@@ -29,11 +29,18 @@ void data_handler(const zn_resource_key_t *rkey, const unsigned char *data, size
 }
 
 int main(int argc, char **argv) {
-  char *uri = "/demo/example/**";
-  if (argc > 1) {
-    uri = argv[1];
-  }
+  char *selector = "/zenoh/examples/**";
   char *locator = 0;
+  
+  if ((argc > 1) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+    printf("USAGE:\n\tzn_pull [<selector>=%s] [<locator>=auto]\n\n", selector);
+    return 0;
+  }
+
+  if (argc > 1) {
+    selector = argv[1];
+  }
+  
   if (argc > 2) {
     locator = argv[2];
   }
@@ -44,10 +51,10 @@ int main(int argc, char **argv) {
   zn_session_t *z = r_z.value.session;
   zn_start_recv_loop(z);
 
-  printf("Declaring Subscriber on '%s'...\n", uri);
+  printf("Declaring Subscriber on '%s'...\n", selector);
   zn_sub_mode_t sm;
   sm.kind = ZN_PULL_MODE;
-  zn_sub_p_result_t r = zn_declare_subscriber(z, uri, &sm, data_handler, NULL);
+  zn_sub_p_result_t r = zn_declare_subscriber(z, selector, &sm, data_handler, NULL);
   ASSERT_P_RESULT(r,"Unable to declare subscriber.\n");
   zn_sub_t *sub = r.value.sub;
 

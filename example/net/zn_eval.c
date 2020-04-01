@@ -31,12 +31,17 @@ void query_handler(const char *rname, const char *predicate, zn_replies_sender_t
   send_replies(query_handle, replies);
 }
 
-int main(int argc, char **argv) {
-  char *uri = "/demo/example/zenoh-c-eval";
-  if (argc > 1) {
-    uri = argv[1];
-  }
+int main(int argc, char **argv) {  
+  char *selector = "/zenoh/examples/c/eval";
   char *locator = 0;
+
+  if ((argc > 1) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+    printf("USAGE:\n\tzn_eval [<path>=%s] [<locator>=auto]\n\n", selector);
+    return 0;
+  }
+  if (argc > 1) {
+    selector = argv[1];
+  }
   if (argc > 2) {
     locator = argv[2];
   }
@@ -47,8 +52,8 @@ int main(int argc, char **argv) {
   zn_session_t *z = r_z.value.session;
   zn_start_recv_loop(z);
 
-  printf("Declaring Eval on '%s'...\n", uri);
-  zn_eval_p_result_t r = zn_declare_eval(z, uri, query_handler, uri);
+  printf("Declaring Eval on '%s'...\n", selector);
+  zn_eval_p_result_t r = zn_declare_eval(z, selector, query_handler, selector);
   ASSERT_P_RESULT(r, "Unable to declare eval.\n");  
   zn_eva_t *eval = r.value.eval;
 
