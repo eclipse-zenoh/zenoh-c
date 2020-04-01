@@ -94,11 +94,16 @@ void query_handler(const char *rname, const char *predicate, zn_replies_sender_t
 }
 
 int main(int argc, char **argv) {
-  char *uri = "/demo/example/**";
-  if (argc > 1) {
-    uri = argv[1];
-  }
+  char *selector = "/zenoh/examples/**";
   char *locator = 0;
+
+  if ((argc > 1) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+    printf("USAGE:\n\tzn_storage [<selector>=%s] [<locator>=auto]\n\n", selector);
+    return 0;
+  }
+  if (argc > 1) {
+    selector = argv[1];
+  }
   if (argc > 2) {
     locator = argv[2];
   }
@@ -109,8 +114,8 @@ int main(int argc, char **argv) {
   zn_session_t *z = r_z.value.session;
   zn_start_recv_loop(z);
 
-  printf("Declaring Storage on '%s'...\n", uri);
-  zn_sto_p_result_t r = zn_declare_storage(z, uri, data_handler, query_handler, NULL);
+  printf("Declaring Storage on '%s'...\n", selector);
+  zn_sto_p_result_t r = zn_declare_storage(z, selector, data_handler, query_handler, NULL);
   ASSERT_P_RESULT(r, "Unable to declare storage.\n");  
   zn_sto_t *sto = r.value.sto;
 

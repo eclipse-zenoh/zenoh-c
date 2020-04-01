@@ -16,15 +16,24 @@
 #include "zenoh.h"
 
 int main(int argc, char **argv) {
-  char *uri = "/demo/example/zenoh-c-stream";
-  if (argc > 1) {
-    uri = argv[1];
+  char *selector = "/zenoh/examples/c/stream/hello";
+  char *value = "Zenitude streamed from zenoh-c!";
+  char *locator = 0;
+
+   if ((argc > 1) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+    printf("USAGE:\n\tzn_stream [<selector>=%s] [<value>=%s] [<locator>=auto]\n\n", selector, value);
+    return 0;
   }
-  char *value = "Stream from C!";
+
+
+  if (argc > 1) {
+    selector = argv[1];
+  }
+  
   if (argc > 2) {
     value = argv[2];
   }
-  char *locator = 0;
+  
   if (argc > 3) {
     locator = argv[3];
   }
@@ -35,8 +44,8 @@ int main(int argc, char **argv) {
   zn_session_t *z = r_z.value.session;
   zn_start_recv_loop(z);  
   
-  printf("Declaring Publisher on '%s'...\n", uri);
-  zn_pub_p_result_t r = zn_declare_publisher(z, uri);
+  printf("Declaring Publisher on '%s'...\n", selector);
+  zn_pub_p_result_t r = zn_declare_publisher(z, selector);
   ASSERT_P_RESULT(r, "Unable to declare publisher.\n");  
   zn_pub_t *pub = r.value.pub;
 
@@ -44,7 +53,7 @@ int main(int argc, char **argv) {
   for(int idx = 0; 1; ++idx) {
     sleep(1);
     sprintf(buf, "[%4d] %s", idx, value);
-    printf("Streaming Data ('%s': '%s')...\n", uri, buf);
+    printf("Streaming Data ('%s': '%s')...\n", selector, buf);
     zn_stream_data(pub, (const unsigned char *)buf, strlen(buf));
   }
 

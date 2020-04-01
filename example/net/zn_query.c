@@ -43,11 +43,16 @@ void reply_handler(const zn_reply_value_t *reply, void *arg) {
 }
 
 int main(int argc, char **argv) {
-  char *uri = "/demo/example/**";
-  if (argc > 1) {
-    uri = argv[1];
-  }
+  char *selector = "/zenoh/examples/**";
   char *locator = 0;
+
+  if ((argc > 1) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+    printf("USAGE:\n\tzn_query [<selector>=%s] [<locator>=auto]\n\n", selector);
+    return 0;
+  }
+  if (argc > 1) {
+    selector = argv[1];
+  }
   if (argc > 2) {
     locator = argv[2];
   }
@@ -58,9 +63,9 @@ int main(int argc, char **argv) {
   zn_session_t *z = r_z.value.session;
   zn_start_recv_loop(z);
 
-  printf("Sending Query '%s'...\n", uri);
+  printf("Sending Query '%s'...\n", selector);
   zn_query_dest_t dest_all = {ZN_ALL, 0};
-  if (zn_query_wo(z, uri, "", reply_handler, NULL, dest_all, dest_all) != 0) {
+  if (zn_query_wo(z, selector, "", reply_handler, NULL, dest_all, dest_all) != 0) {
     printf("Unable to query.\n");
     return -1;
   }
