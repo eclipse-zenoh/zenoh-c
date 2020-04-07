@@ -1,0 +1,35 @@
+name: Build (simple)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: make
+      run: make
+    - name: Gather artifacts
+      run: |
+        mkdir -p artifacts/zenoh-c/examples/zenoh artifacts/zenoh-c/examples/zenoh-net
+        cp build/libzenohc.* artifacts/zenoh-c/
+        cp build/z_* artifacts/zenoh-c/examples/zenoh
+        cp build/zn_* artifacts/zenoh-c/examples/zenoh-net
+        chmod +x artifacts/zenoh-c/examples/zenoh/*
+        chmod +x artifacts/zenoh-c/examples/zenoh-net/*
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: zenoh-c-${{ matrix.os }}
+        # Directory containing files to upload
+        path: artifacts/zenoh-c
