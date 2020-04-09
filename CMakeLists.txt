@@ -84,12 +84,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-# set(CMAKE_C_STANDARD 99)
-# set(CMAKE_C_STANDARD 11)
-# set(CMAKE_C_FLAGS_DEBUG "${ZENOH_DEBUG_OPT} ${ZENOH_PLATFORM_OPT} -Wall -Wextra -Werror -Wpedantic -Wunused -pipe -g -O0 -std=gnu11")
-# set(CMAKE_C_FLAGS_GCOV "${ZENOH_DEBUG_OPT} ${ZENOH_PLATFORM_OPT} -fprofile-arcs -ftest-coverage -Wall -Wextra -Werror -Wpedantic -Wunused -pipe -g -O0 -std=gnu11")
-# set(CMAKE_C_FLAGS_RELEASE "${ZENOH_DEBUG_OPT} ${ZENOH_PLATFORM_OPT} -DNDEBUG -pipe -O3 -std=gnu11")
-
 # Note: don't use CMAKE_C_STANDARD to be compatible with cmake <3.1.0
 set(CMAKE_C_FLAGS_DEBUG "${ZENOH_DEBUG_OPT} ${ZENOH_PLATFORM_OPT} -std=gnu99 -Wall -Wextra -Werror -Wpedantic -Wunused -pipe -g -O0")
 set(CMAKE_C_FLAGS_GCOV "${ZENOH_DEBUG_OPT} ${ZENOH_PLATFORM_OPT} -std=gnu99 -fprofile-arcs -ftest-coverage -Wall -Wextra -Werror -Wpedantic -Wunused -pipe -g -O0")
