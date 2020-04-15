@@ -1,8 +1,7 @@
 ![zenoh banner](./zenoh-dragon.png)
 
-[![Build Status](https://travis-ci.com/eclipse-zenoh/zenoh-c.svg?branch=master)](https://travis-ci.com/eclipse-zenoh/zenoh-c)
-[![codecov](https://codecov.io/gh/eclipse-zenoh/zenoh-c/branch/master/graph/badge.svg)](https://codecov.io/gh/eclipse-zenoh/zenoh-c)
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/19243/badge.svg)](https://scan.coverity.com/projects/eclipse-zenoh-c)
+![Build (simple)](https://github.com/eclipse-zenoh/zenoh-c/workflows/Build%20(simple)/badge.svg)
+![Build cross-platforms](https://github.com/eclipse-zenoh/zenoh-c/workflows/Build%20cross-platforms/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/zenoh-c/badge/?version=latest)](https://zenoh-c.readthedocs.io/en/latest/?badge=latest)
 [![Gitter](https://badges.gitter.im/atolab/zenoh.svg)](https://gitter.im/atolab/zenoh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![License](https://img.shields.io/badge/License-EPL%202.0-blue)](https://choosealicense.com/licenses/epl-2.0/)
