@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   zn_session_t *z = r_z.value.session;
   zn_start_recv_loop(z);  
 
-  zn_pub_p_result_t rp = zn_declare_publisher(z, "/test/thr");
+  zn_pub_p_result_t rp = zn_declare_publisher(z, path);
   ASSERT_P_RESULT(rp, "Unable to declare publisher.\n");
   zn_pub_t *pub = rp.value.pub;
     
