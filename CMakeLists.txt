@@ -13,9 +13,7 @@
 #
 cmake_minimum_required(VERSION 3.0)
 
-project(zenoh)
-set (zenoh_c_VERSION_MAJOR 0)
-set (zenoh_c_VERSION_MINOR 1)
+project(zenoh VERSION 0.4.2 LANGUAGES C)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -68,6 +66,12 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(INSTALL_NAME_DIR "install-windows/lib")
   set(INSTALL_INCLUDE_NAME_DIR "install-windows/include")
   set(JNI_PLATFORM_NAME "win32")
+endif()
+
+if (SKBUILD)
+  set(INSTALL_RPATH "zenoh")
+  set(INSTALL_NAME_DIR "zenoh")
+  set(INSTALL_INCLUDE_NAME_DIR "zenoh/include")
 endif()
 
 if (ZENOH_TRANSPORT_TCP STREQUAL "ON")
