@@ -22,7 +22,7 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Build directory
 BUILD_DIR=build
 
-CROSS_BUILD_TARGETS=manylinux2010-x64 manylinux2010-x86 linux-x64 linux-armv5 linux-armv6 linux-arm64 osx-64
+CROSS_BUILD_TARGETS=manylinux2010-x64 manylinux2010-x86 linux-armv5 linux-armv6 linux-arm64 osx-64
 CROSS_BUILD_DIR=$(BUILD_DIR)/crossbuilds
 CROSS_SCRIPTS_DIR=crossbuilds
 
@@ -31,6 +31,8 @@ CROSS_SCRIPTS_DIR=crossbuilds
 # - MacOS: can't use multiarch/crossbuild since it uses Clang 3.5.0 which lacks <stdatomic.h> (even using -std=gnu11)
 DOCKER_CROSSBUILD_IMAGE=multiarch/crossbuild
 DOCKER_OSXCROSS_IMAGE=liushuyu/osxcross
+DOCKCROSS_x86_IMAGE=dockcross/manylinux2010-x86
+DOCKCROSS_x64_IMAGE=dockcross/manylinux2010-x64
 
 ifneq ($(ZENOH_DEBUG),)
 	ZENOH_DEBUG_OPT := -DZENOH_DEBUG=$(ZENOH_DEBUG)
@@ -67,6 +69,8 @@ test:
 DOCKER_OK := $(shell docker version 2> /dev/null)
 DOCKER_CROSSBUILD_INFO := $(shell docker image inspect $(DOCKER_CROSSBUILD_IMAGE) 2> /dev/null)
 DOCKER_OSXCROSS_INFO := $(shell docker image inspect $(DOCKER_OSXCROSS_IMAGE) 2> /dev/null)
+DOCKCROSS_x86_INFO := $(shell docker image inspect $(DOCKCROSS_x86_IMAGE) 2> /dev/null)
+DOCKCROSS_x64_INFO := $(shell docker image inspect $(DOCKCROSS_x64_IMAGE) 2> /dev/null)
 
 check-docker:
 ifndef DOCKER_OK
@@ -77,6 +81,12 @@ ifeq ($(DOCKER_CROSSBUILD_INFO),[])
 endif
 ifeq ($(DOCKER_OSXCROSS_INFO),[])
 	docker pull $(DOCKER_OSXCROSS_IMAGE)
+endif
+ifeq ($(DOCKCROSS_x86_INFO),[])
+	docker pull $(DOCKCROSS_x86_IMAGE)
+endif
+ifeq ($(DOCKCROSS_x64_INFO),[])
+	docker pull $(DOCKCROSS_x64_IMAGE)
 endif
 
 
@@ -98,25 +108,20 @@ linux-arm64: check-docker
 	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=aarch64-linux-gnu $(DOCKER_CROSSBUILD_IMAGE) \
 		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
 
-linux-x64: check-docker
-	docker run --rm -v $(ROOT_DIR):/workdir $(DOCKER_CROSSBUILD_IMAGE) \
-		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
-	docker run --rm -v $(ROOT_DIR):/workdir $(DOCKER_CROSSBUILD_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
-
 osx-64: check-docker
-	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir -e CC=x86_64-apple-darwin18-clang -e CXX=x86_64-apple-darwin18-clang $(DOCKER_OSXCROSS_IMAGE) \
-		cmake $(CMAKE_OPT) -DCMAKE_SYSTEM_NAME=Darwin -B$(CROSS_BUILD_DIR)/$@
-	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir -e CC=x86_64-apple-darwin18-clang -e CXX=x86_64-apple-darwin18-clang $(DOCKER_OSXCROSS_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
+	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir -e CC=x86_64-apple-darwin18-clang -e CXX=x86_64-apple-darwin18-clang $(DOCKER_OSXCROSS_IMAGE) bash -c "\
+		cmake $(CMAKE_OPT) -DCMAKE_SYSTEM_NAME=Darwin -B$(CROSS_BUILD_DIR)/$@ && \
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@"
 
 manylinux2010-x86: check-docker
-	dockcross/dockcross-manylinux2010-x86 cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
-	dockcross/dockcross-manylinux2010-x86 make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
+	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir $(DOCKCROSS_x86_IMAGE) bash -c "\
+		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@ && \
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@"
 
 manylinux2010-x64: check-docker
-	dockcross/dockcross-manylinux2010-x64 cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
-	dockcross/dockcross-manylinux2010-x64 make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
+	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir $(DOCKCROSS_x64_IMAGE) bash -c "\
+		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@ && \
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@"
 
 
 clean:
