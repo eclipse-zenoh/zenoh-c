@@ -48,21 +48,21 @@ ifneq ($(JNI_INCLUDE_HOME),)
 	CMAKE_OPT += -DJNI_INCLUDE_HOME=$(JNI_INCLUDE_HOME)
 endif
 
-all: cmake make
+all: make
 
 all-cross: $(CROSS_BUILD_TARGETS)
 
-cmake: CMakeLists.txt
+ $(BUILD_DIR)/Makefile: CMakeLists.txt
 	mkdir -p $(BUILD_DIR)
 	cmake $(CMAKE_OPT) -B$(BUILD_DIR)
 
 make: $(BUILD_DIR)/Makefile
 	make -C$(BUILD_DIR)
 
-install:
+install: $(BUILD_DIR)/Makefile
 	make -C$(BUILD_DIR) install
 
-test:
+test: $(BUILD_DIR)/Makefile
 	make -C$(BUILD_DIR) test
 
 
@@ -94,34 +94,34 @@ linux-armv5: check-docker
 	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabi $(DOCKER_CROSSBUILD_IMAGE) \
 		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
 	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabi $(DOCKER_CROSSBUILD_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all
 
 linux-armv6: check-docker
 	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabihf $(DOCKER_CROSSBUILD_IMAGE) \
 		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
 	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabihf $(DOCKER_CROSSBUILD_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all
 
 linux-arm64: check-docker
 	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=aarch64-linux-gnu $(DOCKER_CROSSBUILD_IMAGE) \
 		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
 	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=aarch64-linux-gnu $(DOCKER_CROSSBUILD_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all
 
 osx-64: check-docker
 	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir -e CC=x86_64-apple-darwin18-clang -e CXX=x86_64-apple-darwin18-clang $(DOCKER_OSXCROSS_IMAGE) bash -c "\
 		cmake $(CMAKE_OPT) -DCMAKE_SYSTEM_NAME=Darwin -B$(CROSS_BUILD_DIR)/$@ && \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@"
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all"
 
 manylinux2010-x86: check-docker
 	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir $(DOCKCROSS_x86_IMAGE) bash -c "\
-		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@ && \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@"
+		cmake $(CMAKE_OPT) -DPACKAGING=ON -DTARGET_ARCH=i386 -B$(CROSS_BUILD_DIR)/$@ && \
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all package package_source"
 
 manylinux2010-x64: check-docker
 	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir $(DOCKCROSS_x64_IMAGE) bash -c "\
-		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@ && \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@"
+		cmake $(CMAKE_OPT) -DPACKAGING=ON -DTARGET_ARCH=amd64 -B$(CROSS_BUILD_DIR)/$@ && \
+		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all package package_source"
 
 
 clean:
