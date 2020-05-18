@@ -9,13 +9,14 @@ pipeline {
   stages {
     stage('Checkout Git TAG') {
       steps {
+        cleanWs()
         checkout([$class: 'GitSCM',
                   branches: [[name: "${params.TAG}"]],
                   doGenerateSubmoduleConfigurations: false,
                   extensions: [],
                   gitTool: 'Default',
                   submoduleCfg: [],
-                  userRemoteConfigs: [[url: 'https://github.com/atolab/eclipse-zenoh-c.git']]
+                  userRemoteConfigs: [[url: 'https://github.com/eclipse-zenoh/zenoh-c.git']]
                 ])
       }
     }
@@ -32,6 +33,14 @@ pipeline {
         sh '''
         docker images || true
         make all-cross
+        '''
+      }
+    }
+    stage('Deploy to to download.eclipse.org') {
+      steps {
+        sh '''
+        ssh genie.zenoh@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${TAG}
+        scp build/crossbuilds/*/*.deb* build/crossbuilds/*/*.rpm*  /home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${TAG}/
         '''
       }
     }
