@@ -38,10 +38,12 @@ pipeline {
     }
     stage('Deploy to to download.eclipse.org') {
       steps {
-        sh '''
-        ssh genie.zenoh@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${TAG}
-        scp build/crossbuilds/*/*.deb* build/crossbuilds/*/*.rpm*  /home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${TAG}/
-        '''
+        sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
+          sh '''
+          ssh genie.zenoh@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${TAG}
+          scp build/crossbuilds/*/*.deb* build/crossbuilds/*/*.rpm*  genie.zenoh@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${TAG}/
+          '''
+        }
       }
     }
   }
