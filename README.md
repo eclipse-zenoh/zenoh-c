@@ -23,6 +23,8 @@ Those packages are built using manylinux2010 x86-32 and x86-64 to be  compatible
 
 For other platforms, you will need to clone and build the sources.
 
+WARNING: Note that zenoh-c has not been ported on Windows yet!
+
 -------------------------------
 ## How to build it 
 To build the **zenoh-c** client API you need to ensure that [cmake](https://cmake.org) is available on your platform -- if not please install it. 
