@@ -19,7 +19,11 @@ The C API is for pure clients, in other terms does not support peer-to-peer comm
 ## How to install it
 
 The Eclipse zenoh-c library is available as **Debian** or **RPM** packages in the [Eclipse zenoh download area](https://download.eclipse.org/zenoh/zenoh-c/).
-Those packages are built using manylinux2010 x86-32 and x86-64 to be  compatible with most of the Linux platforms.
+Those packages are built using manylinux2010 x86-32 and x86-64 to be compatible with most of the Linux platforms.
+There are 2 kind of packages:
+
+ - **libzenohc**: only contains the library file (.so)
+ - **libzenohc-dev**: contains the zenoh-c header files for development. Depends on *libzenohc* package
 
 For other platforms, you will need to clone and build the sources.
 
