@@ -74,7 +74,7 @@ $ docker run --init -p 7447:7447/tcp -p 7447:7447/udp -p 8000:8000/tcp adlinktec
 To see the zenoh manual page, simply do:
 
 ```bash
-$ docker run --init -p 7447:7447/tcp -p 7447:7447/udp -p 8000:8000/tcp adlinktech/eclipse-zenoh:latest
+$ docker run --init -p 7447:7447/tcp -p 7447:7447/udp -p 8000:8000/tcp adlinktech/eclipse-zenoh:latest --help
 ```
 
 
