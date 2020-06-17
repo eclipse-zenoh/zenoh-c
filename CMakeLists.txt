@@ -199,6 +199,9 @@ if (TESTS)
   add_test(zn_large_data_test bash routed.sh zn_large_data_test)
 endif(TESTS)
 
+
+
+
 # For packaging
 if (PACKAGING)
 
@@ -223,19 +226,16 @@ if (PACKAGING)
   set(CPACK_COMPONENT_LIB_DESCRIPTION "The C client library for Eclipse zenoh")
   set(CPACK_COMPONENT_DEV_DESCRIPTION "${CPACK_COMPONENT_LIB_DESCRIPTION} - devel files")
 
+  # Sources package
   set(CPACK_SOURCE_GENERATOR "TGZ")
   set(CPACK_SOURCE_IGNORE_FILES "/.git/;/build/")
-  set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
+  set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-src-${PROJECT_VERSION}")
   set(CPACK_GENERATOR "")
 
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "Configure packaging for Linux ${TARGET_ARCH}")
-    # Sources package
-    set(CPACK_SOURCE_GENERATOR "TGZ")
-    set(CPACK_SOURCE_IGNORE_FILES "/.git/;/build/")
-    set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
-  
     set(CPACK_GENERATOR "DEB;RPM")
+  
     # DEB package
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "ADLINK zenoh team, <zenoh@adlink-labs.tech>")
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${TARGET_ARCH})
