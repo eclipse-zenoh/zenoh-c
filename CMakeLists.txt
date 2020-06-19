@@ -16,8 +16,7 @@ cmake_minimum_required(VERSION 3.0)
 project(libzenohc VERSION 0.4.2 LANGUAGES C)
 
 # while in development, use timestamp for patch version:
-# string(TIMESTAMP PROJECT_VERSION_PATCH "%Y%m%ddev")
-set(PROJECT_VERSION_PATCH 2-M1)
+string(TIMESTAMP PROJECT_VERSION_PATCH "%Y%m%ddev")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 if(NOT CMAKE_BUILD_TYPE)
