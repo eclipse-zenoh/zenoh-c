@@ -11,59 +11,51 @@
  * Contributors:
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
+#include "zenoh/net.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "zenoh.h"
+#include <string.h>
 
-void query_handler(const char *rname, const char *predicate, zn_replies_sender_t send_replies, void *query_handle, void *arg) {
-  printf(">> [Query handler] Handling '%s?%s'\n", rname, predicate);
+char *uri = "/demo/example/zenoh-c-eval";
+char *value = "Eval from C!";
 
-  char *data = "Eval from C!";
-  zn_resource_t resource;
-  resource.rname = arg;
-  resource.data = (const unsigned char *)data;
-  resource.length = strlen(data);
-  resource.encoding = 0;
-  resource.kind = 0;
-  zn_resource_t *p_resource = &resource;
-  zn_resource_p_array_t replies = {1, &p_resource};
-
-  send_replies(query_handle, replies);
+void query_handler(ZNQuery *query) {
+    const zn_string *res = zn_query_res_name(query);
+    const zn_string *pred = zn_query_predicate(query);
+    printf(">> [Query handler] Handling '%.*s?%.*s'\n", res->len, res->val, pred->len, pred->val);
+    zn_send_reply(query, uri, (const unsigned char *)value, strlen(value));
 }
 
-int main(int argc, char **argv) {  
-  char *selector = "/zenoh/examples/c/eval";
-  char *locator = 0;
+int main(int argc, char** argv) {
+    if (argc > 1) {
+        uri = argv[1];
+    }
+    char *locator = 0;
+    if (argc > 2) {
+        locator = argv[2];
+    }
 
-  if ((argc > 1) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
-    printf("USAGE:\n\tzn_eval [<path>=%s] [<locator>=auto]\n\n", selector);
-    return 0;
-  }
-  if (argc > 1) {
-    selector = argv[1];
-  }
-  if (argc > 2) {
-    locator = argv[2];
-  }
+    printf("Openning session...\n");
+    ZNSession *s = zn_open(PEER, locator, 0);
+    if (s == 0) {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
 
-  printf("Openning session...\n");
-  zn_session_p_result_t r_z = zn_open(locator, 0, 0);
-  ASSERT_RESULT(r_z, "Unable to open session.\n")
-  zn_session_t *z = r_z.value.session;
-  zn_start_recv_loop(z);
+    printf("Declaring Queryable on '%s'...\n", uri);
+    ZNQueryable *qable = zn_declare_queryable(s, uri, EVAL, query_handler);
+    if (qable == 0) {
+        printf("Unable to declare queryable.\n");
+        exit(-1);
+    }
+    
+    char c = 0;
+    while (c != 'q') {
+        c = fgetc(stdin);
+    }
 
-  printf("Declaring Eval on '%s'...\n", selector);
-  zn_eval_p_result_t r = zn_declare_eval(z, selector, query_handler, selector);
-  ASSERT_P_RESULT(r, "Unable to declare eval.\n");  
-  zn_eva_t *eval = r.value.eval;
-
-  char c = 0;
-  while (c != 'q') {
-    c = fgetc(stdin);
-  }
-
-  zn_undeclare_eval(eval);
-  zn_close(z);
-  zn_stop_recv_loop(z);
-  return 0;
+    zn_undeclare_queryable(qable);
+    zn_close(s);
+    return 0;    
 }

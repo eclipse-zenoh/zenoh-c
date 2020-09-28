@@ -13,22 +13,21 @@
  */
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include "zenoh/net.h"
 
-void data_handler(const zn_sample *sample) {
-    printf(">> [Subscription listener] Received (%.*s, %.*s)\n",
-        sample->key.len, sample->key.val,
-        sample->value.len, sample->value.val);
-}
-
 int main(int argc, char **argv) {
-    char *uri = "/demo/example/**";
+    char *uri = "/demo/example/zenoh-c-pub";
     if (argc > 1) {
         uri = argv[1];
     }
-    char *locator = 0;
+    char *value = "Pub from C!";
     if (argc > 2) {
-        locator = argv[2];
+        value = argv[2];
+    }
+    char *locator = 0;
+    if (argc > 3) {
+        locator = argv[3];
     }
 
     printf("Openning session...\n");
@@ -38,21 +37,24 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Declaring Subscriber on '%s'...\n", uri);
-    ZNSubscriber *sub = zn_declare_subscriber(s, uri, zn_subinfo_pull(), data_handler);
-    if (sub == 0) {
-        printf("Unable to declare subscriber.\n");
-        exit(-1);
+    // long rid = zn_declare_resource(s, uri);
+
+    // printf("Declaring Publisher on '%s'...\n", uri);
+    // ZNPublisher *pub = zn_declare_publisher(s, uri);
+    // if (sub == 0) {
+    //     printf("Unable to declare publisher.\n");
+    //     exit(-1);
+    // }
+
+    char buf[256];
+    for(int idx = 0; 1; ++idx) {
+        sleep(1);
+        sprintf(buf, "[%4d] %s", idx, value);
+        printf("Writing Data ('%s': '%s')...\n", uri, buf);
+        zn_write(s, uri, buf, strlen(buf));
     }
 
-    printf("Press <enter> to pull data...\n");
-    char c = 0;
-    while (c != 'q') {
-        c = fgetc(stdin);
-        zn_pull(sub);
-    }
-
-    zn_undeclare_subscriber(sub);
+    // zn_undeclare_publisher(pub);
     zn_close(s);
     return 0;
 }

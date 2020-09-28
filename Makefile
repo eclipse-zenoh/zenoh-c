@@ -11,107 +11,60 @@
 # Contributors:
 #   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 #
-.PHONY: test clean
+.PHONY: lib example all install clean
 
-# Build type. This set the CMAKE_BUILD_TYPE variable.
-# Accepted values: Release, Debug, GCov
-BUILD_TYPE?=Release
-
-# zenoh-c/ directory
-ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-# Build directory
-BUILD_DIR=build
-
-CROSS_BUILD_TARGETS=manylinux2010-x64 manylinux2010-x86 linux-armv5 linux-armv6 linux-arm64
-CROSS_BUILD_DIR=$(BUILD_DIR)/crossbuilds
-CROSS_SCRIPTS_DIR=crossbuilds
-
-# NOTES:
-# - ARM:   can't use dockcross/dockcross since it uses an old GCC (4.8.3) which lacks <stdatomic.h> (even using -std=gnu11)
-DOCKER_CROSSBUILD_IMAGE=multiarch/crossbuild
-DOCKCROSS_x86_IMAGE=dockcross/manylinux2010-x86
-DOCKCROSS_x64_IMAGE=dockcross/manylinux2010-x64
-
-ifneq ($(ZENOH_DEBUG),)
-	ZENOH_DEBUG_OPT := -DZENOH_DEBUG=$(ZENOH_DEBUG)
+# Library name
+ifeq ($(OS),Windows_NT)
+  LIB_NAME=libzenohc.dll
+else
+  ifeq ($(shell uname -s),Darwin)
+    LIB_NAME=libzenohc.dylib
+  else
+    LIB_NAME=libzenohc.so
+  endif
 endif
 
-CMAKE_OPT=$(ZENOH_DEBUG_OPT) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -H.
-
-# ZENOH_JAVA: when building zenoh-c for zenoh-java:
-ifneq ($(ZENOH_JAVA),)
-	CMAKE_OPT += -DSWIG_JAVA=ON -DTESTS=OFF -DEXAMPLES=OFF
-endif
-ifneq ($(JNI_INCLUDE_HOME),)
-	CMAKE_OPT += -DJNI_INCLUDE_HOME=$(JNI_INCLUDE_HOME)
-endif
-
-all: make
-
-all-cross: $(CROSS_BUILD_TARGETS)
-
- $(BUILD_DIR)/Makefile: CMakeLists.txt
-	mkdir -p $(BUILD_DIR)
-	cmake $(CMAKE_OPT) -B$(BUILD_DIR)
-
-make: $(BUILD_DIR)/Makefile
-	make -C$(BUILD_DIR)
-
-install: $(BUILD_DIR)/Makefile
-	make -C$(BUILD_DIR) install
-
-test: $(BUILD_DIR)/Makefile
-	make -C$(BUILD_DIR) test
-
-
-DOCKER_OK := $(shell docker version 2> /dev/null)
-DOCKER_CROSSBUILD_INFO := $(shell docker image inspect $(DOCKER_CROSSBUILD_IMAGE) 2> /dev/null)
-DOCKCROSS_x86_INFO := $(shell docker image inspect $(DOCKCROSS_x86_IMAGE) 2> /dev/null)
-DOCKCROSS_x64_INFO := $(shell docker image inspect $(DOCKCROSS_x64_IMAGE) 2> /dev/null)
-
-check-docker:
-ifndef DOCKER_OK
-	$(error "Docker is not available. Please install Docker")
-endif
-ifeq ($(DOCKER_CROSSBUILD_INFO),[])
-	docker pull $(DOCKER_CROSSBUILD_IMAGE)
-endif
-ifeq ($(DOCKCROSS_x86_INFO),[])
-	docker pull $(DOCKCROSS_x86_IMAGE)
-endif
-ifeq ($(DOCKCROSS_x64_INFO),[])
-	docker pull $(DOCKCROSS_x64_IMAGE)
+ifeq ($(BUILD_TYPE),Debug)
+  BUILD_DIR=target/debug
+  CARGO=cargo build
+  EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout
+  CLANG=clang
+else 
+  BUILD_DIR=target/release
+  CARGO=cargo build --release
+  EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
+  CLANG=clang -O3
 endif
 
+# Installation prefix
+ifeq ($(PREFIX),)
+  PREFIX=/usr/local
+endif
 
-linux-armv5: check-docker
-	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabi $(DOCKER_CROSSBUILD_IMAGE) \
-		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
-	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabi $(DOCKER_CROSSBUILD_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all
+make: $(BUILD_DIR)/$(LIB_NAME)
 
-linux-armv6: check-docker
-	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabihf $(DOCKER_CROSSBUILD_IMAGE) \
-		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
-	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=arm-linux-gnueabihf $(DOCKER_CROSSBUILD_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all
+example: $(addprefix $(BUILD_DIR)/, $(EXAMPLES))
 
-linux-arm64: check-docker
-	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=aarch64-linux-gnu $(DOCKER_CROSSBUILD_IMAGE) \
-		cmake $(CMAKE_OPT) -B$(CROSS_BUILD_DIR)/$@
-	docker run --rm -v $(ROOT_DIR):/workdir -e CROSS_TRIPLE=aarch64-linux-gnu $(DOCKER_CROSSBUILD_IMAGE) \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all
+all: 
+	make
+	make example
 
-manylinux2010-x86: check-docker
-	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir $(DOCKCROSS_x86_IMAGE) bash -c "\
-		cmake $(CMAKE_OPT) -DPACKAGING=ON -DTARGET_ARCH=i386 -B$(CROSS_BUILD_DIR)/$@ && \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all package package_source"
+$(BUILD_DIR)/$(LIB_NAME):
+	$(CARGO)
 
-manylinux2010-x64: check-docker
-	docker run --rm -v $(ROOT_DIR):/workdir -w /workdir $(DOCKCROSS_x64_IMAGE) bash -c "\
-		cmake $(CMAKE_OPT) -DPACKAGING=ON -DTARGET_ARCH=amd64 -B$(CROSS_BUILD_DIR)/$@ && \
-		make VERBOSE=1 -C$(CROSS_BUILD_DIR)/$@ all package package_source"
+$(BUILD_DIR)/%: example/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
+	$(CLANG) -I include -L $(BUILD_DIR) -lzenohc $< -o $@
 
+include/zenoh/net.h:
+	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
+
+install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h include/zenoh/net.h
+	install -d $(DESTDIR)$(PREFIX)/lib/
+	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
+	install -d $(DESTDIR)$(PREFIX)/include/
+	install -m 755 include/zenoh.h $(DESTDIR)$(PREFIX)/include/
+	install -d $(DESTDIR)$(PREFIX)/include/zenoh/
+	install -m 755 include/zenoh/net.h $(DESTDIR)$(PREFIX)/include/zenoh/net.h
 
 clean:
-	rm -fr $(BUILD_DIR)
+	rm -fr target

@@ -13,37 +13,32 @@
  */
 #include <stdio.h>
 #include <unistd.h>
-#include "zenoh.h"
+#include <string.h>
+#include "zenoh/net.h"
 
 int main(int argc, char **argv) {
-  char *selector = "/zenoh/examples/c/write/hello";
-  char *value = "Zenitude writtem from zenoh-c!";
-  char *locator = 0;
+    char *uri = "/demo/example/zenoh-c-write";
+    if (argc > 1) {
+        uri = argv[1];
+    }
+    char *value = "Write from C!";
+    if (argc > 2) {
+        value = argv[2];
+    }
+    char *locator = 0;
+    if (argc > 3) {
+        locator = argv[3];
+    }
 
-  if ((argc > 1) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
-    printf("USAGE:\n\tzn_stream [<selector>=%s] [<value>=%s] [<locator>=auto]\n\n", selector, value);
+    printf("Openning session...\n");
+    ZNSession *s = zn_open(PEER, locator, 0);
+    if (s == 0) {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
+
+    zn_write(s, uri, value, strlen(value));
+
+    zn_close(s);
     return 0;
-  }
-  if (argc > 1) {
-    selector = argv[1];
-  }
-  
-  if (argc > 2) {
-    value = argv[2];
-  }
-  
-  if (argc > 3) {
-    locator = argv[3];
-  }
-
-  printf("Openning session...\n");
-  zn_session_p_result_t r_z = zn_open(locator, 0, 0);
-  ASSERT_RESULT(r_z, "Unable to open v.\n")
-  zn_session_t *z = r_z.value.session;
-
-  printf("Writing Data ('%s': '%s')...\n", selector, value);
-  zn_write_data(z, selector, (const unsigned char *)value, strlen(value));
-
-  zn_close(z);
-  return 0;
 }
