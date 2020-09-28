@@ -26,14 +26,14 @@ endif
 
 ifeq ($(BUILD_TYPE),Debug)
   BUILD_DIR=target/debug
-  CARGO=cargo build
+  RUSTFLAGS=
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout
-  CLANG=clang
+  LDFLAGS=
 else 
   BUILD_DIR=target/release
-  CARGO=cargo build --release
+  RUSTFLAGS=--release
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
-  CLANG=clang -O3
+  LDFLAGS=-O3
 endif
 
 # Installation prefix
@@ -50,10 +50,10 @@ all:
 	make example
 
 $(BUILD_DIR)/$(LIB_NAME):
-	$(CARGO)
+	cargo build $(RUSTFLAGS)
 
 $(BUILD_DIR)/%: example/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
-	$(CLANG) -I include -L $(BUILD_DIR) -lzenohc $< -o $@
+	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
 include/zenoh/net.h:
 	cbindgen --config cbindgen.toml --crate zenoh-c --output $@

@@ -66,16 +66,6 @@ If you want to build with debug symbols set the `BUILD_TYPE=Debug` environment v
 
 ## Building the Examples
 
-To build the **zenoh-c** client API you need to ensure that [clang](https://clang.llvm.org) is available on your platform.
-
-  -- Ubuntu -- 
-
-  ```bash
-  $ sudo apt-get install clang
-  ```
-
-Once the above dependencies are satisfied, just do the following:
-
   ```bash
   $ cd /path/to/zenoh-c
   $ make example
