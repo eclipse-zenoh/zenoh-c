@@ -63,11 +63,9 @@ jobs:
 
     - name: Gather artifacts
       run: |
-        mkdir -p artifacts/zenoh-c/examples/zenoh artifacts/zenoh-c/examples/zenoh-net
+        mkdir -p artifacts/zenoh-c/examples/zenoh-net
         cp target/release/libzenohc.* artifacts/zenoh-c/
-        cp target/release/z_* artifacts/zenoh-c/examples/zenoh
         cp target/release/zn_* artifacts/zenoh-c/examples/zenoh-net
-        chmod +x artifacts/zenoh-c/examples/zenoh/*
         chmod +x artifacts/zenoh-c/examples/zenoh-net/*
 
     - name: Upload artifact
