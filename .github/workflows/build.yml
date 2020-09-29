@@ -64,7 +64,7 @@ jobs:
       run: make examples
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@v2
       with:
         # Artifact name
         name: zenoh-c-${{ matrix.os }}
