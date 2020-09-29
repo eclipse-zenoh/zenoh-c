@@ -73,3 +73,5 @@ jobs:
           target/release
           !target/release/build
           !target/release/deps
+          !target/release/.*
+          !target/release/*.d
