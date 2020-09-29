@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -56,17 +56,12 @@ jobs:
         args: -- --check
 
     - name: make
+      if: ${{ runner.os != 'Windows' }}
       run: make
 
-    - name: make example
-      run: make example
-
-    - name: Gather artifacts
-      run: |
-        mkdir -p artifacts/zenoh-c/examples/zenoh-net
-        cp target/release/libzenohc.* artifacts/zenoh-c/
-        cp target/release/zn_* artifacts/zenoh-c/examples/zenoh-net
-        chmod +x artifacts/zenoh-c/examples/zenoh-net/*
+    - name: make examples
+      if: ${{ runner.os != 'Windows' }}
+      run: make examples
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
@@ -74,4 +69,7 @@ jobs:
         # Artifact name
         name: zenoh-c-${{ matrix.os }}
         # Directory containing files to upload
-        path: artifacts/zenoh-c
+        path: |
+          target/release
+          !target/release/build
+          !target/release/deps
