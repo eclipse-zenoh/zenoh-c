@@ -68,34 +68,34 @@ If you want to build with debug symbols set the `BUILD_TYPE=Debug` environment v
 
   ```bash
   $ cd /path/to/zenoh-c
-  $ make example
+  $ make examples
   ```
 
 ## Running the Examples
 
 ### Basic Pub/Sub Example
 ```bash
-$ ./target/release/zn_sub
+$ ./target/release/examples/zn_sub
 ```
 
 ```bash
-$ ./target/release/zn_pub
+$ ./target/release/examples/zn_pub
 ```
 
 ### Eval and Query Example
 ```bash
-$ ./target/release/zn_eval
+$ ./target/release/examples/zn_eval
 ```
 
 ```bash
-$ ./target/release/zn_query
+$ ./target/release/examples/zn_query
 ```
 
 ## Running the Throughput Examples
 ```bash
-$ ./target/release/zn_sub_thgr
+$ ./target/release/examples/zn_sub_thgr
 ```
 
 ```bash
-$ ./target/release/zn_pub_thgr
+$ ./target/release/examples/zn_pub_thgr
 ```

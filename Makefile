@@ -41,18 +41,18 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-make: $(BUILD_DIR)/$(LIB_NAME)
+make: $(BUILD_DIR)/$(LIB_NAME) include/zenoh/net.h
 
-example: $(addprefix $(BUILD_DIR)/, $(EXAMPLES))
+examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
 all: 
 	make
-	make example
+	make examples
 
 $(BUILD_DIR)/$(LIB_NAME):
 	cargo build $(RUSTFLAGS)
 
-$(BUILD_DIR)/%: example/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
+$(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
 include/zenoh/net.h:
