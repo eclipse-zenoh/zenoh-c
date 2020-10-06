@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     }
 
     printf("Sending Query '%s'...\n", uri);
-    zn_query(s, uri, "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler);
+    zn_query(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler);
 
     sleep(1);
 

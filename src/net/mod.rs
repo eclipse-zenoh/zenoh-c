@@ -49,6 +49,8 @@ pub static ZN_INFO_ROUTER_PID_KEY: c_uint = 0x02 as c_uint;
 
 pub struct ZNSession(zenoh::net::Session);
 
+pub struct ZNResKey(zenoh::net::ResKey);
+
 pub struct ZNProperties(zenoh::net::Properties);
 
 enum ZnSubOps {
@@ -123,6 +125,30 @@ pub extern "C" fn zn_query_consolidation_incremental() -> *mut ZNQueryConsolidat
 #[no_mangle]
 pub extern "C" fn zn_query_consolidation_last_hop() -> *mut ZNQueryConsolidation {
     Box::into_raw(Box::new(ZNQueryConsolidation(QueryConsolidation::LastHop)))
+}
+
+#[no_mangle]
+pub extern "C" fn zn_rid(id: c_ulong) -> *mut ZNResKey {
+    Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RId(to_zint!(id)))))
+}
+
+/// # Safety
+/// The main reason for this function to be unsafe is that it dereferences a pointer.
+#[no_mangle]
+pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, name: *const c_char) -> *mut ZNResKey {
+    Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RIdWithSuffix(
+        to_zint!(id),
+        CStr::from_ptr(name).to_str().unwrap().to_string(),
+    ))))
+}
+
+/// # Safety
+/// The main reason for this function to be unsafe is that it dereferences a pointer.
+#[no_mangle]
+pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut ZNResKey {
+    Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RName(
+        CStr::from_ptr(name).to_str().unwrap().to_string(),
+    ))))
 }
 
 #[no_mangle]
@@ -459,41 +485,13 @@ pub unsafe extern "C" fn zn_close(session: *mut ZNSession) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_resource(
     session: *mut ZNSession,
-    r_name: *const c_char,
+    reskey: *mut ZNResKey,
 ) -> c_ulong {
-    if r_name.is_null() {
+    if session.is_null() || reskey.is_null() {
         return 0;
     }
-    let name = CStr::from_ptr(r_name).to_str().unwrap();
-    task::block_on(
-        (*session)
-            .0
-            .declare_resource(&ResKey::RName(name.to_string())),
-    )
-    .unwrap() as c_ulong
-}
 
-/// Declare a zenoh resource with a suffix
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
-#[no_mangle]
-pub unsafe extern "C" fn zn_declare_resource_ws(
-    session: *mut ZNSession,
-    rid: c_ulong,
-    suffix: *const c_char,
-) -> c_ulong {
-    if suffix.is_null() {
-        return 0;
-    }
-    let sfx = CStr::from_ptr(suffix).to_str().unwrap();
-    task::block_on(
-        (*session)
-            .0
-            .declare_resource(&ResKey::RIdWithSuffix(to_zint!(rid), sfx.to_string())),
-    )
-    .unwrap() as c_ulong
+    task::block_on((*session).0.declare_resource(&(*reskey).0)).unwrap() as c_ulong
 }
 
 /// Writes a named resource.
@@ -504,40 +502,16 @@ pub unsafe extern "C" fn zn_declare_resource_ws(
 #[no_mangle]
 pub unsafe extern "C" fn zn_write(
     session: *mut ZNSession,
-    r_name: *const c_char,
+    reskey: *mut ZNResKey,
     payload: *const c_char,
     len: c_uint,
 ) -> c_int {
-    if r_name.is_null() {
-        return -1;
+    if session.is_null() || reskey.is_null() {
+        return 1;
     }
 
-    let name = CStr::from_ptr(r_name).to_str().unwrap();
-    let r = ResKey::RName(name.to_string());
     match task::block_on((*session).0.write(
-        &r,
-        slice::from_raw_parts(payload as *const u8, len as usize).into(),
-    )) {
-        Ok(()) => 0,
-        _ => 1,
-    }
-}
-
-/// Writes a named resource using a resource id. This is the most wire efficient way of writing in zenoh.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
-#[no_mangle]
-pub unsafe extern "C" fn zn_write_wrid(
-    session: *mut ZNSession,
-    r_id: c_ulong,
-    payload: *const c_char,
-    len: c_uint,
-) -> c_int {
-    let r = ResKey::RId(to_zint!(r_id));
-    match smol::block_on((*session).0.write(
-        &r,
+        &(*reskey).0,
         slice::from_raw_parts(payload as *const u8, len as usize).into(),
     )) {
         Ok(()) => 0,
@@ -555,26 +529,20 @@ pub unsafe extern "C" fn zn_write_wrid(
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_subscriber(
     session: *mut ZNSession,
-    r_name: *const c_char,
+    reskey: *mut ZNResKey,
     sub_info: *mut ZNSubInfo,
     callback: extern "C" fn(*const zn_sample),
 ) -> *mut ZNSubscriber {
-    if session.is_null() || r_name.is_null() {
+    if session.is_null() || reskey.is_null() || sub_info.is_null() {
         return std::ptr::null_mut();
     }
 
     let si = Box::from_raw(sub_info);
-    let name = CStr::from_ptr(r_name).to_str().unwrap();
-
     let (tx, rx) = channel::<ZnSubOps>(8);
     let rsub = ZNSubscriber(Some(Arc::new(tx)));
     let s = Box::from_raw(session);
-    let mut sub: Subscriber = task::block_on(
-        (*session)
-            .0
-            .declare_subscriber(&ResKey::RName(name.to_string()), &si.0),
-    )
-    .unwrap();
+    let mut sub: Subscriber =
+        task::block_on((*session).0.declare_subscriber(&(*reskey).0, &si.0)).unwrap();
     // Note: This is done to ensure that even if the call-back into C
     // does any blocking call we do not incour the risk of blocking
     // any of the task resolving futures.
@@ -663,21 +631,19 @@ pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut ZNSubscriber) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_query(
     session: *mut ZNSession,
-    key_expr: *const c_char,
+    reskey: *mut ZNResKey,
     predicate: *const c_char,
     target: *mut ZNQueryTarget,
     consolidation: *mut ZNQueryConsolidation,
     callback: extern "C" fn(*const zn_source_info, *const zn_sample),
 ) {
-    let s = Box::from_raw(session);
-    let ke = CStr::from_ptr(key_expr).to_str().unwrap();
     let p = CStr::from_ptr(predicate).to_str().unwrap();
     let qt = Box::from_raw(target);
     let qc = Box::from_raw(consolidation);
+    let mut q = task::block_on((*session).0.query(&(*reskey).0, p, qt.0, qc.0)).unwrap();
 
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let mut q = s.0.query(&ke.into(), p, qt.0, qc.0).await.unwrap();
             let key = zn_string {
                 val: std::ptr::null(),
                 len: 0,
@@ -705,7 +671,6 @@ pub unsafe extern "C" fn zn_query(
 
                 callback(&source_info, &sample)
             }
-            let _ = Box::into_raw(s);
         })
     });
 }
@@ -720,29 +685,24 @@ pub unsafe extern "C" fn zn_query(
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_queryable(
     session: *mut ZNSession,
-    r_name: *const c_char,
+    reskey: *mut ZNResKey,
     kind: c_uint,
     callback: extern "C" fn(*mut ZNQuery),
 ) -> *mut ZNQueryable {
-    if session.is_null() || r_name.is_null() {
+    if session.is_null() || reskey.is_null() {
         return std::ptr::null_mut();
     }
 
-    let s = Box::from_raw(session);
-    let name = CStr::from_ptr(r_name).to_str().unwrap();
-
     let (tx, rx) = channel::<bool>(1);
     let r = ZNQueryable(Some(Arc::new(tx)));
+    let mut queryable: zenoh::net::Queryable =
+        task::block_on((*session).0.declare_queryable(&(*reskey).0, kind as ZInt)).unwrap();
 
     // Note: This is done to ensure that even if the call-back into C
     // does any blocking call we do not incour the risk of blocking
     // any of the task resolving futures.
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let mut queryable: zenoh::net::Queryable =
-                s.0.declare_queryable(&ResKey::RName(name.to_string()), kind as ZInt)
-                    .await
-                    .unwrap();
             loop {
                 select!(
                 query = queryable.stream().next().fuse() => {
@@ -757,7 +717,6 @@ pub unsafe extern "C" fn zn_declare_queryable(
                 },
                 _ = rx.recv().fuse() => {
                     let _ = queryable.undeclare().await;
-                    Box::into_raw(s);
                     return ()
                 })
             }

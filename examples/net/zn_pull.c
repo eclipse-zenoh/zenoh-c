@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Declaring Subscriber on '%s'...\n", uri);
-    ZNSubscriber *sub = zn_declare_subscriber(s, uri, zn_subinfo_pull(), data_handler);
+    ZNSubscriber *sub = zn_declare_subscriber(s, zn_rname(uri), zn_subinfo_pull(), data_handler);
     if (sub == 0) {
         printf("Unable to declare subscriber.\n");
         exit(-1);

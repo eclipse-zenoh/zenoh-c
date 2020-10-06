@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    // long rid = zn_declare_resource(s, uri);
+    ZNResKey *rid = zn_rid(zn_declare_resource(s, zn_rname(uri)));
 
     // printf("Declaring Publisher on '%s'...\n", uri);
     // ZNPublisher *pub = zn_declare_publisher(s, uri);
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Writing Data ('%s': '%s')...\n", uri, buf);
-        zn_write(s, uri, buf, strlen(buf));
+        zn_write(s, rid, buf, strlen(buf));
     }
 
     // zn_undeclare_publisher(pub);

@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
-    ZNQueryable *qable = zn_declare_queryable(s, uri, EVAL, query_handler);
+    ZNQueryable *qable = zn_declare_queryable(s, zn_rname(uri), EVAL, query_handler);
     if (qable == 0) {
         printf("Unable to declare queryable.\n");
         exit(-1);

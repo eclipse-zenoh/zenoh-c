@@ -38,8 +38,8 @@ int main(int argc, char** argv) {
   char *data = (char*) malloc(len);
   memset(data, 1, len);
 
-  size_t rid = zn_declare_resource(s, "/test/thr");
+  ZNResKey *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
   while (1) {
-    zn_write_wrid(s, rid, data, len);
+    zn_write(s, rid, data, len);
   }
 }
