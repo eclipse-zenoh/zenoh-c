@@ -20,7 +20,6 @@ use libc::{c_char, c_int, c_uchar, c_uint, c_ulong};
 use std::convert::TryFrom;
 use std::ffi::{CStr, CString};
 use std::slice;
-use zenoh::net::Config;
 use zenoh::net::*;
 use zenoh_protocol::core::ZInt;
 use zenoh_util::to_zint;
@@ -354,12 +353,13 @@ pub unsafe extern "C" fn zn_scout(
     iface: *const c_char,
     scout_period: c_ulong,
 ) -> *mut ZNScout {
-    let w = what as ZInt;
-    let i = CStr::from_ptr(iface).to_str().unwrap();
+    let what = what as ZInt;
+    let mut config = config::empty();
+    config.push((config::ZN_MULTICAST_INTERFACE_KEY, CStr::from_ptr(iface).to_str().unwrap().as_bytes().to_vec()));
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::net::scout(w, i).await;
+        let mut stream = zenoh::net::scout(what, config).await;
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
@@ -397,20 +397,18 @@ pub extern "C" fn zn_init_logger() {
 ///
 #[no_mangle]
 pub unsafe extern "C" fn zn_open(
-    mode: c_int,
+    mode: *const c_char,
     locator: *const c_char,
     _ps: *const ZNProperties,
 ) -> *mut ZNSession {
     let s = task::block_on(async move {
-        let c: Config = Default::default();
-        let config = if !locator.is_null() {
-            c.mode(to_zint!(mode))
-                .add_peer(CStr::from_ptr(locator).to_str().unwrap())
-        } else {
-            c.mode(to_zint!(mode))
-        };
+        let mut config = config::empty();
+        config.push((config::ZN_MODE_KEY, CStr::from_ptr(mode).to_str().unwrap().as_bytes().to_vec()));
+        if !locator.is_null() {
+            config.push((config::ZN_MODE_KEY, CStr::from_ptr(locator).to_str().unwrap().as_bytes().to_vec()));
+        }
 
-        open(config, None).await
+        open(config).await
     });
     match s {
         Ok(v) => Box::into_raw(Box::new(ZNSession(v))),

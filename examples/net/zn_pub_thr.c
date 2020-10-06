@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     locator = argv[2];
   }  
 
-  ZNSession *s = zn_open(PEER, locator, 0);
+  ZNSession *s = zn_open("peer", locator, 0);
   if (s == 0) {
     printf("Unable to open session!\n");
     exit(-1);
