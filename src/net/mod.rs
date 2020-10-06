@@ -355,7 +355,10 @@ pub unsafe extern "C" fn zn_scout(
 ) -> *mut ZNScout {
     let what = what as ZInt;
     let mut config = config::empty();
-    config.push((config::ZN_MULTICAST_INTERFACE_KEY, CStr::from_ptr(iface).to_str().unwrap().as_bytes().to_vec()));
+    config.push((
+        config::ZN_MULTICAST_INTERFACE_KEY,
+        CStr::from_ptr(iface).to_str().unwrap().as_bytes().to_vec(),
+    ));
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
@@ -403,9 +406,19 @@ pub unsafe extern "C" fn zn_open(
 ) -> *mut ZNSession {
     let s = task::block_on(async move {
         let mut config = config::empty();
-        config.push((config::ZN_MODE_KEY, CStr::from_ptr(mode).to_str().unwrap().as_bytes().to_vec()));
+        config.push((
+            config::ZN_MODE_KEY,
+            CStr::from_ptr(mode).to_str().unwrap().as_bytes().to_vec(),
+        ));
         if !locator.is_null() {
-            config.push((config::ZN_MODE_KEY, CStr::from_ptr(locator).to_str().unwrap().as_bytes().to_vec()));
+            config.push((
+                config::ZN_MODE_KEY,
+                CStr::from_ptr(locator)
+                    .to_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+            ));
         }
 
         open(config).await
