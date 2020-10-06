@@ -39,6 +39,12 @@ int main(int argc, char** argv) {
   memset(data, 1, len);
 
   ZNResKey *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
+  ZNPublisher *pub = zn_declare_publisher(s, rid);
+  if (pub == 0) {
+      printf("Unable to declare publisher.\n");
+      exit(-1);
+  }
+
   while (1) {
     zn_write(s, rid, data, len);
   }

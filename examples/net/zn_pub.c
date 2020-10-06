@@ -37,24 +37,27 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    ZNResKey *rid = zn_rid(zn_declare_resource(s, zn_rname(uri)));
+    printf("Declaring Resource '%s'", uri);
+    unsigned long rid = zn_declare_resource(s, zn_rname(uri));
+    printf(" => RId %lu\n", rid);
+    ZNResKey *reskey = zn_rid(rid);
 
-    // printf("Declaring Publisher on '%s'...\n", uri);
-    // ZNPublisher *pub = zn_declare_publisher(s, uri);
-    // if (sub == 0) {
-    //     printf("Unable to declare publisher.\n");
-    //     exit(-1);
-    // }
+    printf("Declaring Publisher on %lu\n", rid);
+    ZNPublisher *pub = zn_declare_publisher(s, reskey);
+    if (pub == 0) {
+        printf("Unable to declare publisher.\n");
+        exit(-1);
+    }
 
     char buf[256];
     for(int idx = 0; 1; ++idx) {
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
-        printf("Writing Data ('%s': '%s')...\n", uri, buf);
-        zn_write(s, rid, buf, strlen(buf));
+        printf("Writing Data ('%lu': '%s')...\n", rid, buf);
+        zn_write(s, reskey, buf, strlen(buf));
     }
 
-    // zn_undeclare_publisher(pub);
+    zn_undeclare_publisher(pub);
     zn_close(s);
     return 0;
 }

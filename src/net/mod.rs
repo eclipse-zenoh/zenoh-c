@@ -58,6 +58,8 @@ enum ZnSubOps {
     Close,
 }
 
+pub struct ZNPublisher<'a>(zenoh::net::Publisher<'a>);
+
 pub struct ZNSubscriber(Option<Arc<Sender<ZnSubOps>>>);
 
 pub struct ZNQueryTarget(zenoh::net::QueryTarget);
@@ -517,6 +519,37 @@ pub unsafe extern "C" fn zn_write(
         Ok(()) => 0,
         _ => 1,
     }
+}
+
+/// Declares a zenoh publisher
+///
+/// Returns the created publisher or null if the declaration failed.
+///
+/// # Safety
+/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
+///
+#[no_mangle]
+pub unsafe extern "C" fn zn_declare_publisher<'a>(
+    session: *mut ZNSession,
+    reskey: *mut ZNResKey,
+) -> *mut ZNPublisher<'a> {
+    if session.is_null() || reskey.is_null() {
+        return std::ptr::null_mut();
+    }
+
+    Box::into_raw(Box::new(ZNPublisher(
+        task::block_on((*session).0.declare_publisher(&(*reskey).0)).unwrap(),
+    )))
+}
+
+// Un-declares a zenoh publisher
+///
+/// # Safety
+/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
+///
+#[no_mangle]
+pub unsafe extern "C" fn zn_undeclare_publisher(publ: *mut ZNPublisher) {
+    Box::from_raw(publ);
 }
 
 /// Declares a zenoh subscriber

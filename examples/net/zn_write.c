@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    printf("Writing Data ('%s': '%s')...\n", uri, value);
     zn_write(s, zn_rname(uri), value, strlen(value));
 
     zn_close(s);
