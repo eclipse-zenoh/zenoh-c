@@ -29,7 +29,7 @@ void print_stats(volatile struct timeval *start, volatile struct timeval *stop) 
   printf("%f msgs/sec\n", thpt);
 }
 
-void data_handler(const zn_sample *sample) {
+void data_handler(const zn_sample *sample, const void *arg) {
     struct timeval tv;
     if (count == 0) {
         gettimeofday(&tv, 0);
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
     }
 
     ZNResKey *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
-    ZNSubscriber *sub = zn_declare_subscriber(s, rid, zn_subinfo_default(), data_handler);
+    ZNSubscriber *sub = zn_declare_subscriber(s, rid, zn_subinfo_default(), data_handler, NULL);
     if (sub == 0) {
         printf("Unable to declare subscriber.\n");
         exit(-1);

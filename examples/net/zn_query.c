@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <string.h>
 
-void reply_handler(const zn_source_info *info, const zn_sample *sample) {
+void reply_handler(const zn_source_info *info, const zn_sample *sample, const void *arg) {
     printf(">> [Reply handler] received (%.*s, %.*s)\n",
         sample->key.len, sample->key.val,
         sample->value.len, sample->value.val);
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     }
 
     printf("Sending Query '%s'...\n", uri);
-    zn_query(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler);
+    zn_query(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler, NULL);
 
     sleep(1);
 

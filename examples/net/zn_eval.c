@@ -20,7 +20,7 @@
 char *uri = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
-void query_handler(ZNQuery *query) {
+void query_handler(ZNQuery *query, const void *arg) {
     const zn_string *res = zn_query_res_name(query);
     const zn_string *pred = zn_query_predicate(query);
     printf(">> [Query handler] Handling '%.*s?%.*s'\n", res->len, res->val, pred->len, pred->val);
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
-    ZNQueryable *qable = zn_declare_queryable(s, zn_rname(uri), EVAL, query_handler);
+    ZNQueryable *qable = zn_declare_queryable(s, zn_rname(uri), EVAL, query_handler, NULL);
     if (qable == 0) {
         printf("Unable to declare queryable.\n");
         exit(-1);

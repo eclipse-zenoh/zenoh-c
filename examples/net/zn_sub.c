@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include "zenoh/net.h"
 
-void data_handler(const zn_sample *sample) {
+void data_handler(const zn_sample *sample, const void *arg) {
     printf(">> [Subscription listener] Received (%.*s, %.*s)\n",
         sample->key.len, sample->key.val,
         sample->value.len, sample->value.val);
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Declaring Subscriber on '%s'...\n", uri);
-    ZNSubscriber *sub = zn_declare_subscriber(s, zn_rname(uri), zn_subinfo_default(), data_handler);
+    ZNSubscriber *sub = zn_declare_subscriber(s, zn_rname(uri), zn_subinfo_default(), data_handler, NULL);
     if (sub == 0) {
         printf("Unable to declare subscriber.\n");
         exit(-1);

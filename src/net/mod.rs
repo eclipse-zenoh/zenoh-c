@@ -18,7 +18,7 @@ use futures::prelude::*;
 use futures::select;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ulong};
 use std::convert::TryFrom;
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::slice;
 use zenoh::net::*;
 use zenoh_protocol::core::ZInt;
@@ -564,16 +564,18 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     session: *mut ZNSession,
     reskey: *mut ZNResKey,
     sub_info: *mut ZNSubInfo,
-    callback: extern "C" fn(*const zn_sample),
+    callback: extern "C" fn(*const zn_sample, *const c_void),
+    arg: *mut c_void,
 ) -> *mut ZNSubscriber {
     if session.is_null() || reskey.is_null() || sub_info.is_null() {
         return std::ptr::null_mut();
     }
 
+    let s = Box::from_raw(session);
     let si = Box::from_raw(sub_info);
+    let arg = Box::from_raw(arg);
     let (tx, rx) = channel::<ZnSubOps>(8);
     let rsub = ZNSubscriber(Some(Arc::new(tx)));
-    let s = Box::from_raw(session);
     let mut sub: Subscriber =
         task::block_on((*session).0.declare_subscriber(&(*reskey).0, &si.0)).unwrap();
     // Note: This is done to ensure that even if the call-back into C
@@ -590,6 +592,7 @@ pub unsafe extern "C" fn zn_declare_subscriber(
                 len: 0,
             };
             let mut sample = zn_sample { key, value };
+            let arg = Box::into_raw(arg);
 
             loop {
                 select!(
@@ -604,7 +607,7 @@ pub unsafe extern "C" fn zn_declare_subscriber(
                         sample.key.len = us.res_name.len() as c_uint;
                         sample.value.val = data.as_ptr() as *const c_uchar;
                         sample.value.len = data.len() as c_uint;
-                        callback(&sample)
+                        callback(&sample, arg)
                     },
                     op = rx.recv().fuse() => {
                         match op {
@@ -668,11 +671,13 @@ pub unsafe extern "C" fn zn_query(
     predicate: *const c_char,
     target: *mut ZNQueryTarget,
     consolidation: *mut ZNQueryConsolidation,
-    callback: extern "C" fn(*const zn_source_info, *const zn_sample),
+    callback: extern "C" fn(*const zn_source_info, *const zn_sample, *const c_void),
+    arg: *mut c_void,
 ) {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
     let qt = Box::from_raw(target);
     let qc = Box::from_raw(consolidation);
+    let arg = Box::from_raw(arg);
     let mut q = task::block_on((*session).0.query(&(*reskey).0, p, qt.0, qc.0)).unwrap();
 
     task::spawn_blocking(move || {
@@ -691,6 +696,7 @@ pub unsafe extern "C" fn zn_query(
                 len: 0,
             };
             let mut source_info = zn_source_info { kind: 0, id };
+            let arg = Box::into_raw(arg);
 
             while let Some(reply) = q.next().await {
                 source_info.kind = reply.source_kind as c_uint;
@@ -702,7 +708,7 @@ pub unsafe extern "C" fn zn_query(
                 sample.value.val = data.as_ptr() as *const c_uchar;
                 sample.value.len = data.len() as c_uint;
 
-                callback(&source_info, &sample)
+                callback(&source_info, &sample, arg)
             }
         })
     });
@@ -720,12 +726,14 @@ pub unsafe extern "C" fn zn_declare_queryable(
     session: *mut ZNSession,
     reskey: *mut ZNResKey,
     kind: c_uint,
-    callback: extern "C" fn(*mut ZNQuery),
+    callback: extern "C" fn(*mut ZNQuery, *const c_void),
+    arg: *mut c_void,
 ) -> *mut ZNQueryable {
     if session.is_null() || reskey.is_null() {
         return std::ptr::null_mut();
     }
 
+    let arg = Box::from_raw(arg);
     let (tx, rx) = channel::<bool>(1);
     let r = ZNQueryable(Some(Arc::new(tx)));
     let mut queryable: zenoh::net::Queryable =
@@ -736,6 +744,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
     // any of the task resolving futures.
     task::spawn_blocking(move || {
         task::block_on(async move {
+            let arg = Box::into_raw(arg);
             loop {
                 select!(
                 query = queryable.stream().next().fuse() => {
@@ -745,7 +754,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
                   // with non null terminated strings.
                   let bquery = Box::new(ZNQuery(query.unwrap()));
                   let rbquery = Box::into_raw(bquery);
-                  callback(rbquery);
+                  callback(rbquery, arg);
                   Box::from_raw(rbquery);
                 },
                 _ = rx.recv().fuse() => {
