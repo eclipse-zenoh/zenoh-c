@@ -18,7 +18,7 @@ use futures::prelude::*;
 use futures::select;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ulong};
 use std::convert::TryFrom;
-use std::ffi::{CStr, CString, c_void};
+use std::ffi::{c_void, CStr, CString};
 use std::slice;
 use zenoh::net::*;
 use zenoh_protocol::core::ZInt;
@@ -33,19 +33,45 @@ pub static CLIENT: c_uint = whatami::CLIENT as c_uint;
 
 // Flags used in Queryable declaration and in queries
 #[no_mangle]
-pub static ALL_KINDS: c_uint = zenoh::net::queryable::ALL_KINDS as c_uint;
+pub static ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
 #[no_mangle]
-pub static STORAGE: c_uint = zenoh::net::queryable::STORAGE as c_uint;
+pub static STORAGE: c_uint = queryable::STORAGE as c_uint;
 #[no_mangle]
-pub static EVAL: c_uint = zenoh::net::queryable::EVAL as c_uint;
+pub static EVAL: c_uint = queryable::EVAL as c_uint;
+
+// Properties for zenoh net session configuration
+#[no_mangle]
+pub static ZN_MODE_KEY: c_uint = config::ZN_MODE_KEY as c_uint;
+#[no_mangle]
+pub static ZN_PEER_KEY: c_uint = config::ZN_PEER_KEY as c_uint;
+#[no_mangle]
+pub static ZN_LISTENER_KEY: c_uint = config::ZN_LISTENER_KEY as c_uint;
+#[no_mangle]
+pub static ZN_USER_KEY: c_uint = config::ZN_USER_KEY as c_uint;
+#[no_mangle]
+pub static ZN_PASSWORD_KEY: c_uint = config::ZN_PASSWORD_KEY as c_uint;
+#[no_mangle]
+pub static ZN_MULTICAST_SCOUTING_KEY: c_uint = config::ZN_MULTICAST_SCOUTING_KEY as c_uint;
+#[no_mangle]
+pub static ZN_MULTICAST_INTERFACE_KEY: c_uint = config::ZN_MULTICAST_INTERFACE_KEY as c_uint;
+#[no_mangle]
+pub static ZN_MULTICAST_ADDRESS_KEY: c_uint = config::ZN_MULTICAST_ADDRESS_KEY as c_uint;
+#[no_mangle]
+pub static ZN_SCOUTING_TIMEOUT_KEY: c_uint = config::ZN_SCOUTING_TIMEOUT_KEY as c_uint;
+#[no_mangle]
+pub static ZN_SCOUTING_DELAY_KEY: c_uint = config::ZN_SCOUTING_DELAY_KEY as c_uint;
+#[no_mangle]
+pub static ZN_ADD_TIMESTAMP_KEY: c_uint = config::ZN_ADD_TIMESTAMP_KEY as c_uint;
+#[no_mangle]
+pub static ZN_LOCAL_ROUTING_KEY: c_uint = config::ZN_LOCAL_ROUTING_KEY as c_uint;
 
 // Properties returned by zn_info()
 #[no_mangle]
-pub static ZN_INFO_PID_KEY: c_uint = 0x00 as c_uint;
+pub static ZN_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
 #[no_mangle]
-pub static ZN_INFO_PEER_PID_KEY: c_uint = 0x01 as c_uint;
+pub static ZN_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
 #[no_mangle]
-pub static ZN_INFO_ROUTER_PID_KEY: c_uint = 0x02 as c_uint;
+pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
 
 pub struct ZNSession(zenoh::net::Session);
 
@@ -153,6 +179,7 @@ pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut ZNResKey {
     ))))
 }
 
+/// Create a set of properties
 #[no_mangle]
 pub extern "C" fn zn_properties_make() -> *mut ZNProperties {
     Box::into_raw(Box::new(ZNProperties(zenoh::net::Properties::new())))
@@ -209,7 +236,7 @@ pub unsafe extern "C" fn zn_properties_add(
     ps
 }
 
-/// Add a property
+/// Freen a set of properties
 ///
 /// # Safety
 /// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
@@ -218,6 +245,54 @@ pub unsafe extern "C" fn zn_properties_add(
 pub unsafe extern "C" fn zn_properties_free(ps: *mut ZNProperties) {
     let bps = Box::from_raw(ps);
     drop(bps);
+}
+
+/// Create an empty set of properties for zenoh net session configuration.
+///
+/// # Safety
+/// The main reason for this function to be unsafe is that it dereferences a pointer.
+///
+#[no_mangle]
+pub extern "C" fn zn_config_empty() -> *mut ZNProperties {
+    Box::into_raw(Box::new(ZNProperties(config::empty())))
+}
+
+/// Create a default set of properties for zenoh net session configuration.
+///
+/// # Safety
+/// The main reason for this function to be unsafe is that it dereferences a pointer.
+///
+#[no_mangle]
+pub extern "C" fn zn_config_default() -> *mut ZNProperties {
+    Box::into_raw(Box::new(ZNProperties(config::default())))
+}
+
+/// Create a default set of properties for peer mode zenoh net session configuration.
+///
+/// # Safety
+/// The main reason for this function to be unsafe is that it dereferences a pointer.
+///
+#[no_mangle]
+pub extern "C" fn zn_config_peer() -> *mut ZNProperties {
+    Box::into_raw(Box::new(ZNProperties(config::peer())))
+}
+
+/// Create a default set of properties for peer mode zenoh net session configuration.
+/// If peer is not null, it is added to the configuration as remote peer.
+///
+/// # Safety
+/// The main reason for this function to be unsafe is that it dereferences a pointer.
+///
+#[no_mangle]
+pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut ZNProperties {
+    let locator = if peer.is_null() {
+        None
+    } else if let Ok(locator) = CString::from_raw(peer).into_string() {
+        Some(locator)
+    } else {
+        return std::ptr::null_mut();
+    };
+    Box::into_raw(Box::new(ZNProperties(config::client(locator))))
 }
 
 /// Return the resource name for this query
@@ -378,19 +453,15 @@ pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut ZNLocators) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout(
     what: c_uint,
-    iface: *const c_char,
+    config: *mut ZNProperties,
     scout_period: c_ulong,
 ) -> *mut ZNScout {
     let what = what as ZInt;
-    let mut config = config::empty();
-    config.push((
-        config::ZN_MULTICAST_INTERFACE_KEY,
-        CStr::from_ptr(iface).to_str().unwrap().as_bytes().to_vec(),
-    ));
+    let config = Box::from_raw(config);
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::net::scout(what, config).await;
+        let mut stream = zenoh::net::scout(what, (*config).0).await;
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
@@ -427,30 +498,9 @@ pub extern "C" fn zn_init_logger() {
 /// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
 ///
 #[no_mangle]
-pub unsafe extern "C" fn zn_open(
-    mode: *const c_char,
-    locator: *const c_char,
-    _ps: *const ZNProperties,
-) -> *mut ZNSession {
-    let s = task::block_on(async move {
-        let mut config = config::empty();
-        config.push((
-            config::ZN_MODE_KEY,
-            CStr::from_ptr(mode).to_str().unwrap().as_bytes().to_vec(),
-        ));
-        if !locator.is_null() {
-            config.push((
-                config::ZN_MODE_KEY,
-                CStr::from_ptr(locator)
-                    .to_str()
-                    .unwrap()
-                    .as_bytes()
-                    .to_vec(),
-            ));
-        }
-
-        open(config).await
-    });
+pub unsafe extern "C" fn zn_open(config: *mut ZNProperties) -> *mut ZNSession {
+    let config = Box::from_raw(config);
+    let s = task::block_on(async move { open((*config).0).await });
     match s {
         Ok(v) => Box::into_raw(Box::new(ZNSession(v))),
         Err(_) => std::ptr::null_mut(),

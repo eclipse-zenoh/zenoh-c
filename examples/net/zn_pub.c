@@ -25,13 +25,13 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         value = argv[2];
     }
-    char *locator = 0;
+    ZNProperties *config = zn_config_peer();
     if (argc > 3) {
-        locator = argv[3];
+        zn_properties_add(config, ZN_PEER_KEY, argv[3]);
     }
 
     printf("Openning session...\n");
-    ZNSession *s = zn_open("peer", locator, 0);
+    ZNSession *s = zn_open(config);
     if (s == 0) {
         printf("Unable to open session!\n");
         exit(-1);

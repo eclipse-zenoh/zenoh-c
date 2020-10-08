@@ -59,8 +59,10 @@ void fprinthello(FILE *stream, ZNScout *scout, unsigned int idx) {
 }
 
 int main(int argc, char** argv) {
+  ZNProperties *config = zn_config_default();
+
   printf("Scouting...\n");
-  ZNScout *scout = zn_scout(ROUTER | PEER, "auto", 1000);  
+  ZNScout *scout = zn_scout(ROUTER | PEER, config, 1000);  
   if (zn_scout_len(scout) > 0) {
     for (unsigned int i = 0; i < zn_scout_len(scout); ++i) {
         fprinthello(stdout, scout, i);

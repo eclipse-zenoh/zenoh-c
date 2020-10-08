@@ -18,18 +18,18 @@
 #include <string.h>
 
 int main(int argc, char** argv) {
-  char *locator = 0;
   if (argc < 2) {
     printf("USAGE:\n\tzn_pub_thr <payload-size> [<zenoh-locator>]\n\n");
     exit(-1);
   }
   size_t len = atoi(argv[1]);  
   printf("Running throughput test for payload of %zu bytes.\n", len);
+  ZNProperties *config = zn_config_peer();
   if (argc > 2) {
-    locator = argv[2];
-  }  
+    zn_properties_add(config, ZN_PEER_KEY, argv[2]);
+  }
 
-  ZNSession *s = zn_open("peer", locator, 0);
+  ZNSession *s = zn_open(config);
   if (s == 0) {
     printf("Unable to open session!\n");
     exit(-1);
