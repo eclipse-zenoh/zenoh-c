@@ -21,15 +21,16 @@ Publish
 
 .. code-block:: c
 
-  #include <stdio.h>
-  #include <unistd.h>
   #include <string.h>
   #include "zenoh/net.h"
 
   int main(int argc, char **argv) {
+      char* value = "value";
+
       ZNSession *s = zn_open(zn_config_default());
-      zn_write(s, zn_rname(uri), value, strlen(value));
+      zn_write(s, zn_rname("/res/name"), value, strlen(value));
       zn_close(s);
+
       return 0;
   }
 
@@ -39,7 +40,6 @@ Subscribe
 .. code-block:: c
 
   #include <stdio.h>
-  #include <unistd.h>
   #include "zenoh/net.h"
 
   void data_handler(const zn_sample *sample, const void *arg) {
@@ -50,7 +50,7 @@ Subscribe
 
   int main(int argc, char **argv) {
       ZNSession *s = zn_open(zn_config_default());
-      ZNSubscriber *sub = zn_declare_subscriber(s, zn_rname(uri), zn_subinfo_default(), data_handler, NULL);
+      ZNSubscriber *sub = zn_declare_subscriber(s, zn_rname("/res/name"), zn_subinfo_default(), data_handler, NULL);
 
       char c = 0;
       while (c != 'q') {
@@ -67,7 +67,6 @@ Query
 
 .. code-block:: c
 
-  #include <stdlib.h>
   #include <stdio.h>
   #include <unistd.h>
   #include <string.h>
@@ -81,7 +80,7 @@ Query
 
   int main(int argc, char** argv) {
       ZNSession *s = zn_open(zn_config_default());
-      zn_query(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler, NULL);
+      zn_query(s, zn_rname("/res/name"), "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler, NULL);
 
       sleep(1);
 
