@@ -12,7 +12,6 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
-#include <unistd.h>
 #include "zenoh/net.h"
 
 void data_handler(const zn_sample *sample, const void *arg) {

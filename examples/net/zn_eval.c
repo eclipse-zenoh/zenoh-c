@@ -11,11 +11,9 @@
  * Contributors:
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
-#include "zenoh/net.h"
-#include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include "zenoh/net.h"
 
 char *uri = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";

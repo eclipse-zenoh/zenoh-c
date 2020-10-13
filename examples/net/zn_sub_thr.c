@@ -12,7 +12,6 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include "zenoh/net.h"
 
