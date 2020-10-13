@@ -102,35 +102,61 @@ pub struct ZNScout(std::vec::Vec<Hello>);
 
 pub struct ZNLocators(std::vec::Vec<std::ffi::CString>);
 
+/// A string.
+///
+/// Members:
+///   const char *val: A pointer to the string.
+///   unsigned int len: The length of the string.
+///
 #[repr(C)]
 pub struct zn_string {
     val: *const c_char,
     len: c_uint,
 }
 
+/// An array of bytes.
+///
+/// Members:
+///   const unsigned char *val: A pointer to the bytes array.
+///   unsigned int len: The length of the bytes array.
+///
 #[repr(C)]
 pub struct zn_bytes {
     val: *const c_uchar,
     len: c_uint,
 }
 
+/// A zenoh-net data sample.
+///
+/// A sample is the value associated to a given resource at a given point in time.
+///
+/// Members:
+///   zn_string key: The resource key of this data sample.
+///   zn_bytes value: The value of this data sample.
 #[repr(C)]
 pub struct zn_sample {
     key: zn_string,
     value: zn_bytes,
 }
 
+/// Information on the source of a reply.
+///
+/// Members:
+///   unsigned int kind: The kind of source.
+///   zn_bytes id: The unique id of the source.
 #[repr(C)]
 pub struct zn_source_info {
     kind: c_uint,
     id: zn_bytes,
 }
 
+/// Create a default :c:type:`ZNQueryTarget`.
 #[no_mangle]
 pub extern "C" fn zn_query_target_default() -> *mut ZNQueryTarget {
     Box::into_raw(Box::new(ZNQueryTarget(QueryTarget::default())))
 }
 
+/// Create a default :c:type:`ZNQueryConsolidation`.
 #[no_mangle]
 pub extern "C" fn zn_query_consolidation_default() -> *mut ZNQueryConsolidation {
     Box::into_raw(Box::new(
@@ -138,11 +164,16 @@ pub extern "C" fn zn_query_consolidation_default() -> *mut ZNQueryConsolidation 
     ))
 }
 
+/// Create a no consolidation :c:type:`ZNQueryConsolidation`.
+/// Same resource may be received multiple times from different queriable sources.
 #[no_mangle]
 pub extern "C" fn zn_query_consolidation_none() -> *mut ZNQueryConsolidation {
     Box::into_raw(Box::new(ZNQueryConsolidation(QueryConsolidation::None)))
 }
 
+/// Create an incremental consolidation :c:type:`ZNQueryConsolidation`.
+/// Multiple occurences of the same resource will be filtered by all routers
+/// along the replies path.
 #[no_mangle]
 pub extern "C" fn zn_query_consolidation_incremental() -> *mut ZNQueryConsolidation {
     Box::into_raw(Box::new(ZNQueryConsolidation(
@@ -150,28 +181,51 @@ pub extern "C" fn zn_query_consolidation_incremental() -> *mut ZNQueryConsolidat
     )))
 }
 
+/// Create an last_hop consolidation :c:type:`ZNQueryConsolidation`.
+/// Multiple occurences of the same resource will be filtered by the last router
+/// along the replies path.
 #[no_mangle]
 pub extern "C" fn zn_query_consolidation_last_hop() -> *mut ZNQueryConsolidation {
     Box::into_raw(Box::new(ZNQueryConsolidation(QueryConsolidation::LastHop)))
 }
 
+/// Create a resource key from a resource id.
+///
+/// Parameters:
+///     id: The resource id.
+///
+/// Returns:
+///     Return a new resource key.
 #[no_mangle]
 pub extern "C" fn zn_rid(id: c_ulong) -> *mut ZNResKey {
     Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RId(to_zint!(id)))))
 }
 
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
+/// Create a resource key from a resource id and a suffix.
+///
+/// Parameters:
+///     id: The resource id.
+///     suffix: The suffix.
+///
+/// Returns:
+///     Return a new resource key.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, name: *const c_char) -> *mut ZNResKey {
+pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> *mut ZNResKey {
     Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RIdWithSuffix(
         to_zint!(id),
-        CStr::from_ptr(name).to_str().unwrap().to_string(),
+        CStr::from_ptr(suffix).to_str().unwrap().to_string(),
     ))))
 }
 
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
+/// Create a resource key from a resource name.
+///
+/// Parameters:
+///     id: The resource name.
+///
+/// Returns:
+///     Return a new resource key.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut ZNResKey {
     Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RName(
@@ -179,37 +233,48 @@ pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut ZNResKey {
     ))))
 }
 
-/// Create a set of properties
+/// Return a new empty set of properties.
 #[no_mangle]
 pub extern "C" fn zn_properties_make() -> *mut ZNProperties {
     Box::into_raw(Box::new(ZNProperties(zenoh::net::Properties::new())))
 }
 
-/// Get the properties length
+/// Get the length of the given properties.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
+/// Parameters:
+///     ps: A pointer to the properties.
 ///
+/// Returns:
+///     The length of the given properties.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_properties_len(ps: *mut ZNProperties) -> c_uint {
     (*ps).0.len() as c_uint
 }
 
-/// Get the properties n-th property ID
+/// Get the id of the property at a given index in a set of properties.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
+/// Parameters:
+///     ps: A pointer to the properties.
+///     n: The index of the property.
 ///
+/// Returns:
+///     The id of the property at index ``n`` in properties ``ps``.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_property_id(ps: *mut ZNProperties, n: c_uint) -> c_uint {
     (*ps).0[n as usize].0 as c_uint
 }
 
-/// Get the properties n-th property value
+/// Get the value of the property at a given index in a set of properties.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
+/// Parameters:
+///     ps: A pointer to the properties.
+///     n: The index of the property.
 ///
+/// Returns:
+///     The value of the property at index ``n`` in properties ``ps``.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_property_value(ps: *mut ZNProperties, n: c_uint) -> *const zn_bytes {
     let ptr = (*ps).0[n as usize].1.as_ptr();
@@ -220,11 +285,16 @@ pub unsafe extern "C" fn zn_property_value(ps: *mut ZNProperties, n: c_uint) -> 
     Box::into_raw(value)
 }
 
-/// Add a property
+/// Add a property to a set of properties.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
+/// Parameters:
+///   ps: A pointer to the properties.
+///   id: The id of the property to add.
+///   value: The value of the property to add.
 ///
+/// Returns:
+///     A pointer to the updated properties.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_properties_add(
     ps: *mut ZNProperties,
@@ -236,53 +306,44 @@ pub unsafe extern "C" fn zn_properties_add(
     ps
 }
 
-/// Freen a set of properties
+/// Free a set of properties.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///   ps: A pointer to the properties.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_properties_free(ps: *mut ZNProperties) {
     let bps = Box::from_raw(ps);
     drop(bps);
 }
 
-/// Create an empty set of properties for zenoh net session configuration.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+/// Create an empty set of properties for zenoh-net session configuration.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_empty() -> *mut ZNProperties {
     Box::into_raw(Box::new(ZNProperties(config::empty())))
 }
 
-/// Create a default set of properties for zenoh net session configuration.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+/// Create a default set of properties for zenoh-net session configuration.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_default() -> *mut ZNProperties {
     Box::into_raw(Box::new(ZNProperties(config::default())))
 }
 
-/// Create a default set of properties for peer mode zenoh net session configuration.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+/// Create a default set of properties for peer mode zenoh-net session configuration.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_peer() -> *mut ZNProperties {
     Box::into_raw(Box::new(ZNProperties(config::peer())))
 }
 
-/// Create a default set of properties for peer mode zenoh net session configuration.
+/// Create a default set of properties for client mode zenoh-net session configuration.
 /// If peer is not null, it is added to the configuration as remote peer.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+/// Parameters:
+///   peer: An optional peer locator.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut ZNProperties {
     let locator = if peer.is_null() {
@@ -296,10 +357,7 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut ZNPropertie
 }
 
 /// Return the resource name for this query
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_query_res_name(query: *mut ZNQuery) -> *const zn_string {
     let rn = zn_string {
@@ -310,10 +368,7 @@ pub unsafe extern "C" fn zn_query_res_name(query: *mut ZNQuery) -> *const zn_str
 }
 
 /// Return the predicate for this query
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_query_predicate(query: *mut ZNQuery) -> *const zn_string {
     let pred = zn_string {
@@ -323,19 +378,13 @@ pub unsafe extern "C" fn zn_query_predicate(query: *mut ZNQuery) -> *const zn_st
     Box::into_raw(Box::new(pred))
 }
 
-/// Create the default subscriber info.
-///
-/// This describes a reliable push subscriber without any negotiated
-/// schedule. Starting from this default variants can be created.
+/// Create a default subscription info.
 #[no_mangle]
 pub extern "C" fn zn_subinfo_default() -> *mut ZNSubInfo {
     Box::into_raw(Box::new(ZNSubInfo(SubInfo::default())))
 }
 
-/// Create a subscriber info for a pull subscriber
-///
-/// This describes a reliable pull subscriber without any negotiated
-/// schedule.
+/// Create a pull mode subscription info.
 #[no_mangle]
 pub extern "C" fn zn_subinfo_pull() -> *mut ZNSubInfo {
     let si = SubInfo {
@@ -348,20 +397,14 @@ pub extern "C" fn zn_subinfo_pull() -> *mut ZNSubInfo {
 
 /// Get the number of entities scouted  and available as part of
 /// the ZNScout
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_len(si: *mut ZNScout) -> c_uint {
     (*si).0.len() as c_uint
 }
 
 /// Get the whatami for the scouted entity at the given index
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_whatami(si: *mut ZNScout, idx: c_uint) -> c_uint {
     match (*si).0[idx as usize].whatami {
@@ -371,10 +414,7 @@ pub unsafe extern "C" fn zn_scout_whatami(si: *mut ZNScout, idx: c_uint) -> c_ui
 }
 
 /// Get the peer-id for the scouted entity at the given index
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_peerid(si: *mut ZNScout, idx: c_uint) -> *const c_uchar {
     match &(*si).0[idx as usize].pid {
@@ -384,10 +424,7 @@ pub unsafe extern "C" fn zn_scout_peerid(si: *mut ZNScout, idx: c_uint) -> *cons
 }
 
 /// Get the length of the peer-id for the scouted entity at the given index
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_peerid_len(si: *mut ZNScout, idx: c_uint) -> c_uint {
     match &(*si).0[idx as usize].pid {
@@ -397,10 +434,7 @@ pub unsafe extern "C" fn zn_scout_peerid_len(si: *mut ZNScout, idx: c_uint) -> c
 }
 
 /// Get the locators for the scouted.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_locators(si: *mut ZNScout, idx: c_uint) -> *mut ZNLocators {
     let mut vs = vec![];
@@ -416,40 +450,28 @@ pub unsafe extern "C" fn zn_scout_locators(si: *mut ZNScout, idx: c_uint) -> *mu
 }
 
 /// Get the number of locators for the scouted entity.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_locators_len(ls: *mut ZNLocators) -> c_uint {
     (*ls).0.len() as c_uint
 }
 
 /// Get the locator at the given index.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_locator_get(ls: *mut ZNLocators, idx: c_uint) -> *const c_char {
     (*ls).0[idx as usize].as_ptr()
 }
 
 /// Frees the locators
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut ZNLocators) {
     drop(Box::from_raw(ls))
 }
 
 /// The scout mask allows to specify what to scout for.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it dereferences a pointer.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout(
     what: c_uint,
@@ -475,9 +497,7 @@ pub unsafe extern "C" fn zn_scout(
 }
 
 /// Frees the ZNScout by releasing its associated memory.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does of a pointer into a box.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_free(s: *mut ZNScout) {
     drop(Box::from_raw(s))
@@ -490,13 +510,14 @@ pub extern "C" fn zn_init_logger() {
     env_logger::init();
 }
 
-/// Open a zenoh session
+/// Open a zenoh-net session
 ///
-/// Returns the created session or null if the creation did not succeed
+/// Parameters:
+///     config: A set of properties.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Returns:
+///     The created zenoh-net session or null if the creation did not succeed.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_open(config: *mut ZNProperties) -> *mut ZNSession {
     let config = Box::from_raw(config);
@@ -507,33 +528,43 @@ pub unsafe extern "C" fn zn_open(config: *mut ZNProperties) -> *mut ZNSession {
     }
 }
 
-/// Return information on currently open session along with the the kind of entity for which the
-/// session has been established.
+/// Get informations about an zenoh-net session.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
+/// Parameters:
+///     session: A zenoh-net session.
 ///
+/// Returns:
+///     A set of properties containing informations on the given zenoh-net session.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_info(session: *mut ZNSession) -> *mut ZNProperties {
     let ps = task::block_on((*session).0.info());
     let bps = Box::new(ZNProperties(ps));
     Box::into_raw(bps)
 }
-/// Close a zenoh session
+
+/// Close a zenoh-net session.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///     session: A zenoh-net session.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_close(session: *mut ZNSession) {
     task::block_on((*Box::from_raw(session)).0.close()).unwrap();
 }
 
-/// Declare a zenoh resource
+/// Associate a numerical id with the given resource key.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
+/// This numerical id will be used on the network to save bandwidth and
+/// ease the retrieval of the concerned resource in the routing tables.
 ///
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key to map to a numerical id.
+///
+/// Returns:
+///     A numerical id.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_resource(
     session: *mut ZNSession,
@@ -546,11 +577,16 @@ pub unsafe extern "C" fn zn_declare_resource(
     task::block_on((*session).0.declare_resource(&(*reskey).0)).unwrap() as c_ulong
 }
 
-/// Writes a named resource.
+/// Write data.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key to write.
+///     payload: The value to write.
+///     len: The length of the value to write.
+/// Returns:
+///     ``0`` in case of success, ``1`` in case of failure.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_write(
     session: *mut ZNSession,
@@ -571,13 +607,18 @@ pub unsafe extern "C" fn zn_write(
     }
 }
 
-/// Declares a zenoh publisher
+/// Declare a :c:type:`ZNPublisher` for the given resource key.
 ///
-/// Returns the created publisher or null if the declaration failed.
+/// Written resources that match the given key will only be sent on the network
+/// if matching subscribers exist in the system.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key to publish.
 ///
+/// Returns:
+///    The created :c:type:`ZNPublisher` or null if the declaration failed.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_publisher<'a>(
     session: *mut ZNSession,
@@ -592,23 +633,27 @@ pub unsafe extern "C" fn zn_declare_publisher<'a>(
     )))
 }
 
-// Un-declares a zenoh publisher
+/// Undeclare a :c:type:`ZNPublisher`.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///     sub: The :c:type:`ZNPublisher` to undeclare.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_undeclare_publisher(publ: *mut ZNPublisher) {
     Box::from_raw(publ);
 }
-
-/// Declares a zenoh subscriber
+/// Declare a :c:type:`ZNSubscriber` for the given resource key.
 ///
-/// Returns the created subscriber or null if the declaration failed.
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key to subscribe.
+///     sub_info: The :c:type:`ZNSubInfo` to configure the :c:type:`ZNSubscriber`.
+///     callback: The callback function that will be called each time a data matching the subscribed resource is received.
+///     arg: A pointer that will be passed to the **callback** on each call.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Returns:
+///    The created :c:type:`ZNSubscriber` or null if the declaration failed.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_subscriber(
     session: *mut ZNSession,
@@ -681,11 +726,12 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     Box::into_raw(Box::new(rsub))
 }
 
-// Pulls data on a zenoh pull subscriber
+/// Pull data for a pull mode :c:type:`ZNSubscriber`. The pulled data will be provided
+/// by calling the **callback** function provided to the :c:func:`zn_declare_subscriber` function.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///     sub: The :c:type:`ZNSubscriber` to pull from.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_pull(sub: *mut ZNSubscriber) {
     let sub = Box::from_raw(sub);
@@ -696,11 +742,11 @@ pub unsafe extern "C" fn zn_pull(sub: *mut ZNSubscriber) {
     Box::into_raw(sub);
 }
 
-// Un-declares a zenoh subscriber
+/// Undeclare a :c:type:`ZNSubscriber`.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///     sub: The :c:type:`ZNSubscriber` to undeclare.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut ZNSubscriber) {
     match *Box::from_raw(sub) {
@@ -709,11 +755,17 @@ pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut ZNSubscriber) {
     }
 }
 
-// Issues a zenoh query
+/// Query data from the matching queryables in the system.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key to query.
+///     predicate: An indication to matching queryables about the queried data.
+///     target: The kind of queryables that should be target of this query.
+///     consolidation: The kind of consolidation that should be applied on replies.
+///     callback: The callback function that will be called on reception of replies for this query.
+///     arg: A pointer that will be passed to the **callback** on each call.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_query(
     session: *mut ZNSession,
@@ -764,13 +816,18 @@ pub unsafe extern "C" fn zn_query(
     });
 }
 
-/// Declares a zenoh queryable entity
+/// Declare a :c:type:`ZNQueryable` for the given resource key.
 ///
-/// Returns the queryable entity or null if the creation was unsuccessful.
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key the :c:type:`ZNQueryable` will reply to.
+///     kind: The kind of :c:type:`ZNQueryable`.
+///     callback: The callback function that will be called each time a matching query is received.
+///     arg: A pointer that will be passed to the **callback** on each call.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Returns:
+///    The created :c:type:`ZNQueryable` or null if the declaration failed.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_queryable(
     session: *mut ZNSession,
@@ -817,11 +874,11 @@ pub unsafe extern "C" fn zn_declare_queryable(
     Box::into_raw(Box::new(r))
 }
 
-/// Un-declares a zenoh queryable
+/// Undeclare a :c:type:`ZNQueryable`.
 ///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+/// Parameters:
+///     sub: The :c:type:`ZNQueryable` to undeclare.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_undeclare_queryable(sub: *mut ZNQueryable) {
     match *Box::from_raw(sub) {
@@ -831,10 +888,7 @@ pub unsafe extern "C" fn zn_undeclare_queryable(sub: *mut ZNQueryable) {
 }
 
 /// Sends a reply to a query.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_send_reply(
     query: *mut ZNQuery,
@@ -853,10 +907,7 @@ pub unsafe extern "C" fn zn_send_reply(
 
 /// Notifies the zenoh runtime that there won't be any more replies sent for this
 /// query.
-///
-/// # Safety
-/// The main reason for this function to be unsafe is that it does casting of a pointer into a box.
-///
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_close_query(query: *mut ZNQuery) {
     let bq = Box::from_raw(query);

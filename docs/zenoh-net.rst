@@ -12,17 +12,12 @@
 ..   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 ..
 
-*******
-zenoh-c
-*******
-
-The *libzenoh-c* library provides a C client API for the zenoh protocol.
-
-An introduction to zenoh and its concepts is available on `zenoh.io <https://zenoh.io>`_.
-
-Note that only the zenoh-net API is available in c at this time.
+*************
+zenoh-net API
+*************
 
 .. toctree::
     :maxdepth: 10
 
-    zenoh-net
+    examples
+    api
