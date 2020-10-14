@@ -15,25 +15,25 @@
 #include "zenoh/net.h"
 
 int main(int argc, char** argv) {
-    ZNProperties *config = zn_config_peer();
+    zn_properties_t *config = zn_config_peer();
     if (argc > 1) {
         zn_properties_add(config, ZN_PEER_KEY, argv[1]);
     }
     
     printf("Openning session...\n");
-    ZNSession *s = zn_open(config);
+    zn_session_t *s = zn_open(config);
     if (s == 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    ZNProperties *ps = zn_info(s);
+    zn_properties_t *ps = zn_info(s);
     int n = zn_properties_len(ps);
     int id;
 
     for (int i = 0; i < n; ++i) {
         id = zn_property_id(ps, i);
-        const zn_bytes *bs = zn_property_value(ps, i);
+        const zn_bytes_t *bs = zn_property_value(ps, i);
         printf(" %d : ", id);
         for (int j = 0; j < bs->len; j++) {
           printf("%02X", (int)bs->val[j]);

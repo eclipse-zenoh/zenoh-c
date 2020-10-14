@@ -22,12 +22,12 @@ int main(int argc, char** argv) {
   }
   size_t len = atoi(argv[1]);  
   printf("Running throughput test for payload of %zu bytes.\n", len);
-  ZNProperties *config = zn_config_peer();
+  zn_properties_t *config = zn_config_peer();
   if (argc > 2) {
     zn_properties_add(config, ZN_PEER_KEY, argv[2]);
   }
 
-  ZNSession *s = zn_open(config);
+  zn_session_t *s = zn_open(config);
   if (s == 0) {
     printf("Unable to open session!\n");
     exit(-1);
@@ -36,8 +36,8 @@ int main(int argc, char** argv) {
   char *data = (char*) malloc(len);
   memset(data, 1, len);
 
-  ZNResKey *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
-  ZNPublisher *pub = zn_declare_publisher(s, rid);
+  zn_reskey_t *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
+  zn_publisher_t *pub = zn_declare_publisher(s, rid);
   if (pub == 0) {
       printf("Unable to declare publisher.\n");
       exit(-1);

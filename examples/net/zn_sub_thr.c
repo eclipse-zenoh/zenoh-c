@@ -28,7 +28,7 @@ void print_stats(volatile struct timeval *start, volatile struct timeval *stop) 
   printf("%f msgs/sec\n", thpt);
 }
 
-void data_handler(const zn_sample *sample, const void *arg) {
+void data_handler(const zn_sample_t *sample, const void *arg) {
     struct timeval tv;
     if (count == 0) {
         gettimeofday(&tv, 0);
@@ -45,20 +45,20 @@ void data_handler(const zn_sample *sample, const void *arg) {
 }
 
 int main(int argc, char **argv) {
-    ZNProperties *config = zn_config_peer();
+    zn_properties_t *config = zn_config_peer();
     if (argc > 1) {
         zn_properties_add(config, ZN_PEER_KEY, argv[1]);
     }
 
     printf("Openning session...\n");
-    ZNSession *s = zn_open(config);
+    zn_session_t *s = zn_open(config);
     if (s == 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    ZNResKey *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
-    ZNSubscriber *sub = zn_declare_subscriber(s, rid, zn_subinfo_default(), data_handler, NULL);
+    zn_reskey_t *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
+    zn_subscriber_t *sub = zn_declare_subscriber(s, rid, zn_subinfo_default(), data_handler, NULL);
     if (sub == 0) {
         printf("Unable to declare subscriber.\n");
         exit(-1);

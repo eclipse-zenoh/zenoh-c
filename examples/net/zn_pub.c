@@ -25,13 +25,13 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         value = argv[2];
     }
-    ZNProperties *config = zn_config_peer();
+    zn_properties_t *config = zn_config_peer();
     if (argc > 3) {
         zn_properties_add(config, ZN_PEER_KEY, argv[3]);
     }
 
     printf("Openning session...\n");
-    ZNSession *s = zn_open(config);
+    zn_session_t *s = zn_open(config);
     if (s == 0) {
         printf("Unable to open session!\n");
         exit(-1);
@@ -40,10 +40,10 @@ int main(int argc, char **argv) {
     printf("Declaring Resource '%s'", uri);
     unsigned long rid = zn_declare_resource(s, zn_rname(uri));
     printf(" => RId %lu\n", rid);
-    ZNResKey *reskey = zn_rid(rid);
+    zn_reskey_t *reskey = zn_rid(rid);
 
     printf("Declaring Publisher on %lu\n", rid);
-    ZNPublisher *pub = zn_declare_publisher(s, reskey);
+    zn_publisher_t *pub = zn_declare_publisher(s, reskey);
     if (pub == 0) {
         printf("Unable to declare publisher.\n");
         exit(-1);

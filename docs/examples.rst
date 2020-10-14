@@ -27,7 +27,7 @@ Publish
   int main(int argc, char **argv) {
       char* value = "value";
 
-      ZNSession *s = zn_open(zn_config_default());
+      zn_session_t *s = zn_open(zn_config_default());
       zn_write(s, zn_rname("/res/name"), value, strlen(value));
       zn_close(s);
 
@@ -42,15 +42,15 @@ Subscribe
   #include <stdio.h>
   #include "zenoh/net.h"
 
-  void data_handler(const zn_sample *sample, const void *arg) {
+  void data_handler(const zn_sample_t *sample, const void *arg) {
       printf(">> Received (%.*s, %.*s)\n",
           sample->key.len, sample->key.val,
           sample->value.len, sample->value.val);
   }
 
   int main(int argc, char **argv) {
-      ZNSession *s = zn_open(zn_config_default());
-      ZNSubscriber *sub = zn_declare_subscriber(s, zn_rname("/res/name"), zn_subinfo_default(), data_handler, NULL);
+      zn_session_t *s = zn_open(zn_config_default());
+      zn_subscriber_t *sub = zn_declare_subscriber(s, zn_rname("/res/name"), zn_subinfo_default(), data_handler, NULL);
 
       char c = 0;
       while (c != 'q') {
@@ -72,14 +72,14 @@ Query
   #include <string.h>
   #include "zenoh/net.h"
 
-  void reply_handler(const zn_source_info *info, const zn_sample *sample, const void *arg) {
+  void reply_handler(const zn_source_info_t *info, const zn_sample_t *sample, const void *arg) {
       printf(">> Received (%.*s, %.*s)\n",
           sample->key.len, sample->key.val,
           sample->value.len, sample->value.val);
   }
 
   int main(int argc, char** argv) {
-      ZNSession *s = zn_open(zn_config_default());
+      zn_session_t *s = zn_open(zn_config_default());
       zn_query(s, zn_rname("/res/name"), "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler, NULL);
 
       sleep(1);

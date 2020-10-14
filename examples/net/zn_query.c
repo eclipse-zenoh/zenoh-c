@@ -16,7 +16,7 @@
 #include <string.h>
 #include "zenoh/net.h"
 
-void reply_handler(const zn_source_info *info, const zn_sample *sample, const void *arg) {
+void reply_handler(const zn_source_info_t *info, const zn_sample_t *sample, const void *arg) {
     printf(">> [Reply handler] received (%.*s, %.*s)\n",
         sample->key.len, sample->key.val,
         sample->value.len, sample->value.val);
@@ -27,13 +27,13 @@ int main(int argc, char** argv) {
     if (argc > 1) {
         uri = argv[1];
     }
-    ZNProperties *config = zn_config_peer();
+    zn_properties_t *config = zn_config_peer();
     if (argc > 2) {
         zn_properties_add(config, ZN_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
-    ZNSession *s = zn_open(config);
+    zn_session_t *s = zn_open(config);
     if (s == 0) {
         printf("Unable to open session!\n");
         exit(-1);

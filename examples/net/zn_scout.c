@@ -32,7 +32,7 @@ void fprintwhatami(FILE *stream, unsigned int whatami) {
     else  { fprintf(stream, "\"Other\""); }
 }
 
-void fprintlocators(FILE *stream, ZNLocators *locs) {
+void fprintlocators(FILE *stream, zn_locators_t *locs) {
     fprintf(stream, "[");
     for (int i = 0; i < zn_scout_locators_len(locs); i++) {
         fprintf(stream, "\"");
@@ -45,23 +45,23 @@ void fprintlocators(FILE *stream, ZNLocators *locs) {
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, ZNScout *scout, unsigned int idx) {
+void fprinthello(FILE *stream, zn_scout_t *scout, unsigned int idx) {
     fprintf(stream, "Hello { pid: ");
     fprintpid(stream, zn_scout_peerid(scout, idx), zn_scout_peerid_len(scout, idx));
     fprintf(stream, ", whatami: ");
     fprintwhatami(stream, zn_scout_whatami(scout, idx));
     fprintf(stream, ", locators: ");
-    ZNLocators *locs = zn_scout_locators(scout, idx);
+    zn_locators_t *locs = zn_scout_locators(scout, idx);
     fprintlocators(stream, locs);
     zn_scout_locators_free(locs);
     fprintf(stream, " }");
 }
 
 int main(int argc, char** argv) {
-  ZNProperties *config = zn_config_default();
+  zn_properties_t *config = zn_config_default();
 
   printf("Scouting...\n");
-  ZNScout *scout = zn_scout(ROUTER | PEER, config, 1000);  
+  zn_scout_t *scout = zn_scout(ROUTER | PEER, config, 1000);  
   if (zn_scout_len(scout) > 0) {
     for (unsigned int i = 0; i < zn_scout_len(scout); ++i) {
         fprinthello(stdout, scout, i);

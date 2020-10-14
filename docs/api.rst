@@ -22,20 +22,20 @@ Types
 String
 ------
 
-.. autocstruct:: zenoh/net.h::zn_string
+.. autocstruct:: zenoh/net.h::zn_string_t
 
 Bytes
 -----
 
-.. autocstruct:: zenoh/net.h::zn_bytes
+.. autocstruct:: zenoh/net.h::zn_bytes_t
 
 Properties
 ----------
 
-.. c:type:: ZNProperties
+.. c:type:: zn_properties_t
 
   Data structure representing a set of id/value properties where the id is an unsigned int
-  and the value a :c:type:`zn_bytes` bytes array. Several entries with the same id are allowed.
+  and the value a :c:type:`zn_bytes_t` bytes array. Several entries with the same id are allowed.
 
 .. autocfunction:: zenoh/net.h::zn_properties_make
 
@@ -55,7 +55,7 @@ Session
 Session configuration
 ---------------------
 
-A zenoh-net session is configured through a set of :c:type:`ZNProperties`.
+A zenoh-net session is configured through a set of :c:type:`zn_properties_t`.
 
 Several properties with the same id are accepted. If only one property is 
 expected for a given id, then the last property with the id is used.
@@ -149,7 +149,7 @@ session configuration and the associated accepted values.
     - Accepted values : ``"true"``, ``"false"``.
     - Default value : ``"true"``.
 
-The following functions allow to create default sets of :c:type:`ZNProperties` for 
+The following functions allow to create default sets of :c:type:`zn_properties_t` for 
 zenoh-net session configuration. The returned configurations can be amended with extra 
 options with :c:func:`zn_properties_add`.
 
@@ -176,7 +176,7 @@ Resource
 Resource key
 ------------
 
-.. c:type:: ZNResKey
+.. c:type:: zn_reskey_t
 
   A resource key.
   
@@ -200,7 +200,7 @@ Resource key
 Sample
 ------
 
-.. autocstruct:: zenoh/net.h::zn_sample
+.. autocstruct:: zenoh/net.h::zn_sample_t
 
 Resource declaration
 --------------------
@@ -210,7 +210,7 @@ Resource declaration
 Publication
 ===========
 
-.. c:type:: ZNPublisherr
+.. c:type:: zn_publisher_tr
 
   A zenoh-net Publisher.
 
@@ -223,13 +223,13 @@ Publication
 Subscription
 ============
 
-.. c:type:: ZNSubscriber
+.. c:type:: zn_subscriber_t
 
   A zenoh-net subscriber.
 
-.. c:type:: ZNSubInfo
+.. c:type:: zn_subinfo_t
 
-  Informations to be passed to :c:func:`zn_declare_subscriber` to configure the created :c:type:`ZNSubscriber`.
+  Informations to be passed to :c:func:`zn_declare_subscriber` to configure the created :c:type:`zn_subscriber_t`.
 
 .. autocfunction:: zenoh/net.h::zn_subinfo_default
 
@@ -244,13 +244,13 @@ Subscription
 Query
 =====
 
-.. c:type:: ZNQueryTarget
+.. c:type:: zn_query_target_t
 
   The zenoh-net queryables that should be target of a :c:func:`zn_query`.
 
 .. autocfunction:: zenoh/net.h::zn_query_target_default
 
-.. c:type:: ZNQueryConsolidation
+.. c:type:: zn_query_consolidation_t
 
   The kind of consolidation that should be applied on replies to a :c:func:`zn_query`.
 
@@ -262,14 +262,14 @@ Query
 
 .. autocfunction:: zenoh/net.h::zn_query_consolidation_last_hop
 
-.. autocstruct:: zenoh/net.h::zn_source_info
+.. autocstruct:: zenoh/net.h::zn_source_info_t
 
 .. autocfunction:: zenoh/net.h::zn_query
 
 Queryable
 =========
 
-.. c:type:: ZNQueryable
+.. c:type:: zn_queryable_t
 
   The zenoh-net Queryable.
 

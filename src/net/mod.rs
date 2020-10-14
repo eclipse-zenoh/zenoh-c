@@ -73,34 +73,35 @@ pub static ZN_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
 #[no_mangle]
 pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
 
-pub struct ZNSession(zenoh::net::Session);
-
-pub struct ZNResKey(zenoh::net::ResKey);
-
-pub struct ZNProperties(zenoh::net::Properties);
+#[allow(non_camel_case_types)]
+pub struct zn_session_t(zenoh::net::Session);
+#[allow(non_camel_case_types)]
+pub struct zn_reskey_t(zenoh::net::ResKey);
+#[allow(non_camel_case_types)]
+pub struct zn_properties_t(zenoh::net::Properties);
 
 enum ZnSubOps {
     Pull,
     Close,
 }
-
-pub struct ZNPublisher<'a>(zenoh::net::Publisher<'a>);
-
-pub struct ZNSubscriber(Option<Arc<Sender<ZnSubOps>>>);
-
-pub struct ZNQueryTarget(zenoh::net::QueryTarget);
-
-pub struct ZNQueryConsolidation(zenoh::net::QueryConsolidation);
-
-pub struct ZNQueryable(Option<Arc<Sender<bool>>>);
-
-pub struct ZNQuery(zenoh::net::Query);
-
-pub struct ZNSubInfo(zenoh::net::SubInfo);
-
-pub struct ZNScout(std::vec::Vec<Hello>);
-
-pub struct ZNLocators(std::vec::Vec<std::ffi::CString>);
+#[allow(non_camel_case_types)]
+pub struct zn_publisher_t<'a>(zenoh::net::Publisher<'a>);
+#[allow(non_camel_case_types)]
+pub struct zn_subscriber_t(Option<Arc<Sender<ZnSubOps>>>);
+#[allow(non_camel_case_types)]
+pub struct zn_query_target_t(zenoh::net::QueryTarget);
+#[allow(non_camel_case_types)]
+pub struct zn_query_consolidation_t(zenoh::net::QueryConsolidation);
+#[allow(non_camel_case_types)]
+pub struct zn_queryable_t(Option<Arc<Sender<bool>>>);
+#[allow(non_camel_case_types)]
+pub struct zn_query_t(zenoh::net::Query);
+#[allow(non_camel_case_types)]
+pub struct zn_subinfo_t(zenoh::net::SubInfo);
+#[allow(non_camel_case_types)]
+pub struct zn_scout_t(std::vec::Vec<Hello>);
+#[allow(non_camel_case_types)]
+pub struct zn_locators_t(std::vec::Vec<std::ffi::CString>);
 
 /// A string.
 ///
@@ -109,7 +110,7 @@ pub struct ZNLocators(std::vec::Vec<std::ffi::CString>);
 ///   unsigned int len: The length of the string.
 ///
 #[repr(C)]
-pub struct zn_string {
+pub struct zn_string_t {
     val: *const c_char,
     len: c_uint,
 }
@@ -121,7 +122,7 @@ pub struct zn_string {
 ///   unsigned int len: The length of the bytes array.
 ///
 #[repr(C)]
-pub struct zn_bytes {
+pub struct zn_bytes_t {
     val: *const c_uchar,
     len: c_uint,
 }
@@ -131,62 +132,62 @@ pub struct zn_bytes {
 /// A sample is the value associated to a given resource at a given point in time.
 ///
 /// Members:
-///   zn_string key: The resource key of this data sample.
-///   zn_bytes value: The value of this data sample.
+///   zn_string_t key: The resource key of this data sample.
+///   zn_bytes_t value: The value of this data sample.
 #[repr(C)]
-pub struct zn_sample {
-    key: zn_string,
-    value: zn_bytes,
+pub struct zn_sample_t {
+    key: zn_string_t,
+    value: zn_bytes_t,
 }
 
 /// Information on the source of a reply.
 ///
 /// Members:
 ///   unsigned int kind: The kind of source.
-///   zn_bytes id: The unique id of the source.
+///   zn_bytes_t id: The unique id of the source.
 #[repr(C)]
-pub struct zn_source_info {
+pub struct zn_source_info_t {
     kind: c_uint,
-    id: zn_bytes,
+    id: zn_bytes_t,
 }
 
-/// Create a default :c:type:`ZNQueryTarget`.
+/// Create a default :c:type:`zn_query_target_t`.
 #[no_mangle]
-pub extern "C" fn zn_query_target_default() -> *mut ZNQueryTarget {
-    Box::into_raw(Box::new(ZNQueryTarget(QueryTarget::default())))
+pub extern "C" fn zn_query_target_default() -> *mut zn_query_target_t {
+    Box::into_raw(Box::new(zn_query_target_t(QueryTarget::default())))
 }
 
-/// Create a default :c:type:`ZNQueryConsolidation`.
+/// Create a default :c:type:`zn_query_consolidation_t`.
 #[no_mangle]
-pub extern "C" fn zn_query_consolidation_default() -> *mut ZNQueryConsolidation {
+pub extern "C" fn zn_query_consolidation_default() -> *mut zn_query_consolidation_t {
     Box::into_raw(Box::new(
-        ZNQueryConsolidation(QueryConsolidation::default()),
+        zn_query_consolidation_t(QueryConsolidation::default()),
     ))
 }
 
-/// Create a no consolidation :c:type:`ZNQueryConsolidation`.
+/// Create a no consolidation :c:type:`zn_query_consolidation_t`.
 /// Same resource may be received multiple times from different queriable sources.
 #[no_mangle]
-pub extern "C" fn zn_query_consolidation_none() -> *mut ZNQueryConsolidation {
-    Box::into_raw(Box::new(ZNQueryConsolidation(QueryConsolidation::None)))
+pub extern "C" fn zn_query_consolidation_none() -> *mut zn_query_consolidation_t {
+    Box::into_raw(Box::new(zn_query_consolidation_t(QueryConsolidation::None)))
 }
 
-/// Create an incremental consolidation :c:type:`ZNQueryConsolidation`.
+/// Create an incremental consolidation :c:type:`zn_query_consolidation_t`.
 /// Multiple occurences of the same resource will be filtered by all routers
 /// along the replies path.
 #[no_mangle]
-pub extern "C" fn zn_query_consolidation_incremental() -> *mut ZNQueryConsolidation {
-    Box::into_raw(Box::new(ZNQueryConsolidation(
+pub extern "C" fn zn_query_consolidation_incremental() -> *mut zn_query_consolidation_t {
+    Box::into_raw(Box::new(zn_query_consolidation_t(
         QueryConsolidation::Incremental,
     )))
 }
 
-/// Create an last_hop consolidation :c:type:`ZNQueryConsolidation`.
+/// Create an last_hop consolidation :c:type:`zn_query_consolidation_t`.
 /// Multiple occurences of the same resource will be filtered by the last router
 /// along the replies path.
 #[no_mangle]
-pub extern "C" fn zn_query_consolidation_last_hop() -> *mut ZNQueryConsolidation {
-    Box::into_raw(Box::new(ZNQueryConsolidation(QueryConsolidation::LastHop)))
+pub extern "C" fn zn_query_consolidation_last_hop() -> *mut zn_query_consolidation_t {
+    Box::into_raw(Box::new(zn_query_consolidation_t(QueryConsolidation::LastHop)))
 }
 
 /// Create a resource key from a resource id.
@@ -197,8 +198,8 @@ pub extern "C" fn zn_query_consolidation_last_hop() -> *mut ZNQueryConsolidation
 /// Returns:
 ///     Return a new resource key.
 #[no_mangle]
-pub extern "C" fn zn_rid(id: c_ulong) -> *mut ZNResKey {
-    Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RId(to_zint!(id)))))
+pub extern "C" fn zn_rid(id: c_ulong) -> *mut zn_reskey_t {
+    Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RId(to_zint!(id)))))
 }
 
 /// Create a resource key from a resource id and a suffix.
@@ -211,8 +212,8 @@ pub extern "C" fn zn_rid(id: c_ulong) -> *mut ZNResKey {
 ///     Return a new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> *mut ZNResKey {
-    Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RIdWithSuffix(
+pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> *mut zn_reskey_t {
+    Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RIdWithSuffix(
         to_zint!(id),
         CStr::from_ptr(suffix).to_str().unwrap().to_string(),
     ))))
@@ -227,16 +228,16 @@ pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, suffix: *const c_char) 
 ///     Return a new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut ZNResKey {
-    Box::into_raw(Box::new(ZNResKey(zenoh::net::ResKey::RName(
+pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut zn_reskey_t {
+    Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RName(
         CStr::from_ptr(name).to_str().unwrap().to_string(),
     ))))
 }
 
 /// Return a new empty set of properties.
 #[no_mangle]
-pub extern "C" fn zn_properties_make() -> *mut ZNProperties {
-    Box::into_raw(Box::new(ZNProperties(zenoh::net::Properties::new())))
+pub extern "C" fn zn_properties_make() -> *mut zn_properties_t {
+    Box::into_raw(Box::new(zn_properties_t(zenoh::net::Properties::new())))
 }
 
 /// Get the length of the given properties.
@@ -248,7 +249,7 @@ pub extern "C" fn zn_properties_make() -> *mut ZNProperties {
 ///     The length of the given properties.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_properties_len(ps: *mut ZNProperties) -> c_uint {
+pub unsafe extern "C" fn zn_properties_len(ps: *mut zn_properties_t) -> c_uint {
     (*ps).0.len() as c_uint
 }
 
@@ -262,7 +263,7 @@ pub unsafe extern "C" fn zn_properties_len(ps: *mut ZNProperties) -> c_uint {
 ///     The id of the property at index ``n`` in properties ``ps``.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_property_id(ps: *mut ZNProperties, n: c_uint) -> c_uint {
+pub unsafe extern "C" fn zn_property_id(ps: *mut zn_properties_t, n: c_uint) -> c_uint {
     (*ps).0[n as usize].0 as c_uint
 }
 
@@ -276,9 +277,9 @@ pub unsafe extern "C" fn zn_property_id(ps: *mut ZNProperties, n: c_uint) -> c_u
 ///     The value of the property at index ``n`` in properties ``ps``.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_property_value(ps: *mut ZNProperties, n: c_uint) -> *const zn_bytes {
+pub unsafe extern "C" fn zn_property_value(ps: *mut zn_properties_t, n: c_uint) -> *const zn_bytes_t {
     let ptr = (*ps).0[n as usize].1.as_ptr();
-    let value = Box::new(zn_bytes {
+    let value = Box::new(zn_bytes_t {
         val: ptr as *const c_uchar,
         len: (*ps).0[n as usize].1.len() as c_uint,
     });
@@ -297,10 +298,10 @@ pub unsafe extern "C" fn zn_property_value(ps: *mut ZNProperties, n: c_uint) -> 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_properties_add(
-    ps: *mut ZNProperties,
+    ps: *mut zn_properties_t,
     id: c_ulong,
     value: *const c_char,
-) -> *mut ZNProperties {
+) -> *mut zn_properties_t {
     let bs = CStr::from_ptr(value).to_bytes();
     (*ps).0.push((to_zint!(id), Vec::from(bs)));
     ps
@@ -312,7 +313,7 @@ pub unsafe extern "C" fn zn_properties_add(
 ///   ps: A pointer to the properties.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_properties_free(ps: *mut ZNProperties) {
+pub unsafe extern "C" fn zn_properties_free(ps: *mut zn_properties_t) {
     let bps = Box::from_raw(ps);
     drop(bps);
 }
@@ -320,22 +321,22 @@ pub unsafe extern "C" fn zn_properties_free(ps: *mut ZNProperties) {
 /// Create an empty set of properties for zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zn_config_empty() -> *mut ZNProperties {
-    Box::into_raw(Box::new(ZNProperties(config::empty())))
+pub extern "C" fn zn_config_empty() -> *mut zn_properties_t {
+    Box::into_raw(Box::new(zn_properties_t(config::empty())))
 }
 
 /// Create a default set of properties for zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zn_config_default() -> *mut ZNProperties {
-    Box::into_raw(Box::new(ZNProperties(config::default())))
+pub extern "C" fn zn_config_default() -> *mut zn_properties_t {
+    Box::into_raw(Box::new(zn_properties_t(config::default())))
 }
 
 /// Create a default set of properties for peer mode zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zn_config_peer() -> *mut ZNProperties {
-    Box::into_raw(Box::new(ZNProperties(config::peer())))
+pub extern "C" fn zn_config_peer() -> *mut zn_properties_t {
+    Box::into_raw(Box::new(zn_properties_t(config::peer())))
 }
 
 /// Create a default set of properties for client mode zenoh-net session configuration.
@@ -345,7 +346,7 @@ pub extern "C" fn zn_config_peer() -> *mut ZNProperties {
 ///   peer: An optional peer locator.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut ZNProperties {
+pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properties_t {
     let locator = if peer.is_null() {
         None
     } else if let Ok(locator) = CString::from_raw(peer).into_string() {
@@ -353,14 +354,14 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut ZNPropertie
     } else {
         return std::ptr::null_mut();
     };
-    Box::into_raw(Box::new(ZNProperties(config::client(locator))))
+    Box::into_raw(Box::new(zn_properties_t(config::client(locator))))
 }
 
 /// Return the resource name for this query
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_query_res_name(query: *mut ZNQuery) -> *const zn_string {
-    let rn = zn_string {
+pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> *const zn_string_t {
+    let rn = zn_string_t {
         val: (*query).0.res_name.as_ptr() as *const c_char,
         len: (*query).0.res_name.len() as c_uint,
     };
@@ -370,8 +371,8 @@ pub unsafe extern "C" fn zn_query_res_name(query: *mut ZNQuery) -> *const zn_str
 /// Return the predicate for this query
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_query_predicate(query: *mut ZNQuery) -> *const zn_string {
-    let pred = zn_string {
+pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> *const zn_string_t {
+    let pred = zn_string_t {
         val: (*query).0.predicate.as_ptr() as *const c_char,
         len: (*query).0.predicate.len() as c_uint,
     };
@@ -380,33 +381,33 @@ pub unsafe extern "C" fn zn_query_predicate(query: *mut ZNQuery) -> *const zn_st
 
 /// Create a default subscription info.
 #[no_mangle]
-pub extern "C" fn zn_subinfo_default() -> *mut ZNSubInfo {
-    Box::into_raw(Box::new(ZNSubInfo(SubInfo::default())))
+pub extern "C" fn zn_subinfo_default() -> *mut zn_subinfo_t {
+    Box::into_raw(Box::new(zn_subinfo_t(SubInfo::default())))
 }
 
 /// Create a pull mode subscription info.
 #[no_mangle]
-pub extern "C" fn zn_subinfo_pull() -> *mut ZNSubInfo {
+pub extern "C" fn zn_subinfo_pull() -> *mut zn_subinfo_t {
     let si = SubInfo {
         reliability: Reliability::Reliable,
         mode: SubMode::Pull,
         period: None,
     };
-    Box::into_raw(Box::new(ZNSubInfo(si)))
+    Box::into_raw(Box::new(zn_subinfo_t(si)))
 }
 
 /// Get the number of entities scouted  and available as part of
-/// the ZNScout
+/// the zn_scout_t
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_len(si: *mut ZNScout) -> c_uint {
+pub unsafe extern "C" fn zn_scout_len(si: *mut zn_scout_t) -> c_uint {
     (*si).0.len() as c_uint
 }
 
 /// Get the whatami for the scouted entity at the given index
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_whatami(si: *mut ZNScout, idx: c_uint) -> c_uint {
+pub unsafe extern "C" fn zn_scout_whatami(si: *mut zn_scout_t, idx: c_uint) -> c_uint {
     match (*si).0[idx as usize].whatami {
         Some(w) => w as c_uint,
         None => ROUTER as c_uint,
@@ -416,7 +417,7 @@ pub unsafe extern "C" fn zn_scout_whatami(si: *mut ZNScout, idx: c_uint) -> c_ui
 /// Get the peer-id for the scouted entity at the given index
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_peerid(si: *mut ZNScout, idx: c_uint) -> *const c_uchar {
+pub unsafe extern "C" fn zn_scout_peerid(si: *mut zn_scout_t, idx: c_uint) -> *const c_uchar {
     match &(*si).0[idx as usize].pid {
         Some(v) => v.as_slice().as_ptr() as *const c_uchar,
         None => std::ptr::null(),
@@ -426,7 +427,7 @@ pub unsafe extern "C" fn zn_scout_peerid(si: *mut ZNScout, idx: c_uint) -> *cons
 /// Get the length of the peer-id for the scouted entity at the given index
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_peerid_len(si: *mut ZNScout, idx: c_uint) -> c_uint {
+pub unsafe extern "C" fn zn_scout_peerid_len(si: *mut zn_scout_t, idx: c_uint) -> c_uint {
     match &(*si).0[idx as usize].pid {
         Some(v) => v.as_slice().len() as c_uint,
         None => 0,
@@ -436,7 +437,7 @@ pub unsafe extern "C" fn zn_scout_peerid_len(si: *mut ZNScout, idx: c_uint) -> c
 /// Get the locators for the scouted.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_locators(si: *mut ZNScout, idx: c_uint) -> *mut ZNLocators {
+pub unsafe extern "C" fn zn_scout_locators(si: *mut zn_scout_t, idx: c_uint) -> *mut zn_locators_t {
     let mut vs = vec![];
     match &(*si).0[idx as usize].locators {
         Some(ls) => {
@@ -446,27 +447,27 @@ pub unsafe extern "C" fn zn_scout_locators(si: *mut ZNScout, idx: c_uint) -> *mu
         }
         None => (),
     }
-    Box::into_raw(Box::new(ZNLocators(vs)))
+    Box::into_raw(Box::new(zn_locators_t(vs)))
 }
 
 /// Get the number of locators for the scouted entity.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_locators_len(ls: *mut ZNLocators) -> c_uint {
+pub unsafe extern "C" fn zn_scout_locators_len(ls: *mut zn_locators_t) -> c_uint {
     (*ls).0.len() as c_uint
 }
 
 /// Get the locator at the given index.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_locator_get(ls: *mut ZNLocators, idx: c_uint) -> *const c_char {
+pub unsafe extern "C" fn zn_scout_locator_get(ls: *mut zn_locators_t, idx: c_uint) -> *const c_char {
     (*ls).0[idx as usize].as_ptr()
 }
 
 /// Frees the locators
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut ZNLocators) {
+pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut zn_locators_t) {
     drop(Box::from_raw(ls))
 }
 
@@ -475,9 +476,9 @@ pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut ZNLocators) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout(
     what: c_uint,
-    config: *mut ZNProperties,
+    config: *mut zn_properties_t,
     scout_period: c_ulong,
-) -> *mut ZNScout {
+) -> *mut zn_scout_t {
     let what = what as ZInt;
     let config = Box::from_raw(config);
 
@@ -493,13 +494,13 @@ pub unsafe extern "C" fn zn_scout(
         FutureExt::race(scout, timeout).await;
         hs
     });
-    Box::into_raw(Box::new(ZNScout(hellos)))
+    Box::into_raw(Box::new(zn_scout_t(hellos)))
 }
 
-/// Frees the ZNScout by releasing its associated memory.
+/// Frees the zn_scout_t by releasing its associated memory.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_free(s: *mut ZNScout) {
+pub unsafe extern "C" fn zn_scout_free(s: *mut zn_scout_t) {
     drop(Box::from_raw(s))
 }
 
@@ -519,11 +520,11 @@ pub extern "C" fn zn_init_logger() {
 ///     The created zenoh-net session or null if the creation did not succeed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_open(config: *mut ZNProperties) -> *mut ZNSession {
+pub unsafe extern "C" fn zn_open(config: *mut zn_properties_t) -> *mut zn_session_t {
     let config = Box::from_raw(config);
     let s = task::block_on(async move { open((*config).0).await });
     match s {
-        Ok(v) => Box::into_raw(Box::new(ZNSession(v))),
+        Ok(v) => Box::into_raw(Box::new(zn_session_t(v))),
         Err(_) => std::ptr::null_mut(),
     }
 }
@@ -537,9 +538,9 @@ pub unsafe extern "C" fn zn_open(config: *mut ZNProperties) -> *mut ZNSession {
 ///     A set of properties containing informations on the given zenoh-net session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_info(session: *mut ZNSession) -> *mut ZNProperties {
+pub unsafe extern "C" fn zn_info(session: *mut zn_session_t) -> *mut zn_properties_t {
     let ps = task::block_on((*session).0.info());
-    let bps = Box::new(ZNProperties(ps));
+    let bps = Box::new(zn_properties_t(ps));
     Box::into_raw(bps)
 }
 
@@ -549,7 +550,7 @@ pub unsafe extern "C" fn zn_info(session: *mut ZNSession) -> *mut ZNProperties {
 ///     session: A zenoh-net session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_close(session: *mut ZNSession) {
+pub unsafe extern "C" fn zn_close(session: *mut zn_session_t) {
     task::block_on((*Box::from_raw(session)).0.close()).unwrap();
 }
 
@@ -567,8 +568,8 @@ pub unsafe extern "C" fn zn_close(session: *mut ZNSession) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_resource(
-    session: *mut ZNSession,
-    reskey: *mut ZNResKey,
+    session: *mut zn_session_t,
+    reskey: *mut zn_reskey_t,
 ) -> c_ulong {
     if session.is_null() || reskey.is_null() {
         return 0;
@@ -589,8 +590,8 @@ pub unsafe extern "C" fn zn_declare_resource(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_write(
-    session: *mut ZNSession,
-    reskey: *mut ZNResKey,
+    session: *mut zn_session_t,
+    reskey: *mut zn_reskey_t,
     payload: *const c_char,
     len: c_uint,
 ) -> c_int {
@@ -607,7 +608,7 @@ pub unsafe extern "C" fn zn_write(
     }
 }
 
-/// Declare a :c:type:`ZNPublisher` for the given resource key.
+/// Declare a :c:type:`zn_publisher_t` for the given resource key.
 ///
 /// Written resources that match the given key will only be sent on the network
 /// if matching subscribers exist in the system.
@@ -617,51 +618,51 @@ pub unsafe extern "C" fn zn_write(
 ///     resource: The resource key to publish.
 ///
 /// Returns:
-///    The created :c:type:`ZNPublisher` or null if the declaration failed.
+///    The created :c:type:`zn_publisher_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_publisher<'a>(
-    session: *mut ZNSession,
-    reskey: *mut ZNResKey,
-) -> *mut ZNPublisher<'a> {
+    session: *mut zn_session_t,
+    reskey: *mut zn_reskey_t,
+) -> *mut zn_publisher_t<'a> {
     if session.is_null() || reskey.is_null() {
         return std::ptr::null_mut();
     }
 
-    Box::into_raw(Box::new(ZNPublisher(
+    Box::into_raw(Box::new(zn_publisher_t(
         task::block_on((*session).0.declare_publisher(&(*reskey).0)).unwrap(),
     )))
 }
 
-/// Undeclare a :c:type:`ZNPublisher`.
+/// Undeclare a :c:type:`zn_publisher_t`.
 ///
 /// Parameters:
-///     sub: The :c:type:`ZNPublisher` to undeclare.
+///     sub: The :c:type:`zn_publisher_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_undeclare_publisher(publ: *mut ZNPublisher) {
+pub unsafe extern "C" fn zn_undeclare_publisher(publ: *mut zn_publisher_t) {
     Box::from_raw(publ);
 }
-/// Declare a :c:type:`ZNSubscriber` for the given resource key.
+/// Declare a :c:type:`zn_subscriber_t` for the given resource key.
 ///
 /// Parameters:
 ///     session: The zenoh-net session.
 ///     resource: The resource key to subscribe.
-///     sub_info: The :c:type:`ZNSubInfo` to configure the :c:type:`ZNSubscriber`.
+///     sub_info: The :c:type:`zn_subinfo_t` to configure the :c:type:`zn_subscriber_t`.
 ///     callback: The callback function that will be called each time a data matching the subscribed resource is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
 /// Returns:
-///    The created :c:type:`ZNSubscriber` or null if the declaration failed.
+///    The created :c:type:`zn_subscriber_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_subscriber(
-    session: *mut ZNSession,
-    reskey: *mut ZNResKey,
-    sub_info: *mut ZNSubInfo,
-    callback: extern "C" fn(*const zn_sample, *const c_void),
+    session: *mut zn_session_t,
+    reskey: *mut zn_reskey_t,
+    sub_info: *mut zn_subinfo_t,
+    callback: extern "C" fn(*const zn_sample_t, *const c_void),
     arg: *mut c_void,
-) -> *mut ZNSubscriber {
+) -> *mut zn_subscriber_t {
     if session.is_null() || reskey.is_null() || sub_info.is_null() {
         return std::ptr::null_mut();
     }
@@ -670,7 +671,7 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     let si = Box::from_raw(sub_info);
     let arg = Box::from_raw(arg);
     let (tx, rx) = channel::<ZnSubOps>(8);
-    let rsub = ZNSubscriber(Some(Arc::new(tx)));
+    let rsub = zn_subscriber_t(Some(Arc::new(tx)));
     let mut sub: Subscriber =
         task::block_on((*session).0.declare_subscriber(&(*reskey).0, &si.0)).unwrap();
     // Note: This is done to ensure that even if the call-back into C
@@ -678,15 +679,15 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     // any of the task resolving futures.
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let key = zn_string {
+            let key = zn_string_t {
                 val: std::ptr::null(),
                 len: 0,
             };
-            let value = zn_bytes {
+            let value = zn_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             };
-            let mut sample = zn_sample { key, value };
+            let mut sample = zn_sample_t { key, value };
             let arg = Box::into_raw(arg);
 
             loop {
@@ -726,32 +727,32 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     Box::into_raw(Box::new(rsub))
 }
 
-/// Pull data for a pull mode :c:type:`ZNSubscriber`. The pulled data will be provided
+/// Pull data for a pull mode :c:type:`zn_subscriber_t`. The pulled data will be provided
 /// by calling the **callback** function provided to the :c:func:`zn_declare_subscriber` function.
 ///
 /// Parameters:
-///     sub: The :c:type:`ZNSubscriber` to pull from.
+///     sub: The :c:type:`zn_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_pull(sub: *mut ZNSubscriber) {
+pub unsafe extern "C" fn zn_pull(sub: *mut zn_subscriber_t) {
     let sub = Box::from_raw(sub);
     match *sub {
-        ZNSubscriber(Some(ref tx)) => smol::block_on(tx.send(ZnSubOps::Pull)),
-        ZNSubscriber(None) => (),
+        zn_subscriber_t(Some(ref tx)) => smol::block_on(tx.send(ZnSubOps::Pull)),
+        zn_subscriber_t(None) => (),
     }
     Box::into_raw(sub);
 }
 
-/// Undeclare a :c:type:`ZNSubscriber`.
+/// Undeclare a :c:type:`zn_subscriber_t`.
 ///
 /// Parameters:
-///     sub: The :c:type:`ZNSubscriber` to undeclare.
+///     sub: The :c:type:`zn_subscriber_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut ZNSubscriber) {
+pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut zn_subscriber_t) {
     match *Box::from_raw(sub) {
-        ZNSubscriber(Some(tx)) => smol::block_on(tx.send(ZnSubOps::Close)),
-        ZNSubscriber(None) => (),
+        zn_subscriber_t(Some(tx)) => smol::block_on(tx.send(ZnSubOps::Close)),
+        zn_subscriber_t(None) => (),
     }
 }
 
@@ -768,12 +769,12 @@ pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut ZNSubscriber) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_query(
-    session: *mut ZNSession,
-    reskey: *mut ZNResKey,
+    session: *mut zn_session_t,
+    reskey: *mut zn_reskey_t,
     predicate: *const c_char,
-    target: *mut ZNQueryTarget,
-    consolidation: *mut ZNQueryConsolidation,
-    callback: extern "C" fn(*const zn_source_info, *const zn_sample, *const c_void),
+    target: *mut zn_query_target_t,
+    consolidation: *mut zn_query_consolidation_t,
+    callback: extern "C" fn(*const zn_source_info_t, *const zn_sample_t, *const c_void),
     arg: *mut c_void,
 ) {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
@@ -784,20 +785,20 @@ pub unsafe extern "C" fn zn_query(
 
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let key = zn_string {
+            let key = zn_string_t {
                 val: std::ptr::null(),
                 len: 0,
             };
-            let value = zn_bytes {
+            let value = zn_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             };
-            let mut sample = zn_sample { key, value };
-            let id = zn_bytes {
+            let mut sample = zn_sample_t { key, value };
+            let id = zn_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             };
-            let mut source_info = zn_source_info { kind: 0, id };
+            let mut source_info = zn_source_info_t { kind: 0, id };
             let arg = Box::into_raw(arg);
 
             while let Some(reply) = q.next().await {
@@ -816,33 +817,33 @@ pub unsafe extern "C" fn zn_query(
     });
 }
 
-/// Declare a :c:type:`ZNQueryable` for the given resource key.
+/// Declare a :c:type:`zn_queryable_t` for the given resource key.
 ///
 /// Parameters:
 ///     session: The zenoh-net session.
-///     resource: The resource key the :c:type:`ZNQueryable` will reply to.
-///     kind: The kind of :c:type:`ZNQueryable`.
+///     resource: The resource key the :c:type:`zn_queryable_t` will reply to.
+///     kind: The kind of :c:type:`zn_queryable_t`.
 ///     callback: The callback function that will be called each time a matching query is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
 /// Returns:
-///    The created :c:type:`ZNQueryable` or null if the declaration failed.
+///    The created :c:type:`zn_queryable_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_queryable(
-    session: *mut ZNSession,
-    reskey: *mut ZNResKey,
+    session: *mut zn_session_t,
+    reskey: *mut zn_reskey_t,
     kind: c_uint,
-    callback: extern "C" fn(*mut ZNQuery, *const c_void),
+    callback: extern "C" fn(*mut zn_query_t, *const c_void),
     arg: *mut c_void,
-) -> *mut ZNQueryable {
+) -> *mut zn_queryable_t {
     if session.is_null() || reskey.is_null() {
         return std::ptr::null_mut();
     }
 
     let arg = Box::from_raw(arg);
     let (tx, rx) = channel::<bool>(1);
-    let r = ZNQueryable(Some(Arc::new(tx)));
+    let r = zn_queryable_t(Some(Arc::new(tx)));
     let mut queryable: zenoh::net::Queryable =
         task::block_on((*session).0.declare_queryable(&(*reskey).0, kind as ZInt)).unwrap();
 
@@ -859,7 +860,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
                   // a copy that would be otherwise required to add the
                   // C string terminator. See the test_sub.c to find out how to deal
                   // with non null terminated strings.
-                  let bquery = Box::new(ZNQuery(query.unwrap()));
+                  let bquery = Box::new(zn_query_t(query.unwrap()));
                   let rbquery = Box::into_raw(bquery);
                   callback(rbquery, arg);
                   Box::from_raw(rbquery);
@@ -874,16 +875,16 @@ pub unsafe extern "C" fn zn_declare_queryable(
     Box::into_raw(Box::new(r))
 }
 
-/// Undeclare a :c:type:`ZNQueryable`.
+/// Undeclare a :c:type:`zn_queryable_t`.
 ///
 /// Parameters:
-///     sub: The :c:type:`ZNQueryable` to undeclare.
+///     sub: The :c:type:`zn_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_undeclare_queryable(sub: *mut ZNQueryable) {
+pub unsafe extern "C" fn zn_undeclare_queryable(sub: *mut zn_queryable_t) {
     match *Box::from_raw(sub) {
-        ZNQueryable(Some(tx)) => smol::block_on(tx.send(true)),
-        ZNQueryable(None) => (),
+        zn_queryable_t(Some(tx)) => smol::block_on(tx.send(true)),
+        zn_queryable_t(None) => (),
     }
 }
 
@@ -891,7 +892,7 @@ pub unsafe extern "C" fn zn_undeclare_queryable(sub: *mut ZNQueryable) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_send_reply(
-    query: *mut ZNQuery,
+    query: *mut zn_query_t,
     key: *const c_char,
     payload: *const c_uchar,
     len: c_uint,
@@ -909,7 +910,7 @@ pub unsafe extern "C" fn zn_send_reply(
 /// query.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_close_query(query: *mut ZNQuery) {
+pub unsafe extern "C" fn zn_close_query(query: *mut zn_query_t) {
     let bq = Box::from_raw(query);
     std::mem::drop(bq);
 }
