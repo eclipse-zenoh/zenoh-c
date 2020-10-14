@@ -5,7 +5,7 @@ pipeline {
     gitParameter(name: 'GIT_TAG',
                  type: 'PT_BRANCH_TAG',
                  description: 'The Git tag to checkout. If not specified "master" will be checkout.',
-                 defaultValue: 'master')
+                 defaultValue: '0.5.0-beta.3')
     booleanParam(name: 'PUBLISH_RESULTS',
                  description: 'Publish the resulting artifacts (to Eclipse download)',
                  defaultValue: false)
