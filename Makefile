@@ -41,13 +41,11 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-make: include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
+build: include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
-all: 
-	make
-	make examples
+all: build examples
 
 $(BUILD_DIR)/$(LIB_NAME): src/lib.rs src/net/mod.rs
 	cargo build ${CARGOFLAGS}
