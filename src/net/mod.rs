@@ -165,31 +165,6 @@ pub extern "C" fn zn_query_consolidation_default() -> *mut zn_query_consolidatio
     ))
 }
 
-/// Create a no consolidation :c:type:`zn_query_consolidation_t`.
-/// Same resource may be received multiple times from different queriable sources.
-#[no_mangle]
-pub extern "C" fn zn_query_consolidation_none() -> *mut zn_query_consolidation_t {
-    Box::into_raw(Box::new(zn_query_consolidation_t(QueryConsolidation::None)))
-}
-
-/// Create an incremental consolidation :c:type:`zn_query_consolidation_t`.
-/// Multiple occurences of the same resource will be filtered by all routers
-/// along the replies path.
-#[no_mangle]
-pub extern "C" fn zn_query_consolidation_incremental() -> *mut zn_query_consolidation_t {
-    Box::into_raw(Box::new(zn_query_consolidation_t(
-        QueryConsolidation::Incremental,
-    )))
-}
-
-/// Create an last_hop consolidation :c:type:`zn_query_consolidation_t`.
-/// Multiple occurences of the same resource will be filtered by the last router
-/// along the replies path.
-#[no_mangle]
-pub extern "C" fn zn_query_consolidation_last_hop() -> *mut zn_query_consolidation_t {
-    Box::into_raw(Box::new(zn_query_consolidation_t(QueryConsolidation::LastHop)))
-}
-
 /// Create a resource key from a resource id.
 ///
 /// Parameters:

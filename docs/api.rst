@@ -256,12 +256,6 @@ Query
 
 .. autocfunction:: zenoh/net.h::zn_query_consolidation_default
 
-.. autocfunction:: zenoh/net.h::zn_query_consolidation_none
-
-.. autocfunction:: zenoh/net.h::zn_query_consolidation_incremental
-
-.. autocfunction:: zenoh/net.h::zn_query_consolidation_last_hop
-
 .. autocstruct:: zenoh/net.h::zn_source_info_t
 
 .. autocfunction:: zenoh/net.h::zn_query
