@@ -26,12 +26,12 @@ endif
 
 ifeq ($(BUILD_TYPE),Debug)
   BUILD_DIR=target/debug
-  RUSTFLAGS=
+  CARGOFLAGS+=
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout
   LDFLAGS=
 else 
   BUILD_DIR=target/release
-  RUSTFLAGS=--release
+  CARGOFLAGS=--release
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
   LDFLAGS=-O3
 endif
@@ -50,7 +50,7 @@ all:
 	make examples
 
 $(BUILD_DIR)/$(LIB_NAME): src/lib.rs src/net/mod.rs
-	cargo build $(RUSTFLAGS)
+	cargo build ${CARGOFLAGS}
 
 $(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
@@ -67,4 +67,4 @@ install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h include/zenoh/net.h
 	install -m 755 include/zenoh/net.h $(DESTDIR)$(PREFIX)/include/zenoh/net.h
 
 clean:
-	rm -fr target
+	rm -fr target include/zenoh/net.h
