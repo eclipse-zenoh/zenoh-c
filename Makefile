@@ -49,7 +49,7 @@ all:
 	make
 	make examples
 
-$(BUILD_DIR)/$(LIB_NAME): src/lib.rs src/net/mod.rs
+$(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/net/mod.rs
 	cargo build $(RUSTFLAGS)
 
 $(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
