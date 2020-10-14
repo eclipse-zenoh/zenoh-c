@@ -41,7 +41,7 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-make: $(BUILD_DIR)/$(LIB_NAME) include/zenoh/net.h
+make: include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
@@ -49,13 +49,13 @@ all:
 	make
 	make examples
 
-$(BUILD_DIR)/$(LIB_NAME):
+$(BUILD_DIR)/$(LIB_NAME): src/lib.rs src/net/mod.rs
 	cargo build $(RUSTFLAGS)
 
 $(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
-include/zenoh/net.h:
+include/zenoh/net.h: src/lib.rs src/net/mod.rs
 	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
 
 install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h include/zenoh/net.h
