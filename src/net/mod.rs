@@ -160,9 +160,9 @@ pub extern "C" fn zn_query_target_default() -> *mut zn_query_target_t {
 /// Create a default :c:type:`zn_query_consolidation_t`.
 #[no_mangle]
 pub extern "C" fn zn_query_consolidation_default() -> *mut zn_query_consolidation_t {
-    Box::into_raw(Box::new(
-        zn_query_consolidation_t(QueryConsolidation::default()),
-    ))
+    Box::into_raw(Box::new(zn_query_consolidation_t(
+        QueryConsolidation::default(),
+    )))
 }
 
 /// Create a resource key from a resource id.
@@ -187,7 +187,10 @@ pub extern "C" fn zn_rid(id: c_ulong) -> *mut zn_reskey_t {
 ///     Return a new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> *mut zn_reskey_t {
+pub unsafe extern "C" fn zn_rid_with_suffix(
+    id: c_ulong,
+    suffix: *const c_char,
+) -> *mut zn_reskey_t {
     Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RIdWithSuffix(
         to_zint!(id),
         CStr::from_ptr(suffix).to_str().unwrap().to_string(),
@@ -252,7 +255,10 @@ pub unsafe extern "C" fn zn_property_id(ps: *mut zn_properties_t, n: c_uint) -> 
 ///     The value of the property at index ``n`` in properties ``ps``.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_property_value(ps: *mut zn_properties_t, n: c_uint) -> *const zn_bytes_t {
+pub unsafe extern "C" fn zn_property_value(
+    ps: *mut zn_properties_t,
+    n: c_uint,
+) -> *const zn_bytes_t {
     let ptr = (*ps).0[n as usize].1.as_ptr();
     let value = Box::new(zn_bytes_t {
         val: ptr as *const c_uchar,
@@ -435,7 +441,10 @@ pub unsafe extern "C" fn zn_scout_locators_len(ls: *mut zn_locators_t) -> c_uint
 /// Get the locator at the given index.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_scout_locator_get(ls: *mut zn_locators_t, idx: c_uint) -> *const c_char {
+pub unsafe extern "C" fn zn_scout_locator_get(
+    ls: *mut zn_locators_t,
+    idx: c_uint,
+) -> *const c_char {
     (*ls).0[idx as usize].as_ptr()
 }
 
