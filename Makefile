@@ -31,7 +31,7 @@ ifeq ($(BUILD_TYPE),Debug)
   LDFLAGS=
 else 
   BUILD_DIR=target/release
-  CARGOFLAGS=--release
+  CARGOFLAGS+= --release
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
   LDFLAGS=-O3
 endif

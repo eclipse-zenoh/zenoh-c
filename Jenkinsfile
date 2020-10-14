@@ -57,7 +57,7 @@ pipeline {
       agent { label 'MacMini' }
       steps {
         sh '''
-        docker run --init --rm -v $(pwd):/workdir -w /workdir --env "RUSTFLAGS=--target=x86_64-unknown-linux-gnu" \
+        docker run --init --rm -v $(pwd):/workdir -w /workdir --env "CARGOFLAGS=--target=x86_64-unknown-linux-gnu" \
             adlinktech/manylinux2010-x64-rust-nightly make all
         '''
       }
@@ -79,7 +79,7 @@ pipeline {
       agent { label 'MacMini' }
       steps {
         sh '''
-        docker run --init --rm -v $(pwd):/workdir -w /workdir --env "RUSTFLAGS=--target=i686-unknown-linux-gnu" \
+        docker run --init --rm -v $(pwd):/workdir -w /workdir --env "CARGOFLAGS=--target=i686-unknown-linux-gnu" \
             adlinktech/manylinux2010-i686-rust-nightly make all
         '''
       }
