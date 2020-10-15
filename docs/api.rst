@@ -49,6 +49,41 @@ Properties
 
 .. autocfunction:: zenoh/net.h::zn_properties_free
 
+Scouting
+========
+
+.. c:var:: const unsigned int ROUTER
+
+.. c:var:: const unsigned int PEER
+
+.. c:type:: zn_scout_t
+
+  A set of scouted zenoh entities.
+
+.. c:type:: zn_locators_t
+
+  A set of zenoh locators.
+
+.. autocfunction:: zenoh/net.h::zn_scout
+
+.. autocfunction:: zenoh/net.h::zn_scout_len
+
+.. autocfunction:: zenoh/net.h::zn_scout_whatami
+
+.. autocfunction:: zenoh/net.h::zn_scout_peerid
+
+.. autocfunction:: zenoh/net.h::zn_scout_peerid_len
+
+.. autocfunction:: zenoh/net.h::zn_scout_locators
+
+.. autocfunction:: zenoh/net.h::zn_scout_locators_len
+
+.. autocfunction:: zenoh/net.h::zn_scout_locator_get
+
+.. autocfunction:: zenoh/net.h::zn_scout_locators_free
+
+.. autocfunction:: zenoh/net.h::zn_scout_free
+
 Session
 =======
 
