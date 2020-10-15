@@ -22,7 +22,7 @@ release = '0.5.0'
 
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
-extensions = ['sphinx_c_autodoc', 'sphinx_c_autodoc.napoleon', 'sphinxcontrib.restbuilder']
+extensions = ['sphinx_c_autodoc', 'sphinx_c_autodoc.napoleon']
 language = 'c'
 c_autodoc_roots = ['../include']
 
