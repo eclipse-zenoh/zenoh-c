@@ -24,54 +24,8 @@ use zenoh::net::*;
 use zenoh_protocol::core::ZInt;
 use zenoh_util::to_zint;
 
-#[no_mangle]
-pub static ZN_ROUTER: c_uint = whatami::ROUTER as c_uint;
-#[no_mangle]
-pub static ZN_PEER: c_uint = whatami::PEER as c_uint;
-#[no_mangle]
-pub static ZN_CLIENT: c_uint = whatami::CLIENT as c_uint;
-
-// Flags used in Queryable declaration and in queries
-#[no_mangle]
-pub static ZN_QUERYABLE_ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
-#[no_mangle]
-pub static ZN_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
-#[no_mangle]
-pub static ZN_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
-
-// Properties for zenoh net session configuration
-#[no_mangle]
-pub static ZN_CONFIG_MODE_KEY: c_uint = config::ZN_MODE_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_PEER_KEY: c_uint = config::ZN_PEER_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_LISTENER_KEY: c_uint = config::ZN_LISTENER_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_USER_KEY: c_uint = config::ZN_USER_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_PASSWORD_KEY: c_uint = config::ZN_PASSWORD_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_MULTICAST_SCOUTING_KEY: c_uint = config::ZN_MULTICAST_SCOUTING_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_MULTICAST_INTERFACE_KEY: c_uint = config::ZN_MULTICAST_INTERFACE_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_MULTICAST_ADDRESS_KEY: c_uint = config::ZN_MULTICAST_ADDRESS_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_SCOUTING_TIMEOUT_KEY: c_uint = config::ZN_SCOUTING_TIMEOUT_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_SCOUTING_DELAY_KEY: c_uint = config::ZN_SCOUTING_DELAY_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_ADD_TIMESTAMP_KEY: c_uint = config::ZN_ADD_TIMESTAMP_KEY as c_uint;
-#[no_mangle]
-pub static ZN_CONFIG_LOCAL_ROUTING_KEY: c_uint = config::ZN_LOCAL_ROUTING_KEY as c_uint;
-
-// Properties returned by zn_info()
-#[no_mangle]
-pub static ZN_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
-#[no_mangle]
-pub static ZN_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
-#[no_mangle]
-pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
+mod types;
+pub use types::*;
 
 #[allow(non_camel_case_types)]
 pub struct zn_session_t(zenoh::net::Session);
@@ -89,81 +43,13 @@ pub struct zn_publisher_t<'a>(zenoh::net::Publisher<'a>);
 #[allow(non_camel_case_types)]
 pub struct zn_subscriber_t(Option<Arc<Sender<ZnSubOps>>>);
 #[allow(non_camel_case_types)]
-pub struct zn_query_target_t(zenoh::net::QueryTarget);
-#[allow(non_camel_case_types)]
-pub struct zn_query_consolidation_t(zenoh::net::QueryConsolidation);
-#[allow(non_camel_case_types)]
 pub struct zn_queryable_t(Option<Arc<Sender<bool>>>);
 #[allow(non_camel_case_types)]
 pub struct zn_query_t(zenoh::net::Query);
 #[allow(non_camel_case_types)]
-pub struct zn_subinfo_t(zenoh::net::SubInfo);
-#[allow(non_camel_case_types)]
 pub struct zn_scout_t(std::vec::Vec<Hello>);
 #[allow(non_camel_case_types)]
 pub struct zn_locators_t(std::vec::Vec<std::ffi::CString>);
-
-/// A string.
-///
-/// Members:
-///   const char *val: A pointer to the string.
-///   unsigned int len: The length of the string.
-///
-#[repr(C)]
-pub struct zn_string_t {
-    val: *const c_char,
-    len: c_uint,
-}
-
-/// An array of bytes.
-///
-/// Members:
-///   const unsigned char *val: A pointer to the bytes array.
-///   unsigned int len: The length of the bytes array.
-///
-#[repr(C)]
-pub struct zn_bytes_t {
-    val: *const c_uchar,
-    len: c_uint,
-}
-
-/// A zenoh-net data sample.
-///
-/// A sample is the value associated to a given resource at a given point in time.
-///
-/// Members:
-///   zn_string_t key: The resource key of this data sample.
-///   zn_bytes_t value: The value of this data sample.
-#[repr(C)]
-pub struct zn_sample_t {
-    key: zn_string_t,
-    value: zn_bytes_t,
-}
-
-/// Information on the source of a reply.
-///
-/// Members:
-///   unsigned int kind: The kind of source.
-///   zn_bytes_t id: The unique id of the source.
-#[repr(C)]
-pub struct zn_source_info_t {
-    kind: c_uint,
-    id: zn_bytes_t,
-}
-
-/// Create a default :c:type:`zn_query_target_t`.
-#[no_mangle]
-pub extern "C" fn zn_query_target_default() -> *mut zn_query_target_t {
-    Box::into_raw(Box::new(zn_query_target_t(QueryTarget::default())))
-}
-
-/// Create a default :c:type:`zn_query_consolidation_t`.
-#[no_mangle]
-pub extern "C" fn zn_query_consolidation_default() -> *mut zn_query_consolidation_t {
-    Box::into_raw(Box::new(zn_query_consolidation_t(
-        QueryConsolidation::default(),
-    )))
-}
 
 /// Create a resource key from a resource id.
 ///
@@ -360,23 +246,6 @@ pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> *const zn
     Box::into_raw(Box::new(pred))
 }
 
-/// Create a default subscription info.
-#[no_mangle]
-pub extern "C" fn zn_subinfo_default() -> *mut zn_subinfo_t {
-    Box::into_raw(Box::new(zn_subinfo_t(SubInfo::default())))
-}
-
-/// Create a pull mode subscription info.
-#[no_mangle]
-pub extern "C" fn zn_subinfo_pull() -> *mut zn_subinfo_t {
-    let si = SubInfo {
-        reliability: Reliability::Reliable,
-        mode: SubMode::Pull,
-        period: None,
-    };
-    Box::into_raw(Box::new(zn_subinfo_t(si)))
-}
-
 /// Get the number of entities scouted in the result of a :c:func:`zn_scout`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -384,7 +253,7 @@ pub unsafe extern "C" fn zn_scout_len(si: *mut zn_scout_t) -> c_uint {
     (*si).0.len() as c_uint
 }
 
-/// Get the whatami of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
+/// Get the whatami flag of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout_whatami(si: *mut zn_scout_t, idx: c_uint) -> c_uint {
@@ -457,7 +326,7 @@ pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut zn_locators_t) {
 /// Scout for routers and/or peers.
 ///
 /// Parameters:
-///     what: A mask of zenoh entities kind to scout for.
+///     what: A whatami bitmask of zenoh entities kind to scout for.
 ///     config: A set of properties to configure the scouting.
 ///     scout_period: The time that should be spent scouting before returnng the results.
 ///
@@ -650,21 +519,24 @@ pub unsafe extern "C" fn zn_undeclare_publisher(publ: *mut zn_publisher_t) {
 pub unsafe extern "C" fn zn_declare_subscriber(
     session: *mut zn_session_t,
     reskey: *mut zn_reskey_t,
-    sub_info: *mut zn_subinfo_t,
+    sub_info: zn_subinfo_t,
     callback: extern "C" fn(*const zn_sample_t, *const c_void),
     arg: *mut c_void,
 ) -> *mut zn_subscriber_t {
-    if session.is_null() || reskey.is_null() || sub_info.is_null() {
+    if session.is_null() || reskey.is_null() {
         return std::ptr::null_mut();
     }
 
     let s = Box::from_raw(session);
-    let si = Box::from_raw(sub_info);
     let arg = Box::from_raw(arg);
     let (tx, rx) = channel::<ZnSubOps>(8);
     let rsub = zn_subscriber_t(Some(Arc::new(tx)));
-    let mut sub: Subscriber =
-        task::block_on((*session).0.declare_subscriber(&(*reskey).0, &si.0)).unwrap();
+    let mut sub: Subscriber = task::block_on(
+        (*session)
+            .0
+            .declare_subscriber(&(*reskey).0, &sub_info.into()),
+    )
+    .unwrap();
     // Note: This is done to ensure that even if the call-back into C
     // does any blocking call we do not incour the risk of blocking
     // any of the task resolving futures.
@@ -763,16 +635,20 @@ pub unsafe extern "C" fn zn_query(
     session: *mut zn_session_t,
     reskey: *mut zn_reskey_t,
     predicate: *const c_char,
-    target: *mut zn_query_target_t,
-    consolidation: *mut zn_query_consolidation_t,
+    target: zn_query_target_t,
+    consolidation: zn_query_consolidation_t,
     callback: extern "C" fn(*const zn_source_info_t, *const zn_sample_t, *const c_void),
     arg: *mut c_void,
 ) {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
-    let qt = Box::from_raw(target);
-    let qc = Box::from_raw(consolidation);
     let arg = Box::from_raw(arg);
-    let mut q = task::block_on((*session).0.query(&(*reskey).0, p, qt.0, qc.0)).unwrap();
+    let mut q = task::block_on((*session).0.query(
+        &(*reskey).0,
+        p,
+        target.into(),
+        consolidation.into(),
+    ))
+    .unwrap();
 
     task::spawn_blocking(move || {
         task::block_on(async move {

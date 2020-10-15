@@ -52,11 +52,16 @@ Properties
 Scouting
 ========
 
-.. c:var:: const unsigned int ZN_ROUTER
+Types
+-----
 
-.. c:var:: const unsigned int ZN_PEER
+Possible flags in a whatami bitmask : 
 
-.. c:var:: const unsigned int ZN_CLIENT
+  .. c:var:: const unsigned int ZN_ROUTER
+
+  .. c:var:: const unsigned int ZN_PEER
+
+  .. c:var:: const unsigned int ZN_CLIENT
 
 .. c:type:: zn_scout_t
 
@@ -65,6 +70,9 @@ Scouting
 .. c:type:: zn_locators_t
 
   A set of zenoh locators.
+
+Functions
+---------
 
 .. autocfunction:: zenoh/net.h::zn_scout
 
@@ -247,9 +255,15 @@ Resource declaration
 Publication
 ===========
 
+Types
+-----
+
 .. c:type:: zn_publisher_tr
 
   A zenoh-net Publisher.
+
+Functions
+---------
 
 .. autocfunction:: zenoh/net.h::zn_declare_publisher
 
@@ -260,17 +274,25 @@ Publication
 Subscription
 ============
 
+Types
+-----
+
 .. c:type:: zn_subscriber_t
 
   A zenoh-net subscriber.
 
-.. c:type:: zn_subinfo_t
+.. autocenum:: zenoh/net.h::zn_reliability_t
 
-  Informations to be passed to :c:func:`zn_declare_subscriber` to configure the created :c:type:`zn_subscriber_t`.
+.. autocenum:: zenoh/net.h::zn_submode_t
+
+.. autocstruct:: zenoh/net.h::zn_period_t
+
+.. autocstruct:: zenoh/net.h::zn_subinfo_t
 
 .. autocfunction:: zenoh/net.h::zn_subinfo_default
 
-.. autocfunction:: zenoh/net.h::zn_subinfo_pull
+Functions
+---------
 
 .. autocfunction:: zenoh/net.h::zn_declare_subscriber
 
@@ -281,30 +303,74 @@ Subscription
 Query
 =====
 
-.. c:struct:: zn_query_target_t
+Types
+-----
 
-  The zenoh-net queryables that should be target of a :c:func:`zn_query`.
+.. c:struct:: zn_target_t
+
+  Which amongst the matching queryables should be target of a :c:func:`zn_query`.
+
+  .. c:member:: zn_target_t_Tag tag;
+
+  .. c:member:: zn_target_t_COMPLETE_Body complete;
+
+    Members of zn_target_t when :c:member:`zn_target_t.tag` is set to ``zn_target_t_COMPLETE``.
+
+    .. c:member:: unsigned int n
+
+      The number of complete queryables that should be target of a :c:func:`zn_query`.
+
+.. autocenum:: zenoh/net.h::zn_target_t_Tag
+
+.. autocfunction:: zenoh/net.h::zn_target_default
+
+  The network interface to use for multicast scouting.
+
+.. autocstruct:: zenoh/net.h::zn_query_target_t
+
+  Predefined values for :c:member:`zn_query_target_t.kind`: 
+
+    .. c:var:: const unsigned int ZN_QUERYABLE_ALL_KINDS
+
+    .. c:var:: const unsigned int ZN_QUERYABLE_EVAL
+
+    .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
 
 .. autocfunction:: zenoh/net.h::zn_query_target_default
 
-.. c:struct:: zn_query_consolidation_t
+.. autocenum:: zenoh/net.h::zn_consolidation_mode_t
 
-  The kind of consolidation that should be applied on replies to a :c:func:`zn_query`.
+.. autocstruct:: zenoh/net.h::zn_query_consolidation_t
 
 .. autocfunction:: zenoh/net.h::zn_query_consolidation_default
 
 .. autocstruct:: zenoh/net.h::zn_source_info_t
+
+Functions
+---------
 
 .. autocfunction:: zenoh/net.h::zn_query
 
 Queryable
 =========
 
+Types
+-----
+
 .. c:type:: zn_queryable_t
 
   The zenoh-net Queryable.
 
+Functions
+---------
+
 .. autocfunction:: zenoh/net.h::zn_declare_queryable
+
+  Predefined values for ``kind``: 
+
+    .. c:var:: const unsigned int ZN_QUERYABLE_EVAL
+
+    .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
 
 .. autocfunction:: zenoh/net.h::zn_undeclare_queryable
 

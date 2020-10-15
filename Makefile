@@ -49,13 +49,13 @@ all:
 	make
 	make examples
 
-$(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/net/mod.rs
+$(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/net/mod.rs src/net/types.rs
 	cargo build $(RUSTFLAGS)
 
 $(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
-include/zenoh/net.h: src/lib.rs src/net/mod.rs
+include/zenoh/net.h: src/lib.rs src/net/mod.rs src/net/types.rs
 	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
 
 install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h include/zenoh/net.h
