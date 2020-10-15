@@ -4,9 +4,6 @@ target
 # Cargo
 Cargo.lock
 
-# Generated
-include/zenoh/net.h
-
 # vscode
 .vscode 
 
