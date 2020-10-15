@@ -24,7 +24,7 @@ release = '0.5.0'
 master_doc = 'index'
 extensions = ['sphinx_c_autodoc', 'sphinx_c_autodoc.napoleon']
 language = 'c'
-c_autodoc_roots = ['include', '../include']
+c_autodoc_roots = ['../include']
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'
