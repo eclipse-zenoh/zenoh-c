@@ -24,14 +24,18 @@ else
   endif
 endif
 
+ifneq ($(TARGET),)
+  TARGET_OPT=--target=$(TARGET)
+endif
+
 ifeq ($(BUILD_TYPE),Debug)
-  BUILD_DIR=target/debug
-  CARGOFLAGS+=
+  BUILD_DIR=target/${TARGET}/debug
+  CARGOFLAGS=
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout
   LDFLAGS=
 else 
-  BUILD_DIR=target/release
-  CARGOFLAGS+= --release
+  BUILD_DIR=target/${TARGET}/release
+  CARGOFLAGS=--release
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
   LDFLAGS=-O3
 endif
@@ -48,7 +52,7 @@ examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 all: build examples
 
 $(BUILD_DIR)/$(LIB_NAME): src/lib.rs src/net/mod.rs
-	cargo build ${CARGOFLAGS}
+	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
 $(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
