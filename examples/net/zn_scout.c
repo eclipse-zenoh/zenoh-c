@@ -27,8 +27,8 @@ void fprintpid(FILE *stream, const unsigned char *peerid, int len) {
 }
 
 void fprintwhatami(FILE *stream, unsigned int whatami) {
-    if (whatami == ROUTER) { fprintf(stream, "\"Router\""); }
-    else if (whatami == PEER) { fprintf(stream, "\"Peer\""); }
+    if (whatami == ZN_ROUTER) { fprintf(stream, "\"Router\""); }
+    else if (whatami == ZN_PEER) { fprintf(stream, "\"Peer\""); }
     else  { fprintf(stream, "\"Other\""); }
 }
 
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
   zn_properties_t *config = zn_config_default();
 
   printf("Scouting...\n");
-  zn_scout_t *scout = zn_scout(ROUTER | PEER, config, 1000);  
+  zn_scout_t *scout = zn_scout(ZN_ROUTER | ZN_PEER, config, 1000);  
   if (zn_scout_len(scout) > 0) {
     for (unsigned int i = 0; i < zn_scout_len(scout); ++i) {
         fprinthello(stdout, scout, i);

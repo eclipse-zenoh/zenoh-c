@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     }
     zn_properties_t *config = zn_config_peer();
     if (argc > 2) {
-        zn_properties_add(config, ZN_PEER_KEY, argv[2]);
+        zn_properties_add(config, ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
-    zn_queryable_t *qable = zn_declare_queryable(s, zn_rname(uri), EVAL, query_handler, NULL);
+    zn_queryable_t *qable = zn_declare_queryable(s, zn_rname(uri), ZN_QUERYABLE_EVAL, query_handler, NULL);
     if (qable == 0) {
         printf("Unable to declare queryable.\n");
         exit(-1);

@@ -47,7 +47,7 @@ void data_handler(const zn_sample_t *sample, const void *arg) {
 int main(int argc, char **argv) {
     zn_properties_t *config = zn_config_peer();
     if (argc > 1) {
-        zn_properties_add(config, ZN_PEER_KEY, argv[1]);
+        zn_properties_add(config, ZN_CONFIG_PEER_KEY, argv[1]);
     }
 
     printf("Openning session...\n");

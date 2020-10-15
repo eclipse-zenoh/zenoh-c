@@ -25,45 +25,45 @@ use zenoh_protocol::core::ZInt;
 use zenoh_util::to_zint;
 
 #[no_mangle]
-pub static ROUTER: c_uint = whatami::ROUTER as c_uint;
+pub static ZN_ROUTER: c_uint = whatami::ROUTER as c_uint;
 #[no_mangle]
-pub static PEER: c_uint = whatami::PEER as c_uint;
+pub static ZN_PEER: c_uint = whatami::PEER as c_uint;
 #[no_mangle]
-pub static CLIENT: c_uint = whatami::CLIENT as c_uint;
+pub static ZN_CLIENT: c_uint = whatami::CLIENT as c_uint;
 
 // Flags used in Queryable declaration and in queries
 #[no_mangle]
-pub static ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
+pub static ZN_QUERYABLE_ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
 #[no_mangle]
-pub static STORAGE: c_uint = queryable::STORAGE as c_uint;
+pub static ZN_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
 #[no_mangle]
-pub static EVAL: c_uint = queryable::EVAL as c_uint;
+pub static ZN_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
 
 // Properties for zenoh net session configuration
 #[no_mangle]
-pub static ZN_MODE_KEY: c_uint = config::ZN_MODE_KEY as c_uint;
+pub static ZN_CONFIG_MODE_KEY: c_uint = config::ZN_MODE_KEY as c_uint;
 #[no_mangle]
-pub static ZN_PEER_KEY: c_uint = config::ZN_PEER_KEY as c_uint;
+pub static ZN_CONFIG_PEER_KEY: c_uint = config::ZN_PEER_KEY as c_uint;
 #[no_mangle]
-pub static ZN_LISTENER_KEY: c_uint = config::ZN_LISTENER_KEY as c_uint;
+pub static ZN_CONFIG_LISTENER_KEY: c_uint = config::ZN_LISTENER_KEY as c_uint;
 #[no_mangle]
-pub static ZN_USER_KEY: c_uint = config::ZN_USER_KEY as c_uint;
+pub static ZN_CONFIG_USER_KEY: c_uint = config::ZN_USER_KEY as c_uint;
 #[no_mangle]
-pub static ZN_PASSWORD_KEY: c_uint = config::ZN_PASSWORD_KEY as c_uint;
+pub static ZN_CONFIG_PASSWORD_KEY: c_uint = config::ZN_PASSWORD_KEY as c_uint;
 #[no_mangle]
-pub static ZN_MULTICAST_SCOUTING_KEY: c_uint = config::ZN_MULTICAST_SCOUTING_KEY as c_uint;
+pub static ZN_CONFIG_MULTICAST_SCOUTING_KEY: c_uint = config::ZN_MULTICAST_SCOUTING_KEY as c_uint;
 #[no_mangle]
-pub static ZN_MULTICAST_INTERFACE_KEY: c_uint = config::ZN_MULTICAST_INTERFACE_KEY as c_uint;
+pub static ZN_CONFIG_MULTICAST_INTERFACE_KEY: c_uint = config::ZN_MULTICAST_INTERFACE_KEY as c_uint;
 #[no_mangle]
-pub static ZN_MULTICAST_ADDRESS_KEY: c_uint = config::ZN_MULTICAST_ADDRESS_KEY as c_uint;
+pub static ZN_CONFIG_MULTICAST_ADDRESS_KEY: c_uint = config::ZN_MULTICAST_ADDRESS_KEY as c_uint;
 #[no_mangle]
-pub static ZN_SCOUTING_TIMEOUT_KEY: c_uint = config::ZN_SCOUTING_TIMEOUT_KEY as c_uint;
+pub static ZN_CONFIG_SCOUTING_TIMEOUT_KEY: c_uint = config::ZN_SCOUTING_TIMEOUT_KEY as c_uint;
 #[no_mangle]
-pub static ZN_SCOUTING_DELAY_KEY: c_uint = config::ZN_SCOUTING_DELAY_KEY as c_uint;
+pub static ZN_CONFIG_SCOUTING_DELAY_KEY: c_uint = config::ZN_SCOUTING_DELAY_KEY as c_uint;
 #[no_mangle]
-pub static ZN_ADD_TIMESTAMP_KEY: c_uint = config::ZN_ADD_TIMESTAMP_KEY as c_uint;
+pub static ZN_CONFIG_ADD_TIMESTAMP_KEY: c_uint = config::ZN_ADD_TIMESTAMP_KEY as c_uint;
 #[no_mangle]
-pub static ZN_LOCAL_ROUTING_KEY: c_uint = config::ZN_LOCAL_ROUTING_KEY as c_uint;
+pub static ZN_CONFIG_LOCAL_ROUTING_KEY: c_uint = config::ZN_LOCAL_ROUTING_KEY as c_uint;
 
 // Properties returned by zn_info()
 #[no_mangle]
@@ -390,7 +390,7 @@ pub unsafe extern "C" fn zn_scout_len(si: *mut zn_scout_t) -> c_uint {
 pub unsafe extern "C" fn zn_scout_whatami(si: *mut zn_scout_t, idx: c_uint) -> c_uint {
     match (*si).0[idx as usize].whatami {
         Some(w) => w as c_uint,
-        None => ROUTER as c_uint,
+        None => ZN_ROUTER as c_uint,
     }
 }
 
