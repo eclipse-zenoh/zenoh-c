@@ -11,7 +11,7 @@
 # Contributors:
 #   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 #
-.PHONY: lib example all install clean
+.PHONY: build examples all install clean
 
 # Library name
 ifeq ($(OS),Windows_NT)
@@ -24,14 +24,18 @@ else
   endif
 endif
 
+ifneq ($(TARGET),)
+  TARGET_OPT=--target=$(TARGET)
+endif
+
 ifeq ($(BUILD_TYPE),Debug)
-  BUILD_DIR=target/debug
-  RUSTFLAGS=
+  BUILD_DIR=target/${TARGET}/debug
+  CARGOFLAGS=
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout
   LDFLAGS=
 else 
-  BUILD_DIR=target/release
-  RUSTFLAGS=--release
+  BUILD_DIR=target/${TARGET}/release
+  CARGOFLAGS=--release
   EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
   LDFLAGS=-O3
 endif
@@ -41,16 +45,14 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-make: include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
+build: include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
-all: 
-	make
-	make examples
+all: build examples
 
 $(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/net/mod.rs src/net/types.rs
-	cargo build $(RUSTFLAGS)
+	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
 $(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
