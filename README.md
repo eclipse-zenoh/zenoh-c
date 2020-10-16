@@ -1,7 +1,6 @@
 ![zenoh banner](./zenoh-dragon.png)
 
-![Build (simple)](https://github.com/eclipse-zenoh/zenoh-c/workflows/Build%20(simple)/badge.svg)
-![Build cross-platforms](https://github.com/eclipse-zenoh/zenoh-c/workflows/Build%20cross-platforms/badge.svg)
+[![CI](https://github.com/eclipse-zenoh/zenoh-c/workflows/CI/badge.svg)](https://github.com/eclipse-zenoh/zenoh-c/actions?query=workflow%3A%22CI%22)
 [![Documentation Status](https://readthedocs.org/projects/zenoh-c/badge/?version=latest)](https://zenoh-c.readthedocs.io/en/latest/?badge=latest)
 [![Gitter](https://badges.gitter.im/atolab/zenoh.svg)](https://gitter.im/atolab/zenoh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![License](https://img.shields.io/badge/License-EPL%202.0-blue)](https://choosealicense.com/licenses/epl-2.0/)
