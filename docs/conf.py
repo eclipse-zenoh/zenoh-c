@@ -28,3 +28,7 @@ c_autodoc_roots = ['../include']
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'
+
+# ----------------------------------------------------------------------------
+from clang.cindex import Config
+Config.set_library_file('/usr/lib/llvm-6.0/lib/libclang.so.1')
