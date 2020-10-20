@@ -42,8 +42,6 @@ typedef enum zn_submode_t {
   zn_submode_t_PULL,
 } zn_submode_t;
 
-typedef struct zn_locators_t zn_locators_t;
-
 typedef struct zn_properties_t zn_properties_t;
 
 typedef struct zn_publisher_t zn_publisher_t;
@@ -53,8 +51,6 @@ typedef struct zn_query_t zn_query_t;
 typedef struct zn_queryable_t zn_queryable_t;
 
 typedef struct zn_reskey_t zn_reskey_t;
-
-typedef struct zn_scout_t zn_scout_t;
 
 typedef struct zn_session_t zn_session_t;
 
@@ -127,6 +123,47 @@ typedef struct zn_sample_t {
   zn_string_t key;
   zn_bytes_t value;
 } zn_sample_t;
+
+/**
+ * An array of NULL terminated strings.
+ *
+ * Members:
+ *   char *const *val: A pointer to the array.
+ *   unsigned int len: The length of the array.
+ *
+ */
+typedef struct zn_str_array_t {
+  const char *const *val;
+  unsigned int len;
+} zn_str_array_t;
+
+/**
+ * A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
+ *
+ * Members:
+ *   unsigned int whatami: The kind of zenoh entity.
+ *   zn_bytes_t pid: The peer id of the scouted entity (empty if absent).
+ *   zn_str_array_t locators: The locators of the scouted entity.
+ *
+ */
+typedef struct zn_hello_t {
+  unsigned int whatami;
+  zn_bytes_t pid;
+  zn_str_array_t locators;
+} zn_hello_t;
+
+/**
+ * An array of :c:struct:`zn_hello_t` messages.
+ *
+ * Members:
+ *   const zn_hello_t *val: A pointer to the array.
+ *   unsigned int len: The length of the array.
+ *
+ */
+typedef struct zn_hello_array_t {
+  const zn_hello_t *val;
+  unsigned int len;
+} zn_hello_array_t;
 
 /**
  * The possible values of :c:member:`zn_target_t.tag`.
@@ -342,6 +379,15 @@ zn_subscriber_t *zn_declare_subscriber(zn_session_t *session,
                                        void *arg);
 
 /**
+ * Free an array of :c:struct:`zn_hello_t` messages and it's contained :c:struct:`zn_hello_t` messages recursively.
+ *
+ * Parameters:
+ *     strs: The array of :c:struct:`zn_hello_t` messages to free.
+ *
+ */
+void zn_hello_array_free(zn_hello_array_t hellos);
+
+/**
  * Get informations about an zenoh-net session.
  *
  * Parameters:
@@ -522,56 +568,9 @@ zn_reskey_t *zn_rname(const char *name);
  *     scout_period: The time that should be spent scouting before returnng the results.
  *
  * Returns:
- *     A set of scouted entities.
+ *     An array of :c:struct:`zn_hello_t` messages.
  */
-zn_scout_t *zn_scout(unsigned int what, zn_properties_t *config, unsigned long scout_period);
-
-/**
- * Free a zn_scout_t.
- */
-void zn_scout_free(zn_scout_t *s);
-
-/**
- * Get the number of entities scouted in the result of a :c:func:`zn_scout`.
- */
-unsigned int zn_scout_len(zn_scout_t *si);
-
-/**
- * Get the locator at the given index in a locators set.
- */
-const char *zn_scout_locator_get(zn_locators_t *ls, unsigned int idx);
-
-/**
- * Get the locators of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
- */
-zn_locators_t *zn_scout_locators(zn_scout_t *si, unsigned int idx);
-
-/**
- * Free a locators set.
- */
-void zn_scout_locators_free(zn_locators_t *ls);
-
-/**
- * Get the number of locators in a locators set.
- */
-unsigned int zn_scout_locators_len(zn_locators_t *ls);
-
-/**
- * Get the peer-id of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
- */
-const unsigned char *zn_scout_peerid(zn_scout_t *si, unsigned int idx);
-
-/**
- * Get the length of the peer-id of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
- */
-unsigned int zn_scout_peerid_len(zn_scout_t *si,
-                                 unsigned int idx);
-
-/**
- * Get the whatami flag of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
- */
-unsigned int zn_scout_whatami(zn_scout_t *si,
-                              unsigned int idx);
+zn_hello_array_t zn_scout(unsigned int what, zn_properties_t *config, unsigned long scout_period);
 
 /**
  * Sends a reply to a query.
@@ -580,6 +579,15 @@ void zn_send_reply(zn_query_t *query,
                    const char *key,
                    const unsigned char *payload,
                    unsigned int len);
+
+/**
+ * Free an array of NULL terminated strings and it's contained NULL terminated strings recursively.
+ *
+ * Parameters:
+ *     strs: The array of NULL terminated strings to free.
+ *
+ */
+void zn_str_array_free(zn_str_array_t strs);
 
 /**
  * Create a default subscription info.

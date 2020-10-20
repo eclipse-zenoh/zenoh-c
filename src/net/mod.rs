@@ -246,83 +246,6 @@ pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> *const zn
     Box::into_raw(Box::new(pred))
 }
 
-/// Get the number of entities scouted in the result of a :c:func:`zn_scout`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_len(si: *mut zn_scout_t) -> c_uint {
-    (*si).0.len() as c_uint
-}
-
-/// Get the whatami flag of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_whatami(si: *mut zn_scout_t, idx: c_uint) -> c_uint {
-    match (*si).0[idx as usize].whatami {
-        Some(w) => w as c_uint,
-        None => ZN_ROUTER as c_uint,
-    }
-}
-
-/// Get the peer-id of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_peerid(si: *mut zn_scout_t, idx: c_uint) -> *const c_uchar {
-    match &(*si).0[idx as usize].pid {
-        Some(v) => v.as_slice().as_ptr() as *const c_uchar,
-        None => std::ptr::null(),
-    }
-}
-
-/// Get the length of the peer-id of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_peerid_len(si: *mut zn_scout_t, idx: c_uint) -> c_uint {
-    match &(*si).0[idx as usize].pid {
-        Some(v) => v.as_slice().len() as c_uint,
-        None => 0,
-    }
-}
-
-/// Get the locators of the scouted entity at the given index in the result of a :c:func:`zn_scout`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_locators(si: *mut zn_scout_t, idx: c_uint) -> *mut zn_locators_t {
-    let mut vs = vec![];
-    match &(*si).0[idx as usize].locators {
-        Some(ls) => {
-            for l in ls {
-                vs.push(CString::new(format!("{}", l)).unwrap())
-            }
-        }
-        None => (),
-    }
-    Box::into_raw(Box::new(zn_locators_t(vs)))
-}
-
-/// Get the number of locators in a locators set.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_locators_len(ls: *mut zn_locators_t) -> c_uint {
-    (*ls).0.len() as c_uint
-}
-
-/// Get the locator at the given index in a locators set.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_locator_get(
-    ls: *mut zn_locators_t,
-    idx: c_uint,
-) -> *const c_char {
-    (*ls).0[idx as usize].as_ptr()
-}
-
-/// Free a locators set.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut zn_locators_t) {
-    drop(Box::from_raw(ls))
-}
-
 /// Scout for routers and/or peers.
 ///
 /// Parameters:
@@ -331,14 +254,14 @@ pub unsafe extern "C" fn zn_scout_locators_free(ls: *mut zn_locators_t) {
 ///     scout_period: The time that should be spent scouting before returnng the results.
 ///
 /// Returns:
-///     A set of scouted entities.
+///     An array of :c:struct:`zn_hello_t` messages.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_scout(
     what: c_uint,
     config: *mut zn_properties_t,
     scout_period: c_ulong,
-) -> *mut zn_scout_t {
+) -> zn_hello_array_t {
     let what = what as ZInt;
     let config = Box::from_raw(config);
 
@@ -354,14 +277,7 @@ pub unsafe extern "C" fn zn_scout(
         FutureExt::race(scout, timeout).await;
         hs
     });
-    Box::into_raw(Box::new(zn_scout_t(hellos)))
-}
-
-/// Free a zn_scout_t.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_scout_free(s: *mut zn_scout_t) {
-    drop(Box::from_raw(s))
+    hellos.into()
 }
 
 /// Initialise the zenoh runtime logger

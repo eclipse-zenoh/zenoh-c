@@ -12,6 +12,7 @@
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
 use libc::{c_char, c_uchar, c_uint};
+use std::ffi::CString;
 use zenoh::net::*;
 
 #[no_mangle]
@@ -62,6 +63,224 @@ pub static ZN_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
 pub static ZN_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
 #[no_mangle]
 pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
+
+/// A string.
+///
+/// Members:
+///   const char *val: A pointer to the string.
+///   unsigned int len: The length of the string.
+///
+#[repr(C)]
+pub struct zn_string_t {
+    pub val: *const c_char,
+    pub len: c_uint,
+}
+
+/// An array of NULL terminated strings.
+///
+/// Members:
+///   char *const *val: A pointer to the array.
+///   unsigned int len: The length of the array.
+///
+#[repr(C)]
+pub struct zn_str_array_t {
+    pub val: *const *const c_char,
+    pub len: c_uint,
+}
+
+impl<T> From<Vec<T>> for zn_str_array_t
+where
+    T: ToString,
+{
+    #[inline]
+    fn from(v: Vec<T>) -> Self {
+        let v = v
+            .into_iter()
+            .map(|t| {
+                let s = CString::new(t.to_string()).unwrap();
+                let res = s.as_ptr();
+                std::mem::forget(s);
+                res
+            })
+            .collect::<Vec<*const c_char>>();
+        let res = zn_str_array_t {
+            val: v.as_ptr(),
+            len: v.len() as c_uint,
+        };
+        std::mem::forget(v);
+        res
+    }
+}
+
+impl<T> From<Option<Vec<T>>> for zn_str_array_t
+where
+    T: ToString,
+{
+    #[inline]
+    fn from(v: Option<Vec<T>>) -> Self {
+        match v {
+            Some(v) => v.into(),
+            None => zn_str_array_t {
+                val: std::ptr::null(),
+                len: 0,
+            },
+        }
+    }
+}
+
+/// Free an array of NULL terminated strings and it's contained NULL terminated strings recursively.
+///
+/// Parameters:
+///     strs: The array of NULL terminated strings to free.
+///
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_str_array_free(strs: zn_str_array_t) {
+    let locators = Vec::from_raw_parts(
+        strs.val as *mut *const c_char,
+        strs.len as usize,
+        strs.len as usize,
+    );
+    for locator in locators {
+        let _ = CString::from_raw(locator as *mut c_char);
+    }
+}
+
+/// An array of bytes.
+///
+/// Members:
+///   const unsigned char *val: A pointer to the bytes array.
+///   unsigned int len: The length of the bytes array.
+///
+#[repr(C)]
+pub struct zn_bytes_t {
+    pub val: *const c_uchar,
+    pub len: c_uint,
+}
+
+impl From<PeerId> for zn_bytes_t {
+    #[inline]
+    fn from(pid: PeerId) -> Self {
+        let pid = pid.as_slice().to_vec().into_boxed_slice();
+        let res = zn_bytes_t {
+            val: pid.as_ptr(),
+            len: pid.len() as c_uint,
+        };
+        std::mem::forget(pid);
+        res
+    }
+}
+
+impl From<Option<PeerId>> for zn_bytes_t {
+    #[inline]
+    fn from(pid: Option<PeerId>) -> Self {
+        match pid {
+            Some(pid) => pid.into(),
+            None => zn_bytes_t {
+                val: std::ptr::null(),
+                len: 0,
+            },
+        }
+    }
+}
+
+/// A zenoh-net data sample.
+///
+/// A sample is the value associated to a given resource at a given point in time.
+///
+/// Members:
+///   zn_string_t key: The resource key of this data sample.
+///   zn_bytes_t value: The value of this data sample.
+#[repr(C)]
+pub struct zn_sample_t {
+    pub key: zn_string_t,
+    pub value: zn_bytes_t,
+}
+
+/// Information on the source of a reply.
+///
+/// Members:
+///   unsigned int kind: The kind of source.
+///   zn_bytes_t id: The unique id of the source.
+#[repr(C)]
+pub struct zn_source_info_t {
+    pub kind: c_uint,
+    pub id: zn_bytes_t,
+}
+
+/// A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
+///
+/// Members:
+///   unsigned int whatami: The kind of zenoh entity.
+///   zn_bytes_t pid: The peer id of the scouted entity (empty if absent).
+///   zn_str_array_t locators: The locators of the scouted entity.
+///
+#[repr(C)]
+pub struct zn_hello_t {
+    pub whatami: c_uint,
+    pub pid: zn_bytes_t,
+    pub locators: zn_str_array_t,
+}
+
+impl From<Hello> for zn_hello_t {
+    #[inline]
+    fn from(h: Hello) -> Self {
+        zn_hello_t {
+            whatami: match h.whatami {
+                Some(whatami) => whatami as c_uint,
+                None => ZN_ROUTER,
+            },
+            pid: h.pid.into(),
+            locators: h.locators.into(),
+        }
+    }
+}
+
+/// An array of :c:struct:`zn_hello_t` messages.
+///
+/// Members:
+///   const zn_hello_t *val: A pointer to the array.
+///   unsigned int len: The length of the array.
+///
+#[repr(C)]
+pub struct zn_hello_array_t {
+    pub val: *const zn_hello_t,
+    pub len: c_uint,
+}
+
+impl From<Vec<Hello>> for zn_hello_array_t {
+    fn from(hvec: Vec<Hello>) -> Self {
+        let mut hvec = hvec
+            .into_iter()
+            .map(|h| h.into())
+            .collect::<Vec<zn_hello_t>>();
+        hvec.shrink_to_fit();
+        let res = zn_hello_array_t {
+            val: hvec.as_ptr(),
+            len: hvec.len() as c_uint,
+        };
+        std::mem::forget(hvec);
+        res
+    }
+}
+
+/// Free an array of :c:struct:`zn_hello_t` messages and it's contained :c:struct:`zn_hello_t` messages recursively.
+///
+/// Parameters:
+///     strs: The array of :c:struct:`zn_hello_t` messages to free.
+///
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_hello_array_free(hellos: zn_hello_array_t) {
+    let hellos = Vec::from_raw_parts(
+        hellos.val as *mut zn_hello_t,
+        hellos.len as usize,
+        hellos.len as usize,
+    );
+    for hello in hellos {
+        zn_str_array_free(hello.locators);
+    }
+}
 
 /// The subscription reliability.
 ///
@@ -350,52 +569,4 @@ impl Into<QueryConsolidation> for zn_query_consolidation_t {
 #[no_mangle]
 pub extern "C" fn zn_query_consolidation_default() -> zn_query_consolidation_t {
     QueryConsolidation::default().into()
-}
-
-/// A string.
-///
-/// Members:
-///   const char *val: A pointer to the string.
-///   unsigned int len: The length of the string.
-///
-#[repr(C)]
-pub struct zn_string_t {
-    pub val: *const c_char,
-    pub len: c_uint,
-}
-
-/// An array of bytes.
-///
-/// Members:
-///   const unsigned char *val: A pointer to the bytes array.
-///   unsigned int len: The length of the bytes array.
-///
-#[repr(C)]
-pub struct zn_bytes_t {
-    pub val: *const c_uchar,
-    pub len: c_uint,
-}
-
-/// A zenoh-net data sample.
-///
-/// A sample is the value associated to a given resource at a given point in time.
-///
-/// Members:
-///   zn_string_t key: The resource key of this data sample.
-///   zn_bytes_t value: The value of this data sample.
-#[repr(C)]
-pub struct zn_sample_t {
-    pub key: zn_string_t,
-    pub value: zn_bytes_t,
-}
-
-/// Information on the source of a reply.
-///
-/// Members:
-///   unsigned int kind: The kind of source.
-///   zn_bytes_t id: The unique id of the source.
-#[repr(C)]
-pub struct zn_source_info_t {
-    pub kind: c_uint,
-    pub id: zn_bytes_t,
 }

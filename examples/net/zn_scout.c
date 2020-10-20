@@ -14,13 +14,13 @@
 #include <stdio.h>
 #include "zenoh/net.h"
 
-void fprintpid(FILE *stream, const unsigned char *peerid, int len) {
-    if (peerid == NULL) {
+void fprintpid(FILE *stream, zn_bytes_t pid) {
+    if (pid.val == NULL) {
         fprintf(stream, "None");
     } else {
         fprintf(stream, "Some(");
-        for (int i = 0; i < len; i++) {
-          fprintf(stream, "%02X", (int)peerid[i]);
+        for (int i = 0; i < pid.len; i++) {
+          fprintf(stream, "%02X", (int)pid.val[i]);
         }
         fprintf(stream, ")");
     }
@@ -32,28 +32,26 @@ void fprintwhatami(FILE *stream, unsigned int whatami) {
     else  { fprintf(stream, "\"Other\""); }
 }
 
-void fprintlocators(FILE *stream, zn_locators_t *locs) {
+void fprintlocators(FILE *stream, zn_str_array_t locs) {
     fprintf(stream, "[");
-    for (int i = 0; i < zn_scout_locators_len(locs); i++) {
+    for (unsigned int i = 0; i < locs.len; i++) {
         fprintf(stream, "\"");
-        fprintf(stream, "%s", zn_scout_locator_get(locs, i));
+        fprintf(stream, "%s", locs.val[i]);
         fprintf(stream, "\"");
-        if (i < zn_scout_locators_len(locs) - 1) {
+        if (i < locs.len - 1) {
             fprintf(stream, ", ");
         }
     }
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, zn_scout_t *scout, unsigned int idx) {
+void fprinthello(FILE *stream, zn_hello_t hello) {
     fprintf(stream, "Hello { pid: ");
-    fprintpid(stream, zn_scout_peerid(scout, idx), zn_scout_peerid_len(scout, idx));
+    fprintpid(stream, hello.pid);
     fprintf(stream, ", whatami: ");
-    fprintwhatami(stream, zn_scout_whatami(scout, idx));
+    fprintwhatami(stream, hello.whatami);
     fprintf(stream, ", locators: ");
-    zn_locators_t *locs = zn_scout_locators(scout, idx);
-    fprintlocators(stream, locs);
-    zn_scout_locators_free(locs);
+    fprintlocators(stream, hello.locators);
     fprintf(stream, " }");
 }
 
@@ -61,15 +59,16 @@ int main(int argc, char** argv) {
   zn_properties_t *config = zn_config_default();
 
   printf("Scouting...\n");
-  zn_scout_t *scout = zn_scout(ZN_ROUTER | ZN_PEER, config, 1000);  
-  if (zn_scout_len(scout) > 0) {
-    for (unsigned int i = 0; i < zn_scout_len(scout); ++i) {
-        fprinthello(stdout, scout, i);
+  zn_hello_array_t hellos = zn_scout(ZN_ROUTER | ZN_PEER, config, 1000);
+  if (hellos.len > 0) {
+    for (unsigned int i = 0; i < hellos.len; ++i) {
+        fprinthello(stdout, hellos.val[i]);
         fprintf(stdout, "\n");
     }
+    
+    zn_hello_array_free(hellos);
   } else {
     printf("Did not find any zenoh process.\n");
   }
-  zn_scout_free(scout);
   return 0;
 }

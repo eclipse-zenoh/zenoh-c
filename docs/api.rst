@@ -24,6 +24,11 @@ String
 
 .. autocstruct:: zenoh/net.h::zn_string_t
 
+Array of Str
+------------
+
+.. autocstruct:: zenoh/net.h::zn_str_array_t
+
 Bytes
 -----
 
@@ -63,36 +68,16 @@ Possible flags in a whatami bitmask :
 
   .. c:var:: const unsigned int ZN_CLIENT
 
-.. c:type:: zn_scout_t
+.. autocstruct:: zenoh/net.h::zn_hello_t
 
-  A set of scouted zenoh entities.
-
-.. c:type:: zn_locators_t
-
-  A set of zenoh locators.
+.. autocstruct:: zenoh/net.h::zn_hello_array_t
 
 Functions
 ---------
 
 .. autocfunction:: zenoh/net.h::zn_scout
 
-.. autocfunction:: zenoh/net.h::zn_scout_len
-
-.. autocfunction:: zenoh/net.h::zn_scout_whatami
-
-.. autocfunction:: zenoh/net.h::zn_scout_peerid
-
-.. autocfunction:: zenoh/net.h::zn_scout_peerid_len
-
-.. autocfunction:: zenoh/net.h::zn_scout_locators
-
-.. autocfunction:: zenoh/net.h::zn_scout_locators_len
-
-.. autocfunction:: zenoh/net.h::zn_scout_locator_get
-
-.. autocfunction:: zenoh/net.h::zn_scout_locators_free
-
-.. autocfunction:: zenoh/net.h::zn_scout_free
+.. autocfunction:: zenoh/net.h::zn_hello_array_free
 
 Session
 =======
