@@ -39,18 +39,16 @@ Properties
 
 .. c:type:: zn_properties_t
 
-  Data structure representing a set of id/value properties where the id is an unsigned int
-  and the value a :c:type:`zn_bytes_t` bytes array. Several entries with the same id are allowed.
+  A map of key/value properties where the key is an ``unsigned int``
+  and the value a :c:type:`zn_string_t`. Multiple values are coma separated.
 
 .. autocfunction:: zenoh/net.h::zn_properties_make
 
 .. autocfunction:: zenoh/net.h::zn_properties_len
 
-.. autocfunction:: zenoh/net.h::zn_properties_add
+.. autocfunction:: zenoh/net.h::zn_properties_insert
 
-.. autocfunction:: zenoh/net.h::zn_property_id
-
-.. autocfunction:: zenoh/net.h::zn_property_value
+.. autocfunction:: zenoh/net.h::zn_properties_get
 
 .. autocfunction:: zenoh/net.h::zn_properties_free
 
@@ -85,12 +83,11 @@ Session
 Session configuration
 ---------------------
 
-A zenoh-net session is configured through a set of :c:type:`zn_properties_t`.
+A zenoh-net session is configured through a :c:type:`zn_properties_t` properties map.
 
-Several properties with the same id are accepted. If only one property is 
-expected for a given id, then the last property with the id is used.
+Multiple values are coma separated.
 
-The following constants define the several property ids accepted for a zenoh-net 
+The following constants define the several property keys accepted for a zenoh-net 
 session configuration and the associated accepted values.
 
 .. c:var:: const unsigned int ZN_CONFIG_MODE_KEY
@@ -179,9 +176,9 @@ session configuration and the associated accepted values.
     - Accepted values : ``"true"``, ``"false"``.
     - Default value : ``"true"``.
 
-The following functions allow to create default sets of :c:type:`zn_properties_t` for 
+The following functions allow to create default :c:type:`zn_properties_t` maps for 
 zenoh-net session configuration. The returned configurations can be amended with extra 
-options with :c:func:`zn_properties_add`.
+options with :c:func:`zn_properties_insert`.
 
 .. autocfunction:: zenoh/net.h::zn_config_empty
 

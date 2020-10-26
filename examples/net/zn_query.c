@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     }
     zn_properties_t *config = zn_config_peer();
     if (argc > 2) {
-        zn_properties_add(config, ZN_CONFIG_PEER_KEY, argv[2]);
+        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");

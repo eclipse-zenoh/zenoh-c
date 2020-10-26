@@ -17,7 +17,7 @@
 int main(int argc, char** argv) {
     zn_properties_t *config = zn_config_peer();
     if (argc > 1) {
-        zn_properties_add(config, ZN_CONFIG_PEER_KEY, argv[1]);
+        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, argv[1]);
     }
     
     printf("Openning session...\n");
@@ -28,18 +28,14 @@ int main(int argc, char** argv) {
     }
 
     zn_properties_t *ps = zn_info(s);
-    int n = zn_properties_len(ps);
-    int id;
-
-    for (int i = 0; i < n; ++i) {
-        id = zn_property_id(ps, i);
-        const zn_bytes_t *bs = zn_property_value(ps, i);
-        printf(" %d : ", id);
-        for (int j = 0; j < bs->len; j++) {
-          printf("%02X", (int)bs->val[j]);
-        }
-        printf("\n");
-    }
+    zn_string_t prop = zn_properties_get(ps, ZN_INFO_PID_KEY);
+    printf("info_pid : %.*s\n", prop.len, prop.val);
+    
+    prop = zn_properties_get(ps, ZN_INFO_ROUTER_PID_KEY);
+    printf("info_router_pid : %.*s\n", prop.len, prop.val);
+    
+    prop = zn_properties_get(ps, ZN_INFO_PEER_PID_KEY);
+    printf("info_peer_pid : %.*s\n", prop.len, prop.val);
 
     zn_properties_free(ps);
     zn_close(s);

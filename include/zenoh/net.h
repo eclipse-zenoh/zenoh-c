@@ -394,7 +394,7 @@ void zn_hello_array_free(zn_hello_array_t hellos);
  *     session: A zenoh-net session.
  *
  * Returns:
- *     A set of properties containing informations on the given zenoh-net session.
+ *     A :c:type:`zn_properties_t` map containing informations on the given zenoh-net session.
  */
 zn_properties_t *zn_info(zn_session_t *session);
 
@@ -416,19 +416,6 @@ void zn_init_logger(void);
 zn_session_t *zn_open(zn_properties_t *config);
 
 /**
- * Add a property to a set of properties.
- *
- * Parameters:
- *   ps: A pointer to the properties.
- *   id: The id of the property to add.
- *   value: The value of the property to add.
- *
- * Returns:
- *     A pointer to the updated properties.
- */
-zn_properties_t *zn_properties_add(zn_properties_t *ps, unsigned long id, const char *value);
-
-/**
  * Free a set of properties.
  *
  * Parameters:
@@ -437,44 +424,46 @@ zn_properties_t *zn_properties_add(zn_properties_t *ps, unsigned long id, const 
 void zn_properties_free(zn_properties_t *ps);
 
 /**
- * Get the length of the given properties.
+ * Get the property with the given key from a properties map.
  *
  * Parameters:
- *     ps: A pointer to the properties.
+ *     ps: A pointer to properties map.
+ *     key: The key of the property.
  *
  * Returns:
- *     The length of the given properties.
+ *     The value of the property with key ``key`` in properties map ``ps``.
+ */
+zn_string_t zn_properties_get(zn_properties_t *ps, unsigned int key);
+
+/**
+ * Insert a property with a given key to a properties map.
+ * If a property with the same key already exists in the properties map, it is replaced.
+ *
+ * Parameters:
+ *   ps: A pointer to the properties map.
+ *   key: The key of the property to add.
+ *   value: The value of the property to add.
+ *
+ * Returns:
+ *     A pointer to the updated properties map.
+ */
+zn_properties_t *zn_properties_insert(zn_properties_t *ps, unsigned long key, char *value);
+
+/**
+ * Get the length of the given properties map.
+ *
+ * Parameters:
+ *     ps: A pointer to the properties map.
+ *
+ * Returns:
+ *     The length of the given properties map.
  */
 unsigned int zn_properties_len(zn_properties_t *ps);
 
 /**
- * Return a new empty set of properties.
+ * Return a new empty map of properties.
  */
 zn_properties_t *zn_properties_make(void);
-
-/**
- * Get the id of the property at a given index in a set of properties.
- *
- * Parameters:
- *     ps: A pointer to the properties.
- *     n: The index of the property.
- *
- * Returns:
- *     The id of the property at index ``n`` in properties ``ps``.
- */
-unsigned int zn_property_id(zn_properties_t *ps, unsigned int n);
-
-/**
- * Get the value of the property at a given index in a set of properties.
- *
- * Parameters:
- *     ps: A pointer to the properties.
- *     n: The index of the property.
- *
- * Returns:
- *     The value of the property at index ``n`` in properties ``ps``.
- */
-const zn_bytes_t *zn_property_value(zn_properties_t *ps, unsigned int n);
 
 /**
  * Pull data for a pull mode :c:type:`zn_subscriber_t`. The pulled data will be provided

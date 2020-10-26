@@ -31,8 +31,11 @@ pub use types::*;
 pub struct zn_session_t(zenoh::net::Session);
 #[allow(non_camel_case_types)]
 pub struct zn_reskey_t(zenoh::net::ResKey);
+
+type ZNProperties = zenoh_util::collections::IntKeyProperties<zenoh_util::collections::DummyTranscoder>;
+
 #[allow(non_camel_case_types)]
-pub struct zn_properties_t(zenoh::net::Properties);
+pub struct zn_properties_t(ZNProperties);
 
 enum ZnSubOps {
     Pull,
@@ -98,79 +101,67 @@ pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut zn_reskey_t {
     ))))
 }
 
-/// Return a new empty set of properties.
+/// Return a new empty map of properties.
 #[no_mangle]
 pub extern "C" fn zn_properties_make() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(zenoh::net::Properties::new())))
+    Box::into_raw(Box::new(zn_properties_t(ZNProperties::default())))
 }
 
-/// Get the length of the given properties.
+/// Get the length of the given properties map.
 ///
 /// Parameters:
-///     ps: A pointer to the properties.
+///     ps: A pointer to the properties map.
 ///
 /// Returns:
-///     The length of the given properties.
+///     The length of the given properties map.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_properties_len(ps: *mut zn_properties_t) -> c_uint {
     (*ps).0.len() as c_uint
 }
 
-/// Get the id of the property at a given index in a set of properties.
+/// Get the property with the given key from a properties map.
 ///
 /// Parameters:
-///     ps: A pointer to the properties.
-///     n: The index of the property.
+///     ps: A pointer to properties map.
+///     key: The key of the property.
 ///
 /// Returns:
-///     The id of the property at index ``n`` in properties ``ps``.
+///     The value of the property with key ``key`` in properties map ``ps``.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_property_id(ps: *mut zn_properties_t, n: c_uint) -> c_uint {
-    (*ps).0[n as usize].0 as c_uint
+pub unsafe extern "C" fn zn_properties_get(ps: *mut zn_properties_t, key: c_uint) -> zn_string_t {
+    let val = (*ps).0.get(&(key as u64));
+    match val {
+        Some(val) => zn_string_t {
+            val: val.as_ptr() as *const c_char,
+            len: val.len() as c_uint,
+        },
+        None => zn_string_t {
+            val: std::ptr::null(),
+            len: 0,
+        },
+    }
 }
 
-/// Get the value of the property at a given index in a set of properties.
+/// Insert a property with a given key to a properties map.
+/// If a property with the same key already exists in the properties map, it is replaced.
 ///
 /// Parameters:
-///     ps: A pointer to the properties.
-///     n: The index of the property.
-///
-/// Returns:
-///     The value of the property at index ``n`` in properties ``ps``.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_property_value(
-    ps: *mut zn_properties_t,
-    n: c_uint,
-) -> *const zn_bytes_t {
-    let ptr = (*ps).0[n as usize].1.as_ptr();
-    let value = Box::new(zn_bytes_t {
-        val: ptr as *const c_uchar,
-        len: (*ps).0[n as usize].1.len() as c_uint,
-    });
-    Box::into_raw(value)
-}
-
-/// Add a property to a set of properties.
-///
-/// Parameters:
-///   ps: A pointer to the properties.
-///   id: The id of the property to add.
+///   ps: A pointer to the properties map.
+///   key: The key of the property to add.
 ///   value: The value of the property to add.
 ///
 /// Returns:
-///     A pointer to the updated properties.
+///     A pointer to the updated properties map.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_properties_add(
+pub unsafe extern "C" fn zn_properties_insert(
     ps: *mut zn_properties_t,
-    id: c_ulong,
-    value: *const c_char,
+    key: c_ulong,
+    value: *mut c_char,
 ) -> *mut zn_properties_t {
-    let bs = CStr::from_ptr(value).to_bytes();
-    (*ps).0.push((to_zint!(id), Vec::from(bs)));
+    (*ps).0.insert(key, CStr::from_ptr(value).to_string_lossy().to_string());
     ps
 }
 
@@ -189,21 +180,24 @@ pub unsafe extern "C" fn zn_properties_free(ps: *mut zn_properties_t) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_empty() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(config::empty())))
+    Box::into_raw(Box::new(zn_properties_t(
+        ZNProperties::from(config::empty().0))))
 }
 
 /// Create a default set of properties for zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_default() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(config::default())))
+    Box::into_raw(Box::new(zn_properties_t(
+        ZNProperties::from(config::default().0))))
 }
 
 /// Create a default set of properties for peer mode zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_peer() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(config::peer())))
+    Box::into_raw(Box::new(zn_properties_t(
+        ZNProperties::from(config::peer().0))))
 }
 
 /// Create a default set of properties for client mode zenoh-net session configuration.
@@ -221,7 +215,8 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properti
     } else {
         return std::ptr::null_mut();
     };
-    Box::into_raw(Box::new(zn_properties_t(config::client(locator))))
+    Box::into_raw(Box::new(zn_properties_t(
+        ZNProperties::from(config::client(locator).0))))
 }
 
 /// Return the resource name for this query
@@ -267,7 +262,7 @@ pub unsafe extern "C" fn zn_scout(
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::net::scout(what, (*config).0).await;
+        let mut stream = zenoh::net::scout(what, (*config).0.0.into()).await;
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
@@ -298,7 +293,7 @@ pub extern "C" fn zn_init_logger() {
 #[no_mangle]
 pub unsafe extern "C" fn zn_open(config: *mut zn_properties_t) -> *mut zn_session_t {
     let config = Box::from_raw(config);
-    let s = task::block_on(async move { open((*config).0).await });
+    let s = task::block_on(async move { open((*config).0.0.into()).await });
     match s {
         Ok(v) => Box::into_raw(Box::new(zn_session_t(v))),
         Err(_) => std::ptr::null_mut(),
@@ -311,12 +306,12 @@ pub unsafe extern "C" fn zn_open(config: *mut zn_properties_t) -> *mut zn_sessio
 ///     session: A zenoh-net session.
 ///
 /// Returns:
-///     A set of properties containing informations on the given zenoh-net session.
+///     A :c:type:`zn_properties_t` map containing informations on the given zenoh-net session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_info(session: *mut zn_session_t) -> *mut zn_properties_t {
     let ps = task::block_on((*session).0.info());
-    let bps = Box::new(zn_properties_t(ps));
+    let bps = Box::new(zn_properties_t(ZNProperties::from(ps.0)));
     Box::into_raw(bps)
 }
 
