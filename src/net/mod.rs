@@ -32,7 +32,8 @@ pub struct zn_session_t(zenoh::net::Session);
 #[allow(non_camel_case_types)]
 pub struct zn_reskey_t(zenoh::net::ResKey);
 
-type ZNProperties = zenoh_util::collections::IntKeyProperties<zenoh_util::collections::DummyTranscoder>;
+type ZNProperties =
+    zenoh_util::collections::IntKeyProperties<zenoh_util::collections::DummyTranscoder>;
 
 #[allow(non_camel_case_types)]
 pub struct zn_properties_t(ZNProperties);
@@ -161,7 +162,9 @@ pub unsafe extern "C" fn zn_properties_insert(
     key: c_ulong,
     value: *mut c_char,
 ) -> *mut zn_properties_t {
-    (*ps).0.insert(key, CStr::from_ptr(value).to_string_lossy().to_string());
+    (*ps)
+        .0
+        .insert(key, CStr::from_ptr(value).to_string_lossy().to_string());
     ps
 }
 
@@ -180,24 +183,27 @@ pub unsafe extern "C" fn zn_properties_free(ps: *mut zn_properties_t) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_empty() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(
-        ZNProperties::from(config::empty().0))))
+    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
+        config::empty().0,
+    ))))
 }
 
 /// Create a default set of properties for zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_default() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(
-        ZNProperties::from(config::default().0))))
+    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
+        config::default().0,
+    ))))
 }
 
 /// Create a default set of properties for peer mode zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_peer() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(
-        ZNProperties::from(config::peer().0))))
+    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
+        config::peer().0,
+    ))))
 }
 
 /// Create a default set of properties for client mode zenoh-net session configuration.
@@ -215,8 +221,9 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properti
     } else {
         return std::ptr::null_mut();
     };
-    Box::into_raw(Box::new(zn_properties_t(
-        ZNProperties::from(config::client(locator).0))))
+    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
+        config::client(locator).0,
+    ))))
 }
 
 /// Return the resource name for this query
@@ -262,7 +269,7 @@ pub unsafe extern "C" fn zn_scout(
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::net::scout(what, (*config).0.0.into()).await;
+        let mut stream = zenoh::net::scout(what, ((*config).0).0.into()).await;
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
@@ -293,7 +300,7 @@ pub extern "C" fn zn_init_logger() {
 #[no_mangle]
 pub unsafe extern "C" fn zn_open(config: *mut zn_properties_t) -> *mut zn_session_t {
     let config = Box::from_raw(config);
-    let s = task::block_on(async move { open((*config).0.0.into()).await });
+    let s = task::block_on(async move { open(((*config).0).0.into()).await });
     match s {
         Ok(v) => Box::into_raw(Box::new(zn_session_t(v))),
         Err(_) => std::ptr::null_mut(),
