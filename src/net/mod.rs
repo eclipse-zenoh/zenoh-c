@@ -162,9 +162,10 @@ pub unsafe extern "C" fn zn_properties_insert(
     key: c_ulong,
     value: *mut c_char,
 ) -> *mut zn_properties_t {
-    (*ps)
-        .0
-        .insert(key.into(), CStr::from_ptr(value).to_string_lossy().to_string());
+    (*ps).0.insert(
+        key.into(),
+        CStr::from_ptr(value).to_string_lossy().to_string(),
+    );
     ps
 }
 
