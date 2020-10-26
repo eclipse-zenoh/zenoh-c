@@ -19,7 +19,7 @@ pipeline {
     stage('Checkout Git TAG') {
       agent { label 'MacMini' }
       steps {
-        cleanWs()
+        deleteDir()
         checkout([$class: 'GitSCM',
                   branches: [[name: "${params.GIT_TAG}"]],
                   doGenerateSubmoduleConfigurations: false,
@@ -99,6 +99,7 @@ pipeline {
 
     stage('Publish to download.eclipse.org') {
       steps {
+        deleteDir()
         // Unstash packages to be deployed
         unstash 'zenoh-c-MacOS'
         unstash 'zenoh-c-Linux-x64'
