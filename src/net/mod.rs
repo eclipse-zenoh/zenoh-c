@@ -164,7 +164,7 @@ pub unsafe extern "C" fn zn_properties_insert(
 ) -> *mut zn_properties_t {
     (*ps)
         .0
-        .insert(key, CStr::from_ptr(value).to_string_lossy().to_string());
+        .insert(key.into(), CStr::from_ptr(value).to_string_lossy().to_string());
     ps
 }
 
@@ -275,7 +275,7 @@ pub unsafe extern "C" fn zn_scout(
                 hs.push(hello)
             }
         };
-        let timeout = async_std::task::sleep(std::time::Duration::from_millis(scout_period as u64));
+        let timeout = async_std::task::sleep(std::time::Duration::from_millis(scout_period.into()));
         FutureExt::race(scout, timeout).await;
         hs
     });
@@ -353,7 +353,7 @@ pub unsafe extern "C" fn zn_declare_resource(
         return 0;
     }
 
-    task::block_on((*session).0.declare_resource(&(*reskey).0)).unwrap() as c_ulong
+    task::block_on((*session).0.declare_resource(&(*reskey).0)).unwrap().into()
 }
 
 /// Write data.
