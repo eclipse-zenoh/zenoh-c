@@ -275,7 +275,7 @@ pub unsafe extern "C" fn zn_scout(
                 hs.push(hello)
             }
         };
-        let timeout = async_std::task::sleep(std::time::Duration::from_millis(scout_period.into()));
+        let timeout = async_std::task::sleep(std::time::Duration::from_millis(scout_period as u64));
         FutureExt::race(scout, timeout).await;
         hs
     });
@@ -353,7 +353,7 @@ pub unsafe extern "C" fn zn_declare_resource(
         return 0;
     }
 
-    task::block_on((*session).0.declare_resource(&(*reskey).0)).unwrap().into()
+    task::block_on((*session).0.declare_resource(&(*reskey).0)).unwrap() as c_ulong
 }
 
 /// Write data.
