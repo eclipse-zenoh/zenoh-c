@@ -131,14 +131,14 @@ pub unsafe extern "C" fn zn_properties_len(ps: *mut zn_properties_t) -> c_uint {
 ///     The value of the property with key ``key`` in properties map ``ps``.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_properties_get(ps: *mut zn_properties_t, key: c_uint) -> zn_string_t {
+pub unsafe extern "C" fn zn_properties_get(ps: *mut zn_properties_t, key: c_uint) -> z_string_t {
     let val = (*ps).0.get(&(key as u64));
     match val {
-        Some(val) => zn_string_t {
+        Some(val) => z_string_t {
             val: val.as_ptr() as *const c_char,
             len: val.len() as size_t,
         },
-        None => zn_string_t {
+        None => z_string_t {
             val: std::ptr::null(),
             len: 0,
         },
@@ -230,8 +230,8 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properti
 /// Return the resource name for this query
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> *const zn_string_t {
-    let rn = zn_string_t {
+pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> *const z_string_t {
+    let rn = z_string_t {
         val: (*query).0.res_name.as_ptr() as *const c_char,
         len: (*query).0.res_name.len() as size_t,
     };
@@ -241,8 +241,8 @@ pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> *const zn_
 /// Return the predicate for this query
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> *const zn_string_t {
-    let pred = zn_string_t {
+pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> *const z_string_t {
+    let pred = z_string_t {
         val: (*query).0.predicate.as_ptr() as *const c_char,
         len: (*query).0.predicate.len() as size_t,
     };
@@ -286,7 +286,7 @@ pub unsafe extern "C" fn zn_scout(
 /// Initialise the zenoh runtime logger
 ///
 #[no_mangle]
-pub extern "C" fn zn_init_logger() {
+pub extern "C" fn z_init_logger() {
     env_logger::init();
 }
 
@@ -461,11 +461,11 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     // any of the task resolving futures.
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let key = zn_string_t {
+            let key = z_string_t {
                 val: std::ptr::null(),
                 len: 0,
             };
-            let value = zn_bytes_t {
+            let value = z_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             };
@@ -571,16 +571,16 @@ pub unsafe extern "C" fn zn_query(
 
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let key = zn_string_t {
+            let key = z_string_t {
                 val: std::ptr::null(),
                 len: 0,
             };
-            let value = zn_bytes_t {
+            let value = z_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             };
             let mut sample = zn_sample_t { key, value };
-            let id = zn_bytes_t {
+            let id = z_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             };

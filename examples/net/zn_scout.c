@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include "zenoh/net.h"
 
-void fprintpid(FILE *stream, zn_bytes_t pid) {
+void fprintpid(FILE *stream, z_bytes_t pid) {
     if (pid.val == NULL) {
         fprintf(stream, "None");
     } else {
@@ -32,7 +32,7 @@ void fprintwhatami(FILE *stream, unsigned int whatami) {
     else  { fprintf(stream, "\"Other\""); }
 }
 
-void fprintlocators(FILE *stream, zn_str_array_t locs) {
+void fprintlocators(FILE *stream, z_str_array_t locs) {
     fprintf(stream, "[");
     for (unsigned int i = 0; i < locs.len; i++) {
         fprintf(stream, "\"");

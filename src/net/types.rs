@@ -71,7 +71,7 @@ pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_ui
 ///   unsigned int len: The length of the string.
 ///
 #[repr(C)]
-pub struct zn_string_t {
+pub struct z_string_t {
     pub val: *const c_char,
     pub len: size_t,
 }
@@ -83,12 +83,12 @@ pub struct zn_string_t {
 ///   unsigned int len: The length of the array.
 ///
 #[repr(C)]
-pub struct zn_str_array_t {
+pub struct z_str_array_t {
     pub val: *const *const c_char,
     pub len: size_t,
 }
 
-impl<T> From<Vec<T>> for zn_str_array_t
+impl<T> From<Vec<T>> for z_str_array_t
 where
     T: ToString,
 {
@@ -103,7 +103,7 @@ where
                 res
             })
             .collect::<Vec<*const c_char>>();
-        let res = zn_str_array_t {
+        let res = z_str_array_t {
             val: v.as_ptr(),
             len: v.len() as size_t,
         };
@@ -112,7 +112,7 @@ where
     }
 }
 
-impl<T> From<Option<Vec<T>>> for zn_str_array_t
+impl<T> From<Option<Vec<T>>> for z_str_array_t
 where
     T: ToString,
 {
@@ -120,7 +120,7 @@ where
     fn from(v: Option<Vec<T>>) -> Self {
         match v {
             Some(v) => v.into(),
-            None => zn_str_array_t {
+            None => z_str_array_t {
                 val: std::ptr::null(),
                 len: 0,
             },
@@ -135,7 +135,7 @@ where
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_str_array_free(strs: zn_str_array_t) {
+pub unsafe extern "C" fn zn_str_array_free(strs: z_str_array_t) {
     let locators = Vec::from_raw_parts(
         strs.val as *mut *const c_char,
         strs.len as usize,
@@ -153,16 +153,16 @@ pub unsafe extern "C" fn zn_str_array_free(strs: zn_str_array_t) {
 ///   unsigned int len: The length of the bytes array.
 ///
 #[repr(C)]
-pub struct zn_bytes_t {
+pub struct z_bytes_t {
     pub val: *const u8,
     pub len: size_t,
 }
 
-impl From<PeerId> for zn_bytes_t {
+impl From<PeerId> for z_bytes_t {
     #[inline]
     fn from(pid: PeerId) -> Self {
         let pid = pid.as_slice().to_vec().into_boxed_slice();
-        let res = zn_bytes_t {
+        let res = z_bytes_t {
             val: pid.as_ptr(),
             len: pid.len() as size_t,
         };
@@ -171,12 +171,12 @@ impl From<PeerId> for zn_bytes_t {
     }
 }
 
-impl From<Option<PeerId>> for zn_bytes_t {
+impl From<Option<PeerId>> for z_bytes_t {
     #[inline]
     fn from(pid: Option<PeerId>) -> Self {
         match pid {
             Some(pid) => pid.into(),
-            None => zn_bytes_t {
+            None => z_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             },
@@ -189,37 +189,37 @@ impl From<Option<PeerId>> for zn_bytes_t {
 /// A sample is the value associated to a given resource at a given point in time.
 ///
 /// Members:
-///   zn_string_t key: The resource key of this data sample.
-///   zn_bytes_t value: The value of this data sample.
+///   z_string_t key: The resource key of this data sample.
+///   z_bytes_t value: The value of this data sample.
 #[repr(C)]
 pub struct zn_sample_t {
-    pub key: zn_string_t,
-    pub value: zn_bytes_t,
+    pub key: z_string_t,
+    pub value: z_bytes_t,
 }
 
 /// Information on the source of a reply.
 ///
 /// Members:
 ///   unsigned int kind: The kind of source.
-///   zn_bytes_t id: The unique id of the source.
+///   z_bytes_t id: The unique id of the source.
 #[repr(C)]
 pub struct zn_source_info_t {
     pub kind: c_uint,
-    pub id: zn_bytes_t,
+    pub id: z_bytes_t,
 }
 
 /// A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
 ///
 /// Members:
 ///   unsigned int whatami: The kind of zenoh entity.
-///   zn_bytes_t pid: The peer id of the scouted entity (empty if absent).
-///   zn_str_array_t locators: The locators of the scouted entity.
+///   z_bytes_t pid: The peer id of the scouted entity (empty if absent).
+///   z_str_array_t locators: The locators of the scouted entity.
 ///
 #[repr(C)]
 pub struct zn_hello_t {
     pub whatami: c_uint,
-    pub pid: zn_bytes_t,
-    pub locators: zn_str_array_t,
+    pub pid: z_bytes_t,
+    pub locators: z_str_array_t,
 }
 
 impl From<Hello> for zn_hello_t {

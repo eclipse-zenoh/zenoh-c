@@ -92,10 +92,10 @@ typedef struct zn_subinfo_t {
  *   unsigned int len: The length of the string.
  *
  */
-typedef struct zn_string_t {
+typedef struct z_string_t {
   const char *val;
   size_t len;
-} zn_string_t;
+} z_string_t;
 
 /**
  * An array of bytes.
@@ -105,10 +105,10 @@ typedef struct zn_string_t {
  *   unsigned int len: The length of the bytes array.
  *
  */
-typedef struct zn_bytes_t {
+typedef struct z_bytes_t {
   const uint8_t *val;
   size_t len;
-} zn_bytes_t;
+} z_bytes_t;
 
 /**
  * A zenoh-net data sample.
@@ -116,12 +116,12 @@ typedef struct zn_bytes_t {
  * A sample is the value associated to a given resource at a given point in time.
  *
  * Members:
- *   zn_string_t key: The resource key of this data sample.
- *   zn_bytes_t value: The value of this data sample.
+ *   z_string_t key: The resource key of this data sample.
+ *   z_bytes_t value: The value of this data sample.
  */
 typedef struct zn_sample_t {
-  zn_string_t key;
-  zn_bytes_t value;
+  z_string_t key;
+  z_bytes_t value;
 } zn_sample_t;
 
 /**
@@ -132,24 +132,24 @@ typedef struct zn_sample_t {
  *   unsigned int len: The length of the array.
  *
  */
-typedef struct zn_str_array_t {
+typedef struct z_str_array_t {
   const char *const *val;
   size_t len;
-} zn_str_array_t;
+} z_str_array_t;
 
 /**
  * A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
  *
  * Members:
  *   unsigned int whatami: The kind of zenoh entity.
- *   zn_bytes_t pid: The peer id of the scouted entity (empty if absent).
- *   zn_str_array_t locators: The locators of the scouted entity.
+ *   z_bytes_t pid: The peer id of the scouted entity (empty if absent).
+ *   z_str_array_t locators: The locators of the scouted entity.
  *
  */
 typedef struct zn_hello_t {
   unsigned int whatami;
-  zn_bytes_t pid;
-  zn_str_array_t locators;
+  z_bytes_t pid;
+  z_str_array_t locators;
 } zn_hello_t;
 
 /**
@@ -223,11 +223,11 @@ typedef struct zn_query_consolidation_t {
  *
  * Members:
  *   unsigned int kind: The kind of source.
- *   zn_bytes_t id: The unique id of the source.
+ *   z_bytes_t id: The unique id of the source.
  */
 typedef struct zn_source_info_t {
   unsigned int kind;
-  zn_bytes_t id;
+  z_bytes_t id;
 } zn_source_info_t;
 
 extern const unsigned int ZN_CLIENT;
@@ -271,6 +271,12 @@ extern const unsigned int ZN_QUERYABLE_EVAL;
 extern const unsigned int ZN_QUERYABLE_STORAGE;
 
 extern const unsigned int ZN_ROUTER;
+
+/**
+ * Initialise the zenoh runtime logger
+ *
+ */
+void z_init_logger(void);
 
 /**
  * Close a zenoh-net session.
@@ -399,12 +405,6 @@ void zn_hello_array_free(zn_hello_array_t hellos);
 zn_properties_t *zn_info(zn_session_t *session);
 
 /**
- * Initialise the zenoh runtime logger
- *
- */
-void zn_init_logger(void);
-
-/**
  * Open a zenoh-net session
  *
  * Parameters:
@@ -433,7 +433,7 @@ void zn_properties_free(zn_properties_t *ps);
  * Returns:
  *     The value of the property with key ``key`` in properties map ``ps``.
  */
-zn_string_t zn_properties_get(zn_properties_t *ps, unsigned int key);
+z_string_t zn_properties_get(zn_properties_t *ps, unsigned int key);
 
 /**
  * Insert a property with a given key to a properties map.
@@ -502,12 +502,12 @@ zn_query_consolidation_t zn_query_consolidation_default(void);
 /**
  * Return the predicate for this query
  */
-const zn_string_t *zn_query_predicate(zn_query_t *query);
+const z_string_t *zn_query_predicate(zn_query_t *query);
 
 /**
  * Return the resource name for this query
  */
-const zn_string_t *zn_query_res_name(zn_query_t *query);
+const z_string_t *zn_query_res_name(zn_query_t *query);
 
 /**
  * Create a default :c:type:`zn_query_target_t`.
@@ -576,7 +576,7 @@ void zn_send_reply(zn_query_t *query,
  *     strs: The array of NULL terminated strings to free.
  *
  */
-void zn_str_array_free(zn_str_array_t strs);
+void zn_str_array_free(z_str_array_t strs);
 
 /**
  * Create a default subscription info.

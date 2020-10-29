@@ -19,8 +19,8 @@ char *uri = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
 void query_handler(zn_query_t *query, const void *arg) {
-    const zn_string_t *res = zn_query_res_name(query);
-    const zn_string_t *pred = zn_query_predicate(query);
+    const z_string_t *res = zn_query_res_name(query);
+    const z_string_t *pred = zn_query_predicate(query);
     printf(">> [Query handler] Handling '%.*s?%.*s'\n", (int)res->len, res->val, (int)pred->len, pred->val);
     zn_send_reply(query, uri, (const unsigned char *)value, strlen(value));
 }

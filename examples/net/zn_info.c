@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     }
 
     zn_properties_t *ps = zn_info(s);
-    zn_string_t prop = zn_properties_get(ps, ZN_INFO_PID_KEY);
+    z_string_t prop = zn_properties_get(ps, ZN_INFO_PID_KEY);
     printf("info_pid : %.*s\n", (int)prop.len, prop.val);
     
     prop = zn_properties_get(ps, ZN_INFO_ROUTER_PID_KEY);

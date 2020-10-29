@@ -22,17 +22,17 @@ Types
 String
 ------
 
-.. autocstruct:: zenoh/net.h::zn_string_t
+.. autocstruct:: zenoh/net.h::z_string_t
 
 Array of Str
 ------------
 
-.. autocstruct:: zenoh/net.h::zn_str_array_t
+.. autocstruct:: zenoh/net.h::z_str_array_t
 
 Bytes
 -----
 
-.. autocstruct:: zenoh/net.h::zn_bytes_t
+.. autocstruct:: zenoh/net.h::z_bytes_t
 
 Properties
 ----------
@@ -40,7 +40,7 @@ Properties
 .. c:type:: zn_properties_t
 
   A map of key/value properties where the key is an ``unsigned int``
-  and the value a :c:type:`zn_string_t`. Multiple values are coma separated.
+  and the value a :c:type:`z_string_t`. Multiple values are coma separated.
 
 .. autocfunction:: zenoh/net.h::zn_properties_make
 
