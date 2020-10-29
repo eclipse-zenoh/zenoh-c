@@ -11,7 +11,7 @@
 // Contributors:
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
-use libc::{c_char, c_uchar, c_uint};
+use libc::{c_char, c_uint, size_t};
 use std::ffi::CString;
 use zenoh::net::*;
 
@@ -73,7 +73,7 @@ pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_ui
 #[repr(C)]
 pub struct zn_string_t {
     pub val: *const c_char,
-    pub len: c_uint,
+    pub len: size_t,
 }
 
 /// An array of NULL terminated strings.
@@ -85,7 +85,7 @@ pub struct zn_string_t {
 #[repr(C)]
 pub struct zn_str_array_t {
     pub val: *const *const c_char,
-    pub len: c_uint,
+    pub len: size_t,
 }
 
 impl<T> From<Vec<T>> for zn_str_array_t
@@ -105,7 +105,7 @@ where
             .collect::<Vec<*const c_char>>();
         let res = zn_str_array_t {
             val: v.as_ptr(),
-            len: v.len() as c_uint,
+            len: v.len() as size_t,
         };
         std::mem::forget(v);
         res
@@ -154,8 +154,8 @@ pub unsafe extern "C" fn zn_str_array_free(strs: zn_str_array_t) {
 ///
 #[repr(C)]
 pub struct zn_bytes_t {
-    pub val: *const c_uchar,
-    pub len: c_uint,
+    pub val: *const u8,
+    pub len: size_t,
 }
 
 impl From<PeerId> for zn_bytes_t {
@@ -164,7 +164,7 @@ impl From<PeerId> for zn_bytes_t {
         let pid = pid.as_slice().to_vec().into_boxed_slice();
         let res = zn_bytes_t {
             val: pid.as_ptr(),
-            len: pid.len() as c_uint,
+            len: pid.len() as size_t,
         };
         std::mem::forget(pid);
         res
@@ -245,7 +245,7 @@ impl From<Hello> for zn_hello_t {
 #[repr(C)]
 pub struct zn_hello_array_t {
     pub val: *const zn_hello_t,
-    pub len: c_uint,
+    pub len: size_t,
 }
 
 impl From<Vec<Hello>> for zn_hello_array_t {
@@ -257,7 +257,7 @@ impl From<Vec<Hello>> for zn_hello_array_t {
         hvec.shrink_to_fit();
         let res = zn_hello_array_t {
             val: hvec.as_ptr(),
-            len: hvec.len() as c_uint,
+            len: hvec.len() as size_t,
         };
         std::mem::forget(hvec);
         res

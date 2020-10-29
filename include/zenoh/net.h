@@ -94,7 +94,7 @@ typedef struct zn_subinfo_t {
  */
 typedef struct zn_string_t {
   const char *val;
-  unsigned int len;
+  size_t len;
 } zn_string_t;
 
 /**
@@ -106,8 +106,8 @@ typedef struct zn_string_t {
  *
  */
 typedef struct zn_bytes_t {
-  const unsigned char *val;
-  unsigned int len;
+  const uint8_t *val;
+  size_t len;
 } zn_bytes_t;
 
 /**
@@ -134,7 +134,7 @@ typedef struct zn_sample_t {
  */
 typedef struct zn_str_array_t {
   const char *const *val;
-  unsigned int len;
+  size_t len;
 } zn_str_array_t;
 
 /**
@@ -162,7 +162,7 @@ typedef struct zn_hello_t {
  */
 typedef struct zn_hello_array_t {
   const zn_hello_t *val;
-  unsigned int len;
+  size_t len;
 } zn_hello_array_t;
 
 /**

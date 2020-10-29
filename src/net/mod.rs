@@ -16,7 +16,7 @@ use async_std::sync::{channel, Arc, Sender};
 use async_std::task;
 use futures::prelude::*;
 use futures::select;
-use libc::{c_char, c_int, c_uchar, c_uint, c_ulong};
+use libc::{c_char, c_int, c_uchar, c_uint, c_ulong, size_t};
 use std::convert::TryFrom;
 use std::ffi::{c_void, CStr, CString};
 use std::slice;
@@ -136,7 +136,7 @@ pub unsafe extern "C" fn zn_properties_get(ps: *mut zn_properties_t, key: c_uint
     match val {
         Some(val) => zn_string_t {
             val: val.as_ptr() as *const c_char,
-            len: val.len() as c_uint,
+            len: val.len() as size_t,
         },
         None => zn_string_t {
             val: std::ptr::null(),
@@ -233,7 +233,7 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properti
 pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> *const zn_string_t {
     let rn = zn_string_t {
         val: (*query).0.res_name.as_ptr() as *const c_char,
-        len: (*query).0.res_name.len() as c_uint,
+        len: (*query).0.res_name.len() as size_t,
     };
     Box::into_raw(Box::new(rn))
 }
@@ -244,7 +244,7 @@ pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> *const zn_
 pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> *const zn_string_t {
     let pred = zn_string_t {
         val: (*query).0.predicate.as_ptr() as *const c_char,
-        len: (*query).0.predicate.len() as c_uint,
+        len: (*query).0.predicate.len() as size_t,
     };
     Box::into_raw(Box::new(pred))
 }
@@ -482,9 +482,9 @@ pub unsafe extern "C" fn zn_declare_subscriber(
                         let us = s.unwrap();
                         let data = us.payload.to_vec();
                         sample.key.val = us.res_name.as_ptr() as *const c_char;
-                        sample.key.len = us.res_name.len() as c_uint;
+                        sample.key.len = us.res_name.len() as size_t;
                         sample.value.val = data.as_ptr() as *const c_uchar;
-                        sample.value.len = data.len() as c_uint;
+                        sample.value.len = data.len() as size_t;
                         callback(&sample, arg)
                     },
                     op = rx.recv().fuse() => {
@@ -590,12 +590,12 @@ pub unsafe extern "C" fn zn_query(
             while let Some(reply) = q.next().await {
                 source_info.kind = reply.source_kind as c_uint;
                 source_info.id.val = reply.replier_id.as_slice().as_ptr() as *const c_uchar;
-                source_info.id.len = reply.replier_id.as_slice().len() as c_uint;
+                source_info.id.len = reply.replier_id.as_slice().len() as size_t;
                 sample.key.val = reply.data.res_name.as_ptr() as *const c_char;
-                sample.key.len = reply.data.res_name.len() as c_uint;
+                sample.key.len = reply.data.res_name.len() as size_t;
                 let data = reply.data.payload.to_vec();
                 sample.value.val = data.as_ptr() as *const c_uchar;
-                sample.value.len = data.len() as c_uint;
+                sample.value.len = data.len() as size_t;
 
                 callback(&source_info, &sample, arg)
             }

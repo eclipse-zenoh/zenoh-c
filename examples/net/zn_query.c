@@ -18,8 +18,8 @@
 
 void reply_handler(const zn_source_info_t *info, const zn_sample_t *sample, const void *arg) {
     printf(">> [Reply handler] received (%.*s, %.*s)\n",
-        sample->key.len, sample->key.val,
-        sample->value.len, sample->value.val);
+        (int)sample->key.len, sample->key.val,
+        (int)sample->value.len, sample->value.val);
 }
 
 int main(int argc, char** argv) {
