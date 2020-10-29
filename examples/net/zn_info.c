@@ -29,13 +29,13 @@ int main(int argc, char** argv) {
 
     zn_properties_t *ps = zn_info(s);
     zn_string_t prop = zn_properties_get(ps, ZN_INFO_PID_KEY);
-    printf("info_pid : %.*s\n", prop.len, prop.val);
+    printf("info_pid : %.*s\n", (int)prop.len, prop.val);
     
     prop = zn_properties_get(ps, ZN_INFO_ROUTER_PID_KEY);
-    printf("info_router_pid : %.*s\n", prop.len, prop.val);
+    printf("info_router_pid : %.*s\n", (int)prop.len, prop.val);
     
     prop = zn_properties_get(ps, ZN_INFO_PEER_PID_KEY);
-    printf("info_peer_pid : %.*s\n", prop.len, prop.val);
+    printf("info_peer_pid : %.*s\n", (int)prop.len, prop.val);
 
     zn_properties_free(ps);
     zn_close(s);
