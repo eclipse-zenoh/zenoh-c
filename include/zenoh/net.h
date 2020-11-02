@@ -57,6 +57,19 @@ typedef struct zn_session_t zn_session_t;
 typedef struct zn_subscriber_t zn_subscriber_t;
 
 /**
+ * A string.
+ *
+ * Members:
+ *   const char *val: A pointer to the string.
+ *   unsigned int len: The length of the string.
+ *
+ */
+typedef struct z_string_t {
+  const char *val;
+  size_t len;
+} z_string_t;
+
+/**
  * The subscription period.
  *
  * Members:
@@ -83,19 +96,6 @@ typedef struct zn_subinfo_t {
   zn_submode_t mode;
   zn_period_t *period;
 } zn_subinfo_t;
-
-/**
- * A string.
- *
- * Members:
- *   const char *val: A pointer to the string.
- *   unsigned int len: The length of the string.
- *
- */
-typedef struct z_string_t {
-  const char *val;
-  size_t len;
-} z_string_t;
 
 /**
  * An array of bytes.
@@ -279,6 +279,18 @@ extern const unsigned int ZN_ROUTER;
 void z_init_logger(void);
 
 /**
+ * Construct a :c:type:`z_string_t` from a NULL terminated string.
+ * The content of the given string is copied.
+ *
+ * Parameters:
+ *     s: The NULL terminated string.
+ *
+ * Returns:
+ *     A new :c:type:`z_string_t`.
+ */
+z_string_t z_string_make(const char *s);
+
+/**
  * Close a zenoh-net session.
  *
  * Parameters:
@@ -447,7 +459,7 @@ z_string_t zn_properties_get(zn_properties_t *ps, unsigned int key);
  * Returns:
  *     A pointer to the updated properties map.
  */
-zn_properties_t *zn_properties_insert(zn_properties_t *ps, unsigned long key, char *value);
+zn_properties_t *zn_properties_insert(zn_properties_t *ps, unsigned long key, z_string_t value);
 
 /**
  * Get the length of the given properties map.

@@ -160,11 +160,11 @@ pub unsafe extern "C" fn zn_properties_get(ps: *mut zn_properties_t, key: c_uint
 pub unsafe extern "C" fn zn_properties_insert(
     ps: *mut zn_properties_t,
     key: c_ulong,
-    value: *mut c_char,
+    value: z_string_t,
 ) -> *mut zn_properties_t {
     (*ps).0.insert(
         key.into(),
-        CStr::from_ptr(value).to_string_lossy().to_string(),
+        value.into(),
     );
     ps
 }

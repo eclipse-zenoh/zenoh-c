@@ -11,5 +11,6 @@
 // Contributors:
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 #![recursion_limit = "256"]
+#![feature(vec_into_raw_parts)]
 
 pub mod net;

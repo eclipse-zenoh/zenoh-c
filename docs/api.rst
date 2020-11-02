@@ -24,6 +24,9 @@ String
 
 .. autocstruct:: zenoh/net.h::z_string_t
 
+.. autocfunction:: zenoh/net.h::z_string_make
+
+
 Array of Str
 ------------
 

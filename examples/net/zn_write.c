@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     }
     zn_properties_t *config = zn_config_peer();
     if (argc > 3) {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, argv[3]);
+        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[3]));
     }
 
     printf("Openning session...\n");

@@ -12,7 +12,7 @@
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
 use libc::{c_char, c_uint, size_t};
-use std::ffi::CString;
+use std::ffi::{CString, CStr};
 use zenoh::net::*;
 
 #[no_mangle]
@@ -74,6 +74,40 @@ pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_ui
 pub struct z_string_t {
     pub val: *const c_char,
     pub len: size_t,
+}
+
+impl From<String> for z_string_t {
+    #[inline]
+    fn from(s: String) -> Self {
+        let (ptr, len, _) = s.into_raw_parts();
+        z_string_t {
+            val: ptr as *const c_char,
+            len: len as size_t,
+        }
+    }
+}
+
+impl Into<String> for z_string_t {
+    #[inline]
+    fn into(self) -> String {
+        unsafe {
+            String::from_raw_parts(self.val as *mut u8, self.len, self.len)
+        }
+    }
+}
+
+/// Construct a :c:type:`z_string_t` from a NULL terminated string.
+/// The content of the given string is copied.
+///
+/// Parameters:
+///     s: The NULL terminated string.
+///
+/// Returns:
+///     A new :c:type:`z_string_t`.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_string_make(s: *const c_char) -> z_string_t {
+    CStr::from_ptr(s).to_string_lossy().into_owned().into()
 }
 
 /// An array of NULL terminated strings.
