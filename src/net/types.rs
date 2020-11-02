@@ -12,7 +12,7 @@
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
 use libc::{c_char, c_uint, size_t};
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 use zenoh::net::*;
 
 #[no_mangle]
@@ -90,9 +90,7 @@ impl From<String> for z_string_t {
 impl Into<String> for z_string_t {
     #[inline]
     fn into(self) -> String {
-        unsafe {
-            String::from_raw_parts(self.val as *mut u8, self.len, self.len)
-        }
+        unsafe { String::from_raw_parts(self.val as *mut u8, self.len, self.len) }
     }
 }
 
