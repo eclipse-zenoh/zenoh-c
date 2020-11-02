@@ -61,7 +61,7 @@ pub struct zn_locators_t(std::vec::Vec<std::ffi::CString>);
 ///     id: The resource id.
 ///
 /// Returns:
-///     Return a new resource key.
+///     A new resource key.
 #[no_mangle]
 pub extern "C" fn zn_rid(id: c_ulong) -> *mut zn_reskey_t {
     Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RId(to_zint!(id)))))
@@ -74,7 +74,7 @@ pub extern "C" fn zn_rid(id: c_ulong) -> *mut zn_reskey_t {
 ///     suffix: The suffix.
 ///
 /// Returns:
-///     Return a new resource key.
+///     A new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_rid_with_suffix(
@@ -93,7 +93,7 @@ pub unsafe extern "C" fn zn_rid_with_suffix(
 ///     id: The resource name.
 ///
 /// Returns:
-///     Return a new resource key.
+///     A new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut zn_reskey_t {
@@ -664,11 +664,11 @@ pub unsafe extern "C" fn zn_declare_queryable(
 /// Undeclare a :c:type:`zn_queryable_t`.
 ///
 /// Parameters:
-///     sub: The :c:type:`zn_queryable_t` to undeclare.
+///     qable: The :c:type:`zn_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_undeclare_queryable(sub: *mut zn_queryable_t) {
-    match *Box::from_raw(sub) {
+pub unsafe extern "C" fn zn_undeclare_queryable(qable: *mut zn_queryable_t) {
+    match *Box::from_raw(qable) {
         zn_queryable_t(Some(tx)) => smol::block_on(tx.send(true)),
         zn_queryable_t(None) => (),
     }

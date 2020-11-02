@@ -533,7 +533,7 @@ zn_query_target_t zn_query_target_default(void);
  *     id: The resource id.
  *
  * Returns:
- *     Return a new resource key.
+ *     A new resource key.
  */
 zn_reskey_t *zn_rid(unsigned long id);
 
@@ -545,7 +545,7 @@ zn_reskey_t *zn_rid(unsigned long id);
  *     suffix: The suffix.
  *
  * Returns:
- *     Return a new resource key.
+ *     A new resource key.
  */
 zn_reskey_t *zn_rid_with_suffix(unsigned long id, const char *suffix);
 
@@ -556,7 +556,7 @@ zn_reskey_t *zn_rid_with_suffix(unsigned long id, const char *suffix);
  *     id: The resource name.
  *
  * Returns:
- *     Return a new resource key.
+ *     A new resource key.
  */
 zn_reskey_t *zn_rname(const char *name);
 
@@ -612,9 +612,9 @@ void zn_undeclare_publisher(zn_publisher_t *publ);
  * Undeclare a :c:type:`zn_queryable_t`.
  *
  * Parameters:
- *     sub: The :c:type:`zn_queryable_t` to undeclare.
+ *     qable: The :c:type:`zn_queryable_t` to undeclare.
  */
-void zn_undeclare_queryable(zn_queryable_t *sub);
+void zn_undeclare_queryable(zn_queryable_t *qable);
 
 /**
  * Undeclare a :c:type:`zn_subscriber_t`.
