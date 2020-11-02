@@ -514,12 +514,12 @@ zn_query_consolidation_t zn_query_consolidation_default(void);
 /**
  * Return the predicate for this query
  */
-const z_string_t *zn_query_predicate(zn_query_t *query);
+z_string_t zn_query_predicate(zn_query_t *query);
 
 /**
  * Return the resource name for this query
  */
-const z_string_t *zn_query_res_name(zn_query_t *query);
+z_string_t zn_query_res_name(zn_query_t *query);
 
 /**
  * Create a default :c:type:`zn_query_target_t`.

@@ -230,23 +230,21 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properti
 /// Return the resource name for this query
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> *const z_string_t {
-    let rn = z_string_t {
+pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> z_string_t {
+    z_string_t {
         val: (*query).0.res_name.as_ptr() as *const c_char,
         len: (*query).0.res_name.len() as size_t,
-    };
-    Box::into_raw(Box::new(rn))
+    }
 }
 
 /// Return the predicate for this query
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> *const z_string_t {
-    let pred = z_string_t {
+pub unsafe extern "C" fn zn_query_predicate(query: *mut zn_query_t) -> z_string_t {
+    z_string_t {
         val: (*query).0.predicate.as_ptr() as *const c_char,
         len: (*query).0.predicate.len() as size_t,
-    };
-    Box::into_raw(Box::new(pred))
+    }
 }
 
 /// Scout for routers and/or peers.
