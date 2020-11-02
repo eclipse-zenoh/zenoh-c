@@ -20,6 +20,9 @@ int main(int argc, char** argv) {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[1]));
     }
     
+    zn_properties_insert(config, ZN_CONFIG_USER_KEY, z_string_make("user"));
+    zn_properties_insert(config, ZN_CONFIG_PASSWORD_KEY, z_string_make("password"));
+    
     printf("Openning session...\n");
     zn_session_t *s = zn_open(config);
     if (s == 0) {
