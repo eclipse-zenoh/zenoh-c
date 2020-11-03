@@ -242,15 +242,14 @@ pub struct zn_reskey_t {
 }
 
 impl FromRaw<zn_reskey_t> for ResKey {
-    #[allow(clippy::useless_conversion)]
     #[inline]
     fn from_raw(r: zn_reskey_t) -> ResKey {
         unsafe {
             if r.suffix.is_null() || libc::strlen(r.suffix) == 0 {
-                ResKey::RId(r.id.into())
+                ResKey::RId(r.id as ZInt)
             } else if r.id != 0 {
                 ResKey::RIdWithSuffix(
-                    r.id.into(),
+                    r.id as ZInt,
                     String::from_raw_parts(
                         r.suffix as *mut u8,
                         libc::strlen(r.suffix),
@@ -267,16 +266,15 @@ impl FromRaw<zn_reskey_t> for ResKey {
         }
     }
 
-    #[allow(clippy::useless_conversion)]
     #[inline]
     fn into_raw(self) -> zn_reskey_t {
         match self {
             ResKey::RId(rid) => zn_reskey_t {
-                id: rid.into(),
+                id: rid as c_ulong,
                 suffix: std::ptr::null(),
             },
             ResKey::RIdWithSuffix(rid, suffix) => zn_reskey_t {
-                id: rid.into(),
+                id: rid as c_ulong,
                 suffix: String::into_raw_parts(suffix).0 as *const c_char,
             },
             ResKey::RName(suffix) => zn_reskey_t {

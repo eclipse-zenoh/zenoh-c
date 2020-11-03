@@ -150,14 +150,13 @@ pub unsafe extern "C" fn zn_properties_get(ps: *mut zn_properties_t, key: c_uint
 /// Returns:
 ///     A pointer to the updated properties map.
 #[allow(clippy::missing_safety_doc)]
-#[allow(clippy::useless_conversion)]
 #[no_mangle]
 pub unsafe extern "C" fn zn_properties_insert(
     ps: *mut zn_properties_t,
     key: c_ulong,
     value: z_string_t,
 ) -> *mut zn_properties_t {
-    (*ps).0.insert(key.into(), String::from_raw(value));
+    (*ps).0.insert(key as u64, String::from_raw(value));
     ps
 }
 
