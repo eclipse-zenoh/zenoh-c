@@ -1,6 +1,5 @@
 pipeline {
   agent { label 'MacMini' }
-  options { skipDefaultCheckout() }
   parameters {
     gitParameter(name: 'GIT_TAG',
                  type: 'PT_BRANCH_TAG',
