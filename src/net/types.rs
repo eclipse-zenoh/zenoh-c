@@ -246,10 +246,10 @@ impl FromRaw<zn_reskey_t> for ResKey {
     fn from_raw(r: zn_reskey_t) -> ResKey {
         unsafe {
             if r.suffix.is_null() || libc::strlen(r.suffix) == 0 {
-                ResKey::RId(r.id)
+                ResKey::RId(r.id as u64)
             } else if r.id != 0 {
                 ResKey::RIdWithSuffix(
-                    r.id,
+                    r.id as u64,
                     String::from_raw_parts(
                         r.suffix as *mut u8,
                         libc::strlen(r.suffix),
@@ -270,11 +270,11 @@ impl FromRaw<zn_reskey_t> for ResKey {
     fn into_raw(self) -> zn_reskey_t {
         match self {
             ResKey::RId(rid) => zn_reskey_t {
-                id: rid,
+                id: rid as u64,
                 suffix: std::ptr::null(),
             },
             ResKey::RIdWithSuffix(rid, suffix) => zn_reskey_t {
-                id: rid,
+                id: rid as u64,
                 suffix: String::into_raw_parts(suffix).0 as *const c_char,
             },
             ResKey::RName(suffix) => zn_reskey_t {

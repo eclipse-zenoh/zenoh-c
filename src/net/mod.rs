@@ -156,7 +156,7 @@ pub unsafe extern "C" fn zn_properties_insert(
     key: c_ulong,
     value: z_string_t,
 ) -> *mut zn_properties_t {
-    (*ps).0.insert(key.into(), String::from_raw(value));
+    (*ps).0.insert(key as u64, String::from_raw(value));
     ps
 }
 
