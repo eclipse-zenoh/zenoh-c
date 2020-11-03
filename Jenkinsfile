@@ -107,7 +107,7 @@ pipeline {
         sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
           sh '''
           if [ "${PUBLISH_RESULTS}" = "true" ]; then
-            export TARGET_DIR=/home/data/httpd/download.eclipse.org/zenoh/zenoh/${LABEL}/zenoh-c
+            export TARGET_DIR=/home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${LABEL}/
             ssh genie.zenoh@projects-storage.eclipse.org mkdir -p ${TARGET_DIR}
             ssh genie.zenoh@projects-storage.eclipse.org ls -al ${TARGET_DIR}
             scp eclipse-zenoh-c-${LABEL}-*.tar.gz genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
