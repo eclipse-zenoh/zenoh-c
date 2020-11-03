@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'UbuntuVM' }
+  agent { label 'MacMini' }
   options { skipDefaultCheckout() }
   parameters {
     gitParameter(name: 'GIT_TAG',
@@ -17,7 +17,6 @@ pipeline {
 
   stages {
     stage('Checkout Git TAG') {
-      agent { label 'MacMini' }
       steps {
         deleteDir()
         checkout([$class: 'GitSCM',
@@ -31,7 +30,6 @@ pipeline {
       }
     }
     stage('MacOS Build') {
-      agent { label 'MacMini' }
       steps {
         sh '''
         env
@@ -40,7 +38,6 @@ pipeline {
       }
     }
     stage('MacOS Package') {
-      agent { label 'MacMini' }
       steps {
         sh '''
         tar -cvf eclipse-zenoh-c-${LABEL}-macosx${MACOSX_DEPLOYMENT_TARGET}-x86-64.tar --strip-components 2 target/release/*.dylib
@@ -54,7 +51,6 @@ pipeline {
 
 
     stage('x86_64-unknown-linux-gnu Build') {
-      agent { label 'MacMini' }
       steps {
         sh '''
         docker run --init --rm -v $(pwd):/workdir -w /workdir --env "TARGET=x86_64-unknown-linux-gnu" \
@@ -63,7 +59,6 @@ pipeline {
       }
     }
     stage('x86_64-unknown-linux-gnu Package') {
-      agent { label 'MacMini' }
       steps {
         sh '''
         tar -cvf eclipse-zenoh-c-${LABEL}-x86_64-unknown-linux-gnu.tar --strip-components 3 target/x86_64-unknown-linux-gnu/release/*.so
@@ -71,12 +66,10 @@ pipeline {
         gzip eclipse-zenoh-c-${LABEL}-x86_64-unknown-linux-gnu.tar
         tar -czvf eclipse-zenoh-c-${LABEL}-examples-x86_64-unknown-linux-gnu.tar.gz --exclude 'target/x86_64-unknown-linux-gnu/release/examples/*.*' --exclude 'target/x86_64-unknown-linux-gnu/release/examples/*-*' --strip-components 4 target/x86_64-unknown-linux-gnu/release/examples/*
         '''
-        stash includes: 'eclipse-zenoh-c-*-x86_64-unknown-linux-gnu.tar.gz', name: 'zenoh-c-Linux-x64'
       }
     }
 
     stage('i686-unknown-linux-gnu Build') {
-      agent { label 'MacMini' }
       steps {
         sh '''
         docker run --init --rm -v $(pwd):/workdir -w /workdir --env "TARGET=i686-unknown-linux-gnu" \
@@ -85,7 +78,6 @@ pipeline {
       }
     }
     stage('i686-unknown-linux-gnu Package') {
-      agent { label 'MacMini' }
       steps {
         sh '''
         tar -cvf eclipse-zenoh-c-${LABEL}-i686-unknown-linux-gnu.tar --strip-components 3 target/i686-unknown-linux-gnu/release/*.so
@@ -93,17 +85,11 @@ pipeline {
         gzip eclipse-zenoh-c-${LABEL}-i686-unknown-linux-gnu.tar
         tar -czvf eclipse-zenoh-c-${LABEL}-examples-i686-unknown-linux-gnu.tar.gz --exclude 'target/i686-unknown-linux-gnu/release/examples/*.*' --exclude 'target/i686-unknown-linux-gnu/release/examples/*-*' --strip-components 4 target/i686-unknown-linux-gnu/release/examples/*
         '''
-        stash includes: 'eclipse-zenoh-c-*-i686-unknown-linux-gnu.tar.gz', name: 'zenoh-c-Linux-i686'
       }
     }
 
     stage('Publish to download.eclipse.org') {
       steps {
-        deleteDir()
-        // Unstash packages to be deployed
-        unstash 'zenoh-c-MacOS'
-        unstash 'zenoh-c-Linux-x64'
-        unstash 'zenoh-c-Linux-i686'
         sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
           sh '''
           if [ "${PUBLISH_RESULTS}" = "true" ]; then
