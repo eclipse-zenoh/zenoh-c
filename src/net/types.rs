@@ -11,7 +11,7 @@
 // Contributors:
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
-use libc::{c_char, c_uint, size_t};
+use libc::{c_char, c_uint, c_ulong, size_t};
 use std::ffi::{CStr, CString};
 use zenoh::net::*;
 
@@ -64,6 +64,11 @@ pub static ZN_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
 #[no_mangle]
 pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
 
+pub trait FromRaw<T> {
+    fn from_raw(r: T) -> Self;
+    fn into_raw(self) -> T;
+}
+
 /// A string.
 ///
 /// Members:
@@ -76,21 +81,19 @@ pub struct z_string_t {
     pub len: size_t,
 }
 
-impl From<String> for z_string_t {
+impl FromRaw<z_string_t> for String {
     #[inline]
-    fn from(s: String) -> Self {
-        let (ptr, len, _) = s.into_raw_parts();
+    fn from_raw(r: z_string_t) -> Self {
+        unsafe { String::from_raw_parts(r.val as *mut u8, r.len, r.len) }
+    }
+
+    #[inline]
+    fn into_raw(self) -> z_string_t {
+        let (ptr, len, _) = self.into_raw_parts();
         z_string_t {
             val: ptr as *const c_char,
             len: len as size_t,
         }
-    }
-}
-
-impl Into<String> for z_string_t {
-    #[inline]
-    fn into(self) -> String {
-        unsafe { String::from_raw_parts(self.val as *mut u8, self.len, self.len) }
     }
 }
 
@@ -105,7 +108,7 @@ impl Into<String> for z_string_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_string_make(s: *const c_char) -> z_string_t {
-    CStr::from_ptr(s).to_string_lossy().into_owned().into()
+    String::into_raw(CStr::from_ptr(s).to_string_lossy().into_owned())
 }
 
 /// An array of NULL terminated strings.
@@ -211,6 +214,72 @@ impl From<Option<PeerId>> for z_bytes_t {
             None => z_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
+            },
+        }
+    }
+}
+
+/// A resource key.
+///
+/// Resources are identified by URI like string names.  
+/// Examples : ``"/some/resource/key"``.
+/// Resource names can be mapped to numerical ids through :c:func:`zn_declare_resource`
+/// for wire and computation efficiency.
+///
+/// A resource key can be either:
+///
+///   - A plain string resource name.
+///   - A pure numerical id.
+///   - The combination of a numerical prefix and a string suffix.
+///
+/// Members:
+///   unsigned long id: The id or prefix of this resource key. ``0`` if empty.
+///   const char *suffix: The suffix of this resource key. ``NULL`` if pure numerical id.
+#[repr(C)]
+pub struct zn_reskey_t {
+    pub id: c_ulong,
+    pub suffix: *const c_char,
+}
+
+impl FromRaw<zn_reskey_t> for ResKey {
+    #[inline]
+    fn from_raw(r: zn_reskey_t) -> ResKey {
+        unsafe {
+            if r.suffix.is_null() || libc::strlen(r.suffix) == 0 {
+                ResKey::RId(r.id)
+            } else if r.id != 0 {
+                ResKey::RIdWithSuffix(
+                    r.id,
+                    String::from_raw_parts(
+                        r.suffix as *mut u8,
+                        libc::strlen(r.suffix),
+                        libc::strlen(r.suffix) + 1,
+                    ),
+                )
+            } else {
+                ResKey::RName(String::from_raw_parts(
+                    r.suffix as *mut u8,
+                    libc::strlen(r.suffix),
+                    libc::strlen(r.suffix) + 1,
+                ))
+            }
+        }
+    }
+
+    #[inline]
+    fn into_raw(self) -> zn_reskey_t {
+        match self {
+            ResKey::RId(rid) => zn_reskey_t {
+                id: rid,
+                suffix: std::ptr::null(),
+            },
+            ResKey::RIdWithSuffix(rid, suffix) => zn_reskey_t {
+                id: rid,
+                suffix: String::into_raw_parts(suffix).0 as *const c_char,
+            },
+            ResKey::RName(suffix) => zn_reskey_t {
+                id: 0,
+                suffix: String::into_raw_parts(suffix).0 as *const c_char,
             },
         }
     }

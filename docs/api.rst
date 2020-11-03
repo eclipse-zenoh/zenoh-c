@@ -206,20 +206,7 @@ Resource
 Resource key
 ------------
 
-.. c:type:: zn_reskey_t
-
-  A resource key.
-  
-  Resources are identified by URI like string names.  
-  Examples : ``"/some/resource/key"``, ``"/a/selection/*/of/resources/**"``.
-  Resource names can be mapped to numerical ids through :c:func:`zn_declare_resource` 
-  for wire and computation efficiency.
-
-  A resource key can be either:
-
-    - a plain string resource name.
-    - a pure numerical id.
-    - the combination of a numerical prefix and a string suffix.
+.. autocstruct:: zenoh/net.h::zn_reskey_t
 
 .. autocfunction:: zenoh/net.h::zn_rname
 

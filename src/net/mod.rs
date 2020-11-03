@@ -17,20 +17,16 @@ use async_std::task;
 use futures::prelude::*;
 use futures::select;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ulong, size_t};
-use std::convert::TryFrom;
 use std::ffi::{c_void, CStr, CString};
 use std::slice;
 use zenoh::net::*;
 use zenoh_protocol::core::ZInt;
-use zenoh_util::to_zint;
 
 mod types;
 pub use types::*;
 
 #[allow(non_camel_case_types)]
 pub struct zn_session_t(zenoh::net::Session);
-#[allow(non_camel_case_types)]
-pub struct zn_reskey_t(zenoh::net::ResKey);
 
 type ZNProperties =
     zenoh_util::collections::IntKeyProperties<zenoh_util::collections::DummyTranscoder>;
@@ -63,8 +59,11 @@ pub struct zn_locators_t(std::vec::Vec<std::ffi::CString>);
 /// Returns:
 ///     A new resource key.
 #[no_mangle]
-pub extern "C" fn zn_rid(id: c_ulong) -> *mut zn_reskey_t {
-    Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RId(to_zint!(id)))))
+pub extern "C" fn zn_rid(id: c_ulong) -> zn_reskey_t {
+    zn_reskey_t {
+        id,
+        suffix: std::ptr::null(),
+    }
 }
 
 /// Create a resource key from a resource id and a suffix.
@@ -77,14 +76,8 @@ pub extern "C" fn zn_rid(id: c_ulong) -> *mut zn_reskey_t {
 ///     A new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_rid_with_suffix(
-    id: c_ulong,
-    suffix: *const c_char,
-) -> *mut zn_reskey_t {
-    Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RIdWithSuffix(
-        to_zint!(id),
-        CStr::from_ptr(suffix).to_str().unwrap().to_string(),
-    ))))
+pub unsafe extern "C" fn zn_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> zn_reskey_t {
+    zn_reskey_t { id, suffix }
 }
 
 /// Create a resource key from a resource name.
@@ -96,10 +89,11 @@ pub unsafe extern "C" fn zn_rid_with_suffix(
 ///     A new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_rname(name: *const c_char) -> *mut zn_reskey_t {
-    Box::into_raw(Box::new(zn_reskey_t(zenoh::net::ResKey::RName(
-        CStr::from_ptr(name).to_str().unwrap().to_string(),
-    ))))
+pub unsafe extern "C" fn zn_rname(name: *const c_char) -> zn_reskey_t {
+    zn_reskey_t {
+        id: 0,
+        suffix: name,
+    }
 }
 
 /// Return a new empty map of properties.
@@ -162,7 +156,7 @@ pub unsafe extern "C" fn zn_properties_insert(
     key: c_ulong,
     value: z_string_t,
 ) -> *mut zn_properties_t {
-    (*ps).0.insert(key.into(), value.into());
+    (*ps).0.insert(key.into(), String::from_raw(value));
     ps
 }
 
@@ -343,13 +337,16 @@ pub unsafe extern "C" fn zn_close(session: *mut zn_session_t) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_resource(
     session: *mut zn_session_t,
-    reskey: *mut zn_reskey_t,
+    reskey: zn_reskey_t,
 ) -> c_ulong {
-    if session.is_null() || reskey.is_null() {
+    if session.is_null() {
         return 0;
     }
 
-    task::block_on((*session).0.declare_resource(&(*reskey).0)).unwrap() as c_ulong
+    let reskey = ResKey::from_raw(reskey);
+    let result = task::block_on((*session).0.declare_resource(&reskey)).unwrap() as c_ulong;
+    ResKey::into_raw(reskey);
+    result
 }
 
 /// Write data.
@@ -365,21 +362,24 @@ pub unsafe extern "C" fn zn_declare_resource(
 #[no_mangle]
 pub unsafe extern "C" fn zn_write(
     session: *mut zn_session_t,
-    reskey: *mut zn_reskey_t,
+    reskey: zn_reskey_t,
     payload: *const c_char,
     len: c_uint,
 ) -> c_int {
-    if session.is_null() || reskey.is_null() {
+    if session.is_null() {
         return 1;
     }
 
-    match task::block_on((*session).0.write(
-        &(*reskey).0,
+    let reskey = ResKey::from_raw(reskey);
+    let result = match task::block_on((*session).0.write(
+        &reskey,
         slice::from_raw_parts(payload as *const u8, len as usize).into(),
     )) {
         Ok(()) => 0,
         _ => 1,
-    }
+    };
+    ResKey::into_raw(reskey);
+    result
 }
 
 /// Declare a :c:type:`zn_publisher_t` for the given resource key.
@@ -397,15 +397,18 @@ pub unsafe extern "C" fn zn_write(
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_publisher<'a>(
     session: *mut zn_session_t,
-    reskey: *mut zn_reskey_t,
+    reskey: zn_reskey_t,
 ) -> *mut zn_publisher_t<'a> {
-    if session.is_null() || reskey.is_null() {
+    if session.is_null() {
         return std::ptr::null_mut();
     }
 
-    Box::into_raw(Box::new(zn_publisher_t(
-        task::block_on((*session).0.declare_publisher(&(*reskey).0)).unwrap(),
-    )))
+    let reskey = ResKey::from_raw(reskey);
+    let result = Box::into_raw(Box::new(zn_publisher_t(
+        task::block_on((*session).0.declare_publisher(&reskey)).unwrap(),
+    )));
+    ResKey::into_raw(reskey);
+    result
 }
 
 /// Undeclare a :c:type:`zn_publisher_t`.
@@ -432,25 +435,22 @@ pub unsafe extern "C" fn zn_undeclare_publisher(publ: *mut zn_publisher_t) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_subscriber(
     session: *mut zn_session_t,
-    reskey: *mut zn_reskey_t,
+    reskey: zn_reskey_t,
     sub_info: zn_subinfo_t,
     callback: extern "C" fn(*const zn_sample_t, *const c_void),
     arg: *mut c_void,
 ) -> *mut zn_subscriber_t {
-    if session.is_null() || reskey.is_null() {
+    if session.is_null() {
         return std::ptr::null_mut();
     }
 
     let s = Box::from_raw(session);
+    let reskey = ResKey::from_raw(reskey);
     let arg = Box::from_raw(arg);
     let (tx, rx) = channel::<ZnSubOps>(8);
     let rsub = zn_subscriber_t(Some(Arc::new(tx)));
-    let mut sub: Subscriber = task::block_on(
-        (*session)
-            .0
-            .declare_subscriber(&(*reskey).0, &sub_info.into()),
-    )
-    .unwrap();
+    let mut sub: Subscriber =
+        task::block_on((*session).0.declare_subscriber(&reskey, &sub_info.into())).unwrap();
     // Note: This is done to ensure that even if the call-back into C
     // does any blocking call we do not incour the risk of blocking
     // any of the task resolving futures.
@@ -501,6 +501,7 @@ pub unsafe extern "C" fn zn_declare_subscriber(
             }
         })
     });
+    ResKey::into_raw(reskey);
     Box::into_raw(Box::new(rsub))
 }
 
@@ -547,7 +548,7 @@ pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut zn_subscriber_t) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_query(
     session: *mut zn_session_t,
-    reskey: *mut zn_reskey_t,
+    reskey: zn_reskey_t,
     predicate: *const c_char,
     target: zn_query_target_t,
     consolidation: zn_query_consolidation_t,
@@ -555,13 +556,13 @@ pub unsafe extern "C" fn zn_query(
     arg: *mut c_void,
 ) {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
+    let reskey = ResKey::from_raw(reskey);
     let arg = Box::from_raw(arg);
-    let mut q = task::block_on((*session).0.query(
-        &(*reskey).0,
-        p,
-        target.into(),
-        consolidation.into(),
-    ))
+    let mut q = task::block_on(
+        (*session)
+            .0
+            .query(&reskey, p, target.into(), consolidation.into()),
+    )
     .unwrap();
 
     task::spawn_blocking(move || {
@@ -596,6 +597,7 @@ pub unsafe extern "C" fn zn_query(
             }
         })
     });
+    ResKey::into_raw(reskey);
 }
 
 /// Declare a :c:type:`zn_queryable_t` for the given resource key.
@@ -613,20 +615,21 @@ pub unsafe extern "C" fn zn_query(
 #[no_mangle]
 pub unsafe extern "C" fn zn_declare_queryable(
     session: *mut zn_session_t,
-    reskey: *mut zn_reskey_t,
+    reskey: zn_reskey_t,
     kind: c_uint,
     callback: extern "C" fn(*mut zn_query_t, *const c_void),
     arg: *mut c_void,
 ) -> *mut zn_queryable_t {
-    if session.is_null() || reskey.is_null() {
+    if session.is_null() {
         return std::ptr::null_mut();
     }
 
     let arg = Box::from_raw(arg);
+    let reskey = ResKey::from_raw(reskey);
     let (tx, rx) = channel::<bool>(1);
     let r = zn_queryable_t(Some(Arc::new(tx)));
     let mut queryable: zenoh::net::Queryable =
-        task::block_on((*session).0.declare_queryable(&(*reskey).0, kind as ZInt)).unwrap();
+        task::block_on((*session).0.declare_queryable(&reskey, kind as ZInt)).unwrap();
 
     // Note: This is done to ensure that even if the call-back into C
     // does any blocking call we do not incour the risk of blocking
@@ -653,6 +656,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
             }
         })
     });
+    ResKey::into_raw(reskey);
     Box::into_raw(Box::new(r))
 }
 

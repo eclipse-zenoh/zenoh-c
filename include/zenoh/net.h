@@ -50,8 +50,6 @@ typedef struct zn_query_t zn_query_t;
 
 typedef struct zn_queryable_t zn_queryable_t;
 
-typedef struct zn_reskey_t zn_reskey_t;
-
 typedef struct zn_session_t zn_session_t;
 
 typedef struct zn_subscriber_t zn_subscriber_t;
@@ -68,6 +66,29 @@ typedef struct z_string_t {
   const char *val;
   size_t len;
 } z_string_t;
+
+/**
+ * A resource key.
+ *
+ * Resources are identified by URI like string names.
+ * Examples : ``"/some/resource/key"``.
+ * Resource names can be mapped to numerical ids through :c:func:`zn_declare_resource`
+ * for wire and computation efficiency.
+ *
+ * A resource key can be either:
+ *
+ *   - A plain string resource name.
+ *   - A pure numerical id.
+ *   - The combination of a numerical prefix and a string suffix.
+ *
+ * Members:
+ *   unsigned long id: The id or prefix of this resource key. ``0`` if empty.
+ *   const char *suffix: The suffix of this resource key. ``NULL`` if pure numerical id.
+ */
+typedef struct zn_reskey_t {
+  unsigned long id;
+  const char *suffix;
+} zn_reskey_t;
 
 /**
  * The subscription period.
@@ -341,7 +362,7 @@ zn_properties_t *zn_config_peer(void);
  * Returns:
  *    The created :c:type:`zn_publisher_t` or null if the declaration failed.
  */
-zn_publisher_t *zn_declare_publisher(zn_session_t *session, zn_reskey_t *reskey);
+zn_publisher_t *zn_declare_publisher(zn_session_t *session, zn_reskey_t reskey);
 
 /**
  * Declare a :c:type:`zn_queryable_t` for the given resource key.
@@ -357,7 +378,7 @@ zn_publisher_t *zn_declare_publisher(zn_session_t *session, zn_reskey_t *reskey)
  *    The created :c:type:`zn_queryable_t` or null if the declaration failed.
  */
 zn_queryable_t *zn_declare_queryable(zn_session_t *session,
-                                     zn_reskey_t *reskey,
+                                     zn_reskey_t reskey,
                                      unsigned int kind,
                                      void (*callback)(zn_query_t*, const void*),
                                      void *arg);
@@ -375,7 +396,7 @@ zn_queryable_t *zn_declare_queryable(zn_session_t *session,
  * Returns:
  *     A numerical id.
  */
-unsigned long zn_declare_resource(zn_session_t *session, zn_reskey_t *reskey);
+unsigned long zn_declare_resource(zn_session_t *session, zn_reskey_t reskey);
 
 /**
  * Declare a :c:type:`zn_subscriber_t` for the given resource key.
@@ -391,7 +412,7 @@ unsigned long zn_declare_resource(zn_session_t *session, zn_reskey_t *reskey);
  *    The created :c:type:`zn_subscriber_t` or null if the declaration failed.
  */
 zn_subscriber_t *zn_declare_subscriber(zn_session_t *session,
-                                       zn_reskey_t *reskey,
+                                       zn_reskey_t reskey,
                                        zn_subinfo_t sub_info,
                                        void (*callback)(const zn_sample_t*, const void*),
                                        void *arg);
@@ -499,7 +520,7 @@ void zn_pull(zn_subscriber_t *sub);
  *     arg: A pointer that will be passed to the **callback** on each call.
  */
 void zn_query(zn_session_t *session,
-              zn_reskey_t *reskey,
+              zn_reskey_t reskey,
               const char *predicate,
               zn_query_target_t target,
               zn_query_consolidation_t consolidation,
@@ -535,7 +556,7 @@ zn_query_target_t zn_query_target_default(void);
  * Returns:
  *     A new resource key.
  */
-zn_reskey_t *zn_rid(unsigned long id);
+zn_reskey_t zn_rid(unsigned long id);
 
 /**
  * Create a resource key from a resource id and a suffix.
@@ -547,7 +568,7 @@ zn_reskey_t *zn_rid(unsigned long id);
  * Returns:
  *     A new resource key.
  */
-zn_reskey_t *zn_rid_with_suffix(unsigned long id, const char *suffix);
+zn_reskey_t zn_rid_with_suffix(unsigned long id, const char *suffix);
 
 /**
  * Create a resource key from a resource name.
@@ -558,7 +579,7 @@ zn_reskey_t *zn_rid_with_suffix(unsigned long id, const char *suffix);
  * Returns:
  *     A new resource key.
  */
-zn_reskey_t *zn_rname(const char *name);
+zn_reskey_t zn_rname(const char *name);
 
 /**
  * Scout for routers and/or peers.
@@ -635,6 +656,6 @@ void zn_undeclare_subscriber(zn_subscriber_t *sub);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int zn_write(zn_session_t *session, zn_reskey_t *reskey, const char *payload, unsigned int len);
+int zn_write(zn_session_t *session, zn_reskey_t reskey, const char *payload, unsigned int len);
 
 #endif /* ZENOH_NET_ */

@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    zn_reskey_t *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
+    zn_reskey_t rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
     zn_subscriber_t *sub = zn_declare_subscriber(s, rid, zn_subinfo_default(), data_handler, NULL);
     if (sub == 0) {
         printf("Unable to declare subscriber.\n");

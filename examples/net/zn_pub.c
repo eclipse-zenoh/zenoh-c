@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     printf("Declaring Resource '%s'", uri);
     unsigned long rid = zn_declare_resource(s, zn_rname(uri));
     printf(" => RId %lu\n", rid);
-    zn_reskey_t *reskey = zn_rid(rid);
+    zn_reskey_t reskey = zn_rid(rid);
 
     printf("Declaring Publisher on %lu\n", rid);
     zn_publisher_t *pub = zn_declare_publisher(s, reskey);

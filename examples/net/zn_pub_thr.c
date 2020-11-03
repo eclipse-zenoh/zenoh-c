@@ -36,14 +36,14 @@ int main(int argc, char** argv) {
   char *data = (char*) malloc(len);
   memset(data, 1, len);
 
-  zn_reskey_t *rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
-  zn_publisher_t *pub = zn_declare_publisher(s, rid);
+  zn_reskey_t reskey = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
+  zn_publisher_t *pub = zn_declare_publisher(s, reskey);
   if (pub == 0) {
       printf("Unable to declare publisher.\n");
       exit(-1);
   }
 
   while (1) {
-    zn_write(s, rid, data, len);
+    zn_write(s, reskey, data, len);
   }
 }
