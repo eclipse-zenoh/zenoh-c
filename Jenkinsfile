@@ -1,6 +1,5 @@
 pipeline {
   agent { label 'UbuntuVM' }
-  options { skipDefaultCheckout() }
   parameters {
     gitParameter(name: 'GIT_TAG',
                  type: 'PT_BRANCH_TAG',
