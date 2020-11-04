@@ -363,7 +363,7 @@ pub unsafe extern "C" fn zn_declare_resource(
 pub unsafe extern "C" fn zn_write(
     session: *mut zn_session_t,
     reskey: zn_reskey_t,
-    payload: *const c_char,
+    payload: *const u8,
     len: c_uint,
 ) -> c_int {
     if session.is_null() {
@@ -679,7 +679,7 @@ pub unsafe extern "C" fn zn_undeclare_queryable(qable: *mut zn_queryable_t) {
 pub unsafe extern "C" fn zn_send_reply(
     query: *mut zn_query_t,
     key: *const c_char,
-    payload: *const c_uchar,
+    payload: *const u8,
     len: c_uint,
 ) {
     let name = CStr::from_ptr(key).to_str().unwrap();

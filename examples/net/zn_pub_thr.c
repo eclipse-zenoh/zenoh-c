@@ -44,6 +44,6 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    zn_write(s, reskey, data, len);
+    zn_write(s, reskey, (const uint8_t *)data, len);
   }
 }

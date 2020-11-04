@@ -597,10 +597,7 @@ zn_hello_array_t zn_scout(unsigned int what, zn_properties_t *config, unsigned l
 /**
  * Sends a reply to a query.
  */
-void zn_send_reply(zn_query_t *query,
-                   const char *key,
-                   const unsigned char *payload,
-                   unsigned int len);
+void zn_send_reply(zn_query_t *query, const char *key, const uint8_t *payload, unsigned int len);
 
 /**
  * Free an array of NULL terminated strings and it's contained NULL terminated strings recursively.
@@ -656,6 +653,6 @@ void zn_undeclare_subscriber(zn_subscriber_t *sub);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int zn_write(zn_session_t *session, zn_reskey_t reskey, const char *payload, unsigned int len);
+int zn_write(zn_session_t *session, zn_reskey_t reskey, const uint8_t *payload, unsigned int len);
 
 #endif /* ZENOH_NET_ */
