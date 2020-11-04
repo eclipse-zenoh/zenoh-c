@@ -19,7 +19,7 @@ void fprintpid(FILE *stream, z_bytes_t pid) {
         fprintf(stream, "None");
     } else {
         fprintf(stream, "Some(");
-        for (int i = 0; i < pid.len; i++) {
+        for (unsigned int i = 0; i < pid.len; i++) {
           fprintf(stream, "%02X", (int)pid.val[i]);
         }
         fprintf(stream, ")");
