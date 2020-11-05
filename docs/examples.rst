@@ -28,7 +28,7 @@ Publish
       char* value = "value";
 
       zn_session_t *s = zn_open(zn_config_default());
-      zn_write(s, zn_rname("/res/name"), value, strlen(value));
+      zn_write(s, zn_rname("/res/name"), (const uint8_t *)value, strlen(value));
       zn_close(s);
 
       return 0;
