@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Writing Data ('%lu': '%s')...\n", rid, buf);
-        zn_write(s, reskey, (const uint8_t*)buf, strlen(buf));
+        zn_write(s, reskey, (const uint8_t *)buf, strlen(buf));
     }
 
     zn_undeclare_publisher(pub);
