@@ -15,6 +15,9 @@ pipeline {
     booleanParam(name: 'BUILD_LINUX32',
                  description: 'Build i686-unknown-linux-gnu target.',
                  defaultValue: true)
+    booleanParam(name: 'BUILD_WIN64',
+                 description: 'Build x86_64-pc-windows-gnu target.',
+                 defaultValue: true)
     booleanParam(name: 'PUBLISH_ECLIPSE_DOWNLOAD',
                  description: 'Publish the resulting artifacts (to Eclipse download)',
                  defaultValue: false)
@@ -102,6 +105,25 @@ pipeline {
       }
     }
 
+    stage('[MacMini] x86_64-pc-windows-gnu Build') {
+      when { expression { return params.BUILD_WIN64 }}
+      steps {
+        sh '''
+        cbindgen --config cbindgen.toml --crate zenoh-c --output include/zenoh/net.h
+        cargo rustc --verbose --release --bins --lib --examples --target=x86_64-pc-windows-gnu -- -C panic=abort
+        '''
+      }
+    }
+    stage('[MacMini] x86_64-pc-windows-gnu Package') {
+      when { expression { return params.BUILD_WIN64 }}
+      steps {
+        sh '''
+        zip eclipse-zenoh-c-${LABEL}-x86_64-pc-windows-gnu.zip --junk-paths target/x86_64-pc-windows-gnu/release/zenohc.dll
+        zip eclipse-zenoh-c-${LABEL}-x86_64-pc-windows-gnu.zip -r -u include
+        '''
+      }
+    }
+
     stage('[MacMini] Publish to download.eclipse.org') {
       when { expression { return params.PUBLISH_ECLIPSE_DOWNLOAD }}
       steps {
@@ -117,6 +139,9 @@ pipeline {
           fi
           if [ "${BUILD_LINUX32}" = "true" ]; then
             scp eclipse-zenoh-c-${LABEL}-*i686-unknown-linux-gnu.tar.gz genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+          fi
+          if [ "${BUILD_WIN64}" = "true" ]; then
+            scp eclipse-zenoh-c-${LABEL}-*x86_64-pc-windows-gnu.zip genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
           fi
           '''
         }
