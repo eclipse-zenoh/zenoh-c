@@ -6,6 +6,15 @@ pipeline {
                  type: 'PT_BRANCH_TAG',
                  description: 'The Git tag to checkout. If not specified "master" will be checkout.',
                  defaultValue: 'master')
+    booleanParam(name: 'BUILD_MACOSX',
+                 description: 'Build macosx target.',
+                 defaultValue: true)
+    booleanParam(name: 'BUILD_LINUX64',
+                 description: 'Build x86_64-unknown-linux-gnu target.',
+                 defaultValue: true)
+    booleanParam(name: 'BUILD_LINUX32',
+                 description: 'Build i686-unknown-linux-gnu target.',
+                 defaultValue: true)
     booleanParam(name: 'PUBLISH_ECLIPSE_DOWNLOAD',
                  description: 'Publish the resulting artifacts (to Eclipse download)',
                  defaultValue: false)
@@ -31,6 +40,7 @@ pipeline {
     }
 
     stage('[MacMini] MacOS Build') {
+      when { expression { return params.BUILD_MACOSX }}
       steps {
         sh '''
         env
@@ -39,6 +49,7 @@ pipeline {
       }
     }
     stage('[MacMini] MacOS Package') {
+      when { expression { return params.BUILD_MACOSX }}
       steps {
         sh '''
         tar -cvf eclipse-zenoh-c-${LABEL}-macosx${MACOSX_DEPLOYMENT_TARGET}-x86-64.tar --strip-components 2 target/release/*.dylib
@@ -50,6 +61,7 @@ pipeline {
     }
 
     stage('[MacMini] x86_64-unknown-linux-gnu Build') {
+      when { expression { return params.BUILD_LINUX64 }}
       steps {
         sh '''
         docker run --init --rm -v $(pwd):/workdir -w /workdir --env "TARGET=x86_64-unknown-linux-gnu" \
@@ -58,6 +70,7 @@ pipeline {
       }
     }
     stage('[MacMini] x86_64-unknown-linux-gnu Package') {
+      when { expression { return params.BUILD_LINUX64 }}
       steps {
         sh '''
         tar -cvf eclipse-zenoh-c-${LABEL}-x86_64-unknown-linux-gnu.tar --strip-components 3 target/x86_64-unknown-linux-gnu/release/*.so
@@ -69,6 +82,7 @@ pipeline {
     }
 
     stage('[MacMini] i686-unknown-linux-gnu Build') {
+      when { expression { return params.BUILD_LINUX32 }}
       steps {
         sh '''
         docker run --init --rm -v $(pwd):/workdir -w /workdir --env "TARGET=i686-unknown-linux-gnu" \
@@ -77,6 +91,7 @@ pipeline {
       }
     }
     stage('[MacMini] i686-unknown-linux-gnu Package') {
+      when { expression { return params.BUILD_LINUX32 }}
       steps {
         sh '''
         tar -cvf eclipse-zenoh-c-${LABEL}-i686-unknown-linux-gnu.tar --strip-components 3 target/i686-unknown-linux-gnu/release/*.so
@@ -94,7 +109,15 @@ pipeline {
           sh '''
           export TARGET_DIR=/home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${LABEL}/
           ssh genie.zenoh@projects-storage.eclipse.org mkdir -p ${TARGET_DIR}
-          scp eclipse-zenoh-c-${LABEL}-*.tar.gz genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+          if [ "${BUILD_MACOSX}" = "true" ]; then
+            scp eclipse-zenoh-c-${LABEL}-*macosx*.tar.gz genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+          fi
+          if [ "${BUILD_LINUX64}" = "true" ]; then
+            scp eclipse-zenoh-c-${LABEL}-*x86_64-unknown-linux-gnu.tar.gz genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+          fi
+          if [ "${BUILD_LINUX32}" = "true" ]; then
+            scp eclipse-zenoh-c-${LABEL}-*i686-unknown-linux-gnu.tar.gz genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+          fi
           '''
         }
       }
