@@ -320,12 +320,6 @@ z_string_t z_string_make(const char *s);
 void zn_close(zn_session_t *session);
 
 /**
- * Notifies the zenoh runtime that there won't be any more replies sent for this
- * query.
- */
-void zn_close_query(zn_query_t *query);
-
-/**
  * Create a default set of properties for client mode zenoh-net session configuration.
  * If peer is not null, it is added to the configuration as remote peer.
  *

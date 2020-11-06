@@ -690,12 +690,3 @@ pub unsafe extern "C" fn zn_send_reply(
     };
     task::block_on((*query).0.replies_sender.send(s));
 }
-
-/// Notifies the zenoh runtime that there won't be any more replies sent for this
-/// query.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zn_close_query(query: *mut zn_query_t) {
-    let bq = Box::from_raw(query);
-    std::mem::drop(bq);
-}
