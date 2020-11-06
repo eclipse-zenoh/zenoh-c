@@ -219,7 +219,7 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properti
 }
 
 /// Get the resource name of a received query.
-/// 
+///
 /// Parameters:
 ///     query: The query.
 ///
@@ -235,7 +235,7 @@ pub unsafe extern "C" fn zn_query_res_name(query: *mut zn_query_t) -> z_string_t
 }
 
 /// Get the predicate of a received query.
-/// 
+///
 /// Parameters:
 ///     query: The query.
 ///
@@ -686,12 +686,12 @@ pub unsafe extern "C" fn zn_undeclare_queryable(qable: *mut zn_queryable_t) {
 }
 
 /// Send a reply to a query.
-/// 
-/// This function must be called inside of a Queryable callback passing the 
-/// query received as parameters of the callback function. This function can 
-/// be called multiple times to send multiple replies to a query. The reply 
+///
+/// This function must be called inside of a Queryable callback passing the
+/// query received as parameters of the callback function. This function can
+/// be called multiple times to send multiple replies to a query. The reply
 /// will be considered complete when the Queryable callback returns.
-/// 
+///
 /// Parameters:
 ///     query: The query to reply to.
 ///     key: The resource key of this reply.
