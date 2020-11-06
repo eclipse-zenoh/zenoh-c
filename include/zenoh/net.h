@@ -527,12 +527,24 @@ void zn_query(zn_session_t *session,
 zn_query_consolidation_t zn_query_consolidation_default(void);
 
 /**
- * Return the predicate for this query
+ * Get the predicate of a received query.
+ *
+ * Parameters:
+ *     query: The query.
+ *
+ * Returns:
+ *     The predicate of the query.
  */
 z_string_t zn_query_predicate(zn_query_t *query);
 
 /**
- * Return the resource name for this query
+ * Get the resource name of a received query.
+ *
+ * Parameters:
+ *     query: The query.
+ *
+ * Returns:
+ *     The resource name of the query.
  */
 z_string_t zn_query_res_name(zn_query_t *query);
 
@@ -589,7 +601,18 @@ zn_reskey_t zn_rname(const char *name);
 zn_hello_array_t zn_scout(unsigned int what, zn_properties_t *config, unsigned long scout_period);
 
 /**
- * Sends a reply to a query.
+ * Send a reply to a query.
+ *
+ * This function must be called inside of a Queryable callback passing the
+ * query received as parameters of the callback function. This function can
+ * be called multiple times to send multiple replies to a query. The reply
+ * will be considered complete when the Queryable callback returns.
+ *
+ * Parameters:
+ *     query: The query to reply to.
+ *     key: The resource key of this reply.
+ *     payload: The value of this reply.
+ *     len: The length of the value of this reply.
  */
 void zn_send_reply(zn_query_t *query, const char *key, const uint8_t *payload, unsigned int len);
 

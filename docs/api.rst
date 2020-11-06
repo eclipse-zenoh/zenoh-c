@@ -333,6 +333,15 @@ Types
 
   The zenoh-net Queryable.
 
+.. c:type:: zn_query_t
+
+  A query received by a Queryable. 
+
+.. autocfunction:: zenoh/net.h::zn_query_res_name
+
+.. autocfunction:: zenoh/net.h::zn_query_predicate
+
+
 Functions
 ---------
 
@@ -343,6 +352,8 @@ Functions
     .. c:var:: const unsigned int ZN_QUERYABLE_EVAL
 
     .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
+
+.. autocfunction:: zenoh/net.h::zn_send_reply
 
 .. autocfunction:: zenoh/net.h::zn_undeclare_queryable
 
