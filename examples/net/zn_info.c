@@ -15,7 +15,7 @@
 #include "zenoh/net.h"
 
 int main(int argc, char** argv) {
-    zn_properties_t *config = zn_config_peer();
+    zn_properties_t *config = zn_config_default();
     if (argc > 1) {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[1]));
     }

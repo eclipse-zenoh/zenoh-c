@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   }
   size_t len = atoi(argv[1]);  
   printf("Running throughput test for payload of %zu bytes.\n", len);
-  zn_properties_t *config = zn_config_peer();
+  zn_properties_t *config = zn_config_default();
   if (argc > 2) {
     zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
   }

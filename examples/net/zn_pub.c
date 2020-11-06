@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     if (argc > 2) {
         value = argv[2];
     }
-    zn_properties_t *config = zn_config_peer();
+    zn_properties_t *config = zn_config_default();
     if (argc > 3) {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[3]));
     }
