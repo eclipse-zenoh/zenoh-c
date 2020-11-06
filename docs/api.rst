@@ -296,8 +296,6 @@ Types
 
 .. autocfunction:: zenoh/net.h::zn_target_default
 
-  The network interface to use for multicast scouting.
-
 .. autocstruct:: zenoh/net.h::zn_query_target_t
 
   Predefined values for :c:member:`zn_query_target_t.kind`: 
