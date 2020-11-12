@@ -299,6 +299,7 @@ pub struct zn_sample_t {
 }
 
 impl From<Sample> for zn_sample_t {
+    #[inline]
     fn from(s: Sample) -> Self {
         let (val, len, _cap) = s.payload.to_vec().into_raw_parts();
         zn_sample_t {
@@ -365,6 +366,7 @@ pub struct zn_hello_array_t {
 }
 
 impl From<Vec<Hello>> for zn_hello_array_t {
+    #[inline]
     fn from(hvec: Vec<Hello>) -> Self {
         let mut hvec = hvec
             .into_iter()
@@ -430,6 +432,7 @@ pub enum zn_reliability_t {
 }
 
 impl From<Reliability> for zn_reliability_t {
+    #[inline]
     fn from(r: Reliability) -> Self {
         match r {
             Reliability::BestEffort => zn_reliability_t::BEST_EFFORT,
@@ -439,6 +442,7 @@ impl From<Reliability> for zn_reliability_t {
 }
 
 impl Into<Reliability> for zn_reliability_t {
+    #[inline]
     fn into(self) -> Reliability {
         match self {
             zn_reliability_t::BEST_EFFORT => Reliability::BestEffort,
@@ -459,6 +463,7 @@ pub enum zn_submode_t {
 }
 
 impl From<SubMode> for zn_submode_t {
+    #[inline]
     fn from(sm: SubMode) -> Self {
         match sm {
             SubMode::Push => zn_submode_t::PUSH,
@@ -468,6 +473,7 @@ impl From<SubMode> for zn_submode_t {
 }
 
 impl Into<SubMode> for zn_submode_t {
+    #[inline]
     fn into(self) -> SubMode {
         match self {
             zn_submode_t::PUSH => SubMode::Push,
@@ -490,6 +496,7 @@ pub struct zn_period_t {
 }
 
 impl From<Period> for zn_period_t {
+    #[inline]
     fn from(p: Period) -> Self {
         zn_period_t {
             origin: p.origin as c_uint,
@@ -500,6 +507,7 @@ impl From<Period> for zn_period_t {
 }
 
 impl Into<Period> for zn_period_t {
+    #[inline]
     fn into(self) -> Period {
         Period {
             origin: self.origin as ZInt,
@@ -523,6 +531,7 @@ pub struct zn_subinfo_t {
 }
 
 impl From<SubInfo> for zn_subinfo_t {
+    #[inline]
     fn from(si: SubInfo) -> Self {
         zn_subinfo_t {
             reliability: si.reliability.into(),
@@ -536,6 +545,7 @@ impl From<SubInfo> for zn_subinfo_t {
 }
 
 impl Into<SubInfo> for zn_subinfo_t {
+    #[inline]
     fn into(self) -> SubInfo {
         unsafe {
             SubInfo {
@@ -573,6 +583,7 @@ pub struct zn_reply_data_t {
 }
 
 impl zn_reply_data_t {
+    #[inline]
     pub(crate) fn empty() -> Self {
         zn_reply_data_t {
             data: zn_sample_t {
@@ -595,6 +606,7 @@ impl zn_reply_data_t {
 }
 
 impl From<Reply> for zn_reply_data_t {
+    #[inline]
     fn from(r: Reply) -> Self {
         zn_reply_data_t {
             data: r.data.into(),
@@ -691,6 +703,7 @@ pub enum zn_target_t {
 }
 
 impl From<Target> for zn_target_t {
+    #[inline]
     fn from(t: Target) -> Self {
         match t {
             Target::BestMatching => zn_target_t::BEST_MATCHING,
@@ -702,6 +715,7 @@ impl From<Target> for zn_target_t {
 }
 
 impl Into<Target> for zn_target_t {
+    #[inline]
     fn into(self) -> Target {
         match self {
             zn_target_t::BEST_MATCHING => Target::BestMatching,
@@ -730,6 +744,7 @@ pub struct zn_query_target_t {
 }
 
 impl From<QueryTarget> for zn_query_target_t {
+    #[inline]
     fn from(qt: QueryTarget) -> Self {
         zn_query_target_t {
             kind: qt.kind as c_uint,
@@ -739,6 +754,7 @@ impl From<QueryTarget> for zn_query_target_t {
 }
 
 impl Into<QueryTarget> for zn_query_target_t {
+    #[inline]
     fn into(self) -> QueryTarget {
         QueryTarget {
             kind: self.kind.into(),
@@ -766,6 +782,7 @@ pub enum zn_consolidation_mode_t {
 }
 
 impl From<ConsolidationMode> for zn_consolidation_mode_t {
+    #[inline]
     fn from(cm: ConsolidationMode) -> Self {
         match cm {
             ConsolidationMode::Full => zn_consolidation_mode_t::FULL,
@@ -776,6 +793,7 @@ impl From<ConsolidationMode> for zn_consolidation_mode_t {
 }
 
 impl Into<ConsolidationMode> for zn_consolidation_mode_t {
+    #[inline]
     fn into(self) -> ConsolidationMode {
         match self {
             zn_consolidation_mode_t::NONE => ConsolidationMode::None,
@@ -800,6 +818,7 @@ pub struct zn_query_consolidation_t {
 }
 
 impl From<QueryConsolidation> for zn_query_consolidation_t {
+    #[inline]
     fn from(qc: QueryConsolidation) -> Self {
         zn_query_consolidation_t {
             first_routers: qc.first_routers.into(),
@@ -810,6 +829,7 @@ impl From<QueryConsolidation> for zn_query_consolidation_t {
 }
 
 impl Into<QueryConsolidation> for zn_query_consolidation_t {
+    #[inline]
     fn into(self) -> QueryConsolidation {
         QueryConsolidation {
             first_routers: self.first_routers.into(),
