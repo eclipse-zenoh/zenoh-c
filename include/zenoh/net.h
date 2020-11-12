@@ -8,6 +8,17 @@
 
 
 /**
+ * The behavior to adopt in case of congestion while routing some data.
+ *
+ *     - **zn_congestion_control_t_BLOCK**
+ *     - **zn_congestion_control_t_DROP**
+ */
+typedef enum zn_congestion_control_t {
+  zn_congestion_control_t_BLOCK,
+  zn_congestion_control_t_DROP,
+} zn_congestion_control_t;
+
+/**
  * The kind of consolidation that should be applied on replies to a :c:func:`zn_query`.
  *
  *     - **zn_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
@@ -760,5 +771,27 @@ void zn_undeclare_subscriber(zn_subscriber_t *sub);
  *     ``0`` in case of success, ``1`` in case of failure.
  */
 int zn_write(zn_session_t *session, zn_reskey_t reskey, const uint8_t *payload, unsigned int len);
+
+/**
+ * Write data with extended options.
+ *
+ * Parameters:
+ *     session: The zenoh-net session.
+ *     resource: The resource key to write.
+ *     payload: The value to write.
+ *     len: The length of the value to write.
+ *     encoding: The encoding of the value.
+ *     kind: The kind of value.
+ *     congestion_control: The behavior to adopt in case of congestion while routing some data.
+ * Returns:
+ *     ``0`` in case of success, ``1`` in case of failure.
+ */
+int zn_write_ext(zn_session_t *session,
+                 zn_reskey_t reskey,
+                 const uint8_t *payload,
+                 unsigned int len,
+                 unsigned int encoding,
+                 unsigned int kind,
+                 zn_congestion_control_t congestion_control);
 
 #endif /* ZENOH_NET_ */

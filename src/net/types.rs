@@ -398,6 +398,26 @@ pub unsafe extern "C" fn zn_hello_array_free(hellos: zn_hello_array_t) {
     }
 }
 
+/// The behavior to adopt in case of congestion while routing some data.
+///
+///     - **zn_congestion_control_t_BLOCK**
+///     - **zn_congestion_control_t_DROP**
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub enum zn_congestion_control_t {
+    BLOCK,
+    DROP,
+}
+
+impl Into<CongestionControl> for zn_congestion_control_t {
+    fn into(self) -> CongestionControl {
+        match self {
+            zn_congestion_control_t::BLOCK => CongestionControl::Block,
+            zn_congestion_control_t::DROP => CongestionControl::Drop,
+        }
+    }
+}
+
 /// The subscription reliability.
 ///
 ///     - **zn_reliability_t_BEST_EFFORT**

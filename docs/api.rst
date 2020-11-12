@@ -236,6 +236,8 @@ Types
 
   A zenoh-net Publisher.
 
+.. autocenum:: zenoh/net.h::zn_congestion_control_t
+
 Functions
 ---------
 
@@ -244,6 +246,8 @@ Functions
 .. autocfunction:: zenoh/net.h::zn_undeclare_publisher
 
 .. autocfunction:: zenoh/net.h::zn_write
+
+.. autocfunction:: zenoh/net.h::zn_write_ext
 
 Subscription
 ============

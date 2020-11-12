@@ -394,6 +394,48 @@ pub unsafe extern "C" fn zn_write(
     result
 }
 
+/// Write data with extended options.
+///
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key to write.
+///     payload: The value to write.
+///     len: The length of the value to write.
+///     encoding: The encoding of the value.
+///     kind: The kind of value.
+///     congestion_control: The behavior to adopt in case of congestion while routing some data.
+/// Returns:
+///     ``0`` in case of success, ``1`` in case of failure.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_write_ext(
+    session: *mut zn_session_t,
+    reskey: zn_reskey_t,
+    payload: *const u8,
+    len: c_uint,
+    encoding: c_uint,
+    kind: c_uint,
+    congestion_control: zn_congestion_control_t,
+) -> c_int {
+    if session.is_null() {
+        return 1;
+    }
+
+    let reskey = ResKey::from_raw(reskey);
+    let result = match task::block_on((*session).0.write_ext(
+        &reskey,
+        slice::from_raw_parts(payload as *const u8, len as usize).into(),
+        encoding as ZInt,
+        kind as ZInt,
+        congestion_control.into(),
+    )) {
+        Ok(()) => 0,
+        _ => 1,
+    };
+    ResKey::into_raw(reskey);
+    result
+}
+
 /// Declare a :c:type:`zn_publisher_t` for the given resource key.
 ///
 /// Written resources that match the given key will only be sent on the network
