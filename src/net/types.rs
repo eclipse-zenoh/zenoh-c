@@ -298,15 +298,30 @@ pub struct zn_sample_t {
     pub value: z_bytes_t,
 }
 
-/// Information on the source of a reply.
+impl From<Sample> for zn_sample_t {
+    fn from(s: Sample) -> Self {
+        let (val, len, _cap) = s.payload.to_vec().into_raw_parts();
+        zn_sample_t {
+            key: s.res_name.into_raw(),
+            value: z_bytes_t { val, len },
+        }
+    }
+}
+
+/// Free a :c:type:`zn_sample_t` contained key and value.
 ///
-/// Members:
-///   unsigned int kind: The kind of source.
-///   z_bytes_t id: The unique id of the source.
-#[repr(C)]
-pub struct zn_source_info_t {
-    pub kind: c_uint,
-    pub id: z_bytes_t,
+/// Parameters:
+///     sample: The :c:type:`zn_sample_t` to free.
+///
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_sample_free(sample: zn_sample_t) {
+    String::from_raw(sample.key);
+    Vec::from_raw_parts(
+        sample.value.val as *mut zn_reply_data_t,
+        sample.value.len,
+        sample.value.len,
+    );
 }
 
 /// A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
@@ -520,6 +535,124 @@ impl Into<SubInfo> for zn_subinfo_t {
 #[no_mangle]
 pub extern "C" fn zn_subinfo_default() -> zn_subinfo_t {
     SubInfo::default().into()
+}
+
+/// An reply to a :c:func:`zn_query` (or :c:func:`zn_query_collect`).
+///
+/// Members:
+///   zn_sample_t data: a :c:type:`zn_sample_t` containing the key and value of the reply.
+///   unsigned int source_kind: The kind of the replier that sent this reply.
+///   z_bytes_t replier_id: The id of the replier that sent this reply.
+///
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct zn_reply_data_t {
+    data: zn_sample_t,
+    source_kind: c_uint,
+    replier_id: z_bytes_t,
+}
+
+impl zn_reply_data_t {
+    pub(crate) fn empty() -> Self {
+        zn_reply_data_t {
+            data: zn_sample_t {
+                key: z_string_t {
+                    val: std::ptr::null(),
+                    len: 0,
+                },
+                value: z_bytes_t {
+                    val: std::ptr::null(),
+                    len: 0,
+                },
+            },
+            source_kind: 0,
+            replier_id: z_bytes_t {
+                val: std::ptr::null(),
+                len: 0,
+            },
+        }
+    }
+}
+
+impl From<Reply> for zn_reply_data_t {
+    fn from(r: Reply) -> Self {
+        zn_reply_data_t {
+            data: r.data.into(),
+            source_kind: r.source_kind as c_uint,
+            replier_id: r.replier_id.into(),
+        }
+    }
+}
+
+/// Free a :c:type:`zn_reply_data_t` contained data and replier_id.
+///
+/// Parameters:
+///     reply_data: The :c:type:`zn_reply_data_t` to free.
+///
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_reply_data_free(reply_data: zn_reply_data_t) {
+    zn_sample_free(reply_data.data);
+    Vec::from_raw_parts(
+        reply_data.replier_id.val as *mut u8,
+        reply_data.replier_id.len,
+        reply_data.replier_id.len,
+    );
+}
+
+/// An array of :c:type:`zn_reply_data_t`.
+/// Result of :c:func:`zn_query_collect`.
+///
+/// Members:
+///   char *const *val: A pointer to the array.
+///   unsigned int len: The length of the array.
+///
+#[repr(C)]
+pub struct zn_reply_data_array_t {
+    pub val: *const zn_reply_data_t,
+    pub len: size_t,
+}
+
+/// Free a :c:type:`zn_reply_data_array_t` and it's contained replies.
+///
+/// Parameters:
+///     replies: The :c:type:`zn_reply_data_array_t` to free.
+///
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_reply_data_array_free(replies: zn_reply_data_array_t) {
+    let vec = Vec::from_raw_parts(
+        replies.val as *mut zn_reply_data_t,
+        replies.len,
+        replies.len,
+    );
+    for rd in vec {
+        zn_reply_data_free(rd);
+    }
+}
+
+/// The possible values of :c:member:`zn_reply_t.tag`
+///
+///     - **zn_reply_t_Tag_DATA**: The reply contains some data.
+///     - **zn_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub enum zn_reply_t_Tag {
+    DATA,
+    FINAL,
+}
+
+/// An reply to a :c:func:`zn_query`.
+///
+/// Members:
+///   zn_reply_t_Tag tag: Indicates if the reply contains data or if it's a FINAL reply.
+///   zn_reply_data_t data: The reply data if :c:member:`zn_reply_t.tag` equals :c:member:`zn_reply_t_Tag.zn_reply_t_Tag_DATA`.
+///
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct zn_reply_t {
+    pub tag: zn_reply_t_Tag,
+    pub data: zn_reply_data_t,
 }
 
 /// The possible values of :c:member:`zn_target_t.tag`.

@@ -16,12 +16,6 @@
 #include <string.h>
 #include "zenoh/net.h"
 
-void reply_handler(const zn_source_info_t *info, const zn_sample_t *sample, const void *arg) {
-    printf(">> [Reply handler] received (%.*s, %.*s)\n",
-        (int)sample->key.len, sample->key.val,
-        (int)sample->value.len, sample->value.val);
-}
-
 int main(int argc, char** argv) {
     char *uri = "/demo/example/**";
     if (argc > 1) {
@@ -40,9 +34,14 @@ int main(int argc, char** argv) {
     }
 
     printf("Sending Query '%s'...\n", uri);
-    zn_query(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default(), reply_handler, NULL);
+    zn_reply_data_array_t replies = zn_query_collect(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default());
 
-    sleep(1);
+    for(unsigned int i = 0; i < replies.len; ++i) {
+        printf(">> [Reply handler] received (%.*s, %.*s)\n",
+            (int)replies.val[i].data.key.len, replies.val[i].data.key.val,
+            (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
+    }
+    zn_reply_data_array_free(replies);
 
     zn_close(s);
     return 0;

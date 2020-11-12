@@ -219,6 +219,8 @@ Sample
 
 .. autocstruct:: zenoh/net.h::zn_sample_t
 
+.. autocfunction:: zenoh/net.h::zn_sample_free
+
 Resource declaration
 --------------------
 
@@ -314,12 +316,24 @@ Types
 
 .. autocfunction:: zenoh/net.h::zn_query_consolidation_default
 
-.. autocstruct:: zenoh/net.h::zn_source_info_t
+.. autocstruct:: zenoh/net.h::zn_reply_data_t
+
+.. autocfunction:: zenoh/net.h::zn_reply_data_free
+
+.. autocstruct:: zenoh/net.h::zn_reply_data_array_t
+
+.. autocfunction:: zenoh/net.h::zn_reply_data_array_free
+
+.. autocstruct:: zenoh/net.h::zn_reply_t
+
+.. autocenum:: zenoh/net.h::zn_reply_t_Tag
 
 Functions
 ---------
 
 .. autocfunction:: zenoh/net.h::zn_query
+
+.. autocfunction:: zenoh/net.h::zn_query_collect
 
 Queryable
 =========

@@ -32,6 +32,17 @@ typedef enum zn_reliability_t {
 } zn_reliability_t;
 
 /**
+ * The possible values of :c:member:`zn_reply_t.tag`
+ *
+ *     - **zn_reply_t_Tag_DATA**: The reply contains some data.
+ *     - **zn_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
+ */
+typedef enum zn_reply_t_Tag {
+  zn_reply_t_Tag_DATA,
+  zn_reply_t_Tag_FINAL,
+} zn_reply_t_Tag;
+
+/**
  * The subscription mode.
  *
  *     - **zn_submode_t_PUSH**
@@ -240,16 +251,46 @@ typedef struct zn_query_consolidation_t {
 } zn_query_consolidation_t;
 
 /**
- * Information on the source of a reply.
+ * An reply to a :c:func:`zn_query` (or :c:func:`zn_query_collect`).
  *
  * Members:
- *   unsigned int kind: The kind of source.
- *   z_bytes_t id: The unique id of the source.
+ *   zn_sample_t data: a :c:type:`zn_sample_t` containing the key and value of the reply.
+ *   unsigned int source_kind: The kind of the replier that sent this reply.
+ *   z_bytes_t replier_id: The id of the replier that sent this reply.
+ *
  */
-typedef struct zn_source_info_t {
-  unsigned int kind;
-  z_bytes_t id;
-} zn_source_info_t;
+typedef struct zn_reply_data_t {
+  zn_sample_t data;
+  unsigned int source_kind;
+  z_bytes_t replier_id;
+} zn_reply_data_t;
+
+/**
+ * An reply to a :c:func:`zn_query`.
+ *
+ * Members:
+ *   zn_reply_t_Tag tag: Indicates if the reply contains data or if it's a FINAL reply.
+ *   zn_reply_data_t data: The reply data if :c:member:`zn_reply_t.tag` equals :c:member:`zn_reply_t_Tag.zn_reply_t_Tag_DATA`.
+ *
+ */
+typedef struct zn_reply_t {
+  zn_reply_t_Tag tag;
+  zn_reply_data_t data;
+} zn_reply_t;
+
+/**
+ * An array of :c:type:`zn_reply_data_t`.
+ * Result of :c:func:`zn_query_collect`.
+ *
+ * Members:
+ *   char *const *val: A pointer to the array.
+ *   unsigned int len: The length of the array.
+ *
+ */
+typedef struct zn_reply_data_array_t {
+  const zn_reply_data_t *val;
+  size_t len;
+} zn_reply_data_array_t;
 
 extern const unsigned int ZN_CLIENT;
 
@@ -503,6 +544,7 @@ void zn_pull(zn_subscriber_t *sub);
 
 /**
  * Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
  *
  * Parameters:
  *     session: The zenoh-net session.
@@ -518,8 +560,28 @@ void zn_query(zn_session_t *session,
               const char *predicate,
               zn_query_target_t target,
               zn_query_consolidation_t consolidation,
-              void (*callback)(const zn_source_info_t*, const zn_sample_t*, const void*),
+              void (*callback)(zn_reply_t, const void*),
               void *arg);
+
+/**
+ * Query data from the matching queryables in the system.
+ * Replies are collected in an array.
+ *
+ * Parameters:
+ *     session: The zenoh-net session.
+ *     resource: The resource key to query.
+ *     predicate: An indication to matching queryables about the queried data.
+ *     target: The kind of queryables that should be target of this query.
+ *     consolidation: The kind of consolidation that should be applied on replies.
+ *
+ * Returns:
+ *    An array containing all the replies for this query.
+ */
+zn_reply_data_array_t zn_query_collect(zn_session_t *session,
+                                       zn_reskey_t reskey,
+                                       const char *predicate,
+                                       zn_query_target_t target,
+                                       zn_query_consolidation_t consolidation);
 
 /**
  * Create a default :c:type:`zn_query_consolidation_t`.
@@ -554,6 +616,24 @@ z_string_t zn_query_res_name(zn_query_t *query);
 zn_query_target_t zn_query_target_default(void);
 
 /**
+ * Free a :c:type:`zn_reply_data_array_t` and it's contained replies.
+ *
+ * Parameters:
+ *     replies: The :c:type:`zn_reply_data_array_t` to free.
+ *
+ */
+void zn_reply_data_array_free(zn_reply_data_array_t replies);
+
+/**
+ * Free a :c:type:`zn_reply_data_t` contained data and replier_id.
+ *
+ * Parameters:
+ *     reply_data: The :c:type:`zn_reply_data_t` to free.
+ *
+ */
+void zn_reply_data_free(zn_reply_data_t reply_data);
+
+/**
  * Create a resource key from a resource id.
  *
  * Parameters:
@@ -586,6 +666,15 @@ zn_reskey_t zn_rid_with_suffix(unsigned long id, const char *suffix);
  *     A new resource key.
  */
 zn_reskey_t zn_rname(const char *name);
+
+/**
+ * Free a :c:type:`zn_sample_t` contained key and value.
+ *
+ * Parameters:
+ *     sample: The :c:type:`zn_sample_t` to free.
+ *
+ */
+void zn_sample_free(zn_sample_t sample);
 
 /**
  * Scout for routers and/or peers.

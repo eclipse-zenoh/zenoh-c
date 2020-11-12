@@ -547,6 +547,7 @@ pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut zn_subscriber_t) {
 }
 
 /// Query data from the matching queryables in the system.
+/// Replies are provided through a callback function.
 ///
 /// Parameters:
 ///     session: The zenoh-net session.
@@ -564,7 +565,7 @@ pub unsafe extern "C" fn zn_query(
     predicate: *const c_char,
     target: zn_query_target_t,
     consolidation: zn_query_consolidation_t,
-    callback: extern "C" fn(*const zn_source_info_t, *const zn_sample_t, *const c_void),
+    callback: extern "C" fn(zn_reply_t, *const c_void),
     arg: *mut c_void,
 ) {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
@@ -579,37 +580,72 @@ pub unsafe extern "C" fn zn_query(
 
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let key = z_string_t {
-                val: std::ptr::null(),
-                len: 0,
-            };
-            let value = z_bytes_t {
-                val: std::ptr::null(),
-                len: 0,
-            };
-            let mut sample = zn_sample_t { key, value };
-            let id = z_bytes_t {
-                val: std::ptr::null(),
-                len: 0,
-            };
-            let mut source_info = zn_source_info_t { kind: 0, id };
             let arg = Box::into_raw(arg);
-
             while let Some(reply) = q.next().await {
-                source_info.kind = reply.source_kind as c_uint;
-                source_info.id.val = reply.replier_id.as_slice().as_ptr() as *const c_uchar;
-                source_info.id.len = reply.replier_id.as_slice().len() as size_t;
-                sample.key.val = reply.data.res_name.as_ptr() as *const c_char;
-                sample.key.len = reply.data.res_name.len() as size_t;
-                let data = reply.data.payload.to_vec();
-                sample.value.val = data.as_ptr() as *const c_uchar;
-                sample.value.len = data.len() as size_t;
-
-                callback(&source_info, &sample, arg)
+                callback(
+                    zn_reply_t {
+                        tag: zn_reply_t_Tag::DATA,
+                        data: reply.into(),
+                    },
+                    arg,
+                )
             }
+            callback(
+                zn_reply_t {
+                    tag: zn_reply_t_Tag::FINAL,
+                    data: zn_reply_data_t::empty(),
+                },
+                arg,
+            )
+            // while let Some(reply) = q.next().await {
+            //     callback(zn_reply_t::DATA { data: reply.into() }, arg)
+            // }
+            // callback(zn_reply_t::FINAL, arg)
         })
     });
     ResKey::into_raw(reskey);
+}
+
+/// Query data from the matching queryables in the system.
+/// Replies are collected in an array.
+///
+/// Parameters:
+///     session: The zenoh-net session.
+///     resource: The resource key to query.
+///     predicate: An indication to matching queryables about the queried data.
+///     target: The kind of queryables that should be target of this query.
+///     consolidation: The kind of consolidation that should be applied on replies.
+///
+/// Returns:
+///    An array containing all the replies for this query.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_query_collect(
+    session: *mut zn_session_t,
+    reskey: zn_reskey_t,
+    predicate: *const c_char,
+    target: zn_query_target_t,
+    consolidation: zn_query_consolidation_t,
+) -> zn_reply_data_array_t {
+    let p = CStr::from_ptr(predicate).to_str().unwrap();
+    let reskey = ResKey::from_raw(reskey);
+    let mut replies = task::block_on(async {
+        let q = (*session)
+            .0
+            .query(&reskey, p, target.into(), consolidation.into())
+            .await
+            .unwrap();
+        q.collect::<Vec<Reply>>().await
+    })
+    .into_iter()
+    .map(|r| r.into())
+    .collect::<Vec<zn_reply_data_t>>();
+
+    ResKey::into_raw(reskey);
+
+    replies.shrink_to_fit();
+    let (val, len, _cap) = replies.into_raw_parts();
+    zn_reply_data_array_t { val, len }
 }
 
 /// Declare a :c:type:`zn_queryable_t` for the given resource key.
