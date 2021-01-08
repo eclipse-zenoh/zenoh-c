@@ -12,7 +12,8 @@
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
 use async_std::prelude::FutureExt;
-use async_std::sync::{channel, Arc, Sender};
+use async_std::channel::{bounded, Sender};
+use async_std::sync::Arc;
 use async_std::task;
 use futures::prelude::*;
 use futures::select;
@@ -501,7 +502,7 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     let s = Box::from_raw(session);
     let reskey = ResKey::from_raw(reskey);
     let arg = Box::from_raw(arg);
-    let (tx, rx) = channel::<ZnSubOps>(8);
+    let (tx, rx) = bounded::<ZnSubOps>(8);
     let rsub = zn_subscriber_t(Some(Arc::new(tx)));
     let mut sub: Subscriber =
         task::block_on((*session).0.declare_subscriber(&reskey, &sub_info.into())).unwrap();
@@ -569,7 +570,9 @@ pub unsafe extern "C" fn zn_declare_subscriber(
 pub unsafe extern "C" fn zn_pull(sub: *mut zn_subscriber_t) {
     let sub = Box::from_raw(sub);
     match *sub {
-        zn_subscriber_t(Some(ref tx)) => smol::block_on(tx.send(ZnSubOps::Pull)),
+        zn_subscriber_t(Some(ref tx)) => {
+            let _ = async_std::task::block_on(tx.send(ZnSubOps::Pull));
+        },
         zn_subscriber_t(None) => (),
     }
     Box::into_raw(sub);
@@ -583,7 +586,9 @@ pub unsafe extern "C" fn zn_pull(sub: *mut zn_subscriber_t) {
 #[no_mangle]
 pub unsafe extern "C" fn zn_undeclare_subscriber(sub: *mut zn_subscriber_t) {
     match *Box::from_raw(sub) {
-        zn_subscriber_t(Some(tx)) => smol::block_on(tx.send(ZnSubOps::Close)),
+        zn_subscriber_t(Some(tx)) => {
+            let _ = async_std::task::block_on(tx.send(ZnSubOps::Close));
+        },
         zn_subscriber_t(None) => (),
     }
 }
@@ -716,7 +721,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
 
     let arg = Box::from_raw(arg);
     let reskey = ResKey::from_raw(reskey);
-    let (tx, rx) = channel::<bool>(1);
+    let (tx, rx) = bounded::<bool>(1);
     let r = zn_queryable_t(Some(Arc::new(tx)));
     let mut queryable: zenoh::net::Queryable =
         task::block_on((*session).0.declare_queryable(&reskey, kind as ZInt)).unwrap();
@@ -758,7 +763,9 @@ pub unsafe extern "C" fn zn_declare_queryable(
 #[no_mangle]
 pub unsafe extern "C" fn zn_undeclare_queryable(qable: *mut zn_queryable_t) {
     match *Box::from_raw(qable) {
-        zn_queryable_t(Some(tx)) => smol::block_on(tx.send(true)),
+        zn_queryable_t(Some(tx)) => {
+            let _ = async_std::task::block_on(tx.send(true));
+        },
         zn_queryable_t(None) => (),
     }
 }

@@ -150,9 +150,9 @@ typedef struct zn_period_t {
  *     zn_period_t *period: The subscription period.
  */
 typedef struct zn_subinfo_t {
-  zn_reliability_t reliability;
-  zn_submode_t mode;
-  zn_period_t *period;
+  enum zn_reliability_t reliability;
+  enum zn_submode_t mode;
+  struct zn_period_t *period;
 } zn_subinfo_t;
 
 /**
@@ -178,8 +178,8 @@ typedef struct z_bytes_t {
  *   z_bytes_t value: The value of this data sample.
  */
 typedef struct zn_sample_t {
-  z_string_t key;
-  z_bytes_t value;
+  struct z_string_t key;
+  struct z_bytes_t value;
 } zn_sample_t;
 
 /**
@@ -206,8 +206,8 @@ typedef struct z_str_array_t {
  */
 typedef struct zn_hello_t {
   unsigned int whatami;
-  z_bytes_t pid;
-  z_str_array_t locators;
+  struct z_bytes_t pid;
+  struct z_str_array_t locators;
 } zn_hello_t;
 
 /**
@@ -219,7 +219,7 @@ typedef struct zn_hello_t {
  *
  */
 typedef struct zn_hello_array_t {
-  const zn_hello_t *val;
+  const struct zn_hello_t *val;
   size_t len;
 } zn_hello_array_t;
 
@@ -258,7 +258,7 @@ typedef struct zn_target_t {
  */
 typedef struct zn_query_target_t {
   unsigned int kind;
-  zn_target_t target;
+  struct zn_target_t target;
 } zn_query_target_t;
 
 /**
@@ -271,9 +271,9 @@ typedef struct zn_query_target_t {
  *   zn_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
  */
 typedef struct zn_query_consolidation_t {
-  zn_consolidation_mode_t first_routers;
-  zn_consolidation_mode_t last_router;
-  zn_consolidation_mode_t reception;
+  enum zn_consolidation_mode_t first_routers;
+  enum zn_consolidation_mode_t last_router;
+  enum zn_consolidation_mode_t reception;
 } zn_query_consolidation_t;
 
 /**
@@ -286,9 +286,9 @@ typedef struct zn_query_consolidation_t {
  *
  */
 typedef struct zn_reply_data_t {
-  zn_sample_t data;
+  struct zn_sample_t data;
   unsigned int source_kind;
-  z_bytes_t replier_id;
+  struct z_bytes_t replier_id;
 } zn_reply_data_t;
 
 /**
@@ -300,8 +300,8 @@ typedef struct zn_reply_data_t {
  *
  */
 typedef struct zn_reply_t {
-  zn_reply_t_Tag tag;
-  zn_reply_data_t data;
+  enum zn_reply_t_Tag tag;
+  struct zn_reply_data_t data;
 } zn_reply_t;
 
 /**
@@ -314,51 +314,51 @@ typedef struct zn_reply_t {
  *
  */
 typedef struct zn_reply_data_array_t {
-  const zn_reply_data_t *val;
+  const struct zn_reply_data_t *val;
   size_t len;
 } zn_reply_data_array_t;
 
-extern const unsigned int ZN_CLIENT;
-
-extern const unsigned int ZN_CONFIG_ADD_TIMESTAMP_KEY;
-
-extern const unsigned int ZN_CONFIG_LISTENER_KEY;
-
-extern const unsigned int ZN_CONFIG_LOCAL_ROUTING_KEY;
-
-extern const unsigned int ZN_CONFIG_MODE_KEY;
-
-extern const unsigned int ZN_CONFIG_MULTICAST_ADDRESS_KEY;
-
-extern const unsigned int ZN_CONFIG_MULTICAST_INTERFACE_KEY;
-
-extern const unsigned int ZN_CONFIG_MULTICAST_SCOUTING_KEY;
-
-extern const unsigned int ZN_CONFIG_PASSWORD_KEY;
-
-extern const unsigned int ZN_CONFIG_PEER_KEY;
-
-extern const unsigned int ZN_CONFIG_SCOUTING_DELAY_KEY;
-
-extern const unsigned int ZN_CONFIG_SCOUTING_TIMEOUT_KEY;
-
-extern const unsigned int ZN_CONFIG_USER_KEY;
-
-extern const unsigned int ZN_INFO_PEER_PID_KEY;
-
-extern const unsigned int ZN_INFO_PID_KEY;
-
-extern const unsigned int ZN_INFO_ROUTER_PID_KEY;
+extern const unsigned int ZN_ROUTER;
 
 extern const unsigned int ZN_PEER;
 
-extern const unsigned int ZN_QUERYABLE_ALL_KINDS;
+extern const unsigned int ZN_CLIENT;
 
-extern const unsigned int ZN_QUERYABLE_EVAL;
+extern const unsigned int ZN_QUERYABLE_ALL_KINDS;
 
 extern const unsigned int ZN_QUERYABLE_STORAGE;
 
-extern const unsigned int ZN_ROUTER;
+extern const unsigned int ZN_QUERYABLE_EVAL;
+
+extern const unsigned int ZN_CONFIG_MODE_KEY;
+
+extern const unsigned int ZN_CONFIG_PEER_KEY;
+
+extern const unsigned int ZN_CONFIG_LISTENER_KEY;
+
+extern const unsigned int ZN_CONFIG_USER_KEY;
+
+extern const unsigned int ZN_CONFIG_PASSWORD_KEY;
+
+extern const unsigned int ZN_CONFIG_MULTICAST_SCOUTING_KEY;
+
+extern const unsigned int ZN_CONFIG_MULTICAST_INTERFACE_KEY;
+
+extern const unsigned int ZN_CONFIG_MULTICAST_ADDRESS_KEY;
+
+extern const unsigned int ZN_CONFIG_SCOUTING_TIMEOUT_KEY;
+
+extern const unsigned int ZN_CONFIG_SCOUTING_DELAY_KEY;
+
+extern const unsigned int ZN_CONFIG_ADD_TIMESTAMP_KEY;
+
+extern const unsigned int ZN_CONFIG_LOCAL_ROUTING_KEY;
+
+extern const unsigned int ZN_INFO_PID_KEY;
+
+extern const unsigned int ZN_INFO_PEER_PID_KEY;
+
+extern const unsigned int ZN_INFO_ROUTER_PID_KEY;
 
 /**
  * Initialise the zenoh runtime logger
@@ -376,7 +376,7 @@ void z_init_logger(void);
  * Returns:
  *     A new :c:type:`z_string_t`.
  */
-z_string_t z_string_make(const char *s);
+struct z_string_t z_string_make(const char *s);
 
 /**
  * Close a zenoh-net session.
@@ -384,7 +384,7 @@ z_string_t z_string_make(const char *s);
  * Parameters:
  *     session: A zenoh-net session.
  */
-void zn_close(zn_session_t *session);
+void zn_close(struct zn_session_t *session);
 
 /**
  * Create a default set of properties for client mode zenoh-net session configuration.
@@ -393,22 +393,22 @@ void zn_close(zn_session_t *session);
  * Parameters:
  *   peer: An optional peer locator.
  */
-zn_properties_t *zn_config_client(char *peer);
+struct zn_properties_t *zn_config_client(char *peer);
 
 /**
  * Create a default set of properties for zenoh-net session configuration.
  */
-zn_properties_t *zn_config_default(void);
+struct zn_properties_t *zn_config_default(void);
 
 /**
  * Create an empty set of properties for zenoh-net session configuration.
  */
-zn_properties_t *zn_config_empty(void);
+struct zn_properties_t *zn_config_empty(void);
 
 /**
  * Create a default set of properties for peer mode zenoh-net session configuration.
  */
-zn_properties_t *zn_config_peer(void);
+struct zn_properties_t *zn_config_peer(void);
 
 /**
  * Declare a :c:type:`zn_publisher_t` for the given resource key.
@@ -423,7 +423,8 @@ zn_properties_t *zn_config_peer(void);
  * Returns:
  *    The created :c:type:`zn_publisher_t` or null if the declaration failed.
  */
-zn_publisher_t *zn_declare_publisher(zn_session_t *session, zn_reskey_t reskey);
+struct zn_publisher_t *zn_declare_publisher(struct zn_session_t *session,
+                                            struct zn_reskey_t reskey);
 
 /**
  * Declare a :c:type:`zn_queryable_t` for the given resource key.
@@ -438,11 +439,11 @@ zn_publisher_t *zn_declare_publisher(zn_session_t *session, zn_reskey_t reskey);
  * Returns:
  *    The created :c:type:`zn_queryable_t` or null if the declaration failed.
  */
-zn_queryable_t *zn_declare_queryable(zn_session_t *session,
-                                     zn_reskey_t reskey,
-                                     unsigned int kind,
-                                     void (*callback)(zn_query_t*, const void*),
-                                     void *arg);
+struct zn_queryable_t *zn_declare_queryable(struct zn_session_t *session,
+                                            struct zn_reskey_t reskey,
+                                            unsigned int kind,
+                                            void (*callback)(struct zn_query_t*, const void*),
+                                            void *arg);
 
 /**
  * Associate a numerical id with the given resource key.
@@ -457,7 +458,7 @@ zn_queryable_t *zn_declare_queryable(zn_session_t *session,
  * Returns:
  *     A numerical id.
  */
-unsigned long zn_declare_resource(zn_session_t *session, zn_reskey_t reskey);
+unsigned long zn_declare_resource(struct zn_session_t *session, struct zn_reskey_t reskey);
 
 /**
  * Declare a :c:type:`zn_subscriber_t` for the given resource key.
@@ -472,11 +473,11 @@ unsigned long zn_declare_resource(zn_session_t *session, zn_reskey_t reskey);
  * Returns:
  *    The created :c:type:`zn_subscriber_t` or null if the declaration failed.
  */
-zn_subscriber_t *zn_declare_subscriber(zn_session_t *session,
-                                       zn_reskey_t reskey,
-                                       zn_subinfo_t sub_info,
-                                       void (*callback)(const zn_sample_t*, const void*),
-                                       void *arg);
+struct zn_subscriber_t *zn_declare_subscriber(struct zn_session_t *session,
+                                              struct zn_reskey_t reskey,
+                                              struct zn_subinfo_t sub_info,
+                                              void (*callback)(const struct zn_sample_t*, const void*),
+                                              void *arg);
 
 /**
  * Free an array of :c:struct:`zn_hello_t` messages and it's contained :c:struct:`zn_hello_t` messages recursively.
@@ -485,7 +486,7 @@ zn_subscriber_t *zn_declare_subscriber(zn_session_t *session,
  *     strs: The array of :c:struct:`zn_hello_t` messages to free.
  *
  */
-void zn_hello_array_free(zn_hello_array_t hellos);
+void zn_hello_array_free(struct zn_hello_array_t hellos);
 
 /**
  * Get informations about an zenoh-net session.
@@ -496,7 +497,7 @@ void zn_hello_array_free(zn_hello_array_t hellos);
  * Returns:
  *     A :c:type:`zn_properties_t` map containing informations on the given zenoh-net session.
  */
-zn_properties_t *zn_info(zn_session_t *session);
+struct zn_properties_t *zn_info(struct zn_session_t *session);
 
 /**
  * Open a zenoh-net session
@@ -507,7 +508,7 @@ zn_properties_t *zn_info(zn_session_t *session);
  * Returns:
  *     The created zenoh-net session or null if the creation did not succeed.
  */
-zn_session_t *zn_open(zn_properties_t *config);
+struct zn_session_t *zn_open(struct zn_properties_t *config);
 
 /**
  * Free a set of properties.
@@ -515,7 +516,7 @@ zn_session_t *zn_open(zn_properties_t *config);
  * Parameters:
  *   ps: A pointer to the properties.
  */
-void zn_properties_free(zn_properties_t *ps);
+void zn_properties_free(struct zn_properties_t *ps);
 
 /**
  * Get the property with the given key from a properties map.
@@ -527,7 +528,7 @@ void zn_properties_free(zn_properties_t *ps);
  * Returns:
  *     The value of the property with key ``key`` in properties map ``ps``.
  */
-z_string_t zn_properties_get(zn_properties_t *ps, unsigned int key);
+struct z_string_t zn_properties_get(struct zn_properties_t *ps, unsigned int key);
 
 /**
  * Insert a property with a given key to a properties map.
@@ -541,7 +542,9 @@ z_string_t zn_properties_get(zn_properties_t *ps, unsigned int key);
  * Returns:
  *     A pointer to the updated properties map.
  */
-zn_properties_t *zn_properties_insert(zn_properties_t *ps, unsigned long key, z_string_t value);
+struct zn_properties_t *zn_properties_insert(struct zn_properties_t *ps,
+                                             unsigned long key,
+                                             struct z_string_t value);
 
 /**
  * Get the length of the given properties map.
@@ -552,12 +555,12 @@ zn_properties_t *zn_properties_insert(zn_properties_t *ps, unsigned long key, z_
  * Returns:
  *     The length of the given properties map.
  */
-unsigned int zn_properties_len(zn_properties_t *ps);
+unsigned int zn_properties_len(struct zn_properties_t *ps);
 
 /**
  * Return a new empty map of properties.
  */
-zn_properties_t *zn_properties_make(void);
+struct zn_properties_t *zn_properties_make(void);
 
 /**
  * Pull data for a pull mode :c:type:`zn_subscriber_t`. The pulled data will be provided
@@ -566,7 +569,7 @@ zn_properties_t *zn_properties_make(void);
  * Parameters:
  *     sub: The :c:type:`zn_subscriber_t` to pull from.
  */
-void zn_pull(zn_subscriber_t *sub);
+void zn_pull(struct zn_subscriber_t *sub);
 
 /**
  * Query data from the matching queryables in the system.
@@ -581,12 +584,12 @@ void zn_pull(zn_subscriber_t *sub);
  *     callback: The callback function that will be called on reception of replies for this query.
  *     arg: A pointer that will be passed to the **callback** on each call.
  */
-void zn_query(zn_session_t *session,
-              zn_reskey_t reskey,
+void zn_query(struct zn_session_t *session,
+              struct zn_reskey_t reskey,
               const char *predicate,
-              zn_query_target_t target,
-              zn_query_consolidation_t consolidation,
-              void (*callback)(zn_reply_t, const void*),
+              struct zn_query_target_t target,
+              struct zn_query_consolidation_t consolidation,
+              void (*callback)(struct zn_reply_t, const void*),
               void *arg);
 
 /**
@@ -603,16 +606,16 @@ void zn_query(zn_session_t *session,
  * Returns:
  *    An array containing all the replies for this query.
  */
-zn_reply_data_array_t zn_query_collect(zn_session_t *session,
-                                       zn_reskey_t reskey,
-                                       const char *predicate,
-                                       zn_query_target_t target,
-                                       zn_query_consolidation_t consolidation);
+struct zn_reply_data_array_t zn_query_collect(struct zn_session_t *session,
+                                              struct zn_reskey_t reskey,
+                                              const char *predicate,
+                                              struct zn_query_target_t target,
+                                              struct zn_query_consolidation_t consolidation);
 
 /**
  * Create a default :c:type:`zn_query_consolidation_t`.
  */
-zn_query_consolidation_t zn_query_consolidation_default(void);
+struct zn_query_consolidation_t zn_query_consolidation_default(void);
 
 /**
  * Get the predicate of a received query.
@@ -623,7 +626,7 @@ zn_query_consolidation_t zn_query_consolidation_default(void);
  * Returns:
  *     The predicate of the query.
  */
-z_string_t zn_query_predicate(zn_query_t *query);
+struct z_string_t zn_query_predicate(struct zn_query_t *query);
 
 /**
  * Get the resource name of a received query.
@@ -634,12 +637,12 @@ z_string_t zn_query_predicate(zn_query_t *query);
  * Returns:
  *     The resource name of the query.
  */
-z_string_t zn_query_res_name(zn_query_t *query);
+struct z_string_t zn_query_res_name(struct zn_query_t *query);
 
 /**
  * Create a default :c:type:`zn_query_target_t`.
  */
-zn_query_target_t zn_query_target_default(void);
+struct zn_query_target_t zn_query_target_default(void);
 
 /**
  * Free a :c:type:`zn_reply_data_array_t` and it's contained replies.
@@ -648,7 +651,7 @@ zn_query_target_t zn_query_target_default(void);
  *     replies: The :c:type:`zn_reply_data_array_t` to free.
  *
  */
-void zn_reply_data_array_free(zn_reply_data_array_t replies);
+void zn_reply_data_array_free(struct zn_reply_data_array_t replies);
 
 /**
  * Free a :c:type:`zn_reply_data_t` contained data and replier_id.
@@ -657,7 +660,7 @@ void zn_reply_data_array_free(zn_reply_data_array_t replies);
  *     reply_data: The :c:type:`zn_reply_data_t` to free.
  *
  */
-void zn_reply_data_free(zn_reply_data_t reply_data);
+void zn_reply_data_free(struct zn_reply_data_t reply_data);
 
 /**
  * Create a resource key from a resource id.
@@ -668,7 +671,7 @@ void zn_reply_data_free(zn_reply_data_t reply_data);
  * Returns:
  *     A new resource key.
  */
-zn_reskey_t zn_rid(unsigned long id);
+struct zn_reskey_t zn_rid(unsigned long id);
 
 /**
  * Create a resource key from a resource id and a suffix.
@@ -680,7 +683,7 @@ zn_reskey_t zn_rid(unsigned long id);
  * Returns:
  *     A new resource key.
  */
-zn_reskey_t zn_rid_with_suffix(unsigned long id, const char *suffix);
+struct zn_reskey_t zn_rid_with_suffix(unsigned long id, const char *suffix);
 
 /**
  * Create a resource key from a resource name.
@@ -691,7 +694,7 @@ zn_reskey_t zn_rid_with_suffix(unsigned long id, const char *suffix);
  * Returns:
  *     A new resource key.
  */
-zn_reskey_t zn_rname(const char *name);
+struct zn_reskey_t zn_rname(const char *name);
 
 /**
  * Free a :c:type:`zn_sample_t` contained key and value.
@@ -700,7 +703,7 @@ zn_reskey_t zn_rname(const char *name);
  *     sample: The :c:type:`zn_sample_t` to free.
  *
  */
-void zn_sample_free(zn_sample_t sample);
+void zn_sample_free(struct zn_sample_t sample);
 
 /**
  * Scout for routers and/or peers.
@@ -713,7 +716,9 @@ void zn_sample_free(zn_sample_t sample);
  * Returns:
  *     An array of :c:struct:`zn_hello_t` messages.
  */
-zn_hello_array_t zn_scout(unsigned int what, zn_properties_t *config, unsigned long scout_period);
+struct zn_hello_array_t zn_scout(unsigned int what,
+                                 struct zn_properties_t *config,
+                                 unsigned long scout_period);
 
 /**
  * Send a reply to a query.
@@ -729,7 +734,10 @@ zn_hello_array_t zn_scout(unsigned int what, zn_properties_t *config, unsigned l
  *     payload: The value of this reply.
  *     len: The length of the value of this reply.
  */
-void zn_send_reply(zn_query_t *query, const char *key, const uint8_t *payload, unsigned int len);
+void zn_send_reply(struct zn_query_t *query,
+                   const char *key,
+                   const uint8_t *payload,
+                   unsigned int len);
 
 /**
  * Free an array of NULL terminated strings and it's contained NULL terminated strings recursively.
@@ -738,17 +746,17 @@ void zn_send_reply(zn_query_t *query, const char *key, const uint8_t *payload, u
  *     strs: The array of NULL terminated strings to free.
  *
  */
-void zn_str_array_free(z_str_array_t strs);
+void zn_str_array_free(struct z_str_array_t strs);
 
 /**
  * Create a default subscription info.
  */
-zn_subinfo_t zn_subinfo_default(void);
+struct zn_subinfo_t zn_subinfo_default(void);
 
 /**
  * Create a default :c:type:`zn_target_t`.
  */
-zn_target_t zn_target_default(void);
+struct zn_target_t zn_target_default(void);
 
 /**
  * Undeclare a :c:type:`zn_publisher_t`.
@@ -756,7 +764,7 @@ zn_target_t zn_target_default(void);
  * Parameters:
  *     sub: The :c:type:`zn_publisher_t` to undeclare.
  */
-void zn_undeclare_publisher(zn_publisher_t *publ);
+void zn_undeclare_publisher(struct zn_publisher_t *publ);
 
 /**
  * Undeclare a :c:type:`zn_queryable_t`.
@@ -764,7 +772,7 @@ void zn_undeclare_publisher(zn_publisher_t *publ);
  * Parameters:
  *     qable: The :c:type:`zn_queryable_t` to undeclare.
  */
-void zn_undeclare_queryable(zn_queryable_t *qable);
+void zn_undeclare_queryable(struct zn_queryable_t *qable);
 
 /**
  * Undeclare a :c:type:`zn_subscriber_t`.
@@ -772,7 +780,7 @@ void zn_undeclare_queryable(zn_queryable_t *qable);
  * Parameters:
  *     sub: The :c:type:`zn_subscriber_t` to undeclare.
  */
-void zn_undeclare_subscriber(zn_subscriber_t *sub);
+void zn_undeclare_subscriber(struct zn_subscriber_t *sub);
 
 /**
  * Write data.
@@ -785,7 +793,10 @@ void zn_undeclare_subscriber(zn_subscriber_t *sub);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int zn_write(zn_session_t *session, zn_reskey_t reskey, const uint8_t *payload, unsigned int len);
+int zn_write(struct zn_session_t *session,
+             struct zn_reskey_t reskey,
+             const uint8_t *payload,
+             unsigned int len);
 
 /**
  * Write data with extended options.
@@ -801,12 +812,12 @@ int zn_write(zn_session_t *session, zn_reskey_t reskey, const uint8_t *payload, 
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int zn_write_ext(zn_session_t *session,
-                 zn_reskey_t reskey,
+int zn_write_ext(struct zn_session_t *session,
+                 struct zn_reskey_t reskey,
                  const uint8_t *payload,
                  unsigned int len,
                  unsigned int encoding,
                  unsigned int kind,
-                 zn_congestion_control_t congestion_control);
+                 enum zn_congestion_control_t congestion_control);
 
 #endif /* ZENOH_NET_ */
