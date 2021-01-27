@@ -190,6 +190,20 @@ pub extern "C" fn zn_config_default() -> *mut zn_properties_t {
     ))))
 }
 
+/// Create a set of properties for zenoh-net session configuration, parsing a string listing the properties
+/// in such format: "mode=client;peer=tcp/127.0.0.1:7447".
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_config_from_str(s: *const c_char) -> *mut zn_properties_t {
+    if s.is_null() {
+        zn_config_empty()
+    } else {
+        let conf_str = CStr::from_ptr(s);
+        let props = zenoh::net::config::ConfigProperties::from(conf_str.to_string_lossy().as_ref());
+        Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(props.0))))
+    }
+}
+
 /// Create a default set of properties for peer mode zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -323,6 +337,22 @@ pub unsafe extern "C" fn zn_info(session: *mut zn_session_t) -> *mut zn_properti
     let ps = task::block_on((*session).0.info());
     let bps = Box::new(zn_properties_t(ZNProperties::from(ps.0)));
     Box::into_raw(bps)
+}
+
+/// Get informations about an zenoh-net session.
+///
+/// Parameters:
+///     session: A zenoh-net session.
+///
+/// Returns:
+///     A keys/values string containing informations on the given zenoh-net session.
+///     The format of the string is: "key1=value1;key2=value2;...".
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_info_as_str(session: *mut zn_session_t) -> z_string_t {
+    let ps: zenoh::Properties = task::block_on((*session).0.info()).into();
+    let res = String::into_raw(ps.to_string());
+    res
 }
 
 /// Close a zenoh-net session.
