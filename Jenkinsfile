@@ -74,9 +74,9 @@ pipeline {
         docker run --init --rm -v $(pwd):/workdir -w /workdir adlinktech/zenoh-dev-manylinux2010-x86_64-gnu \
           /bin/bash -c "\
             rustup default ${RUST_TOOLCHAIN} && \
-            make all && \
-            cargo deb --target=x86_64-unknown-linux-gnu --variant=libzenohc && \
-            cargo deb --target=x86_64-unknown-linux-gnu --variant=libzenohc-dev \
+            make build && \
+            cargo deb --variant=libzenohc && \
+            cargo deb --variant=libzenohc-dev \
           "
         '''
       }
@@ -100,9 +100,9 @@ pipeline {
         docker run --init --rm -v $(pwd):/workdir -w /workdir adlinktech/zenoh-dev-manylinux2010-i686-gnu \
           /bin/bash -c "\
             rustup default ${RUST_TOOLCHAIN} && \
-            make all && \
-            cargo deb --target=i686-unknown-linux-gnu --variant=libzenohc && \
-            cargo deb --target=i686-unknown-linux-gnu --variant=libzenohc-dev \
+            make build && \
+            cargo deb --variant=libzenohc && \
+            cargo deb --variant=libzenohc-dev \
           "
         '''
       }
