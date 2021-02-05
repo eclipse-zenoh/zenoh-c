@@ -6,6 +6,9 @@ pipeline {
                  type: 'PT_BRANCH_TAG',
                  description: 'The Git tag to checkout. If not specified "master" will be checkout.',
                  defaultValue: 'master')
+    string(name: 'RUST_TOOLCHAIN',
+           description: 'The version of rust toolchain to use (e.g. nightly-2020-12-20)',
+           defaultValue: 'nightly')
     booleanParam(name: 'BUILD_MACOSX',
                  description: 'Build macosx target.',
                  defaultValue: true)
@@ -24,6 +27,7 @@ pipeline {
   }
   environment {
       LABEL = get_label()
+      DOWNLOAD_DIR="/home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${LABEL}"
       MACOSX_DEPLOYMENT_TARGET=10.7
   }
 
@@ -67,11 +71,12 @@ pipeline {
       when { expression { return params.BUILD_LINUX64 }}
       steps {
         sh '''
-        docker run --init --rm -v $(pwd):/workdir -w /workdir --env "TARGET=x86_64-unknown-linux-gnu" adlinktech/manylinux2010-x64-rust-nightly \
+        docker run --init --rm -v $(pwd):/workdir -w /workdir adlinktech/zenoh-dev-manylinux2010-x86_64-gnu \
           /bin/bash -c "\
+            rustup default ${RUST_TOOLCHAIN} && \
             make all && \
             cargo deb --target=x86_64-unknown-linux-gnu --variant=libzenohc && \
-            cargo deb --target=x86_64-unknown-linux-gnu --variant=libzenohc-dev
+            cargo deb --target=x86_64-unknown-linux-gnu --variant=libzenohc-dev \
           "
         '''
       }
@@ -92,10 +97,13 @@ pipeline {
       when { expression { return params.BUILD_LINUX32 }}
       steps {
         sh '''
-        docker run --init --rm -v $(pwd):/workdir -w /workdir --env "TARGET=i686-unknown-linux-gnu" adlinktech/manylinux2010-i686-rust-nightly \
-          make all && \
+        docker run --init --rm -v $(pwd):/workdir -w /workdir adlinktech/zenoh-dev-manylinux2010-i686-gnu \
+          /bin/bash -c "\
+            rustup default ${RUST_TOOLCHAIN} && \
+            make all && \
             cargo deb --target=i686-unknown-linux-gnu --variant=libzenohc && \
-            cargo deb --target=i686-unknown-linux-gnu --variant=libzenohc-dev
+            cargo deb --target=i686-unknown-linux-gnu --variant=libzenohc-dev \
+          "
         '''
       }
     }
@@ -130,26 +138,45 @@ pipeline {
       }
     }
 
+    stage('[MacMini] Prepare directory on download.eclipse.org') {
+      when { expression { return params.PUBLISH_ECLIPSE_DOWNLOAD }}
+      steps {
+        // Note: remove existing dir on download.eclipse.org only if it's for a branch
+        // (e.g. master that is rebuilt periodically from different commits)
+        sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
+          sh '''
+            if [[ ${GIT_TAG} == origin/* ]]; then
+              ssh genie.zenoh@projects-storage.eclipse.org rm -fr ${DOWNLOAD_DIR}
+            fi
+            ssh genie.zenoh@projects-storage.eclipse.org mkdir -p ${DOWNLOAD_DIR}
+            COMMIT_ID=`git log -n1 --format="%h"`
+            echo "https://github.com/eclipse-zenoh/zenoh/tree/${COMMIT_ID}" > _git_commit_${COMMIT_ID}.txt
+            rustc --version > _rust_toolchain_${RUST_TOOLCHAIN}.txt
+            scp _*.txt genie.zenoh@projects-storage.eclipse.org:${DOWNLOAD_DIR}/
+          '''
+        }
+      }
+    }
+
     stage('[MacMini] Publish to download.eclipse.org') {
       when { expression { return params.PUBLISH_ECLIPSE_DOWNLOAD }}
       steps {
         sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
           sh '''
-          export TARGET_DIR=/home/data/httpd/download.eclipse.org/zenoh/zenoh-c/${LABEL}/
-          ssh genie.zenoh@projects-storage.eclipse.org mkdir -p ${TARGET_DIR}
+          ssh genie.zenoh@projects-storage.eclipse.org mkdir -p ${DOWNLOAD_DIR}
           if [ "${BUILD_MACOSX}" = "true" ]; then
-            scp eclipse-zenoh-c-${LABEL}-*macosx*.tar.gz genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+            scp eclipse-zenoh-c-${LABEL}-*macosx*.tar.gz genie.zenoh@projects-storage.eclipse.org:${DOWNLOAD_DIR}
           fi
           if [ "${BUILD_LINUX64}" = "true" ]; then
-            scp eclipse-zenoh-c-${LABEL}-*x86_64-unknown-linux-gnu.tar.gz target/x86_64-unknown-linux-gnu/debian/*.deb genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+            scp eclipse-zenoh-c-${LABEL}-*x86_64-unknown-linux-gnu.tar.gz target/x86_64-unknown-linux-gnu/debian/*.deb genie.zenoh@projects-storage.eclipse.org:${DOWNLOAD_DIR}
             scp target/x86_64-unknown-linux-gnu/debian/*.deb genie.zenoh@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/zenoh/zenoh/${LABEL}/
           fi
           if [ "${BUILD_LINUX32}" = "true" ]; then
-            scp eclipse-zenoh-c-${LABEL}-*i686-unknown-linux-gnu.tar.gz target/i686-unknown-linux-gnu/debian/*.deb genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+            scp eclipse-zenoh-c-${LABEL}-*i686-unknown-linux-gnu.tar.gz target/i686-unknown-linux-gnu/debian/*.deb genie.zenoh@projects-storage.eclipse.org:${DOWNLOAD_DIR}
             scp target/x86_64-unknown-linux-gnu/debian/*.deb genie.zenoh@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/zenoh/zenoh/${LABEL}/
           fi
           if [ "${BUILD_WIN64}" = "true" ]; then
-            scp eclipse-zenoh-c-${LABEL}-*x86_64-pc-windows-gnu.zip genie.zenoh@projects-storage.eclipse.org:${TARGET_DIR}
+            scp eclipse-zenoh-c-${LABEL}-*x86_64-pc-windows-gnu.zip genie.zenoh@projects-storage.eclipse.org:${DOWNLOAD_DIR}
           fi
           '''
         }
