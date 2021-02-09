@@ -30,7 +30,7 @@ pub use types::*;
 pub struct zn_session_t(zenoh::net::Session);
 
 type ZNProperties =
-    zenoh_util::collections::IntKeyProperties<zenoh_util::collections::DummyTranscoder>;
+    zenoh_util::properties::IntKeyProperties<zenoh_util::properties::DummyTranscoder>;
 
 #[allow(non_camel_case_types)]
 pub struct zn_properties_t(ZNProperties);
