@@ -18,8 +18,10 @@ use async_std::task;
 use futures::prelude::*;
 use futures::select;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ulong, size_t};
+use std::convert::TryFrom;
 use std::ffi::{c_void, CStr, CString};
 use std::slice;
+use zenoh::net::config::ConfigProperties;
 use zenoh::net::*;
 use zenoh_protocol::core::ZInt;
 
@@ -29,11 +31,8 @@ pub use types::*;
 #[allow(non_camel_case_types)]
 pub struct zn_session_t(zenoh::net::Session);
 
-type ZNProperties =
-    zenoh_util::properties::IntKeyProperties<zenoh_util::properties::DummyTranscoder>;
-
 #[allow(non_camel_case_types)]
-pub struct zn_properties_t(ZNProperties);
+pub struct zn_properties_t(ConfigProperties);
 
 enum ZnSubOps {
     Pull,
@@ -100,7 +99,7 @@ pub unsafe extern "C" fn zn_rname(name: *const c_char) -> zn_reskey_t {
 /// Return a new empty map of properties.
 #[no_mangle]
 pub extern "C" fn zn_properties_make() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(ZNProperties::default())))
+    Box::into_raw(Box::new(zn_properties_t(config::empty())))
 }
 
 /// Get the length of the given properties map.
@@ -176,18 +175,14 @@ pub unsafe extern "C" fn zn_properties_free(ps: *mut zn_properties_t) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_empty() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
-        config::empty().0,
-    ))))
+    Box::into_raw(Box::new(zn_properties_t(config::empty())))
 }
 
 /// Create a default set of properties for zenoh-net session configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_default() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
-        config::default().0,
-    ))))
+    Box::into_raw(Box::new(zn_properties_t(config::default())))
 }
 
 /// Create a set of properties for zenoh-net session configuration, parsing a string listing the properties
@@ -199,8 +194,33 @@ pub unsafe extern "C" fn zn_config_from_str(s: *const c_char) -> *mut zn_propert
         zn_config_empty()
     } else {
         let conf_str = CStr::from_ptr(s);
-        let props = zenoh::net::config::ConfigProperties::from(conf_str.to_string_lossy().as_ref());
-        Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(props.0))))
+        let props = ConfigProperties::from(conf_str.to_string_lossy().as_ref());
+        Box::into_raw(Box::new(zn_properties_t(props)))
+    }
+}
+
+/// Create a set of properties for zenoh-net session configuration, parsing a file listing the properties
+/// (1 "key=value" per line, comments starting with '#' character are allowed).
+/// Returns null if parsing fails.
+///
+/// Parameters:
+///   path: The path to the file (must be in UTF-8).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_config_from_file(path: *const c_char) -> *mut zn_properties_t {
+    let path_str = CStr::from_ptr(path);
+    match path_str.to_str() {
+        Ok(s) => match zenoh::Properties::try_from(std::path::Path::new(s)) {
+            Ok(props) => Box::into_raw(Box::new(zn_properties_t(ConfigProperties::from(props.0)))),
+            Err(e) => {
+                log::error!("Failed to parse properties from {}: {}", s, e);
+                std::ptr::null_mut()
+            }
+        },
+        Err(e) => {
+            log::error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
+            std::ptr::null_mut()
+        }
     }
 }
 
@@ -208,9 +228,7 @@ pub unsafe extern "C" fn zn_config_from_str(s: *const c_char) -> *mut zn_propert
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zn_config_peer() -> *mut zn_properties_t {
-    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
-        config::peer().0,
-    ))))
+    Box::into_raw(Box::new(zn_properties_t(config::peer())))
 }
 
 /// Create a default set of properties for client mode zenoh-net session configuration.
@@ -228,9 +246,7 @@ pub unsafe extern "C" fn zn_config_client(peer: *mut c_char) -> *mut zn_properti
     } else {
         return std::ptr::null_mut();
     };
-    Box::into_raw(Box::new(zn_properties_t(ZNProperties::from(
-        config::client(locator).0,
-    ))))
+    Box::into_raw(Box::new(zn_properties_t(config::client(locator))))
 }
 
 /// Get the resource name of a received query.
@@ -335,7 +351,7 @@ pub unsafe extern "C" fn zn_open(config: *mut zn_properties_t) -> *mut zn_sessio
 #[no_mangle]
 pub unsafe extern "C" fn zn_info(session: *mut zn_session_t) -> *mut zn_properties_t {
     let ps = task::block_on((*session).0.info());
-    let bps = Box::new(zn_properties_t(ZNProperties::from(ps.0)));
+    let bps = Box::new(zn_properties_t(ConfigProperties::from(ps.0)));
     Box::into_raw(bps)
 }
 
