@@ -213,7 +213,7 @@ pub unsafe extern "C" fn zn_config_from_file(path: *const c_char) -> *mut zn_pro
         Ok(s) => match zenoh::Properties::try_from(std::path::Path::new(s)) {
             Ok(props) => Box::into_raw(Box::new(zn_properties_t(ConfigProperties::from(props.0)))),
             Err(e) => {
-                log::error!("Failed to parse properties from {}: {}", s, e);
+                log::error!("{}", e);
                 std::ptr::null_mut()
             }
         },
