@@ -199,6 +199,19 @@ pub unsafe extern "C" fn zn_config_from_str(s: *const c_char) -> *mut zn_propert
     }
 }
 
+/// Convert a set of properties into a string.
+///
+/// Parameters:
+///     config: The set of properties.
+///
+/// Returns:
+///     A keys/values string containing with such format: "key1=value1;key2=value2;...".
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zn_config_to_str(config: *mut zn_properties_t) -> z_string_t {
+    String::into_raw((*config).0.to_string())
+}
+
 /// Create a set of properties for zenoh-net session configuration, parsing a file listing the properties
 /// (1 "key=value" per line, comments starting with '#' character are allowed).
 /// Returns null if parsing fails.
@@ -367,8 +380,7 @@ pub unsafe extern "C" fn zn_info(session: *mut zn_session_t) -> *mut zn_properti
 #[no_mangle]
 pub unsafe extern "C" fn zn_info_as_str(session: *mut zn_session_t) -> z_string_t {
     let ps: zenoh::Properties = task::block_on((*session).0.info()).into();
-    let res = String::into_raw(ps.to_string());
-    res
+    String::into_raw(ps.to_string())
 }
 
 /// Close a zenoh-net session.
@@ -791,7 +803,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
                 },
                 _ = rx.recv().fuse() => {
                     let _ = queryable.undeclare().await;
-                    return ()
+                    return
                 })
             }
         })

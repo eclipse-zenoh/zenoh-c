@@ -427,6 +427,17 @@ struct zn_properties_t *zn_config_from_str(const char *s);
 struct zn_properties_t *zn_config_peer(void);
 
 /**
+ * Convert a set of properties into a string.
+ *
+ * Parameters:
+ *     config: The set of properties.
+ *
+ * Returns:
+ *     A keys/values string containing with such format: "key1=value1;key2=value2;...".
+ */
+struct z_string_t zn_config_to_str(struct zn_properties_t *config);
+
+/**
  * Declare a :c:type:`zn_publisher_t` for the given resource key.
  *
  * Written resources that match the given key will only be sent on the network
