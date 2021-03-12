@@ -97,6 +97,13 @@ impl FromRaw<z_string_t> for String {
     }
 }
 
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_string_free(zs: z_string_t) {
+    println!("******** z_string_free");
+    let _ = String::from_raw(zs);
+}
+
 /// Construct a :c:type:`z_string_t` from a NULL terminated string.
 /// The content of the given string is copied.
 ///

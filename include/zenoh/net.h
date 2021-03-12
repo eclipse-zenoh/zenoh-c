@@ -366,6 +366,8 @@ extern const unsigned int ZN_INFO_ROUTER_PID_KEY;
  */
 void z_init_logger(void);
 
+void z_string_free(struct z_string_t zs);
+
 /**
  * Construct a :c:type:`z_string_t` from a NULL terminated string.
  * The content of the given string is copied.

@@ -23,7 +23,7 @@ use std::ffi::{c_void, CStr, CString};
 use std::slice;
 use zenoh::net::config::ConfigProperties;
 use zenoh::net::*;
-use zenoh_protocol::core::ZInt;
+// use zenoh_protocol::core::ZInt;
 
 mod types;
 pub use types::*;
