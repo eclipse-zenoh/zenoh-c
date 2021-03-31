@@ -16,23 +16,30 @@
 #include <string.h>
 #include "zenoh/net.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
+    z_init_logger();
+
     char *uri = "/demo/example/zenoh-c-pub";
-    if (argc > 1) {
+    if (argc > 1)
+    {
         uri = argv[1];
     }
     char *value = "Pub from C!";
-    if (argc > 2) {
+    if (argc > 2)
+    {
         value = argv[2];
     }
     zn_properties_t *config = zn_config_default();
-    if (argc > 3) {
+    if (argc > 3)
+    {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[3]));
     }
 
     printf("Openning session...\n");
     zn_session_t *s = zn_open(config);
-    if (s == 0) {
+    if (s == 0)
+    {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -44,13 +51,15 @@ int main(int argc, char **argv) {
 
     printf("Declaring Publisher on %lu\n", rid);
     zn_publisher_t *pub = zn_declare_publisher(s, reskey);
-    if (pub == 0) {
+    if (pub == 0)
+    {
         printf("Unable to declare publisher.\n");
         exit(-1);
     }
 
     char buf[256];
-    for(int idx = 0; 1; ++idx) {
+    for (int idx = 0; 1; ++idx)
+    {
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Writing Data ('%lu': '%s')...\n", rid, buf);

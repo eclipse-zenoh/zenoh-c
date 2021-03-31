@@ -16,19 +16,25 @@
 #include <string.h>
 #include "zenoh/net.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
+    z_init_logger();
+
     char *uri = "/demo/example/**";
-    if (argc > 1) {
+    if (argc > 1)
+    {
         uri = argv[1];
     }
     zn_properties_t *config = zn_config_default();
-    if (argc > 2) {
+    if (argc > 2)
+    {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
     }
 
     printf("Openning session...\n");
     zn_session_t *s = zn_open(config);
-    if (s == 0) {
+    if (s == 0)
+    {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -36,10 +42,11 @@ int main(int argc, char** argv) {
     printf("Sending Query '%s'...\n", uri);
     zn_reply_data_array_t replies = zn_query_collect(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default());
 
-    for(unsigned int i = 0; i < replies.len; ++i) {
+    for (unsigned int i = 0; i < replies.len; ++i)
+    {
         printf(">> [Reply handler] received (%.*s, %.*s)\n",
-            (int)replies.val[i].data.key.len, replies.val[i].data.key.val,
-            (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
+               (int)replies.val[i].data.key.len, replies.val[i].data.key.val,
+               (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
     }
     zn_reply_data_array_free(replies);
 

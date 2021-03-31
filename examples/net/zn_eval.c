@@ -18,42 +18,51 @@
 char *uri = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
-void query_handler(zn_query_t *query, const void *arg) {
+void query_handler(zn_query_t *query, const void *arg)
+{
     z_string_t res = zn_query_res_name(query);
     z_string_t pred = zn_query_predicate(query);
     printf(">> [Query handler] Handling '%.*s?%.*s'\n", (int)res.len, res.val, (int)pred.len, pred.val);
     zn_send_reply(query, uri, (const unsigned char *)value, strlen(value));
 }
 
-int main(int argc, char** argv) {
-    if (argc > 1) {
+int main(int argc, char **argv)
+{
+    z_init_logger();
+
+    if (argc > 1)
+    {
         uri = argv[1];
     }
     zn_properties_t *config = zn_config_default();
-    if (argc > 2) {
+    if (argc > 2)
+    {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
     }
 
     printf("Openning session...\n");
     zn_session_t *s = zn_open(config);
-    if (s == 0) {
+    if (s == 0)
+    {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
     zn_queryable_t *qable = zn_declare_queryable(s, zn_rname(uri), ZN_QUERYABLE_EVAL, query_handler, NULL);
-    if (qable == 0) {
+    if (qable == 0)
+    {
         printf("Unable to declare queryable.\n");
         exit(-1);
     }
-    
+
     char c = 0;
-    while (c != 'q') {
+    while (c != 'q')
+    {
         c = fgetc(stdin);
     }
 
     zn_undeclare_queryable(qable);
     zn_close(s);
-    return 0;    
+    return 0;
 }

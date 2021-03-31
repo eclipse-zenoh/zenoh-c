@@ -16,6 +16,8 @@
 
 int main(int argc, char **argv)
 {
+    z_init_logger();
+
     zn_properties_t *config = zn_config_default();
     if (argc > 1)
     {

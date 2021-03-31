@@ -15,23 +15,30 @@
 #include <string.h>
 #include "zenoh/net.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
+    z_init_logger();
+
     char *uri = "/demo/example/zenoh-c-write";
-    if (argc > 1) {
+    if (argc > 1)
+    {
         uri = argv[1];
     }
     char *value = "Write from C!";
-    if (argc > 2) {
+    if (argc > 2)
+    {
         value = argv[2];
     }
     zn_properties_t *config = zn_config_default();
-    if (argc > 3) {
+    if (argc > 3)
+    {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[3]));
     }
 
     printf("Openning session...\n");
     zn_session_t *s = zn_open(config);
-    if (s == 0) {
+    if (s == 0)
+    {
         printf("Unable to open session!\n");
         exit(-1);
     }

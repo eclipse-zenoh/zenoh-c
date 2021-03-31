@@ -14,38 +14,57 @@
 #include <stdio.h>
 #include "zenoh/net.h"
 
-void fprintpid(FILE *stream, z_bytes_t pid) {
-    if (pid.val == NULL) {
+void fprintpid(FILE *stream, z_bytes_t pid)
+{
+    if (pid.val == NULL)
+    {
         fprintf(stream, "None");
-    } else {
+    }
+    else
+    {
         fprintf(stream, "Some(");
-        for (unsigned int i = 0; i < pid.len; i++) {
-          fprintf(stream, "%02X", (int)pid.val[i]);
+        for (unsigned int i = 0; i < pid.len; i++)
+        {
+            fprintf(stream, "%02X", (int)pid.val[i]);
         }
         fprintf(stream, ")");
     }
 }
 
-void fprintwhatami(FILE *stream, unsigned int whatami) {
-    if (whatami == ZN_ROUTER) { fprintf(stream, "\"Router\""); }
-    else if (whatami == ZN_PEER) { fprintf(stream, "\"Peer\""); }
-    else  { fprintf(stream, "\"Other\""); }
+void fprintwhatami(FILE *stream, unsigned int whatami)
+{
+    if (whatami == ZN_ROUTER)
+    {
+        fprintf(stream, "\"Router\"");
+    }
+    else if (whatami == ZN_PEER)
+    {
+        fprintf(stream, "\"Peer\"");
+    }
+    else
+    {
+        fprintf(stream, "\"Other\"");
+    }
 }
 
-void fprintlocators(FILE *stream, z_str_array_t locs) {
+void fprintlocators(FILE *stream, z_str_array_t locs)
+{
     fprintf(stream, "[");
-    for (unsigned int i = 0; i < locs.len; i++) {
+    for (unsigned int i = 0; i < locs.len; i++)
+    {
         fprintf(stream, "\"");
         fprintf(stream, "%s", locs.val[i]);
         fprintf(stream, "\"");
-        if (i < locs.len - 1) {
+        if (i < locs.len - 1)
+        {
             fprintf(stream, ", ");
         }
     }
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, zn_hello_t hello) {
+void fprinthello(FILE *stream, zn_hello_t hello)
+{
     fprintf(stream, "Hello { pid: ");
     fprintpid(stream, hello.pid);
     fprintf(stream, ", whatami: ");
@@ -55,20 +74,27 @@ void fprinthello(FILE *stream, zn_hello_t hello) {
     fprintf(stream, " }");
 }
 
-int main(int argc, char** argv) {
-  zn_properties_t *config = zn_config_default();
+int main(int argc, char **argv)
+{
+    z_init_logger();
 
-  printf("Scouting...\n");
-  zn_hello_array_t hellos = zn_scout(ZN_ROUTER | ZN_PEER, config, 1000);
-  if (hellos.len > 0) {
-    for (unsigned int i = 0; i < hellos.len; ++i) {
-        fprinthello(stdout, hellos.val[i]);
-        fprintf(stdout, "\n");
+    zn_properties_t *config = zn_config_default();
+
+    printf("Scouting...\n");
+    zn_hello_array_t hellos = zn_scout(ZN_ROUTER | ZN_PEER, config, 1000);
+    if (hellos.len > 0)
+    {
+        for (unsigned int i = 0; i < hellos.len; ++i)
+        {
+            fprinthello(stdout, hellos.val[i]);
+            fprintf(stdout, "\n");
+        }
+
+        zn_hello_array_free(hellos);
     }
-    
-    zn_hello_array_free(hellos);
-  } else {
-    printf("Did not find any zenoh process.\n");
-  }
-  return 0;
+    else
+    {
+        printf("Did not find any zenoh process.\n");
+    }
+    return 0;
 }

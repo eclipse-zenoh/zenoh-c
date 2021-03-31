@@ -21,51 +21,65 @@ volatile unsigned long long int count = 0;
 volatile struct timeval start;
 volatile struct timeval stop;
 
-void print_stats(volatile struct timeval *start, volatile struct timeval *stop) {
-  double t0 = start->tv_sec + ((double)start->tv_usec / 1000000.0);
-  double t1 = stop->tv_sec + ((double)stop->tv_usec / 1000000.0);
-  double thpt = N / (t1 - t0);
-  printf("%f msgs/sec\n", thpt);
+void print_stats(volatile struct timeval *start, volatile struct timeval *stop)
+{
+    double t0 = start->tv_sec + ((double)start->tv_usec / 1000000.0);
+    double t1 = stop->tv_sec + ((double)stop->tv_usec / 1000000.0);
+    double thpt = N / (t1 - t0);
+    printf("%f msgs/sec\n", thpt);
 }
 
-void data_handler(const zn_sample_t *sample, const void *arg) {
+void data_handler(const zn_sample_t *sample, const void *arg)
+{
     struct timeval tv;
-    if (count == 0) {
+    if (count == 0)
+    {
         gettimeofday(&tv, 0);
         start = tv;
         count++;
-    } else if (count < N) {
+    }
+    else if (count < N)
+    {
         count++;
-    } else {
+    }
+    else
+    {
         gettimeofday(&tv, 0);
         stop = tv;
         print_stats(&start, &stop);
         count = 0;
-    }  
+    }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
+    z_init_logger();
+
     zn_properties_t *config = zn_config_default();
-    if (argc > 1) {
+    if (argc > 1)
+    {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[1]));
     }
 
     printf("Openning session...\n");
     zn_session_t *s = zn_open(config);
-    if (s == 0) {
+    if (s == 0)
+    {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     zn_reskey_t rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
     zn_subscriber_t *sub = zn_declare_subscriber(s, rid, zn_subinfo_default(), data_handler, NULL);
-    if (sub == 0) {
+    if (sub == 0)
+    {
         printf("Unable to declare subscriber.\n");
         exit(-1);
     }
 
     char c = 0;
-    while (c != 'q') {
+    while (c != 'q')
+    {
         c = fgetc(stdin);
     }
 

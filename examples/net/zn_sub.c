@@ -14,38 +14,47 @@
 #include <stdio.h>
 #include "zenoh/net.h"
 
-void data_handler(const zn_sample_t *sample, const void *arg) {
+void data_handler(const zn_sample_t *sample, const void *arg)
+{
     printf(">> [Subscription listener] Received (%.*s, %.*s)\n",
-        (int)sample->key.len, sample->key.val,
-        (int)sample->value.len, sample->value.val);
+           (int)sample->key.len, sample->key.val,
+           (int)sample->value.len, sample->value.val);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
+    z_init_logger();
+
     char *uri = "/demo/example/**";
-    if (argc > 1) {
+    if (argc > 1)
+    {
         uri = argv[1];
     }
     zn_properties_t *config = zn_config_default();
-    if (argc > 2) {
+    if (argc > 2)
+    {
         zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
     }
 
     printf("Openning session...\n");
     zn_session_t *s = zn_open(config);
-    if (s == 0) {
+    if (s == 0)
+    {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Subscriber on '%s'...\n", uri);
     zn_subscriber_t *sub = zn_declare_subscriber(s, zn_rname(uri), zn_subinfo_default(), data_handler, NULL);
-    if (sub == 0) {
+    if (sub == 0)
+    {
         printf("Unable to declare subscriber.\n");
         exit(-1);
     }
 
     char c = 0;
-    while (c != 'q') {
+    while (c != 'q')
+    {
         c = fgetc(stdin);
     }
 
