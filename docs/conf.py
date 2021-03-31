@@ -13,12 +13,13 @@
 #
 
 # Configuration file for the Sphinx documentation builder.
+from clang.cindex import Config
 
 # -- Project information -----------------------------------------------------
 project = 'zenoh-c'
 copyright = '2017, 2020 ADLINK Technology Inc'
 author = 'ADLINK zenoh team'
-release = '0.5.0'
+release = '0.5.0-beta.8'
 
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
@@ -30,5 +31,4 @@ c_autodoc_roots = ['../include']
 html_theme = 'sphinx_rtd_theme'
 
 # ----------------------------------------------------------------------------
-from clang.cindex import Config
 Config.set_library_file('/usr/lib/llvm-6.0/lib/libclang.so.1')
