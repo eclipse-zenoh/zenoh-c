@@ -13,7 +13,7 @@
 #
 [package]
 name = "zenoh-c"
-version = "0.5.0-beta.8"
+version = "0.5.0-dev"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = ["kydos <angelo@icorsaro.net>",
@@ -31,8 +31,8 @@ description = "The zenoh C client API"
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-zenoh = "0.5.0-beta.8"
-zenoh-util = "0.5.0-beta.8"
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh" }
 async-std = "=1.9.0"
 futures = "0.3.12"
 async-trait = "0.1.42"
@@ -60,7 +60,7 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2017, 2020 ADLINK Technology Inc."
 section = "net"
 license-file = ["LICENSE", "0"]
-depends = "libzenohc (=0.5.0~beta.8)"
+depends = "libzenohc (=0.5.0~dev)"
 assets = [
     ["include/zenoh.h", "usr/include/", "755"],
     ["include/zenoh/net.h", "usr/include/zenoh/", "755"],
