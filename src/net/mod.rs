@@ -314,7 +314,7 @@ pub unsafe extern "C" fn zn_scout(
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::net::scout(what, ((*config).0).0.into()).await;
+        let mut stream = zenoh::net::scout(what, ((*config).0).0.into());
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
@@ -441,15 +441,15 @@ pub unsafe extern "C" fn zn_write(
     }
 
     let reskey = ResKey::from_raw(reskey);
-    let result = match task::block_on((*session).0.write(
+    let r = (*session).0.write(
         &reskey,
-        slice::from_raw_parts(payload as *const u8, len as usize).into(),
-    )) {
-        Ok(()) => 0,
-        _ => 1,
-    };
+        slice::from_raw_parts(payload as *const u8, len as usize).into()).wait();
+
     ResKey::into_raw(reskey);
-    result
+    match r {
+        Ok(()) => 0,
+        _ => 1
+    }
 }
 
 /// Write data with extended options.
@@ -581,7 +581,7 @@ pub unsafe extern "C" fn zn_declare_subscriber(
 
             loop {
                 select!(
-                    s = sub.stream().next().fuse() => {
+                    s = sub.receiver().next().fuse() => {
                         // This is a bit brutal but avoids an allocation and
                         // a copy that would be otherwise required to add the
                         // C string terminator. See the test_sub.c to find out how to deal
@@ -790,7 +790,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
             let arg = Box::into_raw(arg);
             loop {
                 select!(
-                query = queryable.stream().next().fuse() => {
+                query = queryable.receiver().next().fuse() => {
                   // This is a bit brutal but avoids an allocation and
                   // a copy that would be otherwise required to add the
                   // C string terminator. See the test_sub.c to find out how to deal
@@ -852,5 +852,5 @@ pub unsafe extern "C" fn zn_send_reply(
         payload: slice::from_raw_parts(payload as *const u8, len as usize).into(),
         data_info: None,
     };
-    task::block_on((*query).0.replies_sender.send(s));
+    (*query).0.replies_sender.send(s);
 }
