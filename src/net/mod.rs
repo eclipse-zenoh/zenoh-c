@@ -314,7 +314,7 @@ pub unsafe extern "C" fn zn_scout(
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::net::scout(what, ((*config).0).0.into());
+        let mut stream = zenoh::net::scout(what, ((*config).0).0.into()).await;
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
