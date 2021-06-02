@@ -31,8 +31,8 @@ description = "The zenoh C client API"
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh", branch="sync" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh", branch="sync" }
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh"}
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh"}
 async-std = "=1.9.0"
 futures = "0.3.12"
 async-trait = "0.1.42"
