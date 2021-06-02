@@ -20,6 +20,7 @@ use futures::select;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ulong, size_t};
 use std::convert::TryFrom;
 use std::ffi::{c_void, CStr, CString};
+use std::mem::ManuallyDrop;
 use std::slice;
 use zenoh::net::config::ConfigProperties;
 use zenoh::net::*;
@@ -757,7 +758,8 @@ pub unsafe extern "C" fn zn_query_collect(
     ResKey::into_raw(reskey);
 
     replies.shrink_to_fit();
-    let (val, len, _cap) = replies.into_raw_parts();
+    //TODO replace when stable https://github.com/rust-lang/rust/issues/65816
+    let (val, len, _cap) = vec_into_raw_parts(replies);
     zn_reply_data_array_t { val, len }
 }
 
@@ -866,4 +868,19 @@ pub unsafe extern "C" fn zn_send_reply(
         data_info: None,
     };
     (*query).0.replies_sender.send(s);
+}
+
+//TODO replace when stable https://github.com/rust-lang/rust/issues/65816
+#[inline]
+pub(crate) fn vec_into_raw_parts<T>(v: Vec<T>) -> (*mut T, usize, usize) {
+    let mut me = ManuallyDrop::new(v);
+    (me.as_mut_ptr(), me.len(), me.capacity())
+}
+
+//TODO replace when stable https://github.com/rust-lang/rust/issues/65816
+#[inline]
+pub(crate) fn string_into_raw_parts(s: String) -> (*const c_char, usize, usize) {
+    let bytes = s.into_bytes();
+    let me = ManuallyDrop::new(bytes);
+    (me.as_ptr() as *const c_char, me.len(), me.capacity())
 }
