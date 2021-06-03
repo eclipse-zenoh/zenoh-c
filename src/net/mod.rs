@@ -314,7 +314,9 @@ pub unsafe extern "C" fn zn_scout(
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::net::scout(what, ((*config).0).0.into()).await;
+        let mut stream = zenoh::net::scout(what, ((*config).0).0.into())
+            .wait()
+            .unwrap();
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
@@ -412,9 +414,8 @@ pub unsafe extern "C" fn zn_declare_resource(
     if session.is_null() {
         return 0;
     }
-
     let reskey = ResKey::from_raw(reskey);
-    let result = task::block_on((*session).0.declare_resource(&reskey)).unwrap() as c_ulong;
+    let result = (*session).0.declare_resource(&reskey).wait().unwrap() as c_ulong;
     ResKey::into_raw(reskey);
     result
 }
@@ -441,15 +442,19 @@ pub unsafe extern "C" fn zn_write(
     }
 
     let reskey = ResKey::from_raw(reskey);
-    let result = match task::block_on((*session).0.write(
-        &reskey,
-        slice::from_raw_parts(payload as *const u8, len as usize).into(),
-    )) {
+    let r = (*session)
+        .0
+        .write(
+            &reskey,
+            slice::from_raw_parts(payload as *const u8, len as usize).into(),
+        )
+        .wait();
+
+    ResKey::into_raw(reskey);
+    match r {
         Ok(()) => 0,
         _ => 1,
-    };
-    ResKey::into_raw(reskey);
-    result
+    }
 }
 
 /// Write data with extended options.
@@ -480,13 +485,17 @@ pub unsafe extern "C" fn zn_write_ext(
     }
 
     let reskey = ResKey::from_raw(reskey);
-    let result = match task::block_on((*session).0.write_ext(
-        &reskey,
-        slice::from_raw_parts(payload as *const u8, len as usize).into(),
-        encoding as ZInt,
-        kind as ZInt,
-        congestion_control.into(),
-    )) {
+    let result = match (*session)
+        .0
+        .write_ext(
+            &reskey,
+            slice::from_raw_parts(payload as *const u8, len as usize).into(),
+            encoding as ZInt,
+            kind as ZInt,
+            congestion_control.into(),
+        )
+        .wait()
+    {
         Ok(()) => 0,
         _ => 1,
     };
@@ -517,7 +526,7 @@ pub unsafe extern "C" fn zn_declare_publisher<'a>(
 
     let reskey = ResKey::from_raw(reskey);
     let result = Box::into_raw(Box::new(zn_publisher_t(
-        task::block_on((*session).0.declare_publisher(&reskey)).unwrap(),
+        (*session).0.declare_publisher(&reskey).wait().unwrap(),
     )));
     ResKey::into_raw(reskey);
     result
@@ -561,10 +570,14 @@ pub unsafe extern "C" fn zn_declare_subscriber(
     let arg = Box::from_raw(arg);
     let (tx, rx) = bounded::<ZnSubOps>(8);
     let rsub = zn_subscriber_t(Some(Arc::new(tx)));
-    let mut sub: Subscriber =
-        task::block_on((*session).0.declare_subscriber(&reskey, &sub_info.into())).unwrap();
+    let mut sub: Subscriber = (*session)
+        .0
+        .declare_subscriber(&reskey, &sub_info.into())
+        .wait()
+        .unwrap();
+
     // Note: This is done to ensure that even if the call-back into C
-    // does any blocking call we do not incour the risk of blocking
+    // does any blocking call we do not incur the risk of blocking
     // any of the task resolving futures.
     task::spawn_blocking(move || {
         task::block_on(async move {
@@ -581,7 +594,7 @@ pub unsafe extern "C" fn zn_declare_subscriber(
 
             loop {
                 select!(
-                    s = sub.stream().next().fuse() => {
+                    s = sub.receiver().next().fuse() => {
                         // This is a bit brutal but avoids an allocation and
                         // a copy that would be otherwise required to add the
                         // C string terminator. See the test_sub.c to find out how to deal
@@ -674,12 +687,11 @@ pub unsafe extern "C" fn zn_query(
     let p = CStr::from_ptr(predicate).to_str().unwrap();
     let reskey = ResKey::from_raw(reskey);
     let arg = Box::from_raw(arg);
-    let mut q = task::block_on(
-        (*session)
-            .0
-            .query(&reskey, p, target.into(), consolidation.into()),
-    )
-    .unwrap();
+    let mut q = (*session)
+        .0
+        .query(&reskey, p, target.into(), consolidation.into())
+        .wait()
+        .unwrap();
 
     task::spawn_blocking(move || {
         task::block_on(async move {
@@ -779,8 +791,11 @@ pub unsafe extern "C" fn zn_declare_queryable(
     let reskey = ResKey::from_raw(reskey);
     let (tx, rx) = bounded::<bool>(1);
     let r = zn_queryable_t(Some(Arc::new(tx)));
-    let mut queryable: zenoh::net::Queryable =
-        task::block_on((*session).0.declare_queryable(&reskey, kind as ZInt)).unwrap();
+    let mut queryable: zenoh::net::Queryable = (*session)
+        .0
+        .declare_queryable(&reskey, kind as ZInt)
+        .wait()
+        .unwrap();
 
     // Note: This is done to ensure that even if the call-back into C
     // does any blocking call we do not incour the risk of blocking
@@ -790,7 +805,7 @@ pub unsafe extern "C" fn zn_declare_queryable(
             let arg = Box::into_raw(arg);
             loop {
                 select!(
-                query = queryable.stream().next().fuse() => {
+                query = queryable.receiver().next().fuse() => {
                   // This is a bit brutal but avoids an allocation and
                   // a copy that would be otherwise required to add the
                   // C string terminator. See the test_sub.c to find out how to deal
@@ -852,5 +867,5 @@ pub unsafe extern "C" fn zn_send_reply(
         payload: slice::from_raw_parts(payload as *const u8, len as usize).into(),
         data_info: None,
     };
-    task::block_on((*query).0.replies_sender.send(s));
+    (*query).0.replies_sender.send(s);
 }
