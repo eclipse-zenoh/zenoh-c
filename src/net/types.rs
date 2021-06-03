@@ -11,6 +11,7 @@
 // Contributors:
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
+use crate::net::{string_into_raw_parts, vec_into_raw_parts};
 use libc::{c_char, c_uint, c_ulong, size_t};
 use std::ffi::{CStr, CString};
 use zenoh::net::*;
@@ -89,7 +90,7 @@ impl FromRaw<z_string_t> for String {
 
     #[inline]
     fn into_raw(self) -> z_string_t {
-        let (ptr, len, _) = self.into_raw_parts();
+        let (ptr, len, _) = string_into_raw_parts(self);
         z_string_t {
             val: ptr as *const c_char,
             len: len as size_t,
@@ -281,11 +282,11 @@ impl FromRaw<zn_reskey_t> for ResKey {
             },
             ResKey::RIdWithSuffix(rid, suffix) => zn_reskey_t {
                 id: rid as c_ulong,
-                suffix: String::into_raw_parts(suffix).0 as *const c_char,
+                suffix: string_into_raw_parts(suffix).0,
             },
             ResKey::RName(suffix) => zn_reskey_t {
                 id: 0,
-                suffix: String::into_raw_parts(suffix).0 as *const c_char,
+                suffix: string_into_raw_parts(suffix).0,
             },
         }
     }
@@ -307,7 +308,8 @@ pub struct zn_sample_t {
 impl From<Sample> for zn_sample_t {
     #[inline]
     fn from(s: Sample) -> Self {
-        let (val, len, _cap) = s.payload.to_vec().into_raw_parts();
+        //TODO replace when stable https://github.com/rust-lang/rust/issues/65816
+        let (val, len, _cap) = vec_into_raw_parts(s.payload.to_vec());
         zn_sample_t {
             key: s.res_name.into_raw(),
             value: z_bytes_t { val, len },
