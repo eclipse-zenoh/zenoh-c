@@ -618,7 +618,7 @@ impl From<Reply> for zn_reply_data_t {
     fn from(r: Reply) -> Self {
         zn_reply_data_t {
             data: r.data.into(),
-            source_kind: r.source_kind as c_uint,
+            source_kind: r.replier_kind as c_uint,
             replier_id: r.replier_id.into(),
         }
     }
