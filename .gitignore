@@ -2,7 +2,7 @@
 target
 
 # Cargo
-Cargo.lock
+#Cargo.lock
 
 # vscode
 .vscode 
