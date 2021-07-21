@@ -2,11 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
   schedule:
-    - cron: '0 6 * * 1-5'
+    - cron: "0 6 * * 1-5"
 
 jobs:
   build:
@@ -18,62 +18,63 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install latest nightly
-      uses: actions-rs/toolchain@v1
-      with:
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
           toolchain: nightly
           override: true
           components: rustfmt, clippy
 
-    # `cargo check` command here will use installed `nightly`
-    # as it is set as an "override" for current directory
-    - name: Run cargo check
-      uses: actions-rs/cargo@v1
-      with:
-        command: check
+      # `cargo check` command here will use installed `nightly`
+      # as it is set as an "override" for current directory
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
 
-    - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --verbose --release
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release
 
-    - name: Clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all --examples -- -D warnings
 
-    - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose
 
-    - name: Run rustfmt
-      uses: actions-rs/cargo@v1
-      with:
-        command: fmt
-        args: -- --check
+      - name: Run rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check
 
-    - name: make
-      if: ${{ runner.os != 'Windows' }}
-      run: make
+      - name: make
+        if: ${{ runner.os != 'Windows' }}
+        run: make
 
-    - name: make examples
-      if: ${{ runner.os != 'Windows' }}
-      run: make examples
+      - name: make examples
+        if: ${{ runner.os != 'Windows' }}
+        run: make examples
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
-      with:
-        # Artifact name
-        name: zenoh-c-${{ matrix.os }}
-        # Directory containing files to upload
-        path: |
-          target/release
-          !target/release/build
-          !target/release/deps
-          !target/release/.*
-          !target/release/*.d
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          # Artifact name
+          name: zenoh-c-${{ matrix.os }}
+          # Directory containing files to upload
+          path: |
+            target/release
+            !target/release/build
+            !target/release/deps
+            !target/release/.*
+            !target/release/*.d

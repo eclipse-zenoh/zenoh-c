@@ -419,9 +419,9 @@ pub enum zn_congestion_control_t {
     DROP,
 }
 
-impl Into<CongestionControl> for zn_congestion_control_t {
-    fn into(self) -> CongestionControl {
-        match self {
+impl From<zn_congestion_control_t> for CongestionControl {
+    fn from(val: zn_congestion_control_t) -> Self {
+        match val {
             zn_congestion_control_t::BLOCK => CongestionControl::Block,
             zn_congestion_control_t::DROP => CongestionControl::Drop,
         }
@@ -449,10 +449,10 @@ impl From<Reliability> for zn_reliability_t {
     }
 }
 
-impl Into<Reliability> for zn_reliability_t {
+impl From<zn_reliability_t> for Reliability {
     #[inline]
-    fn into(self) -> Reliability {
-        match self {
+    fn from(val: zn_reliability_t) -> Self {
+        match val {
             zn_reliability_t::BEST_EFFORT => Reliability::BestEffort,
             zn_reliability_t::RELIABLE => Reliability::Reliable,
         }
@@ -480,10 +480,10 @@ impl From<SubMode> for zn_submode_t {
     }
 }
 
-impl Into<SubMode> for zn_submode_t {
+impl From<zn_submode_t> for SubMode {
     #[inline]
-    fn into(self) -> SubMode {
-        match self {
+    fn from(val: zn_submode_t) -> Self {
+        match val {
             zn_submode_t::PUSH => SubMode::Push,
             zn_submode_t::PULL => SubMode::Pull,
         }
@@ -514,13 +514,13 @@ impl From<Period> for zn_period_t {
     }
 }
 
-impl Into<Period> for zn_period_t {
+impl From<zn_period_t> for Period {
     #[inline]
-    fn into(self) -> Period {
+    fn from(val: zn_period_t) -> Self {
         Period {
-            origin: self.origin as ZInt,
-            period: self.period as ZInt,
-            duration: self.duration as ZInt,
+            origin: val.origin as ZInt,
+            period: val.period as ZInt,
+            duration: val.duration as ZInt,
         }
     }
 }
@@ -552,15 +552,15 @@ impl From<SubInfo> for zn_subinfo_t {
     }
 }
 
-impl Into<SubInfo> for zn_subinfo_t {
+impl From<zn_subinfo_t> for SubInfo {
     #[inline]
-    fn into(self) -> SubInfo {
+    fn from(val: zn_subinfo_t) -> Self {
         unsafe {
             SubInfo {
-                reliability: self.reliability.into(),
-                mode: self.mode.into(),
-                period: if !self.period.is_null() {
-                    Some((*Box::from_raw(self.period)).into())
+                reliability: val.reliability.into(),
+                mode: val.mode.into(),
+                period: if !val.period.is_null() {
+                    Some((*Box::from_raw(val.period)).into())
                 } else {
                     None
                 },
@@ -722,10 +722,10 @@ impl From<Target> for zn_target_t {
     }
 }
 
-impl Into<Target> for zn_target_t {
+impl From<zn_target_t> for Target {
     #[inline]
-    fn into(self) -> Target {
-        match self {
+    fn from(val: zn_target_t) -> Self {
+        match val {
             zn_target_t::BEST_MATCHING => Target::BestMatching,
             zn_target_t::COMPLETE { n } => Target::Complete { n: n as ZInt },
             zn_target_t::ALL => Target::All,
@@ -761,12 +761,12 @@ impl From<QueryTarget> for zn_query_target_t {
     }
 }
 
-impl Into<QueryTarget> for zn_query_target_t {
+impl From<zn_query_target_t> for QueryTarget {
     #[inline]
-    fn into(self) -> QueryTarget {
+    fn from(val: zn_query_target_t) -> Self {
         QueryTarget {
-            kind: self.kind.into(),
-            target: self.target.into(),
+            kind: val.kind.into(),
+            target: val.target.into(),
         }
     }
 }
@@ -800,10 +800,10 @@ impl From<ConsolidationMode> for zn_consolidation_mode_t {
     }
 }
 
-impl Into<ConsolidationMode> for zn_consolidation_mode_t {
+impl From<zn_consolidation_mode_t> for ConsolidationMode {
     #[inline]
-    fn into(self) -> ConsolidationMode {
-        match self {
+    fn from(val: zn_consolidation_mode_t) -> Self {
+        match val {
             zn_consolidation_mode_t::NONE => ConsolidationMode::None,
             zn_consolidation_mode_t::LAZY => ConsolidationMode::Lazy,
             zn_consolidation_mode_t::FULL => ConsolidationMode::Full,
@@ -836,13 +836,13 @@ impl From<QueryConsolidation> for zn_query_consolidation_t {
     }
 }
 
-impl Into<QueryConsolidation> for zn_query_consolidation_t {
+impl From<zn_query_consolidation_t> for QueryConsolidation {
     #[inline]
-    fn into(self) -> QueryConsolidation {
+    fn from(val: zn_query_consolidation_t) -> Self {
         QueryConsolidation {
-            first_routers: self.first_routers.into(),
-            last_router: self.last_router.into(),
-            reception: self.reception.into(),
+            first_routers: val.first_routers.into(),
+            last_router: val.last_router.into(),
+            reception: val.reception.into(),
         }
     }
 }
