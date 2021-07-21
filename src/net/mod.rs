@@ -30,6 +30,11 @@ pub use types::*;
 
 #[allow(non_camel_case_types)]
 pub struct zn_session_t(zenoh::net::Session);
+impl From<zenoh::net::Session> for zn_session_t {
+    fn from(session: zenoh::net::Session) -> Self {
+        zn_session_t(session)
+    }
+}
 
 #[allow(non_camel_case_types)]
 pub struct zn_properties_t(ConfigProperties);
