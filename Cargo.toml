@@ -48,6 +48,7 @@ env_logger = "0.8.2"
 [lib]
 name = "zenohc"
 crate-type = ["cdylib", "rlib"]
+doctest = false
 
 [package.metadata.deb.variants.libzenohc]
 name = "libzenohc"
