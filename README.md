@@ -19,7 +19,8 @@ Work in progress...
 
 -------------------------------
 ## How to build it 
-To build the **zenoh-c** client API you need to ensure that [rust](https://www.rust-lang.org) is available on your platform. 
+
+1. Make sure that [rust](https://www.rust-lang.org) is available on your platform:
 
   -- Ubuntu -- 
 
@@ -33,20 +34,29 @@ To build the **zenoh-c** client API you need to ensure that [rust](https://www.r
   $ brew install rust
   ```
 
-The **zenoh-c** client API needs the nightly version of the rustc rust compiler.
+2. Install the nightly version of the rustc rust compiler:
 
   ```bash
   $ rustup toolchain install nightly
   $ rustup default nightly
   ```
 
-The **zenoh-c** client API also needs [cbindgen](https://github.com/eqrion/cbindgen) to be installed on your platform.
+3. Install [cbindgen](https://github.com/eqrion/cbindgen) on your platform:
 
   ```bash
   $ cargo install cbindgen
   ```
 
-Once the above dependencies are satisfied, just do the following:
+4. Clone the [source] with `git`:
+
+   ```sh
+   git clone https://github.com/eclipse-zenoh/zenh-c.git
+   cd rust
+   ```
+
+[source]: https://github.com/eclipse-zenoh/zenh-c
+
+5. Build and install:
 
   ```bash
   $ cd /path/to/zenoh-c
