@@ -47,7 +47,8 @@ pub static ZN_CONFIG_MULTICAST_SCOUTING_KEY: c_uint = config::ZN_MULTICAST_SCOUT
 #[no_mangle]
 pub static ZN_CONFIG_MULTICAST_INTERFACE_KEY: c_uint = config::ZN_MULTICAST_INTERFACE_KEY as c_uint;
 #[no_mangle]
-pub static ZN_CONFIG_MULTICAST_ADDRESS_KEY: c_uint = config::ZN_MULTICAST_ADDRESS_KEY as c_uint;
+pub static ZN_CONFIG_MULTICAST_ADDRESS_KEY: c_uint =
+    config::ZN_MULTICAST_IPV4_ADDRESS_KEY as c_uint;
 #[no_mangle]
 pub static ZN_CONFIG_SCOUTING_TIMEOUT_KEY: c_uint = config::ZN_SCOUTING_TIMEOUT_KEY as c_uint;
 #[no_mangle]
