@@ -13,15 +13,30 @@
 //
 use crate::net::{string_into_raw_parts, vec_into_raw_parts};
 use libc::{c_char, c_uint, c_ulong, size_t};
-use std::ffi::{CStr, CString};
-use zenoh::net::*;
+use std::{
+    borrow::Cow,
+    ffi::{CStr, CString},
+};
+use zenoh::{
+    config,
+    config::WhatAmI,
+    info,
+    net::protocol::core::SubInfo,
+    prelude::{PeerId, ResKey, Sample, ZInt},
+    publisher::CongestionControl,
+    query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, Target},
+    queryable,
+    scouting::Hello,
+    subscriber::{Reliability, SubMode},
+    time::Period,
+};
 
 #[no_mangle]
-pub static ZN_ROUTER: c_uint = whatami::ROUTER as c_uint;
+pub static ZN_ROUTER: c_uint = WhatAmI::Router as c_uint;
 #[no_mangle]
-pub static ZN_PEER: c_uint = whatami::PEER as c_uint;
+pub static ZN_PEER: c_uint = WhatAmI::Peer as c_uint;
 #[no_mangle]
-pub static ZN_CLIENT: c_uint = whatami::CLIENT as c_uint;
+pub static ZN_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
 // Flags used in Queryable declaration and in queries
 #[no_mangle]
@@ -71,7 +86,7 @@ pub trait FromRaw<T> {
     fn into_raw(self) -> T;
 }
 
-/// A string.
+/// An owned, rust-allocated, string.
 ///
 /// Members:
 ///   const char *val: A pointer to the string.
@@ -249,27 +264,30 @@ pub struct zn_reskey_t {
     pub suffix: *const c_char,
 }
 
-impl FromRaw<zn_reskey_t> for ResKey {
+impl FromRaw<zn_reskey_t> for ResKey<'static> {
     #[inline]
-    fn from_raw(r: zn_reskey_t) -> ResKey {
+    fn from_raw(r: zn_reskey_t) -> ResKey<'static> {
         unsafe {
             if r.suffix.is_null() || libc::strlen(r.suffix) == 0 {
                 ResKey::RId(r.id as ZInt)
             } else if r.id != 0 {
                 ResKey::RIdWithSuffix(
                     r.id as ZInt,
+                    Cow::Owned(String::from_raw_parts(
+                        r.suffix as *mut u8,
+                        libc::strlen(r.suffix),
+                        libc::strlen(r.suffix) + 1,
+                    )),
+                )
+            } else {
+                ResKey::RName(
                     String::from_raw_parts(
                         r.suffix as *mut u8,
                         libc::strlen(r.suffix),
                         libc::strlen(r.suffix) + 1,
-                    ),
+                    )
+                    .into(),
                 )
-            } else {
-                ResKey::RName(String::from_raw_parts(
-                    r.suffix as *mut u8,
-                    libc::strlen(r.suffix),
-                    libc::strlen(r.suffix) + 1,
-                ))
             }
         }
     }
@@ -283,11 +301,11 @@ impl FromRaw<zn_reskey_t> for ResKey {
             },
             ResKey::RIdWithSuffix(rid, suffix) => zn_reskey_t {
                 id: rid as c_ulong,
-                suffix: string_into_raw_parts(suffix).0,
+                suffix: string_into_raw_parts(suffix.into_owned()).0,
             },
             ResKey::RName(suffix) => zn_reskey_t {
                 id: 0,
-                suffix: string_into_raw_parts(suffix).0,
+                suffix: string_into_raw_parts(suffix.into_owned()).0,
             },
         }
     }
@@ -310,7 +328,7 @@ impl From<Sample> for zn_sample_t {
     #[inline]
     fn from(s: Sample) -> Self {
         //TODO replace when stable https://github.com/rust-lang/rust/issues/65816
-        let (val, len, _cap) = vec_into_raw_parts(s.payload.to_vec());
+        let (val, len, _cap) = vec_into_raw_parts(s.value.payload.to_vec());
         zn_sample_t {
             key: s.res_name.into_raw(),
             value: z_bytes_t { val, len },
@@ -716,9 +734,10 @@ impl From<Target> for zn_target_t {
     fn from(t: Target) -> Self {
         match t {
             Target::BestMatching => zn_target_t::BEST_MATCHING,
-            Target::Complete { n } => zn_target_t::COMPLETE { n: n as c_uint },
+            // Target::Complete { n } => zn_target_t::COMPLETE { n: n as c_uint },
             Target::All => zn_target_t::ALL,
             Target::None => zn_target_t::NONE,
+            Target::AllComplete => todo!(),
         }
     }
 }
@@ -728,7 +747,9 @@ impl From<zn_target_t> for Target {
     fn from(val: zn_target_t) -> Self {
         match val {
             zn_target_t::BEST_MATCHING => Target::BestMatching,
-            zn_target_t::COMPLETE { n } => Target::Complete { n: n as ZInt },
+            zn_target_t::COMPLETE { .. } => {
+                todo!("zenoh feature \"complete\" not supported by zenoh-c")
+            } // Target::Complete { n: n as ZInt },
             zn_target_t::ALL => Target::All,
             zn_target_t::NONE => Target::None,
         }

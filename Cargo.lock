@@ -1183,6 +1183,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28988d872ab76095a6e6ac88d99b54fd267702734fd7ffe610ca27f533ddb95a"
 
 [[package]]
+name = "ordered-float"
+version = "2.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97c9d06878b3a851e8026ef94bf7fef9ba93062cd412601da4d9cf369b1cc62d"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "parking"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2129,13 +2138,15 @@ checksum = "879f6906492a7cd215bfa4cf595b600146ccfac0c79bcbd1f3000162af5e8b06"
 
 [[package]]
 name = "uhlc"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "766b01176c0b757b0a60e6b5ddeac62efd24e47201abb97b1e39b23d9635791f"
+checksum = "4b39f15111ae3c55bd24b28e2f71e86343ef1d5d16aac8e3faaba8c7a438c881"
 dependencies = [
  "hex",
  "humantime",
+ "lazy_static",
  "log",
+ "serde",
  "uuid",
 ]
 
@@ -2189,6 +2200,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
+name = "unzip-n"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2e7e85a0596447f0f2ac090e16bc4c516c6fe91771fb0c0ccf7fa3dae896b9c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "url"
 version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2208,6 +2230,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 dependencies = [
  "getrandom 0.2.3",
+]
+
+[[package]]
+name = "validated_struct"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75ba5d0467fb18027d71c7bcbb959a25cd76ca60e825daac75d882810fa61e64"
+dependencies = [
+ "serde",
+ "serde_json",
+ "validated_struct_macros",
+]
+
+[[package]]
+name = "validated_struct_macros"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee3979b0600eb636e4482568b649b0f32f6f2469a8d574fc323bf4059e166923"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "unzip-n",
 ]
 
 [[package]]
@@ -2398,7 +2443,7 @@ dependencies = [
 [[package]]
 name = "zenoh"
 version = "0.5.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh#000a2ba4681c49fe55fd42bafa5f4b8996c57cd7"
+source = "git+https://github.com/p-avital/zenoh#6fb2e0fe319e2a3e19452558575b60f00b472178"
 dependencies = [
  "async-global-executor",
  "async-rustls",
@@ -2419,6 +2464,7 @@ dependencies = [
  "libloading",
  "log",
  "nix",
+ "ordered-float",
  "petgraph",
  "quinn",
  "rand 0.8.4",
@@ -2431,6 +2477,7 @@ dependencies = [
  "socket2 0.4.1",
  "uhlc",
  "uuid",
+ "validated_struct",
  "vec_map",
  "webpki 0.22.0",
  "zenoh-plugin-trait",
@@ -2455,9 +2502,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "zenoh-macros"
+version = "0.5.0-dev"
+source = "git+https://github.com/p-avital/zenoh#6fb2e0fe319e2a3e19452558575b60f00b472178"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "unzip-n",
+]
+
+[[package]]
 name = "zenoh-plugin-trait"
 version = "0.1.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh#000a2ba4681c49fe55fd42bafa5f4b8996c57cd7"
+source = "git+https://github.com/p-avital/zenoh#6fb2e0fe319e2a3e19452558575b60f00b472178"
 dependencies = [
  "clap",
  "libloading",
@@ -2468,7 +2526,7 @@ dependencies = [
 [[package]]
 name = "zenoh-util"
 version = "0.5.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh#000a2ba4681c49fe55fd42bafa5f4b8996c57cd7"
+source = "git+https://github.com/p-avital/zenoh#6fb2e0fe319e2a3e19452558575b60f00b472178"
 dependencies = [
  "aes 0.7.4",
  "async-std",
@@ -2492,4 +2550,5 @@ dependencies = [
  "sha3",
  "shellexpand",
  "winapi",
+ "zenoh-macros",
 ]
