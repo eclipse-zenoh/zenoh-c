@@ -13,7 +13,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 int main(int argc, char **argv)
 {
@@ -26,14 +26,14 @@ int main(int argc, char **argv)
   }
   size_t len = atoi(argv[1]);
   printf("Running throughput test for payload of %zu bytes.\n", len);
-  zn_properties_t *config = zn_config_default();
+  z_owned_config_t config = z_config__default();
   if (argc > 2)
   {
-    zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
+    z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[2]));
   }
 
-  zn_session_t *s = zn_open(config);
-  if (s == 0)
+  z_owned_session_t s = z_open(config);
+  if (s.borrow == 0)
   {
     printf("Unable to open session!\n");
     exit(-1);
@@ -42,8 +42,8 @@ int main(int argc, char **argv)
   char *data = (char *)malloc(len);
   memset(data, 1, len);
 
-  zn_reskey_t reskey = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
-  zn_publisher_t *pub = zn_declare_publisher(s, reskey);
+  z_reskey_t reskey = z_rid(z_register_resource(s.borrow, z_rname("/test/thr")));
+  z_publisher_t *pub = z_register_publisher(s.borrow, reskey);
   if (pub == 0)
   {
     printf("Unable to declare publisher.\n");
@@ -52,6 +52,8 @@ int main(int argc, char **argv)
 
   while (1)
   {
-    zn_write(s, reskey, (const uint8_t *)data, len);
+    z_write(s.borrow, reskey, (const uint8_t *)data, len);
   }
+  z_unregister_publisher(pub);
+  z_close(s);
 }

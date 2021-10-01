@@ -29,12 +29,15 @@ description = "The zenoh C client API"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+complete_n = ["zenoh/complete_n"]
+
 [badges]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-zenoh = { git = "https://github.com/p-avital/zenoh" }
-zenoh-util = { git = "https://github.com/p-avital/zenoh" }
+zenoh = { git = "https://github.com/p-avital/zenoh", branch = "more-config-constructors" }
+zenoh-util = { git = "https://github.com/p-avital/zenoh", branch = "more-config-constructors" }
 async-std = "=1.9.0"
 futures = "0.3.12"
 async-trait = "0.1.42"

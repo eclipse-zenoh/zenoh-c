@@ -12,36 +12,40 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
-#include "zenoh/net.h"
+#include <string.h>
+#include "zenoh.h"
 
 int main(int argc, char **argv)
 {
     z_init_logger();
 
-    zn_properties_t *config = zn_config_default();
+    char *uri = "/demo/example/zenoh-c-write";
     if (argc > 1)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[1]));
+        uri = argv[1];
+    }
+    char *value = "Write from C!";
+    if (argc > 2)
+    {
+        value = argv[2];
+    }
+    z_owned_config_t config = z_config__default();
+    if (argc > 3)
+    {
+        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[3]));
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(config);
+    if (s.borrow == 0)
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    zn_properties_t *ps = zn_info(s);
-    z_string_t prop = zn_properties_get(ps, ZN_INFO_PID_KEY);
-    printf("info_pid : %.*s\n", (int)prop.len, prop.val);
+    printf("Writing Data ('%s': '%s')...\n", uri, value);
+    z_write(s.borrow, z_rname(uri), (const uint8_t *)value, strlen(value));
 
-    prop = zn_properties_get(ps, ZN_INFO_ROUTER_PID_KEY);
-    printf("info_router_pid : %.*s\n", (int)prop.len, prop.val);
-
-    prop = zn_properties_get(ps, ZN_INFO_PEER_PID_KEY);
-    printf("info_peer_pid : %.*s\n", (int)prop.len, prop.val);
-
-    zn_properties_free(ps);
-    zn_close(s);
+    z_close(s);
+    return 0;
 }

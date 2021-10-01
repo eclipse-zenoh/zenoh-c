@@ -12,7 +12,7 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 void fprintpid(FILE *stream, z_bytes_t pid)
 {
@@ -78,10 +78,10 @@ int main(int argc, char **argv)
 {
     z_init_logger();
 
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config__default();
 
     printf("Scouting...\n");
-    zn_hello_array_t hellos = zn_scout(ZN_ROUTER | ZN_PEER, config, 1000);
+    z_hello_array_t hellos = z_scout(ZN_ROUTER | ZN_PEER, config, 1000);
     if (hellos.len > 0)
     {
         for (unsigned int i = 0; i < hellos.len; ++i)
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
             fprintf(stdout, "\n");
         }
 
-        zn_hello_array_free(hellos);
+        z_hello_array__free(hellos);
     }
     else
     {

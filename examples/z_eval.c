@@ -13,17 +13,17 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 char *uri = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
-void query_handler(zn_query_t *query, const void *arg)
+void query_handler(z_query_t *query, const void *arg)
 {
-    z_string_t res = zn_query_res_name(query);
-    z_string_t pred = zn_query_predicate(query);
-    printf(">> [Query handler] Handling '%.*s?%.*s'\n", (int)res.len, res.val, (int)pred.len, pred.val);
-    zn_send_reply(query, uri, (const unsigned char *)value, strlen(value));
+    z_string_t res = z_query__res_name(query);
+    z_string_t pred = z_query__predicate(query);
+    printf(">> [Query handler] Handling '%s?%s'\n", res.start, pred.start);
+    z_send_reply(query, uri, (const unsigned char *)value, strlen(value));
 }
 
 int main(int argc, char **argv)
@@ -34,22 +34,22 @@ int main(int argc, char **argv)
     {
         uri = argv[1];
     }
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config__default();
     if (argc > 2)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
+        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[2]));
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(config);
+    if (s.borrow == 0)
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
-    zn_queryable_t *qable = zn_declare_queryable(s, zn_rname(uri), ZN_QUERYABLE_EVAL, query_handler, NULL);
+    z_queryable_t *qable = z_register_queryable(s.borrow, z_rname(uri), ZN_QUERYABLE_EVAL, query_handler, NULL);
     if (qable == 0)
     {
         printf("Unable to declare queryable.\n");
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    zn_undeclare_queryable(qable);
-    zn_close(s);
+    z_unregister_queryable(qable);
+    z_close(s);
     return 0;
 }

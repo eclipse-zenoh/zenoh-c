@@ -29,14 +29,14 @@ ifneq ($(TARGET),)
 endif
 
 ifeq ($(BUILD_TYPE),Debug)
-  BUILD_DIR=target/${TARGET}/debug
+  BUILD_DIR=target${TARGET}/debug
   CARGOFLAGS=
-  EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout
+  EXAMPLES=z_sub z_pub z_write z_query z_eval z_pull z_info z_scout
   LDFLAGS=
 else 
-  BUILD_DIR=target/${TARGET}/release
+  BUILD_DIR=target${TARGET}/release
   CARGOFLAGS=--release
-  EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
+  EXAMPLES=z_sub z_pub z_write z_query z_eval z_pull z_info z_scout z_sub_thr z_pub_thr
   LDFLAGS=-O3
 endif
 
@@ -45,28 +45,26 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-build: include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
+build: include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
 all: build examples
 
-$(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/net/mod.rs src/net/types.rs
+$(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/types.rs
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
-$(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
-	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
+$(BUILD_DIR)/examples/%: examples/%.c include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+	$(CC) -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
-include/zenoh/net.h: src/lib.rs src/net/mod.rs src/net/types.rs cbindgen.toml
+include/zenoh.h: src/lib.rs src/types.rs cbindgen.toml
 	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
 
-install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h include/zenoh/net.h
+install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
 	install -m 755 include/zenoh.h $(DESTDIR)$(PREFIX)/include/
-	install -d $(DESTDIR)$(PREFIX)/include/zenoh/
-	install -m 755 include/zenoh/net.h $(DESTDIR)$(PREFIX)/include/zenoh/net.h
 
 clean:
 	rm -fr target

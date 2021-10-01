@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 int main(int argc, char **argv)
 {
@@ -30,27 +30,27 @@ int main(int argc, char **argv)
     {
         value = argv[2];
     }
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config__default();
     if (argc > 3)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[3]));
+        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[3]));
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(config);
+    if (s.borrow == 0)
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Resource '%s'", uri);
-    unsigned long rid = zn_declare_resource(s, zn_rname(uri));
+    unsigned long rid = z_register_resource(s.borrow, z_rname(uri));
     printf(" => RId %lu\n", rid);
-    zn_reskey_t reskey = zn_rid(rid);
+    z_reskey_t reskey = z_rid(rid);
 
     printf("Declaring Publisher on %lu\n", rid);
-    zn_publisher_t *pub = zn_declare_publisher(s, reskey);
+    z_publisher_t *pub = z_register_publisher(s.borrow, reskey);
     if (pub == 0)
     {
         printf("Unable to declare publisher.\n");
@@ -63,10 +63,10 @@ int main(int argc, char **argv)
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Writing Data ('%lu': '%s')...\n", rid, buf);
-        zn_write(s, reskey, (const uint8_t *)buf, strlen(buf));
+        z_write(s.borrow, reskey, (const uint8_t *)buf, strlen(buf));
     }
 
-    zn_undeclare_publisher(pub);
-    zn_close(s);
+    z_unregister_publisher(pub);
+    z_close(s);
     return 0;
 }

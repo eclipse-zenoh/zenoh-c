@@ -11,16 +11,13 @@
 // Contributors:
 //   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 //
-use crate::net::{string_into_raw_parts, vec_into_raw_parts};
 use libc::{c_char, c_uint, c_ulong, size_t};
-use std::{
-    borrow::Cow,
-    ffi::{CStr, CString},
-};
+use std::ffi::{CStr, CString};
 use zenoh::{
+    buf::ZBuf,
     config,
     config::WhatAmI,
-    info,
+    info::{self, InfoProperties},
     net::protocol::core::SubInfo,
     prelude::{PeerId, ResKey, Sample, ZInt},
     publisher::CongestionControl,
@@ -86,60 +83,107 @@ pub trait FromRaw<T> {
     fn into_raw(self) -> T;
 }
 
-/// An owned, rust-allocated, string.
+/// An owned, zenoh-allocated, null-terminated, string.  
+/// Use `z_string__new` to construct and `z_string__free` to destroy.
 ///
-/// Members:
-///   const char *val: A pointer to the string.
-///   unsigned int len: The length of the string.
-///
+/// Members:  
+///     `start`: the start of the held null-terminated string. `nullptr` is a legal value for `start`
 #[repr(C)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct z_string_t {
-    pub val: *const c_char,
-    pub len: size_t,
+    pub start: *const c_char,
 }
 
-impl FromRaw<z_string_t> for String {
-    #[inline]
-    fn from_raw(r: z_string_t) -> Self {
-        unsafe { String::from_raw_parts(r.val as *mut u8, r.len, r.len) }
+/// Constructs a :c:type:`z_string_t` from a NULL terminated string.  
+/// The contents of `s` is copied.
+///
+/// Parameters:  
+///     s: The NULL terminated string.
+///
+/// Returns:  
+///     A new :c:type:`z_string_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_string__new(s: *const c_char) -> z_string_t {
+    if s.is_null() {
+        return z_string_t { start: s };
     }
-
-    #[inline]
-    fn into_raw(self) -> z_string_t {
-        let (ptr, len, _) = string_into_raw_parts(self);
-        z_string_t {
-            val: ptr as *const c_char,
-            len: len as size_t,
+    let inner = CStr::from_ptr(s).to_owned();
+    let start = inner.as_ptr();
+    std::mem::forget(inner);
+    z_string_t { start }
+}
+/// Frees the passed z_string_t.
+#[no_mangle]
+pub extern "C" fn z_string__free(s: z_string_t) {
+    if !s.start.is_null() {
+        unsafe { CString::from_raw(s.start as *mut c_char) };
+    }
+}
+impl From<String> for z_string_t {
+    fn from(s: String) -> Self {
+        let inner = CString::new(s).unwrap();
+        let start = inner.as_ptr();
+        std::mem::forget(inner);
+        z_string_t { start }
+    }
+}
+impl Default for z_string_t {
+    fn default() -> Self {
+        Self {
+            start: std::ptr::null(),
+        }
+    }
+}
+impl From<&str> for z_string_t {
+    fn from(s: &str) -> Self {
+        let inner = CString::new(s).unwrap();
+        let start = inner.as_ptr();
+        std::mem::forget(inner);
+        z_string_t { start }
+    }
+}
+impl From<z_string_t> for String {
+    fn from(s: z_string_t) -> Self {
+        if s.start.is_null() {
+            String::new()
+        } else {
+            unsafe { CString::from_raw(s.start as *mut c_char) }
+                .into_string()
+                .unwrap()
         }
     }
 }
 
-#[allow(clippy::missing_safety_doc)]
+#[allow(non_camel_case_types)]
+pub struct z_info_inner_t(pub(crate) InfoProperties);
+#[repr(C)]
+#[allow(non_camel_case_types)]
+pub struct z_info_t {
+    pub(crate) borrow: *mut z_info_inner_t,
+}
 #[no_mangle]
-pub unsafe extern "C" fn z_string_free(zs: z_string_t) {
-    let _ = String::from_raw(zs);
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_info__free(info: z_info_t) {
+    if !info.borrow.is_null() {
+        unsafe { drop(Box::from_raw(info.borrow)) }
+    }
+}
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_info__get(info: &z_info_inner_t, key: u64) -> z_string_t {
+    match info.0.get(&key) {
+        Some(s) => s.as_str().into(),
+        None => z_string_t::default(),
+    }
 }
 
-/// Construct a :c:type:`z_string_t` from a NULL terminated string.
-/// The content of the given string is copied.
-///
-/// Parameters:
-///     s: The NULL terminated string.
-///
-/// Returns:
-///     A new :c:type:`z_string_t`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_string_make(s: *const c_char) -> z_string_t {
-    String::into_raw(CStr::from_ptr(s).to_string_lossy().into_owned())
-}
-
-/// An array of NULL terminated strings.
+/// An owned array of owned NULL terminated strings, allocated by zenoh.
+/// Use `z_str_array__free` to destroy.
 ///
 /// Members:
 ///   char *const *val: A pointer to the array.
 ///   unsigned int len: The length of the array.
-///
 #[repr(C)]
 pub struct z_str_array_t {
     pub val: *const *const c_char,
@@ -193,18 +237,18 @@ where
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_str_array_free(strs: z_str_array_t) {
+pub unsafe extern "C" fn z_str_array__free(strs: z_str_array_t) {
     let locators = Vec::from_raw_parts(
         strs.val as *mut *const c_char,
         strs.len as usize,
         strs.len as usize,
     );
     for locator in locators {
-        let _ = CString::from_raw(locator as *mut c_char);
+        std::mem::drop(CString::from_raw(locator as *mut c_char));
     }
 }
 
-/// An array of bytes.
+/// An owned, zenoh-allocated, array of bytes.
 ///
 /// Members:
 ///   const unsigned char *val: A pointer to the bytes array.
@@ -215,7 +259,25 @@ pub struct z_bytes_t {
     pub val: *const u8,
     pub len: size_t,
 }
-
+impl Default for z_bytes_t {
+    fn default() -> Self {
+        z_bytes_t {
+            val: std::ptr::null(),
+            len: 0,
+        }
+    }
+}
+/// Free a :c:type:`z_bytes_t`.
+///
+/// Parameters:
+///    b : The array to free.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_bytes__free(b: z_bytes_t) {
+    std::mem::drop(Box::from_raw(
+        std::slice::from_raw_parts(b.val, b.len) as *const [u8] as *mut [u8],
+    ))
+}
 impl From<PeerId> for z_bytes_t {
     #[inline]
     fn from(pid: PeerId) -> Self {
@@ -228,7 +290,6 @@ impl From<PeerId> for z_bytes_t {
         res
     }
 }
-
 impl From<Option<PeerId>> for z_bytes_t {
     #[inline]
     fn from(pid: Option<PeerId>) -> Self {
@@ -241,6 +302,17 @@ impl From<Option<PeerId>> for z_bytes_t {
         }
     }
 }
+impl From<ZBuf> for z_bytes_t {
+    fn from(buf: ZBuf) -> Self {
+        let data = buf.to_vec().into_boxed_slice();
+        let res = z_bytes_t {
+            val: data.as_ptr(),
+            len: data.len(),
+        };
+        std::mem::forget(data);
+        res
+    }
+}
 
 /// A resource key.
 ///
@@ -250,62 +322,65 @@ impl From<Option<PeerId>> for z_bytes_t {
 /// for wire and computation efficiency.
 ///
 /// A resource key can be either:
-///
 ///   - A plain string resource name.
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.
 ///
 /// Members:
 ///   unsigned long id: The id or prefix of this resource key. ``0`` if empty.
-///   const char *suffix: The suffix of this resource key. ``NULL`` if pure numerical id.
+///   z_string_t suffix: The suffix of the ressource key. May be an empty string.
 #[repr(C)]
-pub struct zn_reskey_t {
+pub struct z_reskey_t {
     pub id: c_ulong,
-    pub suffix: *const c_char,
+    pub suffix: z_string_t,
 }
 
-impl FromRaw<zn_reskey_t> for ResKey<'static> {
+/// Free a :c:type:`z_reskey_t`.
+///
+/// Parameters:
+///    b : The array to free.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reskey__new(id: c_ulong, suffix: *const c_char) -> z_reskey_t {
+    z_reskey_t {
+        id,
+        suffix: z_string__new(suffix),
+    }
+}
+/// Free a :c:type:`z_reskey_t`.
+///
+/// Parameters:
+///    b : The array to free.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reskey__free(reskey: z_reskey_t) {
+    z_string__free(reskey.suffix)
+}
+impl FromRaw<z_reskey_t> for ResKey<'static> {
     #[inline]
-    fn from_raw(r: zn_reskey_t) -> ResKey<'static> {
-        unsafe {
-            if r.suffix.is_null() || libc::strlen(r.suffix) == 0 {
-                ResKey::RId(r.id as ZInt)
-            } else if r.id != 0 {
-                ResKey::RIdWithSuffix(
-                    r.id as ZInt,
-                    Cow::Owned(String::from_raw_parts(
-                        r.suffix as *mut u8,
-                        libc::strlen(r.suffix),
-                        libc::strlen(r.suffix) + 1,
-                    )),
-                )
-            } else {
-                ResKey::RName(
-                    String::from_raw_parts(
-                        r.suffix as *mut u8,
-                        libc::strlen(r.suffix),
-                        libc::strlen(r.suffix) + 1,
-                    )
-                    .into(),
-                )
-            }
+    fn from_raw(r: z_reskey_t) -> ResKey<'static> {
+        if r.suffix.start.is_null() {
+            ResKey::RId(r.id as ZInt)
+        } else if r.id != 0 {
+            ResKey::RIdWithSuffix(r.id as ZInt, String::from(r.suffix).into())
+        } else {
+            ResKey::RName(String::from(r.suffix).into())
         }
     }
-
     #[inline]
-    fn into_raw(self) -> zn_reskey_t {
+    fn into_raw(self) -> z_reskey_t {
         match self {
-            ResKey::RId(rid) => zn_reskey_t {
+            ResKey::RId(rid) => z_reskey_t {
                 id: rid as c_ulong,
-                suffix: std::ptr::null(),
+                suffix: unsafe { z_string__new(std::ptr::null()) },
             },
-            ResKey::RIdWithSuffix(rid, suffix) => zn_reskey_t {
+            ResKey::RIdWithSuffix(rid, suffix) => z_reskey_t {
                 id: rid as c_ulong,
-                suffix: string_into_raw_parts(suffix.into_owned()).0,
+                suffix: z_string_t::from(suffix.into_owned()),
             },
-            ResKey::RName(suffix) => zn_reskey_t {
+            ResKey::RName(suffix) => z_reskey_t {
                 id: 0,
-                suffix: string_into_raw_parts(suffix.into_owned()).0,
+                suffix: z_string_t::from(suffix.into_owned()),
             },
         }
     }
@@ -319,19 +394,17 @@ impl FromRaw<zn_reskey_t> for ResKey<'static> {
 ///   z_string_t key: The resource key of this data sample.
 ///   z_bytes_t value: The value of this data sample.
 #[repr(C)]
-pub struct zn_sample_t {
+pub struct z_sample_t {
     pub key: z_string_t,
     pub value: z_bytes_t,
 }
 
-impl From<Sample> for zn_sample_t {
+impl From<Sample> for z_sample_t {
     #[inline]
     fn from(s: Sample) -> Self {
-        //TODO replace when stable https://github.com/rust-lang/rust/issues/65816
-        let (val, len, _cap) = vec_into_raw_parts(s.value.payload.to_vec());
-        zn_sample_t {
-            key: s.res_name.into_raw(),
-            value: z_bytes_t { val, len },
+        z_sample_t {
+            key: s.res_name.into(),
+            value: s.value.payload.into(),
         }
     }
 }
@@ -343,13 +416,9 @@ impl From<Sample> for zn_sample_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_sample_free(sample: zn_sample_t) {
-    String::from_raw(sample.key);
-    Vec::from_raw_parts(
-        sample.value.val as *mut zn_reply_data_t,
-        sample.value.len,
-        sample.value.len,
-    );
+pub unsafe extern "C" fn z_sample__free(sample: z_sample_t) {
+    z_string__free(sample.key);
+    z_bytes__free(sample.value);
 }
 
 /// A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
@@ -365,7 +434,6 @@ pub struct zn_hello_t {
     pub pid: z_bytes_t,
     pub locators: z_str_array_t,
 }
-
 impl From<Hello> for zn_hello_t {
     #[inline]
     fn from(h: Hello) -> Self {
@@ -387,12 +455,11 @@ impl From<Hello> for zn_hello_t {
 ///   unsigned int len: The length of the array.
 ///
 #[repr(C)]
-pub struct zn_hello_array_t {
+pub struct z_hello_array_t {
     pub val: *const zn_hello_t,
     pub len: size_t,
 }
-
-impl From<Vec<Hello>> for zn_hello_array_t {
+impl From<Vec<Hello>> for z_hello_array_t {
     #[inline]
     fn from(hvec: Vec<Hello>) -> Self {
         let mut hvec = hvec
@@ -400,7 +467,7 @@ impl From<Vec<Hello>> for zn_hello_array_t {
             .map(|h| h.into())
             .collect::<Vec<zn_hello_t>>();
         hvec.shrink_to_fit();
-        let res = zn_hello_array_t {
+        let res = z_hello_array_t {
             val: hvec.as_ptr(),
             len: hvec.len() as size_t,
         };
@@ -408,7 +475,6 @@ impl From<Vec<Hello>> for zn_hello_array_t {
         res
     }
 }
-
 /// Free an array of :c:struct:`zn_hello_t` messages and it's contained :c:struct:`zn_hello_t` messages recursively.
 ///
 /// Parameters:
@@ -416,14 +482,14 @@ impl From<Vec<Hello>> for zn_hello_array_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_hello_array_free(hellos: zn_hello_array_t) {
+pub unsafe extern "C" fn z_hello_array__free(hellos: z_hello_array_t) {
     let hellos = Vec::from_raw_parts(
         hellos.val as *mut zn_hello_t,
         hellos.len as usize,
         hellos.len as usize,
     );
     for hello in hellos {
-        zn_str_array_free(hello.locators);
+        z_str_array__free(hello.locators);
     }
 }
 
@@ -453,27 +519,27 @@ impl From<zn_congestion_control_t> for CongestionControl {
 ///     - **zn_reliability_t_RELIABLE**
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub enum zn_reliability_t {
+pub enum z_reliability_t {
     BEST_EFFORT,
     RELIABLE,
 }
 
-impl From<Reliability> for zn_reliability_t {
+impl From<Reliability> for z_reliability_t {
     #[inline]
     fn from(r: Reliability) -> Self {
         match r {
-            Reliability::BestEffort => zn_reliability_t::BEST_EFFORT,
-            Reliability::Reliable => zn_reliability_t::RELIABLE,
+            Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
+            Reliability::Reliable => z_reliability_t::RELIABLE,
         }
     }
 }
 
-impl From<zn_reliability_t> for Reliability {
+impl From<z_reliability_t> for Reliability {
     #[inline]
-    fn from(val: zn_reliability_t) -> Self {
+    fn from(val: z_reliability_t) -> Self {
         match val {
-            zn_reliability_t::BEST_EFFORT => Reliability::BestEffort,
-            zn_reliability_t::RELIABLE => Reliability::Reliable,
+            z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
+            z_reliability_t::RELIABLE => Reliability::Reliable,
         }
     }
 }
@@ -484,62 +550,90 @@ impl From<zn_reliability_t> for Reliability {
 ///     - **zn_submode_t_PULL**
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub enum zn_submode_t {
+pub enum z_submode_t {
     PUSH,
     PULL,
 }
 
-impl From<SubMode> for zn_submode_t {
+impl From<SubMode> for z_submode_t {
     #[inline]
     fn from(sm: SubMode) -> Self {
         match sm {
-            SubMode::Push => zn_submode_t::PUSH,
-            SubMode::Pull => zn_submode_t::PULL,
+            SubMode::Push => z_submode_t::PUSH,
+            SubMode::Pull => z_submode_t::PULL,
         }
     }
 }
 
-impl From<zn_submode_t> for SubMode {
+impl From<z_submode_t> for SubMode {
     #[inline]
-    fn from(val: zn_submode_t) -> Self {
+    fn from(val: z_submode_t) -> Self {
         match val {
-            zn_submode_t::PUSH => SubMode::Push,
-            zn_submode_t::PULL => SubMode::Pull,
+            z_submode_t::PUSH => SubMode::Push,
+            z_submode_t::PULL => SubMode::Pull,
         }
     }
 }
 
 /// The subscription period.
+/// Equivalent of the rust `Option<zenoh::time::Period>` type, where `None` is represented by the `period` field being 0-valued.
 ///
 /// Members:
 ///     unsigned int origin:
 ///     unsigned int period:
 ///     unsigned int duration:
 #[repr(C)]
-pub struct zn_period_t {
+#[derive(Debug, Clone, Copy)]
+pub struct z_period_t {
     pub origin: c_uint,
     pub period: c_uint,
     pub duration: c_uint,
 }
-
-impl From<Period> for zn_period_t {
+#[allow(non_upper_case_globals)]
+pub const z_period_NONE: z_period_t = z_period_t {
+    origin: 0,
+    period: 0,
+    duration: 0,
+};
+impl From<Period> for z_period_t {
     #[inline]
     fn from(p: Period) -> Self {
-        zn_period_t {
+        z_period_t {
             origin: p.origin as c_uint,
             period: p.period as c_uint,
             duration: p.duration as c_uint,
         }
     }
 }
-
-impl From<zn_period_t> for Period {
+impl From<Option<Period>> for z_period_t {
+    fn from(p: Option<Period>) -> Self {
+        match p {
+            Some(p) => p.into(),
+            None => z_period_t {
+                duration: 0,
+                origin: 0,
+                period: 0,
+            },
+        }
+    }
+}
+impl From<z_period_t> for Period {
     #[inline]
-    fn from(val: zn_period_t) -> Self {
+    fn from(val: z_period_t) -> Self {
         Period {
             origin: val.origin as ZInt,
             period: val.period as ZInt,
             duration: val.duration as ZInt,
+        }
+    }
+}
+impl From<z_period_t> for Option<Period> {
+    #[inline]
+    fn from(val: z_period_t) -> Self {
+        if val.period == 0 {
+            None
+        } else {
+            Some(val.into())
         }
     }
 }
@@ -551,46 +645,44 @@ impl From<zn_period_t> for Period {
 ///     zn_submode_t mode: The subscription mode.
 ///     zn_period_t *period: The subscription period.
 #[repr(C)]
-pub struct zn_subinfo_t {
-    pub reliability: zn_reliability_t,
-    pub mode: zn_submode_t,
-    pub period: *mut zn_period_t,
+pub struct z_subinfo_t {
+    pub reliability: z_reliability_t,
+    pub mode: z_submode_t,
+    pub period: z_period_t,
 }
-
-impl From<SubInfo> for zn_subinfo_t {
+#[no_mangle]
+pub extern "C" fn z_subinfo__period(info: &z_subinfo_t) -> *const z_period_t {
+    if info.period.period != 0 {
+        &info.period
+    } else {
+        std::ptr::null()
+    }
+}
+impl From<SubInfo> for z_subinfo_t {
     #[inline]
     fn from(si: SubInfo) -> Self {
-        zn_subinfo_t {
+        z_subinfo_t {
             reliability: si.reliability.into(),
             mode: si.mode.into(),
-            period: match si.period {
-                Some(period) => Box::into_raw(Box::new(period.into())),
-                None => std::ptr::null_mut(),
-            },
+            period: si.period.into(),
         }
     }
 }
 
-impl From<zn_subinfo_t> for SubInfo {
+impl From<z_subinfo_t> for SubInfo {
     #[inline]
-    fn from(val: zn_subinfo_t) -> Self {
-        unsafe {
-            SubInfo {
-                reliability: val.reliability.into(),
-                mode: val.mode.into(),
-                period: if !val.period.is_null() {
-                    Some((*Box::from_raw(val.period)).into())
-                } else {
-                    None
-                },
-            }
+    fn from(val: z_subinfo_t) -> Self {
+        SubInfo {
+            reliability: val.reliability.into(),
+            mode: val.mode.into(),
+            period: val.period.into(),
         }
     }
 }
 
 /// Create a default subscription info.
 #[no_mangle]
-pub extern "C" fn zn_subinfo_default() -> zn_subinfo_t {
+pub extern "C" fn z_subinfo__default() -> z_subinfo_t {
     SubInfo::default().into()
 }
 
@@ -603,39 +695,28 @@ pub extern "C" fn zn_subinfo_default() -> zn_subinfo_t {
 ///
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub struct zn_reply_data_t {
-    data: zn_sample_t,
+pub struct z_reply_data_t {
+    data: z_sample_t,
     source_kind: c_uint,
     replier_id: z_bytes_t,
 }
-
-impl zn_reply_data_t {
+impl z_reply_data_t {
     #[inline]
     pub(crate) fn empty() -> Self {
-        zn_reply_data_t {
-            data: zn_sample_t {
-                key: z_string_t {
-                    val: std::ptr::null(),
-                    len: 0,
-                },
-                value: z_bytes_t {
-                    val: std::ptr::null(),
-                    len: 0,
-                },
+        z_reply_data_t {
+            data: z_sample_t {
+                key: z_string_t::default(),
+                value: z_bytes_t::default(),
             },
             source_kind: 0,
-            replier_id: z_bytes_t {
-                val: std::ptr::null(),
-                len: 0,
-            },
+            replier_id: z_bytes_t::default(),
         }
     }
 }
-
-impl From<Reply> for zn_reply_data_t {
+impl From<Reply> for z_reply_data_t {
     #[inline]
     fn from(r: Reply) -> Self {
-        zn_reply_data_t {
+        z_reply_data_t {
             data: r.data.into(),
             source_kind: r.replier_kind as c_uint,
             replier_id: r.replier_id.into(),
@@ -650,13 +731,9 @@ impl From<Reply> for zn_reply_data_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_reply_data_free(reply_data: zn_reply_data_t) {
-    zn_sample_free(reply_data.data);
-    Vec::from_raw_parts(
-        reply_data.replier_id.val as *mut u8,
-        reply_data.replier_id.len,
-        reply_data.replier_id.len,
-    );
+pub unsafe extern "C" fn z_reply_data__free(reply_data: z_reply_data_t) {
+    z_sample__free(reply_data.data);
+    z_bytes__free(reply_data.replier_id);
 }
 
 /// An array of :c:type:`zn_reply_data_t`.
@@ -667,8 +744,8 @@ pub unsafe extern "C" fn zn_reply_data_free(reply_data: zn_reply_data_t) {
 ///   unsigned int len: The length of the array.
 ///
 #[repr(C)]
-pub struct zn_reply_data_array_t {
-    pub val: *const zn_reply_data_t,
+pub struct z_reply_data_array_t {
+    pub val: *const z_reply_data_t,
     pub len: size_t,
 }
 
@@ -679,14 +756,10 @@ pub struct zn_reply_data_array_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zn_reply_data_array_free(replies: zn_reply_data_array_t) {
-    let vec = Vec::from_raw_parts(
-        replies.val as *mut zn_reply_data_t,
-        replies.len,
-        replies.len,
-    );
+pub unsafe extern "C" fn z_reply_data_array__free(replies: z_reply_data_array_t) {
+    let vec = Vec::from_raw_parts(replies.val as *mut z_reply_data_t, replies.len, replies.len);
     for rd in vec {
-        zn_reply_data_free(rd);
+        z_reply_data__free(rd);
     }
 }
 
@@ -696,7 +769,8 @@ pub unsafe extern "C" fn zn_reply_data_array_free(replies: zn_reply_data_array_t
 ///     - **zn_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub enum zn_reply_t_Tag {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum z_reply_t_Tag {
     DATA,
     FINAL,
 }
@@ -709,9 +783,16 @@ pub enum zn_reply_t_Tag {
 ///
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub struct zn_reply_t {
-    pub tag: zn_reply_t_Tag,
-    pub data: zn_reply_data_t,
+pub struct z_reply_t {
+    pub tag: z_reply_t_Tag,
+    pub data: z_reply_data_t,
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reply__free(reply: z_reply_t) {
+    if reply.tag == z_reply_t_Tag::DATA {
+        z_reply_data__free(reply.data)
+    }
 }
 
 /// The possible values of :c:member:`zn_target_t.tag`.
@@ -722,43 +803,48 @@ pub struct zn_reply_t {
 ///     - **zn_target_t_NONE**: No queryables.
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub enum zn_target_t {
+pub enum z_target_t {
     BEST_MATCHING,
-    COMPLETE { n: c_uint },
     ALL,
     NONE,
+    ALL_COMPLETE,
+    #[cfg(feature = "complete_n")]
+    COMPLETE {
+        n: c_uint,
+    },
 }
 
-impl From<Target> for zn_target_t {
+impl From<Target> for z_target_t {
     #[inline]
     fn from(t: Target) -> Self {
         match t {
-            Target::BestMatching => zn_target_t::BEST_MATCHING,
-            // Target::Complete { n } => zn_target_t::COMPLETE { n: n as c_uint },
-            Target::All => zn_target_t::ALL,
-            Target::None => zn_target_t::NONE,
-            Target::AllComplete => todo!(),
+            Target::BestMatching => z_target_t::BEST_MATCHING,
+            Target::All => z_target_t::ALL,
+            Target::None => z_target_t::NONE,
+            Target::AllComplete => z_target_t::ALL_COMPLETE,
+            #[cfg(feature = "complete_n")]
+            Target::Complete(n) => z_target_t::COMPLETE { n: n as c_uint },
         }
     }
 }
 
-impl From<zn_target_t> for Target {
+impl From<z_target_t> for Target {
     #[inline]
-    fn from(val: zn_target_t) -> Self {
+    fn from(val: z_target_t) -> Self {
         match val {
-            zn_target_t::BEST_MATCHING => Target::BestMatching,
-            zn_target_t::COMPLETE { .. } => {
-                todo!("zenoh feature \"complete\" not supported by zenoh-c")
-            } // Target::Complete { n: n as ZInt },
-            zn_target_t::ALL => Target::All,
-            zn_target_t::NONE => Target::None,
+            z_target_t::BEST_MATCHING => Target::BestMatching,
+            z_target_t::ALL => Target::All,
+            z_target_t::NONE => Target::None,
+            z_target_t::ALL_COMPLETE => Target::AllComplete,
+            #[cfg(feature = "complete_n")]
+            z_target_t::COMPLETE { n } => Target::Complete(n as ZInt),
         }
     }
 }
 
 /// Create a default :c:type:`zn_target_t`.
 #[no_mangle]
-pub extern "C" fn zn_target_default() -> zn_target_t {
+pub extern "C" fn z_target__default() -> z_target_t {
     Target::default().into()
 }
 
@@ -768,24 +854,22 @@ pub extern "C" fn zn_target_default() -> zn_target_t {
 ///     unsigned int kind: A mask of queryable kinds.
 ///     zn_target_t target: The query target.
 #[repr(C)]
-pub struct zn_query_target_t {
+pub struct z_query_target_t {
     pub kind: c_uint,
-    pub target: zn_target_t,
+    pub target: z_target_t,
 }
-
-impl From<QueryTarget> for zn_query_target_t {
+impl From<QueryTarget> for z_query_target_t {
     #[inline]
     fn from(qt: QueryTarget) -> Self {
-        zn_query_target_t {
+        z_query_target_t {
             kind: qt.kind as c_uint,
             target: qt.target.into(),
         }
     }
 }
-
-impl From<zn_query_target_t> for QueryTarget {
+impl From<z_query_target_t> for QueryTarget {
     #[inline]
-    fn from(val: zn_query_target_t) -> Self {
+    fn from(val: z_query_target_t) -> Self {
         QueryTarget {
             kind: val.kind.into(),
             target: val.target.into(),
@@ -795,7 +879,7 @@ impl From<zn_query_target_t> for QueryTarget {
 
 /// Create a default :c:type:`zn_query_target_t`.
 #[no_mangle]
-pub extern "C" fn zn_query_target_default() -> zn_query_target_t {
+pub extern "C" fn z_query_target__default() -> z_query_target_t {
     QueryTarget::default().into()
 }
 
@@ -805,30 +889,30 @@ pub extern "C" fn zn_query_target_default() -> zn_query_target_t {
 ///     - **zn_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
 ///     - **zn_consolidation_mode_t_NONE**: No consolidation.
 #[repr(C)]
-pub enum zn_consolidation_mode_t {
+pub enum z_consolidation_mode_t {
     FULL,
     LAZY,
     NONE,
 }
 
-impl From<ConsolidationMode> for zn_consolidation_mode_t {
+impl From<ConsolidationMode> for z_consolidation_mode_t {
     #[inline]
     fn from(cm: ConsolidationMode) -> Self {
         match cm {
-            ConsolidationMode::Full => zn_consolidation_mode_t::FULL,
-            ConsolidationMode::Lazy => zn_consolidation_mode_t::LAZY,
-            ConsolidationMode::None => zn_consolidation_mode_t::NONE,
+            ConsolidationMode::Full => z_consolidation_mode_t::FULL,
+            ConsolidationMode::Lazy => z_consolidation_mode_t::LAZY,
+            ConsolidationMode::None => z_consolidation_mode_t::NONE,
         }
     }
 }
 
-impl From<zn_consolidation_mode_t> for ConsolidationMode {
+impl From<z_consolidation_mode_t> for ConsolidationMode {
     #[inline]
-    fn from(val: zn_consolidation_mode_t) -> Self {
+    fn from(val: z_consolidation_mode_t) -> Self {
         match val {
-            zn_consolidation_mode_t::NONE => ConsolidationMode::None,
-            zn_consolidation_mode_t::LAZY => ConsolidationMode::Lazy,
-            zn_consolidation_mode_t::FULL => ConsolidationMode::Full,
+            z_consolidation_mode_t::NONE => ConsolidationMode::None,
+            z_consolidation_mode_t::LAZY => ConsolidationMode::Lazy,
+            z_consolidation_mode_t::FULL => ConsolidationMode::Full,
         }
     }
 }
@@ -841,16 +925,16 @@ impl From<zn_consolidation_mode_t> for ConsolidationMode {
 ///   zn_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
 ///   zn_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
 #[repr(C)]
-pub struct zn_query_consolidation_t {
-    pub first_routers: zn_consolidation_mode_t,
-    pub last_router: zn_consolidation_mode_t,
-    pub reception: zn_consolidation_mode_t,
+pub struct z_query_consolidation_t {
+    pub first_routers: z_consolidation_mode_t,
+    pub last_router: z_consolidation_mode_t,
+    pub reception: z_consolidation_mode_t,
 }
 
-impl From<QueryConsolidation> for zn_query_consolidation_t {
+impl From<QueryConsolidation> for z_query_consolidation_t {
     #[inline]
     fn from(qc: QueryConsolidation) -> Self {
-        zn_query_consolidation_t {
+        z_query_consolidation_t {
             first_routers: qc.first_routers.into(),
             last_router: qc.last_router.into(),
             reception: qc.reception.into(),
@@ -858,9 +942,9 @@ impl From<QueryConsolidation> for zn_query_consolidation_t {
     }
 }
 
-impl From<zn_query_consolidation_t> for QueryConsolidation {
+impl From<z_query_consolidation_t> for QueryConsolidation {
     #[inline]
-    fn from(val: zn_query_consolidation_t) -> Self {
+    fn from(val: z_query_consolidation_t) -> Self {
         QueryConsolidation {
             first_routers: val.first_routers.into(),
             last_router: val.last_router.into(),
@@ -871,6 +955,6 @@ impl From<zn_query_consolidation_t> for QueryConsolidation {
 
 /// Create a default :c:type:`zn_query_consolidation_t`.
 #[no_mangle]
-pub extern "C" fn zn_query_consolidation_default() -> zn_query_consolidation_t {
+pub extern "C" fn z_query_consolidation__default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
 }

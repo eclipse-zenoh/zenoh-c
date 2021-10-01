@@ -13,7 +13,7 @@
  */
 #include <stdio.h>
 #include <sys/time.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 #define N 100000
 
@@ -29,7 +29,7 @@ void print_stats(volatile struct timeval *start, volatile struct timeval *stop)
     printf("%f msgs/sec\n", thpt);
 }
 
-void data_handler(const zn_sample_t *sample, const void *arg)
+void data_handler(const z_sample_t *sample, const void *arg)
 {
     struct timeval tv;
     if (count == 0)
@@ -55,23 +55,23 @@ int main(int argc, char **argv)
 {
     z_init_logger();
 
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config__default();
     if (argc > 1)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[1]));
+        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[1]));
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(config);
+    if (s.borrow == 0)
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    zn_reskey_t rid = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
-    zn_subscriber_t *sub = zn_declare_subscriber(s, rid, zn_subinfo_default(), data_handler, NULL);
-    if (sub == 0)
+    z_reskey_t rid = z_rid(z_register_resource(s.borrow, z_rname("/test/thr")));
+    z_owned_subscriber_t sub = z_register_subscriber(s.borrow, rid, z_subinfo__default(), data_handler, NULL);
+    if (sub.borrow == 0)
     {
         printf("Unable to declare subscriber.\n");
         exit(-1);
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    zn_undeclare_subscriber(sub);
-    zn_close(s);
+    z_unregister_subscriber(sub);
+    z_close(s);
     return 0;
 }

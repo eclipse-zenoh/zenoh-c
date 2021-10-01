@@ -12,40 +12,43 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 int main(int argc, char **argv)
 {
     z_init_logger();
 
-    char *uri = "/demo/example/zenoh-c-write";
+    char *uri = "/demo/example/**";
     if (argc > 1)
     {
         uri = argv[1];
     }
-    char *value = "Write from C!";
+    z_owned_config_t config = z_config__default();
     if (argc > 2)
     {
-        value = argv[2];
-    }
-    zn_properties_t *config = zn_config_default();
-    if (argc > 3)
-    {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[3]));
+        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[2]));
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(config);
+    if (s.borrow == 0)
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    printf("Writing Data ('%s': '%s')...\n", uri, value);
-    zn_write(s, zn_rname(uri), (const uint8_t *)value, strlen(value));
+    printf("Sending Query '%s'...\n", uri);
+    z_reply_data_array_t replies = z_query_collect(s.borrow, z_rname(uri), "", z_query_target__default(), z_query_consolidation__default());
 
-    zn_close(s);
+    for (unsigned int i = 0; i < replies.len; ++i)
+    {
+        printf(">> [Reply handler] received (%s, %.*s)\n",
+               replies.val[i].data.key.start, (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
+    }
+    z_reply_data_array__free(replies);
+
+    z_close(s);
     return 0;
 }
