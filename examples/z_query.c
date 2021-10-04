@@ -40,15 +40,16 @@ int main(int argc, char **argv)
     }
 
     printf("Sending Query '%s'...\n", uri);
-    z_reply_data_array_t replies = z_query_collect(s.borrow, z_rname(uri), "", z_query_target__default(), z_query_consolidation__default());
+    z_owned_reskey_t urikey = z_rname(uri);
+    z_reply_data_array_t replies = z_query_collect(s.borrow, &urikey, "", z_query_target__default(), z_query_consolidation__default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
     {
         printf(">> [Reply handler] received (%s, %.*s)\n",
-               replies.val[i].data.key.start, (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
+               replies.val[i].data.key.borrow, (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
     }
     z_reply_data_array__free(replies);
-
+    z_reskey__free(urikey);
     z_close(s);
     return 0;
 }

@@ -22,7 +22,7 @@ void query_handler(z_query_t *query, const void *arg)
 {
     z_string_t res = z_query__res_name(query);
     z_string_t pred = z_query__predicate(query);
-    printf(">> [Query handler] Handling '%s?%s'\n", res.start, pred.start);
+    printf(">> [Query handler] Handling '%s?%s'\n", res.borrow, pred.borrow);
     z_send_reply(query, uri, (const unsigned char *)value, strlen(value));
 }
 
@@ -49,8 +49,9 @@ int main(int argc, char **argv)
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
-    z_queryable_t *qable = z_register_queryable(s.borrow, z_rname(uri), ZN_QUERYABLE_EVAL, query_handler, NULL);
-    if (qable == 0)
+    z_owned_reskey_t urikey = z_rname(uri);
+    z_owned_queryable_t qable = z_register_queryable(s.borrow, &urikey, ZN_QUERYABLE_EVAL, query_handler, NULL);
+    if (qable.borrow == 0)
     {
         printf("Unable to declare queryable.\n");
         exit(-1);
@@ -63,6 +64,7 @@ int main(int argc, char **argv)
     }
 
     z_unregister_queryable(qable);
+    z_reskey__free(urikey);
     z_close(s);
     return 0;
 }

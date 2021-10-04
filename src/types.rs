@@ -91,7 +91,7 @@ pub trait FromRaw<T> {
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct z_string_t {
-    pub start: *const c_char,
+    pub borrow: *const c_char,
 }
 
 /// Constructs a :c:type:`z_string_t` from a NULL terminated string.  
@@ -106,18 +106,18 @@ pub struct z_string_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_string__new(s: *const c_char) -> z_string_t {
     if s.is_null() {
-        return z_string_t { start: s };
+        return z_string_t { borrow: s };
     }
     let inner = CStr::from_ptr(s).to_owned();
     let start = inner.as_ptr();
     std::mem::forget(inner);
-    z_string_t { start }
+    z_string_t { borrow: start }
 }
 /// Frees the passed z_string_t.
 #[no_mangle]
 pub extern "C" fn z_string__free(s: z_string_t) {
-    if !s.start.is_null() {
-        unsafe { CString::from_raw(s.start as *mut c_char) };
+    if !s.borrow.is_null() {
+        unsafe { CString::from_raw(s.borrow as *mut c_char) };
     }
 }
 impl From<String> for z_string_t {
@@ -125,13 +125,13 @@ impl From<String> for z_string_t {
         let inner = CString::new(s).unwrap();
         let start = inner.as_ptr();
         std::mem::forget(inner);
-        z_string_t { start }
+        z_string_t { borrow: start }
     }
 }
 impl Default for z_string_t {
     fn default() -> Self {
         Self {
-            start: std::ptr::null(),
+            borrow: std::ptr::null(),
         }
     }
 }
@@ -140,15 +140,15 @@ impl From<&str> for z_string_t {
         let inner = CString::new(s).unwrap();
         let start = inner.as_ptr();
         std::mem::forget(inner);
-        z_string_t { start }
+        z_string_t { borrow: start }
     }
 }
 impl From<z_string_t> for String {
     fn from(s: z_string_t) -> Self {
-        if s.start.is_null() {
+        if s.borrow.is_null() {
             String::new()
         } else {
-            unsafe { CString::from_raw(s.start as *mut c_char) }
+            unsafe { CString::from_raw(s.borrow as *mut c_char) }
                 .into_string()
                 .unwrap()
         }
@@ -330,36 +330,69 @@ impl From<ZBuf> for z_bytes_t {
 ///   unsigned long id: The id or prefix of this resource key. ``0`` if empty.
 ///   z_string_t suffix: The suffix of the ressource key. May be an empty string.
 #[repr(C)]
-pub struct z_reskey_t {
+pub struct z_owned_reskey_t {
     pub id: c_ulong,
     pub suffix: z_string_t,
 }
 
-/// Free a :c:type:`z_reskey_t`.
+/// Free a :c:type:`z_owned_reskey_t`.
 ///
 /// Parameters:
 ///    b : The array to free.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_reskey__new(id: c_ulong, suffix: *const c_char) -> z_reskey_t {
-    z_reskey_t {
+pub unsafe extern "C" fn z_reskey__new(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
+    z_owned_reskey_t {
         id,
         suffix: z_string__new(suffix),
     }
 }
-/// Free a :c:type:`z_reskey_t`.
+/// Free a :c:type:`z_owned_reskey_t`.
 ///
 /// Parameters:
 ///    b : The array to free.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_reskey__free(reskey: z_reskey_t) {
+pub unsafe extern "C" fn z_reskey__free(reskey: z_owned_reskey_t) {
     z_string__free(reskey.suffix)
 }
-impl FromRaw<z_reskey_t> for ResKey<'static> {
+
+impl<'a> From<&'a z_owned_reskey_t> for ResKey<'a> {
+    fn from(r: &'a z_owned_reskey_t) -> Self {
+        unsafe {
+            let len = if r.suffix.borrow.is_null() {
+                0
+            } else {
+                libc::strlen(r.suffix.borrow)
+            };
+            match (r.id, len) {
+                (id, 0) => ResKey::RId(id),
+                (0, _) => ResKey::RName(
+                    std::str::from_utf8(std::slice::from_raw_parts(
+                        r.suffix.borrow as *const _,
+                        len,
+                    ))
+                    .unwrap()
+                    .into(),
+                ),
+                (id, _) => ResKey::RIdWithSuffix(
+                    id,
+                    std::str::from_utf8(std::slice::from_raw_parts(
+                        r.suffix.borrow as *const _,
+                        len,
+                    ))
+                    .unwrap()
+                    .into(),
+                ),
+            }
+        }
+    }
+}
+
+impl FromRaw<z_owned_reskey_t> for ResKey<'static> {
     #[inline]
-    fn from_raw(r: z_reskey_t) -> ResKey<'static> {
-        if r.suffix.start.is_null() {
+    fn from_raw(r: z_owned_reskey_t) -> ResKey<'static> {
+        if r.suffix.borrow.is_null() {
             ResKey::RId(r.id as ZInt)
         } else if r.id != 0 {
             ResKey::RIdWithSuffix(r.id as ZInt, String::from(r.suffix).into())
@@ -368,17 +401,17 @@ impl FromRaw<z_reskey_t> for ResKey<'static> {
         }
     }
     #[inline]
-    fn into_raw(self) -> z_reskey_t {
+    fn into_raw(self) -> z_owned_reskey_t {
         match self {
-            ResKey::RId(rid) => z_reskey_t {
+            ResKey::RId(rid) => z_owned_reskey_t {
                 id: rid as c_ulong,
                 suffix: unsafe { z_string__new(std::ptr::null()) },
             },
-            ResKey::RIdWithSuffix(rid, suffix) => z_reskey_t {
+            ResKey::RIdWithSuffix(rid, suffix) => z_owned_reskey_t {
                 id: rid as c_ulong,
                 suffix: z_string_t::from(suffix.into_owned()),
             },
-            ResKey::RName(suffix) => z_reskey_t {
+            ResKey::RName(suffix) => z_owned_reskey_t {
                 id: 0,
                 suffix: z_string_t::from(suffix.into_owned()),
             },

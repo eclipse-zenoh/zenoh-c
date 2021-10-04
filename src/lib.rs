@@ -65,6 +65,10 @@ enum SubOps {
 }
 #[allow(non_camel_case_types)]
 pub struct z_publisher_t<'a>(zenoh::publisher::Publisher<'a>);
+#[repr(C)]
+pub struct z_owned_publisher_t<'a> {
+    borrow: *mut z_publisher_t<'a>,
+}
 #[allow(non_camel_case_types)]
 pub struct z_subscriber_t<'a>(
     Option<Arc<Sender<SubOps>>>,
@@ -81,6 +85,10 @@ impl<'a> z_subscriber_t<'a> {
 }
 #[allow(non_camel_case_types)]
 pub struct z_queryable_t(Option<Arc<Sender<bool>>>);
+#[repr(C)]
+pub struct z_owned_queryable_t {
+    borrow: *mut z_queryable_t,
+}
 #[allow(non_camel_case_types)]
 pub struct z_query_t(Query);
 #[allow(non_camel_case_types)]
@@ -96,7 +104,7 @@ pub struct z_locators_t(std::vec::Vec<std::ffi::CString>);
 /// Returns:
 ///     A new resource key.
 #[no_mangle]
-pub extern "C" fn z_rid(id: c_ulong) -> z_reskey_t {
+pub extern "C" fn z_rid(id: c_ulong) -> z_owned_reskey_t {
     unsafe { z_reskey__new(id, std::ptr::null()) }
 }
 
@@ -110,7 +118,7 @@ pub extern "C" fn z_rid(id: c_ulong) -> z_reskey_t {
 ///     A new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> z_reskey_t {
+pub unsafe extern "C" fn z_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
     z_reskey__new(id, suffix)
 }
 
@@ -123,7 +131,7 @@ pub unsafe extern "C" fn z_rid_with_suffix(id: c_ulong, suffix: *const c_char) -
 ///     A new resource key.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_rname(name: *const c_char) -> z_reskey_t {
+pub unsafe extern "C" fn z_rname(name: *const c_char) -> z_owned_reskey_t {
     z_reskey__new(0, name)
 }
 
@@ -449,14 +457,13 @@ pub unsafe extern "C" fn z_close(session: z_owned_session_t) {
 #[no_mangle]
 pub unsafe extern "C" fn z_register_resource(
     session: &mut z_session_t,
-    reskey: z_reskey_t,
+    reskey: z_owned_reskey_t,
 ) -> c_ulong {
-    // if session.is_null() {
-    //     return 0;
-    // }
-    let reskey = ResKey::from_raw(reskey);
-    let result = session.0.register_resource(&reskey).wait().unwrap() as c_ulong;
-    ResKey::into_raw(reskey);
+    let result = session
+        .0
+        .register_resource(ResKey::from_raw(reskey))
+        .wait()
+        .unwrap() as c_ulong;
     result
 }
 
@@ -473,20 +480,18 @@ pub unsafe extern "C" fn z_register_resource(
 #[no_mangle]
 pub unsafe extern "C" fn z_write(
     session: &mut z_session_t,
-    reskey: z_reskey_t,
+    reskey: &z_owned_reskey_t,
     payload: *const u8,
     len: c_uint,
 ) -> c_int {
-    let reskey = ResKey::from_raw(reskey);
     let r = session
         .0
         .put(
-            &reskey,
+            reskey,
             slice::from_raw_parts(payload as *const u8, len as usize),
         )
         .wait();
 
-    ResKey::into_raw(reskey);
     match r {
         Ok(()) => 0,
         _ => 1,
@@ -509,22 +514,17 @@ pub unsafe extern "C" fn z_write(
 #[no_mangle]
 pub unsafe extern "C" fn z_write_ext(
     session: &mut z_session_t,
-    reskey: z_reskey_t,
+    reskey: &z_owned_reskey_t,
     payload: *const u8,
     len: c_uint,
     encoding: c_uint,
     kind: c_uint,
     congestion_control: zn_congestion_control_t,
 ) -> c_int {
-    // if session.is_null() {
-    //     return 1;
-    // }
-
-    let reskey = ResKey::from_raw(reskey);
     let result = match session
         .0
         .put(
-            &reskey,
+            reskey,
             slice::from_raw_parts(payload as *const u8, len as usize),
         )
         .encoding(encoding as ZInt)
@@ -535,7 +535,6 @@ pub unsafe extern "C" fn z_write_ext(
         Ok(()) => 0,
         _ => 1,
     };
-    ResKey::into_raw(reskey);
     result
 }
 
@@ -552,19 +551,14 @@ pub unsafe extern "C" fn z_write_ext(
 ///    The created :c:type:`zn_publisher_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_register_publisher(
-    session: &mut z_session_t,
-    reskey: z_reskey_t,
-) -> *mut z_publisher_t<'_> {
-    // if session.is_null() {
-    //     return std::ptr::null_mut();
-    // }
-
-    let reskey = ResKey::from_raw(reskey);
+pub unsafe extern "C" fn z_register_publisher<'a>(
+    session: &'a mut z_session_t,
+    reskey: &'a z_owned_reskey_t,
+) -> z_owned_publisher_t<'a> {
     let result = Box::into_raw(Box::new(z_publisher_t(
         (*session).0.publishing(reskey).wait().unwrap(),
     )));
-    result
+    z_owned_publisher_t { borrow: result }
 }
 
 /// Undeclare a :c:type:`zn_publisher_t`.
@@ -573,8 +567,8 @@ pub unsafe extern "C" fn z_register_publisher(
 ///     sub: The :c:type:`zn_publisher_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_unregister_publisher(publ: *mut z_publisher_t) {
-    Box::from_raw(publ);
+pub unsafe extern "C" fn z_unregister_publisher(publ: z_owned_publisher_t) {
+    Box::from_raw(publ.borrow);
 }
 /// Declare a :c:type:`zn_subscriber_t` for the given resource key.
 ///
@@ -589,19 +583,13 @@ pub unsafe extern "C" fn z_unregister_publisher(publ: *mut z_publisher_t) {
 ///    The created :c:type:`zn_subscriber_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_register_subscriber(
-    session: &mut z_session_t,
-    reskey: z_reskey_t,
+pub unsafe extern "C" fn z_register_subscriber<'a>(
+    session: &'a mut z_session_t,
+    reskey: &'a z_owned_reskey_t,
     sub_info: z_subinfo_t,
     callback: extern "C" fn(*const z_sample_t, *const c_void),
     arg: *mut c_void,
-) -> z_owned_subscriber_t<'_> {
-    // if session.is_null() {
-    //     return std::ptr::null_mut();
-    // }
-
-    // let s = Box::from_raw(session);
-    let reskey = ResKey::from_raw(reskey);
+) -> z_owned_subscriber_t<'a> {
     let arg = Box::from_raw(arg);
     let (tx, rx) = bounded::<SubOps>(8);
     let rsub = z_subscriber_t::new(Some(Arc::new(tx)));
@@ -709,7 +697,7 @@ pub unsafe extern "C" fn z_unregister_subscriber(sub: z_owned_subscriber_t) {
 #[no_mangle]
 pub unsafe extern "C" fn z_query(
     session: &mut z_session_t,
-    reskey: z_reskey_t,
+    reskey: &z_owned_reskey_t,
     predicate: *const c_char,
     target: z_query_target_t,
     consolidation: z_query_consolidation_t,
@@ -717,12 +705,11 @@ pub unsafe extern "C" fn z_query(
     arg: *mut c_void,
 ) {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
-    let reskey = ResKey::from_raw(reskey);
     let arg = Box::from_raw(arg);
     let mut q = session
         .0
         .get(KeyedSelector {
-            key_selector: reskey.clone(),
+            key_selector: reskey.into(),
             value_selector: p,
         })
         .target(target.into())
@@ -773,18 +760,17 @@ pub unsafe extern "C" fn z_query(
 #[no_mangle]
 pub unsafe extern "C" fn z_query_collect(
     session: &mut z_session_t,
-    reskey: z_reskey_t,
+    reskey: &z_owned_reskey_t,
     predicate: *const c_char,
     target: z_query_target_t,
     consolidation: z_query_consolidation_t,
 ) -> z_reply_data_array_t {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
-    let reskey = ResKey::from_raw(reskey);
     let mut replies = task::block_on(async {
         let q = session
             .0
             .get(KeyedSelector {
-                key_selector: reskey.clone(),
+                key_selector: reskey.into(),
                 value_selector: p,
             })
             .target(target.into())
@@ -818,18 +804,17 @@ pub unsafe extern "C" fn z_query_collect(
 #[no_mangle]
 pub unsafe extern "C" fn z_register_queryable(
     session: &mut z_session_t,
-    reskey: z_reskey_t,
+    reskey: &z_owned_reskey_t,
     kind: c_uint,
     callback: extern "C" fn(&mut z_query_t, *const c_void),
     arg: *mut c_void,
-) -> *mut z_queryable_t {
+) -> z_owned_queryable_t {
     let arg = Box::from_raw(arg);
-    let reskey = ResKey::from_raw(reskey);
     let (tx, rx) = bounded::<bool>(1);
     let r = z_queryable_t(Some(Arc::new(tx)));
     let queryable = session
         .0
-        .register_queryable(&reskey)
+        .register_queryable(reskey)
         .kind(kind as ZInt)
         .wait()
         .unwrap();
@@ -858,7 +843,9 @@ pub unsafe extern "C" fn z_register_queryable(
             }
         })
     });
-    Box::into_raw(Box::new(r))
+    z_owned_queryable_t {
+        borrow: Box::into_raw(Box::new(r)),
+    }
 }
 
 /// Undeclare a :c:type:`zn_queryable_t`.
@@ -867,8 +854,8 @@ pub unsafe extern "C" fn z_register_queryable(
 ///     qable: The :c:type:`zn_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_unregister_queryable(qable: *mut z_queryable_t) {
-    match *Box::from_raw(qable) {
+pub unsafe extern "C" fn z_unregister_queryable(qable: z_owned_queryable_t) {
+    match *Box::from_raw(qable.borrow) {
         z_queryable_t(Some(tx)) => {
             let _ = async_std::task::block_on(tx.send(true));
         }

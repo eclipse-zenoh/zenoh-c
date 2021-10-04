@@ -47,11 +47,11 @@ int main(int argc, char **argv)
     printf("Declaring Resource '%s'", uri);
     unsigned long rid = z_register_resource(s.borrow, z_rname(uri));
     printf(" => RId %lu\n", rid);
-    z_reskey_t reskey = z_rid(rid);
+    z_owned_reskey_t reskey = z_rid(rid);
 
     printf("Declaring Publisher on %lu\n", rid);
-    z_publisher_t *pub = z_register_publisher(s.borrow, reskey);
-    if (pub == 0)
+    z_owned_publisher_t pub = z_register_publisher(s.borrow, &reskey);
+    if (pub.borrow == 0)
     {
         printf("Unable to declare publisher.\n");
         exit(-1);
@@ -63,9 +63,9 @@ int main(int argc, char **argv)
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Writing Data ('%lu': '%s')...\n", rid, buf);
-        z_write(s.borrow, reskey, (const uint8_t *)buf, strlen(buf));
+        z_write(s.borrow, &reskey, (const uint8_t *)buf, strlen(buf));
     }
-
+    z_reskey__free(reskey);
     z_unregister_publisher(pub);
     z_close(s);
     return 0;

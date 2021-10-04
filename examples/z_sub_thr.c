@@ -69,8 +69,8 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    z_reskey_t rid = z_rid(z_register_resource(s.borrow, z_rname("/test/thr")));
-    z_owned_subscriber_t sub = z_register_subscriber(s.borrow, rid, z_subinfo__default(), data_handler, NULL);
+    z_owned_reskey_t rid = z_rid(z_register_resource(s.borrow, z_rname("/test/thr")));
+    z_owned_subscriber_t sub = z_register_subscriber(s.borrow, &rid, z_subinfo__default(), data_handler, NULL);
     if (sub.borrow == 0)
     {
         printf("Unable to declare subscriber.\n");
@@ -84,6 +84,7 @@ int main(int argc, char **argv)
     }
 
     z_unregister_subscriber(sub);
+    z_reskey__free(rid);
     z_close(s);
     return 0;
 }

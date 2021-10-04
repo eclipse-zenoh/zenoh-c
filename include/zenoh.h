@@ -122,7 +122,7 @@ typedef struct z_owned_config_t {
  *     `start`: the start of the held null-terminated string. `nullptr` is a legal value for `start`
  */
 typedef struct z_string_t {
-  const char *start;
+  const char *borrow;
 } z_string_t;
 
 /**
@@ -187,10 +187,10 @@ typedef struct z_info_t {
  *   unsigned long id: The id or prefix of this resource key. ``0`` if empty.
  *   z_string_t suffix: The suffix of the ressource key. May be an empty string.
  */
-typedef struct z_reskey_t {
+typedef struct z_owned_reskey_t {
   unsigned long id;
   struct z_string_t suffix;
-} z_reskey_t;
+} z_owned_reskey_t;
 
 /**
  * The possible values of :c:member:`zn_target_t.tag`.
@@ -301,6 +301,14 @@ typedef struct z_reply_data_array_t {
   const struct z_reply_data_t *val;
   size_t len;
 } z_reply_data_array_t;
+
+typedef struct z_owned_publisher_t {
+  struct z_publisher_t *borrow;
+} z_owned_publisher_t;
+
+typedef struct z_owned_queryable_t {
+  struct z_queryable_t *borrow;
+} z_owned_queryable_t;
 
 typedef struct z_owned_subscriber_t {
   struct z_subscriber_t *borrow;
@@ -561,7 +569,7 @@ void z_pull(struct z_subscriber_t *sub);
  *     arg: A pointer that will be passed to the **callback** on each call.
  */
 void z_query(struct z_session_t *session,
-             struct z_reskey_t reskey,
+             const struct z_owned_reskey_t *reskey,
              const char *predicate,
              struct z_query_target_t target,
              struct z_query_consolidation_t consolidation,
@@ -605,7 +613,7 @@ struct z_string_t z_query__res_name(const struct z_query_t *query);
  *    An array containing all the replies for this query.
  */
 struct z_reply_data_array_t z_query_collect(struct z_session_t *session,
-                                            struct z_reskey_t reskey,
+                                            const struct z_owned_reskey_t *reskey,
                                             const char *predicate,
                                             struct z_query_target_t target,
                                             struct z_query_consolidation_t consolidation);
@@ -633,7 +641,8 @@ struct z_query_target_t z_query_target__default(void);
  * Returns:
  *    The created :c:type:`zn_publisher_t` or null if the declaration failed.
  */
-struct z_publisher_t *z_register_publisher(struct z_session_t *session, struct z_reskey_t reskey);
+struct z_owned_publisher_t z_register_publisher(struct z_session_t *session,
+                                                const struct z_owned_reskey_t *reskey);
 
 /**
  * Declare a :c:type:`zn_queryable_t` for the given resource key.
@@ -648,11 +657,11 @@ struct z_publisher_t *z_register_publisher(struct z_session_t *session, struct z
  * Returns:
  *    The created :c:type:`zn_queryable_t` or null if the declaration failed.
  */
-struct z_queryable_t *z_register_queryable(struct z_session_t *session,
-                                           struct z_reskey_t reskey,
-                                           unsigned int kind,
-                                           void (*callback)(struct z_query_t*, const void*),
-                                           void *arg);
+struct z_owned_queryable_t z_register_queryable(struct z_session_t *session,
+                                                const struct z_owned_reskey_t *reskey,
+                                                unsigned int kind,
+                                                void (*callback)(struct z_query_t*, const void*),
+                                                void *arg);
 
 /**
  * Associate a numerical id with the given resource key.
@@ -667,7 +676,7 @@ struct z_queryable_t *z_register_queryable(struct z_session_t *session,
  * Returns:
  *     A numerical id.
  */
-unsigned long z_register_resource(struct z_session_t *session, struct z_reskey_t reskey);
+unsigned long z_register_resource(struct z_session_t *session, struct z_owned_reskey_t reskey);
 
 /**
  * Declare a :c:type:`zn_subscriber_t` for the given resource key.
@@ -683,7 +692,7 @@ unsigned long z_register_resource(struct z_session_t *session, struct z_reskey_t
  *    The created :c:type:`zn_subscriber_t` or null if the declaration failed.
  */
 struct z_owned_subscriber_t z_register_subscriber(struct z_session_t *session,
-                                                  struct z_reskey_t reskey,
+                                                  const struct z_owned_reskey_t *reskey,
                                                   struct z_subinfo_t sub_info,
                                                   void (*callback)(const struct z_sample_t*, const void*),
                                                   void *arg);
@@ -709,20 +718,20 @@ void z_reply_data__free(struct z_reply_data_t reply_data);
 void z_reply_data_array__free(struct z_reply_data_array_t replies);
 
 /**
- * Free a :c:type:`z_reskey_t`.
+ * Free a :c:type:`z_owned_reskey_t`.
  *
  * Parameters:
  *    b : The array to free.
  */
-void z_reskey__free(struct z_reskey_t reskey);
+void z_reskey__free(struct z_owned_reskey_t reskey);
 
 /**
- * Free a :c:type:`z_reskey_t`.
+ * Free a :c:type:`z_owned_reskey_t`.
  *
  * Parameters:
  *    b : The array to free.
  */
-struct z_reskey_t z_reskey__new(unsigned long id, const char *suffix);
+struct z_owned_reskey_t z_reskey__new(unsigned long id, const char *suffix);
 
 /**
  * Create a resource key from a resource id.
@@ -733,7 +742,7 @@ struct z_reskey_t z_reskey__new(unsigned long id, const char *suffix);
  * Returns:
  *     A new resource key.
  */
-struct z_reskey_t z_rid(unsigned long id);
+struct z_owned_reskey_t z_rid(unsigned long id);
 
 /**
  * Create a resource key from a resource id and a suffix.
@@ -745,7 +754,7 @@ struct z_reskey_t z_rid(unsigned long id);
  * Returns:
  *     A new resource key.
  */
-struct z_reskey_t z_rid_with_suffix(unsigned long id, const char *suffix);
+struct z_owned_reskey_t z_rid_with_suffix(unsigned long id, const char *suffix);
 
 /**
  * Create a resource key from a resource name.
@@ -756,7 +765,7 @@ struct z_reskey_t z_rid_with_suffix(unsigned long id, const char *suffix);
  * Returns:
  *     A new resource key.
  */
-struct z_reskey_t z_rname(const char *name);
+struct z_owned_reskey_t z_rname(const char *name);
 
 /**
  * Free a :c:type:`zn_sample_t` contained key and value.
@@ -845,7 +854,7 @@ struct z_target_t z_target__default(void);
  * Parameters:
  *     sub: The :c:type:`zn_publisher_t` to undeclare.
  */
-void z_unregister_publisher(struct z_publisher_t *publ);
+void z_unregister_publisher(struct z_owned_publisher_t publ);
 
 /**
  * Undeclare a :c:type:`zn_queryable_t`.
@@ -853,7 +862,7 @@ void z_unregister_publisher(struct z_publisher_t *publ);
  * Parameters:
  *     qable: The :c:type:`zn_queryable_t` to undeclare.
  */
-void z_unregister_queryable(struct z_queryable_t *qable);
+void z_unregister_queryable(struct z_owned_queryable_t qable);
 
 /**
  * Undeclare a :c:type:`zn_subscriber_t`.
@@ -875,7 +884,7 @@ void z_unregister_subscriber(struct z_owned_subscriber_t sub);
  *     ``0`` in case of success, ``1`` in case of failure.
  */
 int z_write(struct z_session_t *session,
-            struct z_reskey_t reskey,
+            const struct z_owned_reskey_t *reskey,
             const uint8_t *payload,
             unsigned int len);
 
@@ -894,7 +903,7 @@ int z_write(struct z_session_t *session,
  *     ``0`` in case of success, ``1`` in case of failure.
  */
 int z_write_ext(struct z_session_t *session,
-                struct z_reskey_t reskey,
+                const struct z_owned_reskey_t *reskey,
                 const uint8_t *payload,
                 unsigned int len,
                 unsigned int encoding,

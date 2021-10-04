@@ -34,15 +34,15 @@ int main(int argc, char **argv)
 
     z_info_t ps = z_info(s.borrow);
     z_string_t prop = z_info__get(ps.borrow, ZN_INFO_PID_KEY);
-    printf("info_pid : %s\n", prop.start);
+    printf("info_pid : %s\n", prop.borrow);
     z_string__free(prop);
 
     prop = z_info__get(ps.borrow, ZN_INFO_ROUTER_PID_KEY);
-    printf("info_router_pid : %s\n", prop.start);
+    printf("info_router_pid : %s\n", prop.borrow);
     z_string__free(prop);
 
     prop = z_info__get(ps.borrow, ZN_INFO_PEER_PID_KEY);
-    printf("info_peer_pid : %s\n", prop.start);
+    printf("info_peer_pid : %s\n", prop.borrow);
     z_string__free(prop);
 
     z_info__free(ps);

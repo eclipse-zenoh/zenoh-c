@@ -17,7 +17,7 @@
 void data_handler(const z_sample_t *sample, const void *arg)
 {
     printf(">> [Subscription listener] Received (%s, %.*s)\n",
-           sample->key.start,
+           sample->key.borrow,
            (int)sample->value.len, sample->value.val);
 }
 
@@ -49,7 +49,8 @@ int main(int argc, char **argv)
     subinfo.reliability = z_reliability_t_RELIABLE;
     subinfo.mode = z_submode_t_PULL;
     subinfo.period = z_period_NONE;
-    z_owned_subscriber_t sub = z_register_subscriber(s.borrow, z_rname(uri), subinfo, data_handler, NULL);
+    z_owned_reskey_t urikey = z_rname(uri);
+    z_owned_subscriber_t sub = z_register_subscriber(s.borrow, &urikey, subinfo, data_handler, NULL);
     if (sub.borrow == 0)
     {
         printf("Unable to declare subscriber.\n");
@@ -65,6 +66,7 @@ int main(int argc, char **argv)
     }
 
     z_unregister_subscriber(sub);
+    z_reskey__free(urikey);
     z_close(s);
     return 0;
 }
