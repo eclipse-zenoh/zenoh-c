@@ -43,5 +43,7 @@
                               z_owned_info_t       \
                             : z_info_check,        \
                               z_owned_subscriber_t \
-                            : z_subscriber_check)(&x)
+                            : z_subscriber_check,  \
+                              z_owned_queryable_t  \
+                            : z_queryable_check)(&x)
 #endif

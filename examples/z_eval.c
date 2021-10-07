@@ -18,7 +18,7 @@
 char *uri = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
-void query_handler(z_query_t *query, const void *arg)
+void query_handler(const z_query_t *query, const void *arg)
 {
     z_owned_string_t res = z_query_res_name(query);
     z_owned_string_t pred = z_query_predicate(query);
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     printf("Declaring Queryable on '%s'...\n", uri);
     z_owned_reskey_t urikey = z_rname(uri);
     z_owned_queryable_t qable = z_register_queryable(z_borrow(s), z_borrow(urikey), ZN_QUERYABLE_EVAL, query_handler, NULL);
-    if (qable.borrow == 0)
+    if (!z_check(qable))
     {
         printf("Unable to declare queryable.\n");
         exit(-1);
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    z_unregister_queryable(qable);
+    z_unregister_queryable(&qable);
     z_reskey_free(&urikey);
     z_close(&s);
     return 0;

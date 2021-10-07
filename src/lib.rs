@@ -138,18 +138,24 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
 //         z_subscriber_t(inner, Default::default())
 //     }
 // }
+type Queryable = Option<Arc<Sender<bool>>>;
+// pub struct z_queryable_t(Option<Arc<Sender<bool>>>);
+pub const Z_QUERYABLE_PADDING_U64: usize = 1;
 #[allow(non_camel_case_types)]
-pub struct z_queryable_t(Option<Arc<Sender<bool>>>);
 #[repr(C)]
-pub struct z_owned_queryable_t {
-    borrow: *mut z_queryable_t,
+pub struct z_owned_queryable_t([u64; Z_QUERYABLE_PADDING_U64]);
+impl AsRef<Queryable> for z_owned_queryable_t {
+    fn as_ref(&self) -> &Queryable {
+        unsafe { std::mem::transmute(self) }
+    }
+}
+impl AsMut<Queryable> for z_owned_queryable_t {
+    fn as_mut(&mut self) -> &mut Queryable {
+        unsafe { std::mem::transmute(self) }
+    }
 }
 #[allow(non_camel_case_types)]
 pub struct z_query_t(Query);
-#[allow(non_camel_case_types)]
-pub struct z_scout_t(std::vec::Vec<Hello>);
-#[allow(non_camel_case_types)]
-pub struct z_locators_t(std::vec::Vec<std::ffi::CString>);
 
 /// Create a resource key from a resource id.
 ///
@@ -584,25 +590,6 @@ pub enum z_write_options_field_t {
     PRIORITY,
 }
 
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_owned_write_options_t {
-    pub borrow: *mut z_write_options_t,
-}
-
-#[no_mangle]
-pub extern "C" fn z_owned_write_options_new() -> z_owned_write_options_t {
-    z_owned_write_options_t {
-        borrow: Box::into_raw(Box::new(z_write_options_t::default())),
-    }
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_owned_write_options_free(options: z_owned_write_options_t) {
-    std::mem::drop(Box::from_raw(options.borrow))
-}
-
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_write_options_set(
@@ -956,12 +943,12 @@ pub unsafe extern "C" fn z_register_queryable(
     session: z_session_t,
     reskey: z_reskey_t,
     kind: c_uint,
-    callback: extern "C" fn(&mut z_query_t, *const c_void),
+    callback: extern "C" fn(&z_query_t, *const c_void),
     arg: *mut c_void,
 ) -> z_owned_queryable_t {
     let arg = Box::from_raw(arg);
     let (tx, rx) = bounded::<bool>(1);
-    let r = z_queryable_t(Some(Arc::new(tx)));
+    let r = z_owned_queryable_t(std::mem::transmute(Some(Arc::new(tx))));
     let queryable = session
         .as_ref()
         .as_ref()
@@ -985,8 +972,8 @@ pub unsafe extern "C" fn z_register_queryable(
                   // a copy that would be otherwise required to add the
                   // C string terminator. See the test_sub.c to find out how to deal
                   // with non null terminated strings.
-                  let mut query = z_query_t(query.unwrap());
-                  callback(&mut query, arg);
+                  let query = z_query_t(query.unwrap());
+                  callback(&query, arg);
                 },
                 _ = rx.recv().fuse() => {
                     let _ = queryable.unregister().await;
@@ -995,9 +982,7 @@ pub unsafe extern "C" fn z_register_queryable(
             }
         })
     });
-    z_owned_queryable_t {
-        borrow: Box::into_raw(Box::new(r)),
-    }
+    r
 }
 
 /// Undeclare a :c:type:`zn_queryable_t`.
@@ -1006,13 +991,20 @@ pub unsafe extern "C" fn z_register_queryable(
 ///     qable: The :c:type:`zn_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_unregister_queryable(qable: z_owned_queryable_t) {
-    match *Box::from_raw(qable.borrow) {
-        z_queryable_t(Some(tx)) => {
+pub unsafe extern "C" fn z_unregister_queryable(qable: &mut z_owned_queryable_t) {
+    let qable = qable.as_mut();
+    match qable {
+        Some(tx) => {
             let _ = async_std::task::block_on(tx.send(true));
+            *qable = None;
         }
-        z_queryable_t(None) => (),
+        None => (),
     }
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
+    qable.as_ref().is_some()
 }
 
 /// Send a reply to a query.
@@ -1030,7 +1022,7 @@ pub unsafe extern "C" fn z_unregister_queryable(qable: z_owned_queryable_t) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_send_reply(
-    query: &mut z_query_t,
+    query: &z_query_t,
     key: *const c_char,
     payload: *const u8,
     len: c_uint,

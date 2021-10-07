@@ -30,6 +30,8 @@
 
 #define Z_SUBSCRIBER_PADDING_U64 1
 
+#define Z_QUERYABLE_PADDING_U64 1
+
 #define Z_INFO_PADDING_U64 6
 
 /**
@@ -86,8 +88,6 @@ typedef enum z_write_options_field_t {
 } z_write_options_field_t;
 
 typedef struct z_query_t z_query_t;
-
-typedef struct z_queryable_t z_queryable_t;
 
 typedef struct z_write_options_t z_write_options_t;
 
@@ -313,7 +313,7 @@ typedef struct z_owned_reply_data_array_t {
 } z_owned_reply_data_array_t;
 
 typedef struct z_owned_queryable_t {
-  struct z_queryable_t *borrow;
+  uint64_t _0[Z_QUERYABLE_PADDING_U64];
 } z_owned_queryable_t;
 
 /**
@@ -689,6 +689,8 @@ struct z_owned_string_t z_query_res_name(const struct z_query_t *query);
  */
 struct z_query_target_t z_query_target_default(void);
 
+bool z_queryable_check(const struct z_owned_queryable_t *qable);
+
 /**
  * Declare a :c:type:`zn_publisher_t` for the given resource key.
  *
@@ -721,7 +723,7 @@ struct z_owned_publisher_t z_register_publisher(struct z_session_t session,
 struct z_owned_queryable_t z_register_queryable(struct z_session_t session,
                                                 struct z_reskey_t reskey,
                                                 unsigned int kind,
-                                                void (*callback)(struct z_query_t*, const void*),
+                                                void (*callback)(const struct z_query_t*, const void*),
                                                 void *arg);
 
 /**
@@ -883,7 +885,7 @@ struct z_owned_hello_array_t z_scout(unsigned int what,
  *     payload: The value of this reply.
  *     len: The length of the value of this reply.
  */
-void z_send_reply(struct z_query_t *query,
+void z_send_reply(const struct z_query_t *query,
                   const char *key,
                   const uint8_t *payload,
                   unsigned int len);
@@ -950,7 +952,7 @@ void z_unregister_publisher(struct z_owned_publisher_t *publ);
  * Parameters:
  *     qable: The :c:type:`zn_queryable_t` to undeclare.
  */
-void z_unregister_queryable(struct z_owned_queryable_t qable);
+void z_unregister_queryable(struct z_owned_queryable_t *qable);
 
 /**
  * Undeclare a :c:type:`zn_subscriber_t`.
