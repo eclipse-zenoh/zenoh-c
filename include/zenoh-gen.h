@@ -185,10 +185,6 @@ typedef struct z_info_t {
   const struct z_owned_info_t *_0;
 } z_info_t;
 
-typedef struct z_owned_write_options_t {
-  struct z_write_options_t *borrow;
-} z_owned_write_options_t;
-
 typedef struct z_owned_publisher_t {
   uint64_t _0[Z_PUBLISHER_PADDING_U64];
 } z_owned_publisher_t;
@@ -530,7 +526,7 @@ struct z_owned_config_t z_config_peer(void);
  * Returns:
  *     A pointer to the updated properties map.
  */
-void z_config_set(struct z_config_t ps, unsigned long key, struct z_owned_string_t value);
+void z_config_set(struct z_config_t config, unsigned long key, struct z_owned_string_t value);
 
 /**
  * Convert a set of properties into a string.
@@ -600,10 +596,6 @@ void z_init_logger(void);
  *     Later functions do not check for null pointers, so you should do it to prevent segfaults.
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
-
-void z_owned_write_options_free(struct z_owned_write_options_t options);
-
-struct z_owned_write_options_t z_owned_write_options_new(void);
 
 bool z_publisher_check(const struct z_owned_publisher_t *publ);
 

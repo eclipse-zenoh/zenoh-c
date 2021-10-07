@@ -248,10 +248,15 @@ pub unsafe extern "C" fn z_config_get(ps: &z_config_t, key: c_uint) -> z_owned_s
 ///     A pointer to the updated properties map.
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 #[no_mangle]
-pub unsafe extern "C" fn z_config_set(mut ps: z_config_t, key: c_ulong, value: z_owned_string_t) {
-    ps.as_mut()
+pub unsafe extern "C" fn z_config_set(
+    mut config: z_config_t,
+    key: c_ulong,
+    value: z_owned_string_t,
+) {
+    config
         .as_mut()
-        .unwrap()
+        .as_mut()
+        .expect("invalid config")
         .iset(key as u64, String::from(value));
 }
 
@@ -414,7 +419,7 @@ pub unsafe extern "C" fn z_scout(
     scout_period: c_ulong,
 ) -> z_owned_hello_array_t {
     let what = WhatAmIMatcher::try_from(what as ZInt).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
-    let config = config.as_mut().take().unwrap();
+    let config = config.as_mut().take().expect("invalid config");
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
@@ -533,7 +538,7 @@ pub unsafe extern "C" fn z_register_resource(
     let result = session
         .as_ref()
         .as_ref()
-        .unwrap()
+        .expect("invalid session")
         .register_resource(ResKey::from_raw(reskey))
         .wait()
         .unwrap() as c_ulong;
@@ -560,7 +565,7 @@ pub unsafe extern "C" fn z_write(
     let r = session
         .as_ref()
         .as_ref()
-        .unwrap()
+        .expect("invalid session")
         .put(
             reskey,
             slice::from_raw_parts(payload as *const u8, len as usize),
@@ -637,7 +642,7 @@ pub unsafe extern "C" fn z_write_ext(
     let result = match session
         .as_ref()
         .as_ref()
-        .unwrap()
+        .expect("invalid session")
         .put(
             reskey,
             slice::from_raw_parts(payload as *const u8, len as usize),
@@ -719,7 +724,7 @@ pub unsafe extern "C" fn z_register_subscriber(
     let sub = session
         .as_ref()
         .as_ref()
-        .unwrap()
+        .expect("invalid session")
         .subscribe(reskey)
         .period(sub_info.period.into())
         .reliability(sub_info.reliability.into())
@@ -842,7 +847,7 @@ pub unsafe extern "C" fn z_query(
     let mut q = session
         .as_ref()
         .as_ref()
-        .unwrap()
+        .expect("invalid session")
         .get(KeyedSelector {
             key_selector: reskey.into(),
             value_selector: p,
@@ -905,7 +910,7 @@ pub unsafe extern "C" fn z_query_collect(
         let q = session
             .as_ref()
             .as_ref()
-            .unwrap()
+            .expect("invalid session")
             .get(KeyedSelector {
                 key_selector: reskey.into(),
                 value_selector: p,
@@ -952,7 +957,7 @@ pub unsafe extern "C" fn z_register_queryable(
     let queryable = session
         .as_ref()
         .as_ref()
-        .unwrap()
+        .expect("invalid session")
         .register_queryable(reskey)
         .kind(kind as ZInt)
         .wait()
