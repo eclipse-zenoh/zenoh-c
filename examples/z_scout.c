@@ -47,15 +47,15 @@ void fprintwhatami(FILE *stream, unsigned int whatami)
     }
 }
 
-void fprintlocators(FILE *stream, z_str_array_t locs)
+void fprintlocators(FILE *stream, const z_owned_str_array_t *locs)
 {
     fprintf(stream, "[");
-    for (unsigned int i = 0; i < locs.len; i++)
+    for (unsigned int i = 0; i < locs->len; i++)
     {
         fprintf(stream, "\"");
-        fprintf(stream, "%s", locs.val[i]);
+        fprintf(stream, "%s", locs->val[i]);
         fprintf(stream, "\"");
-        if (i < locs.len - 1)
+        if (i < locs->len - 1)
         {
             fprintf(stream, ", ");
         }
@@ -63,14 +63,14 @@ void fprintlocators(FILE *stream, z_str_array_t locs)
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, zn_hello_t hello)
+void fprinthello(FILE *stream, const z_owned_hello_t *hello)
 {
     fprintf(stream, "Hello { pid: ");
-    fprintpid(stream, hello.pid);
+    fprintpid(stream, z_borrow(hello->pid));
     fprintf(stream, ", whatami: ");
-    fprintwhatami(stream, hello.whatami);
+    fprintwhatami(stream, hello->whatami);
     fprintf(stream, ", locators: ");
-    fprintlocators(stream, hello.locators);
+    fprintlocators(stream, &hello->locators);
     fprintf(stream, " }");
 }
 
@@ -78,19 +78,19 @@ int main(int argc, char **argv)
 {
     z_init_logger();
 
-    z_owned_config_t config = z_config__default();
+    z_owned_config_t config = z_config_default();
 
     printf("Scouting...\n");
-    z_hello_array_t hellos = z_scout(ZN_ROUTER | ZN_PEER, config, 1000);
+    z_owned_hello_array_t hellos = z_scout(ZN_ROUTER | ZN_PEER, &config, 1000);
     if (hellos.len > 0)
     {
         for (unsigned int i = 0; i < hellos.len; ++i)
         {
-            fprinthello(stdout, hellos.val[i]);
+            fprinthello(stdout, &hellos.val[i]);
             fprintf(stdout, "\n");
         }
 
-        z_hello_array__free(hellos);
+        z_hello_array_free(&hellos);
     }
     else
     {

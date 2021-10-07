@@ -55,23 +55,23 @@ int main(int argc, char **argv)
 {
     z_init_logger();
 
-    z_owned_config_t config = z_config__default();
+    z_owned_config_t config = z_config_default();
     if (argc > 1)
     {
-        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[1]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[1]));
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(config);
-    if (s.borrow == 0)
+    z_owned_session_t s = z_open(&config);
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    z_owned_reskey_t rid = z_rid(z_register_resource(s.borrow, z_rname("/test/thr")));
-    z_owned_subscriber_t sub = z_register_subscriber(s.borrow, &rid, z_subinfo__default(), data_handler, NULL);
-    if (sub.borrow == 0)
+    z_owned_reskey_t rid = z_register_resource(z_borrow(s), z_rname("/test/thr"));
+    z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), z_reskey_borrow(&rid), z_subinfo_default(), data_handler, NULL);
+    if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");
         exit(-1);
@@ -83,8 +83,8 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    z_unregister_subscriber(sub);
-    z_reskey__free(rid);
-    z_close(s);
+    z_unregister_subscriber(&sub);
+    z_reskey_free(&rid);
+    z_close(&s);
     return 0;
 }

@@ -33,11 +33,13 @@ ifeq ($(BUILD_TYPE),Debug)
   CARGOFLAGS=
   EXAMPLES=z_sub z_pub z_write z_query z_eval z_pull z_info z_scout
   LDFLAGS=
+  CFLAGS=-g
 else 
   BUILD_DIR=target${TARGET}/release
   CARGOFLAGS=--release
   EXAMPLES=z_sub z_pub z_write z_query z_eval z_pull z_info z_scout z_sub_thr z_pub_thr
   LDFLAGS=-O3
+  CFLAGS=
 endif
 
 # Installation prefix
@@ -45,7 +47,7 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-build: include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+build: include/zenoh-gen.h $(BUILD_DIR)/$(LIB_NAME)
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
@@ -54,17 +56,17 @@ all: build examples
 $(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/types.rs
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
-$(BUILD_DIR)/examples/%: examples/%.c include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
-	$(CC) -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
+$(BUILD_DIR)/examples/%: examples/%.c include/zenoh-gen.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+	$(CC) -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
-include/zenoh.h: src/lib.rs src/types.rs cbindgen.toml
+include/zenoh-gen.h: src/lib.rs src/types.rs cbindgen.toml
 	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
 
-install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h
+install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh-gen.h
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
-	install -m 755 include/zenoh.h $(DESTDIR)$(PREFIX)/include/
+	install -m 755 include/zenoh-gen.h $(DESTDIR)$(PREFIX)/include/
 
 clean:
 	rm -fr target

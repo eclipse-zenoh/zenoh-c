@@ -84,16 +84,17 @@ pub trait FromRaw<T> {
 }
 
 /// An owned, zenoh-allocated, null-terminated, string.  
-/// Use `z_string__new` to construct and `z_string__free` to destroy.
+/// Use `z_string_new` to construct and `z_string_free` to destroy.
 ///
 /// Members:  
 ///     `start`: the start of the held null-terminated string. `nullptr` is a legal value for `start`
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct z_string_t {
-    pub borrow: *const c_char,
+pub struct z_owned_string_t {
+    pub _borrow: *const c_char,
 }
-
+#[allow(non_camel_case_types)]
+pub type z_string_t = *const c_char;
 /// Constructs a :c:type:`z_string_t` from a NULL terminated string.  
 /// The contents of `s` is copied.
 ///
@@ -104,51 +105,60 @@ pub struct z_string_t {
 ///     A new :c:type:`z_string_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string__new(s: *const c_char) -> z_string_t {
+pub unsafe extern "C" fn z_string_new(s: *const c_char) -> z_owned_string_t {
     if s.is_null() {
-        return z_string_t { borrow: s };
+        return z_owned_string_t { _borrow: s };
     }
     let inner = CStr::from_ptr(s).to_owned();
     let start = inner.as_ptr();
     std::mem::forget(inner);
-    z_string_t { borrow: start }
+    z_owned_string_t { _borrow: start }
 }
 /// Frees the passed z_string_t.
 #[no_mangle]
-pub extern "C" fn z_string__free(s: z_string_t) {
-    if !s.borrow.is_null() {
-        unsafe { CString::from_raw(s.borrow as *mut c_char) };
+pub extern "C" fn z_string_free(s: &mut z_owned_string_t) {
+    if !s._borrow.is_null() {
+        unsafe { CString::from_raw(s._borrow as *mut c_char) };
+        s._borrow = std::ptr::null_mut();
     }
 }
-impl From<String> for z_string_t {
+#[no_mangle]
+pub extern "C" fn z_string_check(s: &z_owned_string_t) -> bool {
+    !s._borrow.is_null()
+}
+#[no_mangle]
+pub extern "C" fn z_string_borrow(s: &z_owned_string_t) -> *const c_char {
+    s._borrow
+}
+impl From<String> for z_owned_string_t {
     fn from(s: String) -> Self {
         let inner = CString::new(s).unwrap();
         let start = inner.as_ptr();
         std::mem::forget(inner);
-        z_string_t { borrow: start }
+        z_owned_string_t { _borrow: start }
     }
 }
-impl Default for z_string_t {
+impl Default for z_owned_string_t {
     fn default() -> Self {
         Self {
-            borrow: std::ptr::null(),
+            _borrow: std::ptr::null(),
         }
     }
 }
-impl From<&str> for z_string_t {
+impl From<&str> for z_owned_string_t {
     fn from(s: &str) -> Self {
         let inner = CString::new(s).unwrap();
         let start = inner.as_ptr();
         std::mem::forget(inner);
-        z_string_t { borrow: start }
+        z_owned_string_t { _borrow: start }
     }
 }
-impl From<z_string_t> for String {
-    fn from(s: z_string_t) -> Self {
-        if s.borrow.is_null() {
+impl From<z_owned_string_t> for String {
+    fn from(s: z_owned_string_t) -> Self {
+        if s._borrow.is_null() {
             String::new()
         } else {
-            unsafe { CString::from_raw(s.borrow as *mut c_char) }
+            unsafe { CString::from_raw(s._borrow as *mut c_char) }
                 .into_string()
                 .unwrap()
         }
@@ -156,41 +166,60 @@ impl From<z_string_t> for String {
 }
 
 #[allow(non_camel_case_types)]
-pub struct z_info_inner_t(pub(crate) InfoProperties);
+#[repr(C)]
+pub struct z_info_t<'a>(&'a z_owned_info_t);
+pub const Z_INFO_PADDING_U64: usize = 6;
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_info_t {
-    pub(crate) borrow: *mut z_info_inner_t,
+pub struct z_owned_info_t(pub(crate) [u64; Z_INFO_PADDING_U64]);
+impl AsRef<Option<InfoProperties>> for z_owned_info_t {
+    fn as_ref(&self) -> &Option<InfoProperties> {
+        unsafe { std::mem::transmute(&self.0) }
+    }
 }
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_info__free(info: z_info_t) {
-    if !info.borrow.is_null() {
-        unsafe { drop(Box::from_raw(info.borrow)) }
+impl AsMut<Option<InfoProperties>> for z_owned_info_t {
+    fn as_mut(&mut self) -> &mut Option<InfoProperties> {
+        unsafe { std::mem::transmute(&mut self.0) }
     }
 }
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_info__get(info: &z_info_inner_t, key: u64) -> z_string_t {
-    match info.0.get(&key) {
+pub extern "C" fn z_info_free(info: &mut z_owned_info_t) {
+    std::mem::drop(info.as_mut().take())
+}
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_info_check(info: &z_owned_info_t) -> bool {
+    info.as_ref().is_some()
+}
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_info_borrow(info: &z_owned_info_t) -> z_info_t {
+    z_info_t(info)
+}
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_info_get(info: z_info_t, key: u64) -> z_owned_string_t {
+    let info = info.0.as_ref();
+    match info.as_ref().map(|i| i.get(&key)).flatten() {
+        None => z_owned_string_t::default(),
         Some(s) => s.as_str().into(),
-        None => z_string_t::default(),
     }
 }
 
 /// An owned array of owned NULL terminated strings, allocated by zenoh.
-/// Use `z_str_array__free` to destroy.
+/// Use `z_str_array_free` to destroy.
 ///
 /// Members:
 ///   char *const *val: A pointer to the array.
 ///   unsigned int len: The length of the array.
 #[repr(C)]
-pub struct z_str_array_t {
+pub struct z_owned_str_array_t {
     pub val: *const *const c_char,
     pub len: size_t,
 }
 
-impl<T> From<Vec<T>> for z_str_array_t
+impl<T> From<Vec<T>> for z_owned_str_array_t
 where
     T: ToString,
 {
@@ -205,7 +234,7 @@ where
                 res
             })
             .collect::<Vec<*const c_char>>();
-        let res = z_str_array_t {
+        let res = z_owned_str_array_t {
             val: v.as_ptr(),
             len: v.len() as size_t,
         };
@@ -214,7 +243,7 @@ where
     }
 }
 
-impl<T> From<Option<Vec<T>>> for z_str_array_t
+impl<T> From<Option<Vec<T>>> for z_owned_str_array_t
 where
     T: ToString,
 {
@@ -222,7 +251,7 @@ where
     fn from(v: Option<Vec<T>>) -> Self {
         match v {
             Some(v) => v.into(),
-            None => z_str_array_t {
+            None => z_owned_str_array_t {
                 val: std::ptr::null(),
                 len: 0,
             },
@@ -237,7 +266,7 @@ where
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_str_array__free(strs: z_str_array_t) {
+pub unsafe extern "C" fn z_str_array_free(strs: &mut z_owned_str_array_t) {
     let locators = Vec::from_raw_parts(
         strs.val as *mut *const c_char,
         strs.len as usize,
@@ -255,13 +284,18 @@ pub unsafe extern "C" fn z_str_array__free(strs: z_str_array_t) {
 ///   unsigned int len: The length of the bytes array.
 ///
 #[repr(C)]
+pub struct z_owned_bytes_t {
+    pub val: *const u8,
+    pub len: size_t,
+}
+#[repr(C)]
 pub struct z_bytes_t {
     pub val: *const u8,
     pub len: size_t,
 }
-impl Default for z_bytes_t {
+impl Default for z_owned_bytes_t {
     fn default() -> Self {
-        z_bytes_t {
+        z_owned_bytes_t {
             val: std::ptr::null(),
             len: 0,
         }
@@ -273,16 +307,32 @@ impl Default for z_bytes_t {
 ///    b : The array to free.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_bytes__free(b: z_bytes_t) {
-    std::mem::drop(Box::from_raw(
-        std::slice::from_raw_parts(b.val, b.len) as *const [u8] as *mut [u8],
-    ))
+pub unsafe extern "C" fn z_bytes_free(b: &mut z_owned_bytes_t) {
+    if !b.val.is_null() {
+        std::mem::drop(Box::from_raw(
+            std::slice::from_raw_parts(b.val, b.len) as *const [u8] as *mut [u8],
+        ));
+        b.val = std::ptr::null_mut();
+    }
 }
-impl From<PeerId> for z_bytes_t {
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_bytes_check(b: &z_owned_bytes_t) -> bool {
+    !b.val.is_null()
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_bytes_borrow(b: &z_owned_bytes_t) -> z_bytes_t {
+    z_bytes_t {
+        val: b.val,
+        len: b.len,
+    }
+}
+impl From<PeerId> for z_owned_bytes_t {
     #[inline]
     fn from(pid: PeerId) -> Self {
         let pid = pid.as_slice().to_vec().into_boxed_slice();
-        let res = z_bytes_t {
+        let res = z_owned_bytes_t {
             val: pid.as_ptr(),
             len: pid.len() as size_t,
         };
@@ -290,22 +340,22 @@ impl From<PeerId> for z_bytes_t {
         res
     }
 }
-impl From<Option<PeerId>> for z_bytes_t {
+impl From<Option<PeerId>> for z_owned_bytes_t {
     #[inline]
     fn from(pid: Option<PeerId>) -> Self {
         match pid {
             Some(pid) => pid.into(),
-            None => z_bytes_t {
+            None => z_owned_bytes_t {
                 val: std::ptr::null(),
                 len: 0,
             },
         }
     }
 }
-impl From<ZBuf> for z_bytes_t {
+impl From<ZBuf> for z_owned_bytes_t {
     fn from(buf: ZBuf) -> Self {
         let data = buf.to_vec().into_boxed_slice();
-        let res = z_bytes_t {
+        let res = z_owned_bytes_t {
             val: data.as_ptr(),
             len: data.len(),
         };
@@ -332,7 +382,14 @@ impl From<ZBuf> for z_bytes_t {
 #[repr(C)]
 pub struct z_owned_reskey_t {
     pub id: c_ulong,
-    pub suffix: z_string_t,
+    pub suffix: z_owned_string_t,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct z_reskey_t {
+    pub id: c_ulong,
+    pub suffix: *const c_char,
 }
 
 /// Free a :c:type:`z_owned_reskey_t`.
@@ -341,11 +398,16 @@ pub struct z_owned_reskey_t {
 ///    b : The array to free.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_reskey__new(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
+pub unsafe extern "C" fn z_reskey_new(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
     z_owned_reskey_t {
         id,
-        suffix: z_string__new(suffix),
+        suffix: z_string_new(suffix),
     }
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reskey_new_borrowed(id: c_ulong, suffix: *const c_char) -> z_reskey_t {
+    z_reskey_t { id, suffix }
 }
 /// Free a :c:type:`z_owned_reskey_t`.
 ///
@@ -353,23 +415,35 @@ pub unsafe extern "C" fn z_reskey__new(id: c_ulong, suffix: *const c_char) -> z_
 ///    b : The array to free.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_reskey__free(reskey: z_owned_reskey_t) {
-    z_string__free(reskey.suffix)
+pub unsafe extern "C" fn z_reskey_free(reskey: &mut z_owned_reskey_t) {
+    z_string_free(&mut reskey.suffix)
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reskey_check(reskey: &z_owned_reskey_t) -> bool {
+    reskey.id != 0 || z_string_check(&reskey.suffix)
+}
+#[no_mangle]
+pub extern "C" fn z_reskey_borrow(reskey: &z_owned_reskey_t) -> z_reskey_t {
+    z_reskey_t {
+        id: reskey.id,
+        suffix: reskey.suffix._borrow,
+    }
 }
 
 impl<'a> From<&'a z_owned_reskey_t> for ResKey<'a> {
     fn from(r: &'a z_owned_reskey_t) -> Self {
         unsafe {
-            let len = if r.suffix.borrow.is_null() {
+            let len = if r.suffix._borrow.is_null() {
                 0
             } else {
-                libc::strlen(r.suffix.borrow)
+                libc::strlen(r.suffix._borrow)
             };
             match (r.id, len) {
                 (id, 0) => ResKey::RId(id),
                 (0, _) => ResKey::RName(
                     std::str::from_utf8(std::slice::from_raw_parts(
-                        r.suffix.borrow as *const _,
+                        r.suffix._borrow as *const _,
                         len,
                     ))
                     .unwrap()
@@ -378,7 +452,7 @@ impl<'a> From<&'a z_owned_reskey_t> for ResKey<'a> {
                 (id, _) => ResKey::RIdWithSuffix(
                     id,
                     std::str::from_utf8(std::slice::from_raw_parts(
-                        r.suffix.borrow as *const _,
+                        r.suffix._borrow as *const _,
                         len,
                     ))
                     .unwrap()
@@ -389,10 +463,36 @@ impl<'a> From<&'a z_owned_reskey_t> for ResKey<'a> {
     }
 }
 
+impl<'a> From<z_reskey_t> for ResKey<'a> {
+    fn from(r: z_reskey_t) -> Self {
+        unsafe {
+            let len = if r.suffix.is_null() {
+                0
+            } else {
+                libc::strlen(r.suffix)
+            };
+            match (r.id, len) {
+                (id, 0) => ResKey::RId(id),
+                (0, _) => ResKey::RName(
+                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix as *const _, len))
+                        .unwrap()
+                        .into(),
+                ),
+                (id, _) => ResKey::RIdWithSuffix(
+                    id,
+                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix as *const _, len))
+                        .unwrap()
+                        .into(),
+                ),
+            }
+        }
+    }
+}
+
 impl FromRaw<z_owned_reskey_t> for ResKey<'static> {
     #[inline]
     fn from_raw(r: z_owned_reskey_t) -> ResKey<'static> {
-        if r.suffix.borrow.is_null() {
+        if r.suffix._borrow.is_null() {
             ResKey::RId(r.id as ZInt)
         } else if r.id != 0 {
             ResKey::RIdWithSuffix(r.id as ZInt, String::from(r.suffix).into())
@@ -405,15 +505,15 @@ impl FromRaw<z_owned_reskey_t> for ResKey<'static> {
         match self {
             ResKey::RId(rid) => z_owned_reskey_t {
                 id: rid as c_ulong,
-                suffix: unsafe { z_string__new(std::ptr::null()) },
+                suffix: unsafe { z_string_new(std::ptr::null()) },
             },
             ResKey::RIdWithSuffix(rid, suffix) => z_owned_reskey_t {
                 id: rid as c_ulong,
-                suffix: z_string_t::from(suffix.into_owned()),
+                suffix: z_owned_string_t::from(suffix.into_owned()),
             },
             ResKey::RName(suffix) => z_owned_reskey_t {
                 id: 0,
-                suffix: z_string_t::from(suffix.into_owned()),
+                suffix: z_owned_string_t::from(suffix.into_owned()),
             },
         }
     }
@@ -427,15 +527,20 @@ impl FromRaw<z_owned_reskey_t> for ResKey<'static> {
 ///   z_string_t key: The resource key of this data sample.
 ///   z_bytes_t value: The value of this data sample.
 #[repr(C)]
+pub struct z_owned_sample_t {
+    pub key: z_owned_string_t,
+    pub value: z_owned_bytes_t,
+}
+#[repr(C)]
 pub struct z_sample_t {
     pub key: z_string_t,
     pub value: z_bytes_t,
 }
 
-impl From<Sample> for z_sample_t {
+impl From<Sample> for z_owned_sample_t {
     #[inline]
     fn from(s: Sample) -> Self {
-        z_sample_t {
+        z_owned_sample_t {
             key: s.res_name.into(),
             value: s.value.payload.into(),
         }
@@ -449,9 +554,22 @@ impl From<Sample> for z_sample_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_sample__free(sample: z_sample_t) {
-    z_string__free(sample.key);
-    z_bytes__free(sample.value);
+pub unsafe extern "C" fn z_sample_free(sample: &mut z_owned_sample_t) {
+    z_string_free(&mut sample.key);
+    z_bytes_free(&mut sample.value);
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
+    z_string_check(&sample.key) && z_bytes_check(&sample.value)
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_sample_borrow(sample: &z_owned_sample_t) -> z_sample_t {
+    z_sample_t {
+        key: z_string_borrow(&sample.key),
+        value: z_bytes_borrow(&sample.value),
+    }
 }
 
 /// A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
@@ -462,15 +580,15 @@ pub unsafe extern "C" fn z_sample__free(sample: z_sample_t) {
 ///   z_str_array_t locators: The locators of the scouted entity.
 ///
 #[repr(C)]
-pub struct zn_hello_t {
+pub struct z_owned_hello_t {
     pub whatami: c_uint,
-    pub pid: z_bytes_t,
-    pub locators: z_str_array_t,
+    pub pid: z_owned_bytes_t,
+    pub locators: z_owned_str_array_t,
 }
-impl From<Hello> for zn_hello_t {
+impl From<Hello> for z_owned_hello_t {
     #[inline]
     fn from(h: Hello) -> Self {
-        zn_hello_t {
+        z_owned_hello_t {
             whatami: match h.whatami {
                 Some(whatami) => whatami as c_uint,
                 None => ZN_ROUTER,
@@ -488,19 +606,19 @@ impl From<Hello> for zn_hello_t {
 ///   unsigned int len: The length of the array.
 ///
 #[repr(C)]
-pub struct z_hello_array_t {
-    pub val: *const zn_hello_t,
+pub struct z_owned_hello_array_t {
+    pub val: *const z_owned_hello_t,
     pub len: size_t,
 }
-impl From<Vec<Hello>> for z_hello_array_t {
+impl From<Vec<Hello>> for z_owned_hello_array_t {
     #[inline]
     fn from(hvec: Vec<Hello>) -> Self {
         let mut hvec = hvec
             .into_iter()
             .map(|h| h.into())
-            .collect::<Vec<zn_hello_t>>();
+            .collect::<Vec<z_owned_hello_t>>();
         hvec.shrink_to_fit();
-        let res = z_hello_array_t {
+        let res = z_owned_hello_array_t {
             val: hvec.as_ptr(),
             len: hvec.len() as size_t,
         };
@@ -515,14 +633,15 @@ impl From<Vec<Hello>> for z_hello_array_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_hello_array__free(hellos: z_hello_array_t) {
+pub unsafe extern "C" fn z_hello_array_free(hellos: &mut z_owned_hello_array_t) {
     let hellos = Vec::from_raw_parts(
-        hellos.val as *mut zn_hello_t,
+        hellos.val as *mut z_owned_hello_t,
         hellos.len as usize,
         hellos.len as usize,
     );
-    for hello in hellos {
-        z_str_array__free(hello.locators);
+    for mut hello in hellos {
+        z_bytes_free(&mut hello.pid);
+        z_str_array_free(&mut hello.locators);
     }
 }
 
@@ -684,7 +803,7 @@ pub struct z_subinfo_t {
     pub period: z_period_t,
 }
 #[no_mangle]
-pub extern "C" fn z_subinfo__period(info: &z_subinfo_t) -> *const z_period_t {
+pub extern "C" fn z_subinfo_period(info: &z_subinfo_t) -> *const z_period_t {
     if info.period.period != 0 {
         &info.period
     } else {
@@ -715,7 +834,7 @@ impl From<z_subinfo_t> for SubInfo {
 
 /// Create a default subscription info.
 #[no_mangle]
-pub extern "C" fn z_subinfo__default() -> z_subinfo_t {
+pub extern "C" fn z_subinfo_default() -> z_subinfo_t {
     SubInfo::default().into()
 }
 
@@ -728,28 +847,28 @@ pub extern "C" fn z_subinfo__default() -> z_subinfo_t {
 ///
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub struct z_reply_data_t {
-    data: z_sample_t,
+pub struct z_owned_reply_data_t {
+    data: z_owned_sample_t,
     source_kind: c_uint,
-    replier_id: z_bytes_t,
+    replier_id: z_owned_bytes_t,
 }
-impl z_reply_data_t {
+impl z_owned_reply_data_t {
     #[inline]
     pub(crate) fn empty() -> Self {
-        z_reply_data_t {
-            data: z_sample_t {
-                key: z_string_t::default(),
-                value: z_bytes_t::default(),
+        z_owned_reply_data_t {
+            data: z_owned_sample_t {
+                key: z_owned_string_t::default(),
+                value: z_owned_bytes_t::default(),
             },
             source_kind: 0,
-            replier_id: z_bytes_t::default(),
+            replier_id: z_owned_bytes_t::default(),
         }
     }
 }
-impl From<Reply> for z_reply_data_t {
+impl From<Reply> for z_owned_reply_data_t {
     #[inline]
     fn from(r: Reply) -> Self {
-        z_reply_data_t {
+        z_owned_reply_data_t {
             data: r.data.into(),
             source_kind: r.replier_kind as c_uint,
             replier_id: r.replier_id.into(),
@@ -764,9 +883,14 @@ impl From<Reply> for z_reply_data_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_reply_data__free(reply_data: z_reply_data_t) {
-    z_sample__free(reply_data.data);
-    z_bytes__free(reply_data.replier_id);
+pub unsafe extern "C" fn z_reply_data_free(reply_data: &mut z_owned_reply_data_t) {
+    z_sample_free(&mut reply_data.data);
+    z_bytes_free(&mut reply_data.replier_id);
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reply_data_check(reply_data: &z_owned_reply_data_t) -> bool {
+    z_sample_check(&reply_data.data) && z_bytes_check(&reply_data.replier_id)
 }
 
 /// An array of :c:type:`zn_reply_data_t`.
@@ -777,8 +901,8 @@ pub unsafe extern "C" fn z_reply_data__free(reply_data: z_reply_data_t) {
 ///   unsigned int len: The length of the array.
 ///
 #[repr(C)]
-pub struct z_reply_data_array_t {
-    pub val: *const z_reply_data_t,
+pub struct z_owned_reply_data_array_t {
+    pub val: *const z_owned_reply_data_t,
     pub len: size_t,
 }
 
@@ -789,11 +913,22 @@ pub struct z_reply_data_array_t {
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_reply_data_array__free(replies: z_reply_data_array_t) {
-    let vec = Vec::from_raw_parts(replies.val as *mut z_reply_data_t, replies.len, replies.len);
-    for rd in vec {
-        z_reply_data__free(rd);
+pub unsafe extern "C" fn z_reply_data_array_free(replies: &mut z_owned_reply_data_array_t) {
+    let vec = Vec::from_raw_parts(
+        replies.val as *mut z_owned_reply_data_t,
+        replies.len,
+        replies.len,
+    );
+    for mut rd in vec {
+        z_reply_data_free(&mut rd);
     }
+    replies.val = std::ptr::null();
+    replies.len = 0;
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reply_data_array_check(replies: &z_owned_reply_data_array_t) -> bool {
+    !replies.val.is_null()
 }
 
 /// The possible values of :c:member:`zn_reply_t.tag`
@@ -816,16 +951,22 @@ pub enum z_reply_t_Tag {
 ///
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub struct z_reply_t {
+pub struct z_owned_reply_t {
     pub tag: z_reply_t_Tag,
-    pub data: z_reply_data_t,
+    pub data: z_owned_reply_data_t,
 }
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_reply__free(reply: z_reply_t) {
+pub unsafe extern "C" fn z_reply_free(reply: &mut z_owned_reply_t) {
     if reply.tag == z_reply_t_Tag::DATA {
-        z_reply_data__free(reply.data)
+        z_reply_data_free(&mut reply.data)
     }
+}
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_reply_check(reply: &z_owned_reply_t) -> bool {
+    z_reply_t_Tag::FINAL == reply.tag
+        || (z_reply_t_Tag::DATA == reply.tag && z_reply_data_check(&reply.data))
 }
 
 /// The possible values of :c:member:`zn_target_t.tag`.
@@ -877,7 +1018,7 @@ impl From<z_target_t> for Target {
 
 /// Create a default :c:type:`zn_target_t`.
 #[no_mangle]
-pub extern "C" fn z_target__default() -> z_target_t {
+pub extern "C" fn z_target_default() -> z_target_t {
     Target::default().into()
 }
 
@@ -912,7 +1053,7 @@ impl From<z_query_target_t> for QueryTarget {
 
 /// Create a default :c:type:`zn_query_target_t`.
 #[no_mangle]
-pub extern "C" fn z_query_target__default() -> z_query_target_t {
+pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()
 }
 
@@ -988,6 +1129,6 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
 
 /// Create a default :c:type:`zn_query_consolidation_t`.
 #[no_mangle]
-pub extern "C" fn z_query_consolidation__default() -> z_query_consolidation_t {
+pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
 }

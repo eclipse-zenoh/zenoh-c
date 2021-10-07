@@ -30,28 +30,29 @@ int main(int argc, char **argv)
     {
         value = argv[2];
     }
-    z_owned_config_t config = z_config__default();
+    z_owned_config_t config = z_config_default();
     if (argc > 3)
     {
-        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[3]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[3]));
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(config);
-    if (s.borrow == 0)
+    z_owned_session_t s = z_open(&config);
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
+    z_session_t borrowed_session = z_borrow(s);
 
     printf("Declaring Resource '%s'", uri);
-    unsigned long rid = z_register_resource(s.borrow, z_rname(uri));
-    printf(" => RId %lu\n", rid);
-    z_owned_reskey_t reskey = z_rid(rid);
+    z_owned_reskey_t reskey = z_register_resource(borrowed_session, z_rname(uri));
+    z_reskey_t key = z_borrow(reskey);
+    printf(" => RId %lu\n", reskey.id);
 
-    printf("Declaring Publisher on %lu\n", rid);
-    z_owned_publisher_t pub = z_register_publisher(s.borrow, &reskey);
-    if (pub.borrow == 0)
+    printf("Declaring Publisher on %lu\n", reskey.id);
+    z_owned_publisher_t pub = z_register_publisher(borrowed_session, key);
+    if (!z_check(pub))
     {
         printf("Unable to declare publisher.\n");
         exit(-1);
@@ -62,11 +63,11 @@ int main(int argc, char **argv)
     {
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
-        printf("Writing Data ('%lu': '%s')...\n", rid, buf);
-        z_write(s.borrow, &reskey, (const uint8_t *)buf, strlen(buf));
+        printf("Writing Data ('%lu': '%s')...\n", reskey.id, buf);
+        z_write(borrowed_session, key, (const uint8_t *)buf, strlen(buf));
     }
-    z_reskey__free(reskey);
-    z_unregister_publisher(pub);
-    z_close(s);
+    z_reskey_free(&reskey);
+    z_unregister_publisher(&pub);
+    z_close(&s);
     return 0;
 }

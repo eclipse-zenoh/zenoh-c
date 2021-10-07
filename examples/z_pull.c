@@ -17,7 +17,7 @@
 void data_handler(const z_sample_t *sample, const void *arg)
 {
     printf(">> [Subscription listener] Received (%s, %.*s)\n",
-           sample->key.borrow,
+           sample->key,
            (int)sample->value.len, sample->value.val);
 }
 
@@ -30,15 +30,15 @@ int main(int argc, char **argv)
     {
         uri = argv[1];
     }
-    z_owned_config_t config = z_config__default();
+    z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[2]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[2]));
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(config);
-    if (s.borrow == 0)
+    z_owned_session_t s = z_open(&config);
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
@@ -50,8 +50,8 @@ int main(int argc, char **argv)
     subinfo.mode = z_submode_t_PULL;
     subinfo.period = z_period_NONE;
     z_owned_reskey_t urikey = z_rname(uri);
-    z_owned_subscriber_t sub = z_register_subscriber(s.borrow, &urikey, subinfo, data_handler, NULL);
-    if (sub.borrow == 0)
+    z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), z_borrow(urikey), subinfo, data_handler, NULL);
+    if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");
         exit(-1);
@@ -62,11 +62,11 @@ int main(int argc, char **argv)
     while (c != 'q')
     {
         c = fgetc(stdin);
-        z_pull(sub.borrow);
+        z_pull(&sub);
     }
 
-    z_unregister_subscriber(sub);
-    z_reskey__free(urikey);
-    z_close(s);
+    z_unregister_subscriber(&sub);
+    z_reskey_free(&urikey);
+    z_close(&s);
     return 0;
 }

@@ -26,25 +26,27 @@ int main(int argc, char **argv)
   }
   size_t len = atoi(argv[1]);
   printf("Running throughput test for payload of %zu bytes.\n", len);
-  z_owned_config_t config = z_config__default();
+  z_owned_config_t config = z_config_default();
   if (argc > 2)
   {
-    z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[2]));
+    z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[2]));
   }
 
-  z_owned_session_t s = z_open(config);
-  if (s.borrow == 0)
+  z_owned_session_t os = z_open(&config);
+  if (!z_check(os))
   {
     printf("Unable to open session!\n");
     exit(-1);
   }
+  z_session_t s = z_borrow(os);
 
   char *data = (char *)malloc(len);
   memset(data, 1, len);
 
-  z_owned_reskey_t reskey = z_rid(z_register_resource(s.borrow, z_rname("/test/thr")));
-  z_owned_publisher_t pub = z_register_publisher(s.borrow, &reskey);
-  if (pub.borrow == 0)
+  z_owned_reskey_t oreskey = z_register_resource(s, z_rname("/test/thr"));
+  z_reskey_t reskey = z_borrow(oreskey);
+  z_owned_publisher_t pub = z_register_publisher(s, reskey);
+  if (!z_check(pub))
   {
     printf("Unable to declare publisher.\n");
     exit(-1);
@@ -52,9 +54,9 @@ int main(int argc, char **argv)
 
   while (1)
   {
-    z_write(s.borrow, &reskey, (const uint8_t *)data, len);
+    z_write(s, reskey, (const uint8_t *)data, len);
   }
-  z_reskey__free(reskey);
-  z_unregister_publisher(pub);
-  z_close(s);
+  z_reskey_free(&oreskey);
+  z_unregister_publisher(&pub);
+  z_close(&os);
 }

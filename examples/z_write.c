@@ -29,15 +29,15 @@ int main(int argc, char **argv)
     {
         value = argv[2];
     }
-    z_owned_config_t config = z_config__default();
+    z_owned_config_t config = z_config_default();
     if (argc > 3)
     {
-        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[3]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[3]));
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(config);
-    if (s.borrow == 0)
+    z_owned_session_t s = z_open(&config);
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
@@ -45,8 +45,8 @@ int main(int argc, char **argv)
 
     printf("Writing Data ('%s': '%s')...\n", uri, value);
     z_owned_reskey_t urikey = z_rname(uri);
-    z_write(s.borrow, &urikey, (const uint8_t *)value, strlen(value));
-    z_reskey__free(urikey);
-    z_close(s);
+    z_write(z_borrow(s), z_borrow(urikey), (const uint8_t *)value, strlen(value));
+    z_reskey_free(&urikey);
+    z_close(&s);
     return 0;
 }

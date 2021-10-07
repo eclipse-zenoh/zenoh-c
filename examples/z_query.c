@@ -25,15 +25,15 @@ int main(int argc, char **argv)
     {
         uri = argv[1];
     }
-    z_owned_config_t config = z_config__default();
+    z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config__insert(config.borrow, ZN_CONFIG_PEER_KEY, z_string__new(argv[2]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[2]));
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(config);
-    if (s.borrow == 0)
+    z_owned_session_t s = z_open(&config);
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
@@ -41,15 +41,15 @@ int main(int argc, char **argv)
 
     printf("Sending Query '%s'...\n", uri);
     z_owned_reskey_t urikey = z_rname(uri);
-    z_reply_data_array_t replies = z_query_collect(s.borrow, &urikey, "", z_query_target__default(), z_query_consolidation__default());
+    z_owned_reply_data_array_t replies = z_query_collect(z_borrow(s), z_borrow(urikey), "", z_query_target_default(), z_query_consolidation_default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
     {
         printf(">> [Reply handler] received (%s, %.*s)\n",
-               replies.val[i].data.key.borrow, (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
+               z_borrow(replies.val[i].data.key), (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
     }
-    z_reply_data_array__free(replies);
-    z_reskey__free(urikey);
-    z_close(s);
+    z_reply_data_array_free(&replies);
+    z_reskey_free(&urikey);
+    z_close(&s);
     return 0;
 }
