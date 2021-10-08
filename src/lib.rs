@@ -37,8 +37,19 @@ mod types;
 pub use types::*;
 
 pub const Z_SESSION_PADDING_U64: usize = 3;
-#[allow(non_camel_case_types)]
+
+/// An owned zenoh session.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_owned_session_t([u64; Z_SESSION_PADDING_U64]);
 impl From<Session> for z_owned_session_t {
     fn from(session: Session) -> Self {
@@ -60,8 +71,10 @@ impl AsRef<Option<Session>> for z_session_t {
         unsafe { (&*self.0).as_ref() }
     }
 }
-#[allow(non_camel_case_types)]
+
+/// A borrowed zenoh session.
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_session_t(*const z_owned_session_t);
 #[no_mangle]
 pub extern "C" fn z_session_borrow(s: &z_owned_session_t) -> z_session_t {
@@ -69,10 +82,22 @@ pub extern "C" fn z_session_borrow(s: &z_owned_session_t) -> z_session_t {
 }
 
 pub const Z_CONFIG_PADDING_U64: usize = 66;
+/// A borrowed zenoh config.
+#[repr(C)]
 #[allow(non_camel_case_types)]
-#[repr(C)]
 pub struct z_config_t(*const z_owned_config_t);
+/// An owned zenoh configuration.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_owned_config_t([u64; Z_CONFIG_PADDING_U64]);
 #[no_mangle]
 pub extern "C" fn z_config_borrow(s: &z_owned_config_t) -> z_config_t {
@@ -105,7 +130,18 @@ enum SubOps {
 }
 
 pub const Z_PUBLISHER_PADDING_U64: usize = 3;
+/// An owned zenoh publisher.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_owned_publisher_t([u64; Z_PUBLISHER_PADDING_U64]);
 impl AsRef<Option<Publisher<'static>>> for z_owned_publisher_t {
     fn as_ref(&self) -> &Option<Publisher<'static>> {
@@ -119,9 +155,18 @@ impl AsMut<Option<Publisher<'static>>> for z_owned_publisher_t {
 }
 type Subscriber = Option<Arc<Sender<SubOps>>>;
 pub const Z_SUBSCRIBER_PADDING_U64: usize = 1;
-#[allow(non_camel_case_types)]
-// pub struct z_subscriber_t<'a>();
+/// An owned zenoh subscriber.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_owned_subscriber_t([u64; Z_SUBSCRIBER_PADDING_U64]);
 impl AsRef<Subscriber> for z_owned_subscriber_t {
     fn as_ref(&self) -> &Subscriber {
@@ -133,16 +178,21 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
         unsafe { std::mem::transmute(self) }
     }
 }
-// impl<'a> z_subscriber_t<'a> {
-//     fn new(inner: Option<Arc<Sender<SubOps>>>) -> Self {
-//         z_subscriber_t(inner, Default::default())
-//     }
-// }
+
 type Queryable = Option<Arc<Sender<bool>>>;
-// pub struct z_queryable_t(Option<Arc<Sender<bool>>>);
 pub const Z_QUERYABLE_PADDING_U64: usize = 1;
-#[allow(non_camel_case_types)]
+/// An owned zenoh queryable.  
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_owned_queryable_t([u64; Z_QUERYABLE_PADDING_U64]);
 impl AsRef<Queryable> for z_owned_queryable_t {
     fn as_ref(&self) -> &Queryable {
@@ -157,79 +207,80 @@ impl AsMut<Queryable> for z_owned_queryable_t {
 #[allow(non_camel_case_types)]
 pub struct z_query_t(Query);
 
-/// Create a resource key from a resource id.
-///
-/// Parameters:
-///     id: The resource id.
-///
-/// Returns:
-///     A new resource key.
+/// Constructs a resource key from a resource id.  
+/// Since id-only ressource keys don't need destruction, a `z_reskey_t` is returned instead of its owned variant.
 #[no_mangle]
-pub extern "C" fn z_rid(id: c_ulong) -> z_owned_reskey_t {
-    unsafe { z_reskey_new(id, std::ptr::null()) }
+pub extern "C" fn z_rid(id: c_ulong) -> z_reskey_t {
+    unsafe { z_reskey_new_borrowed(id, std::ptr::null()) }
 }
 
-/// Create a resource key from a resource id and a suffix.
+/// Constructs a resource key from a resource id and a suffix. `suffix`'s content is copied.
 ///
-/// Parameters:
-///     id: The resource id.
-///     suffix: The suffix, a NULL terminated string, copied on construction.
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
 ///
-/// Returns:
-///     A new resource key.
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
     z_reskey_new(id, suffix)
 }
 
-/// Create a resource key from a resource name.
+/// Constructs a resource key from a resource name. `name`'s content is copied.
 ///
-/// Parameters:
-///     id: The resource name, a NULL terminated string, copied on construction.
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
 ///
-/// Returns:
-///     A new resource key.
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_rname(name: *const c_char) -> z_owned_reskey_t {
     z_reskey_new(0, name)
 }
 
-/// Return a new empty configuration.
+/// Return a new, zenoh-allocated, empty configuration.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
 pub extern "C" fn z_config_new() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(Some(Config::default()))) }
 }
 
-/// Get the length of the given properties map.
-///
-/// Parameters:
-///     ps: A pointer to the properties map.
-///
-/// Returns:
-///     The length of the given properties map.
-#[allow(clippy::missing_safety_doc)]
+/// Gets the number of available keys for configuration.
 #[no_mangle]
-pub unsafe extern "C" fn z_config_len(ps: &z_config_t) -> c_uint {
-    ps.as_ref()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_config_len(config: z_config_t) -> c_uint {
+    config
+        .as_ref()
         .as_ref()
         .map(|c| c.ikeys().len() as c_uint)
         .unwrap_or(0)
 }
 
-/// Get the property with the given key from a properties map.
-///
-/// Parameters:
-///     ps: A pointer to properties map.
-///     key: The key of the property.
-///
-/// Returns:
-///     The value of the property with key ``key`` in properties map ``ps``.
-#[allow(clippy::missing_safety_doc)]
+/// Get the property with the given integer key from the configuration.
 #[no_mangle]
-pub unsafe extern "C" fn z_config_get(ps: &z_config_t, key: c_uint) -> z_owned_string_t {
-    let val = ps.as_ref().as_ref().map(|c| c.iget(key as u64)).flatten();
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_config_get(config: z_config_t, key: c_uint) -> z_owned_string_t {
+    let val = config
+        .as_ref()
+        .as_ref()
+        .map(|c| c.iget(key as u64))
+        .flatten();
     match val {
         Some(val) => val.into_owned().into(),
         None => z_owned_string_t::default(),
@@ -240,59 +291,50 @@ pub unsafe extern "C" fn z_config_get(ps: &z_config_t, key: c_uint) -> z_owned_s
 /// If a property with the same key already exists in the properties map, it is replaced.
 ///
 /// Parameters:
-///   ps: A pointer to the properties map.
+///   config: A pointer to the properties map.
 ///   key: The key of the property to add.
 ///   value: The value of the property to add.
-///
-/// Returns:
-///     A pointer to the updated properties map.
-#[allow(clippy::missing_safety_doc, unused_must_use)]
 #[no_mangle]
-pub unsafe extern "C" fn z_config_set(
-    mut config: z_config_t,
-    key: c_ulong,
-    value: z_owned_string_t,
-) {
+#[allow(clippy::missing_safety_doc, unused_must_use)]
+pub unsafe extern "C" fn z_config_set(mut config: z_config_t, key: c_ulong, value: z_string_t) {
+    let value = CStr::from_ptr(value);
     config
         .as_mut()
         .as_mut()
         .expect("invalid config")
-        .iset(key as u64, String::from(value));
+        .iset(key as u64, value.to_string_lossy());
 }
 
-/// Free a set of properties.
-///
-/// Parameters:
-///   ps: A pointer to the properties.
-#[allow(clippy::missing_safety_doc)]
+/// Frees `config`, invalidating it for double-free safety.
 #[no_mangle]
-pub unsafe extern "C" fn z_config_free(ps: &mut z_owned_config_t) {
-    std::mem::drop(ps.as_mut().take())
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_config_free(config: &mut z_owned_config_t) {
+    std::mem::drop(config.as_mut().take())
 }
-#[allow(clippy::missing_safety_doc)]
+/// Returns `true` if `config` is valid.
 #[no_mangle]
-pub unsafe extern "C" fn z_config_check(ps: &z_owned_config_t) -> bool {
-    ps.as_ref().is_some()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
+    config.as_ref().is_some()
 }
 
-/// Create an empty set of properties for zenoh-net session configuration.
-#[allow(clippy::missing_safety_doc)]
+/// Create an empty, zenoh-allocated, configuration.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_empty() -> z_owned_config_t {
     z_config_new()
 }
 
-/// Create a default set of properties for zenoh-net session configuration.
-#[allow(clippy::missing_safety_doc)]
+/// Create an default, zenoh-allocated, configuration.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_default() -> z_owned_config_t {
     z_config_new()
 }
 
-/// Create a set of properties for zenoh-net session configuration, parsing a string listing the properties
-/// in such format: "mode=client;peer=tcp/127.0.0.1:7447".
-#[allow(clippy::missing_safety_doc)]
+/// Reads a configuration from a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t {
     if s.is_null() {
         z_config_empty()
@@ -303,16 +345,10 @@ pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t
     }
 }
 
-/// Convert a set of properties into a string.
-///
-/// Parameters:
-///     config: The set of properties.
-///
-/// Returns:
-///     A keys/values string containing with such format: "key1=value1;key2=value2;...".
+/// Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_config_to_str(config: &z_config_t) -> z_owned_string_t {
+pub extern "C" fn z_config_to_str(config: z_config_t) -> z_owned_string_t {
     let config = match config.as_ref() {
         Some(c) => c,
         None => return z_owned_string_t::default(),
@@ -320,12 +356,7 @@ pub extern "C" fn z_config_to_str(config: &z_config_t) -> z_owned_string_t {
     ConfigProperties::from(config).to_string().into()
 }
 
-/// Create a set of properties for zenoh-net session configuration, parsing a file listing the properties
-/// (1 "key=value" per line, comments starting with '#' character are allowed).
-/// Returns null if parsing fails.
-///
-/// Parameters:
-///   path: The path to the file (must be in UTF-8).
+/// Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_config_from_file(path: *const c_char) -> z_owned_config_t {
@@ -345,7 +376,7 @@ pub unsafe extern "C" fn z_config_from_file(path: *const c_char) -> z_owned_conf
     }))
 }
 
-/// Create a default set of properties for peer mode zenoh-net session configuration.
+/// Constructs a default configuration peer mode zenoh session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_peer() -> z_owned_config_t {
@@ -356,11 +387,8 @@ pub extern "C" fn z_config_peer() -> z_owned_config_t {
     }
 }
 
-/// Create a default set of properties for client mode zenoh-net session configuration.
-/// If peer is not null, it is added to the configuration as remote peer.
-///
-/// Parameters:
-///   peer: An optional peer locator.
+/// Constructs a default configuration client mode zenoh session.
+/// If `peer` is not null, it is added to the configuration as remote peer.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_config_client(peer: *mut c_char) -> z_owned_config_t {
@@ -376,41 +404,37 @@ pub unsafe extern "C" fn z_config_client(peer: *mut c_char) -> z_owned_config_t 
     ))
 }
 
-/// Get the resource name of a received query.
-///
-/// Parameters:
-///     query: The query.
-///
-/// Returns:
-///     The resource name of the query.
+/// Gets the resource name of a received query as a non null-terminated string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_res_name(query: &z_query_t) -> z_owned_string_t {
-    query.0.selector().key_selector.into()
+pub extern "C" fn z_query_res_name(query: &z_query_t) -> z_bytes_t {
+    let s = query.0.selector().key_selector;
+    z_bytes_t {
+        val: s.as_ptr(),
+        len: s.len(),
+    }
 }
 
-/// Get the predicate of a received query.
-///
-/// Parameters:
-///     query: The query.
-///
-/// Returns:
-///     The predicate of the query.
+/// Get the predicate of a received query as a non null-terminated string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_predicate(query: &z_query_t) -> z_owned_string_t {
-    query.0.selector().value_selector.into()
+pub extern "C" fn z_query_predicate(query: &z_query_t) -> z_bytes_t {
+    let s = query.0.selector().value_selector;
+    z_bytes_t {
+        val: s.as_ptr(),
+        len: s.len(),
+    }
 }
 
 /// Scout for routers and/or peers.
 ///
 /// Parameters:
-///     what: A whatami bitmask of zenoh entities kind to scout for.
-///     config: A set of properties to configure the scouting.
-///     scout_period: The time that should be spent scouting before returnng the results.
+///     `what`: A whatami bitmask of zenoh entities kind to scout for.
+///     `config`: A set of properties to configure the scouting.
+///     `scout_period`: The time that should be spent scouting before returning the results.
 ///
 /// Returns:
-///     An array of :c:struct:`zn_hello_t` messages.
+///     An array of `z_hello_t` messages.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_scout(
@@ -437,20 +461,12 @@ pub unsafe extern "C" fn z_scout(
 }
 
 /// Initialise the zenoh runtime logger
-///
 #[no_mangle]
 pub extern "C" fn z_init_logger() {
     env_logger::init();
 }
 
-/// Open a zenoh-net session
-///
-/// Parameters:
-///     config: A set of properties.
-///
-/// Returns:
-///     The created zenoh-net session or null if the creation did not succeed, wrapped in the z_owned_session_t type.
-///     Later functions do not check for null pointers, so you should do it to prevent segfaults.
+/// Open a zenoh-net session. Should the session opening fail, `z_check`ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
@@ -474,12 +490,6 @@ pub unsafe extern "C" fn z_session_check(config: &z_owned_session_t) -> bool {
 }
 
 /// Get informations about an zenoh-net session.
-///
-/// Parameters:
-///     session: A zenoh-net session.
-///
-/// Returns:
-///     A :c:type:`zn_properties_t` map containing informations on the given zenoh-net session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
@@ -490,14 +500,7 @@ pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
     }
 }
 
-/// Get informations about an zenoh-net session.
-///
-/// Parameters:
-///     session: A zenoh-net session.
-///
-/// Returns:
-///     A keys/values string containing informations on the given zenoh-net session.
-///     The format of the string is: "key1=value1;key2=value2;...".
+/// Get informations about an zenoh-net session as a properties-formatted string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> z_owned_string_t {
@@ -508,10 +511,7 @@ pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> z_owned_string_t
     }
 }
 
-/// Close a zenoh-net session.
-///
-/// Parameters:
-///     session: A zenoh-net session.
+/// Closes a zenoh-net session. This frees and invalidates `session` for double-free safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
@@ -522,24 +522,22 @@ pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
 ///
 /// This numerical id will be used on the network to save bandwidth and
 /// ease the retrieval of the concerned resource in the routing tables.
-///
-/// Parameters:
-///     session: The zenoh-net session.
-///     resource: The resource key to map to a numerical id.
-///
-/// Returns:
-///     A numerical id.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_register_resource(
     session: z_session_t,
-    reskey: z_owned_reskey_t,
-) -> z_owned_reskey_t {
+    reskey: &mut z_owned_reskey_t,
+) -> z_reskey_t {
+    let mut rk = z_owned_reskey_t {
+        id: 0,
+        suffix: z_string_new(std::ptr::null_mut()),
+    };
+    std::mem::swap(reskey, &mut rk);
     let result = session
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .register_resource(ResKey::from_raw(reskey))
+        .register_resource(ResKey::from_raw(rk))
         .wait()
         .unwrap() as c_ulong;
     z_rid(result)
@@ -577,15 +575,17 @@ pub unsafe extern "C" fn z_write(
         _ => 1,
     }
 }
-
-#[allow(non_camel_case_types)]
 #[derive(Default)]
-pub struct z_write_options_t {
+struct WriteOptions {
     encoding: Encoding,
     congestion_control: CongestionControl,
     kind: SampleKind,
     priority: Priority,
 }
+pub const Z_WRITE_OPTIONS_PADDING_U64: usize = 6;
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct z_write_options_t([u64; Z_WRITE_OPTIONS_PADDING_U64]);
 
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -598,11 +598,17 @@ pub enum z_write_options_field_t {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_write_options_default() -> z_write_options_t {
+    z_write_options_t(std::mem::transmute(WriteOptions::default()))
+}
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_write_options_set(
     options: &mut z_write_options_t,
     key: z_write_options_field_t,
     value: c_uint,
 ) {
+    let options: &mut WriteOptions = std::mem::transmute(options);
     match key {
         z_write_options_field_t::ENCODING => options.encoding = Encoding::from(value as ZInt),
         z_write_options_field_t::CONGESTION_CONTROL => {
@@ -640,6 +646,7 @@ pub unsafe extern "C" fn z_write_ext(
     len: c_uint,
     options: &z_write_options_t,
 ) -> c_int {
+    let options: &WriteOptions = std::mem::transmute(options);
     let result = match session
         .as_ref()
         .as_ref()
@@ -660,17 +667,10 @@ pub unsafe extern "C" fn z_write_ext(
     result
 }
 
-/// Declare a :c:type:`zn_publisher_t` for the given resource key.
+/// Register a `z_owned_publisher_t` for the given resource key.
 ///
 /// Written resources that match the given key will only be sent on the network
 /// if matching subscribers exist in the system.
-///
-/// Parameters:
-///     session: The zenoh-net session.
-///     resource: The resource key to publish.
-///
-/// Returns:
-///    The created :c:type:`zn_publisher_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_register_publisher(
@@ -690,26 +690,23 @@ pub unsafe extern "C" fn z_publisher_check(publ: &z_owned_publisher_t) -> bool {
     publ.as_ref().is_some()
 }
 
-/// Undeclare a :c:type:`zn_publisher_t`.
-///
-/// Parameters:
-///     sub: The :c:type:`zn_publisher_t` to undeclare.
+/// Destroys `publ`, unregistering it and invalidating `publ` for double-free safety
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_unregister_publisher(publ: &mut z_owned_publisher_t) {
     std::mem::drop(publ.as_mut().take())
 }
-/// Declare a :c:type:`zn_subscriber_t` for the given resource key.
+/// Declare a :c:type:`z_subscriber_t` for the given resource key.
 ///
 /// Parameters:
 ///     session: The zenoh-net session.
 ///     resource: The resource key to subscribe.
-///     sub_info: The :c:type:`zn_subinfo_t` to configure the :c:type:`zn_subscriber_t`.
+///     sub_info: The :c:type:`z_subinfo_t` to configure the :c:type:`z_subscriber_t`.
 ///     callback: The callback function that will be called each time a data matching the subscribed resource is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
 /// Returns:
-///    The created :c:type:`zn_subscriber_t` or null if the declaration failed.
+///    The created :c:type:`z_subscriber_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_register_subscriber(
@@ -783,11 +780,11 @@ pub unsafe extern "C" fn z_register_subscriber(
     rsub
 }
 
-/// Pull data for a pull mode :c:type:`zn_subscriber_t`. The pulled data will be provided
-/// by calling the **callback** function provided to the :c:func:`zn_declare_subscriber` function.
+/// Pull data for a pull mode :c:type:`z_subscriber_t`. The pulled data will be provided
+/// by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
 ///
 /// Parameters:
-///     sub: The :c:type:`zn_subscriber_t` to pull from.
+///     sub: The :c:type:`z_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_pull(sub: &z_owned_subscriber_t) {
@@ -799,10 +796,10 @@ pub unsafe extern "C" fn z_pull(sub: &z_owned_subscriber_t) {
     }
 }
 
-/// Undeclare a :c:type:`zn_subscriber_t`.
+/// Undeclare a :c:type:`z_subscriber_t`.
 ///
 /// Parameters:
-///     sub: The :c:type:`zn_subscriber_t` to undeclare.
+///     sub: The :c:type:`z_subscriber_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_unregister_subscriber(sub: &mut z_owned_subscriber_t) {
@@ -878,9 +875,9 @@ pub unsafe extern "C" fn z_query(
                 arg,
             )
             // while let Some(reply) = q.next().await {
-            //     callback(zn_reply_t::DATA { data: reply.into() }, arg)
+            //     callback(z_reply_t::DATA { data: reply.into() }, arg)
             // }
-            // callback(zn_reply_t::FINAL, arg)
+            // callback(z_reply_t::FINAL, arg)
         })
     });
 }
@@ -932,17 +929,17 @@ pub unsafe extern "C" fn z_query_collect(
     z_owned_reply_data_array_t { val, len }
 }
 
-/// Declare a :c:type:`zn_queryable_t` for the given resource key.
+/// Declare a :c:type:`z_queryable_t` for the given resource key.
 ///
 /// Parameters:
 ///     session: The zenoh-net session.
-///     resource: The resource key the :c:type:`zn_queryable_t` will reply to.
-///     kind: The kind of :c:type:`zn_queryable_t`.
+///     resource: The resource key the :c:type:`z_queryable_t` will reply to.
+///     kind: The kind of :c:type:`z_queryable_t`.
 ///     callback: The callback function that will be called each time a matching query is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
 /// Returns:
-///    The created :c:type:`zn_queryable_t` or null if the declaration failed.
+///    The created :c:type:`z_queryable_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_register_queryable(
@@ -991,10 +988,10 @@ pub unsafe extern "C" fn z_register_queryable(
     r
 }
 
-/// Undeclare a :c:type:`zn_queryable_t`.
+/// Undeclare a :c:type:`z_queryable_t`.
 ///
 /// Parameters:
-///     qable: The :c:type:`zn_queryable_t` to undeclare.
+///     qable: The :c:type:`z_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_unregister_queryable(qable: &mut z_owned_queryable_t) {

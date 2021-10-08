@@ -40,20 +40,20 @@ Bytes
 Properties
 ----------
 
-.. c:type:: zn_properties_t
+.. c:type:: z_properties_t
 
   A map of key/value properties where the key is an ``unsigned int``
   and the value a :c:type:`z_string_t`. Multiple values are coma separated.
 
-.. autocfunction:: zenoh/net.h::zn_properties_make
+.. autocfunction:: zenoh/net.h::z_properties_make
 
-.. autocfunction:: zenoh/net.h::zn_properties_len
+.. autocfunction:: zenoh/net.h::z_properties_len
 
-.. autocfunction:: zenoh/net.h::zn_properties_insert
+.. autocfunction:: zenoh/net.h::z_properties_insert
 
-.. autocfunction:: zenoh/net.h::zn_properties_get
+.. autocfunction:: zenoh/net.h::z_properties_get
 
-.. autocfunction:: zenoh/net.h::zn_properties_free
+.. autocfunction:: zenoh/net.h::z_properties_free
 
 Scouting
 ========
@@ -69,16 +69,16 @@ Possible flags in a whatami bitmask :
 
   .. c:var:: const unsigned int ZN_CLIENT
 
-.. autocstruct:: zenoh/net.h::zn_hello_t
+.. autocstruct:: zenoh/net.h::z_hello_t
 
-.. autocstruct:: zenoh/net.h::zn_hello_array_t
+.. autocstruct:: zenoh/net.h::z_hello_array_t
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::zn_scout
+.. autocfunction:: zenoh/net.h::z_scout
 
-.. autocfunction:: zenoh/net.h::zn_hello_array_free
+.. autocfunction:: zenoh/net.h::z_hello_array_free
 
 Session
 =======
@@ -86,7 +86,7 @@ Session
 Session configuration
 ---------------------
 
-A zenoh-net session is configured through a :c:type:`zn_properties_t` properties map.
+A zenoh-net session is configured through a :c:type:`z_properties_t` properties map.
 
 Multiple values are coma separated.
 
@@ -179,26 +179,26 @@ session configuration and the associated accepted values.
     - Accepted values : ``"true"``, ``"false"``.
     - Default value : ``"true"``.
 
-The following functions allow to create default :c:type:`zn_properties_t` maps for 
+The following functions allow to create default :c:type:`z_properties_t` maps for 
 zenoh-net session configuration. The returned configurations can be amended with extra 
-options with :c:func:`zn_properties_insert`.
+options with :c:func:`z_properties_insert`.
 
-.. autocfunction:: zenoh/net.h::zn_config_empty
+.. autocfunction:: zenoh/net.h::z_config_empty
 
-.. autocfunction:: zenoh/net.h::zn_config_default
+.. autocfunction:: zenoh/net.h::z_config_default
 
-.. autocfunction:: zenoh/net.h::zn_config_peer
+.. autocfunction:: zenoh/net.h::z_config_peer
 
-.. autocfunction:: zenoh/net.h::zn_config_client
+.. autocfunction:: zenoh/net.h::z_config_client
 
 Session management
 ------------------
 
-.. autocfunction:: zenoh/net.h::zn_open
+.. autocfunction:: zenoh/net.h::z_open
 
-.. autocfunction:: zenoh/net.h::zn_info
+.. autocfunction:: zenoh/net.h::z_info
 
-.. autocfunction:: zenoh/net.h::zn_close
+.. autocfunction:: zenoh/net.h::z_close
 
 Resource
 ========
@@ -206,25 +206,25 @@ Resource
 Resource key
 ------------
 
-.. autocstruct:: zenoh/net.h::zn_reskey_t
+.. autocstruct:: zenoh/net.h::z_reskey_t
 
-.. autocfunction:: zenoh/net.h::zn_rname
+.. autocfunction:: zenoh/net.h::z_rname
 
-.. autocfunction:: zenoh/net.h::zn_rid
+.. autocfunction:: zenoh/net.h::z_rid
 
-.. autocfunction:: zenoh/net.h::zn_rid_with_suffix
+.. autocfunction:: zenoh/net.h::z_rid_with_suffix
 
 Sample
 ------
 
-.. autocstruct:: zenoh/net.h::zn_sample_t
+.. autocstruct:: zenoh/net.h::z_sample_t
 
-.. autocfunction:: zenoh/net.h::zn_sample_free
+.. autocfunction:: zenoh/net.h::z_sample_free
 
 Resource declaration
 --------------------
 
-.. autocfunction:: zenoh/net.h::zn_declare_resource
+.. autocfunction:: zenoh/net.h::z_declare_resource
 
 Publication
 ===========
@@ -232,22 +232,22 @@ Publication
 Types
 -----
 
-.. c:type:: zn_publisher_tr
+.. c:type:: z_publisher_tr
 
   A zenoh-net Publisher.
 
-.. autocenum:: zenoh/net.h::zn_congestion_control_t
+.. autocenum:: zenoh/net.h::z_congestion_control_t
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::zn_declare_publisher
+.. autocfunction:: zenoh/net.h::z_declare_publisher
 
-.. autocfunction:: zenoh/net.h::zn_undeclare_publisher
+.. autocfunction:: zenoh/net.h::z_undeclare_publisher
 
-.. autocfunction:: zenoh/net.h::zn_write
+.. autocfunction:: zenoh/net.h::z_write
 
-.. autocfunction:: zenoh/net.h::zn_write_ext
+.. autocfunction:: zenoh/net.h::z_write_ext
 
 Subscription
 ============
@@ -255,28 +255,28 @@ Subscription
 Types
 -----
 
-.. c:type:: zn_subscriber_t
+.. c:type:: z_subscriber_t
 
   A zenoh-net subscriber.
 
-.. autocenum:: zenoh/net.h::zn_reliability_t
+.. autocenum:: zenoh/net.h::z_reliability_t
 
-.. autocenum:: zenoh/net.h::zn_submode_t
+.. autocenum:: zenoh/net.h::z_submode_t
 
-.. autocstruct:: zenoh/net.h::zn_period_t
+.. autocstruct:: zenoh/net.h::z_period_t
 
-.. autocstruct:: zenoh/net.h::zn_subinfo_t
+.. autocstruct:: zenoh/net.h::z_subinfo_t
 
-.. autocfunction:: zenoh/net.h::zn_subinfo_default
+.. autocfunction:: zenoh/net.h::z_subinfo_default
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::zn_declare_subscriber
+.. autocfunction:: zenoh/net.h::z_declare_subscriber
 
-.. autocfunction:: zenoh/net.h::zn_pull
+.. autocfunction:: zenoh/net.h::z_pull
 
-.. autocfunction:: zenoh/net.h::zn_undeclare_subscriber
+.. autocfunction:: zenoh/net.h::z_undeclare_subscriber
 
 Query
 =====
@@ -284,27 +284,27 @@ Query
 Types
 -----
 
-.. c:struct:: zn_target_t
+.. c:struct:: z_target_t
 
-  Which amongst the matching queryables should be target of a :c:func:`zn_query`.
+  Which amongst the matching queryables should be target of a :c:func:`z_query`.
 
-  .. c:member:: zn_target_t_Tag tag;
+  .. c:member:: z_target_t_Tag tag;
 
-  .. c:member:: zn_target_t_COMPLETE_Body complete;
+  .. c:member:: z_target_t_COMPLETE_Body complete;
 
-    Members of zn_target_t when :c:member:`zn_target_t.tag` is set to ``zn_target_t_COMPLETE``.
+    Members of z_target_t when :c:member:`z_target_t.tag` is set to ``z_target_t_COMPLETE``.
 
     .. c:member:: unsigned int n
 
-      The number of complete queryables that should be target of a :c:func:`zn_query`.
+      The number of complete queryables that should be target of a :c:func:`z_query`.
 
-.. autocenum:: zenoh/net.h::zn_target_t_Tag
+.. autocenum:: zenoh/net.h::z_target_t_Tag
 
-.. autocfunction:: zenoh/net.h::zn_target_default
+.. autocfunction:: zenoh/net.h::z_target_default
 
-.. autocstruct:: zenoh/net.h::zn_query_target_t
+.. autocstruct:: zenoh/net.h::z_query_target_t
 
-  Predefined values for :c:member:`zn_query_target_t.kind`: 
+  Predefined values for :c:member:`z_query_target_t.kind`: 
 
     .. c:var:: const unsigned int ZN_QUERYABLE_ALL_KINDS
 
@@ -312,32 +312,32 @@ Types
 
     .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
 
-.. autocfunction:: zenoh/net.h::zn_query_target_default
+.. autocfunction:: zenoh/net.h::z_query_target_default
 
-.. autocenum:: zenoh/net.h::zn_consolidation_mode_t
+.. autocenum:: zenoh/net.h::z_consolidation_mode_t
 
-.. autocstruct:: zenoh/net.h::zn_query_consolidation_t
+.. autocstruct:: zenoh/net.h::z_query_consolidation_t
 
-.. autocfunction:: zenoh/net.h::zn_query_consolidation_default
+.. autocfunction:: zenoh/net.h::z_query_consolidation_default
 
-.. autocstruct:: zenoh/net.h::zn_reply_data_t
+.. autocstruct:: zenoh/net.h::z_reply_data_t
 
-.. autocfunction:: zenoh/net.h::zn_reply_data_free
+.. autocfunction:: zenoh/net.h::z_reply_data_free
 
-.. autocstruct:: zenoh/net.h::zn_reply_data_array_t
+.. autocstruct:: zenoh/net.h::z_reply_data_array_t
 
-.. autocfunction:: zenoh/net.h::zn_reply_data_array_free
+.. autocfunction:: zenoh/net.h::z_reply_data_array_free
 
-.. autocstruct:: zenoh/net.h::zn_reply_t
+.. autocstruct:: zenoh/net.h::z_reply_t
 
-.. autocenum:: zenoh/net.h::zn_reply_t_Tag
+.. autocenum:: zenoh/net.h::z_reply_t_Tag
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::zn_query
+.. autocfunction:: zenoh/net.h::z_query
 
-.. autocfunction:: zenoh/net.h::zn_query_collect
+.. autocfunction:: zenoh/net.h::z_query_collect
 
 Queryable
 =========
@@ -345,23 +345,23 @@ Queryable
 Types
 -----
 
-.. c:type:: zn_queryable_t
+.. c:type:: z_queryable_t
 
   The zenoh-net Queryable.
 
-.. c:type:: zn_query_t
+.. c:type:: z_query_t
 
   A query received by a Queryable. 
 
-.. autocfunction:: zenoh/net.h::zn_query_res_name
+.. autocfunction:: zenoh/net.h::z_query_res_name
 
-.. autocfunction:: zenoh/net.h::zn_query_predicate
+.. autocfunction:: zenoh/net.h::z_query_predicate
 
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::zn_declare_queryable
+.. autocfunction:: zenoh/net.h::z_declare_queryable
 
   Predefined values for ``kind``: 
 
@@ -369,8 +369,8 @@ Functions
 
     .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
 
-.. autocfunction:: zenoh/net.h::zn_send_reply
+.. autocfunction:: zenoh/net.h::z_send_reply
 
-.. autocfunction:: zenoh/net.h::zn_undeclare_queryable
+.. autocfunction:: zenoh/net.h::z_undeclare_queryable
 
 

@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 
   if (argc < 2)
   {
-    printf("USAGE:\n\tzn_pub_thr <payload-size> [<zenoh-locator>]\n\n");
+    printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
     exit(-1);
   }
   size_t len = atoi(argv[1]);
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   z_owned_config_t config = z_config_default();
   if (argc > 2)
   {
-    z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[2]));
+    z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
   }
 
   z_owned_session_t os = z_open(z_move(config));
@@ -43,8 +43,8 @@ int main(int argc, char **argv)
   char *data = (char *)malloc(len);
   memset(data, 1, len);
 
-  z_owned_reskey_t oreskey = z_register_resource(s, z_rname("/test/thr"));
-  z_reskey_t reskey = z_borrow(oreskey);
+  z_owned_reskey_t oreskey = z_rname("/test/thr");
+  z_reskey_t reskey = z_register_resource(s, z_move(oreskey));
   z_owned_publisher_t pub = z_register_publisher(s, reskey);
   if (!z_check(pub))
   {

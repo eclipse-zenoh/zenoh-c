@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 1)
     {
-        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[1]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[1]);
     }
 
     printf("Openning session...\n");

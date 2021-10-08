@@ -84,27 +84,27 @@ If you want to build with debug symbols set the `BUILD_TYPE=Debug` environment v
 
 ### Basic Pub/Sub Example
 ```bash
-$ ./target/release/examples/zn_sub
+$ ./target/release/examples/z_sub
 ```
 
 ```bash
-$ ./target/release/examples/zn_pub
+$ ./target/release/examples/z_pub
 ```
 
 ### Eval and Query Example
 ```bash
-$ ./target/release/examples/zn_eval
+$ ./target/release/examples/z_eval
 ```
 
 ```bash
-$ ./target/release/examples/zn_query
+$ ./target/release/examples/z_query
 ```
 
 ## Running the Throughput Examples
 ```bash
-$ ./target/release/examples/zn_sub_thgr
+$ ./target/release/examples/z_sub_thgr
 ```
 
 ```bash
-$ ./target/release/examples/zn_pub_thgr
+$ ./target/release/examples/z_pub_thgr
 ```

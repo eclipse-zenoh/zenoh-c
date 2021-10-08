@@ -20,12 +20,10 @@ char *value = "Eval from C!";
 
 void query_handler(const z_query_t *query, const void *arg)
 {
-    z_owned_string_t res = z_query_res_name(query);
-    z_owned_string_t pred = z_query_predicate(query);
-    printf(">> [Query handler] Handling '%s?%s'\n", z_borrow(res), z_borrow(res));
+    z_bytes_t res = z_query_res_name(query);
+    z_bytes_t pred = z_query_predicate(query);
+    printf(">> [Query handler] Handling '%.*s?%.*s'\n", res.len, res.val, pred.len, pred.val);
     z_send_reply(query, uri, (const unsigned char *)value, strlen(value));
-    z_free(pred);
-    z_free(res);
 }
 
 int main(int argc, char **argv)
@@ -39,7 +37,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[2]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");

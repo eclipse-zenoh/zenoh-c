@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 1)
     {
-        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[1]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[1]);
     }
 
     printf("Openning session...\n");
@@ -69,8 +69,9 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    z_owned_reskey_t rid = z_register_resource(z_borrow(s), z_rname("/test/thr"));
-    z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), z_borrow(rid), z_subinfo_default(), data_handler, NULL);
+    z_owned_reskey_t okey = z_rname("/test/thr");
+    z_reskey_t rid = z_register_resource(z_borrow(s), z_move(okey));
+    z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), rid, z_subinfo_default(), data_handler, NULL);
     if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");
@@ -84,7 +85,6 @@ int main(int argc, char **argv)
     }
 
     z_unregister_subscriber(z_move(sub));
-    z_reskey_free(z_move(rid));
     z_close(z_move(s));
     return 0;
 }

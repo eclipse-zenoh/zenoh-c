@@ -70,7 +70,7 @@ pub static ZN_CONFIG_ADD_TIMESTAMP_KEY: c_uint = config::ZN_ADD_TIMESTAMP_KEY as
 #[no_mangle]
 pub static ZN_CONFIG_LOCAL_ROUTING_KEY: c_uint = config::ZN_LOCAL_ROUTING_KEY as c_uint;
 
-// Properties returned by zn_info()
+// Properties returned by z_info()
 #[no_mangle]
 pub static ZN_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
 #[no_mangle]
@@ -84,25 +84,27 @@ pub trait FromRaw<T> {
 }
 
 /// An owned, zenoh-allocated, null-terminated, string.  
-/// Use `z_string_new` to construct and `z_string_free` to destroy.
 ///
-/// Members:  
-///     `start`: the start of the held null-terminated string. `nullptr` is a legal value for `start`
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct z_owned_string_t {
     pub _borrow: *const c_char,
 }
+
+/// A borrowed null-terminated string.
 #[allow(non_camel_case_types)]
 pub type z_string_t = *const c_char;
-/// Constructs a :c:type:`z_string_t` from a NULL terminated string.  
-/// The contents of `s` is copied.
-///
-/// Parameters:  
-///     s: The NULL terminated string.
-///
-/// Returns:  
-///     A new :c:type:`z_string_t`.
+
+/// Constructs a `z_string_t` from a NULL terminated string.  
+/// The contents of `s` are copied.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_string_new(s: *const c_char) -> z_owned_string_t {
@@ -114,7 +116,7 @@ pub unsafe extern "C" fn z_string_new(s: *const c_char) -> z_owned_string_t {
     std::mem::forget(inner);
     z_owned_string_t { _borrow: start }
 }
-/// Frees the passed z_string_t.
+/// Frees `s`'s memory, while invalidating `s` for double-free-safety.
 #[no_mangle]
 pub extern "C" fn z_string_free(s: &mut z_owned_string_t) {
     if !s._borrow.is_null() {
@@ -122,12 +124,13 @@ pub extern "C" fn z_string_free(s: &mut z_owned_string_t) {
         s._borrow = std::ptr::null_mut();
     }
 }
+/// Returns `true` if `s` is valid
 #[no_mangle]
 pub extern "C" fn z_string_check(s: &z_owned_string_t) -> bool {
     !s._borrow.is_null()
 }
 #[no_mangle]
-pub extern "C" fn z_string_borrow(s: &z_owned_string_t) -> *const c_char {
+pub extern "C" fn z_string_borrow(s: &z_owned_string_t) -> z_string_t {
     s._borrow
 }
 impl From<String> for z_owned_string_t {
@@ -165,10 +168,21 @@ impl From<z_owned_string_t> for String {
     }
 }
 
-#[allow(non_camel_case_types)]
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_info_t<'a>(&'a z_owned_info_t);
 pub const Z_INFO_PADDING_U64: usize = 6;
+
+/// A map of integers to strings providing informations on the zenoh session.  
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_owned_info_t(pub(crate) [u64; Z_INFO_PADDING_U64]);
@@ -182,11 +196,14 @@ impl AsMut<Option<InfoProperties>> for z_owned_info_t {
         unsafe { std::mem::transmute(&mut self.0) }
     }
 }
+
+/// Frees `info`'s memory, while invalidating `info` for double-free-safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_info_free(info: &mut z_owned_info_t) {
     std::mem::drop(info.as_mut().take())
 }
+/// Returns `true` if `info` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_info_check(info: &z_owned_info_t) -> bool {
@@ -197,6 +214,8 @@ pub extern "C" fn z_info_check(info: &z_owned_info_t) -> bool {
 pub extern "C" fn z_info_borrow(info: &z_owned_info_t) -> z_info_t {
     z_info_t(info)
 }
+/// Returns the information associated with `key` if it exists.  
+/// If it doesn't, the returned value is invalid, and doesn't need freeing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_info_get(info: z_info_t, key: u64) -> z_owned_string_t {
@@ -207,12 +226,13 @@ pub extern "C" fn z_info_get(info: z_info_t, key: u64) -> z_owned_string_t {
     }
 }
 
-/// An owned array of owned NULL terminated strings, allocated by zenoh.
-/// Use `z_str_array_free` to destroy.
+/// An owned array of owned NULL terminated strings, allocated by zenoh.  
 ///
-/// Members:
-///   char *const *val: A pointer to the array.
-///   unsigned int len: The length of the array.
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_str_array_t {
     pub val: *const *const c_char,
@@ -259,11 +279,7 @@ where
     }
 }
 
-/// Free an array of NULL terminated strings and it's contained NULL terminated strings recursively.
-///
-/// Parameters:
-///     strs: The array of NULL terminated strings to free.
-///
+/// Frees `strs` and invalidates it for double-free safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_str_array_free(strs: &mut z_owned_str_array_t) {
@@ -275,19 +291,34 @@ pub unsafe extern "C" fn z_str_array_free(strs: &mut z_owned_str_array_t) {
     for locator in locators {
         std::mem::drop(CString::from_raw(locator as *mut c_char));
     }
+    strs.val = std::ptr::null();
+    strs.len = 0;
 }
 
-/// An owned, zenoh-allocated, array of bytes.
+/// Returns `true` if
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
+    !strs.val.is_null() || strs.len == 0
+}
+
+/// A zenoh-allocated array of bytes.   
 ///
-/// Members:
-///   const unsigned char *val: A pointer to the bytes array.
-///   unsigned int len: The length of the bytes array.
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
 ///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_bytes_t {
     pub val: *const u8,
     pub len: size_t,
 }
+
+/// A borrowed array of bytes.  
 #[repr(C)]
 pub struct z_bytes_t {
     pub val: *const u8,
@@ -301,12 +332,9 @@ impl Default for z_owned_bytes_t {
         }
     }
 }
-/// Free a :c:type:`z_bytes_t`.
-///
-/// Parameters:
-///    b : The array to free.
-#[allow(clippy::missing_safety_doc)]
+/// Frees `b` and invalidates it for double-free safety.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_free(b: &mut z_owned_bytes_t) {
     if !b.val.is_null() {
         std::mem::drop(Box::from_raw(
@@ -315,13 +343,14 @@ pub unsafe extern "C" fn z_bytes_free(b: &mut z_owned_bytes_t) {
         b.val = std::ptr::null_mut();
     }
 }
-#[allow(clippy::missing_safety_doc)]
+/// Returns `true` if `b` is valid.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_check(b: &z_owned_bytes_t) -> bool {
     !b.val.is_null()
 }
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_borrow(b: &z_owned_bytes_t) -> z_bytes_t {
     z_bytes_t {
         val: b.val,
@@ -364,11 +393,11 @@ impl From<ZBuf> for z_owned_bytes_t {
     }
 }
 
-/// A resource key.
+/// A zenoh-allocated resource key.
 ///
 /// Resources are identified by URI like string names.  
 /// Examples : ``"/some/resource/key"``.
-/// Resource names can be mapped to numerical ids through :c:func:`zn_declare_resource`
+/// Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
 /// for wire and computation efficiency.
 ///
 /// A resource key can be either:
@@ -376,15 +405,30 @@ impl From<ZBuf> for z_owned_bytes_t {
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.
 ///
-/// Members:
-///   unsigned long id: The id or prefix of this resource key. ``0`` if empty.
-///   z_string_t suffix: The suffix of the ressource key. May be an empty string.
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_reskey_t {
     pub id: c_ulong,
     pub suffix: z_owned_string_t,
 }
-
+/// A borrowed ressource key.
+///
+/// Resources are identified by URI like string names.  
+/// Examples : ``"/some/resource/key"``.
+/// Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
+/// for wire and computation efficiency.
+///
+/// A resource key can be either:
+///   - A plain string resource name.
+///   - A pure numerical id.
+///   - The combination of a numerical prefix and a string suffix.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_reskey_t {
@@ -392,34 +436,31 @@ pub struct z_reskey_t {
     pub suffix: *const c_char,
 }
 
-/// Free a :c:type:`z_owned_reskey_t`.
-///
-/// Parameters:
-///    b : The array to free.
-#[allow(clippy::missing_safety_doc)]
+/// Constructs a zenoh-owned ressource key. `suffix`'s contents will be copied.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reskey_new(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
     z_owned_reskey_t {
         id,
         suffix: z_string_new(suffix),
     }
 }
-#[allow(clippy::missing_safety_doc)]
+/// Constructs a borrowed ressource key. The constructed value is valid as long as `suffix` is.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reskey_new_borrowed(id: c_ulong, suffix: *const c_char) -> z_reskey_t {
     z_reskey_t { id, suffix }
 }
-/// Free a :c:type:`z_owned_reskey_t`.
-///
-/// Parameters:
-///    b : The array to free.
-#[allow(clippy::missing_safety_doc)]
+/// Frees `reskey` and invalidates it for double-free safety.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reskey_free(reskey: &mut z_owned_reskey_t) {
-    z_string_free(&mut reskey.suffix)
+    z_string_free(&mut reskey.suffix);
+    reskey.id = 0;
 }
-#[allow(clippy::missing_safety_doc)]
+/// Returns `true` if `reskey` is valid.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reskey_check(reskey: &z_owned_reskey_t) -> bool {
     reskey.id != 0 || z_string_check(&reskey.suffix)
 }
@@ -519,18 +560,35 @@ impl FromRaw<z_owned_reskey_t> for ResKey<'static> {
     }
 }
 
-/// A zenoh-net data sample.
+/// A zenoh-allocated data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
 ///
 /// Members:
-///   z_string_t key: The resource key of this data sample.
-///   z_bytes_t value: The value of this data sample.
+///   `z_owned_string_t key`: The resource key of this data sample.
+///   `z_owned_bytes_t value`: The value of this data sample.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
+/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_sample_t {
     pub key: z_owned_string_t,
     pub value: z_owned_bytes_t,
 }
+
+/// A borrowed data sample.
+///
+/// A sample is the value associated to a given resource at a given point in time.
+///
+/// Members:
+///   `z_string_t key`: The resource key of this data sample.
+///   `z_bytes_t value`: The value of this data sample.
 #[repr(C)]
 pub struct z_sample_t {
     pub key: z_string_t,
@@ -547,24 +605,21 @@ impl From<Sample> for z_owned_sample_t {
     }
 }
 
-/// Free a :c:type:`zn_sample_t` contained key and value.
-///
-/// Parameters:
-///     sample: The :c:type:`zn_sample_t` to free.
-///
-#[allow(clippy::missing_safety_doc)]
+/// Frees `sample`, invalidating it for double-free safety.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_free(sample: &mut z_owned_sample_t) {
     z_string_free(&mut sample.key);
     z_bytes_free(&mut sample.value);
 }
-#[allow(clippy::missing_safety_doc)]
+/// Returns `true` if `sample` is valid.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
     z_string_check(&sample.key) && z_bytes_check(&sample.value)
 }
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_borrow(sample: &z_owned_sample_t) -> z_sample_t {
     z_sample_t {
         key: z_string_borrow(&sample.key),
@@ -572,13 +627,18 @@ pub unsafe extern "C" fn z_sample_borrow(sample: &z_owned_sample_t) -> z_sample_
     }
 }
 
-/// A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
+/// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
 ///
 /// Members:
-///   unsigned int whatami: The kind of zenoh entity.
-///   z_bytes_t pid: The peer id of the scouted entity (empty if absent).
-///   z_str_array_t locators: The locators of the scouted entity.
+///   `unsigned int whatami`: The kind of zenoh entity.
+///   `z_owned_bytes_t pid`: The peer id of the scouted entity (empty if absent).
+///   `z_owned_str_array_t locators`: The locators of the scouted entity.
 ///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_hello_t {
     pub whatami: c_uint,
@@ -599,12 +659,32 @@ impl From<Hello> for z_owned_hello_t {
     }
 }
 
-/// An array of :c:struct:`zn_hello_t` messages.
+/// Frees `hello`, invalidating it for double-free safety.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_free(hello: &mut z_owned_hello_t) {
+    z_bytes_free(&mut hello.pid);
+    z_str_array_free(&mut hello.locators);
+    hello.whatami = 0;
+}
+/// Returns `true` if `hello` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
+    hello.whatami != 0 && z_bytes_check(&hello.pid) && z_str_array_check(&hello.locators)
+}
+
+/// A zenoh-allocated array of `z_hello_t` messages.
 ///
 /// Members:
-///   const zn_hello_t *val: A pointer to the array.
+///   const z_hello_t *val: A pointer to the array.
 ///   unsigned int len: The length of the array.
 ///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_hello_array_t {
     pub val: *const z_owned_hello_t,
@@ -626,49 +706,52 @@ impl From<Vec<Hello>> for z_owned_hello_array_t {
         res
     }
 }
-/// Free an array of :c:struct:`zn_hello_t` messages and it's contained :c:struct:`zn_hello_t` messages recursively.
-///
-/// Parameters:
-///     strs: The array of :c:struct:`zn_hello_t` messages to free.
-///
-#[allow(clippy::missing_safety_doc)]
+/// Frees `hellos`, invalidating it for double-free safety.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_array_free(hellos: &mut z_owned_hello_array_t) {
-    let hellos = Vec::from_raw_parts(
+    let hellos_vec = Vec::from_raw_parts(
         hellos.val as *mut z_owned_hello_t,
         hellos.len as usize,
         hellos.len as usize,
     );
-    for mut hello in hellos {
-        z_bytes_free(&mut hello.pid);
-        z_str_array_free(&mut hello.locators);
+    for mut hello in hellos_vec {
+        z_hello_free(&mut hello);
     }
+    hellos.val = std::ptr::null_mut();
+    hellos.len = 0;
+}
+/// Returns `true` if `hellos` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_array_check(hellos: &z_owned_hello_array_t) -> bool {
+    !hellos.val.is_null() || hellos.len == 0
 }
 
 /// The behavior to adopt in case of congestion while routing some data.
 ///
-///     - **zn_congestion_control_t_BLOCK**
-///     - **zn_congestion_control_t_DROP**
+///     - **z_congestion_control_t_BLOCK**
+///     - **z_congestion_control_t_DROP**
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub enum zn_congestion_control_t {
+pub enum z_congestion_control_t {
     BLOCK,
     DROP,
 }
 
-impl From<zn_congestion_control_t> for CongestionControl {
-    fn from(val: zn_congestion_control_t) -> Self {
+impl From<z_congestion_control_t> for CongestionControl {
+    fn from(val: z_congestion_control_t) -> Self {
         match val {
-            zn_congestion_control_t::BLOCK => CongestionControl::Block,
-            zn_congestion_control_t::DROP => CongestionControl::Drop,
+            z_congestion_control_t::BLOCK => CongestionControl::Block,
+            z_congestion_control_t::DROP => CongestionControl::Drop,
         }
     }
 }
 
 /// The subscription reliability.
 ///
-///     - **zn_reliability_t_BEST_EFFORT**
-///     - **zn_reliability_t_RELIABLE**
+///     - **z_reliability_t_BEST_EFFORT**
+///     - **z_reliability_t_RELIABLE**
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum z_reliability_t {
@@ -698,8 +781,8 @@ impl From<z_reliability_t> for Reliability {
 
 /// The subscription mode.
 ///
-///     - **zn_submode_t_PUSH**
-///     - **zn_submode_t_PULL**
+///     - **z_submode_t_PUSH**
+///     - **z_submode_t_PULL**
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum z_submode_t {
@@ -731,9 +814,9 @@ impl From<z_submode_t> for SubMode {
 /// Equivalent of the rust `Option<zenoh::time::Period>` type, where `None` is represented by the `period` field being 0-valued.
 ///
 /// Members:
-///     unsigned int origin:
-///     unsigned int period:
-///     unsigned int duration:
+///     `unsigned int origin`
+///     `unsigned int period`
+///     `unsigned int duration`
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct z_period_t {
@@ -790,12 +873,12 @@ impl From<z_period_t> for Option<Period> {
     }
 }
 
-/// Informations to be passed to :c:func:`zn_declare_subscriber` to configure the created :c:type:`zn_subscriber_t`.
+/// Informations to be passed to :c:func:`z_declare_subscriber` to configure the created :c:type:`z_subscriber_t`.
 ///
 /// Members:
-///     zn_reliability_t reliability: The subscription reliability.
-///     zn_submode_t mode: The subscription mode.
-///     zn_period_t *period: The subscription period.
+///     `z_reliability_t reliability`: The subscription reliability.
+///     `z_submode_t mode`: The subscription mode.
+///     `z_period_t *period`: The subscription period.
 #[repr(C)]
 pub struct z_subinfo_t {
     pub reliability: z_reliability_t,
@@ -838,13 +921,18 @@ pub extern "C" fn z_subinfo_default() -> z_subinfo_t {
     SubInfo::default().into()
 }
 
-/// An reply to a :c:func:`zn_query` (or :c:func:`zn_query_collect`).
+/// An owned reply to a `z_query` (or `z_query_collect`).
 ///
 /// Members:
-///   zn_sample_t data: a :c:type:`zn_sample_t` containing the key and value of the reply.
-///   unsigned int source_kind: The kind of the replier that sent this reply.
-///   z_bytes_t replier_id: The id of the replier that sent this reply.
+///   `z_owned_sample_t data`: a :c:type:`z_sample_t` containing the key and value of the reply.
+///   `unsigned int source_kind`: The kind of the replier that sent this reply.
+///   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
 ///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_owned_reply_data_t {
@@ -876,40 +964,41 @@ impl From<Reply> for z_owned_reply_data_t {
     }
 }
 
-/// Free a :c:type:`zn_reply_data_t` contained data and replier_id.
-///
-/// Parameters:
-///     reply_data: The :c:type:`zn_reply_data_t` to free.
-///
-#[allow(clippy::missing_safety_doc)]
+/// Frees `reply_data`, invalidating it for double-free safety.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_data_free(reply_data: &mut z_owned_reply_data_t) {
     z_sample_free(&mut reply_data.data);
     z_bytes_free(&mut reply_data.replier_id);
 }
-#[allow(clippy::missing_safety_doc)]
+/// Returns `true` if `reply_data` is valid.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_data_check(reply_data: &z_owned_reply_data_t) -> bool {
     z_sample_check(&reply_data.data) && z_bytes_check(&reply_data.replier_id)
 }
 
-/// An array of :c:type:`zn_reply_data_t`.
-/// Result of :c:func:`zn_query_collect`.
+/// A zenoh-allocated array of `z_owned_reply_data_t`.
 ///
 /// Members:
-///   char *const *val: A pointer to the array.
-///   unsigned int len: The length of the array.
+///   `char *const *val`: A pointer to the array.
+///   `unsigned int len`: The length of the array.
 ///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_reply_data_array_t {
     pub val: *const z_owned_reply_data_t,
     pub len: size_t,
 }
 
-/// Free a :c:type:`zn_reply_data_array_t` and it's contained replies.
+/// Free a :c:type:`z_reply_data_array_t` and it's contained replies.
 ///
 /// Parameters:
-///     replies: The :c:type:`zn_reply_data_array_t` to free.
+///     replies: The :c:type:`z_reply_data_array_t` to free.
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -928,13 +1017,13 @@ pub unsafe extern "C" fn z_reply_data_array_free(replies: &mut z_owned_reply_dat
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_reply_data_array_check(replies: &z_owned_reply_data_array_t) -> bool {
-    !replies.val.is_null()
+    !replies.val.is_null() || replies.len == 0
 }
 
-/// The possible values of :c:member:`zn_reply_t.tag`
+/// The possible values of :c:member:`z_reply_t.tag`
 ///
-///     - **zn_reply_t_Tag_DATA**: The reply contains some data.
-///     - **zn_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
+///     - **z_reply_t_Tag_DATA**: The reply contains some data.
+///     - **z_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -943,38 +1032,45 @@ pub enum z_reply_t_Tag {
     FINAL,
 }
 
-/// An reply to a :c:func:`zn_query`.
+/// An owned reply to a :c:func:`z_query`.
 ///
 /// Members:
-///   zn_reply_t_Tag tag: Indicates if the reply contains data or if it's a FINAL reply.
-///   zn_reply_data_t data: The reply data if :c:member:`zn_reply_t.tag` equals :c:member:`zn_reply_t_Tag.zn_reply_t_Tag_DATA`.
+///   `z_reply_t_Tag tag`: Indicates if the reply contains data or if it's a FINAL reply.
+///   `z_owned_reply_data_t data`: The reply data if :c:member:`z_reply_t.tag` equals :c:member:`z_reply_t_Tag.z_reply_t_Tag_DATA`.
 ///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_owned_reply_t {
     pub tag: z_reply_t_Tag,
     pub data: z_owned_reply_data_t,
 }
-#[allow(clippy::missing_safety_doc)]
+/// Frees `reply`, invalidating it for double-free safety.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_free(reply: &mut z_owned_reply_t) {
     if reply.tag == z_reply_t_Tag::DATA {
         z_reply_data_free(&mut reply.data)
     }
 }
-#[allow(clippy::missing_safety_doc)]
+/// Returns `true` if `reply` is valid.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_check(reply: &z_owned_reply_t) -> bool {
     z_reply_t_Tag::FINAL == reply.tag
         || (z_reply_t_Tag::DATA == reply.tag && z_reply_data_check(&reply.data))
 }
 
-/// The possible values of :c:member:`zn_target_t.tag`.
+/// The possible values of :c:member:`z_target_t.tag`.
 ///
-///     - **zn_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
-///     - **zn_target_t_COMPLETE**: A set of complete queryables.
-///     - **zn_target_t_ALL**: All matching queryables.
-///     - **zn_target_t_NONE**: No queryables.
+///     - **z_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+///     - **z_target_t_COMPLETE**: A set of complete queryables.
+///     - **z_target_t_ALL**: All matching queryables.
+///     - **z_target_t_NONE**: No queryables.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum z_target_t {
@@ -1016,17 +1112,17 @@ impl From<z_target_t> for Target {
     }
 }
 
-/// Create a default :c:type:`zn_target_t`.
+/// Create a default :c:type:`z_target_t`.
 #[no_mangle]
 pub extern "C" fn z_target_default() -> z_target_t {
     Target::default().into()
 }
 
-/// The zenoh-net queryables that should be target of a :c:func:`zn_query`.
+/// The zenoh-net queryables that should be target of a `z_query`.
 ///
 /// Members:
-///     unsigned int kind: A mask of queryable kinds.
-///     zn_target_t target: The query target.
+///     `unsigned int kind`: A mask of queryable kinds.
+///     `z_target_t target`: The query target.
 #[repr(C)]
 pub struct z_query_target_t {
     pub kind: c_uint,
@@ -1051,17 +1147,17 @@ impl From<z_query_target_t> for QueryTarget {
     }
 }
 
-/// Create a default :c:type:`zn_query_target_t`.
+/// Create a default `z_query_target_t`.
 #[no_mangle]
 pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()
 }
 
-/// The kind of consolidation that should be applied on replies to a :c:func:`zn_query`.
+/// The kind of consolidation that should be applied on replies to a :c:func:`z_query`.
 ///
-///     - **zn_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
-///     - **zn_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
-///     - **zn_consolidation_mode_t_NONE**: No consolidation.
+///     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
+///     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
+///     - **z_consolidation_mode_t_NONE**: No consolidation.
 #[repr(C)]
 pub enum z_consolidation_mode_t {
     FULL,
@@ -1091,13 +1187,13 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
     }
 }
 
-/// The kind of consolidation that should be applied on replies to a :c:func:`zn_query`
+/// The kind of consolidation that should be applied on replies to a :c:func:`z_query`
 /// at the different stages of the reply process.
 ///
 /// Members:
-///   zn_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
-///   zn_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
-///   zn_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
+///   z_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
+///   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
+///   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
 #[repr(C)]
 pub struct z_query_consolidation_t {
     pub first_routers: z_consolidation_mode_t,
@@ -1127,7 +1223,7 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
     }
 }
 
-/// Create a default :c:type:`zn_query_consolidation_t`.
+/// Create a default :c:type:`z_query_consolidation_t`.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()

@@ -13,8 +13,8 @@
  */
 
 
-#ifndef ZENOH_GEN
-#define ZENOH_GEN
+#ifndef ZENOH_FUNCTIONS
+#define ZENOH_FUNCTIONS
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -32,14 +32,16 @@
 
 #define Z_QUERYABLE_PADDING_U64 1
 
+#define Z_WRITE_OPTIONS_PADDING_U64 6
+
 #define Z_INFO_PADDING_U64 6
 
 /**
- * The kind of consolidation that should be applied on replies to a :c:func:`zn_query`.
+ * The kind of consolidation that should be applied on replies to a :c:func:`z_query`.
  *
- *     - **zn_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
- *     - **zn_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
- *     - **zn_consolidation_mode_t_NONE**: No consolidation.
+ *     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
+ *     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
+ *     - **z_consolidation_mode_t_NONE**: No consolidation.
  */
 typedef enum z_consolidation_mode_t {
   z_consolidation_mode_t_FULL,
@@ -50,8 +52,8 @@ typedef enum z_consolidation_mode_t {
 /**
  * The subscription reliability.
  *
- *     - **zn_reliability_t_BEST_EFFORT**
- *     - **zn_reliability_t_RELIABLE**
+ *     - **z_reliability_t_BEST_EFFORT**
+ *     - **z_reliability_t_RELIABLE**
  */
 typedef enum z_reliability_t {
   z_reliability_t_BEST_EFFORT,
@@ -59,10 +61,10 @@ typedef enum z_reliability_t {
 } z_reliability_t;
 
 /**
- * The possible values of :c:member:`zn_reply_t.tag`
+ * The possible values of :c:member:`z_reply_t.tag`
  *
- *     - **zn_reply_t_Tag_DATA**: The reply contains some data.
- *     - **zn_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
+ *     - **z_reply_t_Tag_DATA**: The reply contains some data.
+ *     - **z_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
  */
 typedef enum z_reply_t_Tag {
   z_reply_t_Tag_DATA,
@@ -72,8 +74,8 @@ typedef enum z_reply_t_Tag {
 /**
  * The subscription mode.
  *
- *     - **zn_submode_t_PUSH**
- *     - **zn_submode_t_PULL**
+ *     - **z_submode_t_PUSH**
+ *     - **z_submode_t_PULL**
  */
 typedef enum z_submode_t {
   z_submode_t_PUSH,
@@ -89,56 +91,99 @@ typedef enum z_write_options_field_t {
 
 typedef struct z_query_t z_query_t;
 
-typedef struct z_write_options_t z_write_options_t;
-
+/**
+ * A borrowed array of bytes.
+ */
 typedef struct z_bytes_t {
   const uint8_t *val;
   size_t len;
 } z_bytes_t;
 
 /**
- * An owned, zenoh-allocated, array of bytes.
+ * A zenoh-allocated array of bytes.
  *
- * Members:
- *   const unsigned char *val: A pointer to the bytes array.
- *   unsigned int len: The length of the bytes array.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
  *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_bytes_t {
   const uint8_t *val;
   size_t len;
 } z_owned_bytes_t;
 
+/**
+ * An owned zenoh session.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
 typedef struct z_owned_session_t {
   uint64_t _0[Z_SESSION_PADDING_U64];
 } z_owned_session_t;
 
+/**
+ * An owned zenoh configuration.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
 typedef struct z_owned_config_t {
   uint64_t _0[Z_CONFIG_PADDING_U64];
 } z_owned_config_t;
 
+/**
+ * A borrowed zenoh config.
+ */
 typedef struct z_config_t {
   const struct z_owned_config_t *_0;
 } z_config_t;
 
 /**
  * An owned, zenoh-allocated, null-terminated, string.
- * Use `z_string_new` to construct and `z_string_free` to destroy.
  *
- * Members:
- *     `start`: the start of the held null-terminated string. `nullptr` is a legal value for `start`
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_string_t {
   const char *_borrow;
 } z_owned_string_t;
 
 /**
+ * A borrowed null-terminated string.
+ */
+typedef const char *z_string_t;
+
+/**
  * An owned array of owned NULL terminated strings, allocated by zenoh.
- * Use `z_str_array_free` to destroy.
  *
- * Members:
- *   char *const *val: A pointer to the array.
- *   unsigned int len: The length of the array.
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_str_array_t {
   const char *const *val;
@@ -146,13 +191,18 @@ typedef struct z_owned_str_array_t {
 } z_owned_str_array_t;
 
 /**
- * A hello message returned by a zenoh entity to a scout message sent with :c:func:`zn_scout`.
+ * A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
  *
  * Members:
- *   unsigned int whatami: The kind of zenoh entity.
- *   z_bytes_t pid: The peer id of the scouted entity (empty if absent).
- *   z_str_array_t locators: The locators of the scouted entity.
+ *   `unsigned int whatami`: The kind of zenoh entity.
+ *   `z_owned_bytes_t pid`: The peer id of the scouted entity (empty if absent).
+ *   `z_owned_str_array_t locators`: The locators of the scouted entity.
  *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_hello_t {
   unsigned int whatami;
@@ -161,22 +211,42 @@ typedef struct z_owned_hello_t {
 } z_owned_hello_t;
 
 /**
- * An array of :c:struct:`zn_hello_t` messages.
+ * A zenoh-allocated array of `z_hello_t` messages.
  *
  * Members:
- *   const zn_hello_t *val: A pointer to the array.
+ *   const z_hello_t *val: A pointer to the array.
  *   unsigned int len: The length of the array.
  *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_hello_array_t {
   const struct z_owned_hello_t *val;
   size_t len;
 } z_owned_hello_array_t;
 
+/**
+ * A map of integers to strings providing informations on the zenoh session.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
 typedef struct z_owned_info_t {
   uint64_t _0[Z_INFO_PADDING_U64];
 } z_owned_info_t;
 
+/**
+ * A borrowed zenoh session.
+ */
 typedef struct z_session_t {
   const struct z_owned_session_t *_0;
 } z_session_t;
@@ -185,26 +255,63 @@ typedef struct z_info_t {
   const struct z_owned_info_t *_0;
 } z_info_t;
 
+/**
+ * An owned zenoh publisher.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
 typedef struct z_owned_publisher_t {
   uint64_t _0[Z_PUBLISHER_PADDING_U64];
 } z_owned_publisher_t;
 
+/**
+ * An owned zenoh subscriber.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
 typedef struct z_owned_subscriber_t {
   uint64_t _0[Z_SUBSCRIBER_PADDING_U64];
 } z_owned_subscriber_t;
 
+/**
+ * A borrowed ressource key.
+ *
+ * Resources are identified by URI like string names.
+ * Examples : ``"/some/resource/key"``.
+ * Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
+ * for wire and computation efficiency.
+ *
+ * A resource key can be either:
+ *   - A plain string resource name.
+ *   - A pure numerical id.
+ *   - The combination of a numerical prefix and a string suffix.
+ */
 typedef struct z_reskey_t {
   unsigned long id;
   const char *suffix;
 } z_reskey_t;
 
 /**
- * The possible values of :c:member:`zn_target_t.tag`.
+ * The possible values of :c:member:`z_target_t.tag`.
  *
- *     - **zn_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
- *     - **zn_target_t_COMPLETE**: A set of complete queryables.
- *     - **zn_target_t_ALL**: All matching queryables.
- *     - **zn_target_t_NONE**: No queryables.
+ *     - **z_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+ *     - **z_target_t_COMPLETE**: A set of complete queryables.
+ *     - **z_target_t_ALL**: All matching queryables.
+ *     - **z_target_t_NONE**: No queryables.
  */
 typedef enum z_target_t_Tag {
   z_target_t_BEST_MATCHING,
@@ -226,11 +333,11 @@ typedef struct z_target_t {
 } z_target_t;
 
 /**
- * The zenoh-net queryables that should be target of a :c:func:`zn_query`.
+ * The zenoh-net queryables that should be target of a `z_query`.
  *
  * Members:
- *     unsigned int kind: A mask of queryable kinds.
- *     zn_target_t target: The query target.
+ *     `unsigned int kind`: A mask of queryable kinds.
+ *     `z_target_t target`: The query target.
  */
 typedef struct z_query_target_t {
   unsigned int kind;
@@ -238,13 +345,13 @@ typedef struct z_query_target_t {
 } z_query_target_t;
 
 /**
- * The kind of consolidation that should be applied on replies to a :c:func:`zn_query`
+ * The kind of consolidation that should be applied on replies to a :c:func:`z_query`
  * at the different stages of the reply process.
  *
  * Members:
- *   zn_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
- *   zn_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
- *   zn_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
+ *   z_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
+ *   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
+ *   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
  */
 typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t first_routers;
@@ -253,13 +360,22 @@ typedef struct z_query_consolidation_t {
 } z_query_consolidation_t;
 
 /**
- * A zenoh-net data sample.
+ * A zenoh-allocated data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
  *
  * Members:
- *   z_string_t key: The resource key of this data sample.
- *   z_bytes_t value: The value of this data sample.
+ *   `z_owned_string_t key`: The resource key of this data sample.
+ *   `z_owned_bytes_t value`: The value of this data sample.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_sample_t {
   struct z_owned_string_t key;
@@ -267,13 +383,18 @@ typedef struct z_owned_sample_t {
 } z_owned_sample_t;
 
 /**
- * An reply to a :c:func:`zn_query` (or :c:func:`zn_query_collect`).
+ * An owned reply to a `z_query` (or `z_query_collect`).
  *
  * Members:
- *   zn_sample_t data: a :c:type:`zn_sample_t` containing the key and value of the reply.
- *   unsigned int source_kind: The kind of the replier that sent this reply.
- *   z_bytes_t replier_id: The id of the replier that sent this reply.
+ *   `z_owned_sample_t data`: a :c:type:`z_sample_t` containing the key and value of the reply.
+ *   `unsigned int source_kind`: The kind of the replier that sent this reply.
+ *   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
  *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_reply_data_t {
   struct z_owned_sample_t data;
@@ -282,12 +403,17 @@ typedef struct z_owned_reply_data_t {
 } z_owned_reply_data_t;
 
 /**
- * An reply to a :c:func:`zn_query`.
+ * An owned reply to a :c:func:`z_query`.
  *
  * Members:
- *   zn_reply_t_Tag tag: Indicates if the reply contains data or if it's a FINAL reply.
- *   zn_reply_data_t data: The reply data if :c:member:`zn_reply_t.tag` equals :c:member:`zn_reply_t_Tag.zn_reply_t_Tag_DATA`.
+ *   `z_reply_t_Tag tag`: Indicates if the reply contains data or if it's a FINAL reply.
+ *   `z_owned_reply_data_t data`: The reply data if :c:member:`z_reply_t.tag` equals :c:member:`z_reply_t_Tag.z_reply_t_Tag_DATA`.
  *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_reply_t {
   enum z_reply_t_Tag tag;
@@ -295,29 +421,45 @@ typedef struct z_owned_reply_t {
 } z_owned_reply_t;
 
 /**
- * An array of :c:type:`zn_reply_data_t`.
- * Result of :c:func:`zn_query_collect`.
+ * A zenoh-allocated array of `z_owned_reply_data_t`.
  *
  * Members:
- *   char *const *val: A pointer to the array.
- *   unsigned int len: The length of the array.
+ *   `char *const *val`: A pointer to the array.
+ *   `unsigned int len`: The length of the array.
  *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_reply_data_array_t {
   const struct z_owned_reply_data_t *val;
   size_t len;
 } z_owned_reply_data_array_t;
 
+/**
+ * An owned zenoh queryable.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
 typedef struct z_owned_queryable_t {
   uint64_t _0[Z_QUERYABLE_PADDING_U64];
 } z_owned_queryable_t;
 
 /**
- * A resource key.
+ * A zenoh-allocated resource key.
  *
  * Resources are identified by URI like string names.
  * Examples : ``"/some/resource/key"``.
- * Resource names can be mapped to numerical ids through :c:func:`zn_declare_resource`
+ * Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
  * for wire and computation efficiency.
  *
  * A resource key can be either:
@@ -325,9 +467,14 @@ typedef struct z_owned_queryable_t {
  *   - A pure numerical id.
  *   - The combination of a numerical prefix and a string suffix.
  *
- * Members:
- *   unsigned long id: The id or prefix of this resource key. ``0`` if empty.
- *   z_string_t suffix: The suffix of the ressource key. May be an empty string.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_reskey_t {
   unsigned long id;
@@ -339,9 +486,9 @@ typedef struct z_owned_reskey_t {
  * Equivalent of the rust `Option<zenoh::time::Period>` type, where `None` is represented by the `period` field being 0-valued.
  *
  * Members:
- *     unsigned int origin:
- *     unsigned int period:
- *     unsigned int duration:
+ *     `unsigned int origin`
+ *     `unsigned int period`
+ *     `unsigned int duration`
  */
 typedef struct z_period_t {
   unsigned int origin;
@@ -350,12 +497,12 @@ typedef struct z_period_t {
 } z_period_t;
 
 /**
- * Informations to be passed to :c:func:`zn_declare_subscriber` to configure the created :c:type:`zn_subscriber_t`.
+ * Informations to be passed to :c:func:`z_declare_subscriber` to configure the created :c:type:`z_subscriber_t`.
  *
  * Members:
- *     zn_reliability_t reliability: The subscription reliability.
- *     zn_submode_t mode: The subscription mode.
- *     zn_period_t *period: The subscription period.
+ *     `z_reliability_t reliability`: The subscription reliability.
+ *     `z_submode_t mode`: The subscription mode.
+ *     `z_period_t *period`: The subscription period.
  */
 typedef struct z_subinfo_t {
   enum z_reliability_t reliability;
@@ -363,12 +510,23 @@ typedef struct z_subinfo_t {
   struct z_period_t period;
 } z_subinfo_t;
 
-typedef const char *z_string_t;
-
+/**
+ * A borrowed data sample.
+ *
+ * A sample is the value associated to a given resource at a given point in time.
+ *
+ * Members:
+ *   `z_string_t key`: The resource key of this data sample.
+ *   `z_bytes_t value`: The value of this data sample.
+ */
 typedef struct z_sample_t {
   z_string_t key;
   struct z_bytes_t value;
 } z_sample_t;
+
+typedef struct z_write_options_t {
+  uint64_t _0[Z_WRITE_OPTIONS_PADDING_U64];
+} z_write_options_t;
 
 #define z_period_NONE (z_period_t){ .origin = 0, .period = 0, .duration = 0 }
 
@@ -416,101 +574,85 @@ extern const unsigned int ZN_INFO_ROUTER_PID_KEY;
 
 struct z_bytes_t z_bytes_borrow(const struct z_owned_bytes_t *b);
 
+/**
+ * Returns `true` if `b` is valid.
+ */
 bool z_bytes_check(const struct z_owned_bytes_t *b);
 
 /**
- * Free a :c:type:`z_bytes_t`.
- *
- * Parameters:
- *    b : The array to free.
+ * Frees `b` and invalidates it for double-free safety.
  */
 void z_bytes_free(struct z_owned_bytes_t *b);
 
 /**
- * Close a zenoh-net session.
- *
- * Parameters:
- *     session: A zenoh-net session.
+ * Closes a zenoh-net session. This frees and invalidates `session` for double-free safety.
  */
 void z_close(struct z_owned_session_t *session);
 
 struct z_config_t z_config_borrow(const struct z_owned_config_t *s);
 
-bool z_config_check(const struct z_owned_config_t *ps);
+/**
+ * Returns `true` if `config` is valid.
+ */
+bool z_config_check(const struct z_owned_config_t *config);
 
 /**
- * Create a default set of properties for client mode zenoh-net session configuration.
- * If peer is not null, it is added to the configuration as remote peer.
- *
- * Parameters:
- *   peer: An optional peer locator.
+ * Constructs a default configuration client mode zenoh session.
+ * If `peer` is not null, it is added to the configuration as remote peer.
  */
 struct z_owned_config_t z_config_client(char *peer);
 
 /**
- * Create a default set of properties for zenoh-net session configuration.
+ * Create an default, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_default(void);
 
 /**
- * Create an empty set of properties for zenoh-net session configuration.
+ * Create an empty, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_empty(void);
 
 /**
- * Free a set of properties.
- *
- * Parameters:
- *   ps: A pointer to the properties.
+ * Frees `config`, invalidating it for double-free safety.
  */
-void z_config_free(struct z_owned_config_t *ps);
+void z_config_free(struct z_owned_config_t *config);
 
 /**
- * Create a set of properties for zenoh-net session configuration, parsing a file listing the properties
- * (1 "key=value" per line, comments starting with '#' character are allowed).
- * Returns null if parsing fails.
- *
- * Parameters:
- *   path: The path to the file (must be in UTF-8).
+ * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  */
 struct z_owned_config_t z_config_from_file(const char *path);
 
 /**
- * Create a set of properties for zenoh-net session configuration, parsing a string listing the properties
- * in such format: "mode=client;peer=tcp/127.0.0.1:7447".
+ * Reads a configuration from a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
 struct z_owned_config_t z_config_from_str(const char *s);
 
 /**
- * Get the property with the given key from a properties map.
- *
- * Parameters:
- *     ps: A pointer to properties map.
- *     key: The key of the property.
- *
- * Returns:
- *     The value of the property with key ``key`` in properties map ``ps``.
+ * Get the property with the given integer key from the configuration.
  */
-struct z_owned_string_t z_config_get(const struct z_config_t *ps, unsigned int key);
+struct z_owned_string_t z_config_get(struct z_config_t config, unsigned int key);
 
 /**
- * Get the length of the given properties map.
- *
- * Parameters:
- *     ps: A pointer to the properties map.
- *
- * Returns:
- *     The length of the given properties map.
+ * Gets the number of available keys for configuration.
  */
-unsigned int z_config_len(const struct z_config_t *ps);
+unsigned int z_config_len(struct z_config_t config);
 
 /**
- * Return a new empty configuration.
+ * Return a new, zenoh-allocated, empty configuration.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 struct z_owned_config_t z_config_new(void);
 
 /**
- * Create a default set of properties for peer mode zenoh-net session configuration.
+ * Constructs a default configuration peer mode zenoh session.
  */
 struct z_owned_config_t z_config_peer(void);
 
@@ -519,92 +661,83 @@ struct z_owned_config_t z_config_peer(void);
  * If a property with the same key already exists in the properties map, it is replaced.
  *
  * Parameters:
- *   ps: A pointer to the properties map.
+ *   config: A pointer to the properties map.
  *   key: The key of the property to add.
  *   value: The value of the property to add.
- *
- * Returns:
- *     A pointer to the updated properties map.
  */
-void z_config_set(struct z_config_t config, unsigned long key, struct z_owned_string_t value);
+void z_config_set(struct z_config_t config, unsigned long key, z_string_t value);
 
 /**
- * Convert a set of properties into a string.
- *
- * Parameters:
- *     config: The set of properties.
- *
- * Returns:
- *     A keys/values string containing with such format: "key1=value1;key2=value2;...".
+ * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
-struct z_owned_string_t z_config_to_str(const struct z_config_t *config);
+struct z_owned_string_t z_config_to_str(struct z_config_t config);
 
 /**
- * Free an array of :c:struct:`zn_hello_t` messages and it's contained :c:struct:`zn_hello_t` messages recursively.
- *
- * Parameters:
- *     strs: The array of :c:struct:`zn_hello_t` messages to free.
- *
+ * Returns `true` if `hellos` is valid.
+ */
+bool z_hello_array_check(const struct z_owned_hello_array_t *hellos);
+
+/**
+ * Frees `hellos`, invalidating it for double-free safety.
  */
 void z_hello_array_free(struct z_owned_hello_array_t *hellos);
 
 /**
+ * Returns `true` if `hello` is valid.
+ */
+bool z_hello_check(const struct z_owned_hello_t *hello);
+
+/**
+ * Frees `hello`, invalidating it for double-free safety.
+ */
+void z_hello_free(struct z_owned_hello_t *hello);
+
+/**
  * Get informations about an zenoh-net session.
- *
- * Parameters:
- *     session: A zenoh-net session.
- *
- * Returns:
- *     A :c:type:`zn_properties_t` map containing informations on the given zenoh-net session.
  */
 struct z_owned_info_t z_info(struct z_session_t session);
 
 /**
- * Get informations about an zenoh-net session.
- *
- * Parameters:
- *     session: A zenoh-net session.
- *
- * Returns:
- *     A keys/values string containing informations on the given zenoh-net session.
- *     The format of the string is: "key1=value1;key2=value2;...".
+ * Get informations about an zenoh-net session as a properties-formatted string.
  */
 struct z_owned_string_t z_info_as_str(struct z_session_t session);
 
 struct z_info_t z_info_borrow(const struct z_owned_info_t *info);
 
+/**
+ * Returns `true` if `info` is valid.
+ */
 bool z_info_check(const struct z_owned_info_t *info);
 
+/**
+ * Frees `info`'s memory, while invalidating `info` for double-free-safety.
+ */
 void z_info_free(struct z_owned_info_t *info);
 
+/**
+ * Returns the information associated with `key` if it exists.
+ * If it doesn't, the returned value is invalid, and doesn't need freeing.
+ */
 struct z_owned_string_t z_info_get(struct z_info_t info, uint64_t key);
 
 /**
  * Initialise the zenoh runtime logger
- *
  */
 void z_init_logger(void);
 
 /**
- * Open a zenoh-net session
- *
- * Parameters:
- *     config: A set of properties.
- *
- * Returns:
- *     The created zenoh-net session or null if the creation did not succeed, wrapped in the z_owned_session_t type.
- *     Later functions do not check for null pointers, so you should do it to prevent segfaults.
+ * Open a zenoh-net session. Should the session opening fail, `z_check`ing the returned value will return `false`.
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 
 bool z_publisher_check(const struct z_owned_publisher_t *publ);
 
 /**
- * Pull data for a pull mode :c:type:`zn_subscriber_t`. The pulled data will be provided
- * by calling the **callback** function provided to the :c:func:`zn_declare_subscriber` function.
+ * Pull data for a pull mode :c:type:`z_subscriber_t`. The pulled data will be provided
+ * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
  *
  * Parameters:
- *     sub: The :c:type:`zn_subscriber_t` to pull from.
+ *     sub: The :c:type:`z_subscriber_t` to pull from.
  */
 void z_pull(const struct z_owned_subscriber_t *sub);
 
@@ -650,67 +783,48 @@ struct z_owned_reply_data_array_t z_query_collect(struct z_session_t session,
                                                   struct z_query_consolidation_t consolidation);
 
 /**
- * Create a default :c:type:`zn_query_consolidation_t`.
+ * Create a default :c:type:`z_query_consolidation_t`.
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
 
 /**
- * Get the predicate of a received query.
- *
- * Parameters:
- *     query: The query.
- *
- * Returns:
- *     The predicate of the query.
+ * Get the predicate of a received query as a non null-terminated string.
  */
-struct z_owned_string_t z_query_predicate(const struct z_query_t *query);
+struct z_bytes_t z_query_predicate(const struct z_query_t *query);
 
 /**
- * Get the resource name of a received query.
- *
- * Parameters:
- *     query: The query.
- *
- * Returns:
- *     The resource name of the query.
+ * Gets the resource name of a received query as a non null-terminated string.
  */
-struct z_owned_string_t z_query_res_name(const struct z_query_t *query);
+struct z_bytes_t z_query_res_name(const struct z_query_t *query);
 
 /**
- * Create a default :c:type:`zn_query_target_t`.
+ * Create a default `z_query_target_t`.
  */
 struct z_query_target_t z_query_target_default(void);
 
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
 
 /**
- * Declare a :c:type:`zn_publisher_t` for the given resource key.
+ * Register a `z_owned_publisher_t` for the given resource key.
  *
  * Written resources that match the given key will only be sent on the network
  * if matching subscribers exist in the system.
- *
- * Parameters:
- *     session: The zenoh-net session.
- *     resource: The resource key to publish.
- *
- * Returns:
- *    The created :c:type:`zn_publisher_t` or null if the declaration failed.
  */
 struct z_owned_publisher_t z_register_publisher(struct z_session_t session,
                                                 struct z_reskey_t reskey);
 
 /**
- * Declare a :c:type:`zn_queryable_t` for the given resource key.
+ * Declare a :c:type:`z_queryable_t` for the given resource key.
  *
  * Parameters:
  *     session: The zenoh-net session.
- *     resource: The resource key the :c:type:`zn_queryable_t` will reply to.
- *     kind: The kind of :c:type:`zn_queryable_t`.
+ *     resource: The resource key the :c:type:`z_queryable_t` will reply to.
+ *     kind: The kind of :c:type:`z_queryable_t`.
  *     callback: The callback function that will be called each time a matching query is received.
  *     arg: A pointer that will be passed to the **callback** on each call.
  *
  * Returns:
- *    The created :c:type:`zn_queryable_t` or null if the declaration failed.
+ *    The created :c:type:`z_queryable_t` or null if the declaration failed.
  */
 struct z_owned_queryable_t z_register_queryable(struct z_session_t session,
                                                 struct z_reskey_t reskey,
@@ -723,29 +837,21 @@ struct z_owned_queryable_t z_register_queryable(struct z_session_t session,
  *
  * This numerical id will be used on the network to save bandwidth and
  * ease the retrieval of the concerned resource in the routing tables.
- *
- * Parameters:
- *     session: The zenoh-net session.
- *     resource: The resource key to map to a numerical id.
- *
- * Returns:
- *     A numerical id.
  */
-struct z_owned_reskey_t z_register_resource(struct z_session_t session,
-                                            struct z_owned_reskey_t reskey);
+struct z_reskey_t z_register_resource(struct z_session_t session, struct z_owned_reskey_t *reskey);
 
 /**
- * Declare a :c:type:`zn_subscriber_t` for the given resource key.
+ * Declare a :c:type:`z_subscriber_t` for the given resource key.
  *
  * Parameters:
  *     session: The zenoh-net session.
  *     resource: The resource key to subscribe.
- *     sub_info: The :c:type:`zn_subinfo_t` to configure the :c:type:`zn_subscriber_t`.
+ *     sub_info: The :c:type:`z_subinfo_t` to configure the :c:type:`z_subscriber_t`.
  *     callback: The callback function that will be called each time a data matching the subscribed resource is received.
  *     arg: A pointer that will be passed to the **callback** on each call.
  *
  * Returns:
- *    The created :c:type:`zn_subscriber_t` or null if the declaration failed.
+ *    The created :c:type:`z_subscriber_t` or null if the declaration failed.
  */
 struct z_owned_subscriber_t z_register_subscriber(struct z_session_t session,
                                                   struct z_reskey_t reskey,
@@ -753,98 +859,103 @@ struct z_owned_subscriber_t z_register_subscriber(struct z_session_t session,
                                                   void (*callback)(const struct z_sample_t*, const void*),
                                                   void *arg);
 
+/**
+ * Returns `true` if `reply` is valid.
+ */
 bool z_reply_check(const struct z_owned_reply_t *reply);
 
 bool z_reply_data_array_check(const struct z_owned_reply_data_array_t *replies);
 
 /**
- * Free a :c:type:`zn_reply_data_array_t` and it's contained replies.
+ * Free a :c:type:`z_reply_data_array_t` and it's contained replies.
  *
  * Parameters:
- *     replies: The :c:type:`zn_reply_data_array_t` to free.
+ *     replies: The :c:type:`z_reply_data_array_t` to free.
  *
  */
 void z_reply_data_array_free(struct z_owned_reply_data_array_t *replies);
 
+/**
+ * Returns `true` if `reply_data` is valid.
+ */
 bool z_reply_data_check(const struct z_owned_reply_data_t *reply_data);
 
 /**
- * Free a :c:type:`zn_reply_data_t` contained data and replier_id.
- *
- * Parameters:
- *     reply_data: The :c:type:`zn_reply_data_t` to free.
- *
+ * Frees `reply_data`, invalidating it for double-free safety.
  */
 void z_reply_data_free(struct z_owned_reply_data_t *reply_data);
 
+/**
+ * Frees `reply`, invalidating it for double-free safety.
+ */
 void z_reply_free(struct z_owned_reply_t *reply);
 
 struct z_reskey_t z_reskey_borrow(const struct z_owned_reskey_t *reskey);
 
+/**
+ * Returns `true` if `reskey` is valid.
+ */
 bool z_reskey_check(const struct z_owned_reskey_t *reskey);
 
 /**
- * Free a :c:type:`z_owned_reskey_t`.
- *
- * Parameters:
- *    b : The array to free.
+ * Frees `reskey` and invalidates it for double-free safety.
  */
 void z_reskey_free(struct z_owned_reskey_t *reskey);
 
 /**
- * Free a :c:type:`z_owned_reskey_t`.
- *
- * Parameters:
- *    b : The array to free.
+ * Constructs a zenoh-owned ressource key. `suffix`'s contents will be copied.
  */
 struct z_owned_reskey_t z_reskey_new(unsigned long id, const char *suffix);
 
+/**
+ * Constructs a borrowed ressource key. The constructed value is valid as long as `suffix` is.
+ */
 struct z_reskey_t z_reskey_new_borrowed(unsigned long id, const char *suffix);
 
 /**
- * Create a resource key from a resource id.
- *
- * Parameters:
- *     id: The resource id.
- *
- * Returns:
- *     A new resource key.
+ * Constructs a resource key from a resource id.
+ * Since id-only ressource keys don't need destruction, a `z_reskey_t` is returned instead of its owned variant.
  */
-struct z_owned_reskey_t z_rid(unsigned long id);
+struct z_reskey_t z_rid(unsigned long id);
 
 /**
- * Create a resource key from a resource id and a suffix.
+ * Constructs a resource key from a resource id and a suffix. `suffix`'s content is copied.
  *
- * Parameters:
- *     id: The resource id.
- *     suffix: The suffix, a NULL terminated string, copied on construction.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
  *
- * Returns:
- *     A new resource key.
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-struct z_owned_reskey_t z_rid_with_suffix(unsigned long id, const char *suffix);
+struct z_owned_reskey_t z_rid_with_suffix(unsigned long id,
+                                          const char *suffix);
 
 /**
- * Create a resource key from a resource name.
+ * Constructs a resource key from a resource name. `name`'s content is copied.
  *
- * Parameters:
- *     id: The resource name, a NULL terminated string, copied on construction.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
  *
- * Returns:
- *     A new resource key.
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 struct z_owned_reskey_t z_rname(const char *name);
 
 struct z_sample_t z_sample_borrow(const struct z_owned_sample_t *sample);
 
+/**
+ * Returns `true` if `sample` is valid.
+ */
 bool z_sample_check(const struct z_owned_sample_t *sample);
 
 /**
- * Free a :c:type:`zn_sample_t` contained key and value.
- *
- * Parameters:
- *     sample: The :c:type:`zn_sample_t` to free.
- *
+ * Frees `sample`, invalidating it for double-free safety.
  */
 void z_sample_free(struct z_owned_sample_t *sample);
 
@@ -852,12 +963,12 @@ void z_sample_free(struct z_owned_sample_t *sample);
  * Scout for routers and/or peers.
  *
  * Parameters:
- *     what: A whatami bitmask of zenoh entities kind to scout for.
- *     config: A set of properties to configure the scouting.
- *     scout_period: The time that should be spent scouting before returnng the results.
+ *     `what`: A whatami bitmask of zenoh entities kind to scout for.
+ *     `config`: A set of properties to configure the scouting.
+ *     `scout_period`: The time that should be spent scouting before returning the results.
  *
  * Returns:
- *     An array of :c:struct:`zn_hello_t` messages.
+ *     An array of `z_hello_t` messages.
  */
 struct z_owned_hello_array_t z_scout(unsigned int what,
                                      struct z_owned_config_t *config,
@@ -887,32 +998,30 @@ struct z_session_t z_session_borrow(const struct z_owned_session_t *s);
 bool z_session_check(const struct z_owned_session_t *config);
 
 /**
- * Free an array of NULL terminated strings and it's contained NULL terminated strings recursively.
- *
- * Parameters:
- *     strs: The array of NULL terminated strings to free.
- *
+ * Returns `true` if
+ */
+bool z_str_array_check(const struct z_owned_str_array_t *strs);
+
+/**
+ * Frees `strs` and invalidates it for double-free safety.
  */
 void z_str_array_free(struct z_owned_str_array_t *strs);
 
-const char *z_string_borrow(const struct z_owned_string_t *s);
+z_string_t z_string_borrow(const struct z_owned_string_t *s);
 
+/**
+ * Returns `true` if `s` is valid
+ */
 bool z_string_check(const struct z_owned_string_t *s);
 
 /**
- * Frees the passed z_string_t.
+ * Frees `s`'s memory, while invalidating `s` for double-free-safety.
  */
 void z_string_free(struct z_owned_string_t *s);
 
 /**
- * Constructs a :c:type:`z_string_t` from a NULL terminated string.
- * The contents of `s` is copied.
- *
- * Parameters:
- *     s: The NULL terminated string.
- *
- * Returns:
- *     A new :c:type:`z_string_t`.
+ * Constructs a `z_string_t` from a NULL terminated string.
+ * The contents of `s` are copied.
  */
 struct z_owned_string_t z_string_new(const char *s);
 
@@ -926,31 +1035,28 @@ const struct z_period_t *z_subinfo_period(const struct z_subinfo_t *info);
 bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 
 /**
- * Create a default :c:type:`zn_target_t`.
+ * Create a default :c:type:`z_target_t`.
  */
 struct z_target_t z_target_default(void);
 
 /**
- * Undeclare a :c:type:`zn_publisher_t`.
- *
- * Parameters:
- *     sub: The :c:type:`zn_publisher_t` to undeclare.
+ * Destroys `publ`, unregistering it and invalidating `publ` for double-free safety
  */
 void z_unregister_publisher(struct z_owned_publisher_t *publ);
 
 /**
- * Undeclare a :c:type:`zn_queryable_t`.
+ * Undeclare a :c:type:`z_queryable_t`.
  *
  * Parameters:
- *     qable: The :c:type:`zn_queryable_t` to undeclare.
+ *     qable: The :c:type:`z_queryable_t` to undeclare.
  */
 void z_unregister_queryable(struct z_owned_queryable_t *qable);
 
 /**
- * Undeclare a :c:type:`zn_subscriber_t`.
+ * Undeclare a :c:type:`z_subscriber_t`.
  *
  * Parameters:
- *     sub: The :c:type:`zn_subscriber_t` to undeclare.
+ *     sub: The :c:type:`z_subscriber_t` to undeclare.
  */
 void z_unregister_subscriber(struct z_owned_subscriber_t *sub);
 
@@ -990,8 +1096,10 @@ int z_write_ext(struct z_session_t session,
                 unsigned int len,
                 const struct z_write_options_t *options);
 
+struct z_write_options_t z_write_options_default(void);
+
 void z_write_options_set(struct z_write_options_t *options,
                          enum z_write_options_field_t key,
                          unsigned int value);
 
-#endif /* ZENOH_GEN */
+#endif /* ZENOH_FUNCTIONS */
