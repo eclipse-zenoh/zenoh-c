@@ -56,7 +56,7 @@ int main(int argc, char **argv)
   {
     z_write(s, reskey, (const uint8_t *)data, len);
   }
-  z_reskey_free(&oreskey);
   z_unregister_publisher(&pub);
+  z_reskey_free(&oreskey);
   z_close(&os);
 }

@@ -588,6 +588,7 @@ pub struct z_write_options_t {
 }
 
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub enum z_write_options_field_t {
     ENCODING,
     CONGESTION_CONTROL,

@@ -89,12 +89,11 @@ int main(int argc, char **argv)
             fprinthello(stdout, &hellos.val[i]);
             fprintf(stdout, "\n");
         }
-
-        z_hello_array_free(&hellos);
     }
     else
     {
         printf("Did not find any zenoh process.\n");
     }
+    z_hello_array_free(&hellos);
     return 0;
 }

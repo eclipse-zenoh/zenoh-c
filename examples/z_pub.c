@@ -66,8 +66,8 @@ int main(int argc, char **argv)
         printf("Writing Data ('%lu': '%s')...\n", reskey.id, buf);
         z_write(borrowed_session, key, (const uint8_t *)buf, strlen(buf));
     }
-    z_reskey_free(&reskey);
     z_unregister_publisher(&pub);
+    z_reskey_free(&reskey);
     z_close(&s);
     return 0;
 }

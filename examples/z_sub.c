@@ -57,8 +57,8 @@ int main(int argc, char **argv)
   {
     c = fgetc(stdin);
   }
-  z_reskey_free(&key);
   z_unregister_subscriber(&sub);
+  z_reskey_free(&key);
   z_close(&s);
   return 0;
 }

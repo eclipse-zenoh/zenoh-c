@@ -62,7 +62,7 @@ $(BUILD_DIR)/examples/%: examples/%.c include/zenoh-gen.h include/zenoh.h $(BUIL
 include/zenoh-gen.h: src/lib.rs src/types.rs cbindgen.toml
 	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
 
-install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh-gen.h
+install: build
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
