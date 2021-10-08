@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(&config);
+    z_owned_session_t s = z_open(z_move(config));
     if (!z_check(s))
     {
         printf("Unable to open session!\n");
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     printf("Writing Data ('%s': '%s')...\n", uri, value);
     z_owned_reskey_t urikey = z_rname(uri);
     z_write(z_borrow(s), z_borrow(urikey), (const uint8_t *)value, strlen(value));
-    z_reskey_free(&urikey);
-    z_close(&s);
+    z_reskey_free(z_move(urikey));
+    z_close(z_move(s));
     return 0;
 }

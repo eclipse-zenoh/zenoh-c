@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(&config);
+    z_owned_session_t s = z_open(z_move(config));
     if (!z_check(s))
     {
         printf("Unable to open session!\n");
@@ -65,8 +65,8 @@ int main(int argc, char **argv)
         z_pull(&sub);
     }
 
-    z_unregister_subscriber(&sub);
-    z_reskey_free(&urikey);
-    z_close(&s);
+    z_unregister_subscriber(z_move(sub));
+    z_reskey_free(z_move(urikey));
+    z_close(z_move(s));
     return 0;
 }

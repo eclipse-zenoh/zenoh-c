@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(&config);
+    z_owned_session_t s = z_open(z_move(config));
     if (!z_check(s))
     {
         printf("Unable to open session!\n");
@@ -36,16 +36,16 @@ int main(int argc, char **argv)
     z_info_t ps = z_borrow(ops);
     z_owned_string_t prop = z_info_get(ps, ZN_INFO_PID_KEY);
     printf("info_pid : %s\n", z_borrow(prop));
-    z_string_free(&prop);
+    z_string_free(z_move(prop));
 
     prop = z_info_get(ps, ZN_INFO_ROUTER_PID_KEY);
     printf("info_router_pid : %s\n", z_borrow(prop));
-    z_string_free(&prop);
+    z_string_free(z_move(prop));
 
     prop = z_info_get(ps, ZN_INFO_PEER_PID_KEY);
     printf("info_peer_pid : %s\n", z_borrow(prop));
-    z_string_free(&prop);
+    z_string_free(z_move(prop));
 
-    z_info_free(&ops);
-    z_close(&s);
+    z_info_free(z_move(ops));
+    z_close(z_move(s));
 }

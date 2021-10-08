@@ -46,4 +46,6 @@
                             : z_subscriber_check,  \
                               z_owned_queryable_t  \
                             : z_queryable_check)(&x)
+
+#define z_move(x) (&x)
 #endif

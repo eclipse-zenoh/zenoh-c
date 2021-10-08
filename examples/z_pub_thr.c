@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, z_string_new(argv[2]));
   }
 
-  z_owned_session_t os = z_open(&config);
+  z_owned_session_t os = z_open(z_move(config));
   if (!z_check(os))
   {
     printf("Unable to open session!\n");
@@ -57,6 +57,6 @@ int main(int argc, char **argv)
     z_write(s, reskey, (const uint8_t *)data, len);
   }
   z_unregister_publisher(&pub);
-  z_reskey_free(&oreskey);
-  z_close(&os);
+  z_reskey_free(z_move(oreskey));
+  z_close(z_move(os));
 }

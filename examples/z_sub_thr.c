@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     }
 
     printf("Openning session...\n");
-    z_owned_session_t s = z_open(&config);
+    z_owned_session_t s = z_open(z_move(config));
     if (!z_check(s))
     {
         printf("Unable to open session!\n");
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     }
 
     z_owned_reskey_t rid = z_register_resource(z_borrow(s), z_rname("/test/thr"));
-    z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), z_reskey_borrow(&rid), z_subinfo_default(), data_handler, NULL);
+    z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), z_borrow(rid), z_subinfo_default(), data_handler, NULL);
     if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");
@@ -83,8 +83,8 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    z_unregister_subscriber(&sub);
-    z_reskey_free(&rid);
-    z_close(&s);
+    z_unregister_subscriber(z_move(sub));
+    z_reskey_free(z_move(rid));
+    z_close(z_move(s));
     return 0;
 }
