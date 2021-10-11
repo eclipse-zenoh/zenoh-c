@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
   z_owned_reskey_t oreskey = z_rname("/test/thr");
   z_reskey_t reskey = z_register_resource(s, z_move(oreskey));
-  z_owned_publisher_t pub = z_register_publisher(s, reskey);
+  z_owned_publisher_t pub = z_publishing(s, reskey);
   if (!z_check(pub))
   {
     printf("Unable to declare publisher.\n");

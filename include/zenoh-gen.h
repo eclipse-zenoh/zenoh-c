@@ -272,22 +272,6 @@ typedef struct z_owned_publisher_t {
 } z_owned_publisher_t;
 
 /**
- * An owned zenoh subscriber.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_subscriber_t {
-  uint64_t _0[Z_SUBSCRIBER_PADDING_U64];
-} z_owned_subscriber_t;
-
-/**
  * A borrowed ressource key.
  *
  * Resources are identified by URI like string names.
@@ -304,6 +288,22 @@ typedef struct z_reskey_t {
   unsigned long id;
   const char *suffix;
 } z_reskey_t;
+
+/**
+ * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
+ * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_subscriber_t {
+  uint64_t _0[Z_SUBSCRIBER_PADDING_U64];
+} z_owned_subscriber_t;
 
 /**
  * The possible values of :c:member:`z_target_t.tag`.
@@ -482,6 +482,20 @@ typedef struct z_owned_reskey_t {
 } z_owned_reskey_t;
 
 /**
+ * A borrowed data sample.
+ *
+ * A sample is the value associated to a given resource at a given point in time.
+ *
+ * Members:
+ *   `z_string_t key`: The resource key of this data sample.
+ *   `z_bytes_t value`: The value of this data sample.
+ */
+typedef struct z_sample_t {
+  z_string_t key;
+  struct z_bytes_t value;
+} z_sample_t;
+
+/**
  * The subscription period.
  * Equivalent of the rust `Option<zenoh::time::Period>` type, where `None` is represented by the `period` field being 0-valued.
  *
@@ -511,19 +525,8 @@ typedef struct z_subinfo_t {
 } z_subinfo_t;
 
 /**
- * A borrowed data sample.
- *
- * A sample is the value associated to a given resource at a given point in time.
- *
- * Members:
- *   `z_string_t key`: The resource key of this data sample.
- *   `z_bytes_t value`: The value of this data sample.
+ * Options passed to the `z_write_ext` function.
  */
-typedef struct z_sample_t {
-  z_string_t key;
-  struct z_bytes_t value;
-} z_sample_t;
-
 typedef struct z_write_options_t {
   uint64_t _0[Z_WRITE_OPTIONS_PADDING_U64];
 } z_write_options_t;
@@ -733,8 +736,16 @@ struct z_owned_session_t z_open(struct z_owned_config_t *config);
 bool z_publisher_check(const struct z_owned_publisher_t *publ);
 
 /**
- * Pull data for a pull mode :c:type:`z_subscriber_t`. The pulled data will be provided
- * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
+ * Register a `z_owned_publisher_t` for the given resource key.
+ *
+ * Written resources that match the given key will only be sent on the network
+ * if matching subscribers exist in the system.
+ */
+struct z_owned_publisher_t z_publishing(struct z_session_t session, struct z_reskey_t reskey);
+
+/**
+ * Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
+ * by calling the **callback** function provided to the :c:func:`z_subscribe` function.
  *
  * Parameters:
  *     sub: The :c:type:`z_subscriber_t` to pull from.
@@ -805,16 +816,7 @@ struct z_query_target_t z_query_target_default(void);
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
 
 /**
- * Register a `z_owned_publisher_t` for the given resource key.
- *
- * Written resources that match the given key will only be sent on the network
- * if matching subscribers exist in the system.
- */
-struct z_owned_publisher_t z_register_publisher(struct z_session_t session,
-                                                struct z_reskey_t reskey);
-
-/**
- * Declare a :c:type:`z_queryable_t` for the given resource key.
+ * Registers a `z_queryable_t` for the given resource key.
  *
  * Parameters:
  *     session: The zenoh-net session.
@@ -839,25 +841,6 @@ struct z_owned_queryable_t z_register_queryable(struct z_session_t session,
  * ease the retrieval of the concerned resource in the routing tables.
  */
 struct z_reskey_t z_register_resource(struct z_session_t session, struct z_owned_reskey_t *reskey);
-
-/**
- * Declare a :c:type:`z_subscriber_t` for the given resource key.
- *
- * Parameters:
- *     session: The zenoh-net session.
- *     resource: The resource key to subscribe.
- *     sub_info: The :c:type:`z_subinfo_t` to configure the :c:type:`z_subscriber_t`.
- *     callback: The callback function that will be called each time a data matching the subscribed resource is received.
- *     arg: A pointer that will be passed to the **callback** on each call.
- *
- * Returns:
- *    The created :c:type:`z_subscriber_t` or null if the declaration failed.
- */
-struct z_owned_subscriber_t z_register_subscriber(struct z_session_t session,
-                                                  struct z_reskey_t reskey,
-                                                  struct z_subinfo_t sub_info,
-                                                  void (*callback)(const struct z_sample_t*, const void*),
-                                                  void *arg);
 
 /**
  * Returns `true` if `reply` is valid.
@@ -1032,6 +1015,32 @@ struct z_subinfo_t z_subinfo_default(void);
 
 const struct z_period_t *z_subinfo_period(const struct z_subinfo_t *info);
 
+/**
+ * Subscribes to the given resource key.
+ *
+ * Parameters:
+ *     session: The zenoh-net session.
+ *     resource: The resource key to subscribe.
+ *     sub_info: The :c:type:`z_subinfo_t` to configure the subscriber.
+ *     callback: The callback function that will be called each time a data matching the subscribed resource is received.
+ *     arg: A pointer that will be passed to the **callback** on each call.
+ *
+ * Returns:
+ *    An owned subscription handle.
+ *
+ *    To check if the subscription succeeded and if the subscription handle is still valid,
+ *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ *
+ *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ */
+struct z_owned_subscriber_t z_subscribe(struct z_session_t session,
+                                        struct z_reskey_t reskey,
+                                        struct z_subinfo_t sub_info,
+                                        void (*callback)(const struct z_sample_t*, const void*),
+                                        void *arg);
+
 bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 
 /**
@@ -1045,7 +1054,7 @@ struct z_target_t z_target_default(void);
 void z_unregister_publisher(struct z_owned_publisher_t *publ);
 
 /**
- * Undeclare a :c:type:`z_queryable_t`.
+ * Unregisters a `z_queryable_t`, freeing it and invalidating it for doube-free safety.
  *
  * Parameters:
  *     qable: The :c:type:`z_queryable_t` to undeclare.
@@ -1053,10 +1062,7 @@ void z_unregister_publisher(struct z_owned_publisher_t *publ);
 void z_unregister_queryable(struct z_owned_queryable_t *qable);
 
 /**
- * Undeclare a :c:type:`z_subscriber_t`.
- *
- * Parameters:
- *     sub: The :c:type:`z_subscriber_t` to undeclare.
+ * Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
  */
 void z_unregister_subscriber(struct z_owned_subscriber_t *sub);
 
@@ -1084,9 +1090,7 @@ int z_write(struct z_session_t session,
  *     resource: The resource key to write.
  *     payload: The value to write.
  *     len: The length of the value to write.
- *     encoding: The encoding of the value.
- *     kind: The kind of value.
- *     congestion_control: The behavior to adopt in case of congestion while routing some data.
+ *     options: The write options
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
@@ -1096,9 +1100,16 @@ int z_write_ext(struct z_session_t session,
                 unsigned int len,
                 const struct z_write_options_t *options);
 
+/**
+ * Constructs the default value for write options
+ */
 struct z_write_options_t z_write_options_default(void);
 
-void z_write_options_set(struct z_write_options_t *options,
+/**
+ * Sets the value for the required field of a `z_write_options_t`.
+ * Returns `false` if the value insertion failed.
+ */
+bool z_write_options_set(struct z_write_options_t *options,
                          enum z_write_options_field_t key,
                          unsigned int value);
 

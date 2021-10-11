@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     printf(" => RId %lu\n", reskey.id);
 
     printf("Declaring Publisher on %lu\n", reskey.id);
-    z_owned_publisher_t pub = z_register_publisher(borrowed_session, reskey);
+    z_owned_publisher_t pub = z_publishing(borrowed_session, reskey);
     if (!z_check(pub))
     {
         printf("Unable to declare publisher.\n");

@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
   printf("Declaring Subscriber on '%s'...\n", uri);
   z_owned_reskey_t key = z_rname(uri);
-  z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), z_borrow(key), z_subinfo_default(), data_handler, NULL);
+  z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(key), z_subinfo_default(), data_handler, NULL);
   if (!z_check(sub))
   {
     printf("Unable to declare subscriber.\n");

@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     subinfo.mode = z_submode_t_PULL;
     subinfo.period = z_period_NONE;
     z_owned_reskey_t urikey = z_rname(uri);
-    z_owned_subscriber_t sub = z_register_subscriber(z_borrow(s), z_borrow(urikey), subinfo, data_handler, NULL);
+    z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(urikey), subinfo, data_handler, NULL);
     if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");

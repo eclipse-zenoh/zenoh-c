@@ -155,7 +155,7 @@ impl AsMut<Option<Publisher<'static>>> for z_owned_publisher_t {
 }
 type Subscriber = Option<Arc<Sender<SubOps>>>;
 pub const Z_SUBSCRIBER_PADDING_U64: usize = 1;
-/// An owned zenoh subscriber.
+/// An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
 /// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
@@ -530,7 +530,7 @@ pub unsafe extern "C" fn z_register_resource(
 ) -> z_reskey_t {
     let mut rk = z_owned_reskey_t {
         id: 0,
-        suffix: z_string_new(std::ptr::null_mut()),
+        suffix: z_owned_string_t::default(),
     };
     std::mem::swap(reskey, &mut rk);
     let result = session
@@ -583,8 +583,10 @@ struct WriteOptions {
     priority: Priority,
 }
 pub const Z_WRITE_OPTIONS_PADDING_U64: usize = 6;
-#[allow(non_camel_case_types)]
+
+/// Options passed to the `z_write_ext` function.  
 #[repr(C)]
+#[allow(non_camel_case_types)]
 pub struct z_write_options_t([u64; Z_WRITE_OPTIONS_PADDING_U64]);
 
 #[repr(C)]
@@ -596,33 +598,42 @@ pub enum z_write_options_field_t {
     PRIORITY,
 }
 
+/// Constructs the default value for write options
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_write_options_default() -> z_write_options_t {
     z_write_options_t(std::mem::transmute(WriteOptions::default()))
 }
+
+/// Sets the value for the required field of a `z_write_options_t`.  
+/// Returns `false` if the value insertion failed.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_write_options_set(
     options: &mut z_write_options_t,
     key: z_write_options_field_t,
     value: c_uint,
-) {
+) -> bool {
     let options: &mut WriteOptions = std::mem::transmute(options);
     match key {
         z_write_options_field_t::ENCODING => options.encoding = Encoding::from(value as ZInt),
         z_write_options_field_t::CONGESTION_CONTROL => {
             if value < 2 {
                 options.congestion_control = std::mem::transmute(value as u8)
+            } else {
+                return false;
             }
         }
         z_write_options_field_t::KIND => options.kind = (value as ZInt).into(),
         z_write_options_field_t::PRIORITY => {
             if 0 < value && value < 8 {
                 options.priority = std::mem::transmute(value as u8)
+            } else {
+                return false;
             }
         }
     };
+    true
 }
 
 /// Write data with extended options.
@@ -632,13 +643,11 @@ pub unsafe extern "C" fn z_write_options_set(
 ///     resource: The resource key to write.
 ///     payload: The value to write.
 ///     len: The length of the value to write.
-///     encoding: The encoding of the value.
-///     kind: The kind of value.
-///     congestion_control: The behavior to adopt in case of congestion while routing some data.
+///     options: The write options
 /// Returns:
 ///     ``0`` in case of success, ``1`` in case of failure.
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_write_ext(
     session: z_session_t,
     reskey: z_reskey_t,
@@ -671,9 +680,9 @@ pub unsafe extern "C" fn z_write_ext(
 ///
 /// Written resources that match the given key will only be sent on the network
 /// if matching subscribers exist in the system.
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_register_publisher(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_publishing(
     session: z_session_t,
     reskey: z_reskey_t,
 ) -> z_owned_publisher_t {
@@ -691,25 +700,32 @@ pub unsafe extern "C" fn z_publisher_check(publ: &z_owned_publisher_t) -> bool {
 }
 
 /// Destroys `publ`, unregistering it and invalidating `publ` for double-free safety
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_unregister_publisher(publ: &mut z_owned_publisher_t) {
     std::mem::drop(publ.as_mut().take())
 }
-/// Declare a :c:type:`z_subscriber_t` for the given resource key.
+/// Subscribes to the given resource key.
 ///
 /// Parameters:
 ///     session: The zenoh-net session.
 ///     resource: The resource key to subscribe.
-///     sub_info: The :c:type:`z_subinfo_t` to configure the :c:type:`z_subscriber_t`.
+///     sub_info: The :c:type:`z_subinfo_t` to configure the subscriber.
 ///     callback: The callback function that will be called each time a data matching the subscribed resource is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
 /// Returns:
-///    The created :c:type:`z_subscriber_t` or null if the declaration failed.
-#[allow(clippy::missing_safety_doc)]
+///    An owned subscription handle.
+///
+///    To check if the subscription succeeded and if the subscription handle is still valid,
+///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+///
+///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
 #[no_mangle]
-pub unsafe extern "C" fn z_register_subscriber(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_subscribe(
     session: z_session_t,
     reskey: z_reskey_t,
     sub_info: z_subinfo_t,
@@ -780,8 +796,8 @@ pub unsafe extern "C" fn z_register_subscriber(
     rsub
 }
 
-/// Pull data for a pull mode :c:type:`z_subscriber_t`. The pulled data will be provided
-/// by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
+/// Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
+/// by calling the **callback** function provided to the :c:func:`z_subscribe` function.
 ///
 /// Parameters:
 ///     sub: The :c:type:`z_subscriber_t` to pull from.
@@ -796,10 +812,7 @@ pub unsafe extern "C" fn z_pull(sub: &z_owned_subscriber_t) {
     }
 }
 
-/// Undeclare a :c:type:`z_subscriber_t`.
-///
-/// Parameters:
-///     sub: The :c:type:`z_subscriber_t` to undeclare.
+/// Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_unregister_subscriber(sub: &mut z_owned_subscriber_t) {
@@ -929,7 +942,7 @@ pub unsafe extern "C" fn z_query_collect(
     z_owned_reply_data_array_t { val, len }
 }
 
-/// Declare a :c:type:`z_queryable_t` for the given resource key.
+/// Registers a `z_queryable_t` for the given resource key.
 ///
 /// Parameters:
 ///     session: The zenoh-net session.
@@ -988,7 +1001,7 @@ pub unsafe extern "C" fn z_register_queryable(
     r
 }
 
-/// Undeclare a :c:type:`z_queryable_t`.
+/// Unregisters a `z_queryable_t`, freeing it and invalidating it for doube-free safety.
 ///
 /// Parameters:
 ///     qable: The :c:type:`z_queryable_t` to undeclare.
