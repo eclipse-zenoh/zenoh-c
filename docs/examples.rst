@@ -28,7 +28,7 @@ Publish
       char* value = "value";
 
       z_session_t *s = z_open(z_config_default());
-      z_write(s, z_rname("/res/name"), (const uint8_t *)value, strlen(value));
+      z_write(s, z_expr("/res/name"), (const uint8_t *)value, strlen(value));
       z_close(s);
 
       return 0;
@@ -50,7 +50,7 @@ Subscribe
 
   int main(int argc, char **argv) {
       z_session_t *s = z_open(z_config_default());
-      z_subscriber_t *sub = z_declare_subscriber(s, z_rname("/res/name"), z_subinfo_default(), data_handler, NULL);
+      z_subscriber_t *sub = z_declare_subscriber(s, z_expr("/res/name"), z_subinfo_default(), data_handler, NULL);
 
       char c = 0;
       while (c != 'q') {
@@ -74,7 +74,7 @@ Query
 
   int main(int argc, char** argv) {
       z_session_t *s = z_open(z_config_default());
-      z_reply_data_array_t replies = z_query_collect(s, z_rname("/res/name"), "", z_query_target_default(), z_query_consolidation_default());
+      z_reply_data_array_t replies = z_query_collect(s, z_expr("/res/name"), "", z_query_target_default(), z_query_consolidation_default());
       
       for(unsigned int i = 0; i < replies.len; ++i) {
           printf(">> Received (%.*s, %.*s)\n",

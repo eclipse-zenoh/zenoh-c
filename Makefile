@@ -47,20 +47,17 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-build: include/zenoh-gen.h $(BUILD_DIR)/$(LIB_NAME)
+build: $(BUILD_DIR)/$(LIB_NAME)
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
 all: build examples
 
-$(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/types.rs
+$(BUILD_DIR)/$(LIB_NAME): Cargo.toml build.rs splitguide.yaml cbindgen.toml src/lib.rs src/types.rs
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
-$(BUILD_DIR)/examples/%: examples/%.c include/zenoh-gen.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+$(BUILD_DIR)/examples/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
-
-include/zenoh-gen.h: src/lib.rs src/types.rs cbindgen.toml
-	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
 
 install: build
 	install -d $(DESTDIR)$(PREFIX)/lib/

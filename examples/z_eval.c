@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
-    z_owned_reskey_t urikey = z_rname(uri);
+    z_owned_keyexpr_t urikey = z_expr(uri);
     z_owned_queryable_t qable = z_register_queryable(z_borrow(s), z_borrow(urikey), ZN_QUERYABLE_EVAL, query_handler, NULL);
     if (!z_check(qable))
     {
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     }
 
     z_unregister_queryable(z_move(qable));
-    z_reskey_free(z_move(urikey));
+    z_keyexpr_free(z_move(urikey));
     z_close(z_move(s));
     return 0;
 }

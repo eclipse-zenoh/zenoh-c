@@ -44,9 +44,9 @@ int main(int argc, char **argv)
     }
 
     printf("Writing Data ('%s': '%s')...\n", uri, value);
-    z_owned_reskey_t urikey = z_rname(uri);
+    z_owned_keyexpr_t urikey = z_expr(uri);
     z_write(z_borrow(s), z_borrow(urikey), (const uint8_t *)value, strlen(value));
-    z_reskey_free(z_move(urikey));
+    z_keyexpr_free(z_move(urikey));
     z_close(z_move(s));
     return 0;
 }

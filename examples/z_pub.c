@@ -46,12 +46,12 @@ int main(int argc, char **argv)
     z_session_t borrowed_session = z_borrow(s);
 
     printf("Declaring Resource '%s'", uri);
-    z_owned_reskey_t urikey = z_rname(uri);
-    z_reskey_t reskey = z_register_resource(borrowed_session, z_move(urikey));
-    printf(" => RId %lu\n", reskey.id);
+    z_owned_keyexpr_t urikey = z_expr(uri);
+    z_keyexpr_t keyexpr = z_register_resource(borrowed_session, z_move(urikey));
+    printf(" => RId %lu\n", keyexpr.id);
 
-    printf("Declaring Publisher on %lu\n", reskey.id);
-    z_owned_publisher_t pub = z_publishing(borrowed_session, reskey);
+    printf("Declaring Publisher on %lu\n", keyexpr.id);
+    z_owned_publisher_t pub = z_publishing(borrowed_session, keyexpr);
     if (!z_check(pub))
     {
         printf("Unable to declare publisher.\n");
@@ -63,8 +63,8 @@ int main(int argc, char **argv)
     {
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
-        printf("Writing Data ('%lu': '%s')...\n", reskey.id, buf);
-        z_write(borrowed_session, reskey, (const uint8_t *)buf, strlen(buf));
+        printf("Writing Data ('%lu': '%s')...\n", keyexpr.id, buf);
+        z_write(borrowed_session, keyexpr, (const uint8_t *)buf, strlen(buf));
     }
     z_unregister_publisher(z_move(pub));
     z_close(z_move(s));

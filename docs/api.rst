@@ -86,11 +86,11 @@ Session
 Session configuration
 ---------------------
 
-A zenoh-net session is configured through a :c:type:`z_properties_t` properties map.
+A zenoh session is configured through a :c:type:`z_properties_t` properties map.
 
 Multiple values are coma separated.
 
-The following constants define the several property keys accepted for a zenoh-net 
+The following constants define the several property keys accepted for a zenoh 
 session configuration and the associated accepted values.
 
 .. c:var:: const unsigned int ZN_CONFIG_MODE_KEY
@@ -180,7 +180,7 @@ session configuration and the associated accepted values.
     - Default value : ``"true"``.
 
 The following functions allow to create default :c:type:`z_properties_t` maps for 
-zenoh-net session configuration. The returned configurations can be amended with extra 
+zenoh session configuration. The returned configurations can be amended with extra 
 options with :c:func:`z_properties_insert`.
 
 .. autocfunction:: zenoh/net.h::z_config_empty
@@ -206,13 +206,13 @@ Resource
 Resource key
 ------------
 
-.. autocstruct:: zenoh/net.h::z_reskey_t
+.. autocstruct:: zenoh/net.h::z_keyexpr_t
 
-.. autocfunction:: zenoh/net.h::z_rname
+.. autocfunction:: zenoh/net.h::z_expr
 
-.. autocfunction:: zenoh/net.h::z_rid
+.. autocfunction:: zenoh/net.h::z_id
 
-.. autocfunction:: zenoh/net.h::z_rid_with_suffix
+.. autocfunction:: zenoh/net.h::z_id_with_suffix
 
 Sample
 ------
@@ -234,7 +234,7 @@ Types
 
 .. c:type:: z_publisher_tr
 
-  A zenoh-net Publisher.
+  A zenoh Publisher.
 
 .. autocenum:: zenoh/net.h::z_congestion_control_t
 
@@ -257,7 +257,7 @@ Types
 
 .. c:type:: z_subscriber_t
 
-  A zenoh-net subscriber.
+  A zenoh subscriber.
 
 .. autocenum:: zenoh/net.h::z_reliability_t
 
@@ -347,7 +347,7 @@ Types
 
 .. c:type:: z_queryable_t
 
-  The zenoh-net Queryable.
+  The zenoh Queryable.
 
 .. c:type:: z_query_t
 

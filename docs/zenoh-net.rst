@@ -13,7 +13,7 @@
 ..
 
 *************
-zenoh-net API
+zenoh API
 *************
 
 .. toctree::

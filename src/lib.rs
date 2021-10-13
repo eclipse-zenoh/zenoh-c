@@ -208,10 +208,10 @@ impl AsMut<Queryable> for z_owned_queryable_t {
 pub struct z_query_t(Query);
 
 /// Constructs a resource key from a resource id.  
-/// Since id-only ressource keys don't need destruction, a `z_reskey_t` is returned instead of its owned variant.
+/// Since id-only ressource keys don't need destruction, a `z_keyexpr_t` is returned instead of its owned variant.
 #[no_mangle]
-pub extern "C" fn z_rid(id: c_ulong) -> z_reskey_t {
-    unsafe { z_reskey_new_borrowed(id, std::ptr::null()) }
+pub extern "C" fn z_id(id: c_ulong) -> z_keyexpr_t {
+    unsafe { z_keyexpr_new_borrowed(id, std::ptr::null()) }
 }
 
 /// Constructs a resource key from a resource id and a suffix. `suffix`'s content is copied.
@@ -226,8 +226,8 @@ pub extern "C" fn z_rid(id: c_ulong) -> z_reskey_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_rid_with_suffix(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
-    z_reskey_new(id, suffix)
+pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
+    z_keyexpr_new(id, suffix)
 }
 
 /// Constructs a resource key from a resource name. `name`'s content is copied.
@@ -242,8 +242,8 @@ pub unsafe extern "C" fn z_rid_with_suffix(id: c_ulong, suffix: *const c_char) -
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_rname(name: *const c_char) -> z_owned_reskey_t {
-    z_reskey_new(0, name)
+pub unsafe extern "C" fn z_expr(name: *const c_char) -> z_owned_keyexpr_t {
+    z_keyexpr_new(0, name)
 }
 
 /// Return a new, zenoh-allocated, empty configuration.
@@ -466,7 +466,7 @@ pub extern "C" fn z_init_logger() {
     env_logger::init();
 }
 
-/// Open a zenoh-net session. Should the session opening fail, `z_check`ing the returned value will return `false`.
+/// Open a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
@@ -489,7 +489,7 @@ pub unsafe extern "C" fn z_session_check(config: &z_owned_session_t) -> bool {
     config.as_ref().is_some()
 }
 
-/// Get informations about an zenoh-net session.
+/// Get informations about an zenoh session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
@@ -500,7 +500,7 @@ pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
     }
 }
 
-/// Get informations about an zenoh-net session as a properties-formatted string.
+/// Get informations about an zenoh session as a properties-formatted string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> z_owned_string_t {
@@ -511,7 +511,7 @@ pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> z_owned_string_t
     }
 }
 
-/// Closes a zenoh-net session. This frees and invalidates `session` for double-free safety.
+/// Closes a zenoh session. This frees and invalidates `session` for double-free safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
@@ -526,13 +526,13 @@ pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
 #[no_mangle]
 pub unsafe extern "C" fn z_register_resource(
     session: z_session_t,
-    reskey: &mut z_owned_reskey_t,
-) -> z_reskey_t {
-    let mut rk = z_owned_reskey_t {
+    keyexpr: &mut z_owned_keyexpr_t,
+) -> z_keyexpr_t {
+    let mut rk = z_owned_keyexpr_t {
         id: 0,
         suffix: z_owned_string_t::default(),
     };
-    std::mem::swap(reskey, &mut rk);
+    std::mem::swap(keyexpr, &mut rk);
     let result = session
         .as_ref()
         .as_ref()
@@ -540,13 +540,13 @@ pub unsafe extern "C" fn z_register_resource(
         .register_resource(ResKey::from_raw(rk))
         .wait()
         .unwrap() as c_ulong;
-    z_rid(result)
+    z_id(result)
 }
 
 /// Write data.
 ///
 /// Parameters:
-///     session: The zenoh-net session.
+///     session: The zenoh session.
 ///     resource: The resource key to write.
 ///     payload: The value to write.
 ///     len: The length of the value to write.
@@ -556,7 +556,7 @@ pub unsafe extern "C" fn z_register_resource(
 #[no_mangle]
 pub unsafe extern "C" fn z_write(
     session: z_session_t,
-    reskey: z_reskey_t,
+    keyexpr: z_keyexpr_t,
     payload: *const u8,
     len: c_uint,
 ) -> c_int {
@@ -565,7 +565,7 @@ pub unsafe extern "C" fn z_write(
         .as_ref()
         .expect("invalid session")
         .put(
-            reskey,
+            keyexpr,
             slice::from_raw_parts(payload as *const u8, len as usize),
         )
         .wait();
@@ -639,7 +639,7 @@ pub unsafe extern "C" fn z_write_options_set(
 /// Write data with extended options.
 ///
 /// Parameters:
-///     session: The zenoh-net session.
+///     session: The zenoh session.
 ///     resource: The resource key to write.
 ///     payload: The value to write.
 ///     len: The length of the value to write.
@@ -650,7 +650,7 @@ pub unsafe extern "C" fn z_write_options_set(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_write_ext(
     session: z_session_t,
-    reskey: z_reskey_t,
+    keyexpr: z_keyexpr_t,
     payload: *const u8,
     len: c_uint,
     options: &z_write_options_t,
@@ -661,7 +661,7 @@ pub unsafe extern "C" fn z_write_ext(
         .as_ref()
         .expect("invalid session")
         .put(
-            reskey,
+            keyexpr,
             slice::from_raw_parts(payload as *const u8, len as usize),
         )
         .encoding(options.encoding.clone())
@@ -684,12 +684,12 @@ pub unsafe extern "C" fn z_write_ext(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publishing(
     session: z_session_t,
-    reskey: z_reskey_t,
+    keyexpr: z_keyexpr_t,
 ) -> z_owned_publisher_t {
     let publisher = std::mem::transmute::<_, &'static z_session_t>(session)
         .as_ref()
         .as_ref()
-        .map(|s| s.publishing(reskey).wait().ok())
+        .map(|s| s.publishing(keyexpr).wait().ok())
         .flatten();
     z_owned_publisher_t(std::mem::transmute(publisher))
 }
@@ -708,7 +708,7 @@ pub unsafe extern "C" fn z_unregister_publisher(publ: &mut z_owned_publisher_t) 
 /// Subscribes to the given resource key.
 ///
 /// Parameters:
-///     session: The zenoh-net session.
+///     session: The zenoh session.
 ///     resource: The resource key to subscribe.
 ///     sub_info: The :c:type:`z_subinfo_t` to configure the subscriber.
 ///     callback: The callback function that will be called each time a data matching the subscribed resource is received.
@@ -727,7 +727,7 @@ pub unsafe extern "C" fn z_unregister_publisher(publ: &mut z_owned_publisher_t) 
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_subscribe(
     session: z_session_t,
-    reskey: z_reskey_t,
+    keyexpr: z_keyexpr_t,
     sub_info: z_subinfo_t,
     callback: extern "C" fn(*const z_sample_t, *const c_void),
     arg: *mut c_void,
@@ -739,7 +739,7 @@ pub unsafe extern "C" fn z_subscribe(
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .subscribe(reskey)
+        .subscribe(keyexpr)
         .period(sub_info.period.into())
         .reliability(sub_info.reliability.into())
         .mode(sub_info.mode.into());
@@ -835,7 +835,7 @@ pub unsafe extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool 
 /// Replies are provided through a callback function.
 ///
 /// Parameters:
-///     session: The zenoh-net session.
+///     session: The zenoh session.
 ///     resource: The resource key to query.
 ///     predicate: An indication to matching queryables about the queried data.
 ///     target: The kind of queryables that should be target of this query.
@@ -846,7 +846,7 @@ pub unsafe extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool 
 #[no_mangle]
 pub unsafe extern "C" fn z_query(
     session: z_session_t,
-    reskey: z_reskey_t,
+    keyexpr: z_keyexpr_t,
     predicate: *const c_char,
     target: z_query_target_t,
     consolidation: z_query_consolidation_t,
@@ -860,7 +860,7 @@ pub unsafe extern "C" fn z_query(
         .as_ref()
         .expect("invalid session")
         .get(KeyedSelector {
-            key_selector: reskey.into(),
+            key_selector: keyexpr.into(),
             value_selector: p,
         })
         .target(target.into())
@@ -899,7 +899,7 @@ pub unsafe extern "C" fn z_query(
 /// Replies are collected in an array.
 ///
 /// Parameters:
-///     session: The zenoh-net session.
+///     session: The zenoh session.
 ///     resource: The resource key to query.
 ///     predicate: An indication to matching queryables about the queried data.
 ///     target: The kind of queryables that should be target of this query.
@@ -911,7 +911,7 @@ pub unsafe extern "C" fn z_query(
 #[no_mangle]
 pub unsafe extern "C" fn z_query_collect(
     session: z_session_t,
-    reskey: z_reskey_t,
+    keyexpr: z_keyexpr_t,
     predicate: *const c_char,
     target: z_query_target_t,
     consolidation: z_query_consolidation_t,
@@ -923,7 +923,7 @@ pub unsafe extern "C" fn z_query_collect(
             .as_ref()
             .expect("invalid session")
             .get(KeyedSelector {
-                key_selector: reskey.into(),
+                key_selector: keyexpr.into(),
                 value_selector: p,
             })
             .target(target.into())
@@ -945,7 +945,7 @@ pub unsafe extern "C" fn z_query_collect(
 /// Registers a `z_queryable_t` for the given resource key.
 ///
 /// Parameters:
-///     session: The zenoh-net session.
+///     session: The zenoh session.
 ///     resource: The resource key the :c:type:`z_queryable_t` will reply to.
 ///     kind: The kind of :c:type:`z_queryable_t`.
 ///     callback: The callback function that will be called each time a matching query is received.
@@ -957,7 +957,7 @@ pub unsafe extern "C" fn z_query_collect(
 #[no_mangle]
 pub unsafe extern "C" fn z_register_queryable(
     session: z_session_t,
-    reskey: z_reskey_t,
+    keyexpr: z_keyexpr_t,
     kind: c_uint,
     callback: extern "C" fn(&z_query_t, *const c_void),
     arg: *mut c_void,
@@ -969,7 +969,7 @@ pub unsafe extern "C" fn z_register_queryable(
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .register_queryable(reskey)
+        .register_queryable(keyexpr)
         .kind(kind as ZInt)
         .wait()
         .unwrap();

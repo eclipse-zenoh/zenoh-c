@@ -43,9 +43,9 @@ int main(int argc, char **argv)
   char *data = (char *)malloc(len);
   memset(data, 1, len);
 
-  z_owned_reskey_t oreskey = z_rname("/test/thr");
-  z_reskey_t reskey = z_register_resource(s, z_move(oreskey));
-  z_owned_publisher_t pub = z_publishing(s, reskey);
+  z_owned_keyexpr_t okeyexpr = z_expr("/test/thr");
+  z_keyexpr_t keyexpr = z_register_resource(s, z_move(okeyexpr));
+  z_owned_publisher_t pub = z_publishing(s, keyexpr);
   if (!z_check(pub))
   {
     printf("Unable to declare publisher.\n");
@@ -54,9 +54,9 @@ int main(int argc, char **argv)
 
   while (1)
   {
-    z_write(s, reskey, (const uint8_t *)data, len);
+    z_write(s, keyexpr, (const uint8_t *)data, len);
   }
   z_unregister_publisher(&pub);
-  z_reskey_free(z_move(oreskey));
+  z_keyexpr_free(z_move(okeyexpr));
   z_close(z_move(os));
 }

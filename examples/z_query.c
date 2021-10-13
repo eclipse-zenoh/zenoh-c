@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     }
 
     printf("Sending Query '%s'...\n", uri);
-    z_owned_reskey_t urikey = z_rname(uri);
+    z_owned_keyexpr_t urikey = z_expr(uri);
     z_owned_reply_data_array_t replies = z_query_collect(z_borrow(s), z_borrow(urikey), "", z_query_target_default(), z_query_consolidation_default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
                z_borrow(replies.val[i].data.key), (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
     }
     z_reply_data_array_free(z_move(replies));
-    z_reskey_free(z_move(urikey));
+    z_keyexpr_free(z_move(urikey));
     z_close(z_move(s));
     return 0;
 }

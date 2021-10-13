@@ -414,7 +414,7 @@ impl From<ZBuf> for z_owned_bytes_t {
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
-pub struct z_owned_reskey_t {
+pub struct z_owned_keyexpr_t {
     pub id: c_ulong,
     pub suffix: z_owned_string_t,
 }
@@ -431,7 +431,7 @@ pub struct z_owned_reskey_t {
 ///   - The combination of a numerical prefix and a string suffix.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct z_reskey_t {
+pub struct z_keyexpr_t {
     pub id: c_ulong,
     pub suffix: *const c_char,
 }
@@ -439,8 +439,8 @@ pub struct z_reskey_t {
 /// Constructs a zenoh-owned ressource key. `suffix`'s contents will be copied.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reskey_new(id: c_ulong, suffix: *const c_char) -> z_owned_reskey_t {
-    z_owned_reskey_t {
+pub unsafe extern "C" fn z_keyexpr_new(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
+    z_owned_keyexpr_t {
         id,
         suffix: z_string_new(suffix),
     }
@@ -448,32 +448,32 @@ pub unsafe extern "C" fn z_reskey_new(id: c_ulong, suffix: *const c_char) -> z_o
 /// Constructs a borrowed ressource key. The constructed value is valid as long as `suffix` is.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reskey_new_borrowed(id: c_ulong, suffix: *const c_char) -> z_reskey_t {
-    z_reskey_t { id, suffix }
+pub unsafe extern "C" fn z_keyexpr_new_borrowed(id: c_ulong, suffix: *const c_char) -> z_keyexpr_t {
+    z_keyexpr_t { id, suffix }
 }
-/// Frees `reskey` and invalidates it for double-free safety.
+/// Frees `keyexpr` and invalidates it for double-free safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reskey_free(reskey: &mut z_owned_reskey_t) {
-    z_string_free(&mut reskey.suffix);
-    reskey.id = 0;
+pub unsafe extern "C" fn z_keyexpr_free(keyexpr: &mut z_owned_keyexpr_t) {
+    z_string_free(&mut keyexpr.suffix);
+    keyexpr.id = 0;
 }
-/// Returns `true` if `reskey` is valid.
+/// Returns `true` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reskey_check(reskey: &z_owned_reskey_t) -> bool {
-    reskey.id != 0 || z_string_check(&reskey.suffix)
+pub unsafe extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
+    keyexpr.id != 0 || z_string_check(&keyexpr.suffix)
 }
 #[no_mangle]
-pub extern "C" fn z_reskey_borrow(reskey: &z_owned_reskey_t) -> z_reskey_t {
-    z_reskey_t {
-        id: reskey.id,
-        suffix: reskey.suffix._borrow,
+pub extern "C" fn z_keyexpr_borrow(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
+    z_keyexpr_t {
+        id: keyexpr.id,
+        suffix: keyexpr.suffix._borrow,
     }
 }
 
-impl<'a> From<&'a z_owned_reskey_t> for ResKey<'a> {
-    fn from(r: &'a z_owned_reskey_t) -> Self {
+impl<'a> From<&'a z_owned_keyexpr_t> for ResKey<'a> {
+    fn from(r: &'a z_owned_keyexpr_t) -> Self {
         unsafe {
             let len = if r.suffix._borrow.is_null() {
                 0
@@ -504,8 +504,8 @@ impl<'a> From<&'a z_owned_reskey_t> for ResKey<'a> {
     }
 }
 
-impl<'a> From<z_reskey_t> for ResKey<'a> {
-    fn from(r: z_reskey_t) -> Self {
+impl<'a> From<z_keyexpr_t> for ResKey<'a> {
+    fn from(r: z_keyexpr_t) -> Self {
         unsafe {
             let len = if r.suffix.is_null() {
                 0
@@ -530,9 +530,9 @@ impl<'a> From<z_reskey_t> for ResKey<'a> {
     }
 }
 
-impl FromRaw<z_owned_reskey_t> for ResKey<'static> {
+impl FromRaw<z_owned_keyexpr_t> for ResKey<'static> {
     #[inline]
-    fn from_raw(r: z_owned_reskey_t) -> ResKey<'static> {
+    fn from_raw(r: z_owned_keyexpr_t) -> ResKey<'static> {
         if r.suffix._borrow.is_null() {
             ResKey::RId(r.id as ZInt)
         } else if r.id != 0 {
@@ -542,17 +542,17 @@ impl FromRaw<z_owned_reskey_t> for ResKey<'static> {
         }
     }
     #[inline]
-    fn into_raw(self) -> z_owned_reskey_t {
+    fn into_raw(self) -> z_owned_keyexpr_t {
         match self {
-            ResKey::RId(rid) => z_owned_reskey_t {
+            ResKey::RId(rid) => z_owned_keyexpr_t {
                 id: rid as c_ulong,
                 suffix: unsafe { z_string_new(std::ptr::null()) },
             },
-            ResKey::RIdWithSuffix(rid, suffix) => z_owned_reskey_t {
+            ResKey::RIdWithSuffix(rid, suffix) => z_owned_keyexpr_t {
                 id: rid as c_ulong,
                 suffix: z_owned_string_t::from(suffix.into_owned()),
             },
-            ResKey::RName(suffix) => z_owned_reskey_t {
+            ResKey::RName(suffix) => z_owned_keyexpr_t {
                 id: 0,
                 suffix: z_owned_string_t::from(suffix.into_owned()),
             },
@@ -1118,7 +1118,7 @@ pub extern "C" fn z_target_default() -> z_target_t {
     Target::default().into()
 }
 
-/// The zenoh-net queryables that should be target of a `z_query`.
+/// The zenoh queryables that should be target of a `z_query`.
 ///
 /// Members:
 ///     `unsigned int kind`: A mask of queryable kinds.

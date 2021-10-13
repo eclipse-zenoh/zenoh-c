@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     subinfo.reliability = z_reliability_t_RELIABLE;
     subinfo.mode = z_submode_t_PULL;
     subinfo.period = z_period_NONE;
-    z_owned_reskey_t urikey = z_rname(uri);
+    z_owned_keyexpr_t urikey = z_expr(uri);
     z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(urikey), subinfo, data_handler, NULL);
     if (!z_check(sub))
     {
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     }
 
     z_unregister_subscriber(z_move(sub));
-    z_reskey_free(z_move(urikey));
+    z_keyexpr_free(z_move(urikey));
     z_close(z_move(s));
     return 0;
 }
