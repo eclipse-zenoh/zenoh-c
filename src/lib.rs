@@ -81,7 +81,7 @@ pub extern "C" fn z_session_borrow(s: &z_owned_session_t) -> z_session_t {
     z_session_t(s)
 }
 
-pub const Z_CONFIG_PADDING_U64: usize = 66;
+pub const Z_CONFIG_PADDING_U64: usize = 97;
 /// A borrowed zenoh config.
 #[repr(C)]
 #[allow(non_camel_case_types)]
