@@ -34,29 +34,16 @@ Work in progress...
   $ brew install rust
   ```
 
-2. Install the nightly version of the rustc rust compiler:
-
-  ```bash
-  $ rustup toolchain install nightly
-  $ rustup default nightly
-  ```
-
-3. Install [cbindgen](https://github.com/eqrion/cbindgen) on your platform:
-
-  ```bash
-  $ cargo install cbindgen
-  ```
-
-4. Clone the [source] with `git`:
+2. Clone the [source] with `git`:
 
    ```sh
-   git clone https://github.com/eclipse-zenoh/zenh-c.git
+   git clone https://github.com/eclipse-zenoh/zenoh-c.git
    cd rust
    ```
 
-[source]: https://github.com/eclipse-zenoh/zenh-c
+[source]: https://github.com/eclipse-zenoh/zenoh-c
 
-5. Build and install:
+3. Build and install:
 
   ```bash
   $ cd /path/to/zenoh-c

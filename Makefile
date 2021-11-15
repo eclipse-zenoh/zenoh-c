@@ -11,7 +11,7 @@
 # Contributors:
 #   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 #
-.PHONY: build examples all install clean
+.PHONY: lib examples all install clean
 
 # Library name
 ifeq ($(OS),Windows_NT)
@@ -45,22 +45,17 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-build: include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
+all: lib examples
+
+lib:
+	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
-all: build examples
-
-$(BUILD_DIR)/$(LIB_NAME): Cargo.toml src/lib.rs src/net/mod.rs src/net/types.rs
-	cargo build ${CARGOFLAGS} ${TARGET_OPT}
-
-$(BUILD_DIR)/examples/%: examples/net/%.c include/zenoh/net.h $(BUILD_DIR)/$(LIB_NAME)
+$(BUILD_DIR)/examples/%: examples/net/%.c
 	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
-include/zenoh/net.h: src/lib.rs src/net/mod.rs src/net/types.rs cbindgen.toml
-	cbindgen --config cbindgen.toml --crate zenoh-c --output $@
-
-install: $(BUILD_DIR)/$(LIB_NAME) include/zenoh.h include/zenoh/net.h
+install: lib include/zenoh.h include/zenoh/net.h
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
