@@ -344,7 +344,7 @@ extern const unsigned int ZN_CONFIG_MULTICAST_SCOUTING_KEY;
 
 extern const unsigned int ZN_CONFIG_MULTICAST_INTERFACE_KEY;
 
-extern const unsigned int ZN_CONFIG_MULTICAST_ADDRESS_KEY;
+extern const unsigned int ZN_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
 
 extern const unsigned int ZN_CONFIG_SCOUTING_TIMEOUT_KEY;
 
