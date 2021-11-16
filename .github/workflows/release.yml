@@ -178,6 +178,7 @@ jobs:
         run: |
           TARGET=${{ matrix.job.target }}
           LIB_PKG_NAME="${TARGET}-zenoh-c-${{ steps.env.outputs.PKG_VERSION }}.zip"
+          DEBS_PKG_NAME="${TARGET}-zenoh-c-${{ steps.env.outputs.PKG_VERSION }}-deb-pkgs.zip"
 
           case ${TARGET} in
             *linux*)
@@ -187,6 +188,15 @@ jobs:
               cd -
               zip ../../../${LIB_PKG_NAME} include
               echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
+
+              # check if debian packages has been created and packages them in a single tgz
+              if [[ -d target/${TARGET}/debian ]]; then
+                cd target/${TARGET}/debian
+                echo "Packaging ${DEBS_PKG_NAME}:"
+                zip ../../../${DEBS_PKG_NAME} *.deb
+                cd -
+                echo ::set-output name=DEBS_PKG_NAME::"${DEBS_PKG_NAME}"
+              fi
               ;;
             *apple*)
               cd "target/${TARGET}/release/"
@@ -211,3 +221,9 @@ jobs:
         with:
           name: ${{ steps.package.outputs.LIB_PKG_NAME }}
           path: ${{ steps.package.outputs.LIB_PKG_NAME }}
+      - name: "Upload debian packages"
+        if: ${{ steps.package.outputs.DEBS_PKG_NAME }}
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ steps.package.outputs.DEBS_PKG_NAME }}
+          path: ${{ steps.package.outputs.DEBS_PKG_NAME }}
