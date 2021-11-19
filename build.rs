@@ -9,6 +9,7 @@ fn main() {
         .write_to_file(GENERATION_PATH);
     split_bindings();
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=splitguide.yaml");
     println!("cargo:rerun-if-changed=cbindgen.toml")
 }

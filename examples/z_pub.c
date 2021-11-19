@@ -47,12 +47,11 @@ int main(int argc, char **argv)
 
     printf("Declaring Resource '%s'", uri);
     z_owned_keyexpr_t urikey = z_expr(uri);
-    z_keyexpr_t keyexpr = z_register_resource(borrowed_session, z_move(urikey));
+    z_keyexpr_t keyexpr = z_declare_expr(borrowed_session, z_move(urikey));
     printf(" => RId %lu\n", keyexpr.id);
 
     printf("Declaring Publisher on %lu\n", keyexpr.id);
-    z_owned_publisher_t pub = z_publishing(borrowed_session, keyexpr);
-    if (!z_check(pub))
+    if (!z_declare_publication(borrowed_session, keyexpr))
     {
         printf("Unable to declare publisher.\n");
         exit(-1);
@@ -66,7 +65,7 @@ int main(int argc, char **argv)
         printf("Writing Data ('%lu': '%s')...\n", keyexpr.id, buf);
         z_write(borrowed_session, keyexpr, (const uint8_t *)buf, strlen(buf));
     }
-    z_unregister_publisher(z_move(pub));
+    z_undeclare_publication(borrowed_session, keyexpr);
     z_close(z_move(s));
     return 0;
 }

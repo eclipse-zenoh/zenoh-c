@@ -18,17 +18,14 @@ use async_std::task;
 use futures::prelude::*;
 use futures::select;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ulong, size_t};
-use std::convert::TryFrom;
-use std::ffi::{c_void, CStr, CString};
+use std::ffi::{c_void, CStr};
 use std::mem::ManuallyDrop;
 use std::slice;
 use zenoh::config::whatami::WhatAmIMatcher;
 use zenoh::config::{Config, ConfigProperties, IntKeyMapLike, WhatAmI};
 use zenoh::info::InfoProperties;
-use zenoh::prelude::{
-    Encoding, KeyedSelector, Priority, ResKey, Sample, SampleKind, ZFuture, ZInt,
-};
-use zenoh::publisher::{CongestionControl, Publisher};
+use zenoh::prelude::{Encoding, KeyExpr, Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
+use zenoh::publication::CongestionControl;
 use zenoh::queryable::Query;
 use zenoh::scouting::Hello;
 use zenoh::Session;
@@ -81,7 +78,7 @@ pub extern "C" fn z_session_borrow(s: &z_owned_session_t) -> z_session_t {
     z_session_t(s)
 }
 
-pub const Z_CONFIG_PADDING_U64: usize = 97;
+pub const Z_CONFIG_PADDING_U64: usize = 110;
 /// A borrowed zenoh config.
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -129,30 +126,6 @@ enum SubOps {
     Close,
 }
 
-pub const Z_PUBLISHER_PADDING_U64: usize = 3;
-/// An owned zenoh publisher.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_owned_publisher_t([u64; Z_PUBLISHER_PADDING_U64]);
-impl AsRef<Option<Publisher<'static>>> for z_owned_publisher_t {
-    fn as_ref(&self) -> &Option<Publisher<'static>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl AsMut<Option<Publisher<'static>>> for z_owned_publisher_t {
-    fn as_mut(&mut self) -> &mut Option<Publisher<'static>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
 type Subscriber = Option<Arc<Sender<SubOps>>>;
 pub const Z_SUBSCRIBER_PADDING_U64: usize = 1;
 /// An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
@@ -340,8 +313,8 @@ pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t
         z_config_empty()
     } else {
         let conf_str = CStr::from_ptr(s);
-        let props = zenoh::config::ConfigProperties::from(conf_str.to_string_lossy().as_ref());
-        z_owned_config_t(std::mem::transmute(Config::try_from(props).ok()))
+        let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();
+        z_owned_config_t(std::mem::transmute(props))
     }
 }
 
@@ -380,39 +353,50 @@ pub unsafe extern "C" fn z_config_from_file(path: *const c_char) -> z_owned_conf
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_peer() -> z_owned_config_t {
-    unsafe {
-        z_owned_config_t(std::mem::transmute(
-            Config::try_from(zenoh::config::peer()).ok(),
-        ))
-    }
+    unsafe { z_owned_config_t(std::mem::transmute(Some(zenoh::config::peer()))) }
 }
 
 /// Constructs a default configuration client mode zenoh session.
 /// If `peer` is not null, it is added to the configuration as remote peer.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_config_client(peer: *mut c_char) -> z_owned_config_t {
-    let locator = if peer.is_null() {
-        None
-    } else if let Ok(locator) = CString::from_raw(peer).into_string() {
-        Some(locator)
+pub unsafe extern "C" fn z_config_client(
+    peers: *const *const c_char,
+    n_peers: usize,
+) -> z_owned_config_t {
+    let locators = if peers.is_null() {
+        Vec::new()
+    } else if let Ok(locators) = std::slice::from_raw_parts(peers, n_peers)
+        .iter()
+        .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
+        .fold(
+            Ok(Vec::<zenoh::prelude::Locator>::new()),
+            |acc, it| match (acc, it) {
+                (Err(_), _) | (_, Err(_)) => Err(()),
+                (Ok(mut vec), Ok(loc)) => {
+                    vec.push(loc);
+                    Ok(vec)
+                }
+            },
+        )
+    {
+        locators
     } else {
         return z_owned_config_t(std::mem::transmute(None::<Config>));
     };
-    z_owned_config_t(std::mem::transmute(
-        Config::try_from(zenoh::config::client(locator)).ok(),
-    ))
+    z_owned_config_t(std::mem::transmute(Some(zenoh::config::client(locators))))
 }
 
 /// Gets the resource name of a received query as a non null-terminated string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_res_name(query: &z_query_t) -> z_bytes_t {
-    let s = query.0.selector().key_selector;
-    z_bytes_t {
+pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
+    let (scope, s) = query.0.key_selector().as_id_and_suffix();
+    let suffix = z_bytes_t {
         val: s.as_ptr(),
         len: s.len(),
-    }
+    };
+    z_keyexpr_t { id: scope, suffix }
 }
 
 /// Get the predicate of a received query as a non null-terminated string.
@@ -524,20 +508,20 @@ pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
 /// ease the retrieval of the concerned resource in the routing tables.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_register_resource(
+pub unsafe extern "C" fn z_declare_expr(
     session: z_session_t,
     keyexpr: &mut z_owned_keyexpr_t,
 ) -> z_keyexpr_t {
     let mut rk = z_owned_keyexpr_t {
         id: 0,
-        suffix: z_owned_string_t::default(),
+        suffix: z_owned_bytes_t::default(),
     };
     std::mem::swap(keyexpr, &mut rk);
     let result = session
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .register_resource(ResKey::from_raw(rk))
+        .declare_expr(KeyExpr::from(z_keyexpr_borrow(&rk)))
         .wait()
         .unwrap() as c_ulong;
     z_id(result)
@@ -676,34 +660,29 @@ pub unsafe extern "C" fn z_write_ext(
     result
 }
 
-/// Register a `z_owned_publisher_t` for the given resource key.
+/// Declares a publication for the given resource key, returning `true` on success.
 ///
 /// Written resources that match the given key will only be sent on the network
 /// if matching subscribers exist in the system.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_publishing(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
-) -> z_owned_publisher_t {
-    let publisher = std::mem::transmute::<_, &'static z_session_t>(session)
+pub unsafe extern "C" fn z_declare_publication(session: z_session_t, keyexpr: z_keyexpr_t) -> bool {
+    session
         .as_ref()
         .as_ref()
-        .map(|s| s.publishing(keyexpr).wait().ok())
-        .flatten();
-    z_owned_publisher_t(std::mem::transmute(publisher))
-}
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_publisher_check(publ: &z_owned_publisher_t) -> bool {
-    publ.as_ref().is_some()
+        .map(|s| s.declare_publication(keyexpr).wait().ok())
+        .flatten()
+        .is_some()
 }
 
-/// Destroys `publ`, unregistering it and invalidating `publ` for double-free safety
+/// Undeclares a publication for the given resource key
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_unregister_publisher(publ: &mut z_owned_publisher_t) {
-    std::mem::drop(publ.as_mut().take())
+pub unsafe extern "C" fn z_undeclare_publication(session: z_session_t, keyexpr: z_keyexpr_t) {
+    session
+        .as_ref()
+        .as_ref()
+        .map(|s| s.undeclare_publication(keyexpr).wait().ok());
 }
 /// Subscribes to the given resource key.
 ///
@@ -751,9 +730,15 @@ pub unsafe extern "C" fn z_subscribe(
     // any of the task resolving futures.
     task::spawn_blocking(move || {
         task::block_on(async move {
-            let mut key = vec![0u8];
+            let key = z_keyexpr_t {
+                id: 0,
+                suffix: z_bytes_t {
+                    val: std::ptr::null(),
+                    len: 0,
+                },
+            };
             let mut sample = z_sample_t {
-                key: key.as_ptr() as *const i8,
+                key,
                 value: z_bytes_t {
                     val: std::ptr::null(),
                     len: 0,
@@ -769,9 +754,7 @@ pub unsafe extern "C" fn z_subscribe(
                         // with non null terminated strings.
                         let us = s.unwrap();
                         let data = us.value.payload.to_vec();
-                        key.clear();
-                        key.extend(us.res_name.bytes());
-                        key.push(0);
+                        sample.key = (&us.key_expr).into();
                         sample.value.val = data.as_ptr() as *const c_uchar;
                         sample.value.len = data.len() as size_t;
                         callback(&sample, arg)
@@ -783,7 +766,7 @@ pub unsafe extern "C" fn z_subscribe(
                             },
 
                             Ok(SubOps::Close) => {
-                                let _ = sub.unregister().await;
+                                let _ = sub.close().await;
                                 return
                             },
                             _ => return
@@ -815,7 +798,7 @@ pub unsafe extern "C" fn z_pull(sub: &z_owned_subscriber_t) {
 /// Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_unregister_subscriber(sub: &mut z_owned_subscriber_t) {
+pub unsafe extern "C" fn z_subscriber_close(sub: &mut z_owned_subscriber_t) {
     let sub = sub.as_mut();
     match sub {
         Some(tx) => {
@@ -859,7 +842,7 @@ pub unsafe extern "C" fn z_query(
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .get(KeyedSelector {
+        .get(Selector {
             key_selector: keyexpr.into(),
             value_selector: p,
         })
@@ -922,7 +905,7 @@ pub unsafe extern "C" fn z_query_collect(
             .as_ref()
             .as_ref()
             .expect("invalid session")
-            .get(KeyedSelector {
+            .get(Selector {
                 key_selector: keyexpr.into(),
                 value_selector: p,
             })
@@ -955,7 +938,7 @@ pub unsafe extern "C" fn z_query_collect(
 ///    The created :c:type:`z_queryable_t` or null if the declaration failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_register_queryable(
+pub unsafe extern "C" fn z_queryable_new(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     kind: c_uint,
@@ -969,7 +952,7 @@ pub unsafe extern "C" fn z_register_queryable(
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .register_queryable(keyexpr)
+        .queryable(keyexpr)
         .kind(kind as ZInt)
         .wait()
         .unwrap();
@@ -992,7 +975,7 @@ pub unsafe extern "C" fn z_register_queryable(
                   callback(&query, arg);
                 },
                 _ = rx.recv().fuse() => {
-                    let _ = queryable.unregister().await;
+                    let _ = queryable.close().await;
                     return
                 })
             }
@@ -1007,7 +990,7 @@ pub unsafe extern "C" fn z_register_queryable(
 ///     qable: The :c:type:`z_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_unregister_queryable(qable: &mut z_owned_queryable_t) {
+pub unsafe extern "C" fn z_queryable_close(qable: &mut z_owned_queryable_t) {
     let qable = qable.as_mut();
     match qable {
         Some(tx) => {

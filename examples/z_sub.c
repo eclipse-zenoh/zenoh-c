@@ -57,7 +57,7 @@ int main(int argc, char **argv)
   {
     c = fgetc(stdin);
   }
-  z_unregister_subscriber(z_move(sub));
+  z_subscriber_close(z_move(sub));
   z_keyexpr_free(z_move(key));
   z_close(z_move(s));
   return 0;

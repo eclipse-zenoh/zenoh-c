@@ -20,7 +20,7 @@ char *value = "Eval from C!";
 
 void query_handler(const z_query_t *query, const void *arg)
 {
-    z_bytes_t res = z_query_res_name(query);
+    z_bytes_t res = z_query_key_expr(query).suffix;
     z_bytes_t pred = z_query_predicate(query);
     printf(">> [Query handler] Handling '%.*s?%.*s'\n", res.len, res.val, pred.len, pred.val);
     z_send_reply(query, uri, (const unsigned char *)value, strlen(value));
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
     printf("Declaring Queryable on '%s'...\n", uri);
     z_owned_keyexpr_t urikey = z_expr(uri);
-    z_owned_queryable_t qable = z_register_queryable(z_borrow(s), z_borrow(urikey), ZN_QUERYABLE_EVAL, query_handler, NULL);
+    z_owned_queryable_t qable = z_queryable_new(z_borrow(s), z_borrow(urikey), ZN_QUERYABLE_EVAL, query_handler, NULL);
     if (!z_check(qable))
     {
         printf("Unable to declare queryable.\n");
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    z_unregister_queryable(z_move(qable));
+    z_queryable_close(z_move(qable));
     z_keyexpr_free(z_move(urikey));
     z_close(z_move(s));
     return 0;

@@ -19,8 +19,8 @@ use zenoh::{
     config::WhatAmI,
     info::{self, InfoProperties},
     net::protocol::core::SubInfo,
-    prelude::{PeerId, ResKey, Sample, ZInt},
-    publisher::CongestionControl,
+    prelude::{KeyExpr, PeerId, Sample, ZInt},
+    publication::CongestionControl,
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, Target},
     queryable,
     scouting::Hello,
@@ -320,6 +320,7 @@ pub struct z_owned_bytes_t {
 
 /// A borrowed array of bytes.  
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct z_bytes_t {
     pub val: *const u8,
     pub len: size_t,
@@ -329,6 +330,21 @@ impl Default for z_owned_bytes_t {
         z_owned_bytes_t {
             val: std::ptr::null(),
             len: 0,
+        }
+    }
+}
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_new(start: *const u8, len: usize) -> z_owned_bytes_t {
+    if start.is_null() {
+        z_owned_bytes_t { val: start, len: 0 }
+    } else {
+        let slice = std::slice::from_raw_parts(start, len);
+        let boxed = Box::<[u8]>::from(slice);
+        let start = Box::into_raw(boxed);
+        z_owned_bytes_t {
+            val: (*start).as_ptr(),
+            len,
         }
     }
 }
@@ -392,6 +408,16 @@ impl From<ZBuf> for z_owned_bytes_t {
         res
     }
 }
+impl From<z_owned_bytes_t> for String {
+    fn from(s: z_owned_bytes_t) -> Self {
+        unsafe {
+            String::from_utf8(
+                Box::from_raw(std::slice::from_raw_parts_mut(s.val as *mut u8, s.len)).into(),
+            )
+            .unwrap()
+        }
+    }
+}
 
 /// A zenoh-allocated resource key.
 ///
@@ -414,9 +440,10 @@ impl From<ZBuf> for z_owned_bytes_t {
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+#[derive(Default)]
 pub struct z_owned_keyexpr_t {
     pub id: c_ulong,
-    pub suffix: z_owned_string_t,
+    pub suffix: z_owned_bytes_t,
 }
 /// A borrowed ressource key.
 ///
@@ -433,7 +460,7 @@ pub struct z_owned_keyexpr_t {
 #[derive(Clone, Copy)]
 pub struct z_keyexpr_t {
     pub id: c_ulong,
-    pub suffix: *const c_char,
+    pub suffix: z_bytes_t,
 }
 
 /// Constructs a zenoh-owned ressource key. `suffix`'s contents will be copied.
@@ -442,120 +469,100 @@ pub struct z_keyexpr_t {
 pub unsafe extern "C" fn z_keyexpr_new(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
     z_owned_keyexpr_t {
         id,
-        suffix: z_string_new(suffix),
+        suffix: z_bytes_new(suffix as *const _, libc::strlen(suffix)),
     }
 }
 /// Constructs a borrowed ressource key. The constructed value is valid as long as `suffix` is.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_new_borrowed(id: c_ulong, suffix: *const c_char) -> z_keyexpr_t {
-    z_keyexpr_t { id, suffix }
+    z_keyexpr_t {
+        id,
+        suffix: z_bytes_t {
+            val: suffix as *const _,
+            len: libc::strlen(suffix),
+        },
+    }
 }
 /// Frees `keyexpr` and invalidates it for double-free safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_free(keyexpr: &mut z_owned_keyexpr_t) {
-    z_string_free(&mut keyexpr.suffix);
+    z_bytes_free(&mut keyexpr.suffix);
     keyexpr.id = 0;
 }
 /// Returns `true` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
-    keyexpr.id != 0 || z_string_check(&keyexpr.suffix)
+    keyexpr.id != 0 || z_bytes_check(&keyexpr.suffix)
 }
 #[no_mangle]
 pub extern "C" fn z_keyexpr_borrow(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
     z_keyexpr_t {
         id: keyexpr.id,
-        suffix: keyexpr.suffix._borrow,
+        suffix: unsafe { z_bytes_borrow(&keyexpr.suffix) },
     }
 }
 
-impl<'a> From<&'a z_owned_keyexpr_t> for ResKey<'a> {
+impl<'a> From<&'a z_owned_keyexpr_t> for KeyExpr<'a> {
     fn from(r: &'a z_owned_keyexpr_t) -> Self {
         unsafe {
-            let len = if r.suffix._borrow.is_null() {
-                0
-            } else {
-                libc::strlen(r.suffix._borrow)
-            };
+            let len = r.suffix.len;
             match (r.id, len) {
-                (id, 0) => ResKey::RId(id),
-                (0, _) => ResKey::RName(
-                    std::str::from_utf8(std::slice::from_raw_parts(
-                        r.suffix._borrow as *const _,
-                        len,
-                    ))
-                    .unwrap()
-                    .into(),
+                (id, 0) => KeyExpr::from(id),
+                (0, _) => KeyExpr::from(
+                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
+                        .unwrap(),
                 ),
-                (id, _) => ResKey::RIdWithSuffix(
-                    id,
-                    std::str::from_utf8(std::slice::from_raw_parts(
-                        r.suffix._borrow as *const _,
-                        len,
-                    ))
-                    .unwrap()
-                    .into(),
+                (id, _) => KeyExpr::from(id).with_suffix(
+                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
+                        .unwrap(),
                 ),
             }
         }
     }
 }
 
-impl<'a> From<z_keyexpr_t> for ResKey<'a> {
+impl<'a> From<z_keyexpr_t> for KeyExpr<'a> {
     fn from(r: z_keyexpr_t) -> Self {
         unsafe {
-            let len = if r.suffix.is_null() {
-                0
-            } else {
-                libc::strlen(r.suffix)
-            };
+            let len = r.suffix.len;
             match (r.id, len) {
-                (id, 0) => ResKey::RId(id),
-                (0, _) => ResKey::RName(
-                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix as *const _, len))
+                (id, 0) => KeyExpr::from(id),
+                (0, _) => {
+                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
                         .unwrap()
-                        .into(),
-                ),
-                (id, _) => ResKey::RIdWithSuffix(
-                    id,
-                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix as *const _, len))
-                        .unwrap()
-                        .into(),
+                        .into()
+                }
+                (id, _) => KeyExpr::from(id).with_suffix(
+                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
+                        .unwrap(),
                 ),
             }
         }
     }
 }
 
-impl FromRaw<z_owned_keyexpr_t> for ResKey<'static> {
-    #[inline]
-    fn from_raw(r: z_owned_keyexpr_t) -> ResKey<'static> {
-        if r.suffix._borrow.is_null() {
-            ResKey::RId(r.id as ZInt)
-        } else if r.id != 0 {
-            ResKey::RIdWithSuffix(r.id as ZInt, String::from(r.suffix).into())
-        } else {
-            ResKey::RName(String::from(r.suffix).into())
+impl<'a> From<&KeyExpr<'a>> for z_keyexpr_t {
+    fn from(key: &KeyExpr<'a>) -> Self {
+        let (id, suffix) = key.as_id_and_suffix();
+        z_keyexpr_t {
+            id,
+            suffix: z_bytes_t {
+                val: suffix.as_ptr() as *const _,
+                len: suffix.len(),
+            },
         }
     }
-    #[inline]
-    fn into_raw(self) -> z_owned_keyexpr_t {
-        match self {
-            ResKey::RId(rid) => z_owned_keyexpr_t {
-                id: rid as c_ulong,
-                suffix: unsafe { z_string_new(std::ptr::null()) },
-            },
-            ResKey::RIdWithSuffix(rid, suffix) => z_owned_keyexpr_t {
-                id: rid as c_ulong,
-                suffix: z_owned_string_t::from(suffix.into_owned()),
-            },
-            ResKey::RName(suffix) => z_owned_keyexpr_t {
-                id: 0,
-                suffix: z_owned_string_t::from(suffix.into_owned()),
-            },
+}
+
+impl<'a> From<KeyExpr<'a>> for z_owned_keyexpr_t {
+    fn from(key: KeyExpr<'a>) -> Self {
+        let (id, suffix) = key.as_id_and_suffix();
+        z_owned_keyexpr_t {
+            id,
+            suffix: unsafe { z_bytes_new(suffix.as_ptr() as *const _, suffix.len()) },
         }
     }
 }
@@ -578,7 +585,7 @@ impl FromRaw<z_owned_keyexpr_t> for ResKey<'static> {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_sample_t {
-    pub key: z_owned_string_t,
+    pub key: z_owned_keyexpr_t,
     pub value: z_owned_bytes_t,
 }
 
@@ -591,7 +598,7 @@ pub struct z_owned_sample_t {
 ///   `z_bytes_t value`: The value of this data sample.
 #[repr(C)]
 pub struct z_sample_t {
-    pub key: z_string_t,
+    pub key: z_keyexpr_t,
     pub value: z_bytes_t,
 }
 
@@ -599,7 +606,7 @@ impl From<Sample> for z_owned_sample_t {
     #[inline]
     fn from(s: Sample) -> Self {
         z_owned_sample_t {
-            key: s.res_name.into(),
+            key: s.key_expr.into(),
             value: s.value.payload.into(),
         }
     }
@@ -609,20 +616,20 @@ impl From<Sample> for z_owned_sample_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_free(sample: &mut z_owned_sample_t) {
-    z_string_free(&mut sample.key);
+    z_keyexpr_free(&mut sample.key);
     z_bytes_free(&mut sample.value);
 }
 /// Returns `true` if `sample` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
-    z_string_check(&sample.key) && z_bytes_check(&sample.value)
+    z_keyexpr_check(&sample.key) && z_bytes_check(&sample.value)
 }
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_borrow(sample: &z_owned_sample_t) -> z_sample_t {
     z_sample_t {
-        key: z_string_borrow(&sample.key),
+        key: z_keyexpr_borrow(&sample.key),
         value: z_bytes_borrow(&sample.value),
     }
 }
@@ -945,7 +952,7 @@ impl z_owned_reply_data_t {
     pub(crate) fn empty() -> Self {
         z_owned_reply_data_t {
             data: z_owned_sample_t {
-                key: z_owned_string_t::default(),
+                key: z_owned_keyexpr_t::default(),
                 value: z_owned_bytes_t::default(),
             },
             source_kind: 0,

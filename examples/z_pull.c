@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         z_pull(&sub);
     }
 
-    z_unregister_subscriber(z_move(sub));
+    z_subscriber_close(z_move(sub));
     z_keyexpr_free(z_move(urikey));
     z_close(z_move(s));
     return 0;

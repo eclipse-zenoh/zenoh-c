@@ -44,9 +44,8 @@ int main(int argc, char **argv)
   memset(data, 1, len);
 
   z_owned_keyexpr_t okeyexpr = z_expr("/test/thr");
-  z_keyexpr_t keyexpr = z_register_resource(s, z_move(okeyexpr));
-  z_owned_publisher_t pub = z_publishing(s, keyexpr);
-  if (!z_check(pub))
+  z_keyexpr_t keyexpr = z_declare_expr(s, z_move(okeyexpr));
+  if (!z_declare_publication(s, keyexpr))
   {
     printf("Unable to declare publisher.\n");
     exit(-1);
@@ -56,7 +55,6 @@ int main(int argc, char **argv)
   {
     z_write(s, keyexpr, (const uint8_t *)data, len);
   }
-  z_unregister_publisher(&pub);
-  z_keyexpr_free(z_move(okeyexpr));
+  z_undeclare_publication(s, keyexpr);
   z_close(z_move(os));
 }

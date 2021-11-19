@@ -30,8 +30,6 @@
 							: z_keyexpr_check,     \
 							  z_owned_config_t     \
 							: z_config_check,      \
-							  z_owned_publisher_t  \
-							: z_publisher_check,   \
 							  z_owned_string_t     \
 							: z_string_check,      \
 							  z_owned_bytes_t      \

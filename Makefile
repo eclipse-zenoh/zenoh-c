@@ -53,7 +53,7 @@ examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
 all: build examples
 
-$(BUILD_DIR)/$(LIB_NAME): Cargo.toml build.rs splitguide.yaml cbindgen.toml src/lib.rs src/types.rs
+$(BUILD_DIR)/$(LIB_NAME): Cargo.toml Cargo.lock build.rs splitguide.yaml cbindgen.toml src/lib.rs src/types.rs
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
 $(BUILD_DIR)/examples/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)

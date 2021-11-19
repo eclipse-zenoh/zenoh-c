@@ -90,6 +90,23 @@ typedef struct z_owned_string_t {
  */
 typedef const char *z_string_t;
 /**
+ * A borrowed ressource key.
+ *
+ * Resources are identified by URI like string names.
+ * Examples : ``"/some/resource/key"``.
+ * Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
+ * for wire and computation efficiency.
+ *
+ * A resource key can be either:
+ *   - A plain string resource name.
+ *   - A pure numerical id.
+ *   - The combination of a numerical prefix and a string suffix.
+ */
+typedef struct z_keyexpr_t {
+  unsigned long id;
+  struct z_bytes_t suffix;
+} z_keyexpr_t;
+/**
  * A zenoh-allocated resource key.
  *
  * Resources are identified by URI like string names.
@@ -113,7 +130,7 @@ typedef const char *z_string_t;
  */
 typedef struct z_owned_keyexpr_t {
   unsigned long id;
-  struct z_owned_string_t suffix;
+  struct z_owned_bytes_t suffix;
 } z_owned_keyexpr_t;
 /**
  * An owned array of owned NULL terminated strings, allocated by zenoh.
@@ -164,23 +181,6 @@ typedef struct z_owned_hello_array_t {
   const struct z_owned_hello_t *val;
   size_t len;
 } z_owned_hello_array_t;
-/**
- * A borrowed ressource key.
- *
- * Resources are identified by URI like string names.
- * Examples : ``"/some/resource/key"``.
- * Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
- * for wire and computation efficiency.
- *
- * A resource key can be either:
- *   - A plain string resource name.
- *   - A pure numerical id.
- *   - The combination of a numerical prefix and a string suffix.
- */
-typedef struct z_keyexpr_t {
-  unsigned long id;
-  const char *suffix;
-} z_keyexpr_t;
 /**
  * The possible values of :c:member:`z_target_t.tag`.
  *
@@ -249,7 +249,7 @@ typedef struct z_query_consolidation_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_sample_t {
-  struct z_owned_string_t key;
+  struct z_owned_keyexpr_t key;
   struct z_owned_bytes_t value;
 } z_owned_sample_t;
 /**
@@ -315,7 +315,7 @@ typedef struct z_owned_reply_data_array_t {
  *   `z_bytes_t value`: The value of this data sample.
  */
 typedef struct z_sample_t {
-  z_string_t key;
+  struct z_keyexpr_t key;
   struct z_bytes_t value;
 } z_sample_t;
 /**
@@ -376,6 +376,7 @@ bool z_bytes_check(const struct z_owned_bytes_t *b);
  * Frees `b` and invalidates it for double-free safety.
  */
 void z_bytes_free(struct z_owned_bytes_t *b);
+struct z_owned_bytes_t z_bytes_new(const uint8_t *start, uintptr_t len);
 /**
  * Closes a zenoh session. This frees and invalidates `session` for double-free safety.
  */
@@ -389,7 +390,7 @@ bool z_config_check(const struct z_owned_config_t *config);
  * Constructs a default configuration client mode zenoh session.
  * If `peer` is not null, it is added to the configuration as remote peer.
  */
-struct z_owned_config_t z_config_client(char *peer);
+struct z_owned_config_t z_config_client(const char *const *peers, uintptr_t n_peers);
 /**
  * Create an default, zenoh-allocated, configuration.
  */
@@ -449,6 +450,20 @@ void z_config_set(struct z_config_t config, unsigned long key, z_string_t value)
  * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
 struct z_owned_string_t z_config_to_str(struct z_config_t config);
+/**
+ * Associate a numerical id with the given resource key.
+ *
+ * This numerical id will be used on the network to save bandwidth and
+ * ease the retrieval of the concerned resource in the routing tables.
+ */
+struct z_keyexpr_t z_declare_expr(struct z_session_t session, struct z_owned_keyexpr_t *keyexpr);
+/**
+ * Declares a publication for the given resource key, returning `true` on success.
+ *
+ * Written resources that match the given key will only be sent on the network
+ * if matching subscribers exist in the system.
+ */
+bool z_declare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
 /**
  * Constructs a resource key from a resource name. `name`'s content is copied.
  *
@@ -544,14 +559,6 @@ struct z_keyexpr_t z_keyexpr_new_borrowed(unsigned long id, const char *suffix);
  * Open a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
-bool z_publisher_check(const struct z_owned_publisher_t *publ);
-/**
- * Register a `z_owned_publisher_t` for the given resource key.
- *
- * Written resources that match the given key will only be sent on the network
- * if matching subscribers exist in the system.
- */
-struct z_owned_publisher_t z_publishing(struct z_session_t session, struct z_keyexpr_t keyexpr);
 /**
  * Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
  * by calling the **callback** function provided to the :c:func:`z_subscribe` function.
@@ -604,18 +611,25 @@ struct z_owned_reply_data_array_t z_query_collect(struct z_session_t session,
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
+ * Gets the resource name of a received query as a non null-terminated string.
+ */
+struct z_keyexpr_t z_query_key_expr(const struct z_query_t *query);
+/**
  * Get the predicate of a received query as a non null-terminated string.
  */
 struct z_bytes_t z_query_predicate(const struct z_query_t *query);
-/**
- * Gets the resource name of a received query as a non null-terminated string.
- */
-struct z_bytes_t z_query_res_name(const struct z_query_t *query);
 /**
  * Create a default `z_query_target_t`.
  */
 struct z_query_target_t z_query_target_default(void);
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
+/**
+ * Unregisters a `z_queryable_t`, freeing it and invalidating it for doube-free safety.
+ *
+ * Parameters:
+ *     qable: The :c:type:`z_queryable_t` to undeclare.
+ */
+void z_queryable_close(struct z_owned_queryable_t *qable);
 /**
  * Registers a `z_queryable_t` for the given resource key.
  *
@@ -629,19 +643,11 @@ bool z_queryable_check(const struct z_owned_queryable_t *qable);
  * Returns:
  *    The created :c:type:`z_queryable_t` or null if the declaration failed.
  */
-struct z_owned_queryable_t z_register_queryable(struct z_session_t session,
-                                                struct z_keyexpr_t keyexpr,
-                                                unsigned int kind,
-                                                void (*callback)(const struct z_query_t*, const void*),
-                                                void *arg);
-/**
- * Associate a numerical id with the given resource key.
- *
- * This numerical id will be used on the network to save bandwidth and
- * ease the retrieval of the concerned resource in the routing tables.
- */
-struct z_keyexpr_t z_register_resource(struct z_session_t session,
-                                       struct z_owned_keyexpr_t *keyexpr);
+struct z_owned_queryable_t z_queryable_new(struct z_session_t session,
+                                           struct z_keyexpr_t keyexpr,
+                                           unsigned int kind,
+                                           void (*callback)(const struct z_query_t*, const void*),
+                                           void *arg);
 /**
  * Returns `true` if `reply` is valid.
  */
@@ -764,24 +770,17 @@ struct z_owned_subscriber_t z_subscribe(struct z_session_t session,
                                         void *arg);
 bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 /**
+ * Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
+ */
+void z_subscriber_close(struct z_owned_subscriber_t *sub);
+/**
  * Create a default :c:type:`z_target_t`.
  */
 struct z_target_t z_target_default(void);
 /**
- * Destroys `publ`, unregistering it and invalidating `publ` for double-free safety
+ * Undeclares a publication for the given resource key
  */
-void z_unregister_publisher(struct z_owned_publisher_t *publ);
-/**
- * Unregisters a `z_queryable_t`, freeing it and invalidating it for doube-free safety.
- *
- * Parameters:
- *     qable: The :c:type:`z_queryable_t` to undeclare.
- */
-void z_unregister_queryable(struct z_owned_queryable_t *qable);
-/**
- * Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
- */
-void z_unregister_subscriber(struct z_owned_subscriber_t *sub);
+void z_undeclare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
 /**
  * Write data.
  *

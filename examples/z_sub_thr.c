@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     }
 
     z_owned_keyexpr_t okey = z_expr("/test/thr");
-    z_keyexpr_t rid = z_register_resource(z_borrow(s), z_move(okey));
+    z_keyexpr_t rid = z_declare_expr(z_borrow(s), z_move(okey));
     z_owned_subscriber_t sub = z_subscribe(z_borrow(s), rid, z_subinfo_default(), data_handler, NULL);
     if (!z_check(sub))
     {
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    z_unregister_subscriber(z_move(sub));
+    z_subscriber_close(z_move(sub));
     z_close(z_move(s));
     return 0;
 }
