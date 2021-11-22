@@ -32,11 +32,11 @@ that is able to scale down to extremely constrainded devices and networks.
 2. Clone the [source] with `git`:
 
    ```sh
-   git clone https://github.com/eclipse-zenoh/zenh-c.git
+   git clone https://github.com/eclipse-zenoh/zenoh-c.git
    cd rust
    ```
 
-[source]: https://github.com/eclipse-zenoh/zenh-c
+[source]: https://github.com/eclipse-zenoh/zenoh-c
 
 3. Build and install:
 

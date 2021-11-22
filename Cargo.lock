@@ -88,9 +88,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
+checksum = "38d9ff5d688f1c13395289f67db01d4826b46dd694e7580accdc3e8430f2d98e"
 
 [[package]]
 name = "async-attributes"
@@ -673,19 +673,6 @@ checksum = "56899898ce76aaf4a0f24d914c97ea6ed976d42fec6ad33fcbb0a1103e07b2b0"
 
 [[package]]
 name = "env_logger"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
-dependencies = [
- "atty",
- "humantime",
- "log",
- "regex",
- "termcolor",
-]
-
-[[package]]
-name = "env_logger"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b2cf0344971ee6c64c31be0d530793fba457d322dfec2810c453d0ef228f9c3"
@@ -1154,9 +1141,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.107"
+version = "0.2.108"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbe5e23404da5b4f555ef85ebed98fb4083e55a00c317800bc2a50ede9f3d219"
+checksum = "8521a1b57e76b1ec69af7599e75e38e7b7fad6610f037db8c79b127201b5d119"
 
 [[package]]
 name = "libloading"
@@ -2573,9 +2560,9 @@ dependencies = [
 
 [[package]]
 name = "validated_struct"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44e0fae9302755a7ead9ce0096d4dc056b9cef3b0f7fe956f6d1678c38a01180"
+checksum = "85affc53ebb88700a36aefff74b6a4db38dbccf26ec777d40c9e9b471be261f8"
 dependencies = [
  "json5",
  "serde",
@@ -2585,9 +2572,9 @@ dependencies = [
 
 [[package]]
 name = "validated_struct_macros"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c978affcb752e5ad50358512e51b5f772c7310612130f06cb4d97978d2cb325"
+checksum = "ca689f3addec28c7d67ed3139498d0325253c71bf58ef57c2ba76141f7ce576f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2851,7 +2838,7 @@ dependencies = [
 [[package]]
 name = "zenoh"
 version = "0.5.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#71199485570f73709351f2c14a5f3fc2d0072382"
+source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#5de8519ec810bb9ad5aaa588084c0182b0629306"
 dependencies = [
  "async-global-executor",
  "async-rustls",
@@ -2860,7 +2847,7 @@ dependencies = [
  "base64",
  "bincode",
  "clap",
- "env_logger 0.9.0",
+ "env_logger",
  "event-listener",
  "flume",
  "futures",
@@ -2903,7 +2890,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "cbindgen",
- "env_logger 0.8.4",
+ "env_logger",
  "fs2",
  "futures",
  "json5",
@@ -2919,7 +2906,7 @@ dependencies = [
 [[package]]
 name = "zenoh-macros"
 version = "0.5.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#71199485570f73709351f2c14a5f3fc2d0072382"
+source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#5de8519ec810bb9ad5aaa588084c0182b0629306"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2930,7 +2917,7 @@ dependencies = [
 [[package]]
 name = "zenoh-plugin-trait"
 version = "0.1.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#71199485570f73709351f2c14a5f3fc2d0072382"
+source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#5de8519ec810bb9ad5aaa588084c0182b0629306"
 dependencies = [
  "libloading",
  "log",
@@ -2941,7 +2928,7 @@ dependencies = [
 [[package]]
 name = "zenoh-util"
 version = "0.5.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#71199485570f73709351f2c14a5f3fc2d0072382"
+source = "git+https://github.com/eclipse-zenoh/zenoh?branch=apis-merge#5de8519ec810bb9ad5aaa588084c0182b0629306"
 dependencies = [
  "aes 0.7.5",
  "async-std",

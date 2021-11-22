@@ -11,7 +11,7 @@
 # Contributors:
 #   ADLINK zenoh team, <zenoh@adlink-labs.tech>
 #
-.PHONY: build examples all install clean
+.PHONY: lib examples all install clean
 
 # Library name
 ifeq ($(OS),Windows_NT)
