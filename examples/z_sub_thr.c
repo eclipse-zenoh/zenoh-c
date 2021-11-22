@@ -85,6 +85,7 @@ int main(int argc, char **argv)
     }
 
     z_subscriber_close(z_move(sub));
+    z_undeclare_expr(z_borrow(s), rid);
     z_close(z_move(s));
     return 0;
 }

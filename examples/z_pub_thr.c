@@ -56,5 +56,6 @@ int main(int argc, char **argv)
     z_write(s, keyexpr, (const uint8_t *)data, len);
   }
   z_undeclare_publication(s, keyexpr);
+  z_undeclare_expr(s, keyexpr);
   z_close(z_move(os));
 }
