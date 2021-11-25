@@ -19,7 +19,7 @@ from clang.cindex import Config
 project = 'zenoh-c'
 copyright = '2017, 2020 ADLINK Technology Inc'
 author = 'ADLINK zenoh team'
-release = '0.5.0-dev'
+release = '0.5.0-beta.9'
 
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
