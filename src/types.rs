@@ -937,7 +937,7 @@ pub extern "C" fn z_subinfo_default() -> z_subinfo_t {
     SubInfo::default().into()
 }
 
-/// An owned reply to a `z_query` (or `z_query_collect`).
+/// An owned reply to a `z_get` (or `z_get_collect`).
 ///
 /// Members:
 ///   `z_owned_sample_t data`: a :c:type:`z_sample_t` containing the key and value of the reply.
@@ -1048,7 +1048,7 @@ pub enum z_reply_t_Tag {
     FINAL,
 }
 
-/// An owned reply to a :c:func:`z_query`.
+/// An owned reply to a :c:func:`z_get`.
 ///
 /// Members:
 ///   `z_reply_t_Tag tag`: Indicates if the reply contains data or if it's a FINAL reply.
@@ -1134,7 +1134,7 @@ pub extern "C" fn z_target_default() -> z_target_t {
     Target::default().into()
 }
 
-/// The zenoh queryables that should be target of a `z_query`.
+/// The zenoh queryables that should be target of a `z_get`.
 ///
 /// Members:
 ///     `unsigned int kind`: A mask of queryable kinds.
@@ -1169,7 +1169,7 @@ pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()
 }
 
-/// The kind of consolidation that should be applied on replies to a :c:func:`z_query`.
+/// The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
 ///
 ///     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
 ///     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
@@ -1203,7 +1203,7 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
     }
 }
 
-/// The kind of consolidation that should be applied on replies to a :c:func:`z_query`
+/// The kind of consolidation that should be applied on replies to a :c:func:`z_get`
 /// at the different stages of the reply process.
 ///
 /// Members:

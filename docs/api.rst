@@ -286,7 +286,7 @@ Types
 
 .. c:struct:: z_target_t
 
-  Which amongst the matching queryables should be target of a :c:func:`z_query`.
+  Which amongst the matching queryables should be target of a :c:func:`get`.
 
   .. c:member:: z_target_t_Tag tag;
 
@@ -296,7 +296,7 @@ Types
 
     .. c:member:: unsigned int n
 
-      The number of complete queryables that should be target of a :c:func:`z_query`.
+      The number of complete queryables that should be target of a :c:func:`z_get`.
 
 .. autocenum:: zenoh/net.h::z_target_t_Tag
 
@@ -335,9 +335,9 @@ Types
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::z_query
+.. autocfunction:: zenoh/net.h::z_get
 
-.. autocfunction:: zenoh/net.h::z_query_collect
+.. autocfunction:: zenoh/net.h::z_get_collect
 
 Queryable
 =========
