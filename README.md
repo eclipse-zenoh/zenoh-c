@@ -79,7 +79,7 @@ $ ./target/release/examples/z_eval
 ```
 
 ```bash
-$ ./target/release/examples/z_query
+$ ./target/release/examples/z_get
 ```
 
 ## Running the Throughput Examples
