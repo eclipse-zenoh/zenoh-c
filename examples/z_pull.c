@@ -16,8 +16,8 @@
 
 void data_handler(const z_sample_t *sample, const void *arg)
 {
-    printf(">> [Subscription listener] Received (%s, %.*s)\n",
-           sample->key,
+    printf(">> [Subscriber] Received ('%.*s': '%.*s')\n",
+           (int)sample->key.suffix.len, sample->key.suffix.start,
            (int)sample->value.len, sample->value.start);
 }
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("Declaring Subscriber on '%s'...\n", uri);
+    printf("Creating Subscriber on '%s'...\n", uri);
     z_subinfo_t subinfo;
     subinfo.reliability = z_reliability_t_RELIABLE;
     subinfo.mode = z_submode_t_PULL;
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(urikey), subinfo, data_handler, NULL);
     if (!z_check(sub))
     {
-        printf("Unable to declare subscriber.\n");
+        printf("Unable to create subscriber.\n");
         exit(-1);
     }
 

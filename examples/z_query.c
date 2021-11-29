@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     for (unsigned int i = 0; i < replies.len; ++i)
     {
         z_keyexpr_t key = z_borrow(replies.val[i].data.key);
-        printf(">> [Reply handler] received (%.*s, %.*s)\n",
+        printf(">> Received ('%.*s': '%.*s')\n",
                (int)key.suffix.len, key.suffix.start, (int)replies.val[i].data.value.len, replies.val[i].data.value.start);
     }
     z_reply_data_array_free(z_move(replies));

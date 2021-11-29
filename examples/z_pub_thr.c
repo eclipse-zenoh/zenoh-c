@@ -25,7 +25,6 @@ int main(int argc, char **argv)
     exit(-1);
   }
   size_t len = atoi(argv[1]);
-  printf("Running throughput test for payload of %zu bytes.\n", len);
   z_owned_config_t config = z_config_default();
   if (argc > 2)
   {
@@ -47,7 +46,7 @@ int main(int argc, char **argv)
   z_keyexpr_t keyexpr = z_declare_expr(s, z_move(okeyexpr));
   if (!z_declare_publication(s, keyexpr))
   {
-    printf("Unable to declare publisher.\n");
+    printf("Unable to declare publication.\n");
     exit(-1);
   }
 

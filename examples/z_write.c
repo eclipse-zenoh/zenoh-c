@@ -19,12 +19,12 @@ int main(int argc, char **argv)
 {
     z_init_logger();
 
-    char *uri = "/demo/example/zenoh-c-write";
+    char *uri = "/demo/example/zenoh-c-put";
     if (argc > 1)
     {
         uri = argv[1];
     }
-    char *value = "Write from C!";
+    char *value = "Put from C!";
     if (argc > 2)
     {
         value = argv[2];
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("Writing Data ('%s': '%s')...\n", uri, value);
+    printf("Putting Data ('%s': '%s')...\n", uri, value);
     z_owned_keyexpr_t urikey = z_expr(uri);
     z_put(z_borrow(s), z_borrow(urikey), (const uint8_t *)value, strlen(value));
     z_keyexpr_free(z_move(urikey));

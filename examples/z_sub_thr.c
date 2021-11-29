@@ -61,7 +61,6 @@ int main(int argc, char **argv)
         z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[1]);
     }
 
-    printf("Openning session...\n");
     z_owned_session_t s = z_open(z_move(config));
     if (!z_check(s))
     {
@@ -74,7 +73,7 @@ int main(int argc, char **argv)
     z_owned_subscriber_t sub = z_subscribe(z_borrow(s), rid, z_subinfo_default(), data_handler, NULL);
     if (!z_check(sub))
     {
-        printf("Unable to declare subscriber.\n");
+        printf("Unable to create subscriber.\n");
         exit(-1);
     }
 
