@@ -51,7 +51,7 @@ typedef struct z_query_t z_query_t;
  * A borrowed array of bytes.
  */
 typedef struct z_bytes_t {
-  const uint8_t *val;
+  const uint8_t *start;
   size_t len;
 } z_bytes_t;
 /**
@@ -67,7 +67,7 @@ typedef struct z_bytes_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_bytes_t {
-  const uint8_t *val;
+  const uint8_t *start;
   size_t len;
 } z_owned_bytes_t;
 /**
@@ -132,55 +132,6 @@ typedef struct z_owned_keyexpr_t {
   unsigned long id;
   struct z_owned_bytes_t suffix;
 } z_owned_keyexpr_t;
-/**
- * An owned array of owned NULL terminated strings, allocated by zenoh.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_str_array_t {
-  const char *const *val;
-  size_t len;
-} z_owned_str_array_t;
-/**
- * A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
- *
- * Members:
- *   `unsigned int whatami`: The kind of zenoh entity.
- *   `z_owned_bytes_t pid`: The peer id of the scouted entity (empty if absent).
- *   `z_owned_str_array_t locators`: The locators of the scouted entity.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-typedef struct z_owned_hello_t {
-  unsigned int whatami;
-  struct z_owned_bytes_t pid;
-  struct z_owned_str_array_t locators;
-} z_owned_hello_t;
-/**
- * A zenoh-allocated array of `z_hello_t` messages.
- *
- * Members:
- *   const z_hello_t *val: A pointer to the array.
- *   unsigned int len: The length of the array.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-typedef struct z_owned_hello_array_t {
-  const struct z_owned_hello_t *val;
-  size_t len;
-} z_owned_hello_array_t;
 /**
  * The possible values of :c:member:`z_target_t.tag`.
  *
@@ -305,6 +256,55 @@ typedef struct z_owned_reply_data_array_t {
   const struct z_owned_reply_data_t *val;
   size_t len;
 } z_owned_reply_data_array_t;
+/**
+ * An owned array of owned NULL terminated strings, allocated by zenoh.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_str_array_t {
+  const char *const *val;
+  size_t len;
+} z_owned_str_array_t;
+/**
+ * A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
+ *
+ * Members:
+ *   `unsigned int whatami`: The kind of zenoh entity.
+ *   `z_owned_bytes_t pid`: The peer id of the scouted entity (empty if absent).
+ *   `z_owned_str_array_t locators`: The locators of the scouted entity.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_hello_t {
+  unsigned int whatami;
+  struct z_owned_bytes_t pid;
+  struct z_owned_str_array_t locators;
+} z_owned_hello_t;
+/**
+ * A zenoh-allocated array of `z_hello_t` messages.
+ *
+ * Members:
+ *   const z_hello_t *val: A pointer to the array.
+ *   unsigned int len: The length of the array.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_hello_array_t {
+  const struct z_owned_hello_t *val;
+  size_t len;
+} z_owned_hello_array_t;
 /**
  * A borrowed data sample.
  *
@@ -479,6 +479,45 @@ bool z_declare_publication(struct z_session_t session, struct z_keyexpr_t keyexp
  */
 struct z_owned_keyexpr_t z_expr(const char *name);
 /**
+ * Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     resource: The resource key to query.
+ *     predicate: An indication to matching queryables about the queried data.
+ *     target: The kind of queryables that should be target of this query.
+ *     consolidation: The kind of consolidation that should be applied on replies.
+ *     callback: The callback function that will be called on reception of replies for this query.
+ *     arg: A pointer that will be passed to the **callback** on each call.
+ */
+void z_get(struct z_session_t session,
+           struct z_keyexpr_t keyexpr,
+           const char *predicate,
+           struct z_query_target_t target,
+           struct z_query_consolidation_t consolidation,
+           void (*callback)(struct z_owned_reply_t, const void*),
+           void *arg);
+/**
+ * Query data from the matching queryables in the system.
+ * Replies are collected in an array.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     resource: The resource key to query.
+ *     predicate: An indication to matching queryables about the queried data.
+ *     target: The kind of queryables that should be target of this query.
+ *     consolidation: The kind of consolidation that should be applied on replies.
+ *
+ * Returns:
+ *    An array containing all the replies for this query.
+ */
+struct z_owned_reply_data_array_t z_get_collect(struct z_session_t session,
+                                                struct z_keyexpr_t keyexpr,
+                                                const char *predicate,
+                                                struct z_query_target_t target,
+                                                struct z_query_consolidation_t consolidation);
+/**
  * Returns `true` if `hellos` is valid.
  */
 bool z_hello_array_check(const struct z_owned_hello_array_t *hellos);
@@ -569,44 +608,20 @@ struct z_owned_session_t z_open(struct z_owned_config_t *config);
  */
 void z_pull(const struct z_owned_subscriber_t *sub);
 /**
- * Query data from the matching queryables in the system.
- * Replies are provided through a callback function.
+ * Write data.
  *
  * Parameters:
  *     session: The zenoh session.
- *     resource: The resource key to query.
- *     predicate: An indication to matching queryables about the queried data.
- *     target: The kind of queryables that should be target of this query.
- *     consolidation: The kind of consolidation that should be applied on replies.
- *     callback: The callback function that will be called on reception of replies for this query.
- *     arg: A pointer that will be passed to the **callback** on each call.
- */
-void z_query(struct z_session_t session,
-             struct z_keyexpr_t keyexpr,
-             const char *predicate,
-             struct z_query_target_t target,
-             struct z_query_consolidation_t consolidation,
-             void (*callback)(struct z_owned_reply_t, const void*),
-             void *arg);
-/**
- * Query data from the matching queryables in the system.
- * Replies are collected in an array.
- *
- * Parameters:
- *     session: The zenoh session.
- *     resource: The resource key to query.
- *     predicate: An indication to matching queryables about the queried data.
- *     target: The kind of queryables that should be target of this query.
- *     consolidation: The kind of consolidation that should be applied on replies.
- *
+ *     resource: The resource key to write.
+ *     payload: The value to write.
+ *     len: The length of the value to write.
  * Returns:
- *    An array containing all the replies for this query.
+ *     ``0`` in case of success, ``1`` in case of failure.
  */
-struct z_owned_reply_data_array_t z_query_collect(struct z_session_t session,
-                                                  struct z_keyexpr_t keyexpr,
-                                                  const char *predicate,
-                                                  struct z_query_target_t target,
-                                                  struct z_query_consolidation_t consolidation);
+int z_put(struct z_session_t session,
+          struct z_keyexpr_t keyexpr,
+          const uint8_t *payload,
+          unsigned int len);
 /**
  * Create a default :c:type:`z_query_consolidation_t`.
  */
@@ -786,21 +801,6 @@ void z_undeclare_expr(struct z_session_t session, struct z_keyexpr_t keyexpr);
  * Undeclares a publication for the given resource key
  */
 void z_undeclare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
-/**
- * Write data.
- *
- * Parameters:
- *     session: The zenoh session.
- *     resource: The resource key to write.
- *     payload: The value to write.
- *     len: The length of the value to write.
- * Returns:
- *     ``0`` in case of success, ``1`` in case of failure.
- */
-int z_write(struct z_session_t session,
-            struct z_keyexpr_t keyexpr,
-            const uint8_t *payload,
-            unsigned int len);
 /**
  * Write data with extended options.
  *

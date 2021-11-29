@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 
   while (1)
   {
-    z_write(s, keyexpr, (const uint8_t *)data, len);
+    z_put(s, keyexpr, (const uint8_t *)data, len);
   }
   z_undeclare_publication(s, keyexpr);
   z_undeclare_expr(s, keyexpr);

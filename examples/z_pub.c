@@ -63,7 +63,7 @@ int main(int argc, char **argv)
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Writing Data ('%lu': '%s')...\n", keyexpr.id, buf);
-        z_write(borrowed_session, keyexpr, (const uint8_t *)buf, strlen(buf));
+        z_put(borrowed_session, keyexpr, (const uint8_t *)buf, strlen(buf));
     }
     z_undeclare_publication(borrowed_session, keyexpr);
     z_undeclare_expr(borrowed_session, keyexpr);

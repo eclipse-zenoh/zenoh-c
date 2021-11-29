@@ -18,7 +18,7 @@ void data_handler(const z_sample_t *sample, const void *arg)
 {
     printf(">> [Subscription listener] Received (%s, %.*s)\n",
            sample->key,
-           (int)sample->value.len, sample->value.val);
+           (int)sample->value.len, sample->value.start);
 }
 
 int main(int argc, char **argv)

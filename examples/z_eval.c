@@ -22,7 +22,7 @@ void query_handler(const z_query_t *query, const void *arg)
 {
     z_bytes_t res = z_query_key_expr(query).suffix;
     z_bytes_t pred = z_query_predicate(query);
-    printf(">> [Query handler] Handling '%.*s?%.*s'\n", res.len, res.val, pred.len, pred.val);
+    printf(">> [Query handler] Handling '%.*s?%.*s'\n", (int)res.len, res.start, (int)pred.len, pred.start);
     z_send_reply(query, uri, (const unsigned char *)value, strlen(value));
 }
 

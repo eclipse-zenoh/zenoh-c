@@ -393,7 +393,7 @@ pub unsafe extern "C" fn z_config_client(
 pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
     let (scope, s) = query.0.key_selector().as_id_and_suffix();
     let suffix = z_bytes_t {
-        val: s.as_ptr(),
+        start: s.as_ptr(),
         len: s.len(),
     };
     z_keyexpr_t { id: scope, suffix }
@@ -405,7 +405,7 @@ pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
 pub extern "C" fn z_query_predicate(query: &z_query_t) -> z_bytes_t {
     let s = query.0.selector().value_selector;
     z_bytes_t {
-        val: s.as_ptr(),
+        start: s.as_ptr(),
         len: s.len(),
     }
 }
@@ -551,7 +551,7 @@ pub unsafe extern "C" fn z_undeclare_expr(session: z_session_t, keyexpr: z_keyex
 ///     ``0`` in case of success, ``1`` in case of failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_write(
+pub unsafe extern "C" fn z_put(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     payload: *const u8,
@@ -746,14 +746,14 @@ pub unsafe extern "C" fn z_subscribe(
             let key = z_keyexpr_t {
                 id: 0,
                 suffix: z_bytes_t {
-                    val: std::ptr::null(),
+                    start: std::ptr::null(),
                     len: 0,
                 },
             };
             let mut sample = z_sample_t {
                 key,
                 value: z_bytes_t {
-                    val: std::ptr::null(),
+                    start: std::ptr::null(),
                     len: 0,
                 },
             };
@@ -768,7 +768,7 @@ pub unsafe extern "C" fn z_subscribe(
                         let us = s.unwrap();
                         let data = us.value.payload.to_vec();
                         sample.key = (&us.key_expr).into();
-                        sample.value.val = data.as_ptr() as *const c_uchar;
+                        sample.value.start = data.as_ptr() as *const c_uchar;
                         sample.value.len = data.len() as size_t;
                         callback(&sample, arg)
                     },
@@ -840,7 +840,7 @@ pub unsafe extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool 
 ///     arg: A pointer that will be passed to the **callback** on each call.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query(
+pub unsafe extern "C" fn z_get(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     predicate: *const c_char,
@@ -905,7 +905,7 @@ pub unsafe extern "C" fn z_query(
 ///    An array containing all the replies for this query.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_collect(
+pub unsafe extern "C" fn z_get_collect(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     predicate: *const c_char,

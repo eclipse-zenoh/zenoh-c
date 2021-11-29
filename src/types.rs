@@ -314,7 +314,7 @@ pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_bytes_t {
-    pub val: *const u8,
+    pub start: *const u8,
     pub len: size_t,
 }
 
@@ -322,13 +322,13 @@ pub struct z_owned_bytes_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_bytes_t {
-    pub val: *const u8,
+    pub start: *const u8,
     pub len: size_t,
 }
 impl Default for z_owned_bytes_t {
     fn default() -> Self {
         z_owned_bytes_t {
-            val: std::ptr::null(),
+            start: std::ptr::null(),
             len: 0,
         }
     }
@@ -337,13 +337,13 @@ impl Default for z_owned_bytes_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_new(start: *const u8, len: usize) -> z_owned_bytes_t {
     if start.is_null() {
-        z_owned_bytes_t { val: start, len: 0 }
+        z_owned_bytes_t { start, len: 0 }
     } else {
         let slice = std::slice::from_raw_parts(start, len);
         let boxed = Box::<[u8]>::from(slice);
         let start = Box::into_raw(boxed);
         z_owned_bytes_t {
-            val: (*start).as_ptr(),
+            start: (*start).as_ptr(),
             len,
         }
     }
@@ -352,24 +352,24 @@ pub unsafe extern "C" fn z_bytes_new(start: *const u8, len: usize) -> z_owned_by
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_free(b: &mut z_owned_bytes_t) {
-    if !b.val.is_null() {
+    if !b.start.is_null() {
         std::mem::drop(Box::from_raw(
-            std::slice::from_raw_parts(b.val, b.len) as *const [u8] as *mut [u8],
+            std::slice::from_raw_parts(b.start, b.len) as *const [u8] as *mut [u8],
         ));
-        b.val = std::ptr::null_mut();
+        b.start = std::ptr::null_mut();
     }
 }
 /// Returns `true` if `b` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_check(b: &z_owned_bytes_t) -> bool {
-    !b.val.is_null()
+    !b.start.is_null()
 }
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_borrow(b: &z_owned_bytes_t) -> z_bytes_t {
     z_bytes_t {
-        val: b.val,
+        start: b.start,
         len: b.len,
     }
 }
@@ -378,7 +378,7 @@ impl From<PeerId> for z_owned_bytes_t {
     fn from(pid: PeerId) -> Self {
         let pid = pid.as_slice().to_vec().into_boxed_slice();
         let res = z_owned_bytes_t {
-            val: pid.as_ptr(),
+            start: pid.as_ptr(),
             len: pid.len() as size_t,
         };
         std::mem::forget(pid);
@@ -391,7 +391,7 @@ impl From<Option<PeerId>> for z_owned_bytes_t {
         match pid {
             Some(pid) => pid.into(),
             None => z_owned_bytes_t {
-                val: std::ptr::null(),
+                start: std::ptr::null(),
                 len: 0,
             },
         }
@@ -401,7 +401,7 @@ impl From<ZBuf> for z_owned_bytes_t {
     fn from(buf: ZBuf) -> Self {
         let data = buf.to_vec().into_boxed_slice();
         let res = z_owned_bytes_t {
-            val: data.as_ptr(),
+            start: data.as_ptr(),
             len: data.len(),
         };
         std::mem::forget(data);
@@ -412,7 +412,7 @@ impl From<z_owned_bytes_t> for String {
     fn from(s: z_owned_bytes_t) -> Self {
         unsafe {
             String::from_utf8(
-                Box::from_raw(std::slice::from_raw_parts_mut(s.val as *mut u8, s.len)).into(),
+                Box::from_raw(std::slice::from_raw_parts_mut(s.start as *mut u8, s.len)).into(),
             )
             .unwrap()
         }
@@ -479,7 +479,7 @@ pub unsafe extern "C" fn z_keyexpr_new_borrowed(id: c_ulong, suffix: *const c_ch
     z_keyexpr_t {
         id,
         suffix: z_bytes_t {
-            val: suffix as *const _,
+            start: suffix as *const _,
             len: libc::strlen(suffix),
         },
     }
@@ -512,12 +512,18 @@ impl<'a> From<&'a z_owned_keyexpr_t> for KeyExpr<'a> {
             match (r.id, len) {
                 (id, 0) => KeyExpr::from(id),
                 (0, _) => KeyExpr::from(
-                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
-                        .unwrap(),
+                    std::str::from_utf8(std::slice::from_raw_parts(
+                        r.suffix.start as *const _,
+                        len,
+                    ))
+                    .unwrap(),
                 ),
                 (id, _) => KeyExpr::from(id).with_suffix(
-                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
-                        .unwrap(),
+                    std::str::from_utf8(std::slice::from_raw_parts(
+                        r.suffix.start as *const _,
+                        len,
+                    ))
+                    .unwrap(),
                 ),
             }
         }
@@ -531,13 +537,16 @@ impl<'a> From<z_keyexpr_t> for KeyExpr<'a> {
             match (r.id, len) {
                 (id, 0) => KeyExpr::from(id),
                 (0, _) => {
-                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
+                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.start as *const _, len))
                         .unwrap()
                         .into()
                 }
                 (id, _) => KeyExpr::from(id).with_suffix(
-                    std::str::from_utf8(std::slice::from_raw_parts(r.suffix.val as *const _, len))
-                        .unwrap(),
+                    std::str::from_utf8(std::slice::from_raw_parts(
+                        r.suffix.start as *const _,
+                        len,
+                    ))
+                    .unwrap(),
                 ),
             }
         }
@@ -550,7 +559,7 @@ impl<'a> From<&KeyExpr<'a>> for z_keyexpr_t {
         z_keyexpr_t {
             id,
             suffix: z_bytes_t {
-                val: suffix.as_ptr() as *const _,
+                start: suffix.as_ptr() as *const _,
                 len: suffix.len(),
             },
         }
