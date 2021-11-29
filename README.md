@@ -13,11 +13,6 @@
 that is able to scale down to extremely constrainded devices and networks. 
 
 -------------------------------
-## How to install it
-
-Work in progress...
-
--------------------------------
 ## How to build it 
 
 1. Make sure that [rust](https://www.rust-lang.org) is available on your platform:
@@ -71,27 +66,44 @@ If you want to build with debug symbols set the `BUILD_TYPE=Debug` environment v
 
 ### Basic Pub/Sub Example
 ```bash
-$ ./target/release/examples/zn_sub
+$ ./target/release/examples/z_sub
 ```
 
 ```bash
-$ ./target/release/examples/zn_pub
+$ ./target/release/examples/z_pub
 ```
 
 ### Eval and Query Example
 ```bash
-$ ./target/release/examples/zn_eval
+$ ./target/release/examples/z_eval
 ```
 
 ```bash
-$ ./target/release/examples/zn_query
+$ ./target/release/examples/z_query
 ```
 
 ## Running the Throughput Examples
 ```bash
-$ ./target/release/examples/zn_sub_thgr
+$ ./target/release/examples/z_sub_thgr
 ```
 
 ```bash
-$ ./target/release/examples/zn_pub_thgr
+$ ./target/release/examples/z_pub_thgr
 ```
+
+## API conventions
+Many of the types exposed by the `zenoh-c` API are types for which destruction is necessary. To help you spot these types, we named them with the convention that  any destructible type must start by `z_owned`.
+
+For maximum performance, we try to make as few copies as possible. Sometimes, this implies moving data that you `z_owned`. Any function that takes a non-const pointer to a `z_owned` type will perform its destruction. To make this pattern more obvious, we encourage you to use the `z_move` macro instead of a simple `&` to create these pointers. Rest assured that all `z_owned` types are double-free safe, and that you may check whether any `z_owned_X_t` typed value is still valid by using `z_X_check(&val)`, or the `z_check(val)` macro if you're using C11.
+
+We hope this convention will help you streamline your memory-safe usage of zenoh, as following it should make looking for leaks trivial: simply search for paths where a value of a `z_owned` type hasn't been passed to a function using `z_move`.
+
+Functions that simply need to borrow your data will instead take values of the associated `z_X_t` type. You may construct them using `z_X_borrow(&val)` (or `z_borrow(val)` with C11).
+
+Note that some `z_X_t` typed values can be constructed without needing to `z_borrow` their owned variants. This allows you to reduce the amount of copies realized in your program.
+
+The examples have been written with C11 in mind, using the conventions we encourage you to follow.
+
+Finally, we strongly advise that you refrain from using structure field that starts with `_`:
+* We try to maintain a common API between `zenoh-c` and [`zenoh-pico`](https://github.com/eclipse-zenoh/zenoh-pico), such that porting code from one to the other is, ideally, trivial. However, some types must have distinct representations in either library, meaning that using these representations explicitly will get you in trouble when porting.
+* We reserve the right to change the memory layout of any type which has `_`-prefixed fields, so trying to use them might cause your code to break on updates.

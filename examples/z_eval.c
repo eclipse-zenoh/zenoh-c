@@ -13,17 +13,17 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 char *uri = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
-void query_handler(zn_query_t *query, const void *arg)
+void query_handler(const z_query_t *query, const void *arg)
 {
-    z_string_t res = zn_query_res_name(query);
-    z_string_t pred = zn_query_predicate(query);
-    printf(">> [Query handler] Handling '%.*s?%.*s'\n", (int)res.len, res.val, (int)pred.len, pred.val);
-    zn_send_reply(query, uri, (const unsigned char *)value, strlen(value));
+    z_bytes_t res = z_query_key_expr(query).suffix;
+    z_bytes_t pred = z_query_predicate(query);
+    printf(">> [Query handler] Handling '%.*s?%.*s'\n", res.len, res.val, pred.len, pred.val);
+    z_send_reply(query, uri, (const unsigned char *)value, strlen(value));
 }
 
 int main(int argc, char **argv)
@@ -34,23 +34,24 @@ int main(int argc, char **argv)
     {
         uri = argv[1];
     }
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Queryable on '%s'...\n", uri);
-    zn_queryable_t *qable = zn_declare_queryable(s, zn_rname(uri), ZN_QUERYABLE_EVAL, query_handler, NULL);
-    if (qable == 0)
+    z_owned_keyexpr_t urikey = z_expr(uri);
+    z_owned_queryable_t qable = z_queryable_new(z_borrow(s), z_borrow(urikey), ZN_QUERYABLE_EVAL, query_handler, NULL);
+    if (!z_check(qable))
     {
         printf("Unable to declare queryable.\n");
         exit(-1);
@@ -62,7 +63,8 @@ int main(int argc, char **argv)
         c = fgetc(stdin);
     }
 
-    zn_undeclare_queryable(qable);
-    zn_close(s);
+    z_queryable_close(z_move(qable));
+    z_keyexpr_free(z_move(urikey));
+    z_close(z_move(s));
     return 0;
 }

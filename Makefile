@@ -29,15 +29,17 @@ ifneq ($(TARGET),)
 endif
 
 ifeq ($(BUILD_TYPE),Debug)
-  BUILD_DIR=target/${TARGET}/debug
+  BUILD_DIR=target${TARGET}/debug
   CARGOFLAGS=
-  EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout
+  EXAMPLES=z_sub z_pub z_write z_query z_eval z_pull z_info z_scout
   LDFLAGS=
+  CFLAGS=-g
 else 
-  BUILD_DIR=target/${TARGET}/release
+  BUILD_DIR=target${TARGET}/release
   CARGOFLAGS=--release
-  EXAMPLES=zn_sub zn_pub zn_write zn_query zn_eval zn_pull zn_info zn_scout zn_sub_thr zn_pub_thr
+  EXAMPLES=z_sub z_pub z_write z_query z_eval z_pull z_info z_scout z_sub_thr z_pub_thr
   LDFLAGS=-O3
+  CFLAGS=
 endif
 
 # Installation prefix
@@ -45,23 +47,23 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
-all: lib examples
-
-lib:
-	cargo build ${CARGOFLAGS} ${TARGET_OPT}
+build: $(BUILD_DIR)/$(LIB_NAME)
 
 examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
 
-$(BUILD_DIR)/examples/%: examples/net/%.c
-	$(CC) -o $@ $< -I include -L $(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
+all: build examples
 
-install: lib include/zenoh.h include/zenoh/net.h
+$(BUILD_DIR)/$(LIB_NAME): Cargo.toml Cargo.lock build.rs splitguide.yaml cbindgen.toml src/lib.rs src/types.rs
+	cargo build ${CARGOFLAGS} ${TARGET_OPT}
+
+$(BUILD_DIR)/examples/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+	$(CC) -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
+
+install: build
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
-	install -m 755 include/zenoh.h $(DESTDIR)$(PREFIX)/include/
-	install -d $(DESTDIR)$(PREFIX)/include/zenoh/
-	install -m 755 include/zenoh/net.h $(DESTDIR)$(PREFIX)/include/zenoh/net.h
+	install -m 755 include/zenoh-gen.h $(DESTDIR)$(PREFIX)/include/
 
 clean:
 	rm -fr target

@@ -12,12 +12,12 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
-void data_handler(const zn_sample_t *sample, const void *arg)
+void data_handler(const z_sample_t *sample, const void *arg)
 {
-    printf(">> [Subscription listener] Received (%.*s, %.*s)\n",
-           (int)sample->key.len, sample->key.val,
+    printf(">> [Subscription listener] Received (%s, %.*s)\n",
+           sample->key,
            (int)sample->value.len, sample->value.val);
 }
 
@@ -30,27 +30,28 @@ int main(int argc, char **argv)
     {
         uri = argv[1];
     }
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Subscriber on '%s'...\n", uri);
-    zn_subinfo_t subinfo;
-    subinfo.reliability = zn_reliability_t_RELIABLE;
-    subinfo.mode = zn_submode_t_PULL;
-    subinfo.period = NULL;
-    zn_subscriber_t *sub = zn_declare_subscriber(s, zn_rname(uri), subinfo, data_handler, NULL);
-    if (sub == 0)
+    z_subinfo_t subinfo;
+    subinfo.reliability = z_reliability_t_RELIABLE;
+    subinfo.mode = z_submode_t_PULL;
+    subinfo.period = z_period_NONE;
+    z_owned_keyexpr_t urikey = z_expr(uri);
+    z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(urikey), subinfo, data_handler, NULL);
+    if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");
         exit(-1);
@@ -61,10 +62,11 @@ int main(int argc, char **argv)
     while (c != 'q')
     {
         c = fgetc(stdin);
-        zn_pull(sub);
+        z_pull(&sub);
     }
 
-    zn_undeclare_subscriber(sub);
-    zn_close(s);
+    z_subscriber_close(z_move(sub));
+    z_keyexpr_free(z_move(urikey));
+    z_close(z_move(s));
     return 0;
 }

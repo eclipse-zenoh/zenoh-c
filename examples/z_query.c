@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 int main(int argc, char **argv)
 {
@@ -25,31 +25,31 @@ int main(int argc, char **argv)
     {
         uri = argv[1];
     }
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Sending Query '%s'...\n", uri);
-    zn_reply_data_array_t replies = zn_query_collect(s, zn_rname(uri), "", zn_query_target_default(), zn_query_consolidation_default());
+    z_owned_keyexpr_t urikey = z_expr(uri);
+    z_owned_reply_data_array_t replies = z_query_collect(z_borrow(s), z_borrow(urikey), "", z_query_target_default(), z_query_consolidation_default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
     {
-        printf(">> [Reply handler] received (%.*s, %.*s)\n",
-               (int)replies.val[i].data.key.len, replies.val[i].data.key.val,
-               (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
+        printf(">> [Reply handler] received (%s, %.*s)\n",
+               z_borrow(replies.val[i].data.key), (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
     }
-    zn_reply_data_array_free(replies);
-
-    zn_close(s);
+    z_reply_data_array_free(z_move(replies));
+    z_keyexpr_free(z_move(urikey));
+    z_close(z_move(s));
     return 0;
 }
