@@ -759,7 +759,7 @@ void z_send_reply(const struct z_query_t *query,
                   const uint8_t *payload,
                   unsigned int len);
 struct z_session_t z_session_borrow(const struct z_owned_session_t *s);
-bool z_session_check(const struct z_owned_session_t *config);
+bool z_session_check(const struct z_owned_session_t *session);
 /**
  * Returns `true` if
  */

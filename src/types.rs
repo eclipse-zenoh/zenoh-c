@@ -469,7 +469,14 @@ pub struct z_keyexpr_t {
 pub unsafe extern "C" fn z_keyexpr_new(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
     z_owned_keyexpr_t {
         id,
-        suffix: z_bytes_new(suffix as *const _, libc::strlen(suffix)),
+        suffix: z_bytes_new(
+            suffix as *const _,
+            if suffix.is_null() {
+                0
+            } else {
+                libc::strlen(suffix)
+            },
+        ),
     }
 }
 /// Constructs a borrowed ressource key. The constructed value is valid as long as `suffix` is.
@@ -480,7 +487,11 @@ pub unsafe extern "C" fn z_keyexpr_new_borrowed(id: c_ulong, suffix: *const c_ch
         id,
         suffix: z_bytes_t {
             start: suffix as *const _,
-            len: libc::strlen(suffix),
+            len: if suffix.is_null() {
+                0
+            } else {
+                libc::strlen(suffix)
+            },
         },
     }
 }
