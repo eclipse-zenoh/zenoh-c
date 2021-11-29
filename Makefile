@@ -31,13 +31,13 @@ endif
 ifeq ($(BUILD_TYPE),Debug)
   BUILD_DIR=target${TARGET}/debug
   CARGOFLAGS=
-  EXAMPLES=z_sub z_pub z_write z_get z_eval z_pull z_info z_scout
+  EXAMPLES=z_sub z_pub z_put z_get z_eval z_pull z_info z_scout
   LDFLAGS=
   CFLAGS=-g
 else 
   BUILD_DIR=target${TARGET}/release
   CARGOFLAGS=--release
-  EXAMPLES=z_sub z_pub z_write z_get z_eval z_pull z_info z_scout z_sub_thr z_pub_thr
+  EXAMPLES=z_sub z_pub z_put z_get z_eval z_pull z_info z_scout z_sub_thr z_pub_thr
   LDFLAGS=-O3
   CFLAGS=
 endif
