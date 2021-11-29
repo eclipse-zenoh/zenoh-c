@@ -97,6 +97,12 @@ typedef struct z_owned_subscriber_t {
   uint64_t _0[Z_SUBSCRIBER_PADDING_U64];
 } z_owned_subscriber_t;
 /**
+ * Options passed to the `z_put_ext` function.
+ */
+typedef struct z_put_options_t {
+  uint64_t _0[Z_WRITE_OPTIONS_PADDING_U64];
+} z_put_options_t;
+/**
  * An owned zenoh queryable.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
@@ -111,9 +117,3 @@ typedef struct z_owned_subscriber_t {
 typedef struct z_owned_queryable_t {
   uint64_t _0[Z_QUERYABLE_PADDING_U64];
 } z_owned_queryable_t;
-/**
- * Options passed to the `z_write_ext` function.
- */
-typedef struct z_write_options_t {
-  uint64_t _0[Z_WRITE_OPTIONS_PADDING_U64];
-} z_write_options_t;

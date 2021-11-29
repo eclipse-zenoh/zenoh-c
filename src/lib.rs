@@ -581,14 +581,14 @@ struct WriteOptions {
 }
 pub const Z_WRITE_OPTIONS_PADDING_U64: usize = 6;
 
-/// Options passed to the `z_write_ext` function.  
+/// Options passed to the `z_put_ext` function.  
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_write_options_t([u64; Z_WRITE_OPTIONS_PADDING_U64]);
+pub struct z_put_options_t([u64; Z_WRITE_OPTIONS_PADDING_U64]);
 
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub enum z_write_options_field_t {
+pub enum z_put_options_field_t {
     ENCODING,
     CONGESTION_CONTROL,
     KIND,
@@ -598,31 +598,31 @@ pub enum z_write_options_field_t {
 /// Constructs the default value for write options
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_write_options_default() -> z_write_options_t {
-    z_write_options_t(std::mem::transmute(WriteOptions::default()))
+pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
+    z_put_options_t(std::mem::transmute(WriteOptions::default()))
 }
 
-/// Sets the value for the required field of a `z_write_options_t`.  
+/// Sets the value for the required field of a `z_put_options_t`.  
 /// Returns `false` if the value insertion failed.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_write_options_set(
-    options: &mut z_write_options_t,
-    key: z_write_options_field_t,
+pub unsafe extern "C" fn z_put_options_set(
+    options: &mut z_put_options_t,
+    key: z_put_options_field_t,
     value: c_uint,
 ) -> bool {
     let options: &mut WriteOptions = std::mem::transmute(options);
     match key {
-        z_write_options_field_t::ENCODING => options.encoding = Encoding::from(value as ZInt),
-        z_write_options_field_t::CONGESTION_CONTROL => {
+        z_put_options_field_t::ENCODING => options.encoding = Encoding::from(value as ZInt),
+        z_put_options_field_t::CONGESTION_CONTROL => {
             if value < 2 {
                 options.congestion_control = std::mem::transmute(value as u8)
             } else {
                 return false;
             }
         }
-        z_write_options_field_t::KIND => options.kind = (value as ZInt).into(),
-        z_write_options_field_t::PRIORITY => {
+        z_put_options_field_t::KIND => options.kind = (value as ZInt).into(),
+        z_put_options_field_t::PRIORITY => {
             if 0 < value && value < 8 {
                 options.priority = std::mem::transmute(value as u8)
             } else {
@@ -645,12 +645,12 @@ pub unsafe extern "C" fn z_write_options_set(
 ///     ``0`` in case of success, ``1`` in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_write_ext(
+pub unsafe extern "C" fn z_put_ext(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     payload: *const u8,
     len: c_uint,
-    options: &z_write_options_t,
+    options: &z_put_options_t,
 ) -> c_int {
     let options: &WriteOptions = std::mem::transmute(options);
     let result = match session

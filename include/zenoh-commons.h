@@ -10,6 +10,12 @@ typedef enum z_consolidation_mode_t {
   z_consolidation_mode_t_LAZY,
   z_consolidation_mode_t_NONE,
 } z_consolidation_mode_t;
+typedef enum z_put_options_field_t {
+  z_put_options_field_t_ENCODING,
+  z_put_options_field_t_CONGESTION_CONTROL,
+  z_put_options_field_t_KIND,
+  z_put_options_field_t_PRIORITY,
+} z_put_options_field_t;
 /**
  * The subscription reliability.
  *
@@ -40,12 +46,6 @@ typedef enum z_submode_t {
   z_submode_t_PUSH,
   z_submode_t_PULL,
 } z_submode_t;
-typedef enum z_write_options_field_t {
-  z_write_options_field_t_ENCODING,
-  z_write_options_field_t_CONGESTION_CONTROL,
-  z_write_options_field_t_KIND,
-  z_write_options_field_t_PRIORITY,
-} z_write_options_field_t;
 typedef struct z_query_t z_query_t;
 /**
  * A borrowed array of bytes.
@@ -623,6 +623,34 @@ int z_put(struct z_session_t session,
           const uint8_t *payload,
           unsigned int len);
 /**
+ * Write data with extended options.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     resource: The resource key to write.
+ *     payload: The value to write.
+ *     len: The length of the value to write.
+ *     options: The write options
+ * Returns:
+ *     ``0`` in case of success, ``1`` in case of failure.
+ */
+int z_put_ext(struct z_session_t session,
+              struct z_keyexpr_t keyexpr,
+              const uint8_t *payload,
+              unsigned int len,
+              const struct z_put_options_t *options);
+/**
+ * Constructs the default value for write options
+ */
+struct z_put_options_t z_put_options_default(void);
+/**
+ * Sets the value for the required field of a `z_put_options_t`.
+ * Returns `false` if the value insertion failed.
+ */
+bool z_put_options_set(struct z_put_options_t *options,
+                       enum z_put_options_field_t key,
+                       unsigned int value);
+/**
  * Create a default :c:type:`z_query_consolidation_t`.
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
@@ -801,31 +829,3 @@ void z_undeclare_expr(struct z_session_t session, struct z_keyexpr_t keyexpr);
  * Undeclares a publication for the given resource key
  */
 void z_undeclare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
-/**
- * Write data with extended options.
- *
- * Parameters:
- *     session: The zenoh session.
- *     resource: The resource key to write.
- *     payload: The value to write.
- *     len: The length of the value to write.
- *     options: The write options
- * Returns:
- *     ``0`` in case of success, ``1`` in case of failure.
- */
-int z_write_ext(struct z_session_t session,
-                struct z_keyexpr_t keyexpr,
-                const uint8_t *payload,
-                unsigned int len,
-                const struct z_write_options_t *options);
-/**
- * Constructs the default value for write options
- */
-struct z_write_options_t z_write_options_default(void);
-/**
- * Sets the value for the required field of a `z_write_options_t`.
- * Returns `false` if the value insertion failed.
- */
-bool z_write_options_set(struct z_write_options_t *options,
-                         enum z_write_options_field_t key,
-                         unsigned int value);

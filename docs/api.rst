@@ -245,9 +245,9 @@ Functions
 
 .. autocfunction:: zenoh/net.h::z_undeclare_publisher
 
-.. autocfunction:: zenoh/net.h::z_write
+.. autocfunction:: zenoh/net.h::z_put
 
-.. autocfunction:: zenoh/net.h::z_write_ext
+.. autocfunction:: zenoh/net.h::z_put_ext
 
 Subscription
 ============
