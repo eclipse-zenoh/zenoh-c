@@ -57,13 +57,13 @@ $(BUILD_DIR)/$(LIB_NAME): Cargo.toml Cargo.lock build.rs splitguide.yaml cbindge
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
 $(BUILD_DIR)/examples/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
-	$(CC) -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
+	$(CC) -Wall -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
 install: build
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
-	install -m 755 include/zenoh-gen.h $(DESTDIR)$(PREFIX)/include/
+	install -m 755 include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(DESTDIR)$(PREFIX)/include/
 
 clean:
 	rm -fr target

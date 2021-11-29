@@ -16,7 +16,7 @@
 
 void fprintpid(FILE *stream, z_bytes_t pid)
 {
-    if (pid.val == NULL)
+    if (pid.start == NULL)
     {
         fprintf(stream, "None");
     }
@@ -25,7 +25,7 @@ void fprintpid(FILE *stream, z_bytes_t pid)
         fprintf(stream, "Some(");
         for (unsigned int i = 0; i < pid.len; i++)
         {
-            fprintf(stream, "%02X", (int)pid.val[i]);
+            fprintf(stream, "%02X", (int)pid.start[i]);
         }
         fprintf(stream, ")");
     }
