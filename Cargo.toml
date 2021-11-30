@@ -56,7 +56,7 @@ fs2 = "0.4"
 
 [lib]
 name = "zenohc"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "staticlib"]
 doctest = false
 
 [package.metadata.deb.variants.libzenohc]

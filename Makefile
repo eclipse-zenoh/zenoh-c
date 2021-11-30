@@ -47,16 +47,25 @@ ifeq ($(PREFIX),)
   PREFIX=/usr/local
 endif
 
+mkdirs:
+	mkdir -p $(BUILD_DIR)/examples/static_link
+	mkdir -p $(BUILD_DIR)/examples/dynamic_link
+
 build: $(BUILD_DIR)/$(LIB_NAME)
 
-examples: $(addprefix $(BUILD_DIR)/examples/, $(EXAMPLES))
+static_examples: $(addprefix $(BUILD_DIR)/examples/static_link/, $(EXAMPLES))
+dynamic_examples: $(addprefix $(BUILD_DIR)/examples/dynamic_link/, $(EXAMPLES))
 
+examples: mkdirs static_examples dynamic_examples
 all: build examples
 
 $(BUILD_DIR)/$(LIB_NAME): Cargo.toml Cargo.lock build.rs splitguide.yaml cbindgen.toml src/lib.rs src/types.rs
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
-$(BUILD_DIR)/examples/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+$(BUILD_DIR)/examples/static_link/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+	$(CC) -Wall -s -o $@ $< -Iinclude -L$(BUILD_DIR) -l:libzenohc.a -lpthread -ldl -lrt -lm $(CFLAGS) $(LDFLAGS)
+
+$(BUILD_DIR)/examples/dynamic_link/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -Wall -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
 install: build
