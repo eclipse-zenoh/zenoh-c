@@ -469,8 +469,8 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
 }
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_session_check(config: &z_owned_session_t) -> bool {
-    config.as_ref().is_some()
+pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
+    session.as_ref().is_some()
 }
 
 /// Get informations about an zenoh session.
