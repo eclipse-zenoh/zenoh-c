@@ -16,11 +16,14 @@
 # Library name
 ifeq ($(OS),Windows_NT)
   LIB_NAME=libzenohc.dll
+  STATIC_LDFLAGS=-lrt
 else
   ifeq ($(shell uname -s),Darwin)
     LIB_NAME=libzenohc.dylib
+    STATIC_LDFLAGS=-framework Security -framework Foundation
   else
     LIB_NAME=libzenohc.so
+    STATIC_LDFLAGS=-lrt
   endif
 endif
 
@@ -63,7 +66,7 @@ $(BUILD_DIR)/$(LIB_NAME): Cargo.toml Cargo.lock build.rs splitguide.yaml cbindge
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
 $(BUILD_DIR)/examples/static_link/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
-	$(CC) -Wall -s -o $@ $< -Iinclude -L$(BUILD_DIR) -l:libzenohc.a -lpthread -ldl -lrt -lm $(CFLAGS) $(LDFLAGS)
+	$(CC) -Wall -s -o $@ $< -Iinclude $(BUILD_DIR)/libzenohc.a -lpthread -ldl -lm $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS)
 
 $(BUILD_DIR)/examples/dynamic_link/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -Wall -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
