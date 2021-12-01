@@ -396,7 +396,7 @@ pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
         start: s.as_ptr(),
         len: s.len(),
     };
-    z_keyexpr_t { id: scope, suffix }
+    z_keyexpr_t { id: scope as c_ulong, suffix }
 }
 
 /// Get the predicate of a received query as a non null-terminated string.
@@ -535,7 +535,7 @@ pub unsafe extern "C" fn z_undeclare_expr(session: z_session_t, keyexpr: z_keyex
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .undeclare_expr(keyexpr.id)
+        .undeclare_expr(keyexpr.id as ZInt)
         .wait()
         .unwrap();
 }

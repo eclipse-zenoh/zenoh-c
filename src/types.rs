@@ -521,7 +521,7 @@ impl<'a> From<&'a z_owned_keyexpr_t> for KeyExpr<'a> {
         unsafe {
             let len = r.suffix.len;
             match (r.id, len) {
-                (id, 0) => KeyExpr::from(id),
+                (id, 0) => KeyExpr::from(id as ZInt),
                 (0, _) => KeyExpr::from(
                     std::str::from_utf8(std::slice::from_raw_parts(
                         r.suffix.start as *const _,
@@ -529,7 +529,7 @@ impl<'a> From<&'a z_owned_keyexpr_t> for KeyExpr<'a> {
                     ))
                     .unwrap(),
                 ),
-                (id, _) => KeyExpr::from(id).with_suffix(
+                (id, _) => KeyExpr::from(id as ZInt).with_suffix(
                     std::str::from_utf8(std::slice::from_raw_parts(
                         r.suffix.start as *const _,
                         len,
@@ -546,13 +546,13 @@ impl<'a> From<z_keyexpr_t> for KeyExpr<'a> {
         unsafe {
             let len = r.suffix.len;
             match (r.id, len) {
-                (id, 0) => KeyExpr::from(id),
+                (id, 0) => KeyExpr::from(id as ZInt),
                 (0, _) => {
                     std::str::from_utf8(std::slice::from_raw_parts(r.suffix.start as *const _, len))
                         .unwrap()
                         .into()
                 }
-                (id, _) => KeyExpr::from(id).with_suffix(
+                (id, _) => KeyExpr::from(id as ZInt).with_suffix(
                     std::str::from_utf8(std::slice::from_raw_parts(
                         r.suffix.start as *const _,
                         len,
@@ -568,7 +568,7 @@ impl<'a> From<&KeyExpr<'a>> for z_keyexpr_t {
     fn from(key: &KeyExpr<'a>) -> Self {
         let (id, suffix) = key.as_id_and_suffix();
         z_keyexpr_t {
-            id,
+            id: id as c_ulong,
             suffix: z_bytes_t {
                 start: suffix.as_ptr() as *const _,
                 len: suffix.len(),
@@ -581,7 +581,7 @@ impl<'a> From<KeyExpr<'a>> for z_owned_keyexpr_t {
     fn from(key: KeyExpr<'a>) -> Self {
         let (id, suffix) = key.as_id_and_suffix();
         z_owned_keyexpr_t {
-            id,
+            id: id as c_ulong,
             suffix: unsafe { z_bytes_new(suffix.as_ptr() as *const _, suffix.len()) },
         }
     }
