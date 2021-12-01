@@ -13,7 +13,7 @@
 #
 [package]
 name = "zenoh-c"
-version = "0.5.0-dev"
+version = "0.6.0-dev"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
@@ -72,7 +72,7 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2017, 2020 ADLINK Technology Inc."
 section = "net"
 license-file = ["LICENSE", "0"]
-depends = "libzenohc (=0.5.0~dev)"
+depends = "libzenohc (=0.6.0~dev)"
 assets = [
     [
         "include/zenoh.h",
