@@ -65,17 +65,17 @@ all: build examples
 $(BUILD_DIR)/$(LIB_NAME): Cargo.toml Cargo.lock build.rs splitguide.yaml cbindgen.toml src/lib.rs src/types.rs
 	cargo build ${CARGOFLAGS} ${TARGET_OPT}
 
-$(BUILD_DIR)/examples/static_link/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+$(BUILD_DIR)/examples/static_link/%: examples/%.c include/zenoh_macros.h include/zenoh_concrete.h include/zenoh_commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -Wall -s -o $@ $< -Iinclude $(BUILD_DIR)/libzenohc.a -lpthread -ldl -lm $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS)
 
-$(BUILD_DIR)/examples/dynamic_link/%: examples/%.c include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
+$(BUILD_DIR)/examples/dynamic_link/%: examples/%.c include/zenoh_macros.h include/zenoh_concrete.h include/zenoh_commons.h include/zenoh.h $(BUILD_DIR)/$(LIB_NAME)
 	$(CC) -Wall -s -o $@ $< -Iinclude -L$(BUILD_DIR) -lzenohc $(CFLAGS) $(LDFLAGS)
 
 install: build
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 755 $(BUILD_DIR)/$(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
-	install -m 755 include/zenoh-macros.h include/zenoh-concrete.h include/zenoh-commons.h include/zenoh.h $(DESTDIR)$(PREFIX)/include/
+	install -m 755 include/zenoh_macros.h include/zenoh_concrete.h include/zenoh_commons.h include/zenoh.h $(DESTDIR)$(PREFIX)/include/
 
 clean:
 	rm -fr target

@@ -1,9 +1,9 @@
-zenoh-commons.h:
+zenoh_commons.h:
   - :functions
   - :const
   - :typedefs
   - z_period_NONE!
-zenoh-concrete.h:
+zenoh_concrete.h:
   - :includes
   - :defines
   - z_owned_session_t!
