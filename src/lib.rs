@@ -396,7 +396,10 @@ pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
         start: s.as_ptr(),
         len: s.len(),
     };
-    z_keyexpr_t { id: scope as c_ulong, suffix }
+    z_keyexpr_t {
+        id: scope as c_ulong,
+        suffix,
+    }
 }
 
 /// Get the predicate of a received query as a non null-terminated string.
