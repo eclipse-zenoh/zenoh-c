@@ -13,7 +13,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 int main(int argc, char **argv)
 {
@@ -21,37 +21,40 @@ int main(int argc, char **argv)
 
   if (argc < 2)
   {
-    printf("USAGE:\n\tzn_pub_thr <payload-size> [<zenoh-locator>]\n\n");
+    printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
     exit(-1);
   }
   size_t len = atoi(argv[1]);
-  printf("Running throughput test for payload of %zu bytes.\n", len);
-  zn_properties_t *config = zn_config_default();
+  z_owned_config_t config = z_config_default();
   if (argc > 2)
   {
-    zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[2]));
+    z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
   }
 
-  zn_session_t *s = zn_open(config);
-  if (s == 0)
+  z_owned_session_t os = z_open(z_move(config));
+  if (!z_check(os))
   {
     printf("Unable to open session!\n");
     exit(-1);
   }
+  z_session_t s = z_borrow(os);
 
   char *data = (char *)malloc(len);
   memset(data, 1, len);
 
-  zn_reskey_t reskey = zn_rid(zn_declare_resource(s, zn_rname("/test/thr")));
-  zn_publisher_t *pub = zn_declare_publisher(s, reskey);
-  if (pub == 0)
+  z_owned_keyexpr_t okeyexpr = z_expr("/test/thr");
+  z_keyexpr_t keyexpr = z_declare_expr(s, z_move(okeyexpr));
+  if (!z_declare_publication(s, keyexpr))
   {
-    printf("Unable to declare publisher.\n");
+    printf("Unable to declare publication.\n");
     exit(-1);
   }
 
   while (1)
   {
-    zn_write(s, reskey, (const uint8_t *)data, len);
+    z_put(s, keyexpr, (const uint8_t *)data, len);
   }
+  z_undeclare_publication(s, keyexpr);
+  z_undeclare_expr(s, keyexpr);
+  z_close(z_move(os));
 }

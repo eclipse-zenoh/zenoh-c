@@ -27,9 +27,9 @@ Publish
   int main(int argc, char **argv) {
       char* value = "value";
 
-      zn_session_t *s = zn_open(zn_config_default());
-      zn_write(s, zn_rname("/res/name"), (const uint8_t *)value, strlen(value));
-      zn_close(s);
+      z_session_t *s = z_open(z_config_default());
+      z_put(s, z_expr("/res/name"), (const uint8_t *)value, strlen(value));
+      z_close(s);
 
       return 0;
   }
@@ -42,23 +42,23 @@ Subscribe
   #include <stdio.h>
   #include "zenoh/net.h"
 
-  void data_handler(const zn_sample_t *sample, const void *arg) {
+  void data_handler(const z_sample_t *sample, const void *arg) {
       printf(">> Received (%.*s, %.*s)\n",
           (int)sample->key.len, sample->key.val,
           (int)sample->value.len, sample->value.val);
   }
 
   int main(int argc, char **argv) {
-      zn_session_t *s = zn_open(zn_config_default());
-      zn_subscriber_t *sub = zn_declare_subscriber(s, zn_rname("/res/name"), zn_subinfo_default(), data_handler, NULL);
+      z_session_t *s = z_open(z_config_default());
+      z_subscriber_t *sub = z_declare_subscriber(s, z_expr("/res/name"), z_subinfo_default(), data_handler, NULL);
 
       char c = 0;
       while (c != 'q') {
           c = fgetc(stdin);
       }
 
-      zn_undeclare_subscriber(sub);
-      zn_close(s);
+      z_undeclare_subscriber(sub);
+      z_close(s);
       return 0;
   }
 
@@ -73,16 +73,16 @@ Query
   #include "zenoh/net.h"
 
   int main(int argc, char** argv) {
-      zn_session_t *s = zn_open(zn_config_default());
-      zn_reply_data_array_t replies = zn_query_collect(s, zn_rname("/res/name"), "", zn_query_target_default(), zn_query_consolidation_default());
+      z_session_t *s = z_open(z_config_default());
+      z_reply_data_array_t replies = z_query_collect(s, z_expr("/res/name"), "", z_query_target_default(), z_query_consolidation_default());
       
       for(unsigned int i = 0; i < replies.len; ++i) {
           printf(">> Received (%.*s, %.*s)\n",
             (int)replies.val[i].data.key.len, replies.val[i].data.key.val,
             (int)replies.val[i].data.value.len, replies.val[i].data.value.val);
       }
-      zn_reply_data_array_free(replies);
+      z_reply_data_array_free(replies);
 
-      zn_close(s);
+      z_close(s);
       return 0;
   }

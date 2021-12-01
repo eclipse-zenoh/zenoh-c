@@ -20,9 +20,9 @@ The *libzenoh-c* library provides a C client API for the zenoh protocol.
 
 An introduction to zenoh and its concepts is available on `zenoh.io <https://zenoh.io>`_.
 
-Note that only the zenoh-net API is available in c at this time.
+Note that only the zenoh API is available in c at this time.
 
 .. toctree::
     :maxdepth: 10
 
-    zenoh-net
+    zenoh

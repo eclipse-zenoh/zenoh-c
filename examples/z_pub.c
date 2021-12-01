@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include "zenoh/net.h"
+#include "zenoh.h"
 
 int main(int argc, char **argv)
 {
@@ -30,30 +30,30 @@ int main(int argc, char **argv)
     {
         value = argv[2];
     }
-    zn_properties_t *config = zn_config_default();
+    z_owned_config_t config = z_config_default();
     if (argc > 3)
     {
-        zn_properties_insert(config, ZN_CONFIG_PEER_KEY, z_string_make(argv[3]));
+        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[3]);
     }
 
     printf("Openning session...\n");
-    zn_session_t *s = zn_open(config);
-    if (s == 0)
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
     {
         printf("Unable to open session!\n");
         exit(-1);
     }
+    z_session_t borrowed_session = z_borrow(s);
 
-    printf("Declaring Resource '%s'", uri);
-    unsigned long rid = zn_declare_resource(s, zn_rname(uri));
-    printf(" => RId %lu\n", rid);
-    zn_reskey_t reskey = zn_rid(rid);
+    printf("Declaring key expression '%s'...", uri);
+    z_owned_keyexpr_t urikey = z_expr(uri);
+    z_keyexpr_t keyexpr = z_declare_expr(borrowed_session, z_move(urikey));
+    printf(" => RId %lu\n", keyexpr.id);
 
-    printf("Declaring Publisher on %lu\n", rid);
-    zn_publisher_t *pub = zn_declare_publisher(s, reskey);
-    if (pub == 0)
+    printf("Declaring publication on '%lu'\n", keyexpr.id);
+    if (!z_declare_publication(borrowed_session, keyexpr))
     {
-        printf("Unable to declare publisher.\n");
+        printf("Unable to declare publication.\n");
         exit(-1);
     }
 
@@ -62,11 +62,11 @@ int main(int argc, char **argv)
     {
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
-        printf("Writing Data ('%lu': '%s')...\n", rid, buf);
-        zn_write(s, reskey, (const uint8_t *)buf, strlen(buf));
+        printf("Putting Data ('%lu': '%s')...\n", keyexpr.id, buf);
+        z_put(borrowed_session, keyexpr, (const uint8_t *)buf, strlen(buf));
     }
-
-    zn_undeclare_publisher(pub);
-    zn_close(s);
+    z_undeclare_publication(borrowed_session, keyexpr);
+    z_undeclare_expr(borrowed_session, keyexpr);
+    z_close(z_move(s));
     return 0;
 }
