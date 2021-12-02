@@ -98,15 +98,19 @@ typedef struct z_owned_string_t {
  */
 typedef const char *z_string_t;
 /**
- * A borrowed ressource key.
+ * A borrowed key expression.
  *
- * Resources are identified by URI like string names.
- * Examples : ``"/some/resource/key"``.
- * Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
+ * Key expressions can identify a single key or a set of keys.
+ * 
+ * Examples : 
+ *    - ``"/key/expression"``.
+ *    - ``"/key/ex*"``.
+ * 
+ * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
  * for wire and computation efficiency.
  *
- * A resource key can be either:
- *   - A plain string resource name.
+ * A key expression can be either:
+ *   - A plain string expression.
  *   - A pure numerical id.
  *   - The combination of a numerical prefix and a string suffix.
  */
@@ -115,15 +119,19 @@ typedef struct z_keyexpr_t {
   struct z_bytes_t suffix;
 } z_keyexpr_t;
 /**
- * A zenoh-allocated resource key.
+ * A borrowed key expression.
  *
- * Resources are identified by URI like string names.
- * Examples : ``"/some/resource/key"``.
- * Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
+ * Key expressions can identify a single key or a set of keys.
+ * 
+ * Examples : 
+ *    - ``"/key/expression"``.
+ *    - ``"/key/ex*"``.
+ * 
+ * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
  * for wire and computation efficiency.
  *
- * A resource key can be either:
- *   - A plain string resource name.
+ * A key expression can be either:
+ *   - A plain string expression.
  *   - A pure numerical id.
  *   - The combination of a numerical prefix and a string suffix.
  *
@@ -467,7 +475,7 @@ void z_config_set(struct z_config_t config, unsigned long key, z_string_t value)
  */
 struct z_owned_string_t z_config_to_str(struct z_config_t config);
 /**
- * Associates a numerical id with the given resource key. The id is returned as a `z_keyexpr_t` with a nullptr suffix.
+ * Associates a numerical id with the given key expression. The id is returned as a `z_keyexpr_t` with a nullptr suffix.
  *
  * This numerical id will be used on the network to save bandwidth and
  * ease the retrieval of the concerned resource in the routing tables.
@@ -475,14 +483,14 @@ struct z_owned_string_t z_config_to_str(struct z_config_t config);
 struct z_keyexpr_t z_declare_expr(struct z_session_t session,
                                   struct z_owned_keyexpr_t *keyexpr);
 /**
- * Declares a publication for the given resource key, returning `true` on success.
+ * Declares a publication for the given key expression, returning `true` on success.
  *
  * Written resources that match the given key will only be sent on the network
  * if matching subscribers exist in the system.
  */
 bool z_declare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
 /**
- * Constructs a resource key from a resource name. `name`'s content is copied.
+ * Constructs a key expression from a string expression. `name`'s content is copied.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
  * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
@@ -500,7 +508,7 @@ struct z_owned_keyexpr_t z_expr(const char *name);
  *
  * Parameters:
  *     session: The zenoh session.
- *     resource: The resource key to query.
+ *     keyexpr: The key expression matching resources to query.
  *     predicate: An indication to matching queryables about the queried data.
  *     target: The kind of queryables that should be target of this query.
  *     consolidation: The kind of consolidation that should be applied on replies.
@@ -520,7 +528,7 @@ void z_get(struct z_session_t session,
  *
  * Parameters:
  *     session: The zenoh session.
- *     resource: The resource key to query.
+ *     keyexpr: The key expression matching resources to query.
  *     predicate: An indication to matching queryables about the queried data.
  *     target: The kind of queryables that should be target of this query.
  *     consolidation: The kind of consolidation that should be applied on replies.
@@ -550,12 +558,12 @@ bool z_hello_check(const struct z_owned_hello_t *hello);
  */
 void z_hello_free(struct z_owned_hello_t *hello);
 /**
- * Constructs a resource key from a resource id.
- * Since id-only ressource keys don't need destruction, a `z_keyexpr_t` is returned instead of its owned variant.
+ * Constructs a key expression from an expression id.
+ * Since id-only kes expressions don't need destruction, a `z_keyexpr_t` is returned instead of its owned variant.
  */
 struct z_keyexpr_t z_id(unsigned long id);
 /**
- * Constructs a resource key from a resource id and a suffix. `suffix`'s content is copied.
+ * Constructs a key expression from an expression id and a suffix. `suffix`'s content is copied.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
  * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
@@ -610,11 +618,11 @@ bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
  */
 void z_keyexpr_free(struct z_owned_keyexpr_t *keyexpr);
 /**
- * Constructs a zenoh-owned ressource key. `suffix`'s contents will be copied.
+ * Constructs a zenoh-owned key expression. `suffix`'s contents will be copied.
  */
 struct z_owned_keyexpr_t z_keyexpr_new(unsigned long id, const char *suffix);
 /**
- * Constructs a borrowed ressource key. The constructed value is valid as long as `suffix` is.
+ * Constructs a borrowed key expression. The constructed value is valid as long as `suffix` is.
  */
 struct z_keyexpr_t z_keyexpr_new_borrowed(unsigned long id, const char *suffix);
 /**
@@ -634,7 +642,7 @@ void z_pull(const struct z_owned_subscriber_t *sub);
  *
  * Parameters:
  *     session: The zenoh session.
- *     resource: The resource key to write.
+ *     keyexpr: The key expression to write.
  *     payload: The value to write.
  *     len: The length of the value to write.
  * Returns:
@@ -649,7 +657,7 @@ int z_put(struct z_session_t session,
  *
  * Parameters:
  *     session: The zenoh session.
- *     resource: The resource key to write.
+ *     keyexpr: The key expression to write.
  *     payload: The value to write.
  *     len: The length of the value to write.
  *     options: The write options
@@ -677,7 +685,7 @@ bool z_put_options_set(struct z_put_options_t *options,
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
- * Gets the resource name of a received query as a non null-terminated string.
+ * Gets the key expression of a received query as a non null-terminated string.
  */
 struct z_keyexpr_t z_query_key_expr(const struct z_query_t *query);
 /**
@@ -700,11 +708,11 @@ bool z_queryable_check(const struct z_owned_queryable_t *qable);
  */
 void z_queryable_close(struct z_owned_queryable_t *qable);
 /**
- * Registers a `z_queryable_t` for the given resource key.
+ * Registers a `z_queryable_t` for the given key expression.
  *
  * Parameters:
  *     session: The zenoh session.
- *     resource: The resource key the :c:type:`z_queryable_t` will reply to.
+ *     keyexpr: The key expression the :c:type:`z_queryable_t` will reply to.
  *     kind: The kind of :c:type:`z_queryable_t`.
  *     callback: The callback function that will be called each time a matching query is received.
  *     arg: A pointer that will be passed to the **callback** on each call.
@@ -778,7 +786,7 @@ struct z_owned_hello_array_t z_scout(unsigned int what,
  *
  * Parameters:
  *     query: The query to reply to.
- *     key: The resource key of this reply.
+ *     key: The key of this reply.
  *     payload: The value of this reply.
  *     len: The length of the value of this reply.
  */
@@ -828,19 +836,19 @@ struct z_subinfo_t z_subinfo_default(void);
  */
 const struct z_period_t *z_subinfo_period(const struct z_subinfo_t *info);
 /**
- * Subscribes to the given resource key.
+ * Subscribes to the given key expression.
  *
  * Parameters:
  *     session: The zenoh session.
- *     resource: The resource key to subscribe.
+ *     keyexpr: The key expression to subscribe.
  *     sub_info: The :c:type:`z_subinfo_t` to configure the subscriber.
- *     callback: The callback function that will be called each time a data matching the subscribed resource is received.
+ *     callback: The callback function that will be called each time a data matching the subscribed expression is received.
  *     arg: A pointer that will be passed to the **callback** on each call.
  *
  * Returns:
- *    An owned subscription handle.
+ *    A :c:type:`z_owned_subscriber_t`.
  *
- *    To check if the subscription succeeded and if the subscription handle is still valid,
+ *    To check if the subscription succeeded and if the subscriber is still valid,
  *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  *
  *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
@@ -865,10 +873,10 @@ void z_subscriber_close(struct z_owned_subscriber_t *sub);
  */
 struct z_target_t z_target_default(void);
 /**
- * Unbinds the numerical id key generated by a call to `z_declare_expr`
+ * Unbinds the numerical id key generated by a call to :c:func:`z_declare_expr`.
  */
 void z_undeclare_expr(struct z_session_t session, struct z_keyexpr_t keyexpr);
 /**
- * Undeclares a publication for the given resource key
+ * Undeclares a publication for the given key expression.
  */
 void z_undeclare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);

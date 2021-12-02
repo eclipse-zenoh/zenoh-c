@@ -97,7 +97,7 @@ typedef struct z_owned_subscriber_t {
   uint64_t _0[Z_SUBSCRIBER_PADDING_U64];
 } z_owned_subscriber_t;
 /**
- * Options passed to the `z_put_ext` function.
+ * Options passed to the :c:func:`z_put_ext` function.
  */
 typedef struct z_put_options_t {
   uint64_t _0[Z_WRITE_OPTIONS_PADDING_U64];
