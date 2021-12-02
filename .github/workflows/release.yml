@@ -183,23 +183,24 @@ jobs:
         shell: bash
         run: |
           TARGET=${{ matrix.job.target }}
-          LIB_PKG_NAME="zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}.zip"
-          DEBS_PKG_NAME="zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}-deb-pkgs.zip"
+          LIB_PKG_NAME="${PWD}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}.zip"
+          DEBS_PKG_NAME="${PWD}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}-deb-pkgs.zip"
 
           case ${TARGET} in
             *linux*)
               cd "target/${TARGET}/release/"
               echo "Packaging ${LIB_PKG_NAME}:"
-              zip ../../../${LIB_PKG_NAME} libzenohc.so
+              mkdir lib && cp libzenohc.so lib/
+              zip -r ${LIB_PKG_NAME} lib
               cd -
-              zip ../../../${LIB_PKG_NAME} include
+              zip ${LIB_PKG_NAME} include
               echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
 
               # check if debian packages has been created and packages them in a single tgz
               if [[ -d target/${TARGET}/debian ]]; then
                 cd target/${TARGET}/debian
                 echo "Packaging ${DEBS_PKG_NAME}:"
-                zip ../../../${DEBS_PKG_NAME} *.deb
+                zip ${DEBS_PKG_NAME} *.deb
                 cd -
                 echo ::set-output name=DEBS_PKG_NAME::"${DEBS_PKG_NAME}"
               fi
@@ -207,17 +208,19 @@ jobs:
             *apple*)
               cd "target/${TARGET}/release/"
               echo "Packaging ${LIB_PKG_NAME}:"
-              zip ../../../${LIB_PKG_NAME} libzenohc.dylib
+              mkdir lib && cp libzenohc.dylib lib/
+              zip -r ${LIB_PKG_NAME} lib
               cd -
-              zip ../../../${LIB_PKG_NAME} include
+              zip ${LIB_PKG_NAME} include
               echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
               ;;
             *windows*)
               cd "target/${TARGET}/release/"
               echo "Packaging ${LIB_PKG_NAME}:"
-              7z -y a "../../../${LIB_PKG_NAME}" zenohc.dll
+              mkdir lib && cp zenohc.dll lib/
+              7z -y -r a "${LIB_PKG_NAME}" lib
               cd -
-              7z -y a "../../../${LIB_PKG_NAME}" include
+              7z -y -r a "${LIB_PKG_NAME}" include
               echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
               ;;
           esac
