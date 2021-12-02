@@ -23,8 +23,6 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           components: rustfmt, clippy
 
       # `cargo check` command here will use installed `nightly`

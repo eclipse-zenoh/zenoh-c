@@ -183,8 +183,8 @@ jobs:
         shell: bash
         run: |
           TARGET=${{ matrix.job.target }}
-          LIB_PKG_NAME="${PWD}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}.zip"
-          DEBS_PKG_NAME="${PWD}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}-deb-pkgs.zip"
+          LIB_PKG_NAME="${GITHUB_WORKSPACE}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}.zip"
+          DEBS_PKG_NAME="${GITHUB_WORKSPACE}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}-deb-pkgs.zip"
 
           case ${TARGET} in
             *linux*)
@@ -193,7 +193,7 @@ jobs:
               mkdir lib && cp libzenohc.so lib/
               zip -r ${LIB_PKG_NAME} lib
               cd -
-              zip ${LIB_PKG_NAME} include
+              zip -r ${LIB_PKG_NAME} include
               echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
 
               # check if debian packages has been created and packages them in a single tgz
@@ -211,7 +211,7 @@ jobs:
               mkdir lib && cp libzenohc.dylib lib/
               zip -r ${LIB_PKG_NAME} lib
               cd -
-              zip ${LIB_PKG_NAME} include
+              zip -r ${LIB_PKG_NAME} include
               echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
               ;;
             *windows*)
