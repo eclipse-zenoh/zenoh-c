@@ -75,13 +75,8 @@ license-file = ["LICENSE", "0"]
 depends = "libzenohc (=0.6.0~dev)"
 assets = [
     [
-        "include/zenoh.h",
+        "include/*",
         "usr/include/",
-        "755",
-    ],
-    [
-        "include/zenoh/net.h",
-        "usr/include/zenoh/",
         "755",
     ],
 ]
