@@ -272,6 +272,7 @@ Types
 .. autocstruct:: zenoh_commons.h::z_period_t
 .. autocstruct:: zenoh_commons.h::z_subinfo_t
 .. autocfunction:: zenoh_commons.h::z_subinfo_default
+.. autocfunction:: zenoh_commons.h::z_subinfo_period
 
 Functions
 ---------

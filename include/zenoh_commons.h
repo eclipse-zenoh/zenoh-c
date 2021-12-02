@@ -10,6 +10,14 @@ typedef enum z_consolidation_mode_t {
   z_consolidation_mode_t_LAZY,
   z_consolidation_mode_t_NONE,
 } z_consolidation_mode_t;
+/**
+ * The different kind of options in a :c:type:`z_put_options_t`.
+ *
+ *     - **z_put_options_field_t_ENCODING**
+ *     - **z_put_options_field_t_CONGESTION_CONTROL**
+ *     - **z_put_options_field_t_KIND**
+ *     - **z_put_options_field_t_PRIORITY**
+ */
 typedef enum z_put_options_field_t {
   z_put_options_field_t_ENCODING,
   z_put_options_field_t_CONGESTION_CONTROL,
@@ -376,11 +384,19 @@ bool z_bytes_check(const struct z_owned_bytes_t *b);
  * Frees `b` and invalidates it for double-free safety.
  */
 void z_bytes_free(struct z_owned_bytes_t *b);
+/**
+ * Constructs a :c:type:`z_owned_bytes_t` of lengh `len` from the bytes
+ * starting at address `start`.
+ * The bytes from `start` are copied.
+ */
 struct z_owned_bytes_t z_bytes_new(const uint8_t *start, uintptr_t len);
 /**
  * Closes a zenoh session. This frees and invalidates `session` for double-free safety.
  */
 void z_close(struct z_owned_session_t *session);
+/**
+ * Returns a :c:type:`z_config_t` borrowed from `s`.
+ */
 struct z_config_t z_config_borrow(const struct z_owned_config_t *s);
 /**
  * Returns `true` if `config` is valid.
@@ -392,11 +408,11 @@ bool z_config_check(const struct z_owned_config_t *config);
  */
 struct z_owned_config_t z_config_client(const char *const *peers, uintptr_t n_peers);
 /**
- * Create an default, zenoh-allocated, configuration.
+ * Creates an default, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_default(void);
 /**
- * Create an empty, zenoh-allocated, configuration.
+ * Creates an empty, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_empty(void);
 /**
@@ -412,7 +428,7 @@ struct z_owned_config_t z_config_from_file(const char *path);
  */
 struct z_owned_config_t z_config_from_str(const char *s);
 /**
- * Get the property with the given integer key from the configuration.
+ * Gets the property with the given integer key from the configuration.
  */
 struct z_owned_string_t z_config_get(struct z_config_t config, unsigned int key);
 /**
@@ -437,7 +453,7 @@ struct z_owned_config_t z_config_new(void);
  */
 struct z_owned_config_t z_config_peer(void);
 /**
- * Insert a property with a given key to a properties map.
+ * Inserts a property with a given key to a properties map.
  * If a property with the same key already exists in the properties map, it is replaced.
  *
  * Parameters:
@@ -451,7 +467,7 @@ void z_config_set(struct z_config_t config, unsigned long key, z_string_t value)
  */
 struct z_owned_string_t z_config_to_str(struct z_config_t config);
 /**
- * Associate a numerical id with the given resource key. The id is returned as a `z_keyexpr_t` with a nullptr suffix.
+ * Associates a numerical id with the given resource key. The id is returned as a `z_keyexpr_t` with a nullptr suffix.
  *
  * This numerical id will be used on the network to save bandwidth and
  * ease the retrieval of the concerned resource in the routing tables.
@@ -553,13 +569,16 @@ struct z_keyexpr_t z_id(unsigned long id);
 struct z_owned_keyexpr_t z_id_with_suffix(unsigned long id,
                                           const char *suffix);
 /**
- * Get informations about an zenoh session.
+ * Gets informations about an zenoh session.
  */
 struct z_owned_info_t z_info(struct z_session_t session);
 /**
- * Get informations about an zenoh session as a properties-formatted string.
+ * Gets informations about an zenoh session as a properties-formatted string.
  */
 struct z_owned_string_t z_info_as_str(struct z_session_t session);
+/**
+ * Returns a :c:type:`z_info_t` borrowed from `info`.
+ */
 struct z_info_t z_info_borrow(const struct z_owned_info_t *info);
 /**
  * Returns `true` if `info` is valid.
@@ -575,9 +594,12 @@ void z_info_free(struct z_owned_info_t *info);
  */
 struct z_owned_string_t z_info_get(struct z_info_t info, uint64_t key);
 /**
- * Initialise the zenoh runtime logger
+ * Initialises the zenoh runtime logger
  */
 void z_init_logger(void);
+/**
+ * Returns a :c:type:`z_keyexpr_t` borrowed from `keyexpr`.
+ */
 struct z_keyexpr_t z_keyexpr_borrow(const struct z_owned_keyexpr_t *keyexpr);
 /**
  * Returns `true` if `keyexpr` is valid.
@@ -596,7 +618,7 @@ struct z_owned_keyexpr_t z_keyexpr_new(unsigned long id, const char *suffix);
  */
 struct z_keyexpr_t z_keyexpr_new_borrowed(unsigned long id, const char *suffix);
 /**
- * Open a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
+ * Opens a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
@@ -651,7 +673,7 @@ bool z_put_options_set(struct z_put_options_t *options,
                        enum z_put_options_field_t key,
                        unsigned int value);
 /**
- * Create a default :c:type:`z_query_consolidation_t`.
+ * Creates a default :c:type:`z_query_consolidation_t`.
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
@@ -659,13 +681,16 @@ struct z_query_consolidation_t z_query_consolidation_default(void);
  */
 struct z_keyexpr_t z_query_key_expr(const struct z_query_t *query);
 /**
- * Get the predicate of a received query as a non null-terminated string.
+ * Gets the predicate of a received query as a non null-terminated string.
  */
 struct z_bytes_t z_query_predicate(const struct z_query_t *query);
 /**
- * Create a default `z_query_target_t`.
+ * Creates a default `z_query_target_t`.
  */
 struct z_query_target_t z_query_target_default(void);
+/**
+ * Returns `true` if `qable` is valid.
+ */
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
 /**
  * Unregisters a `z_queryable_t`, freeing it and invalidating it for doube-free safety.
@@ -717,6 +742,9 @@ void z_reply_data_free(struct z_owned_reply_data_t *reply_data);
  * Frees `reply`, invalidating it for double-free safety.
  */
 void z_reply_free(struct z_owned_reply_t *reply);
+/**
+ * Returns a :c:type:`z_sample_t` borrowed from `sample`.
+ */
 struct z_sample_t z_sample_borrow(const struct z_owned_sample_t *sample);
 /**
  * Returns `true` if `sample` is valid.
@@ -758,16 +786,25 @@ void z_send_reply(const struct z_query_t *query,
                   const char *key,
                   const uint8_t *payload,
                   unsigned int len);
+/**
+ * Returns a :c:type:`z_session_t` borrowed from `s`.
+ */
 struct z_session_t z_session_borrow(const struct z_owned_session_t *s);
+/**
+ * Returns `true`if `session`is valid.
+ */
 bool z_session_check(const struct z_owned_session_t *session);
 /**
- * Returns `true` if
+ * Returns `true` if `strs` is valid
  */
 bool z_str_array_check(const struct z_owned_str_array_t *strs);
 /**
  * Frees `strs` and invalidates it for double-free safety.
  */
 void z_str_array_free(struct z_owned_str_array_t *strs);
+/**
+ * Returns a :c:type:`z_string_t` borrowed from `s`.
+ */
 z_string_t z_string_borrow(const struct z_owned_string_t *s);
 /**
  * Returns `true` if `s` is valid
@@ -778,7 +815,7 @@ bool z_string_check(const struct z_owned_string_t *s);
  */
 void z_string_free(struct z_owned_string_t *s);
 /**
- * Constructs a `z_string_t` from a NULL terminated string.
+ * Construct a :c:type:`z_owned_string_t` from a NULL terminated string.
  * The contents of `s` are copied.
  */
 struct z_owned_string_t z_string_new(const char *s);
@@ -786,6 +823,9 @@ struct z_owned_string_t z_string_new(const char *s);
  * Create a default subscription info.
  */
 struct z_subinfo_t z_subinfo_default(void);
+/**
+ * Returns the subscription period from `info`.
+ */
 const struct z_period_t *z_subinfo_period(const struct z_subinfo_t *info);
 /**
  * Subscribes to the given resource key.
@@ -812,6 +852,9 @@ struct z_owned_subscriber_t z_subscribe(struct z_session_t session,
                                         struct z_subinfo_t sub_info,
                                         void (*callback)(const struct z_sample_t*, const void*),
                                         void *arg);
+/**
+ * Returns `true` if `sub` is valid.
+ */
 bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 /**
  * Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
