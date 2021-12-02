@@ -35,7 +35,7 @@ typedef enum z_reliability_t {
   z_reliability_t_RELIABLE,
 } z_reliability_t;
 /**
- * The possible values of :c:member:`z_reply_t.tag`
+ * The possible values of :c:member:`z_owned_reply_t.tag`
  *
  *     - **z_reply_t_Tag_DATA**: The reply contains some data.
  *     - **z_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
@@ -243,7 +243,7 @@ typedef struct z_owned_reply_data_t {
  *
  * Members:
  *   `z_reply_t_Tag tag`: Indicates if the reply contains data or if it's a FINAL reply.
- *   `z_owned_reply_data_t data`: The reply data if :c:member:`z_reply_t.tag` equals :c:member:`z_reply_t_Tag.z_reply_t_Tag_DATA`.
+ *   `z_owned_reply_data_t data`: The reply data if :c:member:`z_owned_reply_t.tag` equals :c:member:`z_reply_t_Tag.z_reply_t_Tag_DATA`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -256,7 +256,7 @@ typedef struct z_owned_reply_t {
   struct z_owned_reply_data_t data;
 } z_owned_reply_t;
 /**
- * A zenoh-allocated array of `z_owned_reply_data_t`.
+ * A zenoh-allocated array of :c:type:`z_owned_reply_data_t`.
  *
  * Members:
  *   `char *const *val`: A pointer to the array.
@@ -349,7 +349,7 @@ typedef struct z_period_t {
   unsigned int duration;
 } z_period_t;
 /**
- * Informations to be passed to :c:func:`z_declare_subscriber` to configure the created :c:type:`z_subscriber_t`.
+ * Informations to be passed to :c:func:`z_subscribe` to configure the created :c:type:`z_owned_subscriber_t`.
  *
  * Members:
  *     `z_reliability_t reliability`: The subscription reliability.
@@ -634,7 +634,7 @@ struct z_owned_session_t z_open(struct z_owned_config_t *config);
  * by calling the **callback** function provided to the :c:func:`z_subscribe` function.
  *
  * Parameters:
- *     sub: The :c:type:`z_subscriber_t` to pull from.
+ *     sub: The :c:type:`z_owned_subscriber_t` to pull from.
  */
 void z_pull(const struct z_owned_subscriber_t *sub);
 /**
@@ -701,24 +701,24 @@ struct z_query_target_t z_query_target_default(void);
  */
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
 /**
- * Unregisters a `z_queryable_t`, freeing it and invalidating it for doube-free safety.
+ * Close a `z_owned_queryable_t`, freeing it and invalidating it for doube-free safety.
  *
  * Parameters:
- *     qable: The :c:type:`z_queryable_t` to undeclare.
+ *     qable: The :c:type:`z_owned_queryable_t` to close.
  */
 void z_queryable_close(struct z_owned_queryable_t *qable);
 /**
- * Registers a `z_queryable_t` for the given key expression.
+ * Creates a Queryable for the given key expression.
  *
  * Parameters:
  *     session: The zenoh session.
- *     keyexpr: The key expression the :c:type:`z_queryable_t` will reply to.
- *     kind: The kind of :c:type:`z_queryable_t`.
+ *     keyexpr: The key expression the Queryable will reply to.
+ *     kind: The kind of Queryable.
  *     callback: The callback function that will be called each time a matching query is received.
  *     arg: A pointer that will be passed to the **callback** on each call.
  *
  * Returns:
- *    The created :c:type:`z_queryable_t` or null if the declaration failed.
+ *    The created :c:type:`z_owned_queryable_t` or null if the creation failed.
  */
 struct z_owned_queryable_t z_queryable_new(struct z_session_t session,
                                            struct z_keyexpr_t keyexpr,
@@ -731,10 +731,10 @@ struct z_owned_queryable_t z_queryable_new(struct z_session_t session,
 bool z_reply_check(const struct z_owned_reply_t *reply);
 bool z_reply_data_array_check(const struct z_owned_reply_data_array_t *replies);
 /**
- * Free a :c:type:`z_reply_data_array_t` and it's contained replies.
+ * Free a :c:type:`z_owned_reply_data_array_t` and it's contained replies.
  *
  * Parameters:
- *     replies: The :c:type:`z_reply_data_array_t` to free.
+ *     replies: The :c:type:`z_owned_reply_data_array_t` to free.
  *
  */
 void z_reply_data_array_free(struct z_owned_reply_data_array_t *replies);
