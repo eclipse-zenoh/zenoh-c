@@ -16,44 +16,41 @@
 API Reference
 *************
 
-Types
-=====
+Generic types
+=============
 
 String
 ------
 
-.. autocstruct:: zenoh/net.h::z_string_t
+.. c:type:: z_string_t
 
-.. autocfunction:: zenoh/net.h::z_string_make
+  A borrowed null-terminated string. (``const char*``).
 
+.. autocstruct:: zenoh_commons.h::z_owned_string_t
+
+.. autocfunction:: zenoh_commons.h::z_string_new
+.. autocfunction:: zenoh_commons.h::z_string_borrow
+.. autocfunction:: zenoh_commons.h::z_string_check
+.. autocfunction:: zenoh_commons.h::z_string_free
 
 Array of Str
 ------------
 
-.. autocstruct:: zenoh/net.h::z_str_array_t
+.. autocstruct:: zenoh_commons.h::z_owned_str_array_t
+
+.. autocfunction:: zenoh_commons.h::z_str_array_check
+.. autocfunction:: zenoh_commons.h::z_str_array_free
 
 Bytes
 -----
 
-.. autocstruct:: zenoh/net.h::z_bytes_t
+.. autocstruct:: zenoh_commons.h::z_bytes_t
+.. autocstruct:: zenoh_commons.h::z_owned_bytes_t
 
-Properties
-----------
-
-.. c:type:: z_properties_t
-
-  A map of key/value properties where the key is an ``unsigned int``
-  and the value a :c:type:`z_string_t`. Multiple values are coma separated.
-
-.. autocfunction:: zenoh/net.h::z_properties_make
-
-.. autocfunction:: zenoh/net.h::z_properties_len
-
-.. autocfunction:: zenoh/net.h::z_properties_insert
-
-.. autocfunction:: zenoh/net.h::z_properties_get
-
-.. autocfunction:: zenoh/net.h::z_properties_free
+.. autocfunction:: zenoh_commons.h::z_bytes_new
+.. autocfunction:: zenoh_commons.h::z_bytes_borrow
+.. autocfunction:: zenoh_commons.h::z_bytes_check
+.. autocfunction:: zenoh_commons.h::z_bytes_free
 
 Scouting
 ========
@@ -69,16 +66,18 @@ Possible flags in a whatami bitmask :
 
   .. c:var:: const unsigned int ZN_CLIENT
 
-.. autocstruct:: zenoh/net.h::z_hello_t
+.. autocstruct:: zenoh_commons.h::z_owned_hello_t
 
-.. autocstruct:: zenoh/net.h::z_hello_array_t
+.. autocstruct:: zenoh_commons.h::z_owned_hello_array_t
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::z_scout
-
-.. autocfunction:: zenoh/net.h::z_hello_array_free
+.. autocfunction:: zenoh_commons.h::z_scout
+.. autocfunction:: zenoh_commons.h::z_hello_check
+.. autocfunction:: zenoh_commons.h::z_hello_free
+.. autocfunction:: zenoh_commons.h::z_hello_array_check
+.. autocfunction:: zenoh_commons.h::z_hello_array_free
 
 Session
 =======
@@ -86,11 +85,25 @@ Session
 Session configuration
 ---------------------
 
-A zenoh session is configured through a :c:type:`z_properties_t` properties map.
+.. autocstruct:: zenoh_concrete.h::z_config_t
+.. autocstruct:: zenoh_concrete.h::z_owned_config_t
 
-Multiple values are coma separated.
+.. autocfunction:: zenoh_commons.h::z_config_new
+.. autocfunction:: zenoh_commons.h::z_config_default
+.. autocfunction:: zenoh_commons.h::z_config_empty
+.. autocfunction:: zenoh_commons.h::z_config_client
+.. autocfunction:: zenoh_commons.h::z_config_peer
+.. autocfunction:: zenoh_commons.h::z_config_from_file
+.. autocfunction:: zenoh_commons.h::z_config_from_str
+.. autocfunction:: zenoh_commons.h::z_config_set
+.. autocfunction:: zenoh_commons.h::z_config_get
+.. autocfunction:: zenoh_commons.h::z_config_len
+.. autocfunction:: zenoh_commons.h::z_config_to_str
+.. autocfunction:: zenoh_commons.h::z_config_borrow
+.. autocfunction:: zenoh_commons.h::z_config_check
+.. autocfunction:: zenoh_commons.h::z_config_free
 
-The following constants define the several property keys accepted for a zenoh 
+The following constants define the several configuration keys accepted for a zenoh 
 session configuration and the associated accepted values.
 
 .. c:var:: const unsigned int ZN_CONFIG_MODE_KEY
@@ -179,52 +192,52 @@ session configuration and the associated accepted values.
     - Accepted values : ``"true"``, ``"false"``.
     - Default value : ``"true"``.
 
-The following functions allow to create default :c:type:`z_properties_t` maps for 
-zenoh session configuration. The returned configurations can be amended with extra 
-options with :c:func:`z_properties_insert`.
-
-.. autocfunction:: zenoh/net.h::z_config_empty
-
-.. autocfunction:: zenoh/net.h::z_config_default
-
-.. autocfunction:: zenoh/net.h::z_config_peer
-
-.. autocfunction:: zenoh/net.h::z_config_client
-
 Session management
 ------------------
 
-.. autocfunction:: zenoh/net.h::z_open
+Types
+^^^^^
 
-.. autocfunction:: zenoh/net.h::z_info
+.. autocstruct:: zenoh_concrete.h::z_session_t
+.. autocstruct:: zenoh_concrete.h::z_owned_session_t
 
-.. autocfunction:: zenoh/net.h::z_close
+Functions
+^^^^^^^^^
 
-Resource
-========
+.. autocfunction:: zenoh_commons.h::z_open
+.. autocfunction:: zenoh_commons.h::z_info
+.. autocfunction:: zenoh_commons.h::z_close
 
-Resource key
-------------
+.. autocfunction:: zenoh_commons.h::z_session_borrow
+.. autocfunction:: zenoh_commons.h::z_session_check
 
-.. autocstruct:: zenoh/net.h::z_keyexpr_t
+Key expression
+==============
 
-.. autocfunction:: zenoh/net.h::z_expr
+.. autocstruct:: zenoh_commons.h::z_keyexpr_t
+.. autocstruct:: zenoh_commons.h::z_owned_keyexpr_t
 
-.. autocfunction:: zenoh/net.h::z_id
+.. autocfunction:: zenoh_commons.h::z_expr
+.. autocfunction:: zenoh_commons.h::z_id
+.. autocfunction:: zenoh_commons.h::z_id_with_suffix
 
-.. autocfunction:: zenoh/net.h::z_id_with_suffix
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new_borrowed
+.. autocfunction:: zenoh_commons.h::z_keyexpr_borrow
+.. autocfunction:: zenoh_commons.h::z_keyexpr_check
+.. autocfunction:: zenoh_commons.h::z_keyexpr_free
+
+.. autocfunction:: zenoh_commons.h::z_declare_expr
 
 Sample
-------
+======
 
-.. autocstruct:: zenoh/net.h::z_sample_t
+.. autocstruct:: zenoh_commons.h::z_sample_t
+.. autocstruct:: zenoh_commons.h::z_owned_sample_t
 
-.. autocfunction:: zenoh/net.h::z_sample_free
-
-Resource declaration
---------------------
-
-.. autocfunction:: zenoh/net.h::z_declare_resource
+.. autocfunction:: zenoh_commons.h::z_sample_borrow
+.. autocfunction:: zenoh_commons.h::z_sample_check
+.. autocfunction:: zenoh_commons.h::z_sample_free
 
 Publication
 ===========
@@ -232,22 +245,20 @@ Publication
 Types
 -----
 
-.. c:type:: z_publisher_tr
+.. autocstruct:: zenoh_concrete.h::z_put_options_t
+.. autocenum:: zenoh_commons.h::z_put_options_field_t
 
-  A zenoh Publisher.
-
-.. autocenum:: zenoh/net.h::z_congestion_control_t
+.. autocfunction:: zenoh_commons.h::z_put_options_default
+.. autocfunction:: zenoh_commons.h::z_put_options_set
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::z_declare_publisher
+.. autocfunction:: zenoh_commons.h::z_put
+.. autocfunction:: zenoh_commons.h::z_put_ext
 
-.. autocfunction:: zenoh/net.h::z_undeclare_publisher
-
-.. autocfunction:: zenoh/net.h::z_put
-
-.. autocfunction:: zenoh/net.h::z_put_ext
+.. autocfunction:: zenoh_commons.h::z_declare_publication
+.. autocfunction:: zenoh_commons.h::z_undeclare_publication
 
 Subscription
 ============
@@ -255,28 +266,20 @@ Subscription
 Types
 -----
 
-.. c:type:: z_subscriber_t
-
-  A zenoh subscriber.
-
-.. autocenum:: zenoh/net.h::z_reliability_t
-
-.. autocenum:: zenoh/net.h::z_submode_t
-
-.. autocstruct:: zenoh/net.h::z_period_t
-
-.. autocstruct:: zenoh/net.h::z_subinfo_t
-
-.. autocfunction:: zenoh/net.h::z_subinfo_default
+.. autocstruct:: zenoh_concrete.h::z_owned_subscriber_t
+.. autocenum:: zenoh_commons.h::z_reliability_t
+.. autocenum:: zenoh_commons.h::z_submode_t
+.. autocstruct:: zenoh_commons.h::z_period_t
+.. autocstruct:: zenoh_commons.h::z_subinfo_t
+.. autocfunction:: zenoh_commons.h::z_subinfo_default
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::z_declare_subscriber
-
-.. autocfunction:: zenoh/net.h::z_pull
-
-.. autocfunction:: zenoh/net.h::z_undeclare_subscriber
+.. autocfunction:: zenoh_commons.h::z_subscribe
+.. autocfunction:: zenoh_commons.h::z_pull
+.. autocfunction:: zenoh_commons.h::z_subscriber_check
+.. autocfunction:: zenoh_commons.h::z_subscriber_close
 
 Query
 =====
@@ -298,11 +301,11 @@ Types
 
       The number of complete queryables that should be target of a :c:func:`z_get`.
 
-.. autocenum:: zenoh/net.h::z_target_t_Tag
+.. autocenum:: zenoh_commons.h::z_target_t_Tag
 
-.. autocfunction:: zenoh/net.h::z_target_default
+.. autocfunction:: zenoh_commons.h::z_target_default
 
-.. autocstruct:: zenoh/net.h::z_query_target_t
+.. autocstruct:: zenoh_commons.h::z_query_target_t
 
   Predefined values for :c:member:`z_query_target_t.kind`: 
 
@@ -311,33 +314,33 @@ Types
     .. c:var:: const unsigned int ZN_QUERYABLE_EVAL
 
     .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
+  
+.. autocfunction:: zenoh_commons.h::z_query_target_default
 
-.. autocfunction:: zenoh/net.h::z_query_target_default
+.. autocenum:: zenoh_commons.h::z_consolidation_mode_t
+.. autocstruct:: zenoh_commons.h::z_query_consolidation_t
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_default
 
-.. autocenum:: zenoh/net.h::z_consolidation_mode_t
+.. autocstruct:: zenoh_commons.h::z_owned_reply_data_t
+.. autocfunction:: zenoh_commons.h::z_reply_data_check
+.. autocfunction:: zenoh_commons.h::z_reply_data_free
 
-.. autocstruct:: zenoh/net.h::z_query_consolidation_t
 
-.. autocfunction:: zenoh/net.h::z_query_consolidation_default
+.. autocstruct:: zenoh_commons.h::z_owned_reply_data_array_t
+.. autocfunction:: zenoh_commons.h::z_reply_data_array_check
+.. autocfunction:: zenoh_commons.h::z_reply_data_array_free
 
-.. autocstruct:: zenoh/net.h::z_reply_data_t
-
-.. autocfunction:: zenoh/net.h::z_reply_data_free
-
-.. autocstruct:: zenoh/net.h::z_reply_data_array_t
-
-.. autocfunction:: zenoh/net.h::z_reply_data_array_free
-
-.. autocstruct:: zenoh/net.h::z_reply_t
-
-.. autocenum:: zenoh/net.h::z_reply_t_Tag
+.. autocstruct:: zenoh_commons.h::z_owned_reply_t
+.. autocenum:: zenoh_commons.h::z_reply_t_Tag
+.. autocfunction:: zenoh_commons.h::z_reply_check
+.. autocfunction:: zenoh_commons.h::z_reply_free
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::z_get
+.. autocfunction:: zenoh_commons.h::z_get
 
-.. autocfunction:: zenoh/net.h::z_get_collect
+.. autocfunction:: zenoh_commons.h::z_get_collect
 
 Queryable
 =========
@@ -345,23 +348,20 @@ Queryable
 Types
 -----
 
-.. c:type:: z_queryable_t
-
-  The zenoh Queryable.
+.. autocstruct:: zenoh_concrete.h::z_owned_queryable_t
 
 .. c:type:: z_query_t
 
   A query received by a Queryable. 
 
-.. autocfunction:: zenoh/net.h::z_query_res_name
-
-.. autocfunction:: zenoh/net.h::z_query_predicate
+.. autocfunction:: zenoh_commons.h::z_query_key_expr
+.. autocfunction:: zenoh_commons.h::z_query_predicate
 
 
 Functions
 ---------
 
-.. autocfunction:: zenoh/net.h::z_declare_queryable
+.. autocfunction:: zenoh_commons.h::z_queryable_new
 
   Predefined values for ``kind``: 
 
@@ -369,8 +369,8 @@ Functions
 
     .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
 
-.. autocfunction:: zenoh/net.h::z_send_reply
-
-.. autocfunction:: zenoh/net.h::z_undeclare_queryable
+.. autocfunction:: zenoh_commons.h::z_send_reply
+.. autocfunction:: zenoh_commons.h::z_queryable_check
+.. autocfunction:: zenoh_commons.h::z_queryable_close
 
 

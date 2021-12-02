@@ -25,4 +25,5 @@ Note that only the zenoh API is available in c at this time.
 .. toctree::
     :maxdepth: 10
 
-    zenoh
+    examples
+    api
