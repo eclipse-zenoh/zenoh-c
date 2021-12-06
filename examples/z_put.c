@@ -44,9 +44,7 @@ int main(int argc, char **argv)
     }
 
     printf("Putting Data ('%s': '%s')...\n", uri, value);
-    z_owned_keyexpr_t urikey = z_expr(uri);
-    z_put(z_borrow(s), z_borrow(urikey), (const uint8_t *)value, strlen(value));
-    z_keyexpr_free(z_move(urikey));
+    z_put(z_borrow(s), z_expr(uri), (const uint8_t *)value, strlen(value));
     z_close(z_move(s));
     return 0;
 }

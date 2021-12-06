@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     z_session_t borrowed_session = z_borrow(s);
 
     printf("Declaring key expression '%s'...", expr);
-    z_owned_keyexpr_t keyexpr = z_expr(expr);
+    z_owned_keyexpr_t keyexpr = z_expr_new(expr);
     z_keyexpr_t keyid = z_declare_expr(borrowed_session, z_move(keyexpr));
     printf(" => RId %lu\n", keyid.id);
 

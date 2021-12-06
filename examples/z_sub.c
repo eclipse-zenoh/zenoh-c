@@ -44,8 +44,7 @@ int main(int argc, char **argv)
   }
 
   printf("Declaring Subscriber on '%s'...\n", expr);
-  z_owned_keyexpr_t keyexpr = z_expr(expr);
-  z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(keyexpr), z_subinfo_default(), data_handler, NULL);
+  z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_expr(expr), z_subinfo_default(), data_handler, NULL);
   if (!z_check(sub))
   {
     printf("Unable to declare subscriber.\n");
@@ -59,7 +58,6 @@ int main(int argc, char **argv)
     c = fgetc(stdin);
   }
   z_subscriber_close(z_move(sub));
-  z_keyexpr_free(z_move(keyexpr));
   z_close(z_move(s));
   return 0;
 }

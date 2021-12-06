@@ -49,8 +49,7 @@ int main(int argc, char **argv)
     }
 
     printf("Creating Queryable on '%s'...\n", expr);
-    z_owned_keyexpr_t keyexpr = z_expr(expr);
-    z_owned_queryable_t qable = z_queryable_new(z_borrow(s), z_borrow(keyexpr), ZN_QUERYABLE_EVAL, query_handler, NULL);
+    z_owned_queryable_t qable = z_queryable_new(z_borrow(s), z_expr(expr), ZN_QUERYABLE_EVAL, query_handler, NULL);
     if (!z_check(qable))
     {
         printf("Unable to create queryable.\n");
@@ -65,7 +64,6 @@ int main(int argc, char **argv)
     }
 
     z_queryable_close(z_move(qable));
-    z_keyexpr_free(z_move(keyexpr));
     z_close(z_move(s));
     return 0;
 }

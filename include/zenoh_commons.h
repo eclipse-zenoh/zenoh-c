@@ -490,6 +490,10 @@ struct z_keyexpr_t z_declare_expr(struct z_session_t session,
  */
 bool z_declare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
 /**
+ * Constructs a borrowed key expression from a string expression.
+ */
+struct z_keyexpr_t z_expr(const char *name);
+/**
  * Constructs a key expression from a string expression. `name`'s content is copied.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
@@ -501,7 +505,7 @@ bool z_declare_publication(struct z_session_t session, struct z_keyexpr_t keyexp
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-struct z_owned_keyexpr_t z_expr(const char *name);
+struct z_owned_keyexpr_t z_expr_new(const char *name);
 /**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
@@ -563,6 +567,10 @@ void z_hello_free(struct z_owned_hello_t *hello);
  */
 struct z_keyexpr_t z_id(unsigned long id);
 /**
+ * Constructs a borrowed key expression from an expression id and a suffix.
+ */
+struct z_keyexpr_t z_id_with_suffix(unsigned long id, const char *suffix);
+/**
  * Constructs a key expression from an expression id and a suffix. `suffix`'s content is copied.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
@@ -574,8 +582,8 @@ struct z_keyexpr_t z_id(unsigned long id);
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-struct z_owned_keyexpr_t z_id_with_suffix(unsigned long id,
-                                          const char *suffix);
+struct z_owned_keyexpr_t z_id_with_suffix_new(unsigned long id,
+                                              const char *suffix);
 /**
  * Gets informations about an zenoh session.
  */

@@ -191,6 +191,14 @@ pub extern "C" fn z_id(id: c_ulong) -> z_keyexpr_t {
     unsafe { z_keyexpr_new_borrowed(id, std::ptr::null()) }
 }
 
+/// Constructs a borrowed key expression from an expression id and a suffix.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) -> z_keyexpr_t {
+    z_keyexpr_new_borrowed(id, suffix)
+}
+
+
 /// Constructs a key expression from an expression id and a suffix. `suffix`'s content is copied.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
@@ -203,8 +211,15 @@ pub extern "C" fn z_id(id: c_ulong) -> z_keyexpr_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
+pub unsafe extern "C" fn z_id_with_suffix_new(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
     z_keyexpr_new(id, suffix)
+}
+
+/// Constructs a borrowed key expression from a string expression.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_expr(name: *const c_char) -> z_keyexpr_t {
+    z_keyexpr_new_borrowed(0, name)
 }
 
 /// Constructs a key expression from a string expression. `name`'s content is copied.
@@ -219,7 +234,7 @@ pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) ->
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_expr(name: *const c_char) -> z_owned_keyexpr_t {
+pub unsafe extern "C" fn z_expr_new(name: *const c_char) -> z_owned_keyexpr_t {
     z_keyexpr_new(0, name)
 }
 

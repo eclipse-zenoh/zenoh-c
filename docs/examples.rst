@@ -29,8 +29,7 @@ Publish
 
       z_owned_config_t config = z_config_default();
       z_owned_session_t s = z_open(z_move(config));
-      z_owned_keyexpr_t key = z_expr("/key/expression");
-      z_put(z_borrow(s), z_borrow(key), (const uint8_t *)value, strlen(value));
+      z_put(z_borrow(s), z_expr("/key/expression"), (const uint8_t *)value, strlen(value));
       z_close(z_move(s));
 
       return 0;
@@ -53,8 +52,7 @@ Subscribe
   int main(int argc, char **argv) {
       z_owned_config_t config = z_config_default();
       z_owned_session_t s = z_open(z_move(config));
-      z_owned_keyexpr_t key = z_expr("/key/expression");
-      z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(key), z_subinfo_default(), data_handler, NULL);
+      z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_expr("/key/expression"), z_subinfo_default(), data_handler, NULL);
 
       char c = 0;
       while (c != 'q') {
@@ -79,8 +77,7 @@ Query
   int main(int argc, char** argv) {
       z_owned_config_t config = z_config_default();
       z_owned_session_t s = z_open(z_move(config));
-      z_owned_keyexpr_t key = z_expr("/key/expression");
-      z_owned_reply_data_array_t replies = z_get_collect(z_borrow(s), z_borrow(key), "", z_query_target_default(), z_query_consolidation_default());
+      z_owned_reply_data_array_t replies = z_get_collect(z_borrow(s), z_expr("/key/expression"), "", z_query_target_default(), z_query_consolidation_default());
 
       for(unsigned int i = 0; i < replies.len; ++i) {
           printf(">> Received (%.*s, %.*s)\n",

@@ -49,8 +49,7 @@ int main(int argc, char **argv)
     subinfo.reliability = z_reliability_t_RELIABLE;
     subinfo.mode = z_submode_t_PULL;
     subinfo.period = z_period_NONE;
-    z_owned_keyexpr_t keyexpr = z_expr(expr);
-    z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_borrow(keyexpr), subinfo, data_handler, NULL);
+    z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_expr(expr), subinfo, data_handler, NULL);
     if (!z_check(sub))
     {
         printf("Unable to create subscriber.\n");
@@ -66,7 +65,6 @@ int main(int argc, char **argv)
     }
 
     z_subscriber_close(z_move(sub));
-    z_keyexpr_free(z_move(keyexpr));
     z_close(z_move(s));
     return 0;
 }

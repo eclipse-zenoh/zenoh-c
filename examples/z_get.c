@@ -40,9 +40,8 @@ int main(int argc, char **argv)
     }
 
     printf("Sending Query '%s'...\n", expr);
-    z_owned_keyexpr_t keyexpr = z_expr(expr);
     z_owned_reply_data_array_t replies = z_get_collect(
-        z_borrow(s), z_borrow(keyexpr), "", 
+        z_borrow(s), z_expr(expr), "", 
         z_query_target_default(), z_query_consolidation_default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
@@ -52,7 +51,6 @@ int main(int argc, char **argv)
                (int)replies.val[i].data.value.len, replies.val[i].data.value.start);
     }
     z_reply_data_array_free(z_move(replies));
-    z_keyexpr_free(z_move(keyexpr));
     z_close(z_move(s));
     return 0;
 }
