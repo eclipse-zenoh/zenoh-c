@@ -19,10 +19,10 @@ int main(int argc, char **argv)
 {
     z_init_logger();
 
-    char *uri = "/demo/example/zenoh-c-put";
+    char *expr = "/demo/example/zenoh-c-put";
     if (argc > 1)
     {
-        uri = argv[1];
+        expr = argv[1];
     }
     char *value = "Put from C!";
     if (argc > 2)
@@ -43,8 +43,8 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("Putting Data ('%s': '%s')...\n", uri, value);
-    z_put(z_borrow(s), z_expr(uri), (const uint8_t *)value, strlen(value));
+    printf("Putting Data ('%s': '%s')...\n", expr, value);
+    z_put(z_borrow(s), z_expr(expr), (const uint8_t *)value, strlen(value));
     z_close(z_move(s));
     return 0;
 }
