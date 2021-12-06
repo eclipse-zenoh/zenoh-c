@@ -68,8 +68,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    z_owned_keyexpr_t okey = z_expr_new("/test/thr");
-    z_keyexpr_t rid = z_declare_expr(z_borrow(s), z_move(okey));
+    z_keyexpr_t rid = z_declare_expr(z_borrow(s), z_expr("/test/thr"));
     z_owned_subscriber_t sub = z_subscribe(z_borrow(s), rid, z_subinfo_default(), data_handler, NULL);
     if (!z_check(sub))
     {

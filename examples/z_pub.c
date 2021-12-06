@@ -46,12 +46,11 @@ int main(int argc, char **argv)
     z_session_t borrowed_session = z_borrow(s);
 
     printf("Declaring key expression '%s'...", expr);
-    z_owned_keyexpr_t keyexpr = z_expr_new(expr);
-    z_keyexpr_t keyid = z_declare_expr(borrowed_session, z_move(keyexpr));
-    printf(" => RId %lu\n", keyid.id);
+    z_keyexpr_t keyexpr = z_declare_expr(borrowed_session, z_expr(expr));
+    printf(" => RId %lu\n", keyexpr.id);
 
-    printf("Declaring publication on '%lu'\n", keyid.id);
-    if (!z_declare_publication(borrowed_session, keyid))
+    printf("Declaring publication on '%lu'\n", keyexpr.id);
+    if (!z_declare_publication(borrowed_session, keyexpr))
     {
         printf("Unable to declare publication.\n");
         exit(-1);
@@ -63,10 +62,10 @@ int main(int argc, char **argv)
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%lu': '%s')...\n", keyexpr.id, buf);
-        z_put(borrowed_session, keyid, (const uint8_t *)buf, strlen(buf));
+        z_put(borrowed_session, keyexpr, (const uint8_t *)buf, strlen(buf));
     }
-    z_undeclare_publication(borrowed_session, keyid);
-    z_undeclare_expr(borrowed_session, keyid);
+    z_undeclare_publication(borrowed_session, keyexpr);
+    z_undeclare_expr(borrowed_session, keyexpr);
     z_close(z_move(s));
     return 0;
 }

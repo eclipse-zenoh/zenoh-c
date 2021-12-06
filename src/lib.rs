@@ -24,7 +24,7 @@ use std::slice;
 use zenoh::config::whatami::WhatAmIMatcher;
 use zenoh::config::{Config, ConfigProperties, IntKeyMapLike, WhatAmI};
 use zenoh::info::InfoProperties;
-use zenoh::prelude::{Encoding, KeyExpr, Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
+use zenoh::prelude::{Encoding, Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
 use zenoh::publication::CongestionControl;
 use zenoh::queryable::Query;
 use zenoh::scouting::Hello;
@@ -198,7 +198,6 @@ pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) ->
     z_keyexpr_new_borrowed(id, suffix)
 }
 
-
 /// Constructs a key expression from an expression id and a suffix. `suffix`'s content is copied.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
@@ -211,7 +210,10 @@ pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) ->
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_id_with_suffix_new(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
+pub unsafe extern "C" fn z_id_with_suffix_new(
+    id: c_ulong,
+    suffix: *const c_char,
+) -> z_owned_keyexpr_t {
     z_keyexpr_new(id, suffix)
 }
 
@@ -532,20 +534,12 @@ pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
 /// ease the retrieval of the concerned resource in the routing tables.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_declare_expr(
-    session: z_session_t,
-    keyexpr: &mut z_owned_keyexpr_t,
-) -> z_keyexpr_t {
-    let mut rk = z_owned_keyexpr_t {
-        id: 0,
-        suffix: z_owned_bytes_t::default(),
-    };
-    std::mem::swap(keyexpr, &mut rk);
+pub unsafe extern "C" fn z_declare_expr(session: z_session_t, keyexpr: z_keyexpr_t) -> z_keyexpr_t {
     let result = session
         .as_ref()
         .as_ref()
         .expect("invalid session")
-        .declare_expr(KeyExpr::from(z_keyexpr_borrow(&rk)))
+        .declare_expr(keyexpr)
         .wait()
         .unwrap() as c_ulong;
     z_id(result)

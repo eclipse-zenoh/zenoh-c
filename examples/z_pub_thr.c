@@ -42,8 +42,7 @@ int main(int argc, char **argv)
   char *data = (char *)malloc(len);
   memset(data, 1, len);
 
-  z_owned_keyexpr_t okeyexpr = z_expr_new("/test/thr");
-  z_keyexpr_t keyexpr = z_declare_expr(s, z_move(okeyexpr));
+  z_keyexpr_t keyexpr = z_declare_expr(s, z_expr("/test/thr"));
   if (!z_declare_publication(s, keyexpr))
   {
     printf("Unable to declare publication.\n");

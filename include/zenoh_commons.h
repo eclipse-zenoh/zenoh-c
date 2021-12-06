@@ -481,7 +481,7 @@ struct z_owned_string_t z_config_to_str(struct z_config_t config);
  * ease the retrieval of the concerned resource in the routing tables.
  */
 struct z_keyexpr_t z_declare_expr(struct z_session_t session,
-                                  struct z_owned_keyexpr_t *keyexpr);
+                                  struct z_keyexpr_t keyexpr);
 /**
  * Declares a publication for the given key expression, returning `true` on success.
  *
