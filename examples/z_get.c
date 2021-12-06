@@ -20,10 +20,10 @@ int main(int argc, char **argv)
 {
     z_init_logger();
 
-    char *uri = "/demo/example/**";
+    char *expr = "/demo/example/**";
     if (argc > 1)
     {
-        uri = argv[1];
+        expr = argv[1];
     }
     z_owned_config_t config = z_config_default();
     if (argc > 2)
@@ -39,10 +39,10 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("Sending Query '%s'...\n", uri);
-    z_owned_keyexpr_t urikey = z_expr(uri);
+    printf("Sending Query '%s'...\n", expr);
+    z_owned_keyexpr_t keyexpr = z_expr(expr);
     z_owned_reply_data_array_t replies = z_get_collect(
-        z_borrow(s), z_borrow(urikey), "", 
+        z_borrow(s), z_borrow(keyexpr), "", 
         z_query_target_default(), z_query_consolidation_default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
                (int)replies.val[i].data.value.len, replies.val[i].data.value.start);
     }
     z_reply_data_array_free(z_move(replies));
-    z_keyexpr_free(z_move(urikey));
+    z_keyexpr_free(z_move(keyexpr));
     z_close(z_move(s));
     return 0;
 }

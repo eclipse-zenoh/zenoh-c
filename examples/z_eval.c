@@ -15,7 +15,7 @@
 #include <string.h>
 #include "zenoh.h"
 
-char *uri = "/demo/example/zenoh-c-eval";
+char *expr = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
 void query_handler(const z_query_t *query, const void *arg)
@@ -23,7 +23,7 @@ void query_handler(const z_query_t *query, const void *arg)
     z_bytes_t res = z_query_key_expr(query).suffix;
     z_bytes_t pred = z_query_predicate(query);
     printf(">> [Queryable ] Received Query '%.*s%.*s'\n", (int)res.len, res.start, (int)pred.len, pred.start);
-    z_send_reply(query, uri, (const unsigned char *)value, strlen(value));
+    z_send_reply(query, expr, (const unsigned char *)value, strlen(value));
 }
 
 int main(int argc, char **argv)
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 
     if (argc > 1)
     {
-        uri = argv[1];
+        expr = argv[1];
     }
     z_owned_config_t config = z_config_default();
     if (argc > 2)
@@ -48,9 +48,9 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("Creating Queryable on '%s'...\n", uri);
-    z_owned_keyexpr_t urikey = z_expr(uri);
-    z_owned_queryable_t qable = z_queryable_new(z_borrow(s), z_borrow(urikey), ZN_QUERYABLE_EVAL, query_handler, NULL);
+    printf("Creating Queryable on '%s'...\n", expr);
+    z_owned_keyexpr_t keyexpr = z_expr(expr);
+    z_owned_queryable_t qable = z_queryable_new(z_borrow(s), z_borrow(keyexpr), ZN_QUERYABLE_EVAL, query_handler, NULL);
     if (!z_check(qable))
     {
         printf("Unable to create queryable.\n");
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     }
 
     z_queryable_close(z_move(qable));
-    z_keyexpr_free(z_move(urikey));
+    z_keyexpr_free(z_move(keyexpr));
     z_close(z_move(s));
     return 0;
 }
