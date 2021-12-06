@@ -103,7 +103,7 @@ pub struct z_owned_string_t {
 #[allow(non_camel_case_types)]
 pub type z_string_t = *const c_char;
 
-/// Constructs a `z_string_t` from a NULL terminated string.  
+/// Constructs a :c:type:`z_owned_string_t` from a NULL terminated string.
 /// The contents of `s` are copied.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -129,6 +129,8 @@ pub extern "C" fn z_string_free(s: &mut z_owned_string_t) {
 pub extern "C" fn z_string_check(s: &z_owned_string_t) -> bool {
     !s._borrow.is_null()
 }
+
+/// Returns a :c:type:`z_string_t` borrowed from `s`.
 #[no_mangle]
 pub extern "C" fn z_string_borrow(s: &z_owned_string_t) -> z_string_t {
     s._borrow
@@ -209,6 +211,8 @@ pub extern "C" fn z_info_free(info: &mut z_owned_info_t) {
 pub extern "C" fn z_info_check(info: &z_owned_info_t) -> bool {
     info.as_ref().is_some()
 }
+
+/// Returns a :c:type:`z_info_t` borrowed from `info`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_info_borrow(info: &z_owned_info_t) -> z_info_t {
@@ -295,7 +299,7 @@ pub unsafe extern "C" fn z_str_array_free(strs: &mut z_owned_str_array_t) {
     strs.len = 0;
 }
 
-/// Returns `true` if
+/// Returns `true` if `strs` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
@@ -333,6 +337,10 @@ impl Default for z_owned_bytes_t {
         }
     }
 }
+
+/// Constructs a :c:type:`z_owned_bytes_t` of lengh `len` from the bytes
+/// starting at address `start`.
+/// The bytes from `start` are copied.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_new(start: *const u8, len: usize) -> z_owned_bytes_t {
@@ -419,15 +427,19 @@ impl From<z_owned_bytes_t> for String {
     }
 }
 
-/// A zenoh-allocated resource key.
+/// A zenoh-allocated key expression.
 ///
-/// Resources are identified by URI like string names.  
-/// Examples : ``"/some/resource/key"``.
-/// Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
+/// Key expressions can identify a single key or a set of keys.
+///
+/// Examples :
+///    - ``"/key/expression"``.
+///    - ``"/key/ex*"``.
+///
+/// Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
 /// for wire and computation efficiency.
 ///
-/// A resource key can be either:
-///   - A plain string resource name.
+/// A key expression can be either:
+///   - A plain string expression.
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.
 ///
@@ -445,15 +457,19 @@ pub struct z_owned_keyexpr_t {
     pub id: c_ulong,
     pub suffix: z_owned_bytes_t,
 }
-/// A borrowed ressource key.
+/// A borrowed key expression.
 ///
-/// Resources are identified by URI like string names.  
-/// Examples : ``"/some/resource/key"``.
-/// Resource names can be mapped to numerical ids through :c:func:`z_declare_resource`
+/// Key expressions can identify a single key or a set of keys.
+///
+/// Examples :
+///    - ``"/key/expression"``.
+///    - ``"/key/ex*"``.
+///
+/// Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
 /// for wire and computation efficiency.
 ///
-/// A resource key can be either:
-///   - A plain string resource name.
+/// A key expression can be either:
+///   - A plain string expression.
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.
 #[repr(C)]
@@ -463,7 +479,7 @@ pub struct z_keyexpr_t {
     pub suffix: z_bytes_t,
 }
 
-/// Constructs a zenoh-owned ressource key. `suffix`'s contents will be copied.
+/// Constructs a zenoh-owned key expression. `suffix`'s contents will be copied.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_new(id: c_ulong, suffix: *const c_char) -> z_owned_keyexpr_t {
@@ -479,7 +495,7 @@ pub unsafe extern "C" fn z_keyexpr_new(id: c_ulong, suffix: *const c_char) -> z_
         ),
     }
 }
-/// Constructs a borrowed ressource key. The constructed value is valid as long as `suffix` is.
+/// Constructs a borrowed key expression. The constructed value is valid as long as `suffix` is.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_new_borrowed(id: c_ulong, suffix: *const c_char) -> z_keyexpr_t {
@@ -508,6 +524,8 @@ pub unsafe extern "C" fn z_keyexpr_free(keyexpr: &mut z_owned_keyexpr_t) {
 pub unsafe extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
     keyexpr.id != 0 || z_bytes_check(&keyexpr.suffix)
 }
+
+/// Returns a :c:type:`z_keyexpr_t` borrowed from `keyexpr`.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_borrow(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
     z_keyexpr_t {
@@ -645,6 +663,8 @@ pub unsafe extern "C" fn z_sample_free(sample: &mut z_owned_sample_t) {
 pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
     z_keyexpr_check(&sample.key) && z_bytes_check(&sample.value)
 }
+
+/// Returns a :c:type:`z_sample_t` borrowed from `sample`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_borrow(sample: &z_owned_sample_t) -> z_sample_t {
@@ -900,7 +920,7 @@ impl From<z_period_t> for Option<Period> {
     }
 }
 
-/// Informations to be passed to :c:func:`z_declare_subscriber` to configure the created :c:type:`z_subscriber_t`.
+/// Informations to be passed to :c:func:`z_subscribe` to configure the created :c:type:`z_owned_subscriber_t`.
 ///
 /// Members:
 ///     `z_reliability_t reliability`: The subscription reliability.
@@ -912,6 +932,8 @@ pub struct z_subinfo_t {
     pub mode: z_submode_t,
     pub period: z_period_t,
 }
+
+/// Returns the subscription period from `info`.
 #[no_mangle]
 pub extern "C" fn z_subinfo_period(info: &z_subinfo_t) -> *const z_period_t {
     if info.period.period != 0 {
@@ -1005,7 +1027,7 @@ pub unsafe extern "C" fn z_reply_data_check(reply_data: &z_owned_reply_data_t) -
     z_sample_check(&reply_data.data) && z_bytes_check(&reply_data.replier_id)
 }
 
-/// A zenoh-allocated array of `z_owned_reply_data_t`.
+/// A zenoh-allocated array of :c:type:`z_owned_reply_data_t`.
 ///
 /// Members:
 ///   `char *const *val`: A pointer to the array.
@@ -1022,10 +1044,10 @@ pub struct z_owned_reply_data_array_t {
     pub len: size_t,
 }
 
-/// Free a :c:type:`z_reply_data_array_t` and it's contained replies.
+/// Free a :c:type:`z_owned_reply_data_array_t` and it's contained replies.
 ///
 /// Parameters:
-///     replies: The :c:type:`z_reply_data_array_t` to free.
+///     replies: The :c:type:`z_owned_reply_data_array_t` to free.
 ///
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -1047,7 +1069,7 @@ pub unsafe extern "C" fn z_reply_data_array_check(replies: &z_owned_reply_data_a
     !replies.val.is_null() || replies.len == 0
 }
 
-/// The possible values of :c:member:`z_reply_t.tag`
+/// The possible values of :c:member:`z_owned_reply_t.tag`
 ///
 ///     - **z_reply_t_Tag_DATA**: The reply contains some data.
 ///     - **z_reply_t_Tag_FINAL**: The reply does not contain any data and indicates that there will be no more replies for this query.
@@ -1063,7 +1085,7 @@ pub enum z_reply_t_Tag {
 ///
 /// Members:
 ///   `z_reply_t_Tag tag`: Indicates if the reply contains data or if it's a FINAL reply.
-///   `z_owned_reply_data_t data`: The reply data if :c:member:`z_reply_t.tag` equals :c:member:`z_reply_t_Tag.z_reply_t_Tag_DATA`.
+///   `z_owned_reply_data_t data`: The reply data if :c:member:`z_owned_reply_t.tag` equals :c:member:`z_reply_t_Tag.z_reply_t_Tag_DATA`.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -1174,7 +1196,7 @@ impl From<z_query_target_t> for QueryTarget {
     }
 }
 
-/// Create a default `z_query_target_t`.
+/// Creates a default `z_query_target_t`.
 #[no_mangle]
 pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()
@@ -1250,7 +1272,7 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
     }
 }
 
-/// Create a default :c:type:`z_query_consolidation_t`.
+/// Creates a default :c:type:`z_query_consolidation_t`.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()

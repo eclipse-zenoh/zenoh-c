@@ -73,6 +73,8 @@ impl AsRef<Option<Session>> for z_session_t {
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_session_t(*const z_owned_session_t);
+
+/// Returns a :c:type:`z_session_t` borrowed from `s`.
 #[no_mangle]
 pub extern "C" fn z_session_borrow(s: &z_owned_session_t) -> z_session_t {
     z_session_t(s)
@@ -96,6 +98,8 @@ pub struct z_config_t(*const z_owned_config_t);
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_owned_config_t([u64; Z_CONFIG_PADDING_U64]);
+
+/// Returns a :c:type:`z_config_t` borrowed from `s`.
 #[no_mangle]
 pub extern "C" fn z_config_borrow(s: &z_owned_config_t) -> z_config_t {
     z_config_t(s)
@@ -180,14 +184,14 @@ impl AsMut<Queryable> for z_owned_queryable_t {
 #[allow(non_camel_case_types)]
 pub struct z_query_t(Query);
 
-/// Constructs a resource key from a resource id.  
-/// Since id-only ressource keys don't need destruction, a `z_keyexpr_t` is returned instead of its owned variant.
+/// Constructs a key expression from an expression id.
+/// Since id-only kes expressions don't need destruction, a `z_keyexpr_t` is returned instead of its owned variant.
 #[no_mangle]
 pub extern "C" fn z_id(id: c_ulong) -> z_keyexpr_t {
     unsafe { z_keyexpr_new_borrowed(id, std::ptr::null()) }
 }
 
-/// Constructs a resource key from a resource id and a suffix. `suffix`'s content is copied.
+/// Constructs a key expression from an expression id and a suffix. `suffix`'s content is copied.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
 /// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
@@ -203,7 +207,7 @@ pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) ->
     z_keyexpr_new(id, suffix)
 }
 
-/// Constructs a resource key from a resource name. `name`'s content is copied.
+/// Constructs a key expression from a string expression. `name`'s content is copied.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
 /// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
@@ -245,7 +249,7 @@ pub unsafe extern "C" fn z_config_len(config: z_config_t) -> c_uint {
         .unwrap_or(0)
 }
 
-/// Get the property with the given integer key from the configuration.
+/// Gets the property with the given integer key from the configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_config_get(config: z_config_t, key: c_uint) -> z_owned_string_t {
@@ -260,7 +264,7 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: c_uint) -> z_owne
     }
 }
 
-/// Insert a property with a given key to a properties map.
+/// Inserts a property with a given key to a properties map.
 /// If a property with the same key already exists in the properties map, it is replaced.
 ///
 /// Parameters:
@@ -291,14 +295,14 @@ pub unsafe extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
     config.as_ref().is_some()
 }
 
-/// Create an empty, zenoh-allocated, configuration.
+/// Creates an empty, zenoh-allocated, configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_empty() -> z_owned_config_t {
     z_config_new()
 }
 
-/// Create an default, zenoh-allocated, configuration.
+/// Creates a default, zenoh-allocated, configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_default() -> z_owned_config_t {
@@ -387,7 +391,7 @@ pub unsafe extern "C" fn z_config_client(
     z_owned_config_t(std::mem::transmute(Some(zenoh::config::client(locators))))
 }
 
-/// Gets the resource name of a received query as a non null-terminated string.
+/// Gets the key expression of a received query as a non null-terminated string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
@@ -402,7 +406,7 @@ pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
     }
 }
 
-/// Get the predicate of a received query as a non null-terminated string.
+/// Gets the predicate of a received query as a non null-terminated string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_predicate(query: &z_query_t) -> z_bytes_t {
@@ -447,13 +451,13 @@ pub unsafe extern "C" fn z_scout(
     hellos.into()
 }
 
-/// Initialise the zenoh runtime logger
+/// Initialises the zenoh runtime logger
 #[no_mangle]
 pub extern "C" fn z_init_logger() {
     env_logger::init();
 }
 
-/// Open a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
+/// Opens a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
@@ -470,13 +474,15 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
         }
     }
 }
+
+/// Returns `true` if `session` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
     session.as_ref().is_some()
 }
 
-/// Get informations about an zenoh session.
+/// Gets informations about an zenoh session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
@@ -487,7 +493,7 @@ pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
     }
 }
 
-/// Get informations about an zenoh session as a properties-formatted string.
+/// Gets informations about an zenoh session as a properties-formatted string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> z_owned_string_t {
@@ -505,7 +511,7 @@ pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
     session.as_mut().take().map(|s| task::block_on(s.close()));
 }
 
-/// Associate a numerical id with the given resource key. The id is returned as a `z_keyexpr_t` with a nullptr suffix.
+/// Associates a numerical id with the given key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
 ///
 /// This numerical id will be used on the network to save bandwidth and
 /// ease the retrieval of the concerned resource in the routing tables.
@@ -530,7 +536,7 @@ pub unsafe extern "C" fn z_declare_expr(
     z_id(result)
 }
 
-/// Unbinds the numerical id key generated by a call to `z_declare_expr`
+/// Unbinds the numerical id key generated by a call to :c:func:`z_declare_expr`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_undeclare_expr(session: z_session_t, keyexpr: z_keyexpr_t) {
@@ -547,7 +553,7 @@ pub unsafe extern "C" fn z_undeclare_expr(session: z_session_t, keyexpr: z_keyex
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     resource: The resource key to write.
+///     keyexpr: The key expression to write.
 ///     payload: The value to write.
 ///     len: The length of the value to write.
 /// Returns:
@@ -584,13 +590,19 @@ struct WriteOptions {
 }
 pub const Z_WRITE_OPTIONS_PADDING_U64: usize = 6;
 
-/// Options passed to the `z_put_ext` function.  
+/// Options passed to the :c:func:`z_put_ext` function.  
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t([u64; Z_WRITE_OPTIONS_PADDING_U64]);
 
 #[repr(C)]
 #[allow(non_camel_case_types)]
+/// The different kind of options in a :c:type:`z_put_options_t`.
+///
+///     - **z_put_options_field_t_ENCODING**
+///     - **z_put_options_field_t_CONGESTION_CONTROL**
+///     - **z_put_options_field_t_KIND**
+///     - **z_put_options_field_t_PRIORITY**
 pub enum z_put_options_field_t {
     ENCODING,
     CONGESTION_CONTROL,
@@ -640,7 +652,7 @@ pub unsafe extern "C" fn z_put_options_set(
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     resource: The resource key to write.
+///     keyexpr: The key expression to write.
 ///     payload: The value to write.
 ///     len: The length of the value to write.
 ///     options: The write options
@@ -676,7 +688,7 @@ pub unsafe extern "C" fn z_put_ext(
     result
 }
 
-/// Declares a publication for the given resource key, returning `true` on success.
+/// Declares a publication for the given key expression, returning `true` on success.
 ///
 /// Written resources that match the given key will only be sent on the network
 /// if matching subscribers exist in the system.
@@ -691,7 +703,7 @@ pub unsafe extern "C" fn z_declare_publication(session: z_session_t, keyexpr: z_
         .is_some()
 }
 
-/// Undeclares a publication for the given resource key
+/// Undeclares a publication for the given key expression.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_undeclare_publication(session: z_session_t, keyexpr: z_keyexpr_t) {
@@ -700,19 +712,19 @@ pub unsafe extern "C" fn z_undeclare_publication(session: z_session_t, keyexpr: 
         .as_ref()
         .map(|s| s.undeclare_publication(keyexpr).wait().ok());
 }
-/// Subscribes to the given resource key.
+/// Subscribes to the given key expression.
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     resource: The resource key to subscribe.
+///     keyexpr: The key expression to subscribe.
 ///     sub_info: The :c:type:`z_subinfo_t` to configure the subscriber.
-///     callback: The callback function that will be called each time a data matching the subscribed resource is received.
+///     callback: The callback function that will be called each time a data matching the subscribed expression is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
 /// Returns:
-///    An owned subscription handle.
+///    A :c:type:`z_owned_subscriber_t`.
 ///
-///    To check if the subscription succeeded and if the subscription handle is still valid,
+///    To check if the subscription succeeded and if the subscriber is still valid,
 ///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 ///
 ///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
@@ -799,7 +811,7 @@ pub unsafe extern "C" fn z_subscribe(
 /// by calling the **callback** function provided to the :c:func:`z_subscribe` function.
 ///
 /// Parameters:
-///     sub: The :c:type:`z_subscriber_t` to pull from.
+///     sub: The :c:type:`z_owned_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_pull(sub: &z_owned_subscriber_t) {
@@ -824,6 +836,8 @@ pub unsafe extern "C" fn z_subscriber_close(sub: &mut z_owned_subscriber_t) {
         None => (),
     }
 }
+
+/// Returns `true` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool {
@@ -835,7 +849,7 @@ pub unsafe extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool 
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     resource: The resource key to query.
+///     keyexpr: The key expression matching resources to query.
 ///     predicate: An indication to matching queryables about the queried data.
 ///     target: The kind of queryables that should be target of this query.
 ///     consolidation: The kind of consolidation that should be applied on replies.
@@ -899,7 +913,7 @@ pub unsafe extern "C" fn z_get(
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     resource: The resource key to query.
+///     keyexpr: The key expression matching resources to query.
 ///     predicate: An indication to matching queryables about the queried data.
 ///     target: The kind of queryables that should be target of this query.
 ///     consolidation: The kind of consolidation that should be applied on replies.
@@ -941,17 +955,17 @@ pub unsafe extern "C" fn z_get_collect(
     z_owned_reply_data_array_t { val, len }
 }
 
-/// Registers a `z_queryable_t` for the given resource key.
+/// Creates a Queryable for the given key expression.
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     resource: The resource key the :c:type:`z_queryable_t` will reply to.
-///     kind: The kind of :c:type:`z_queryable_t`.
+///     keyexpr: The key expression the Queryable will reply to.
+///     kind: The kind of Queryable.
 ///     callback: The callback function that will be called each time a matching query is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
 /// Returns:
-///    The created :c:type:`z_queryable_t` or null if the declaration failed.
+///    The created :c:type:`z_owned_queryable_t` or null if the creation failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_queryable_new(
@@ -1000,10 +1014,10 @@ pub unsafe extern "C" fn z_queryable_new(
     r
 }
 
-/// Unregisters a `z_queryable_t`, freeing it and invalidating it for doube-free safety.
+/// Close a `z_owned_queryable_t`, freeing it and invalidating it for doube-free safety.
 ///
 /// Parameters:
-///     qable: The :c:type:`z_queryable_t` to undeclare.
+///     qable: The :c:type:`z_owned_queryable_t` to close.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_queryable_close(qable: &mut z_owned_queryable_t) {
@@ -1016,6 +1030,8 @@ pub unsafe extern "C" fn z_queryable_close(qable: &mut z_owned_queryable_t) {
         None => (),
     }
 }
+
+/// Returns `true` if `qable` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
@@ -1031,7 +1047,7 @@ pub unsafe extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool 
 ///
 /// Parameters:
 ///     query: The query to reply to.
-///     key: The resource key of this reply.
+///     key: The key of this reply.
 ///     payload: The value of this reply.
 ///     len: The length of the value of this reply.
 #[allow(clippy::missing_safety_doc)]

@@ -101,11 +101,11 @@ typedef const char *z_string_t;
  * A borrowed key expression.
  *
  * Key expressions can identify a single key or a set of keys.
- * 
- * Examples : 
+ *
+ * Examples :
  *    - ``"/key/expression"``.
  *    - ``"/key/ex*"``.
- * 
+ *
  * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
  * for wire and computation efficiency.
  *
@@ -119,14 +119,14 @@ typedef struct z_keyexpr_t {
   struct z_bytes_t suffix;
 } z_keyexpr_t;
 /**
- * A borrowed key expression.
+ * A zenoh-allocated key expression.
  *
  * Key expressions can identify a single key or a set of keys.
- * 
- * Examples : 
+ *
+ * Examples :
  *    - ``"/key/expression"``.
  *    - ``"/key/ex*"``.
- * 
+ *
  * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
  * for wire and computation efficiency.
  *
@@ -416,7 +416,7 @@ bool z_config_check(const struct z_owned_config_t *config);
  */
 struct z_owned_config_t z_config_client(const char *const *peers, uintptr_t n_peers);
 /**
- * Creates an default, zenoh-allocated, configuration.
+ * Creates a default, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_default(void);
 /**
@@ -475,7 +475,7 @@ void z_config_set(struct z_config_t config, unsigned long key, z_string_t value)
  */
 struct z_owned_string_t z_config_to_str(struct z_config_t config);
 /**
- * Associates a numerical id with the given key expression. The id is returned as a `z_keyexpr_t` with a nullptr suffix.
+ * Associates a numerical id with the given key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
  *
  * This numerical id will be used on the network to save bandwidth and
  * ease the retrieval of the concerned resource in the routing tables.
@@ -799,11 +799,11 @@ void z_send_reply(const struct z_query_t *query,
  */
 struct z_session_t z_session_borrow(const struct z_owned_session_t *s);
 /**
- * Returns `true`if `session`is valid.
+ * Returns `true` if `session` is valid.
  */
 bool z_session_check(const struct z_owned_session_t *session);
 /**
- * Returns `true` if `strs` is valid
+ * Returns `true` if `strs` is valid.
  */
 bool z_str_array_check(const struct z_owned_str_array_t *strs);
 /**
@@ -823,7 +823,7 @@ bool z_string_check(const struct z_owned_string_t *s);
  */
 void z_string_free(struct z_owned_string_t *s);
 /**
- * Construct a :c:type:`z_owned_string_t` from a NULL terminated string.
+ * Constructs a :c:type:`z_owned_string_t` from a NULL terminated string.
  * The contents of `s` are copied.
  */
 struct z_owned_string_t z_string_new(const char *s);
