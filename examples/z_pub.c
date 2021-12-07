@@ -43,14 +43,13 @@ int main(int argc, char **argv)
         printf("Unable to open session!\n");
         exit(-1);
     }
-    z_session_t borrowed_session = z_borrow(s);
 
     printf("Declaring key expression '%s'...", expr);
-    z_keyexpr_t keyexpr = z_declare_expr(borrowed_session, z_expr(expr));
+    z_keyexpr_t keyexpr = z_declare_expr(z_borrow(s), z_expr(expr));
     printf(" => RId %lu\n", keyexpr.id);
 
     printf("Declaring publication on '%lu'\n", keyexpr.id);
-    if (!z_declare_publication(borrowed_session, keyexpr))
+    if (!z_declare_publication(z_borrow(s), keyexpr))
     {
         printf("Unable to declare publication.\n");
         exit(-1);
@@ -62,10 +61,10 @@ int main(int argc, char **argv)
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%lu': '%s')...\n", keyexpr.id, buf);
-        z_put(borrowed_session, keyexpr, (const uint8_t *)buf, strlen(buf));
+        z_put(z_borrow(s), keyexpr, (const uint8_t *)buf, strlen(buf));
     }
-    z_undeclare_publication(borrowed_session, keyexpr);
-    z_undeclare_expr(borrowed_session, keyexpr);
+    z_undeclare_publication(z_borrow(s), keyexpr);
+    z_undeclare_expr(z_borrow(s), keyexpr);
     z_close(z_move(s));
     return 0;
 }
