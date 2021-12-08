@@ -80,7 +80,6 @@ pub extern "C" fn z_session_borrow(s: &z_owned_session_t) -> z_session_t {
     z_session_t(s)
 }
 
-pub const Z_CONFIG_PADDING_U64: usize = 110;
 /// A borrowed zenoh config.
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -97,7 +96,7 @@ pub struct z_config_t(*const z_owned_config_t);
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_owned_config_t([u64; Z_CONFIG_PADDING_U64]);
+pub struct z_owned_config_t(*mut ());
 
 /// Returns a :c:type:`z_config_t` borrowed from `s`.
 #[no_mangle]
@@ -252,7 +251,7 @@ pub unsafe extern "C" fn z_expr_new(name: *const c_char) -> z_owned_keyexpr_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
 pub extern "C" fn z_config_new() -> z_owned_config_t {
-    unsafe { z_owned_config_t(std::mem::transmute(Some(Config::default()))) }
+    unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(Config::default())))) }
 }
 
 /// Gets the number of available keys for configuration.
@@ -335,7 +334,7 @@ pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t
     } else {
         let conf_str = CStr::from_ptr(s);
         let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();
-        z_owned_config_t(std::mem::transmute(props))
+        z_owned_config_t(std::mem::transmute(props.map(Box::new)))
     }
 }
 
@@ -357,7 +356,7 @@ pub unsafe extern "C" fn z_config_from_file(path: *const c_char) -> z_owned_conf
     let path_str = CStr::from_ptr(path);
     z_owned_config_t(std::mem::transmute(match path_str.to_str() {
         Ok(path) => match zenoh::config::Config::from_file(path) {
-            Ok(c) => Some(c),
+            Ok(c) => Some(Box::new(c)),
             Err(e) => {
                 log::error!("Couldn't read config from {}: {}", path, e);
                 None
@@ -374,7 +373,7 @@ pub unsafe extern "C" fn z_config_from_file(path: *const c_char) -> z_owned_conf
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_peer() -> z_owned_config_t {
-    unsafe { z_owned_config_t(std::mem::transmute(Some(zenoh::config::peer()))) }
+    unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(zenoh::config::peer())))) }
 }
 
 /// Constructs a default configuration client mode zenoh session.
@@ -403,9 +402,11 @@ pub unsafe extern "C" fn z_config_client(
     {
         locators
     } else {
-        return z_owned_config_t(std::mem::transmute(None::<Config>));
+        return z_owned_config_t(std::mem::transmute(None::<Box<Config>>));
     };
-    z_owned_config_t(std::mem::transmute(Some(zenoh::config::client(locators))))
+    z_owned_config_t(std::mem::transmute(Some(Box::new(zenoh::config::client(
+        locators,
+    )))))
 }
 
 /// Gets the key expression of a received query as a non null-terminated string.

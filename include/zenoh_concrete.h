@@ -16,7 +16,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #define Z_SESSION_PADDING_U64 3
-#define Z_CONFIG_PADDING_U64 110
 #define Z_SUBSCRIBER_PADDING_U64 1
 #define Z_QUERYABLE_PADDING_U64 1
 #define Z_WRITE_OPTIONS_PADDING_U64 6
@@ -49,7 +48,7 @@ typedef struct z_owned_session_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_config_t {
-  uint64_t _0[Z_CONFIG_PADDING_U64];
+  void *_0;
 } z_owned_config_t;
 /**
  * A borrowed zenoh config.
