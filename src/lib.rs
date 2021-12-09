@@ -22,7 +22,7 @@ use std::ffi::{c_void, CStr};
 use std::mem::ManuallyDrop;
 use std::slice;
 use zenoh::config::whatami::WhatAmIMatcher;
-use zenoh::config::{Config, ConfigProperties, IntKeyMapLike, WhatAmI};
+use zenoh::config::{Config, IntKeyMapLike, WhatAmI};
 use zenoh::info::InfoProperties;
 use zenoh::prelude::{Encoding, Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
 use zenoh::publication::CongestionControl;
@@ -103,23 +103,23 @@ pub struct z_owned_config_t(*mut ());
 pub extern "C" fn z_config_borrow(s: &z_owned_config_t) -> z_config_t {
     z_config_t(s)
 }
-impl AsRef<Option<Config>> for z_config_t {
-    fn as_ref(&self) -> &Option<Config> {
+impl AsRef<Option<Box<Config>>> for z_config_t {
+    fn as_ref(&self) -> &Option<Box<Config>> {
         unsafe { (&*self.0).as_ref() }
     }
 }
-impl AsMut<Option<Config>> for z_config_t {
-    fn as_mut(&mut self) -> &mut Option<Config> {
+impl AsMut<Option<Box<Config>>> for z_config_t {
+    fn as_mut(&mut self) -> &mut Option<Box<Config>> {
         unsafe { (&mut *(self.0 as *mut z_owned_config_t)).as_mut() }
     }
 }
-impl AsRef<Option<Config>> for z_owned_config_t {
-    fn as_ref(&self) -> &Option<Config> {
+impl AsRef<Option<Box<Config>>> for z_owned_config_t {
+    fn as_ref(&self) -> &Option<Box<Config>> {
         unsafe { std::mem::transmute(self) }
     }
 }
-impl AsMut<Option<Config>> for z_owned_config_t {
-    fn as_mut(&mut self) -> &mut Option<Config> {
+impl AsMut<Option<Box<Config>>> for z_owned_config_t {
+    fn as_mut(&mut self) -> &mut Option<Box<Config>> {
         unsafe { std::mem::transmute(self) }
     }
 }
@@ -342,11 +342,14 @@ pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_to_str(config: z_config_t) -> z_owned_string_t {
-    let config = match config.as_ref() {
+    let config: &Config = match config.as_ref() {
         Some(c) => c,
         None => return z_owned_string_t::default(),
     };
-    ConfigProperties::from(config).to_string().into()
+    match json5::to_string(config) {
+        Ok(s) => s.into(),
+        Err(_) => z_owned_string_t::default(),
+    }
 }
 
 /// Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
@@ -456,7 +459,7 @@ pub unsafe extern "C" fn z_scout(
 
     let hellos = task::block_on(async move {
         let mut hs = std::vec::Vec::<Hello>::new();
-        let mut stream = zenoh::scout(what, config).wait().unwrap();
+        let mut stream = zenoh::scout(what, *config).wait().unwrap();
         let scout = async {
             while let Some(hello) = stream.next().await {
                 hs.push(hello)
@@ -483,7 +486,7 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
         Some(c) => c,
         None => return z_owned_session_t(std::mem::transmute(None::<Session>)),
     };
-    let s = task::block_on(async move { zenoh::open(config).await });
+    let s = task::block_on(async move { zenoh::open(*config).await });
     match s {
         Ok(v) => v.into(),
         Err(e) => {
