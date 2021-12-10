@@ -486,7 +486,7 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
         Some(c) => c,
         None => return z_owned_session_t(std::mem::transmute(None::<Session>)),
     };
-    let s = task::block_on(async move { zenoh::open(*config).await });
+    let s = zenoh::open(*config).wait();
     match s {
         Ok(v) => v.into(),
         Err(e) => {
@@ -509,7 +509,7 @@ pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
     let session = (&*session.0).as_ref();
     match session {
-        Some(s) => z_owned_info_t(std::mem::transmute(task::block_on(s.info()))),
+        Some(s) => z_owned_info_t(std::mem::transmute(s.info().wait())),
         None => z_owned_info_t(std::mem::transmute(None::<InfoProperties>)),
     }
 }
@@ -520,7 +520,7 @@ pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
 pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> z_owned_string_t {
     let session = (&*session.0).as_ref();
     match session {
-        Some(s) => task::block_on(s.info()).to_string().into(),
+        Some(s) => s.info().wait().to_string().into(),
         None => z_owned_string_t::default(),
     }
 }
@@ -529,7 +529,7 @@ pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> z_owned_string_t
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
-    session.as_mut().take().map(|s| task::block_on(s.close()));
+    session.as_mut().take().map(|s| s.close().wait());
 }
 
 /// Associates a numerical id with the given key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
@@ -943,24 +943,21 @@ pub unsafe extern "C" fn z_get_collect(
     consolidation: z_query_consolidation_t,
 ) -> z_owned_reply_data_array_t {
     let p = CStr::from_ptr(predicate).to_str().unwrap();
-    let mut replies = task::block_on(async {
-        let q = session
-            .as_ref()
-            .as_ref()
-            .expect("invalid session")
-            .get(Selector {
-                key_selector: keyexpr.into(),
-                value_selector: p,
-            })
-            .target(target.into())
-            .consolidation(consolidation.into())
-            .await
-            .unwrap();
-        q.collect::<Vec<_>>().await
-    })
-    .into_iter()
-    .map(|r| r.into())
-    .collect::<Vec<z_owned_reply_data_t>>();
+    let mut replies = session
+        .as_ref()
+        .as_ref()
+        .expect("invalid session")
+        .get(Selector {
+            key_selector: keyexpr.into(),
+            value_selector: p,
+        })
+        .target(target.into())
+        .consolidation(consolidation.into())
+        .wait()
+        .unwrap()
+        .iter()
+        .map(|r| r.into())
+        .collect::<Vec<z_owned_reply_data_t>>();
 
     replies.shrink_to_fit();
     //TODO replace when stable https://github.com/rust-lang/rust/issues/65816
