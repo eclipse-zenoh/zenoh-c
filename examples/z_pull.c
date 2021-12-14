@@ -12,6 +12,7 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
+#include <unistd.h>
 #include "zenoh.h"
 
 void data_handler(const z_sample_t *sample, const void *arg)
@@ -61,7 +62,14 @@ int main(int argc, char **argv)
     while (c != 'q')
     {
         c = fgetc(stdin);
-        z_pull(&sub);
+        if (c == -1)
+        {
+            sleep(1);
+        }
+        else
+        {
+            z_pull(&sub);
+        }
     }
 
     z_subscriber_close(z_move(sub));

@@ -13,6 +13,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "zenoh.h"
 
 char *expr = "/demo/example/zenoh-c-eval";
@@ -61,6 +62,10 @@ int main(int argc, char **argv)
     while (c != 'q')
     {
         c = fgetc(stdin);
+        if (c == -1)
+        {
+            sleep(1);
+        }
     }
 
     z_queryable_close(z_move(qable));
