@@ -73,13 +73,7 @@ copyright = "2017, 2020 ADLINK Technology Inc."
 section = "net"
 license-file = ["LICENSE", "0"]
 depends = "libzenohc (=0.6.0~dev)"
-assets = [
-    [
-        "include/*",
-        "usr/include/",
-        "755",
-    ],
-]
+assets = [["include/*", "usr/include/", "755"]]
 
 
 [profile.dev]
