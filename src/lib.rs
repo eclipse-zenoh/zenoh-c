@@ -124,6 +124,7 @@ impl AsMut<Option<Box<Config>>> for z_owned_config_t {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 enum SubOps {
     Pull,
     Close,
@@ -805,7 +806,6 @@ pub unsafe extern "C" fn z_subscribe(
                             Ok(SubOps::Pull) => {
                                 let _ = sub.pull().await;
                             },
-
                             Ok(SubOps::Close) => {
                                 let _ = sub.close().await;
                                 return

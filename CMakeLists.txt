@@ -1,0 +1,68 @@
+cmake_minimum_required(VERSION 3.10)
+project(zenohc_examples LANGUAGES C)
+set(CARGO_FLAGS "")
+if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(CMAKE_BUILD_TYPE "Debug")
+	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/debug/")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
+	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release/")
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
+	set(ENV{RUSTFLAGS} "-g")
+	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release/")
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
+	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release/")
+else()
+	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+endif()
+message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+
+execute_process(
+	COMMAND cargo build ${CARGO_FLAGS}
+)
+
+add_library(zenohc_static STATIC IMPORTED)
+find_library(libzenohc_static NAMES "libzenohc.a" "libzenohc.lib" HINTS "${CMAKE_BINARY_DIR}" NO_DEFAULT_PATH)
+message(STATUS "libzenohc_static: ${libzenohc_static}")
+set_property(TARGET zenohc_static PROPERTY IMPORTED_LOCATION ${libzenohc_static})
+
+add_library(zenohc SHARED IMPORTED)
+find_library(libzenohc NAMES "libzenohc.so" "libzenohc.dll" "libzenohc.dylib" HINTS "${CMAKE_BINARY_DIR}" NO_DEFAULT_PATH)
+message(STATUS "libzenohc: ${libzenohc}")
+set_property(TARGET zenohc PROPERTY IMPORTED_LOCATION ${libzenohc})
+target_include_directories(zenohc INTERFACE "${CMAKE_SOURCE_DIR}/include")
+
+macro(ADD_OSX_FRAMEWORK fwname target)
+    find_library(FRAMEWORK_${fwname}
+    NAMES ${fwname}
+    PATHS ${CMAKE_OSX_SYSROOT}/System/Library
+    PATH_SUFFIXES Frameworks
+    NO_DEFAULT_PATH)
+    if( ${FRAMEWORK_${fwname}} STREQUAL FRAMEWORK_${fwname}-NOTFOUND)
+        MESSAGE(ERROR ": Framework ${fwname} not found")
+    else()
+        TARGET_LINK_LIBRARIES(${target} PUBLIC "${FRAMEWORK_${fwname}}/${fwname}")
+        MESSAGE(STATUS "Framework ${fwname} found at ${FRAMEWORK_${fwname}}")
+    endif()
+endmacro(ADD_OSX_FRAMEWORK)
+
+file(GLOB files "${CMAKE_SOURCE_DIR}/examples/*.c")
+foreach(file ${files})
+	get_filename_component(target ${file} NAME_WE)
+	add_executable(${target} ${file})
+	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
+	target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
+	target_link_directories(${target} PUBLIC ${CMAKE_BINARY_DIR})
+	if(APPLE)
+		ADD_OSX_FRAMEWORK(Security target)
+		ADD_OSX_FRAMEWORK(Foundation target)
+	elseif(UNIX)
+		target_link_libraries(${target} PUBLIC zenohc_static rt pthread m dl)
+	else()
+		message(FATAL_ERROR "Building examples is not yet supported for non-unix OS")
+	endif()
+endforeach()
+
+install(TARGETS ${zenohc})
