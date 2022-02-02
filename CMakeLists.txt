@@ -1,8 +1,18 @@
 cmake_minimum_required(VERSION 3.10)
 project(zenohc_examples LANGUAGES C)
+
+if(NOT CMAKE_BUILD_TYPE)
+set(default_build_type "Debug")
+message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+STRING "Choose the type of build." FORCE)	
+# Set the possible values of build type for cmake-gui
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
 set(CARGO_FLAGS "")
-if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(CMAKE_BUILD_TYPE "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/debug/")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
@@ -52,6 +62,7 @@ file(GLOB files "${CMAKE_SOURCE_DIR}/examples/*.c")
 foreach(file ${files})
 	get_filename_component(target ${file} NAME_WE)
 	add_executable(${target} ${file})
+	set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 	set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
 	target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
 	target_link_directories(${target} PUBLIC ${CMAKE_BINARY_DIR})
@@ -61,7 +72,6 @@ foreach(file ${files})
 	elseif(UNIX)
 		target_link_libraries(${target} PUBLIC zenohc_static rt pthread m dl)
 	else()
-		message(FATAL_ERROR "Building examples is not yet supported for non-unix OS")
 	endif()
 endforeach()
 

@@ -12,30 +12,27 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
 #include "zenoh.h"
 
 #define N 100000
 
 volatile unsigned long long int count = 0;
-volatile struct timeval start;
-volatile struct timeval stop;
+volatile clock_t start;
+volatile clock_t stop;
 
-void print_stats(volatile struct timeval *start, volatile struct timeval *stop)
+void print_stats(volatile time_t *start, volatile time_t *stop)
 {
-    double t0 = start->tv_sec + ((double)start->tv_usec / 1000000.0);
-    double t1 = stop->tv_sec + ((double)stop->tv_usec / 1000000.0);
-    double thpt = N / (t1 - t0);
+    clock_t elapsed = stop - start;
+    double thpt = N * (double)CLOCKS_PER_SEC / (double)(elapsed);
     printf("%f msgs/sec\n", thpt);
 }
 
 void data_handler(const z_sample_t *sample, const void *arg)
 {
-    struct timeval tv;
     if (count == 0)
     {
-        gettimeofday(&tv, 0);
-        start = tv;
+        start = clock();
         count++;
     }
     else if (count < N)
@@ -44,8 +41,7 @@ void data_handler(const z_sample_t *sample, const void *arg)
     }
     else
     {
-        gettimeofday(&tv, 0);
-        stop = tv;
+        stop = clock();
         print_stats(&start, &stop);
         count = 0;
     }
