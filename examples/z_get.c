@@ -12,7 +12,6 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include "zenoh.h"
 
@@ -43,13 +42,13 @@ int main(int argc, char **argv)
     z_query_target_t target = z_query_target_default();
     target.target.tag = z_target_t_ALL;
     z_owned_reply_data_array_t replies = z_get_collect(
-        z_borrow(s), z_expr(expr), "", 
+        z_borrow(s), z_expr(expr), "",
         target, z_query_consolidation_default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
     {
         printf(">> Received ('%.*s': '%.*s')\n",
-               (int)replies.val[i].data.key.suffix.len, replies.val[i].data.key.suffix.start, 
+               (int)replies.val[i].data.key.suffix.len, replies.val[i].data.key.suffix.start,
                (int)replies.val[i].data.value.len, replies.val[i].data.value.start);
     }
     z_reply_data_array_free(z_move(replies));
