@@ -1,0 +1,88 @@
+#
+# Copyright (c) 2017, 2020 ADLINK Technology Inc.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+#
+# Contributors:
+#   ADLINK zenoh team, <zenoh@adlink-labs.tech>
+#
+[package]
+name = "zenoh-c"
+version = "@CARGO_PROJECT_VERSION@"
+repository = "https://github.com/eclipse-zenoh/zenoh-c"
+homepage = "http://zenoh.io"
+authors = [
+    "kydos <angelo@icorsaro.net>",
+    "Julien Enoch <julien@enoch.fr>",
+    "Olivier Hécart <olivier.hecart@adlinktech.com>",
+    "Luca Cominardi <luca.cominardi@adlinktech.com>",
+]
+edition = "2018"
+license = " EPL-2.0 OR Apache-2.0"
+categories = ["network-programming"]
+description = "The zenoh C client API"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+complete_n = ["zenoh/complete_n"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh" }
+async-std = "=1.9.0"
+futures = "0.3.12"
+async-trait = "0.1.42"
+spin = "0.7.1"
+rand = "0.8.3"
+libc = "0.2.85"
+log = "0.4"
+json5 = "0.4"
+env_logger = "0.9.0"
+
+[build-dependencies]
+cbindgen = "0.20.0"
+serde_yaml = "0.8"
+fs2 = "0.4"
+
+[lib]
+name = "zenohc"
+crate-type = ["cdylib", "staticlib"]
+doctest = false
+
+[package.metadata.deb.variants.libzenohc]
+name = "libzenohc"
+maintainer = "zenoh-dev@eclipse.org"
+copyright = "2017, 2020 ADLINK Technology Inc."
+section = "net"
+license-file = ["LICENSE", "0"]
+
+[package.metadata.deb.variants.libzenohc-dev]
+name = "libzenohc-dev"
+maintainer = "zenoh-dev@eclipse.org"
+copyright = "2017, 2020 ADLINK Technology Inc."
+section = "net"
+license-file = ["LICENSE", "0"]
+depends = "libzenohc (=0.6.0~dev)"
+assets = [["include/*", "usr/include/", "755"]]
+
+
+[profile.dev]
+debug = true
+opt-level = 0
+
+[profile.release]
+debug = false     # If you want debug symbol in release mode, set the env variable: RUSTFLAGS=-g
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+panic = "abort"
