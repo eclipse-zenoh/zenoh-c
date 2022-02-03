@@ -12,6 +12,7 @@ target
 cmake-build-debug
 cmake-build-release 
 build
+zenohc.pc
 
 # Prerequisites
 *.d
