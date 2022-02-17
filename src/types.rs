@@ -18,7 +18,7 @@ use zenoh::{
     config,
     config::WhatAmI,
     info::{self, InfoProperties},
-    net::protocol::core::SubInfo,
+    net::protocol::{core::SubInfo, io::SplitBuffer},
     prelude::{KeyExpr, PeerId, Sample, ZInt},
     publication::CongestionControl,
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, Target},
@@ -85,8 +85,8 @@ pub trait FromRaw<T> {
 
 /// An owned, zenoh-allocated, null-terminated, string.  
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -96,10 +96,10 @@ pub trait FromRaw<T> {
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct z_owned_string_t {
-    pub _borrow: *const c_char,
+    pub _loan: *const c_char,
 }
 
-/// A borrowed null-terminated string.
+/// A loaned null-terminated string.
 #[allow(non_camel_case_types)]
 pub type z_string_t = *const c_char;
 
@@ -109,44 +109,44 @@ pub type z_string_t = *const c_char;
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_string_new(s: *const c_char) -> z_owned_string_t {
     if s.is_null() {
-        return z_owned_string_t { _borrow: s };
+        return z_owned_string_t { _loan: s };
     }
     let inner = CStr::from_ptr(s).to_owned();
     let start = inner.as_ptr();
     std::mem::forget(inner);
-    z_owned_string_t { _borrow: start }
+    z_owned_string_t { _loan: start }
 }
 /// Frees `s`'s memory, while invalidating `s` for double-free-safety.
 #[no_mangle]
 pub extern "C" fn z_string_free(s: &mut z_owned_string_t) {
-    if !s._borrow.is_null() {
-        unsafe { CString::from_raw(s._borrow as *mut c_char) };
-        s._borrow = std::ptr::null_mut();
+    if !s._loan.is_null() {
+        unsafe { CString::from_raw(s._loan as *mut c_char) };
+        s._loan = std::ptr::null_mut();
     }
 }
 /// Returns `true` if `s` is valid
 #[no_mangle]
 pub extern "C" fn z_string_check(s: &z_owned_string_t) -> bool {
-    !s._borrow.is_null()
+    !s._loan.is_null()
 }
 
-/// Returns a :c:type:`z_string_t` borrowed from `s`.
+/// Returns a :c:type:`z_string_t` loaned from `s`.
 #[no_mangle]
-pub extern "C" fn z_string_borrow(s: &z_owned_string_t) -> z_string_t {
-    s._borrow
+pub extern "C" fn z_string_loan(s: &z_owned_string_t) -> z_string_t {
+    s._loan
 }
 impl From<String> for z_owned_string_t {
     fn from(s: String) -> Self {
         let inner = CString::new(s).unwrap();
         let start = inner.as_ptr();
         std::mem::forget(inner);
-        z_owned_string_t { _borrow: start }
+        z_owned_string_t { _loan: start }
     }
 }
 impl Default for z_owned_string_t {
     fn default() -> Self {
         Self {
-            _borrow: std::ptr::null(),
+            _loan: std::ptr::null(),
         }
     }
 }
@@ -155,15 +155,15 @@ impl From<&str> for z_owned_string_t {
         let inner = CString::new(s).unwrap();
         let start = inner.as_ptr();
         std::mem::forget(inner);
-        z_owned_string_t { _borrow: start }
+        z_owned_string_t { _loan: start }
     }
 }
 impl From<z_owned_string_t> for String {
     fn from(s: z_owned_string_t) -> Self {
-        if s._borrow.is_null() {
+        if s._loan.is_null() {
             String::new()
         } else {
-            unsafe { CString::from_raw(s._borrow as *mut c_char) }
+            unsafe { CString::from_raw(s._loan as *mut c_char) }
                 .into_string()
                 .unwrap()
         }
@@ -173,12 +173,11 @@ impl From<z_owned_string_t> for String {
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_info_t<'a>(&'a z_owned_info_t);
-pub const Z_INFO_PADDING_U64: usize = 6;
 
 /// A map of integers to strings providing informations on the zenoh session.  
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -187,7 +186,7 @@ pub const Z_INFO_PADDING_U64: usize = 6;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_owned_info_t(pub(crate) [u64; Z_INFO_PADDING_U64]);
+pub struct z_owned_info_t(pub(crate) [usize; 6]);
 impl AsRef<Option<InfoProperties>> for z_owned_info_t {
     fn as_ref(&self) -> &Option<InfoProperties> {
         unsafe { std::mem::transmute(&self.0) }
@@ -212,10 +211,10 @@ pub extern "C" fn z_info_check(info: &z_owned_info_t) -> bool {
     info.as_ref().is_some()
 }
 
-/// Returns a :c:type:`z_info_t` borrowed from `info`.
+/// Returns a :c:type:`z_info_t` loaned from `info`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_info_borrow(info: &z_owned_info_t) -> z_info_t {
+pub extern "C" fn z_info_loan(info: &z_owned_info_t) -> z_info_t {
     z_info_t(info)
 }
 /// Returns the information associated with `key` if it exists.  
@@ -308,8 +307,8 @@ pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
 
 /// A zenoh-allocated array of bytes.   
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -322,7 +321,7 @@ pub struct z_owned_bytes_t {
     pub len: size_t,
 }
 
-/// A borrowed array of bytes.  
+/// A loaned array of bytes.  
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_bytes_t {
@@ -375,7 +374,7 @@ pub unsafe extern "C" fn z_bytes_check(b: &z_owned_bytes_t) -> bool {
 }
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_borrow(b: &z_owned_bytes_t) -> z_bytes_t {
+pub unsafe extern "C" fn z_bytes_loan(b: &z_owned_bytes_t) -> z_bytes_t {
     z_bytes_t {
         start: b.start,
         len: b.len,
@@ -407,7 +406,7 @@ impl From<Option<PeerId>> for z_owned_bytes_t {
 }
 impl From<ZBuf> for z_owned_bytes_t {
     fn from(buf: ZBuf) -> Self {
-        let data = buf.to_vec().into_boxed_slice();
+        let data = buf.contiguous().into_owned().into_boxed_slice();
         let res = z_owned_bytes_t {
             start: data.as_ptr(),
             len: data.len(),
@@ -443,8 +442,8 @@ impl From<z_owned_bytes_t> for String {
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -457,7 +456,7 @@ pub struct z_owned_keyexpr_t {
     pub id: c_ulong,
     pub suffix: z_owned_bytes_t,
 }
-/// A borrowed key expression.
+/// A loaned key expression.
 ///
 /// Key expressions can identify a single key or a set of keys.
 ///
@@ -495,10 +494,10 @@ pub unsafe extern "C" fn z_keyexpr_new(id: c_ulong, suffix: *const c_char) -> z_
         ),
     }
 }
-/// Constructs a borrowed key expression. The constructed value is valid as long as `suffix` is.
+/// Constructs a loaned key expression. The constructed value is valid as long as `suffix` is.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_keyexpr_new_borrowed(id: c_ulong, suffix: *const c_char) -> z_keyexpr_t {
+pub unsafe extern "C" fn z_keyexpr_new_loaned(id: c_ulong, suffix: *const c_char) -> z_keyexpr_t {
     z_keyexpr_t {
         id,
         suffix: z_bytes_t {
@@ -525,12 +524,12 @@ pub unsafe extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
     keyexpr.id != 0 || z_bytes_check(&keyexpr.suffix)
 }
 
-/// Returns a :c:type:`z_keyexpr_t` borrowed from `keyexpr`.
+/// Returns a :c:type:`z_keyexpr_t` loaned from `keyexpr`.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_borrow(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
+pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
     z_keyexpr_t {
         id: keyexpr.id,
-        suffix: unsafe { z_bytes_borrow(&keyexpr.suffix) },
+        suffix: unsafe { z_bytes_loan(&keyexpr.suffix) },
     }
 }
 
@@ -613,8 +612,8 @@ impl<'a> From<KeyExpr<'a>> for z_owned_keyexpr_t {
 ///   `z_owned_string_t key`: The resource key of this data sample.
 ///   `z_owned_bytes_t value`: The value of this data sample.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -627,7 +626,7 @@ pub struct z_owned_sample_t {
     pub value: z_owned_bytes_t,
 }
 
-/// A borrowed data sample.
+/// A loaned data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
 ///
@@ -664,13 +663,13 @@ pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
     z_keyexpr_check(&sample.key) && z_bytes_check(&sample.value)
 }
 
-/// Returns a :c:type:`z_sample_t` borrowed from `sample`.
+/// Returns a :c:type:`z_sample_t` loaned from `sample`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_borrow(sample: &z_owned_sample_t) -> z_sample_t {
+pub unsafe extern "C" fn z_sample_loan(sample: &z_owned_sample_t) -> z_sample_t {
     z_sample_t {
-        key: z_keyexpr_borrow(&sample.key),
-        value: z_bytes_borrow(&sample.value),
+        key: z_keyexpr_loan(&sample.key),
+        value: z_bytes_loan(&sample.value),
     }
 }
 

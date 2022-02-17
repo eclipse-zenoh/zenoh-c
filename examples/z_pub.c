@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 3)
     {
-        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[3]);
+        z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[3]);
     }
 
     printf("Openning session...\n");
@@ -50,11 +50,11 @@ int main(int argc, char **argv)
     }
 
     printf("Declaring key expression '%s'...", expr);
-    z_keyexpr_t keyexpr = z_declare_expr(z_borrow(s), z_expr(expr));
+    z_keyexpr_t keyexpr = z_declare_expr(z_loan(s), z_expr(expr));
     printf(" => RId %lu\n", keyexpr.id);
 
     printf("Declaring publication on '%lu'\n", keyexpr.id);
-    if (!z_declare_publication(z_borrow(s), keyexpr))
+    if (!z_declare_publication(z_loan(s), keyexpr))
     {
         printf("Unable to declare publication.\n");
         exit(-1);
@@ -66,10 +66,10 @@ int main(int argc, char **argv)
         sleep(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%lu': '%s')...\n", keyexpr.id, buf);
-        z_put(z_borrow(s), keyexpr, (const uint8_t *)buf, strlen(buf));
+        z_put(z_loan(s), keyexpr, (const uint8_t *)buf, strlen(buf));
     }
-    z_undeclare_publication(z_borrow(s), keyexpr);
-    z_undeclare_expr(z_borrow(s), keyexpr);
+    z_undeclare_publication(z_loan(s), keyexpr);
+    z_undeclare_expr(z_loan(s), keyexpr);
     z_close(z_move(s));
     return 0;
 }

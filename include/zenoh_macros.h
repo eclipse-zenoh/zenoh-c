@@ -1,15 +1,15 @@
-#define z_borrow(x) _Generic((x), z_owned_session_t \
-							 : z_session_borrow,    \
-							   z_owned_keyexpr_t    \
-							 : z_keyexpr_borrow,    \
-							   z_owned_config_t     \
-							 : z_config_borrow,     \
-							   z_owned_string_t     \
-							 : z_string_borrow,     \
-							   z_owned_bytes_t      \
-							 : z_bytes_borrow,      \
-							   z_owned_info_t       \
-							 : z_info_borrow)(&x)
+#define z_loan(x) _Generic((x), z_owned_session_t \
+						   : z_session_loan,      \
+							 z_owned_keyexpr_t    \
+						   : z_keyexpr_loan,      \
+							 z_owned_config_t     \
+						   : z_config_loan,       \
+							 z_owned_string_t     \
+						   : z_string_loan,       \
+							 z_owned_bytes_t      \
+						   : z_bytes_loan,        \
+							 z_owned_info_t       \
+						   : z_info_loan)(&x)
 #define z_free(x) _Generic((x), z_owned_session_t \
 						   : z_close,             \
 							 z_owned_keyexpr_t    \

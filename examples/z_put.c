@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 3)
     {
-        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[3]);
+        z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[3]);
     }
 
     printf("Openning session...\n");
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     }
 
     printf("Putting Data ('%s': '%s')...\n", expr, value);
-    z_put(z_borrow(s), z_expr(expr), (const uint8_t *)value, strlen(value));
+    z_put(z_loan(s), z_expr(expr), (const uint8_t *)value, strlen(value));
     z_close(z_move(s));
     return 0;
 }

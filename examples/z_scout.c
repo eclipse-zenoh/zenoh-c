@@ -66,7 +66,7 @@ void fprintlocators(FILE *stream, const z_owned_str_array_t *locs)
 void fprinthello(FILE *stream, const z_owned_hello_t *hello)
 {
     fprintf(stream, "Hello { pid: ");
-    fprintpid(stream, z_borrow(hello->pid));
+    fprintpid(stream, z_loan(hello->pid));
     fprintf(stream, ", whatami: ");
     fprintwhatami(stream, hello->whatami);
     fprintf(stream, ", locators: ");

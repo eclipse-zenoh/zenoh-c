@@ -56,17 +56,10 @@ typedef enum z_submode_t {
 } z_submode_t;
 typedef struct z_query_t z_query_t;
 /**
- * A borrowed array of bytes.
- */
-typedef struct z_bytes_t {
-  const uint8_t *start;
-  size_t len;
-} z_bytes_t;
-/**
  * A zenoh-allocated array of bytes.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -79,10 +72,17 @@ typedef struct z_owned_bytes_t {
   size_t len;
 } z_owned_bytes_t;
 /**
+ * A loaned array of bytes.
+ */
+typedef struct z_bytes_t {
+  const uint8_t *start;
+  size_t len;
+} z_bytes_t;
+/**
  * An owned, zenoh-allocated, null-terminated, string.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -91,14 +91,14 @@ typedef struct z_owned_bytes_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_string_t {
-  const char *_borrow;
+  const char *_loan;
 } z_owned_string_t;
 /**
- * A borrowed null-terminated string.
+ * A loaned null-terminated string.
  */
 typedef const char *z_string_t;
 /**
- * A borrowed key expression.
+ * A loaned key expression.
  *
  * Key expressions can identify a single key or a set of keys.
  *
@@ -135,8 +135,8 @@ typedef struct z_keyexpr_t {
  *   - A pure numerical id.
  *   - The combination of a numerical prefix and a string suffix.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -206,8 +206,8 @@ typedef struct z_query_consolidation_t {
  *   `z_owned_string_t key`: The resource key of this data sample.
  *   `z_owned_bytes_t value`: The value of this data sample.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -322,7 +322,7 @@ typedef struct z_owned_hello_array_t {
   size_t len;
 } z_owned_hello_array_t;
 /**
- * A borrowed data sample.
+ * A loaned data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
  *
@@ -383,7 +383,6 @@ extern const unsigned int ZN_CONFIG_LOCAL_ROUTING_KEY;
 extern const unsigned int ZN_INFO_PID_KEY;
 extern const unsigned int ZN_INFO_PEER_PID_KEY;
 extern const unsigned int ZN_INFO_ROUTER_PID_KEY;
-struct z_bytes_t z_bytes_borrow(const struct z_owned_bytes_t *b);
 /**
  * Returns `true` if `b` is valid.
  */
@@ -392,6 +391,7 @@ bool z_bytes_check(const struct z_owned_bytes_t *b);
  * Frees `b` and invalidates it for double-free safety.
  */
 void z_bytes_free(struct z_owned_bytes_t *b);
+struct z_bytes_t z_bytes_loan(const struct z_owned_bytes_t *b);
 /**
  * Constructs a :c:type:`z_owned_bytes_t` of lengh `len` from the bytes
  * starting at address `start`.
@@ -402,10 +402,6 @@ struct z_owned_bytes_t z_bytes_new(const uint8_t *start, uintptr_t len);
  * Closes a zenoh session. This frees and invalidates `session` for double-free safety.
  */
 void z_close(struct z_owned_session_t *session);
-/**
- * Returns a :c:type:`z_config_t` borrowed from `s`.
- */
-struct z_config_t z_config_borrow(const struct z_owned_config_t *s);
 /**
  * Returns `true` if `config` is valid.
  */
@@ -444,10 +440,14 @@ struct z_owned_string_t z_config_get(struct z_config_t config, unsigned int key)
  */
 unsigned int z_config_len(struct z_config_t config);
 /**
+ * Returns a :c:type:`z_config_t` loaned from `s`.
+ */
+struct z_config_t z_config_loan(const struct z_owned_config_t *s);
+/**
  * Return a new, zenoh-allocated, empty configuration.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -490,14 +490,14 @@ struct z_keyexpr_t z_declare_expr(struct z_session_t session,
  */
 bool z_declare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
 /**
- * Constructs a borrowed key expression from a string expression.
+ * Constructs a loaned key expression from a string expression.
  */
 struct z_keyexpr_t z_expr(const char *name);
 /**
  * Constructs a key expression from a string expression. `name`'s content is copied.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -567,14 +567,14 @@ void z_hello_free(struct z_owned_hello_t *hello);
  */
 struct z_keyexpr_t z_id(unsigned long id);
 /**
- * Constructs a borrowed key expression from an expression id and a suffix.
+ * Constructs a loaned key expression from an expression id and a suffix.
  */
 struct z_keyexpr_t z_id_with_suffix(unsigned long id, const char *suffix);
 /**
  * Constructs a key expression from an expression id and a suffix. `suffix`'s content is copied.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -593,10 +593,6 @@ struct z_owned_info_t z_info(struct z_session_t session);
  */
 struct z_owned_string_t z_info_as_str(struct z_session_t session);
 /**
- * Returns a :c:type:`z_info_t` borrowed from `info`.
- */
-struct z_info_t z_info_borrow(const struct z_owned_info_t *info);
-/**
  * Returns `true` if `info` is valid.
  */
 bool z_info_check(const struct z_owned_info_t *info);
@@ -610,13 +606,13 @@ void z_info_free(struct z_owned_info_t *info);
  */
 struct z_owned_string_t z_info_get(struct z_info_t info, uint64_t key);
 /**
+ * Returns a :c:type:`z_info_t` loaned from `info`.
+ */
+struct z_info_t z_info_loan(const struct z_owned_info_t *info);
+/**
  * Initialises the zenoh runtime logger
  */
 void z_init_logger(void);
-/**
- * Returns a :c:type:`z_keyexpr_t` borrowed from `keyexpr`.
- */
-struct z_keyexpr_t z_keyexpr_borrow(const struct z_owned_keyexpr_t *keyexpr);
 /**
  * Returns `true` if `keyexpr` is valid.
  */
@@ -626,13 +622,17 @@ bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
  */
 void z_keyexpr_free(struct z_owned_keyexpr_t *keyexpr);
 /**
+ * Returns a :c:type:`z_keyexpr_t` loaned from `keyexpr`.
+ */
+struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
+/**
  * Constructs a zenoh-owned key expression. `suffix`'s contents will be copied.
  */
 struct z_owned_keyexpr_t z_keyexpr_new(unsigned long id, const char *suffix);
 /**
- * Constructs a borrowed key expression. The constructed value is valid as long as `suffix` is.
+ * Constructs a loaned key expression. The constructed value is valid as long as `suffix` is.
  */
-struct z_keyexpr_t z_keyexpr_new_borrowed(unsigned long id, const char *suffix);
+struct z_keyexpr_t z_keyexpr_new_loaned(unsigned long id, const char *suffix);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
  */
@@ -759,10 +759,6 @@ void z_reply_data_free(struct z_owned_reply_data_t *reply_data);
  */
 void z_reply_free(struct z_owned_reply_t *reply);
 /**
- * Returns a :c:type:`z_sample_t` borrowed from `sample`.
- */
-struct z_sample_t z_sample_borrow(const struct z_owned_sample_t *sample);
-/**
  * Returns `true` if `sample` is valid.
  */
 bool z_sample_check(const struct z_owned_sample_t *sample);
@@ -770,6 +766,10 @@ bool z_sample_check(const struct z_owned_sample_t *sample);
  * Frees `sample`, invalidating it for double-free safety.
  */
 void z_sample_free(struct z_owned_sample_t *sample);
+/**
+ * Returns a :c:type:`z_sample_t` loaned from `sample`.
+ */
+struct z_sample_t z_sample_loan(const struct z_owned_sample_t *sample);
 /**
  * Scout for routers and/or peers.
  *
@@ -803,13 +803,13 @@ void z_send_reply(const struct z_query_t *query,
                   const uint8_t *payload,
                   unsigned int len);
 /**
- * Returns a :c:type:`z_session_t` borrowed from `s`.
- */
-struct z_session_t z_session_borrow(const struct z_owned_session_t *s);
-/**
  * Returns `true` if `session` is valid.
  */
 bool z_session_check(const struct z_owned_session_t *session);
+/**
+ * Returns a :c:type:`z_session_t` loaned from `s`.
+ */
+struct z_session_t z_session_loan(const struct z_owned_session_t *s);
 /**
  * Returns `true` if `strs` is valid.
  */
@@ -819,10 +819,6 @@ bool z_str_array_check(const struct z_owned_str_array_t *strs);
  */
 void z_str_array_free(struct z_owned_str_array_t *strs);
 /**
- * Returns a :c:type:`z_string_t` borrowed from `s`.
- */
-z_string_t z_string_borrow(const struct z_owned_string_t *s);
-/**
  * Returns `true` if `s` is valid
  */
 bool z_string_check(const struct z_owned_string_t *s);
@@ -830,6 +826,10 @@ bool z_string_check(const struct z_owned_string_t *s);
  * Frees `s`'s memory, while invalidating `s` for double-free-safety.
  */
 void z_string_free(struct z_owned_string_t *s);
+/**
+ * Returns a :c:type:`z_string_t` loaned from `s`.
+ */
+z_string_t z_string_loan(const struct z_owned_string_t *s);
 /**
  * Constructs a :c:type:`z_owned_string_t` from a NULL terminated string.
  * The contents of `s` are copied.

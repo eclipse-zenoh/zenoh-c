@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
+        z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     subinfo.reliability = z_reliability_t_RELIABLE;
     subinfo.mode = z_submode_t_PULL;
     subinfo.period = z_period_NONE;
-    z_owned_subscriber_t sub = z_subscribe(z_borrow(s), z_expr(expr), subinfo, data_handler, NULL);
+    z_owned_subscriber_t sub = z_subscribe(z_loan(s), z_expr(expr), subinfo, data_handler, NULL);
     if (!z_check(sub))
     {
         printf("Unable to create subscriber.\n");

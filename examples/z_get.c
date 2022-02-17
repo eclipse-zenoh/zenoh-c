@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
+        z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     z_query_target_t target = z_query_target_default();
     target.target.tag = z_target_t_ALL;
     z_owned_reply_data_array_t replies = z_get_collect(
-        z_borrow(s), z_expr(expr), "",
+        z_loan(s), z_expr(expr), "",
         target, z_query_consolidation_default());
 
     for (unsigned int i = 0; i < replies.len; ++i)
