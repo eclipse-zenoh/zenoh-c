@@ -18,6 +18,7 @@ use async_std::task;
 use futures::prelude::*;
 use futures::select;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ulong, size_t};
+use std::borrow::Cow;
 use std::ffi::{c_void, CStr};
 use std::mem::ManuallyDrop;
 use std::slice;
@@ -887,7 +888,7 @@ pub unsafe extern "C" fn z_get(
         .expect("invalid session")
         .get(Selector {
             key_selector: keyexpr.into(),
-            value_selector: p,
+            value_selector: Cow::Borrowed(p),
         })
         .target(target.into())
         .consolidation(consolidation.into())
@@ -949,7 +950,7 @@ pub unsafe extern "C" fn z_get_collect(
         .expect("invalid session")
         .get(Selector {
             key_selector: keyexpr.into(),
-            value_selector: p,
+            value_selector: Cow::Borrowed(p),
         })
         .target(target.into())
         .consolidation(consolidation.into())
