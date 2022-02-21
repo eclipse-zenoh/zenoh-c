@@ -21,7 +21,9 @@ use zenoh::{
     net::protocol::{core::SubInfo, io::SplitBuffer},
     prelude::{KeyExpr, PeerId, Sample, ZInt},
     publication::CongestionControl,
-    query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, Target},
+    query::{
+        ConsolidationMode, ConsolidationStrategy, QueryConsolidation, QueryTarget, Reply, Target,
+    },
     queryable,
     scouting::Hello,
     subscriber::{Reliability, SubMode},
@@ -1246,19 +1248,49 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
 ///   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
 ///   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
 #[repr(C)]
-pub struct z_query_consolidation_t {
+pub struct z_consolidation_strategy_t {
     pub first_routers: z_consolidation_mode_t,
     pub last_router: z_consolidation_mode_t,
     pub reception: z_consolidation_mode_t,
 }
 
+impl From<ConsolidationStrategy> for z_consolidation_strategy_t {
+    #[inline]
+    fn from(cs: ConsolidationStrategy) -> Self {
+        z_consolidation_strategy_t {
+            first_routers: cs.first_routers.into(),
+            last_router: cs.last_router.into(),
+            reception: cs.reception.into(),
+        }
+    }
+}
+
+impl From<z_consolidation_strategy_t> for ConsolidationStrategy {
+    #[inline]
+    fn from(val: z_consolidation_strategy_t) -> Self {
+        ConsolidationStrategy {
+            first_routers: val.first_routers.into(),
+            last_router: val.last_router.into(),
+            reception: val.reception.into(),
+        }
+    }
+}
+
+/// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+#[repr(C)]
+pub enum z_query_consolidation_t {
+    AUTO,
+    MANUAL(z_consolidation_strategy_t),
+}
+
 impl From<QueryConsolidation> for z_query_consolidation_t {
     #[inline]
     fn from(qc: QueryConsolidation) -> Self {
-        z_query_consolidation_t {
-            first_routers: qc.first_routers.into(),
-            last_router: qc.last_router.into(),
-            reception: qc.reception.into(),
+        match qc {
+            QueryConsolidation::Auto => z_query_consolidation_t::AUTO,
+            QueryConsolidation::Manual(strategy) => {
+                z_query_consolidation_t::MANUAL(strategy.into())
+            }
         }
     }
 }
@@ -1266,12 +1298,72 @@ impl From<QueryConsolidation> for z_query_consolidation_t {
 impl From<z_query_consolidation_t> for QueryConsolidation {
     #[inline]
     fn from(val: z_query_consolidation_t) -> Self {
-        QueryConsolidation {
-            first_routers: val.first_routers.into(),
-            last_router: val.last_router.into(),
-            reception: val.reception.into(),
+        match val {
+            z_query_consolidation_t::AUTO => QueryConsolidation::Auto,
+            z_query_consolidation_t::MANUAL(strategy) => {
+                QueryConsolidation::Manual(strategy.into())
+            }
         }
     }
+}
+
+/// Automatic query consolidation strategy selection.
+///
+/// A query consolidation strategy will automatically be selected depending
+/// the query selector. If the selector contains time range properties,
+/// no consolidation is performed. Otherwise the
+/// :c:func:`z_query_consolidation_reception` strategy is used.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
+    QueryConsolidation::auto().into()
+}
+
+/// No consolidation performed.
+///
+/// This is usefull when querying timeseries data bases or
+/// when using quorums.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
+    QueryConsolidation::none().into()
+}
+
+/// Lazy consolidation performed at all stages.
+///
+/// This strategy offers the best latency. Replies are directly
+/// transmitted to the application when received without needing
+/// to wait for all replies.
+///
+/// This mode does not garantie that there will be no duplicates.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_lazy() -> z_query_consolidation_t {
+    QueryConsolidation::lazy().into()
+}
+
+/// Full consolidation performed at reception.
+///
+/// This is the default strategy. It offers the best latency while
+/// garantying that there will be no duplicates.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_reception() -> z_query_consolidation_t {
+    QueryConsolidation::reception().into()
+}
+
+/// Full consolidation performed on last router and at reception.
+///
+/// This mode offers a good latency while optimizing bandwidth on
+/// the last transport link between the router and the application.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_last_router() -> z_query_consolidation_t {
+    QueryConsolidation::last_router().into()
+}
+
+/// Full consolidation performed everywhere.
+///
+/// This mode optimizes bandwidth on all links in the system
+/// but will provide a very poor latency.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_full() -> z_query_consolidation_t {
+    QueryConsolidation::full().into()
 }
 
 /// Creates a default :c:type:`z_query_consolidation_t`.

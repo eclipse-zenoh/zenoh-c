@@ -192,10 +192,25 @@ typedef struct z_query_target_t {
  *   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
  *   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
  */
-typedef struct z_query_consolidation_t {
+typedef struct z_consolidation_strategy_t {
   enum z_consolidation_mode_t first_routers;
   enum z_consolidation_mode_t last_router;
   enum z_consolidation_mode_t reception;
+} z_consolidation_strategy_t;
+/**
+ * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+ */
+typedef enum z_query_consolidation_t_Tag {
+  z_query_consolidation_t_AUTO,
+  z_query_consolidation_t_MANUAL,
+} z_query_consolidation_t_Tag;
+typedef struct z_query_consolidation_t {
+  z_query_consolidation_t_Tag tag;
+  union {
+    struct {
+      struct z_consolidation_strategy_t manual;
+    };
+  };
 } z_query_consolidation_t;
 /**
  * A zenoh-allocated data sample.
@@ -689,9 +704,56 @@ bool z_put_options_set(struct z_put_options_t *options,
                        enum z_put_options_field_t key,
                        unsigned int value);
 /**
+ * Automatic query consolidation strategy selection.
+ *
+ * A query consolidation strategy will automatically be selected depending
+ * the query selector. If the selector contains time range properties,
+ * no consolidation is performed. Otherwise the
+ * :c:func:`z_query_consolidation_reception` strategy is used.
+ */
+struct z_query_consolidation_t z_query_consolidation_auto(void);
+/**
  * Creates a default :c:type:`z_query_consolidation_t`.
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
+/**
+ * Full consolidation performed everywhere.
+ *
+ * This mode optimizes bandwidth on all links in the system
+ * but will provide a very poor latency.
+ */
+struct z_query_consolidation_t z_query_consolidation_full(void);
+/**
+ * Full consolidation performed on last router and at reception.
+ *
+ * This mode offers a good latency while optimizing bandwidth on
+ * the last transport link between the router and the application.
+ */
+struct z_query_consolidation_t z_query_consolidation_last_router(void);
+/**
+ * Lazy consolidation performed at all stages.
+ *
+ * This strategy offers the best latency. Replies are directly
+ * transmitted to the application when received without needing
+ * to wait for all replies.
+ *
+ * This mode does not garantie that there will be no duplicates.
+ */
+struct z_query_consolidation_t z_query_consolidation_lazy(void);
+/**
+ * No consolidation performed.
+ *
+ * This is usefull when querying timeseries data bases or
+ * when using quorums.
+ */
+struct z_query_consolidation_t z_query_consolidation_none(void);
+/**
+ * Full consolidation performed at reception.
+ *
+ * This is the default strategy. It offers the best latency while
+ * garantying that there will be no duplicates.
+ */
+struct z_query_consolidation_t z_query_consolidation_reception(void);
 /**
  * Gets the key expression of a received query as a non null-terminated string.
  */
