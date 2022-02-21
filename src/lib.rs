@@ -25,6 +25,7 @@ use std::slice;
 use zenoh::config::whatami::WhatAmIMatcher;
 use zenoh::config::{Config, IntKeyMapLike, WhatAmI};
 use zenoh::info::InfoProperties;
+use zenoh::net::protocol::io::SplitBuffer;
 use zenoh::prelude::{Encoding, Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
 use zenoh::publication::CongestionControl;
 use zenoh::queryable::Query;
@@ -34,12 +35,10 @@ use zenoh::Session;
 mod types;
 pub use types::*;
 
-pub const Z_SESSION_PADDING_U64: usize = 3;
-
 /// An owned zenoh session.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -48,7 +47,8 @@ pub const Z_SESSION_PADDING_U64: usize = 3;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_owned_session_t([u64; Z_SESSION_PADDING_U64]);
+pub struct z_owned_session_t([usize; 3]);
+
 impl From<Session> for z_owned_session_t {
     fn from(session: Session) -> Self {
         unsafe { z_owned_session_t(std::mem::transmute(Some(session))) }
@@ -70,25 +70,25 @@ impl AsRef<Option<Session>> for z_session_t {
     }
 }
 
-/// A borrowed zenoh session.
+/// A loaned zenoh session.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_session_t(*const z_owned_session_t);
 
-/// Returns a :c:type:`z_session_t` borrowed from `s`.
+/// Returns a :c:type:`z_session_t` loaned from `s`.
 #[no_mangle]
-pub extern "C" fn z_session_borrow(s: &z_owned_session_t) -> z_session_t {
+pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
     z_session_t(s)
 }
 
-/// A borrowed zenoh config.
+/// A loaned zenoh config.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_config_t(*const z_owned_config_t);
 /// An owned zenoh configuration.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -99,9 +99,9 @@ pub struct z_config_t(*const z_owned_config_t);
 #[allow(non_camel_case_types)]
 pub struct z_owned_config_t(*mut ());
 
-/// Returns a :c:type:`z_config_t` borrowed from `s`.
+/// Returns a :c:type:`z_config_t` loaned from `s`.
 #[no_mangle]
-pub extern "C" fn z_config_borrow(s: &z_owned_config_t) -> z_config_t {
+pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
     z_config_t(s)
 }
 impl AsRef<Option<Box<Config>>> for z_config_t {
@@ -132,11 +132,10 @@ enum SubOps {
 }
 
 type Subscriber = Option<Arc<Sender<SubOps>>>;
-pub const Z_SUBSCRIBER_PADDING_U64: usize = 1;
 /// An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -145,7 +144,7 @@ pub const Z_SUBSCRIBER_PADDING_U64: usize = 1;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_owned_subscriber_t([u64; Z_SUBSCRIBER_PADDING_U64]);
+pub struct z_owned_subscriber_t([usize; 1]);
 impl AsRef<Subscriber> for z_owned_subscriber_t {
     fn as_ref(&self) -> &Subscriber {
         unsafe { std::mem::transmute(self) }
@@ -158,11 +157,10 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
 }
 
 type Queryable = Option<Arc<Sender<bool>>>;
-pub const Z_QUERYABLE_PADDING_U64: usize = 1;
 /// An owned zenoh queryable.  
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -171,7 +169,7 @@ pub const Z_QUERYABLE_PADDING_U64: usize = 1;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_owned_queryable_t([u64; Z_QUERYABLE_PADDING_U64]);
+pub struct z_owned_queryable_t([usize; 1]);
 impl AsRef<Queryable> for z_owned_queryable_t {
     fn as_ref(&self) -> &Queryable {
         unsafe { std::mem::transmute(self) }
@@ -189,20 +187,20 @@ pub struct z_query_t(Query);
 /// Since id-only kes expressions don't need destruction, a `z_keyexpr_t` is returned instead of its owned variant.
 #[no_mangle]
 pub extern "C" fn z_id(id: c_ulong) -> z_keyexpr_t {
-    unsafe { z_keyexpr_new_borrowed(id, std::ptr::null()) }
+    unsafe { z_keyexpr_new_loaned(id, std::ptr::null()) }
 }
 
-/// Constructs a borrowed key expression from an expression id and a suffix.
+/// Constructs a loaned key expression from an expression id and a suffix.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_id_with_suffix(id: c_ulong, suffix: *const c_char) -> z_keyexpr_t {
-    z_keyexpr_new_borrowed(id, suffix)
+    z_keyexpr_new_loaned(id, suffix)
 }
 
 /// Constructs a key expression from an expression id and a suffix. `suffix`'s content is copied.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -218,17 +216,17 @@ pub unsafe extern "C" fn z_id_with_suffix_new(
     z_keyexpr_new(id, suffix)
 }
 
-/// Constructs a borrowed key expression from a string expression.
+/// Constructs a loaned key expression from a string expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_expr(name: *const c_char) -> z_keyexpr_t {
-    z_keyexpr_new_borrowed(0, name)
+    z_keyexpr_new_loaned(0, name)
 }
 
 /// Constructs a key expression from a string expression. `name`'s content is copied.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -243,8 +241,8 @@ pub unsafe extern "C" fn z_expr_new(name: *const c_char) -> z_owned_keyexpr_t {
 
 /// Return a new, zenoh-allocated, empty configuration.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.  
-/// The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
@@ -511,8 +509,8 @@ pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
     let session = (&*session.0).as_ref();
     match session {
-        Some(s) => z_owned_info_t(std::mem::transmute(s.info().wait())),
-        None => z_owned_info_t(std::mem::transmute(None::<InfoProperties>)),
+        Some(s) => std::mem::transmute(s.info().wait()),
+        None => std::mem::transmute(None::<InfoProperties>),
     }
 }
 
@@ -598,17 +596,19 @@ pub unsafe extern "C" fn z_put(
 }
 #[derive(Default)]
 struct WriteOptions {
-    encoding: Encoding,
-    congestion_control: CongestionControl,
-    kind: SampleKind,
-    priority: Priority,
+    encoding: Encoding,                    // u64 + 4 usize
+    kind: SampleKind,                      // u8
+    congestion_control: CongestionControl, // u8
+    priority: Priority,                    // u8
 }
-pub const Z_WRITE_OPTIONS_PADDING_U64: usize = 6;
 
 /// Options passed to the :c:func:`z_put_ext` function.  
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_put_options_t([u64; Z_WRITE_OPTIONS_PADDING_U64]);
+pub struct z_put_options_t {
+    align: u64,
+    pad: [usize; 5],
+}
 
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -629,7 +629,7 @@ pub enum z_put_options_field_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
-    z_put_options_t(std::mem::transmute(WriteOptions::default()))
+    std::mem::transmute(WriteOptions::default())
 }
 
 /// Sets the value for the required field of a `z_put_options_t`.  
@@ -796,7 +796,7 @@ pub unsafe extern "C" fn z_subscribe(
                         // C string terminator. See the test_sub.c to find out how to deal
                         // with non null terminated strings.
                         let us = s.unwrap();
-                        let data = us.value.payload.to_vec();
+                        let data = us.value.payload.contiguous();
                         sample.key = (&us.key_expr).into();
                         sample.value.start = data.as_ptr() as *const c_uchar;
                         sample.value.len = data.len() as size_t;

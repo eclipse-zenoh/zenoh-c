@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   z_owned_config_t config = z_config_default();
   if (argc > 2)
   {
-    z_config_set(z_borrow(config), ZN_CONFIG_PEER_KEY, argv[2]);
+    z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[2]);
   }
 
   z_owned_session_t os = z_open(z_move(config));
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     printf("Unable to open session!\n");
     exit(-1);
   }
-  z_session_t s = z_borrow(os);
+  z_session_t s = z_loan(os);
 
   char *data = (char *)malloc(len);
   memset(data, 1, len);

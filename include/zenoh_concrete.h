@@ -15,16 +15,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#define Z_SESSION_PADDING_U64 3
-#define Z_SUBSCRIBER_PADDING_U64 1
-#define Z_QUERYABLE_PADDING_U64 1
-#define Z_WRITE_OPTIONS_PADDING_U64 6
-#define Z_INFO_PADDING_U64 6
 /**
  * An owned zenoh session.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -33,13 +28,13 @@
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_session_t {
-  uint64_t _0[Z_SESSION_PADDING_U64];
+  uintptr_t _0[3];
 } z_owned_session_t;
 /**
  * An owned zenoh configuration.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -51,13 +46,13 @@ typedef struct z_owned_config_t {
   void *_0;
 } z_owned_config_t;
 /**
- * A borrowed zenoh config.
+ * A loaned zenoh config.
  */
 typedef struct z_config_t {
   const struct z_owned_config_t *_0;
 } z_config_t;
 /**
- * A borrowed zenoh session.
+ * A loaned zenoh session.
  */
 typedef struct z_session_t {
   const struct z_owned_session_t *_0;
@@ -65,8 +60,8 @@ typedef struct z_session_t {
 /**
  * A map of integers to strings providing informations on the zenoh session.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -75,7 +70,8 @@ typedef struct z_session_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_info_t {
-  uint64_t _0[Z_INFO_PADDING_U64];
+  uint64_t align[2];
+  uintptr_t pad[4];
 } z_owned_info_t;
 typedef struct z_info_t {
   const struct z_owned_info_t *_0;
@@ -83,8 +79,8 @@ typedef struct z_info_t {
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -93,19 +89,20 @@ typedef struct z_info_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_subscriber_t {
-  uint64_t _0[Z_SUBSCRIBER_PADDING_U64];
+  uintptr_t _0[1];
 } z_owned_subscriber_t;
 /**
  * Options passed to the :c:func:`z_put_ext` function.
  */
 typedef struct z_put_options_t {
-  uint64_t _0[Z_WRITE_OPTIONS_PADDING_U64];
+  uint64_t align;
+  uintptr_t pad[5];
 } z_put_options_t;
 /**
  * An owned zenoh queryable.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by borrowing it using `z_X_borrow(&val)`.
- * The `z_borrow(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_borrow(&val)`.
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -114,5 +111,5 @@ typedef struct z_put_options_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_queryable_t {
-  uint64_t _0[Z_QUERYABLE_PADDING_U64];
+  uintptr_t _0[1];
 } z_owned_queryable_t;
