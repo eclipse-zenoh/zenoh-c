@@ -186,15 +186,18 @@ pub struct z_info_t<'a>(&'a z_owned_info_t);
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_owned_info_t(pub(crate) [usize; 6]);
+pub struct z_owned_info_t {
+    align: [u64; 2],
+    pad: [usize; 4],
+}
 impl AsRef<Option<InfoProperties>> for z_owned_info_t {
     fn as_ref(&self) -> &Option<InfoProperties> {
-        unsafe { std::mem::transmute(&self.0) }
+        unsafe { std::mem::transmute(self) }
     }
 }
 impl AsMut<Option<InfoProperties>> for z_owned_info_t {
     fn as_mut(&mut self) -> &mut Option<InfoProperties> {
-        unsafe { std::mem::transmute(&mut self.0) }
+        unsafe { std::mem::transmute(self) }
     }
 }
 

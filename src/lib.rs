@@ -509,8 +509,8 @@ pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
     let session = (&*session.0).as_ref();
     match session {
-        Some(s) => z_owned_info_t(std::mem::transmute(s.info().wait())),
-        None => z_owned_info_t(std::mem::transmute(None::<InfoProperties>)),
+        Some(s) => std::mem::transmute(s.info().wait()),
+        None => std::mem::transmute(None::<InfoProperties>),
     }
 }
 

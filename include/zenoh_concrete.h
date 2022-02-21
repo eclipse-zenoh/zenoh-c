@@ -70,7 +70,8 @@ typedef struct z_session_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_info_t {
-  uintptr_t _0[6];
+  uint64_t align[2];
+  uintptr_t pad[4];
 } z_owned_info_t;
 typedef struct z_info_t {
   const struct z_owned_info_t *_0;
