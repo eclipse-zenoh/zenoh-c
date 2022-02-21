@@ -13,6 +13,12 @@
  */
 #include <stdio.h>
 #include <string.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
 #include "zenoh.h"
 
 char *expr = "/demo/example/zenoh-c-eval";
@@ -58,8 +64,13 @@ int main(int argc, char **argv)
 
     printf("Enter 'q' to quit...\n");
     char c = 0;
-    while (getchar() != 'q')
+    while (c != 'q')
     {
+        c = getchar();
+        if (c == -1)
+        {
+            sleep(1);
+        }
     }
 
     z_queryable_close(z_move(qable));

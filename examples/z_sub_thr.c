@@ -21,7 +21,7 @@ volatile unsigned long long int count = 0;
 volatile clock_t start;
 volatile clock_t stop;
 
-void print_stats(volatile time_t *start, volatile time_t *stop)
+void print_stats(volatile clock_t *start, volatile clock_t *stop)
 {
     clock_t elapsed = stop - start;
     double thpt = N * (double)CLOCKS_PER_SEC / (double)(elapsed);

@@ -12,6 +12,12 @@
  *   ADLINK zenoh team, <zenoh@adlink-labs.tech>
  */
 #include <stdio.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
 #include "zenoh.h"
 
 void data_handler(const z_sample_t *sample, const void *arg)
@@ -58,10 +64,18 @@ int main(int argc, char **argv)
 
     printf("Press <enter> to pull data...\n");
     char c = 0;
-    while (getchar() != 'q')
-    {
-        z_pull(&sub);
-    }
+   while (c != 'q')
+     {
+         c = getchar();
+         if (c == -1)
+         {
+             sleep(1);
+         }
+         else
+         {
+             z_pull(&sub);
+         }
+     }
 
     z_subscriber_close(z_move(sub));
     z_close(z_move(s));
