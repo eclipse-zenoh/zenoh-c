@@ -14,7 +14,7 @@
 [package]
 name = "zenoh-c"
 version = "@CARGO_PROJECT_VERSION@"
-repository = "https://github.com/eclipse-zenoh/zenoh-c"
+repository = "https://github.com/ZettaScaleLabs/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
     "kydos <angelo@icorsaro.net>",
@@ -37,8 +37,8 @@ complete_n = ["zenoh/complete_n"]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh" }
+zenoh = { git = "https://github.com/ZettaScaleLabs/zenoh", branch = "config/cleanup" }
+zenoh-util = { git = "https://github.com/ZettaScaleLabs/zenoh", branch = "config/cleanup" }
 async-std = "=1.10.0"
 futures = "0.3.12"
 async-trait = "0.1.42"

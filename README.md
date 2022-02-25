@@ -1,6 +1,6 @@
 ![zenoh banner](./zenoh-dragon.png)
 
-[![CI](https://github.com/eclipse-zenoh/zenoh-c/workflows/CI/badge.svg)](https://github.com/eclipse-zenoh/zenoh-c/actions?query=workflow%3A%22CI%22)
+[![CI](https://github.com/ZettaScaleLabs/zenoh-c/workflows/CI/badge.svg)](https://github.com/ZettaScaleLabs/zenoh-c/actions?query=workflow%3A%22CI%22)
 [![Documentation Status](https://readthedocs.org/projects/zenoh-c/badge/?version=latest)](https://zenoh-c.readthedocs.io/en/latest/?badge=latest)
 [![Gitter](https://badges.gitter.im/atolab/zenoh.svg)](https://gitter.im/atolab/zenoh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![License](https://img.shields.io/badge/License-EPL%202.0-blue)](https://choosealicense.com/licenses/epl-2.0/)
@@ -32,11 +32,11 @@ that is able to scale down to extremely constrainded devices and networks.
 2. Clone the [source] with `git`:
 
    ```sh
-   git clone https://github.com/eclipse-zenoh/zenoh-c.git
+   git clone https://github.com/ZettaScaleLabs/zenoh-c.git
    cd rust
    ```
 
-[source]: https://github.com/eclipse-zenoh/zenoh-c
+[source]: https://github.com/ZettaScaleLabs/zenoh-c
 
 3. Build and install:
 
@@ -105,5 +105,5 @@ Note that some `z_X_t` typed values can be constructed without needing to `z_bor
 The examples have been written with C11 in mind, using the conventions we encourage you to follow.
 
 Finally, we strongly advise that you refrain from using structure field that starts with `_`:
-* We try to maintain a common API between `zenoh-c` and [`zenoh-pico`](https://github.com/eclipse-zenoh/zenoh-pico), such that porting code from one to the other is, ideally, trivial. However, some types must have distinct representations in either library, meaning that using these representations explicitly will get you in trouble when porting.
+* We try to maintain a common API between `zenoh-c` and [`zenoh-pico`](https://github.com/ZettaScaleLabs/zenoh-pico), such that porting code from one to the other is, ideally, trivial. However, some types must have distinct representations in either library, meaning that using these representations explicitly will get you in trouble when porting.
 * We reserve the right to change the memory layout of any type which has `_`-prefixed fields, so trying to use them might cause your code to break on updates.

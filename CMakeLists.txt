@@ -3,7 +3,7 @@ project(
 	zenohc 
 	VERSION 0.6.0.0
 	DESCRIPTION "The C bindings for Zenoh"
-	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
+	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-c"
 	LANGUAGES C
 )
 set(CARGO_PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
