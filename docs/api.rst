@@ -113,14 +113,14 @@ session configuration and the associated accepted values.
     - Accepted values : ``"peer"``, ``"client"``.
     - Default value : ``"peer"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_PEER_KEY
+.. c:var:: const unsigned int ZN_CONFIG_CONNECT_KEY
 
   The locator of a peer to connect to.
     - Accepted values : ``<locator>`` (ex: ``"tcp/10.10.10.10:7447"``).
     - Default value : None.
     - Multiple values accepted.
 
-.. c:var:: const unsigned int ZN_CONFIG_LISTENER_KEY
+.. c:var:: const unsigned int ZN_CONFIG_LISTEN_KEY
 
   A locator to listen on.
 

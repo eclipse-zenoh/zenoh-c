@@ -49,9 +49,9 @@ pub static ZN_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
 #[no_mangle]
 pub static ZN_CONFIG_MODE_KEY: c_uint = config::ZN_MODE_KEY as c_uint;
 #[no_mangle]
-pub static ZN_CONFIG_PEER_KEY: c_uint = config::ZN_PEER_KEY as c_uint;
+pub static ZN_CONFIG_CONNECT_KEY: c_uint = config::ZN_CONNECT_KEY as c_uint;
 #[no_mangle]
-pub static ZN_CONFIG_LISTENER_KEY: c_uint = config::ZN_LISTENER_KEY as c_uint;
+pub static ZN_CONFIG_LISTEN_KEY: c_uint = config::ZN_LISTEN_KEY as c_uint;
 #[no_mangle]
 pub static ZN_CONFIG_USER_KEY: c_uint = config::ZN_USER_KEY as c_uint;
 #[no_mangle]

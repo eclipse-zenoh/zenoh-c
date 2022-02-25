@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[2]);
+        z_config_set(z_loan(config), ZN_CONFIG_CONNECT_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
@@ -64,18 +64,18 @@ int main(int argc, char **argv)
 
     printf("Press <enter> to pull data...\n");
     char c = 0;
-   while (c != 'q')
-     {
-         c = getchar();
-         if (c == -1)
-         {
-             sleep(1);
-         }
-         else
-         {
-             z_pull(&sub);
-         }
-     }
+    while (c != 'q')
+    {
+        c = getchar();
+        if (c == -1)
+        {
+            sleep(1);
+        }
+        else
+        {
+            z_pull(&sub);
+        }
+    }
 
     z_subscriber_close(z_move(sub));
     z_close(z_move(s));

@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[2]);
+        z_config_set(z_loan(config), ZN_CONFIG_CONNECT_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
