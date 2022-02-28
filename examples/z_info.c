@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 1)
     {
-        z_config_set(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]);
+        z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]);
     }
 
     printf("Openning session...\n");
