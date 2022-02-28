@@ -271,16 +271,10 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: z_string_t) -> z_
     }
 }
 
-/// Inserts a property with a given key to a properties map.
-/// If a property with the same key already exists in the properties map, it is replaced.
-///
-/// Parameters:
-///   config: A pointer to the properties map.
-///   key: The key of the property to add.
-///   value: The value of the property to add.
+/// Inserts a JSON-serialized `value` at the `key` position of the configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn z_config_set(
+pub unsafe extern "C" fn z_config_insert_json(
     mut config: z_config_t,
     key: z_string_t,
     value: z_string_t,

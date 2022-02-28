@@ -451,6 +451,10 @@ struct z_owned_config_t z_config_from_str(const char *s);
  */
 struct z_owned_string_t z_config_get(struct z_config_t config, z_string_t key);
 /**
+ * Inserts a JSON-serialized `value` at the `key` position of the configuration.
+ */
+bool z_config_insert_json(struct z_config_t config, z_string_t key, z_string_t value);
+/**
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
 struct z_config_t z_config_loan(const struct z_owned_config_t *s);
@@ -471,16 +475,6 @@ struct z_owned_config_t z_config_new(void);
  * Constructs a default configuration peer mode zenoh session.
  */
 struct z_owned_config_t z_config_peer(void);
-/**
- * Inserts a property with a given key to a properties map.
- * If a property with the same key already exists in the properties map, it is replaced.
- *
- * Parameters:
- *   config: A pointer to the properties map.
- *   key: The key of the property to add.
- *   value: The value of the property to add.
- */
-bool z_config_set(struct z_config_t config, z_string_t key, z_string_t value);
 /**
  * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
