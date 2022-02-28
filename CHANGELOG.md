@@ -1,1 +1,1 @@
-All changes for each release are tracked via [GitHub Releases](https://github.com/ZettaScaleLabs/zenoh-c/releases).
+All changes for each release are tracked via [GitHub Releases](https://github.com/eclipse-zenoh/zenoh-c/releases).

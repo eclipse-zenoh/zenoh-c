@@ -603,8 +603,8 @@ struct WriteOptions {
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
-    align: u64,
-    pad: [usize; 5],
+    _align: u64,
+    _pad: [usize; 5],
 }
 
 #[repr(C)]

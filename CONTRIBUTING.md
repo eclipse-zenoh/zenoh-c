@@ -22,7 +22,7 @@ more.
 
 The project maintains the following source code repositories
 
-* https://github.com/ZettaScaleLabs
+* https://github.com/eclipse-zenoh
 
 ## Eclipse Contributor Agreement
 

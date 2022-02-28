@@ -195,8 +195,8 @@ pub struct z_info_t<'a>(&'a z_owned_info_t);
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_owned_info_t {
-    align: [u64; 2],
-    pad: [usize; 4],
+    _align: [u64; 2],
+    _pad: [usize; 4],
 }
 impl AsRef<Option<InfoProperties>> for z_owned_info_t {
     fn as_ref(&self) -> &Option<InfoProperties> {

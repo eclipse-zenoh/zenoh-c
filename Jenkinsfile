@@ -41,7 +41,7 @@ pipeline {
                   extensions: [],
                   gitTool: 'Default',
                   submoduleCfg: [],
-                  userRemoteConfigs: [[url: 'https://github.com/ZettaScaleLabs/zenoh-c.git']]
+                  userRemoteConfigs: [[url: 'https://github.com/eclipse-zenoh/zenoh-c.git']]
                 ])
       }
     }
@@ -148,7 +148,7 @@ pipeline {
             fi
             ssh genie.zenoh@projects-storage.eclipse.org mkdir -p ${DOWNLOAD_DIR}
             COMMIT_ID=`git log -n1 --format="%h"`
-            echo "https://github.com/ZettaScaleLabs/zenoh/tree/${COMMIT_ID}" > _git_commit_${COMMIT_ID}.txt
+            echo "https://github.com/eclipse-zenoh/zenoh/tree/${COMMIT_ID}" > _git_commit_${COMMIT_ID}.txt
             rustc --version > _rust_toolchain_${RUST_TOOLCHAIN}.txt
             scp _*.txt genie.zenoh@projects-storage.eclipse.org:${DOWNLOAD_DIR}/
           '''

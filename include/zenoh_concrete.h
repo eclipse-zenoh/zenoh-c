@@ -70,8 +70,8 @@ typedef struct z_session_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_info_t {
-  uint64_t align[2];
-  uintptr_t pad[4];
+  uint64_t _align[2];
+  uintptr_t _pad[4];
 } z_owned_info_t;
 typedef struct z_info_t {
   const struct z_owned_info_t *_0;
@@ -95,8 +95,8 @@ typedef struct z_owned_subscriber_t {
  * Options passed to the :c:func:`z_put_ext` function.
  */
 typedef struct z_put_options_t {
-  uint64_t align;
-  uintptr_t pad[5];
+  uint64_t _align;
+  uintptr_t _pad[5];
 } z_put_options_t;
 /**
  * An owned zenoh queryable.
