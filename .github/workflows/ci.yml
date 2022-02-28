@@ -56,13 +56,18 @@ jobs:
           command: fmt
           args: -- --check
 
-      - name: make
-        if: ${{ runner.os != 'Windows' }}
-        run: make
+      - name: build
+        shell: bash
+        run: |
+          mkdir -p build && cd build 
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build .
 
       - name: make examples
-        if: ${{ runner.os != 'Windows' }}
-        run: make examples
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target examples
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2

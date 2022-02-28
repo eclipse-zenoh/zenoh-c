@@ -42,7 +42,7 @@ that is able to scale down to extremely constrainded devices and networks.
 
   ```bash
   $ cd /path/to/zenoh-c
-  $ mkdir -p build && cd build #
+  $ mkdir -p build && cd build 
   $ cmake -DCMAKE_BUILD_TYPE=Release ..
   $ cmake --build .
   $ cmake --build . --target install # on linux use **sudo**
