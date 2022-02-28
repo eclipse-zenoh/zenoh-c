@@ -3,7 +3,7 @@ project(
 	zenohc 
 	VERSION 0.6.0.0
 	DESCRIPTION "The C bindings for Zenoh"
-	HOMEPAGE_URL "https://github.com/ZettaScaleLabs/zenoh-c"
+	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
 )
 set(CARGO_PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
@@ -47,14 +47,14 @@ add_custom_target(cargo COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUST
 
 
 if(APPLE)
-	set(libzenohc "${CMAKE_BINARY_DIR}/libzenoh.dylib")
-	set(libzenohc_static "${CMAKE_BINARY_DIR}/libzenoh.a")
+	set(libzenohc "${CMAKE_BINARY_DIR}/libzenohc.dylib")
+	set(libzenohc_static "${CMAKE_BINARY_DIR}/libzenohc.a")
 elseif(UNIX)
-	set(libzenohc "${CMAKE_BINARY_DIR}/libzenoh.so")
-	set(libzenohc_static "${CMAKE_BINARY_DIR}/libzenoh.a")
+	set(libzenohc "${CMAKE_BINARY_DIR}/libzenohc.so")
+	set(libzenohc_static "${CMAKE_BINARY_DIR}/libzenohc.a")
 elseif(WIN32)
-	set(libzenohc "${CMAKE_BINARY_DIR}/zenoh.dll")
-	set(libzenohc_static "${CMAKE_BINARY_DIR}/zenoh.lib")
+	set(libzenohc "${CMAKE_BINARY_DIR}/zenohc.dll")
+	set(libzenohc_static "${CMAKE_BINARY_DIR}/zenohc.lib")
 endif()
 
 add_library(zenohc_static STATIC IMPORTED)

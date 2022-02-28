@@ -134,15 +134,12 @@ impl SplitGuide {
         }
     }
     fn requested_ids(&self) -> impl Iterator<Item = &str> {
-        self.rules
-            .iter()
-            .map(|(_, rules)| {
-                rules.iter().filter_map(|r| match r {
-                    SplitRule::Brand(_) => None,
-                    SplitRule::Exclusive(s) | SplitRule::Shared(s) => Some(s.as_str()),
-                })
+        self.rules.iter().flat_map(|(_, rules)| {
+            rules.iter().filter_map(|r| match r {
+                SplitRule::Brand(_) => None,
+                SplitRule::Exclusive(s) | SplitRule::Shared(s) => Some(s.as_str()),
             })
-            .flatten()
+        })
     }
 }
 
@@ -243,38 +240,34 @@ impl<'a> Token<'a> {
         }
     }
     fn function(s: &'a str) -> Option<Self> {
-        s.until_incl(";")
-            .map(|span| {
-                span.contains('(').then(|| {
-                    let mut iter = span.chars().rev();
-                    let id_end = iter
-                        .by_ref()
-                        .take_while(|&c| c != '(')
-                        .fold(1, |acc, c| acc + c.len_utf8());
-                    let id_len = iter
-                        .take_while(|&c| c.is_alphanumeric() || c == '_')
-                        .fold(0, |acc, c| acc + c.len_utf8());
-                    let id = &span[(span.len() - id_end - id_len)..(span.len() - id_end)];
-                    Token::new(TokenType::Function, id, span)
-                })
+        s.until_incl(";").and_then(|span| {
+            span.contains('(').then(|| {
+                let mut iter = span.chars().rev();
+                let id_end = iter
+                    .by_ref()
+                    .take_while(|&c| c != '(')
+                    .fold(1, |acc, c| acc + c.len_utf8());
+                let id_len = iter
+                    .take_while(|&c| c.is_alphanumeric() || c == '_')
+                    .fold(0, |acc, c| acc + c.len_utf8());
+                let id = &span[(span.len() - id_end - id_len)..(span.len() - id_end)];
+                Token::new(TokenType::Function, id, span)
             })
-            .flatten()
+        })
     }
     fn r#const(s: &'a str) -> Option<Self> {
-        s.until_incl(";")
-            .map(|span| {
-                span.contains("const").then(|| {
-                    let id_len = span
-                        .chars()
-                        .rev()
-                        .skip(1)
-                        .take_while(|&c| c.is_alphanumeric() || c == '_')
-                        .fold(0, |acc, c| acc + c.len_utf8());
-                    let id = &span[(span.len() - 1 - id_len)..(span.len() - 1)];
-                    Token::new(TokenType::Const, id, span)
-                })
+        s.until_incl(";").and_then(|span| {
+            span.contains("const").then(|| {
+                let id_len = span
+                    .chars()
+                    .rev()
+                    .skip(1)
+                    .take_while(|&c| c.is_alphanumeric() || c == '_')
+                    .fold(0, |acc, c| acc + c.len_utf8());
+                let id = &span[(span.len() - 1 - id_len)..(span.len() - 1)];
+                Token::new(TokenType::Const, id, span)
             })
-            .flatten()
+        })
     }
     fn whitespace(s: &'a str) -> Option<Self> {
         let mut len = 0;

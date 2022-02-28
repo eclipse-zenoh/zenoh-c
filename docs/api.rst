@@ -60,11 +60,11 @@ Types
 
 Possible flags in a whatami bitmask : 
 
-  .. c:var:: const unsigned int ZN_ROUTER
+  .. c:var:: const unsigned int Z_ROUTER
 
-  .. c:var:: const unsigned int ZN_PEER
+  .. c:var:: const unsigned int Z_PEER
 
-  .. c:var:: const unsigned int ZN_CLIENT
+  .. c:var:: const unsigned int Z_CLIENT
 
 .. autocstruct:: zenoh_commons.h::z_owned_hello_t
 
@@ -106,21 +106,21 @@ Session configuration
 The following constants define the several configuration keys accepted for a zenoh 
 session configuration and the associated accepted values.
 
-.. c:var:: const unsigned int ZN_CONFIG_MODE_KEY
+.. c:var:: const unsigned int Z_CONFIG_MODE_KEY
 
   The library mode.
 
     - Accepted values : ``"peer"``, ``"client"``.
     - Default value : ``"peer"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_CONNECT_KEY
+.. c:var:: const unsigned int Z_CONFIG_CONNECT_KEY
 
   The locator of a peer to connect to.
     - Accepted values : ``<locator>`` (ex: ``"tcp/10.10.10.10:7447"``).
     - Default value : None.
     - Multiple values accepted.
 
-.. c:var:: const unsigned int ZN_CONFIG_LISTEN_KEY
+.. c:var:: const unsigned int Z_CONFIG_LISTEN_KEY
 
   A locator to listen on.
 
@@ -128,14 +128,14 @@ session configuration and the associated accepted values.
     - Default value : None.
     - Multiple values accepted.
 
-.. c:var:: const unsigned int ZN_CONFIG_USER_KEY
+.. c:var:: const unsigned int Z_CONFIG_USER_KEY
 
   The user name to use for authentication.
 
     - Accepted values : ``<string>``.
     - Default value : None.
 
-.. c:var:: const unsigned int ZN_CONFIG_PASSWORD_KEY
+.. c:var:: const unsigned int Z_CONFIG_PASSWORD_KEY
 
   The password to use for authentication.
 
@@ -143,49 +143,49 @@ session configuration and the associated accepted values.
     - Default value : None.
 
 
-.. c:var:: const unsigned int ZN_CONFIG_MULTICAST_SCOUTING_KEY
+.. c:var:: const unsigned int Z_CONFIG_MULTICAST_SCOUTING_KEY
 
   Activates/Desactivates multicast scouting.
 
     - Accepted values : ``"true"``, ``"false"``.
     - Default value : ``"true"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_MULTICAST_INTERFACE_KEY
+.. c:var:: const unsigned int Z_CONFIG_MULTICAST_INTERFACE_KEY
 
   The network interface to use for multicast scouting.
 
     - Accepted values : ``"auto"``, ``<ip address>``, ``<interface name>``.
     - Default value : ``"auto"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_MULTICAST_ADDRESS_KEY
+.. c:var:: const unsigned int Z_CONFIG_MULTICAST_ADDRESS_KEY
 
   The multicast address and ports to use for multicast scouting.
 
     - Accepted values : ``<ip address>:<port>``.
     - Default value : ``"224.0.0.224:7447"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_SCOUTING_TIMEOUT_KEY
+.. c:var:: const unsigned int Z_CONFIG_SCOUTING_TIMEOUT_KEY
 
   In client mode, the period dedicated to scouting a router before failing.
 
     - Accepted values : ``<float in seconds>``.
     - Default value : ``"3.0"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_SCOUTING_DELAY_KEY
+.. c:var:: const unsigned int Z_CONFIG_SCOUTING_DELAY_KEY
 
   In peer mode, the period dedicated to scouting first remote peers before doing anything else.
 
     - Accepted values : ``<float in seconds>``.
     - Default value : ``"0.2"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_ADD_TIMESTAMP_KEY
+.. c:var:: const unsigned int Z_CONFIG_ADD_TIMESTAMP_KEY
 
   Indicates if data messages should be timestamped.
 
     - Accepted values : ``"true"``, ``"false"``.
     - Default value : ``"false"``.
 
-.. c:var:: const unsigned int ZN_CONFIG_LOCAL_ROUTING_KEY
+.. c:var:: const unsigned int Z_CONFIG_LOCAL_ROUTING_KEY
 
   Indicates if local writes/queries should reach local subscribers/queryables.
 
@@ -310,11 +310,11 @@ Types
 
   Predefined values for :c:member:`z_query_target_t.kind`: 
 
-    .. c:var:: const unsigned int ZN_QUERYABLE_ALL_KINDS
+    .. c:var:: const unsigned int Z_QUERYABLE_ALL_KINDS
 
-    .. c:var:: const unsigned int ZN_QUERYABLE_EVAL
+    .. c:var:: const unsigned int Z_QUERYABLE_EVAL
 
-    .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
+    .. c:var:: const unsigned int Z_QUERYABLE_STORAGE
   
 .. autocfunction:: zenoh_commons.h::z_query_target_default
 
@@ -366,9 +366,9 @@ Functions
 
   Predefined values for ``kind``: 
 
-    .. c:var:: const unsigned int ZN_QUERYABLE_EVAL
+    .. c:var:: const unsigned int Z_QUERYABLE_EVAL
 
-    .. c:var:: const unsigned int ZN_QUERYABLE_STORAGE
+    .. c:var:: const unsigned int Z_QUERYABLE_STORAGE
 
 .. autocfunction:: zenoh_commons.h::z_send_reply
 .. autocfunction:: zenoh_commons.h::z_queryable_check

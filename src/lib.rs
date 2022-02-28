@@ -22,8 +22,9 @@ use std::borrow::Cow;
 use std::ffi::{c_void, CStr};
 use std::mem::ManuallyDrop;
 use std::slice;
+use validated_struct::ValidatedMap;
 use zenoh::config::whatami::WhatAmIMatcher;
-use zenoh::config::{Config, IntKeyMapLike, WhatAmI};
+use zenoh::config::{Config, WhatAmI};
 use zenoh::info::InfoProperties;
 use zenoh::net::protocol::io::SplitBuffer;
 use zenoh::prelude::{Encoding, Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
@@ -254,28 +255,18 @@ pub extern "C" fn z_config_new() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(Config::default())))) }
 }
 
-/// Gets the number of available keys for configuration.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_len(config: z_config_t) -> c_uint {
-    config
-        .as_ref()
-        .as_ref()
-        .map(|c| c.ikeys().len() as c_uint)
-        .unwrap_or(0)
-}
-
 /// Gets the property with the given integer key from the configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_get(config: z_config_t, key: c_uint) -> z_owned_string_t {
-    let val = config
-        .as_ref()
-        .as_ref()
-        .map(|c| c.iget(key as u64))
-        .flatten();
+pub unsafe extern "C" fn z_config_get(config: z_config_t, key: z_string_t) -> z_owned_string_t {
+    let key = match CStr::from_ptr(key).to_str() {
+        Ok(s) => s,
+        Err(_) => return z_owned_string_t::default(),
+    };
+
+    let val = config.as_ref().as_ref().and_then(|c| c.get_json(key).ok());
     match val {
-        Some(val) => val.into_owned().into(),
+        Some(val) => val.into(),
         None => z_owned_string_t::default(),
     }
 }
@@ -289,13 +280,19 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: c_uint) -> z_owne
 ///   value: The value of the property to add.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn z_config_set(mut config: z_config_t, key: c_ulong, value: z_string_t) {
+pub unsafe extern "C" fn z_config_set(
+    mut config: z_config_t,
+    key: z_string_t,
+    value: z_string_t,
+) -> bool {
+    let key = CStr::from_ptr(key);
     let value = CStr::from_ptr(value);
     config
         .as_mut()
         .as_mut()
         .expect("invalid config")
-        .iset(key as u64, value.to_string_lossy());
+        .insert_json5(key.to_string_lossy(), &value.to_string_lossy())
+        .is_ok()
 }
 
 /// Frees `config`, invalidating it for double-free safety.
@@ -713,8 +710,7 @@ pub unsafe extern "C" fn z_declare_publication(session: z_session_t, keyexpr: z_
     session
         .as_ref()
         .as_ref()
-        .map(|s| s.declare_publication(keyexpr).wait().ok())
-        .flatten()
+        .and_then(|s| s.declare_publication(keyexpr).wait().ok())
         .is_some()
 }
 

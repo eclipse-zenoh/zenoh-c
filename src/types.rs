@@ -15,7 +15,6 @@ use libc::{c_char, c_uint, c_ulong, size_t};
 use std::ffi::{CStr, CString};
 use zenoh::{
     buf::ZBuf,
-    config,
     config::WhatAmI,
     info::{self, InfoProperties},
     net::protocol::{core::SubInfo, io::SplitBuffer},
@@ -31,54 +30,61 @@ use zenoh::{
 };
 
 #[no_mangle]
-pub static ZN_ROUTER: c_uint = WhatAmI::Router as c_uint;
+pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
 #[no_mangle]
-pub static ZN_PEER: c_uint = WhatAmI::Peer as c_uint;
+pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
 #[no_mangle]
-pub static ZN_CLIENT: c_uint = WhatAmI::Client as c_uint;
+pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
 // Flags used in Queryable declaration and in queries
 #[no_mangle]
-pub static ZN_QUERYABLE_ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
+pub static Z_QUERYABLE_ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
 #[no_mangle]
-pub static ZN_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
+pub static Z_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
 #[no_mangle]
-pub static ZN_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
+pub static Z_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
 
-// Properties for zenoh net session configuration
 #[no_mangle]
-pub static ZN_CONFIG_MODE_KEY: c_uint = config::ZN_MODE_KEY as c_uint;
+pub static Z_CONFIG_MODE_KEY: &u8 = unsafe { &*(b"mode\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_CONNECT_KEY: c_uint = config::ZN_CONNECT_KEY as c_uint;
+pub static Z_CONFIG_CONNECT_KEY: &u8 = unsafe { &*(b"connect/endpoints\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_LISTEN_KEY: c_uint = config::ZN_LISTEN_KEY as c_uint;
+pub static Z_CONFIG_LISTEN_KEY: &u8 = unsafe { &*(b"listen/endpoints\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_USER_KEY: c_uint = config::ZN_USER_KEY as c_uint;
+pub static Z_CONFIG_USER_KEY: &u8 =
+    unsafe { &*(b"transport/auth/usrpwd/user\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_PASSWORD_KEY: c_uint = config::ZN_PASSWORD_KEY as c_uint;
+pub static Z_CONFIG_PASSWORD_KEY: &u8 =
+    unsafe { &*(b"transport/auth/usrpwd/password\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_MULTICAST_SCOUTING_KEY: c_uint = config::ZN_MULTICAST_SCOUTING_KEY as c_uint;
+pub static Z_CONFIG_MULTICAST_SCOUTING_KEY: &u8 =
+    unsafe { &*(b"scouting/multicast/enabled\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_MULTICAST_INTERFACE_KEY: c_uint = config::ZN_MULTICAST_INTERFACE_KEY as c_uint;
+pub static Z_CONFIG_MULTICAST_INTERFACE_KEY: &u8 =
+    unsafe { &*(b"scouting/multicast/interface\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: c_uint =
-    config::ZN_MULTICAST_IPV4_ADDRESS_KEY as c_uint;
+pub static Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: &u8 =
+    unsafe { &*(b"scouting/multicast/address\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_SCOUTING_TIMEOUT_KEY: c_uint = config::ZN_SCOUTING_TIMEOUT_KEY as c_uint;
+pub static Z_CONFIG_SCOUTING_TIMEOUT_KEY: &u8 =
+    unsafe { &*(b"scouting/timeout\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_SCOUTING_DELAY_KEY: c_uint = config::ZN_SCOUTING_DELAY_KEY as c_uint;
+pub static Z_CONFIG_SCOUTING_DELAY_KEY: &u8 =
+    unsafe { &*(b"scouting/delay\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_ADD_TIMESTAMP_KEY: c_uint = config::ZN_ADD_TIMESTAMP_KEY as c_uint;
+pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &u8 =
+    unsafe { &*(b"add_timestamp\0".as_ptr() as *const u8) };
 #[no_mangle]
-pub static ZN_CONFIG_LOCAL_ROUTING_KEY: c_uint = config::ZN_LOCAL_ROUTING_KEY as c_uint;
+pub static Z_CONFIG_LOCAL_ROUTING_KEY: &u8 =
+    unsafe { &*(b"local_routing\0".as_ptr() as *const u8) };
 
 // Properties returned by z_info()
 #[no_mangle]
-pub static ZN_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
+pub static Z_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
 #[no_mangle]
-pub static ZN_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
+pub static Z_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
 #[no_mangle]
-pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
+pub static Z_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
 
 pub trait FromRaw<T> {
     fn from_raw(r: T) -> Self;
@@ -228,7 +234,7 @@ pub extern "C" fn z_info_loan(info: &z_owned_info_t) -> z_info_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_info_get(info: z_info_t, key: u64) -> z_owned_string_t {
     let info = info.0.as_ref();
-    match info.as_ref().map(|i| i.get(&key)).flatten() {
+    match info.as_ref().and_then(|i| i.get(&key)) {
         None => z_owned_string_t::default(),
         Some(s) => s.as_str().into(),
     }
@@ -702,7 +708,7 @@ impl From<Hello> for z_owned_hello_t {
         z_owned_hello_t {
             whatami: match h.whatami {
                 Some(whatami) => whatami as c_uint,
-                None => ZN_ROUTER,
+                None => Z_ROUTER,
             },
             pid: h.pid.into(),
             locators: h.locators.into(),

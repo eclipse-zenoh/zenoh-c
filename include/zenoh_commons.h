@@ -377,27 +377,27 @@ typedef struct z_subinfo_t {
   struct z_period_t period;
 } z_subinfo_t;
 #define z_period_NONE (z_period_t){ .origin = 0, .period = 0, .duration = 0 }
-extern const unsigned int ZN_ROUTER;
-extern const unsigned int ZN_PEER;
-extern const unsigned int ZN_CLIENT;
-extern const unsigned int ZN_QUERYABLE_ALL_KINDS;
-extern const unsigned int ZN_QUERYABLE_STORAGE;
-extern const unsigned int ZN_QUERYABLE_EVAL;
-extern const unsigned int ZN_CONFIG_MODE_KEY;
-extern const unsigned int ZN_CONFIG_CONNECT_KEY;
-extern const unsigned int ZN_CONFIG_LISTEN_KEY;
-extern const unsigned int ZN_CONFIG_USER_KEY;
-extern const unsigned int ZN_CONFIG_PASSWORD_KEY;
-extern const unsigned int ZN_CONFIG_MULTICAST_SCOUTING_KEY;
-extern const unsigned int ZN_CONFIG_MULTICAST_INTERFACE_KEY;
-extern const unsigned int ZN_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
-extern const unsigned int ZN_CONFIG_SCOUTING_TIMEOUT_KEY;
-extern const unsigned int ZN_CONFIG_SCOUTING_DELAY_KEY;
-extern const unsigned int ZN_CONFIG_ADD_TIMESTAMP_KEY;
-extern const unsigned int ZN_CONFIG_LOCAL_ROUTING_KEY;
-extern const unsigned int ZN_INFO_PID_KEY;
-extern const unsigned int ZN_INFO_PEER_PID_KEY;
-extern const unsigned int ZN_INFO_ROUTER_PID_KEY;
+extern const unsigned int Z_ROUTER;
+extern const unsigned int Z_PEER;
+extern const unsigned int Z_CLIENT;
+extern const unsigned int Z_QUERYABLE_ALL_KINDS;
+extern const unsigned int Z_QUERYABLE_STORAGE;
+extern const unsigned int Z_QUERYABLE_EVAL;
+extern const uint8_t *Z_CONFIG_MODE_KEY;
+extern const uint8_t *Z_CONFIG_CONNECT_KEY;
+extern const uint8_t *Z_CONFIG_LISTEN_KEY;
+extern const uint8_t *Z_CONFIG_USER_KEY;
+extern const uint8_t *Z_CONFIG_PASSWORD_KEY;
+extern const uint8_t *Z_CONFIG_MULTICAST_SCOUTING_KEY;
+extern const uint8_t *Z_CONFIG_MULTICAST_INTERFACE_KEY;
+extern const uint8_t *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
+extern const uint8_t *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
+extern const uint8_t *Z_CONFIG_SCOUTING_DELAY_KEY;
+extern const uint8_t *Z_CONFIG_ADD_TIMESTAMP_KEY;
+extern const uint8_t *Z_CONFIG_LOCAL_ROUTING_KEY;
+extern const unsigned int Z_INFO_PID_KEY;
+extern const unsigned int Z_INFO_PEER_PID_KEY;
+extern const unsigned int Z_INFO_ROUTER_PID_KEY;
 /**
  * Returns `true` if `b` is valid.
  */
@@ -449,11 +449,7 @@ struct z_owned_config_t z_config_from_str(const char *s);
 /**
  * Gets the property with the given integer key from the configuration.
  */
-struct z_owned_string_t z_config_get(struct z_config_t config, unsigned int key);
-/**
- * Gets the number of available keys for configuration.
- */
-unsigned int z_config_len(struct z_config_t config);
+struct z_owned_string_t z_config_get(struct z_config_t config, z_string_t key);
 /**
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
@@ -484,7 +480,7 @@ struct z_owned_config_t z_config_peer(void);
  *   key: The key of the property to add.
  *   value: The value of the property to add.
  */
-void z_config_set(struct z_config_t config, unsigned long key, z_string_t value);
+bool z_config_set(struct z_config_t config, z_string_t key, z_string_t value);
 /**
  * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
