@@ -74,7 +74,7 @@ void fprinthello(FILE *stream, const z_owned_hello_t *hello)
     fprintf(stream, " }");
 }
 
-int main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
+int main(int argc, char **argv)
 {
     z_init_logger();
 
