@@ -37,9 +37,9 @@ complete_n = ["zenoh/complete_n"]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-zenoh = { git = "https://github.com/ZettaScaleLabs/zenoh", branch = "config/cleanup" }
-zenoh-util = { git = "https://github.com/ZettaScaleLabs/zenoh", branch = "config/cleanup" }
-zenoh-protocol-core = { git = "https://github.com/ZettaScaleLabs/zenoh", branch = "config/cleanup" }
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh" }
+zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh" }
 async-std = "=1.10.0"
 futures = "0.3.12"
 async-trait = "0.1.42"
