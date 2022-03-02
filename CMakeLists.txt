@@ -68,21 +68,6 @@ message(STATUS "zenoh-c dynamic library will be built at: ${libzenohc}")
 set_property(TARGET zenohc PROPERTY IMPORTED_LOCATION ${libzenohc})
 target_include_directories(zenohc INTERFACE "${CMAKE_SOURCE_DIR}/include")
 
-macro(ADD_OSX_FRAMEWORK fwname target)
-	find_library(FRAMEWORK_${fwname}
-		NAMES ${fwname}
-		PATHS ${CMAKE_OSX_SYSROOT}/System/Library
-		PATH_SUFFIXES Frameworks
-		NO_DEFAULT_PATH
-		)
-	if(${FRAMEWORK_${fwname}} STREQUAL FRAMEWORK_${fwname}-NOTFOUND)
-		MESSAGE(ERROR ": Framework ${fwname} not found")
-	else()
-		TARGET_LINK_LIBRARIES(${target} PUBLIC "${FRAMEWORK_${fwname}}/${fwname}")
-		MESSAGE(STATUS "Framework ${fwname} found at ${FRAMEWORK_${fwname}}")
-	endif()
-endmacro(ADD_OSX_FRAMEWORK)
-
 if(APPLE OR UNIX OR WIN32)
 	file(GLOB files "${CMAKE_SOURCE_DIR}/examples/*.c")
 	add_custom_target(examples)
@@ -96,8 +81,9 @@ if(APPLE OR UNIX OR WIN32)
 		target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
 		target_link_libraries(${target} PUBLIC ${libzenohc_static})
 		if(APPLE)
-			ADD_OSX_FRAMEWORK(Security ${target})
-			ADD_OSX_FRAMEWORK(Foundation ${target})
+			find_library(FFoundation Foundation)
+			find_library(FSecurity Security)
+			target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
 		elseif(UNIX)
 			target_link_libraries(${target} PUBLIC rt pthread m dl)
 		elseif(WIN32)
