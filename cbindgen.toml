@@ -68,7 +68,7 @@ style = "both"
 
 [defines]
 # "target_os = freebsd" = "DEFINE_FREEBSD"
-# "feature = serde" = "DEFINE_SERDE"
+# "feature = complete_n" = "DEFINE_COMPLETE_N"
 
 
 [export]

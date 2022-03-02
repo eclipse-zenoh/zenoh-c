@@ -92,13 +92,6 @@ typedef struct z_owned_subscriber_t {
   uintptr_t _0[1];
 } z_owned_subscriber_t;
 /**
- * Options passed to the :c:func:`z_put_ext` function.
- */
-typedef struct z_put_options_t {
-  uint64_t _align;
-  uintptr_t _pad[5];
-} z_put_options_t;
-/**
  * An owned zenoh queryable.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.

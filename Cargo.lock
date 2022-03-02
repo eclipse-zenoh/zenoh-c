@@ -2026,7 +2026,7 @@ dependencies = [
 [[package]]
 name = "zenoh"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-global-executor",
  "async-std",
@@ -2072,7 +2072,7 @@ dependencies = [
 [[package]]
 name = "zenoh-buffers"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "bincode",
@@ -2102,13 +2102,14 @@ dependencies = [
  "spin 0.9.2",
  "validated_struct 1.0.0",
  "zenoh",
+ "zenoh-protocol-core",
  "zenoh-util",
 ]
 
 [[package]]
 name = "zenoh-cfg-properties"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "zenoh-core",
  "zenoh-macros",
@@ -2117,7 +2118,7 @@ dependencies = [
 [[package]]
 name = "zenoh-collections"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "async-trait",
@@ -2130,7 +2131,7 @@ dependencies = [
 [[package]]
 name = "zenoh-config"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "flume",
  "json5",
@@ -2147,7 +2148,7 @@ dependencies = [
 [[package]]
 name = "zenoh-core"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "anyhow",
  "lazy_static",
@@ -2156,7 +2157,7 @@ dependencies = [
 [[package]]
 name = "zenoh-crypto"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "aes",
  "hmac",
@@ -2169,7 +2170,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "async-trait",
@@ -2187,7 +2188,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-commons"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "async-trait",
@@ -2202,7 +2203,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-tcp"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "async-trait",
@@ -2217,7 +2218,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-tls"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-rustls",
  "async-std",
@@ -2235,7 +2236,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-udp"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "async-trait",
@@ -2252,7 +2253,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-unixsock_stream"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "async-trait",
@@ -2268,7 +2269,7 @@ dependencies = [
 [[package]]
 name = "zenoh-macros"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2280,7 +2281,7 @@ dependencies = [
 [[package]]
 name = "zenoh-plugin-trait"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "libloading",
  "log",
@@ -2293,7 +2294,7 @@ dependencies = [
 [[package]]
 name = "zenoh-protocol"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "log",
  "uhlc",
@@ -2305,7 +2306,7 @@ dependencies = [
 [[package]]
 name = "zenoh-protocol-core"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "hex",
  "lazy_static",
@@ -2318,7 +2319,7 @@ dependencies = [
 [[package]]
 name = "zenoh-sync"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "event-listener",
@@ -2331,7 +2332,7 @@ dependencies = [
 [[package]]
 name = "zenoh-transport"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-global-executor",
  "async-std",
@@ -2357,7 +2358,7 @@ dependencies = [
 [[package]]
 name = "zenoh-util"
 version = "0.6.0-dev.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#54d2b92a30b7befee79505f80ece4348f6f6c986"
+source = "git+https://github.com/ZettaScaleLabs/zenoh?branch=config/cleanup#d7f7f2837b3827aabf7132e4ab0bb73ca3580134"
 dependencies = [
  "async-std",
  "clap",
