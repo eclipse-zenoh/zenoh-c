@@ -82,7 +82,15 @@ macro(ADD_OSX_FRAMEWORK fwname target)
 		MESSAGE(STATUS "Framework ${fwname} found at ${FRAMEWORK_${fwname}}")
 	endif()
 endmacro(ADD_OSX_FRAMEWORK)
-	
+
+if (MSVC)
+    # warning level 4 and all warnings as errors
+    add_compile_options(/W4 /WX)
+else()
+    # lots of warnings and all warnings as errors
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif()
+
 if(APPLE OR UNIX OR WIN32)
 	file(GLOB files "${CMAKE_SOURCE_DIR}/examples/*.c")
 	add_custom_target(examples)

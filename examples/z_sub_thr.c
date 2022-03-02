@@ -28,7 +28,7 @@ void print_stats(volatile clock_t *start, volatile clock_t *stop)
     printf("%f msgs/sec\n", thpt);
 }
 
-void data_handler(const z_sample_t *sample, const void *arg)
+void data_handler(const z_sample_t *sample __attribute__((unused)), const void *arg __attribute__((unused)))
 {
     if (count == 0)
     {

@@ -45,38 +45,40 @@ pub static Z_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
 pub static Z_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
 
 #[no_mangle]
-pub static Z_CONFIG_MODE_KEY: &u8 = unsafe { &*(b"mode\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_CONNECT_KEY: &u8 = unsafe { &*(b"connect/endpoints\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_CONNECT_KEY: &c_char =
+    unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_LISTEN_KEY: &u8 = unsafe { &*(b"listen/endpoints\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_LISTEN_KEY: &c_char =
+    unsafe { &*(b"listen/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_USER_KEY: &u8 =
-    unsafe { &*(b"transport/auth/usrpwd/user\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_USER_KEY: &c_char =
+    unsafe { &*(b"transport/auth/usrpwd/user\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_PASSWORD_KEY: &u8 =
-    unsafe { &*(b"transport/auth/usrpwd/password\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_PASSWORD_KEY: &c_char =
+    unsafe { &*(b"transport/auth/usrpwd/password\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_MULTICAST_SCOUTING_KEY: &u8 =
-    unsafe { &*(b"scouting/multicast/enabled\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_MULTICAST_SCOUTING_KEY: &c_char =
+    unsafe { &*(b"scouting/multicast/enabled\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_MULTICAST_INTERFACE_KEY: &u8 =
-    unsafe { &*(b"scouting/multicast/interface\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_MULTICAST_INTERFACE_KEY: &c_char =
+    unsafe { &*(b"scouting/multicast/interface\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: &u8 =
-    unsafe { &*(b"scouting/multicast/address\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: &c_char =
+    unsafe { &*(b"scouting/multicast/address\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_SCOUTING_TIMEOUT_KEY: &u8 =
-    unsafe { &*(b"scouting/timeout\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_SCOUTING_TIMEOUT_KEY: &c_char =
+    unsafe { &*(b"scouting/timeout\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_SCOUTING_DELAY_KEY: &u8 =
-    unsafe { &*(b"scouting/delay\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
+    unsafe { &*(b"scouting/delay\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &u8 =
-    unsafe { &*(b"add_timestamp\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
+    unsafe { &*(b"add_timestamp\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static Z_CONFIG_LOCAL_ROUTING_KEY: &u8 =
-    unsafe { &*(b"local_routing\0".as_ptr() as *const u8) };
+pub static Z_CONFIG_LOCAL_ROUTING_KEY: &c_char =
+    unsafe { &*(b"local_routing\0".as_ptr() as *const c_char) };
 
 // Properties returned by z_info()
 #[no_mangle]

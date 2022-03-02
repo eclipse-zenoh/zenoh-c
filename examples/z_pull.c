@@ -20,7 +20,7 @@
 #endif
 #include "zenoh.h"
 
-void data_handler(const z_sample_t *sample, const void *arg)
+void data_handler(const z_sample_t *sample, const void *arg __attribute__((unused)))
 {
     printf(">> [Subscriber] Received ('%.*s': '%.*s')\n",
            (int)sample->key.suffix.len, sample->key.suffix.start,

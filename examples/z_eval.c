@@ -24,7 +24,7 @@
 char *expr = "/demo/example/zenoh-c-eval";
 char *value = "Eval from C!";
 
-void query_handler(const z_query_t *query, const void *arg)
+void query_handler(const z_query_t *query, const void *arg __attribute__((unused)))
 {
     z_bytes_t res = z_query_key_expr(query).suffix;
     z_bytes_t pred = z_query_predicate(query);
