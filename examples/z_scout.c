@@ -33,11 +33,11 @@ void fprintpid(FILE *stream, z_bytes_t pid)
 
 void fprintwhatami(FILE *stream, unsigned int whatami)
 {
-    if (whatami == ZN_ROUTER)
+    if (whatami == Z_ROUTER)
     {
         fprintf(stream, "\"Router\"");
     }
-    else if (whatami == ZN_PEER)
+    else if (whatami == Z_PEER)
     {
         fprintf(stream, "\"Peer\"");
     }
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
 
     printf("Scouting...\n");
-    z_owned_hello_array_t hellos = z_scout(ZN_ROUTER | ZN_PEER, z_move(config), 1000);
+    z_owned_hello_array_t hellos = z_scout(Z_ROUTER | Z_PEER, z_move(config), 1000);
     if (hellos.len > 0)
     {
         for (unsigned int i = 0; i < hellos.len; ++i)

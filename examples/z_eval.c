@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[2]);
+        z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]);
     }
 
     printf("Openning session...\n");
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     }
 
     printf("Creating Queryable on '%s'...\n", expr);
-    z_owned_queryable_t qable = z_queryable_new(z_loan(s), z_expr(expr), ZN_QUERYABLE_EVAL, query_handler, NULL);
+    z_owned_queryable_t qable = z_queryable_new(z_loan(s), z_expr(expr), Z_QUERYABLE_EVAL, query_handler, NULL);
     if (!z_check(qable))
     {
         printf("Unable to create queryable.\n");

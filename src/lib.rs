@@ -22,11 +22,12 @@ use std::borrow::Cow;
 use std::ffi::{c_void, CStr};
 use std::mem::ManuallyDrop;
 use std::slice;
+use validated_struct::ValidatedMap;
 use zenoh::config::whatami::WhatAmIMatcher;
-use zenoh::config::{Config, IntKeyMapLike, WhatAmI};
+use zenoh::config::{Config, WhatAmI};
 use zenoh::info::InfoProperties;
 use zenoh::net::protocol::io::SplitBuffer;
-use zenoh::prelude::{Encoding, Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
+use zenoh::prelude::{Priority, Sample, SampleKind, Selector, ZFuture, ZInt};
 use zenoh::publication::CongestionControl;
 use zenoh::queryable::Query;
 use zenoh::scouting::Hello;
@@ -254,48 +255,38 @@ pub extern "C" fn z_config_new() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(Config::default())))) }
 }
 
-/// Gets the number of available keys for configuration.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_len(config: z_config_t) -> c_uint {
-    config
-        .as_ref()
-        .as_ref()
-        .map(|c| c.ikeys().len() as c_uint)
-        .unwrap_or(0)
-}
-
 /// Gets the property with the given integer key from the configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_get(config: z_config_t, key: c_uint) -> z_owned_string_t {
-    let val = config
-        .as_ref()
-        .as_ref()
-        .map(|c| c.iget(key as u64))
-        .flatten();
+pub unsafe extern "C" fn z_config_get(config: z_config_t, key: z_string_t) -> z_owned_string_t {
+    let key = match CStr::from_ptr(key).to_str() {
+        Ok(s) => s,
+        Err(_) => return z_owned_string_t::default(),
+    };
+
+    let val = config.as_ref().as_ref().and_then(|c| c.get_json(key).ok());
     match val {
-        Some(val) => val.into_owned().into(),
+        Some(val) => val.into(),
         None => z_owned_string_t::default(),
     }
 }
 
-/// Inserts a property with a given key to a properties map.
-/// If a property with the same key already exists in the properties map, it is replaced.
-///
-/// Parameters:
-///   config: A pointer to the properties map.
-///   key: The key of the property to add.
-///   value: The value of the property to add.
+/// Inserts a JSON-serialized `value` at the `key` position of the configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn z_config_set(mut config: z_config_t, key: c_ulong, value: z_string_t) {
+pub unsafe extern "C" fn z_config_insert_json(
+    mut config: z_config_t,
+    key: z_string_t,
+    value: z_string_t,
+) -> bool {
+    let key = CStr::from_ptr(key);
     let value = CStr::from_ptr(value);
     config
         .as_mut()
         .as_mut()
         .expect("invalid config")
-        .iset(key as u64, value.to_string_lossy());
+        .insert_json5(key.to_string_lossy(), &value.to_string_lossy())
+        .is_ok()
 }
 
 /// Frees `config`, invalidating it for double-free safety.
@@ -594,73 +585,27 @@ pub unsafe extern "C" fn z_put(
         _ => 1,
     }
 }
-#[derive(Default)]
-struct WriteOptions {
-    encoding: Encoding,                    // u64 + 4 usize
-    kind: SampleKind,                      // u8
-    congestion_control: CongestionControl, // u8
-    priority: Priority,                    // u8
-}
 
 /// Options passed to the :c:func:`z_put_ext` function.  
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
-    align: u64,
-    pad: [usize; 5],
-}
-
-#[repr(C)]
-#[allow(non_camel_case_types)]
-/// The different kind of options in a :c:type:`z_put_options_t`.
-///
-///     - **z_put_options_field_t_ENCODING**
-///     - **z_put_options_field_t_CONGESTION_CONTROL**
-///     - **z_put_options_field_t_KIND**
-///     - **z_put_options_field_t_PRIORITY**
-pub enum z_put_options_field_t {
-    ENCODING,
-    CONGESTION_CONTROL,
-    KIND,
-    PRIORITY,
+    encoding: z_encoding_t,
+    kind: u8,
+    congestion_control: u8,
+    priority: u8,
 }
 
 /// Constructs the default value for write options
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
-    std::mem::transmute(WriteOptions::default())
-}
-
-/// Sets the value for the required field of a `z_put_options_t`.  
-/// Returns `false` if the value insertion failed.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_put_options_set(
-    options: &mut z_put_options_t,
-    key: z_put_options_field_t,
-    value: c_uint,
-) -> bool {
-    let options: &mut WriteOptions = std::mem::transmute(options);
-    match key {
-        z_put_options_field_t::ENCODING => options.encoding = Encoding::from(value as ZInt),
-        z_put_options_field_t::CONGESTION_CONTROL => {
-            if value < 2 {
-                options.congestion_control = std::mem::transmute(value as u8)
-            } else {
-                return false;
-            }
-        }
-        z_put_options_field_t::KIND => options.kind = (value as ZInt).into(),
-        z_put_options_field_t::PRIORITY => {
-            if 0 < value && value < 8 {
-                options.priority = std::mem::transmute(value as u8)
-            } else {
-                return false;
-            }
-        }
-    };
-    true
+    z_put_options_t {
+        encoding: z_encoding_default(),
+        kind: SampleKind::default() as u8,
+        congestion_control: CongestionControl::default() as u8,
+        priority: Priority::default() as u8,
+    }
 }
 
 /// Write data with extended options.
@@ -682,7 +627,6 @@ pub unsafe extern "C" fn z_put_ext(
     len: c_uint,
     options: &z_put_options_t,
 ) -> c_int {
-    let options: &WriteOptions = std::mem::transmute(options);
     let result = match session
         .as_ref()
         .as_ref()
@@ -691,10 +635,10 @@ pub unsafe extern "C" fn z_put_ext(
             keyexpr,
             slice::from_raw_parts(payload as *const u8, len as usize),
         )
-        .encoding(options.encoding.clone())
-        .kind(options.kind)
-        .congestion_control(options.congestion_control)
-        .priority(options.priority)
+        .encoding(options.encoding)
+        .kind(std::mem::transmute(options.kind))
+        .congestion_control(std::mem::transmute(options.congestion_control))
+        .priority(std::mem::transmute(options.priority))
         .wait()
     {
         Ok(()) => 0,
@@ -713,8 +657,7 @@ pub unsafe extern "C" fn z_declare_publication(session: z_session_t, keyexpr: z_
     session
         .as_ref()
         .as_ref()
-        .map(|s| s.declare_publication(keyexpr).wait().ok())
-        .flatten()
+        .and_then(|s| s.declare_publication(keyexpr).wait().ok())
         .is_some()
 }
 
@@ -786,6 +729,13 @@ pub unsafe extern "C" fn z_subscribe(
                     start: std::ptr::null(),
                     len: 0,
                 },
+                encoding: z_encoding_t {
+                    prefix: z_known_encoding_t::Empty,
+                    suffix: z_bytes_t {
+                        start: std::ptr::null(),
+                        len: 0,
+                    },
+                },
             };
             let arg = Box::into_raw(arg);
             loop {
@@ -800,6 +750,7 @@ pub unsafe extern "C" fn z_subscribe(
                         sample.key = (&us.key_expr).into();
                         sample.value.start = data.as_ptr() as *const c_uchar;
                         sample.value.len = data.len() as size_t;
+                        sample.encoding = (&us.value.encoding).into();
                         callback(&sample, arg)
                     },
                     op = rx.recv().fuse() => {

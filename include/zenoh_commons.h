@@ -10,20 +10,29 @@ typedef enum z_consolidation_mode_t {
   z_consolidation_mode_t_LAZY,
   z_consolidation_mode_t_NONE,
 } z_consolidation_mode_t;
-/**
- * The different kind of options in a :c:type:`z_put_options_t`.
- *
- *     - **z_put_options_field_t_ENCODING**
- *     - **z_put_options_field_t_CONGESTION_CONTROL**
- *     - **z_put_options_field_t_KIND**
- *     - **z_put_options_field_t_PRIORITY**
- */
-typedef enum z_put_options_field_t {
-  z_put_options_field_t_ENCODING,
-  z_put_options_field_t_CONGESTION_CONTROL,
-  z_put_options_field_t_KIND,
-  z_put_options_field_t_PRIORITY,
-} z_put_options_field_t;
+typedef enum z_known_encoding_t {
+  z_known_encoding_t_Empty = 0,
+  z_known_encoding_t_AppOctetStream = 1,
+  z_known_encoding_t_AppCustom = 2,
+  z_known_encoding_t_TextPlain = 3,
+  z_known_encoding_t_AppProperties = 4,
+  z_known_encoding_t_AppJson = 5,
+  z_known_encoding_t_AppSql = 6,
+  z_known_encoding_t_AppInteger = 7,
+  z_known_encoding_t_AppFloat = 8,
+  z_known_encoding_t_AppXml = 9,
+  z_known_encoding_t_AppXhtmlXml = 10,
+  z_known_encoding_t_AppXWwwFormUrlencoded = 11,
+  z_known_encoding_t_TextJson = 12,
+  z_known_encoding_t_TextHtml = 13,
+  z_known_encoding_t_TextXml = 14,
+  z_known_encoding_t_TextCss = 15,
+  z_known_encoding_t_TextCsv = 16,
+  z_known_encoding_t_TextJavascript = 17,
+  z_known_encoding_t_ImageJpeg = 18,
+  z_known_encoding_t_ImagePng = 19,
+  z_known_encoding_t_ImageGif = 20,
+} z_known_encoding_t;
 /**
  * The subscription reliability.
  *
@@ -118,6 +127,22 @@ typedef struct z_keyexpr_t {
   unsigned long id;
   struct z_bytes_t suffix;
 } z_keyexpr_t;
+typedef struct z_owned_encoding_t {
+  enum z_known_encoding_t prefix;
+  struct z_owned_bytes_t suffix;
+  bool _freed;
+} z_owned_encoding_t;
+/**
+ * The encoding of a payload, in a MIME-like format.
+ *
+ * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
+ *
+ * `suffix` MUST be a valid UTF-8 string.
+ */
+typedef struct z_encoding_t {
+  enum z_known_encoding_t prefix;
+  struct z_bytes_t suffix;
+} z_encoding_t;
 /**
  * A zenoh-allocated key expression.
  *
@@ -233,6 +258,7 @@ typedef struct z_query_consolidation_t {
 typedef struct z_owned_sample_t {
   struct z_owned_keyexpr_t key;
   struct z_owned_bytes_t value;
+  struct z_owned_encoding_t encoding;
 } z_owned_sample_t;
 /**
  * An owned reply to a `z_get` (or `z_get_collect`).
@@ -337,6 +363,15 @@ typedef struct z_owned_hello_array_t {
   size_t len;
 } z_owned_hello_array_t;
 /**
+ * Options passed to the :c:func:`z_put_ext` function.
+ */
+typedef struct z_put_options_t {
+  struct z_encoding_t encoding;
+  uint8_t kind;
+  uint8_t congestion_control;
+  uint8_t priority;
+} z_put_options_t;
+/**
  * A loaned data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
@@ -348,6 +383,7 @@ typedef struct z_owned_hello_array_t {
 typedef struct z_sample_t {
   struct z_keyexpr_t key;
   struct z_bytes_t value;
+  struct z_encoding_t encoding;
 } z_sample_t;
 /**
  * The subscription period.
@@ -377,27 +413,27 @@ typedef struct z_subinfo_t {
   struct z_period_t period;
 } z_subinfo_t;
 #define z_period_NONE (z_period_t){ .origin = 0, .period = 0, .duration = 0 }
-extern const unsigned int ZN_ROUTER;
-extern const unsigned int ZN_PEER;
-extern const unsigned int ZN_CLIENT;
-extern const unsigned int ZN_QUERYABLE_ALL_KINDS;
-extern const unsigned int ZN_QUERYABLE_STORAGE;
-extern const unsigned int ZN_QUERYABLE_EVAL;
-extern const unsigned int ZN_CONFIG_MODE_KEY;
-extern const unsigned int ZN_CONFIG_PEER_KEY;
-extern const unsigned int ZN_CONFIG_LISTENER_KEY;
-extern const unsigned int ZN_CONFIG_USER_KEY;
-extern const unsigned int ZN_CONFIG_PASSWORD_KEY;
-extern const unsigned int ZN_CONFIG_MULTICAST_SCOUTING_KEY;
-extern const unsigned int ZN_CONFIG_MULTICAST_INTERFACE_KEY;
-extern const unsigned int ZN_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
-extern const unsigned int ZN_CONFIG_SCOUTING_TIMEOUT_KEY;
-extern const unsigned int ZN_CONFIG_SCOUTING_DELAY_KEY;
-extern const unsigned int ZN_CONFIG_ADD_TIMESTAMP_KEY;
-extern const unsigned int ZN_CONFIG_LOCAL_ROUTING_KEY;
-extern const unsigned int ZN_INFO_PID_KEY;
-extern const unsigned int ZN_INFO_PEER_PID_KEY;
-extern const unsigned int ZN_INFO_ROUTER_PID_KEY;
+extern const unsigned int Z_ROUTER;
+extern const unsigned int Z_PEER;
+extern const unsigned int Z_CLIENT;
+extern const unsigned int Z_QUERYABLE_ALL_KINDS;
+extern const unsigned int Z_QUERYABLE_STORAGE;
+extern const unsigned int Z_QUERYABLE_EVAL;
+extern const char *Z_CONFIG_MODE_KEY;
+extern const char *Z_CONFIG_CONNECT_KEY;
+extern const char *Z_CONFIG_LISTEN_KEY;
+extern const char *Z_CONFIG_USER_KEY;
+extern const char *Z_CONFIG_PASSWORD_KEY;
+extern const char *Z_CONFIG_MULTICAST_SCOUTING_KEY;
+extern const char *Z_CONFIG_MULTICAST_INTERFACE_KEY;
+extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
+extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
+extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
+extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
+extern const char *Z_CONFIG_LOCAL_ROUTING_KEY;
+extern const unsigned int Z_INFO_PID_KEY;
+extern const unsigned int Z_INFO_PEER_PID_KEY;
+extern const unsigned int Z_INFO_ROUTER_PID_KEY;
 /**
  * Returns `true` if `b` is valid.
  */
@@ -449,11 +485,11 @@ struct z_owned_config_t z_config_from_str(const char *s);
 /**
  * Gets the property with the given integer key from the configuration.
  */
-struct z_owned_string_t z_config_get(struct z_config_t config, unsigned int key);
+struct z_owned_string_t z_config_get(struct z_config_t config, z_string_t key);
 /**
- * Gets the number of available keys for configuration.
+ * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  */
-unsigned int z_config_len(struct z_config_t config);
+bool z_config_insert_json(struct z_config_t config, z_string_t key, z_string_t value);
 /**
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
@@ -476,16 +512,6 @@ struct z_owned_config_t z_config_new(void);
  */
 struct z_owned_config_t z_config_peer(void);
 /**
- * Inserts a property with a given key to a properties map.
- * If a property with the same key already exists in the properties map, it is replaced.
- *
- * Parameters:
- *   config: A pointer to the properties map.
- *   key: The key of the property to add.
- *   value: The value of the property to add.
- */
-void z_config_set(struct z_config_t config, unsigned long key, z_string_t value);
-/**
  * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
 struct z_owned_string_t z_config_to_str(struct z_config_t config);
@@ -504,6 +530,22 @@ struct z_keyexpr_t z_declare_expr(struct z_session_t session,
  * if matching subscribers exist in the system.
  */
 bool z_declare_publication(struct z_session_t session, struct z_keyexpr_t keyexpr);
+/**
+ * Returns `true` if `encoding` is valid.
+ */
+bool z_encoding_check(const struct z_owned_encoding_t *encoding);
+/**
+ * Frees `encoding`, invalidating it for double-free safety.
+ */
+struct z_encoding_t z_encoding_default(void);
+/**
+ * Frees `encoding`, invalidating it for double-free safety.
+ */
+void z_encoding_free(struct z_owned_encoding_t *encoding);
+/**
+ * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
+ */
+struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
  * Constructs a loaned key expression from a string expression.
  */
@@ -696,13 +738,6 @@ int z_put_ext(struct z_session_t session,
  * Constructs the default value for write options
  */
 struct z_put_options_t z_put_options_default(void);
-/**
- * Sets the value for the required field of a `z_put_options_t`.
- * Returns `false` if the value insertion failed.
- */
-bool z_put_options_set(struct z_put_options_t *options,
-                       enum z_put_options_field_t key,
-                       unsigned int value);
 /**
  * Automatic query consolidation strategy selection.
  *

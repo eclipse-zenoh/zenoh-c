@@ -22,53 +22,53 @@
 
 void data_handler(const z_sample_t *sample, const void *arg)
 {
-  printf(">> [Subscriber] Received ('%.*s': '%.*s')\n",
-         (int)sample->key.suffix.len, sample->key.suffix.start, (int)sample->value.len, sample->value.start);
+    printf(">> [Subscriber] Received ('%.*s': '%.*s')\n",
+           (int)sample->key.suffix.len, sample->key.suffix.start, (int)sample->value.len, sample->value.start);
 }
 
 int main(int argc, char **argv)
 {
-  z_init_logger();
+    z_init_logger();
 
-  char *expr = "/demo/example/**";
-  if (argc > 1)
-  {
-    expr = argv[1];
-  }
-  z_owned_config_t config = z_config_default();
-  if (argc > 2)
-  {
-    z_config_set(z_loan(config), ZN_CONFIG_PEER_KEY, argv[2]);
-  }
-
-  printf("Openning session...\n");
-  z_owned_session_t s = z_open(z_move(config));
-  if (!z_check(s))
-  {
-    printf("Unable to open session!\n");
-    exit(-1);
-  }
-
-  printf("Declaring Subscriber on '%s'...\n", expr);
-  z_owned_subscriber_t sub = z_subscribe(z_loan(s), z_expr(expr), z_subinfo_default(), data_handler, NULL);
-  if (!z_check(sub))
-  {
-    printf("Unable to declare subscriber.\n");
-    exit(-1);
-  }
-
-  printf("Enter 'q' to quit...\n");
-  char c = 0;
-  while (c != 'q')
-  {
-    c = getchar();
-    if (c == -1)
+    char *expr = "/demo/example/**";
+    if (argc > 1)
     {
-        sleep(1);
+        expr = argv[1];
     }
-  }
+    z_owned_config_t config = z_config_default();
+    if (argc > 2)
+    {
+        z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]);
+    }
 
-  z_subscriber_close(z_move(sub));
-  z_close(z_move(s));
-  return 0;
+    printf("Openning session...\n");
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
+    {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
+
+    printf("Declaring Subscriber on '%s'...\n", expr);
+    z_owned_subscriber_t sub = z_subscribe(z_loan(s), z_expr(expr), z_subinfo_default(), data_handler, NULL);
+    if (!z_check(sub))
+    {
+        printf("Unable to declare subscriber.\n");
+        exit(-1);
+    }
+
+    printf("Enter 'q' to quit...\n");
+    char c = 0;
+    while (c != 'q')
+    {
+        c = getchar();
+        if (c == -1)
+        {
+            sleep(1);
+        }
+    }
+
+    z_subscriber_close(z_move(sub));
+    z_close(z_move(s));
+    return 0;
 }

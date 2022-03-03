@@ -20,35 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install latest nightly
-        uses: actions-rs/toolchain@v1
-        with:
-          components: rustfmt, clippy
-
-      # `cargo check` command here will use installed `nightly`
-      # as it is set as an "override" for current directory
-      - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --release
-
       - name: Clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: --all --examples -- -D warnings
-
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --verbose
 
       - name: Run rustfmt
         uses: actions-rs/cargo@v1
@@ -56,13 +32,24 @@ jobs:
           command: fmt
           args: -- --check
 
-      - name: make
-        if: ${{ runner.os != 'Windows' }}
-        run: make
+      - name: build
+        shell: bash
+        run: |
+          mkdir -p build && cd build 
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build .
 
       - name: make examples
-        if: ${{ runner.os != 'Windows' }}
-        run: make examples
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target examples
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2

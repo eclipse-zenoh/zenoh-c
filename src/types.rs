@@ -15,7 +15,6 @@ use libc::{c_char, c_uint, c_ulong, size_t};
 use std::ffi::{CStr, CString};
 use zenoh::{
     buf::ZBuf,
-    config,
     config::WhatAmI,
     info::{self, InfoProperties},
     net::protocol::{core::SubInfo, io::SplitBuffer},
@@ -31,54 +30,63 @@ use zenoh::{
 };
 
 #[no_mangle]
-pub static ZN_ROUTER: c_uint = WhatAmI::Router as c_uint;
+pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
 #[no_mangle]
-pub static ZN_PEER: c_uint = WhatAmI::Peer as c_uint;
+pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
 #[no_mangle]
-pub static ZN_CLIENT: c_uint = WhatAmI::Client as c_uint;
+pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
 // Flags used in Queryable declaration and in queries
 #[no_mangle]
-pub static ZN_QUERYABLE_ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
+pub static Z_QUERYABLE_ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
 #[no_mangle]
-pub static ZN_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
+pub static Z_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
 #[no_mangle]
-pub static ZN_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
+pub static Z_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
 
-// Properties for zenoh net session configuration
 #[no_mangle]
-pub static ZN_CONFIG_MODE_KEY: c_uint = config::ZN_MODE_KEY as c_uint;
+pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_PEER_KEY: c_uint = config::ZN_PEER_KEY as c_uint;
+pub static Z_CONFIG_CONNECT_KEY: &c_char =
+    unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_LISTENER_KEY: c_uint = config::ZN_LISTENER_KEY as c_uint;
+pub static Z_CONFIG_LISTEN_KEY: &c_char =
+    unsafe { &*(b"listen/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_USER_KEY: c_uint = config::ZN_USER_KEY as c_uint;
+pub static Z_CONFIG_USER_KEY: &c_char =
+    unsafe { &*(b"transport/auth/usrpwd/user\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_PASSWORD_KEY: c_uint = config::ZN_PASSWORD_KEY as c_uint;
+pub static Z_CONFIG_PASSWORD_KEY: &c_char =
+    unsafe { &*(b"transport/auth/usrpwd/password\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_MULTICAST_SCOUTING_KEY: c_uint = config::ZN_MULTICAST_SCOUTING_KEY as c_uint;
+pub static Z_CONFIG_MULTICAST_SCOUTING_KEY: &c_char =
+    unsafe { &*(b"scouting/multicast/enabled\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_MULTICAST_INTERFACE_KEY: c_uint = config::ZN_MULTICAST_INTERFACE_KEY as c_uint;
+pub static Z_CONFIG_MULTICAST_INTERFACE_KEY: &c_char =
+    unsafe { &*(b"scouting/multicast/interface\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: c_uint =
-    config::ZN_MULTICAST_IPV4_ADDRESS_KEY as c_uint;
+pub static Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: &c_char =
+    unsafe { &*(b"scouting/multicast/address\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_SCOUTING_TIMEOUT_KEY: c_uint = config::ZN_SCOUTING_TIMEOUT_KEY as c_uint;
+pub static Z_CONFIG_SCOUTING_TIMEOUT_KEY: &c_char =
+    unsafe { &*(b"scouting/timeout\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_SCOUTING_DELAY_KEY: c_uint = config::ZN_SCOUTING_DELAY_KEY as c_uint;
+pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
+    unsafe { &*(b"scouting/delay\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_ADD_TIMESTAMP_KEY: c_uint = config::ZN_ADD_TIMESTAMP_KEY as c_uint;
+pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
+    unsafe { &*(b"add_timestamp\0".as_ptr() as *const c_char) };
 #[no_mangle]
-pub static ZN_CONFIG_LOCAL_ROUTING_KEY: c_uint = config::ZN_LOCAL_ROUTING_KEY as c_uint;
+pub static Z_CONFIG_LOCAL_ROUTING_KEY: &c_char =
+    unsafe { &*(b"local_routing\0".as_ptr() as *const c_char) };
 
 // Properties returned by z_info()
 #[no_mangle]
-pub static ZN_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
+pub static Z_INFO_PID_KEY: c_uint = info::ZN_INFO_PID_KEY as c_uint;
 #[no_mangle]
-pub static ZN_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
+pub static Z_INFO_PEER_PID_KEY: c_uint = info::ZN_INFO_PEER_PID_KEY as c_uint;
 #[no_mangle]
-pub static ZN_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
+pub static Z_INFO_ROUTER_PID_KEY: c_uint = info::ZN_INFO_ROUTER_PID_KEY as c_uint;
 
 pub trait FromRaw<T> {
     fn from_raw(r: T) -> Self;
@@ -189,8 +197,8 @@ pub struct z_info_t<'a>(&'a z_owned_info_t);
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_owned_info_t {
-    align: [u64; 2],
-    pad: [usize; 4],
+    _align: [u64; 2],
+    _pad: [usize; 4],
 }
 impl AsRef<Option<InfoProperties>> for z_owned_info_t {
     fn as_ref(&self) -> &Option<InfoProperties> {
@@ -228,7 +236,7 @@ pub extern "C" fn z_info_loan(info: &z_owned_info_t) -> z_info_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_info_get(info: z_info_t, key: u64) -> z_owned_string_t {
     let info = info.0.as_ref();
-    match info.as_ref().map(|i| i.get(&key)).flatten() {
+    match info.as_ref().and_then(|i| i.get(&key)) {
         None => z_owned_string_t::default(),
         Some(s) => s.as_str().into(),
     }
@@ -629,6 +637,7 @@ impl<'a> From<KeyExpr<'a>> for z_owned_keyexpr_t {
 pub struct z_owned_sample_t {
     pub key: z_owned_keyexpr_t,
     pub value: z_owned_bytes_t,
+    pub encoding: z_owned_encoding_t,
 }
 
 /// A loaned data sample.
@@ -642,6 +651,7 @@ pub struct z_owned_sample_t {
 pub struct z_sample_t {
     pub key: z_keyexpr_t,
     pub value: z_bytes_t,
+    pub encoding: z_encoding_t,
 }
 
 impl From<Sample> for z_owned_sample_t {
@@ -650,6 +660,7 @@ impl From<Sample> for z_owned_sample_t {
         z_owned_sample_t {
             key: s.key_expr.into(),
             value: s.value.payload.into(),
+            encoding: z_encoding_t::from(&s.value.encoding).into(),
         }
     }
 }
@@ -675,6 +686,7 @@ pub unsafe extern "C" fn z_sample_loan(sample: &z_owned_sample_t) -> z_sample_t 
     z_sample_t {
         key: z_keyexpr_loan(&sample.key),
         value: z_bytes_loan(&sample.value),
+        encoding: z_encoding_loan(&sample.encoding),
     }
 }
 
@@ -702,7 +714,7 @@ impl From<Hello> for z_owned_hello_t {
         z_owned_hello_t {
             whatami: match h.whatami {
                 Some(whatami) => whatami as c_uint,
-                None => ZN_ROUTER,
+                None => Z_ROUTER,
             },
             pid: h.pid.into(),
             locators: h.locators.into(),
@@ -1000,6 +1012,14 @@ impl z_owned_reply_data_t {
             data: z_owned_sample_t {
                 key: z_owned_keyexpr_t::default(),
                 value: z_owned_bytes_t::default(),
+                encoding: z_owned_encoding_t {
+                    prefix: z_known_encoding_t::Empty,
+                    suffix: z_owned_bytes_t {
+                        start: std::ptr::null(),
+                        len: 0,
+                    },
+                    _freed: false,
+                },
             },
             source_kind: 0,
             replier_id: z_owned_bytes_t::default(),
@@ -1370,4 +1390,193 @@ pub extern "C" fn z_query_consolidation_full() -> z_query_consolidation_t {
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(C)]
+pub enum z_known_encoding_t {
+    Empty = 0,
+    AppOctetStream = 1,
+    AppCustom = 2,
+    TextPlain = 3,
+    AppProperties = 4,
+    AppJson = 5,
+    AppSql = 6,
+    AppInteger = 7,
+    AppFloat = 8,
+    AppXml = 9,
+    AppXhtmlXml = 10,
+    AppXWwwFormUrlencoded = 11,
+    TextJson = 12,
+    TextHtml = 13,
+    TextXml = 14,
+    TextCss = 15,
+    TextCsv = 16,
+    TextJavascript = 17,
+    ImageJpeg = 18,
+    ImagePng = 19,
+    ImageGif = 20,
+}
+impl From<z_known_encoding_t> for zenoh_protocol_core::KnownEncoding {
+    fn from(val: z_known_encoding_t) -> Self {
+        if cfg!(debug_assertions) {
+            match val {
+                z_known_encoding_t::Empty => zenoh_protocol_core::KnownEncoding::Empty,
+                z_known_encoding_t::AppOctetStream => {
+                    zenoh_protocol_core::KnownEncoding::AppOctetStream
+                }
+                z_known_encoding_t::AppCustom => zenoh_protocol_core::KnownEncoding::AppCustom,
+                z_known_encoding_t::TextPlain => zenoh_protocol_core::KnownEncoding::TextPlain,
+                z_known_encoding_t::AppProperties => {
+                    zenoh_protocol_core::KnownEncoding::AppProperties
+                }
+                z_known_encoding_t::AppJson => zenoh_protocol_core::KnownEncoding::AppJson,
+                z_known_encoding_t::AppSql => zenoh_protocol_core::KnownEncoding::AppSql,
+                z_known_encoding_t::AppInteger => zenoh_protocol_core::KnownEncoding::AppInteger,
+                z_known_encoding_t::AppFloat => zenoh_protocol_core::KnownEncoding::AppFloat,
+                z_known_encoding_t::AppXml => zenoh_protocol_core::KnownEncoding::AppXml,
+                z_known_encoding_t::AppXhtmlXml => zenoh_protocol_core::KnownEncoding::AppXhtmlXml,
+                z_known_encoding_t::AppXWwwFormUrlencoded => {
+                    zenoh_protocol_core::KnownEncoding::AppXWwwFormUrlencoded
+                }
+                z_known_encoding_t::TextJson => zenoh_protocol_core::KnownEncoding::TextJson,
+                z_known_encoding_t::TextHtml => zenoh_protocol_core::KnownEncoding::TextHtml,
+                z_known_encoding_t::TextXml => zenoh_protocol_core::KnownEncoding::TextXml,
+                z_known_encoding_t::TextCss => zenoh_protocol_core::KnownEncoding::TextCss,
+                z_known_encoding_t::TextCsv => zenoh_protocol_core::KnownEncoding::TextCsv,
+                z_known_encoding_t::TextJavascript => {
+                    zenoh_protocol_core::KnownEncoding::TextJavascript
+                }
+                z_known_encoding_t::ImageJpeg => zenoh_protocol_core::KnownEncoding::ImageJpeg,
+                z_known_encoding_t::ImagePng => zenoh_protocol_core::KnownEncoding::ImagePng,
+                z_known_encoding_t::ImageGif => zenoh_protocol_core::KnownEncoding::ImageGif,
+            }
+        } else {
+            unsafe { std::mem::transmute(val as u8) }
+        }
+    }
+}
+impl From<zenoh_protocol_core::KnownEncoding> for z_known_encoding_t {
+    fn from(val: zenoh_protocol_core::KnownEncoding) -> Self {
+        if cfg!(debug_assertions) {
+            match val {
+                zenoh_protocol_core::KnownEncoding::Empty => z_known_encoding_t::Empty,
+                zenoh_protocol_core::KnownEncoding::AppOctetStream => {
+                    z_known_encoding_t::AppOctetStream
+                }
+                zenoh_protocol_core::KnownEncoding::AppCustom => z_known_encoding_t::AppCustom,
+                zenoh_protocol_core::KnownEncoding::TextPlain => z_known_encoding_t::TextPlain,
+                zenoh_protocol_core::KnownEncoding::AppProperties => {
+                    z_known_encoding_t::AppProperties
+                }
+                zenoh_protocol_core::KnownEncoding::AppJson => z_known_encoding_t::AppJson,
+                zenoh_protocol_core::KnownEncoding::AppSql => z_known_encoding_t::AppSql,
+                zenoh_protocol_core::KnownEncoding::AppInteger => z_known_encoding_t::AppInteger,
+                zenoh_protocol_core::KnownEncoding::AppFloat => z_known_encoding_t::AppFloat,
+                zenoh_protocol_core::KnownEncoding::AppXml => z_known_encoding_t::AppXml,
+                zenoh_protocol_core::KnownEncoding::AppXhtmlXml => z_known_encoding_t::AppXhtmlXml,
+                zenoh_protocol_core::KnownEncoding::AppXWwwFormUrlencoded => {
+                    z_known_encoding_t::AppXWwwFormUrlencoded
+                }
+                zenoh_protocol_core::KnownEncoding::TextJson => z_known_encoding_t::TextJson,
+                zenoh_protocol_core::KnownEncoding::TextHtml => z_known_encoding_t::TextHtml,
+                zenoh_protocol_core::KnownEncoding::TextXml => z_known_encoding_t::TextXml,
+                zenoh_protocol_core::KnownEncoding::TextCss => z_known_encoding_t::TextCss,
+                zenoh_protocol_core::KnownEncoding::TextCsv => z_known_encoding_t::TextCsv,
+                zenoh_protocol_core::KnownEncoding::TextJavascript => {
+                    z_known_encoding_t::TextJavascript
+                }
+                zenoh_protocol_core::KnownEncoding::ImageJpeg => z_known_encoding_t::ImageJpeg,
+                zenoh_protocol_core::KnownEncoding::ImagePng => z_known_encoding_t::ImagePng,
+                zenoh_protocol_core::KnownEncoding::ImageGif => z_known_encoding_t::ImageGif,
+            }
+        } else {
+            unsafe { std::mem::transmute(val as u32) }
+        }
+    }
+}
+
+/// The encoding of a payload, in a MIME-like format.
+///
+/// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
+///
+/// `suffix` MUST be a valid UTF-8 string.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct z_encoding_t {
+    pub prefix: z_known_encoding_t,
+    pub suffix: z_bytes_t,
+}
+impl From<z_encoding_t> for zenoh_protocol_core::Encoding {
+    fn from(enc: z_encoding_t) -> Self {
+        if enc.suffix.len == 0 {
+            zenoh_protocol_core::Encoding::Exact(enc.prefix.into())
+        } else {
+            let suffix = unsafe {
+                let slice: &'static [u8] =
+                    std::slice::from_raw_parts(enc.suffix.start, enc.suffix.len);
+                std::str::from_utf8_unchecked(slice)
+            };
+            zenoh_protocol_core::Encoding::WithSuffix(enc.prefix.into(), suffix.into())
+        }
+    }
+}
+impl From<&zenoh_protocol_core::Encoding> for z_encoding_t {
+    fn from(val: &zenoh_protocol_core::Encoding) -> Self {
+        let suffix = val.suffix();
+        z_encoding_t {
+            prefix: (*val.prefix()).into(),
+            suffix: z_bytes_t {
+                start: suffix.as_ptr(),
+                len: suffix.len(),
+            },
+        }
+    }
+}
+
+#[repr(C)]
+pub struct z_owned_encoding_t {
+    pub prefix: z_known_encoding_t,
+    pub suffix: z_owned_bytes_t,
+    pub _freed: bool,
+}
+
+/// Frees `encoding`, invalidating it for double-free safety.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_encoding_default() -> z_encoding_t {
+    (&zenoh_protocol_core::Encoding::default()).into()
+}
+/// Frees `encoding`, invalidating it for double-free safety.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_encoding_free(encoding: &mut z_owned_encoding_t) {
+    z_bytes_free(&mut encoding.suffix);
+    encoding._freed = true
+}
+/// Returns `true` if `encoding` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
+    !encoding._freed
+}
+
+/// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
+    z_encoding_t {
+        prefix: encoding.prefix,
+        suffix: z_bytes_loan(&encoding.suffix),
+    }
+}
+impl From<z_encoding_t> for z_owned_encoding_t {
+    fn from(val: z_encoding_t) -> Self {
+        let suffix = unsafe { z_bytes_new(val.suffix.start, val.suffix.len) };
+        z_owned_encoding_t {
+            prefix: val.prefix,
+            suffix,
+            _freed: false,
+        }
+    }
 }
