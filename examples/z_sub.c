@@ -38,7 +38,11 @@ int main(int argc, char **argv)
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
-        z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]);
+        if (!z_config_insert_json(z_loan(config), Z_CONFIG_LISTEN_KEY, argv[2]))
+        {
+            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
+            exit(-1)
+        }
     }
 
     printf("Openning session...\n");
