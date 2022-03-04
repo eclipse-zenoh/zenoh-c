@@ -171,14 +171,14 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: deb
-          args: --no-build --target=${{ matrix.job.target }} --variant=libzenohc
+          args: --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc
 
       - name: Debian package - libzenohc-dev
         if: contains(matrix.job.target, '-linux-gnu')
         uses: actions-rs/cargo@v1
         with:
           command: deb
-          args: --no-build --target=${{ matrix.job.target }} --variant=libzenohc-dev
+          args: --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc-dev
 
       - name: Packaging
         id: package
