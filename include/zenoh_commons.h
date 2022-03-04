@@ -478,6 +478,8 @@ struct z_owned_config_t z_config_from_str(const char *s);
 struct z_owned_string_t z_config_get(struct z_config_t config, z_string_t key);
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
+ *
+ * Returns `true` if insertion was succesful, `false` otherwise.
  */
 bool z_config_insert_json(struct z_config_t config, z_string_t key, z_string_t value);
 /**

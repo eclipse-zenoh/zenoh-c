@@ -272,6 +272,8 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: z_string_t) -> z_
 }
 
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
+///
+/// Returns `true` if insertion was succesful, `false` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 pub unsafe extern "C" fn z_config_insert_json(
@@ -284,7 +286,7 @@ pub unsafe extern "C" fn z_config_insert_json(
     config
         .as_mut()
         .as_mut()
-        .expect("invalid config")
+        .expect("uninitialized config")
         .insert_json5(key.to_string_lossy(), &value.to_string_lossy())
         .is_ok()
 }
