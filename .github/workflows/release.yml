@@ -178,7 +178,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: deb
-          args: --no-build --target=${{ matrix.job.target }} --variant=libzenohc-dev
+          args: --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc-dev
 
       - name: Packaging
         id: package
