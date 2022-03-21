@@ -22,8 +22,8 @@ use std::borrow::Cow;
 use std::ffi::{c_void, CStr};
 use std::mem::ManuallyDrop;
 use std::slice;
-use validated_struct::ValidatedMap;
 use zenoh::config::whatami::WhatAmIMatcher;
+use zenoh::config::ValidatedMap;
 use zenoh::config::{Config, WhatAmI};
 use zenoh::info::InfoProperties;
 use zenoh::net::protocol::io::SplitBuffer;
@@ -287,7 +287,7 @@ pub unsafe extern "C" fn z_config_insert_json(
         .as_mut()
         .as_mut()
         .expect("uninitialized config")
-        .insert_json5(key.to_string_lossy(), &value.to_string_lossy())
+        .insert_json5(&key.to_string_lossy(), &value.to_string_lossy())
         .is_ok()
 }
 

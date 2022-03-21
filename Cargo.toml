@@ -48,7 +48,6 @@ libc = "0.2.85"
 log = "0.4"
 json5 = "0.4"
 env_logger = "0.9.0"
-validated_struct = {version = "1.0.0", features = ["json_get"]}
 
 [build-dependencies]
 cbindgen = "0.20.0"
