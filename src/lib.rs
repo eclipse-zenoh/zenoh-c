@@ -436,7 +436,7 @@ pub extern "C" fn z_query_predicate(query: &z_query_t) -> z_bytes_t {
 /// Parameters:
 ///     `what`: A whatami bitmask of zenoh entities kind to scout for.
 ///     `config`: A set of properties to configure the scouting.
-///     `scout_period`: The time that should be spent scouting before returning the results.
+///     `scout_period`: The time (in milliseconds) that should be spent scouting before returning the results.
 ///
 /// Returns:
 ///     An array of `z_hello_t` messages.
