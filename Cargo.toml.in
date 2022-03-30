@@ -14,7 +14,7 @@
 [package]
 name = "zenoh-c"
 version = "@CARGO_PROJECT_VERSION@"
-repository = "https://github.com/ZettaScaleLabs/zenoh-c"
+repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
     "kydos <angelo@icorsaro.net>",
