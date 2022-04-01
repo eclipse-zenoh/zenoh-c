@@ -254,7 +254,7 @@ typedef struct z_owned_sample_t {
  * An owned reply to a `z_get` (or `z_get_collect`).
  *
  * Members:
- *   `z_owned_sample_t data`: a :c:type:`z_sample_t` containing the key and value of the reply.
+ *   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
  *   `unsigned int source_kind`: The kind of the replier that sent this reply.
  *   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
  *
@@ -265,7 +265,7 @@ typedef struct z_owned_sample_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_reply_data_t {
-  struct z_owned_sample_t data;
+  struct z_owned_sample_t sample;
   unsigned int source_kind;
   struct z_owned_bytes_t replier_id;
 } z_owned_reply_data_t;
