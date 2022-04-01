@@ -989,7 +989,7 @@ pub extern "C" fn z_subinfo_default() -> z_subinfo_t {
 /// An owned reply to a `z_get` (or `z_get_collect`).
 ///
 /// Members:
-///   `z_owned_sample_t data`: a :c:type:`z_sample_t` containing the key and value of the reply.
+///   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
 ///   `unsigned int source_kind`: The kind of the replier that sent this reply.
 ///   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
 ///
@@ -1001,7 +1001,7 @@ pub extern "C" fn z_subinfo_default() -> z_subinfo_t {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_owned_reply_data_t {
-    data: z_owned_sample_t,
+    sample: z_owned_sample_t,
     source_kind: c_uint,
     replier_id: z_owned_bytes_t,
 }
@@ -1009,7 +1009,7 @@ impl z_owned_reply_data_t {
     #[inline]
     pub(crate) fn empty() -> Self {
         z_owned_reply_data_t {
-            data: z_owned_sample_t {
+            sample: z_owned_sample_t {
                 key: z_owned_keyexpr_t::default(),
                 value: z_owned_bytes_t::default(),
                 encoding: z_owned_encoding_t {
@@ -1030,7 +1030,7 @@ impl From<Reply> for z_owned_reply_data_t {
     #[inline]
     fn from(r: Reply) -> Self {
         z_owned_reply_data_t {
-            data: r.data.into(),
+            sample: r.sample.into(),
             source_kind: r.replier_kind as c_uint,
             replier_id: r.replier_id.into(),
         }
@@ -1041,14 +1041,14 @@ impl From<Reply> for z_owned_reply_data_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_data_free(reply_data: &mut z_owned_reply_data_t) {
-    z_sample_free(&mut reply_data.data);
+    z_sample_free(&mut reply_data.sample);
     z_bytes_free(&mut reply_data.replier_id);
 }
 /// Returns `true` if `reply_data` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_data_check(reply_data: &z_owned_reply_data_t) -> bool {
-    z_sample_check(&reply_data.data) && z_bytes_check(&reply_data.replier_id)
+    z_sample_check(&reply_data.sample) && z_bytes_check(&reply_data.replier_id)
 }
 
 /// A zenoh-allocated array of :c:type:`z_owned_reply_data_t`.

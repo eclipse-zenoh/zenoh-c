@@ -81,8 +81,8 @@ Query
 
       for(unsigned int i = 0; i < replies.len; ++i) {
           printf(">> Received (%.*s, %.*s)\n",
-            (int)replies.val[i].data.key.suffix.len, replies.val[i].data.key.suffix.start,
-            (int)replies.val[i].data.value.len, replies.val[i].data.value.start);
+            (int)replies.val[i].sample.key.suffix.len, replies.val[i].sample.key.suffix.start,
+            (int)replies.val[i].sample.value.len, replies.val[i].sample.value.start);
       }
       z_reply_data_array_free(z_move(replies));
 
