@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, 2020 ADLINK Technology Inc.
+# Copyright (c) 2022 ZettaScale Technology
 #
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
@@ -9,7 +9,7 @@
 # SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 #
 # Contributors:
-#   ADLINK zenoh team, <zenoh@adlink-labs.tech>
+#   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
 
 # Configuration file for the Sphinx documentation builder.
@@ -17,8 +17,8 @@ from clang.cindex import Config
 
 # -- Project information -----------------------------------------------------
 project = 'zenoh-c'
-copyright = '2017, 2020 ADLINK Technology Inc'
-author = 'ADLINK zenoh team'
+copyright = '2017, 2022 ZettaScale Technology'
+author = 'ZettaScale Zenoh team'
 release = '0.6.0-dev'
 
 # -- General configuration ---------------------------------------------------
