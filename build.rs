@@ -98,6 +98,7 @@ impl SplitGuide {
                                 ":includes" => SplitRule::Brand(TokenType::Include),
                                 ":defines" => SplitRule::Brand(TokenType::Define),
                                 ":const" => SplitRule::Brand(TokenType::Const),
+                                ":ifdefines" => SplitRule::Brand(TokenType::IfDefine),
                                 _ if s.ends_with('!') => {
                                     s.pop();
                                     SplitRule::Exclusive(s)
@@ -179,6 +180,7 @@ enum TokenType {
     Define,
     Include,
     Ifndef,
+    IfDefine,
     Endif,
     Whitespace,
 }
@@ -207,6 +209,7 @@ impl<'a> Token<'a> {
             .or_else(|| Self::endif(s))
             .or_else(|| Self::include(s))
             .or_else(|| Self::ifndef(s))
+            .or_else(|| Self::ifdefine(s))
             .or_else(|| Self::define(s))
             .or_else(|| Self::typedef(s))
             .or_else(|| Self::r#const(s))
@@ -306,6 +309,13 @@ impl<'a> Token<'a> {
         s.starts_with(start).then(|| {
             let span = s.until("\n").unwrap_or(s);
             Token::new(TokenType::Ifndef, &span[start.len()..], span)
+        })
+    }
+    fn ifdefine(s: &'a str) -> Option<Self> {
+        let start = "#if defined(";
+        s.starts_with(start).then(|| {
+            let span = s.until_incl("#endif").unwrap_or(s);
+            Token::new(TokenType::IfDefine, span, span)
         })
     }
     fn define(s: &'a str) -> Option<Self> {

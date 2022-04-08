@@ -2,6 +2,7 @@ zenoh_commons.h:
   - :functions
   - :const
   - :typedefs
+  - :ifdefines
   - z_period_NONE!
 zenoh_concrete.h:
   - :includes

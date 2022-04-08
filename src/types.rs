@@ -1151,10 +1151,10 @@ pub enum z_target_t {
     ALL,
     NONE,
     ALL_COMPLETE,
-    // #[cfg(feature = "complete_n")]
-    // COMPLETE {
-    //     n: c_uint,
-    // },
+    #[cfg(feature = "complete_n")]
+    COMPLETE {
+        n: c_uint,
+    },
 }
 
 impl From<Target> for z_target_t {
@@ -1165,8 +1165,8 @@ impl From<Target> for z_target_t {
             Target::All => z_target_t::ALL,
             Target::None => z_target_t::NONE,
             Target::AllComplete => z_target_t::ALL_COMPLETE,
-            // #[cfg(feature = "complete_n")]
-            // Target::Complete(n) => z_target_t::COMPLETE { n: n as c_uint },
+            #[cfg(feature = "complete_n")]
+            Target::Complete(n) => z_target_t::COMPLETE { n: n as c_uint },
         }
     }
 }
@@ -1179,8 +1179,8 @@ impl From<z_target_t> for Target {
             z_target_t::ALL => Target::All,
             z_target_t::NONE => Target::None,
             z_target_t::ALL_COMPLETE => Target::AllComplete,
-            // #[cfg(feature = "complete_n")]
-            // z_target_t::COMPLETE { n } => Target::Complete(n as ZInt),
+            #[cfg(feature = "complete_n")]
+            z_target_t::COMPLETE { n } => Target::Complete(n as ZInt),
         }
     }
 }

@@ -43,7 +43,7 @@ else()
 endif()
 message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 set(RUSTFLAGS $ENV{RUSTFLAGS})
-add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}")
+add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} --features ${FEATURES} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS} --features ${FEATURES}")
 
 
 if(APPLE)

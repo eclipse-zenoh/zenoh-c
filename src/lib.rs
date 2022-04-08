@@ -867,10 +867,6 @@ pub unsafe extern "C" fn z_get(
                 },
                 arg,
             )
-            // while let Some(reply) = q.next().await {
-            //     callback(z_reply_t::DATA { data: reply.into() }, arg)
-            // }
-            // callback(z_reply_t::FINAL, arg)
         })
     });
 }
