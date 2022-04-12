@@ -924,7 +924,6 @@ pub unsafe extern "C" fn z_get_collect(
 /// Parameters:
 ///     session: The zenoh session.
 ///     keyexpr: The key expression the Queryable will reply to.
-///     kind: The kind of Queryable.
 ///     callback: The callback function that will be called each time a matching query is received.
 ///     arg: A pointer that will be passed to the **callback** on each call.
 ///
@@ -935,7 +934,6 @@ pub unsafe extern "C" fn z_get_collect(
 pub unsafe extern "C" fn z_queryable_new(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
-    kind: c_uint,
     callback: extern "C" fn(&z_query_t, *const c_void),
     arg: *mut c_void,
 ) -> z_owned_queryable_t {
@@ -947,7 +945,6 @@ pub unsafe extern "C" fn z_queryable_new(
         .as_ref()
         .expect("invalid session")
         .queryable(keyexpr)
-        .kind(kind as ZInt)
         .wait()
         .unwrap();
     let mut queryable: zenoh::queryable::Queryable<'static> = std::mem::transmute(queryable);

@@ -288,34 +288,22 @@ Query
 Types
 -----
 
-.. c:struct:: z_target_t
+.. c:struct:: z_query_target_t
 
   Which amongst the matching queryables should be target of a :c:func:`get`.
 
-  .. c:member:: z_target_t_Tag tag;
+  .. c:member:: z_query_target_t_Tag tag;
 
-  .. c:member:: z_target_t_COMPLETE_Body complete;
+  .. c:member:: z_query_target_t_COMPLETE_Body complete;
 
-    Members of z_target_t when :c:member:`z_target_t.tag` is set to ``z_target_t_COMPLETE``.
+    Members of z_query_target_t when :c:member:`z_query_target_t.tag` is set to ``z_target_t_COMPLETE``.
 
     .. c:member:: unsigned int n
 
       The number of complete queryables that should be target of a :c:func:`z_get`.
 
-.. autocenum:: zenoh_commons.h::z_target_t_Tag
+.. autocenum:: zenoh_commons.h::z_query_target_t_Tag
 
-.. autocfunction:: zenoh_commons.h::z_target_default
-
-.. autocstruct:: zenoh_commons.h::z_query_target_t
-
-  Predefined values for :c:member:`z_query_target_t.kind`: 
-
-    .. c:var:: const unsigned int Z_QUERYABLE_ALL_KINDS
-
-    .. c:var:: const unsigned int Z_QUERYABLE_EVAL
-
-    .. c:var:: const unsigned int Z_QUERYABLE_STORAGE
-  
 .. autocfunction:: zenoh_commons.h::z_query_target_default
 
 .. autocenum:: zenoh_commons.h::z_consolidation_mode_t
@@ -363,13 +351,6 @@ Functions
 ---------
 
 .. autocfunction:: zenoh_commons.h::z_queryable_new
-
-  Predefined values for ``kind``: 
-
-    .. c:var:: const unsigned int Z_QUERYABLE_EVAL
-
-    .. c:var:: const unsigned int Z_QUERYABLE_STORAGE
-
 .. autocfunction:: zenoh_commons.h::z_send_reply
 .. autocfunction:: zenoh_commons.h::z_queryable_check
 .. autocfunction:: zenoh_commons.h::z_queryable_close

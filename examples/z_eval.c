@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     }
 
     printf("Creating Queryable on '%s'...\n", expr);
-    z_owned_queryable_t qable = z_queryable_new(z_loan(s), z_expr(expr), Z_QUERYABLE_EVAL, query_handler, NULL);
+    z_owned_queryable_t qable = z_queryable_new(z_loan(s), z_expr(expr), query_handler, NULL);
     if (!z_check(qable))
     {
         printf("Unable to create queryable.\n");

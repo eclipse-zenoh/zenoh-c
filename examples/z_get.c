@@ -43,8 +43,7 @@ int main(int argc, char **argv)
     }
 
     printf("Sending Query '%s'...\n", expr);
-    z_query_target_t target = z_query_target_default();
-    target.target = z_target_t_ALL;
+    z_query_target_t target = z_query_target_t_ALL;
     z_owned_reply_data_array_t replies = z_get_collect(
         z_loan(s), z_expr(expr), "",
         target, z_query_consolidation_default());

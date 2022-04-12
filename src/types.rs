@@ -21,9 +21,8 @@ use zenoh::{
     prelude::{KeyExpr, PeerId, Sample, ZInt},
     publication::CongestionControl,
     query::{
-        ConsolidationMode, ConsolidationStrategy, QueryConsolidation, QueryTarget, Reply, Target,
+        ConsolidationMode, ConsolidationStrategy, QueryConsolidation, QueryTarget, Reply,
     },
-    queryable,
     scouting::Hello,
     subscriber::{Reliability, SubMode},
     time::Period,
@@ -35,14 +34,6 @@ pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
 pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
 #[no_mangle]
 pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
-
-// Flags used in Queryable declaration and in queries
-#[no_mangle]
-pub static Z_QUERYABLE_ALL_KINDS: c_uint = queryable::ALL_KINDS as c_uint;
-#[no_mangle]
-pub static Z_QUERYABLE_STORAGE: c_uint = queryable::STORAGE as c_uint;
-#[no_mangle]
-pub static Z_QUERYABLE_EVAL: c_uint = queryable::EVAL as c_uint;
 
 #[no_mangle]
 pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const c_char) };
@@ -990,7 +981,6 @@ pub extern "C" fn z_subinfo_default() -> z_subinfo_t {
 ///
 /// Members:
 ///   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
-///   `unsigned int source_kind`: The kind of the replier that sent this reply.
 ///   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
@@ -1002,7 +992,6 @@ pub extern "C" fn z_subinfo_default() -> z_subinfo_t {
 #[repr(C)]
 pub struct z_owned_reply_data_t {
     sample: z_owned_sample_t,
-    source_kind: c_uint,
     replier_id: z_owned_bytes_t,
 }
 impl z_owned_reply_data_t {
@@ -1021,7 +1010,6 @@ impl z_owned_reply_data_t {
                     _freed: false,
                 },
             },
-            source_kind: 0,
             replier_id: z_owned_bytes_t::default(),
         }
     }
@@ -1031,7 +1019,6 @@ impl From<Reply> for z_owned_reply_data_t {
     fn from(r: Reply) -> Self {
         z_owned_reply_data_t {
             sample: r.sample.into(),
-            source_kind: r.replier_kind as c_uint,
             replier_id: r.replier_id.into(),
         }
     }
@@ -1138,15 +1125,15 @@ pub unsafe extern "C" fn z_reply_check(reply: &z_owned_reply_t) -> bool {
         || (z_reply_t_Tag::DATA == reply.tag && z_reply_data_check(&reply.data))
 }
 
-/// The possible values of :c:member:`z_target_t.tag`.
+/// The possible values of :c:member:`z_query_target_t.tag`.
 ///
-///     - **z_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
-///     - **z_target_t_COMPLETE**: A set of complete queryables.
-///     - **z_target_t_ALL**: All matching queryables.
-///     - **z_target_t_NONE**: No queryables.
+///     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+///     - **z_query_target_t_COMPLETE**: A set of complete queryables.
+///     - **z_query_target_t_ALL**: All matching queryables.
+///     - **z_query_target_t_NONE**: No queryables.
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub enum z_target_t {
+pub enum z_query_target_t {
     BEST_MATCHING,
     ALL,
     NONE,
@@ -1157,70 +1144,35 @@ pub enum z_target_t {
     // },
 }
 
-impl From<Target> for z_target_t {
-    #[inline]
-    fn from(t: Target) -> Self {
-        match t {
-            Target::BestMatching => z_target_t::BEST_MATCHING,
-            Target::All => z_target_t::ALL,
-            Target::None => z_target_t::NONE,
-            Target::AllComplete => z_target_t::ALL_COMPLETE,
-            // #[cfg(feature = "complete_n")]
-            // Target::Complete(n) => z_target_t::COMPLETE { n: n as c_uint },
-        }
-    }
-}
-
-impl From<z_target_t> for Target {
-    #[inline]
-    fn from(val: z_target_t) -> Self {
-        match val {
-            z_target_t::BEST_MATCHING => Target::BestMatching,
-            z_target_t::ALL => Target::All,
-            z_target_t::NONE => Target::None,
-            z_target_t::ALL_COMPLETE => Target::AllComplete,
-            // #[cfg(feature = "complete_n")]
-            // z_target_t::COMPLETE { n } => Target::Complete(n as ZInt),
-        }
-    }
-}
-
-/// Create a default :c:type:`z_target_t`.
-#[no_mangle]
-pub extern "C" fn z_target_default() -> z_target_t {
-    Target::default().into()
-}
-
-/// The zenoh queryables that should be target of a `z_get`.
-///
-/// Members:
-///     `unsigned int kind`: A mask of queryable kinds.
-///     `z_target_t target`: The query target.
-#[repr(C)]
-pub struct z_query_target_t {
-    pub kind: c_uint,
-    pub target: z_target_t,
-}
 impl From<QueryTarget> for z_query_target_t {
     #[inline]
-    fn from(qt: QueryTarget) -> Self {
-        z_query_target_t {
-            kind: qt.kind as c_uint,
-            target: qt.target.into(),
+    fn from(t: QueryTarget) -> Self {
+        match t {
+            QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
+            QueryTarget::All => z_query_target_t::ALL,
+            QueryTarget::None => z_query_target_t::NONE,
+            QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
+            // #[cfg(feature = "complete_n")]
+            // QueryTarget::Complete(n) => z_query_target_t::COMPLETE { n: n as c_uint },
         }
     }
 }
+
 impl From<z_query_target_t> for QueryTarget {
     #[inline]
     fn from(val: z_query_target_t) -> Self {
-        QueryTarget {
-            kind: val.kind.into(),
-            target: val.target.into(),
+        match val {
+            z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
+            z_query_target_t::ALL => QueryTarget::All,
+            z_query_target_t::NONE => QueryTarget::None,
+            z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
+            // #[cfg(feature = "complete_n")]
+            // z_query_target_t::COMPLETE { n } => QueryTarget::Complete(n as ZInt),
         }
     }
 }
 
-/// Creates a default `z_query_target_t`.
+/// Create a default :c:type:`z_query_target_t`.
 #[no_mangle]
 pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()

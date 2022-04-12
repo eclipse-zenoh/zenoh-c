@@ -34,6 +34,20 @@ typedef enum z_known_encoding_t {
   z_known_encoding_t_ImageGif = 20,
 } z_known_encoding_t;
 /**
+ * The possible values of :c:member:`z_query_target_t.tag`.
+ *
+ *     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+ *     - **z_query_target_t_COMPLETE**: A set of complete queryables.
+ *     - **z_query_target_t_ALL**: All matching queryables.
+ *     - **z_query_target_t_NONE**: No queryables.
+ */
+typedef enum z_query_target_t {
+  z_query_target_t_BEST_MATCHING,
+  z_query_target_t_ALL,
+  z_query_target_t_NONE,
+  z_query_target_t_ALL_COMPLETE,
+} z_query_target_t;
+/**
  * The subscription reliability.
  *
  *     - **z_reliability_t_BEST_EFFORT**
@@ -63,20 +77,6 @@ typedef enum z_submode_t {
   z_submode_t_PUSH,
   z_submode_t_PULL,
 } z_submode_t;
-/**
- * The possible values of :c:member:`z_target_t.tag`.
- *
- *     - **z_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
- *     - **z_target_t_COMPLETE**: A set of complete queryables.
- *     - **z_target_t_ALL**: All matching queryables.
- *     - **z_target_t_NONE**: No queryables.
- */
-typedef enum z_target_t {
-  z_target_t_BEST_MATCHING,
-  z_target_t_ALL,
-  z_target_t_NONE,
-  z_target_t_ALL_COMPLETE,
-} z_target_t;
 typedef struct z_query_t z_query_t;
 /**
  * A zenoh-allocated array of bytes.
@@ -188,17 +188,6 @@ typedef struct z_owned_keyexpr_t {
   struct z_owned_bytes_t suffix;
 } z_owned_keyexpr_t;
 /**
- * The zenoh queryables that should be target of a `z_get`.
- *
- * Members:
- *     `unsigned int kind`: A mask of queryable kinds.
- *     `z_target_t target`: The query target.
- */
-typedef struct z_query_target_t {
-  unsigned int kind;
-  enum z_target_t target;
-} z_query_target_t;
-/**
  * The kind of consolidation that should be applied on replies to a :c:func:`z_get`
  * at the different stages of the reply process.
  *
@@ -255,7 +244,6 @@ typedef struct z_owned_sample_t {
  *
  * Members:
  *   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
- *   `unsigned int source_kind`: The kind of the replier that sent this reply.
  *   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
@@ -266,7 +254,6 @@ typedef struct z_owned_sample_t {
  */
 typedef struct z_owned_reply_data_t {
   struct z_owned_sample_t sample;
-  unsigned int source_kind;
   struct z_owned_bytes_t replier_id;
 } z_owned_reply_data_t;
 /**
@@ -406,9 +393,6 @@ typedef struct z_subinfo_t {
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
-extern const unsigned int Z_QUERYABLE_ALL_KINDS;
-extern const unsigned int Z_QUERYABLE_STORAGE;
-extern const unsigned int Z_QUERYABLE_EVAL;
 extern const char *Z_CONFIG_MODE_KEY;
 extern const char *Z_CONFIG_CONNECT_KEY;
 extern const char *Z_CONFIG_LISTEN_KEY;
@@ -571,7 +555,7 @@ struct z_owned_keyexpr_t z_expr_new(const char *name);
 void z_get(struct z_session_t session,
            struct z_keyexpr_t keyexpr,
            const char *predicate,
-           struct z_query_target_t target,
+           enum z_query_target_t target,
            struct z_query_consolidation_t consolidation,
            void (*callback)(struct z_owned_reply_t, const void*),
            void *arg);
@@ -592,7 +576,7 @@ void z_get(struct z_session_t session,
 struct z_owned_reply_data_array_t z_get_collect(struct z_session_t session,
                                                 struct z_keyexpr_t keyexpr,
                                                 const char *predicate,
-                                                struct z_query_target_t target,
+                                                enum z_query_target_t target,
                                                 struct z_query_consolidation_t consolidation);
 /**
  * Returns `true` if `hellos` is valid.
@@ -790,9 +774,9 @@ struct z_keyexpr_t z_query_key_expr(const struct z_query_t *query);
  */
 struct z_bytes_t z_query_predicate(const struct z_query_t *query);
 /**
- * Creates a default `z_query_target_t`.
+ * Create a default :c:type:`z_query_target_t`.
  */
-struct z_query_target_t z_query_target_default(void);
+enum z_query_target_t z_query_target_default(void);
 /**
  * Returns `true` if `qable` is valid.
  */
@@ -810,7 +794,6 @@ void z_queryable_close(struct z_owned_queryable_t *qable);
  * Parameters:
  *     session: The zenoh session.
  *     keyexpr: The key expression the Queryable will reply to.
- *     kind: The kind of Queryable.
  *     callback: The callback function that will be called each time a matching query is received.
  *     arg: A pointer that will be passed to the **callback** on each call.
  *
@@ -819,7 +802,6 @@ void z_queryable_close(struct z_owned_queryable_t *qable);
  */
 struct z_owned_queryable_t z_queryable_new(struct z_session_t session,
                                            struct z_keyexpr_t keyexpr,
-                                           unsigned int kind,
                                            void (*callback)(const struct z_query_t*, const void*),
                                            void *arg);
 /**
@@ -965,10 +947,6 @@ bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
  * Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
  */
 void z_subscriber_close(struct z_owned_subscriber_t *sub);
-/**
- * Create a default :c:type:`z_target_t`.
- */
-enum z_target_t z_target_default(void);
 /**
  * Unbinds the numerical id key generated by a call to :c:func:`z_declare_expr`.
  */
