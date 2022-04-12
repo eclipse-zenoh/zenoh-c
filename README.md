@@ -79,9 +79,9 @@ $ ./target/release/examples/z_sub
 $ ./target/release/examples/z_pub
 ```
 
-### Eval and Query Example
+### Queryable and Query Example
 ```bash
-$ ./target/release/examples/z_eval
+$ ./target/release/examples/z_queryable
 ```
 
 ```bash

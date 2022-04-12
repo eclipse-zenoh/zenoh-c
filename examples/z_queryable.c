@@ -21,8 +21,8 @@
 #endif
 #include "zenoh.h"
 
-char *expr = "/demo/example/zenoh-c-eval";
-char *value = "Eval from C!";
+char *expr = "/demo/example/zenoh-c-queryable";
+char *value = "Queryable from C!";
 
 void query_handler(const z_query_t *query, const void *arg)
 {
