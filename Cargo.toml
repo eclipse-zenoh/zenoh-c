@@ -62,14 +62,14 @@ doctest = false
 [package.metadata.deb.variants.libzenohc]
 name = "libzenohc"
 maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology."
+copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
 
 [package.metadata.deb.variants.libzenohc-dev]
 name = "libzenohc-dev"
 maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology."
+copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
 depends = "libzenohc (=0.6.0~dev)"

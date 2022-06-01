@@ -20,10 +20,12 @@
 #endif
 #include "zenoh.h"
 
-void data_handler(const z_sample_t *sample, const void *arg)
+void data_handler(const z_sample_t sample, const void *arg)
 {
-    printf(">> [Subscriber] Received ('%.*s': '%.*s')\n",
-           (int)sample->key.suffix.len, sample->key.suffix.start, (int)sample->value.len, sample->value.start);
+    char *keystr = z_keyexpr_to_string(sample.key);
+    printf(">> [Subscriber] Received ('%s': '%.*s')\n",
+           keystr, (int)sample.value.len, sample.value.start);
+    free(keystr);
 }
 
 int main(int argc, char **argv)
@@ -35,6 +37,7 @@ int main(int argc, char **argv)
     {
         expr = argv[1];
     }
+
     z_owned_config_t config = z_config_default();
     if (argc > 2)
     {
@@ -45,7 +48,7 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("Openning session...\n");
+    printf("Opening session...\n");
     z_owned_session_t s = z_open(z_move(config));
     if (!z_check(s))
     {
@@ -54,7 +57,7 @@ int main(int argc, char **argv)
     }
 
     printf("Declaring Subscriber on '%s'...\n", expr);
-    z_owned_subscriber_t sub = z_subscribe(z_loan(s), z_expr(expr), z_subinfo_default(), data_handler, NULL);
+    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), data_handler, NULL);
     if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");
@@ -72,7 +75,7 @@ int main(int argc, char **argv)
         }
     }
 
-    z_subscriber_close(z_move(sub));
+    z_undeclare_subscriber(z_move(sub));
     z_close(z_move(s));
     return 0;
 }
