@@ -315,7 +315,7 @@ struct z_owned_config_t z_config_peer(void);
 /**
  * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
-char *z_config_to_str(struct z_config_t config);
+char *z_config_to_string(struct z_config_t config);
 /**
  * Declare a key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
  *

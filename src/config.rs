@@ -200,7 +200,7 @@ pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t
 /// Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_config_to_str(config: z_config_t) -> *mut c_char {
+pub extern "C" fn z_config_to_string(config: z_config_t) -> *mut c_char {
     let config: &Config = match config.as_ref() {
         Some(c) => c,
         None => return std::ptr::null_mut(),
