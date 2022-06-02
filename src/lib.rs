@@ -25,6 +25,8 @@ mod get;
 pub use crate::get::*;
 mod queryable;
 pub use crate::queryable::*;
+mod put;
+pub use crate::put::*;
 mod scouting;
 pub use crate::scouting::*;
 mod session;

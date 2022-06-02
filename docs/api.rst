@@ -267,7 +267,7 @@ Types
 -----
 
 .. autocstruct:: zenoh_concrete.h::z_owned_subscriber_t
-.. autocenum:: zenoh_commons.h::z_reliability_t
+.. autocenum:: zenoh_commons.h::z_reliability
 .. autocenum:: zenoh_commons.h::z_submode_t
 .. autocstruct:: zenoh_commons.h::z_period_t
 .. autocstruct:: zenoh_commons.h::z_subinfo_t

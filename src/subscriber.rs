@@ -22,32 +22,32 @@ use zenoh::subscriber::Reliability;
 
 /// The subscription reliability.
 ///
-///     - **z_reliability_t_BEST_EFFORT**
-///     - **z_reliability_t_RELIABLE**
+///     - **z_reliability_BEST_EFFORT**
+///     - **z_reliability_RELIABLE**
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum z_reliability_t {
+pub enum z_reliability {
     BEST_EFFORT,
     RELIABLE,
 }
 
-impl From<Reliability> for z_reliability_t {
+impl From<Reliability> for z_reliability {
     #[inline]
     fn from(r: Reliability) -> Self {
         match r {
-            Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
-            Reliability::Reliable => z_reliability_t::RELIABLE,
+            Reliability::BestEffort => z_reliability::BEST_EFFORT,
+            Reliability::Reliable => z_reliability::RELIABLE,
         }
     }
 }
 
-impl From<z_reliability_t> for Reliability {
+impl From<z_reliability> for Reliability {
     #[inline]
-    fn from(val: z_reliability_t) -> Self {
+    fn from(val: z_reliability) -> Self {
         match val {
-            z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
-            z_reliability_t::RELIABLE => Reliability::Reliable,
+            z_reliability::BEST_EFFORT => Reliability::BestEffort,
+            z_reliability::RELIABLE => Reliability::Reliable,
         }
     }
 }
@@ -86,19 +86,19 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
 /// Declare a subscriber for a given key expression.
 ///
 /// Members:
-///     `z_reliability_t reliability`: The subscription reliability.
+///     `z_reliability reliability`: The subscription reliability.
 ///     `void *cargs`: A pointer that will be passed to the **callback** at each call.
 ///
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
-    pub reliability: z_reliability_t,
+    pub reliability: z_reliability,
     pub cargs: *const c_void,
 }
 
 /// Create a default subscription info.
 #[no_mangle]
-pub extern "C" fn z_subscriber_options() -> z_subscriber_options_t {
+pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
     let info = SubInfo::default();
     z_subscriber_options_t {
         reliability: info.reliability.into(),
@@ -112,7 +112,7 @@ pub extern "C" fn z_subscriber_options() -> z_subscriber_options_t {
 ///     session: The zenoh session.
 ///     keyexpr: The key expression to subscribe.
 ///     callback: The callback function that will be called each time a data matching the subscribed expression is received.
-///     opts: The options to be passed to describer A pointer that will be passed to the **callback** on each call.
+///     opts: The options to be passed to describe the options to be passed to the subscriber declaration.
 ///
 /// Returns:
 ///    A :c:type:`z_owned_subscriber_t`.
@@ -122,7 +122,45 @@ pub extern "C" fn z_subscriber_options() -> z_subscriber_options_t {
 ///
 ///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 ///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+///
+/// Example:
+///    Declaring a subscriber passing `NULL` for the options:
+///    ```
+///    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
+///    ```
+///
+///    is equivalent to initializing and passing the default subscriber options:
+///    
+///    ```
+///    z_subscriber_options_t opts = z_subscriber_options_default();
+///    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+///    ```
+///
+///    Passing custom arguments to the **callback** can be done by defining a custom structure:
+///
+///    ```
+///    typedef struct {
+///      z_keyexpr_t forward;
+///      z_session_t session;
+///    } myargs_t;
+///
+///    void callback(const z_sample_t sample, const void *arg)
+///    {
+///      myargs_t *myargs = (myargs_t *)arg;
+///      z_put(myargs->session, myargs->forward, sample->value, NULL);
+///    }
+///
+///    int main() {
+///      myargs_t cargs = {
+///        forward = z_keyexpr("/forward"),
+///        session = s,
+///      };
+///      z_subscriber_options_t opts = z_subscriber_options_default();
+///      opts.cargs = (void *)&cargs;
+///      z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+///    }
+///    ```
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_declare_subscriber(
@@ -141,7 +179,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
 
     match session.as_ref() {
         Some(s) => {
-            let default = z_subscriber_options();
+            let default = z_subscriber_options_default();
             if opts.is_null() {
                 opts = &default;
             }

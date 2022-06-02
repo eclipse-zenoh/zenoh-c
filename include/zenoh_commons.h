@@ -1,36 +1,53 @@
-typedef enum z_known_encoding_t {
-  z_known_encoding_t_Empty = 0,
-  z_known_encoding_t_AppOctetStream = 1,
-  z_known_encoding_t_AppCustom = 2,
-  z_known_encoding_t_TextPlain = 3,
-  z_known_encoding_t_AppProperties = 4,
-  z_known_encoding_t_AppJson = 5,
-  z_known_encoding_t_AppSql = 6,
-  z_known_encoding_t_AppInteger = 7,
-  z_known_encoding_t_AppFloat = 8,
-  z_known_encoding_t_AppXml = 9,
-  z_known_encoding_t_AppXhtmlXml = 10,
-  z_known_encoding_t_AppXWwwFormUrlencoded = 11,
-  z_known_encoding_t_TextJson = 12,
-  z_known_encoding_t_TextHtml = 13,
-  z_known_encoding_t_TextXml = 14,
-  z_known_encoding_t_TextCss = 15,
-  z_known_encoding_t_TextCsv = 16,
-  z_known_encoding_t_TextJavascript = 17,
-  z_known_encoding_t_ImageJpeg = 18,
-  z_known_encoding_t_ImagePng = 19,
-  z_known_encoding_t_ImageGif = 20,
-} z_known_encoding_t;
+typedef enum z_congestion_control {
+  z_congestion_control_BLOCK,
+  z_congestion_control_DROP,
+} z_congestion_control;
+typedef enum z_known_encoding {
+  z_known_encoding_Empty = 0,
+  z_known_encoding_AppOctetStream = 1,
+  z_known_encoding_AppCustom = 2,
+  z_known_encoding_TextPlain = 3,
+  z_known_encoding_AppProperties = 4,
+  z_known_encoding_AppJson = 5,
+  z_known_encoding_AppSql = 6,
+  z_known_encoding_AppInteger = 7,
+  z_known_encoding_AppFloat = 8,
+  z_known_encoding_AppXml = 9,
+  z_known_encoding_AppXhtmlXml = 10,
+  z_known_encoding_AppXWwwFormUrlencoded = 11,
+  z_known_encoding_TextJson = 12,
+  z_known_encoding_TextHtml = 13,
+  z_known_encoding_TextXml = 14,
+  z_known_encoding_TextCss = 15,
+  z_known_encoding_TextCsv = 16,
+  z_known_encoding_TextJavascript = 17,
+  z_known_encoding_ImageJpeg = 18,
+  z_known_encoding_ImagePng = 19,
+  z_known_encoding_ImageGif = 20,
+} z_known_encoding;
+typedef enum z_priority {
+  z_priority_REAL_TIME = 1,
+  z_priority_INTERACTIVE_HIGH = 2,
+  z_priority_INTERACTIVE_LOW = 3,
+  z_priority_DATA_HIGH = 4,
+  z_priority_DATA = 5,
+  z_priority_DATA_LOW = 6,
+  z_priority_BACKGROUND = 7,
+} z_priority;
 /**
  * The subscription reliability.
  *
- *     - **z_reliability_t_BEST_EFFORT**
- *     - **z_reliability_t_RELIABLE**
+ *     - **z_reliability_BEST_EFFORT**
+ *     - **z_reliability_RELIABLE**
  */
-typedef enum z_reliability_t {
-  z_reliability_t_BEST_EFFORT,
-  z_reliability_t_RELIABLE,
-} z_reliability_t;
+typedef enum z_reliability {
+  z_reliability_BEST_EFFORT,
+  z_reliability_RELIABLE,
+} z_reliability;
+typedef enum z_sample_kind {
+  z_sample_kind_PUT,
+  z_sample_kind_DELETE,
+} z_sample_kind;
 /**
  * A loaned array of bytes.
  */
@@ -119,7 +136,7 @@ typedef struct z_keyexpr_t {
  * `suffix` MUST be a valid UTF-8 string.
  */
 typedef struct z_encoding_t {
-  enum z_known_encoding_t prefix;
+  enum z_known_encoding prefix;
   struct z_bytes_t suffix;
 } z_encoding_t;
 /**
@@ -132,27 +149,36 @@ typedef struct z_encoding_t {
  *   `z_bytes_t value`: The value of this data sample.
  */
 typedef struct z_sample_t {
-  struct z_keyexpr_t key;
-  struct z_bytes_t value;
+  struct z_keyexpr_t keyexpr;
+  struct z_bytes_t payload;
   struct z_encoding_t encoding;
+  enum z_sample_kind kind;
 } z_sample_t;
 /**
  * Declare a subscriber for a given key expression.
  *
  * Members:
- *     `z_reliability_t reliability`: The subscription reliability.
+ *     `z_reliability reliability`: The subscription reliability.
  *     `void *cargs`: A pointer that will be passed to the **callback** at each call.
  *
  */
 typedef struct z_subscriber_options_t {
-  enum z_reliability_t reliability;
+  enum z_reliability reliability;
   const void *cargs;
 } z_subscriber_options_t;
 typedef struct z_owned_encoding_t {
-  enum z_known_encoding_t prefix;
+  enum z_known_encoding prefix;
   struct z_owned_bytes_t suffix;
   bool _freed;
 } z_owned_encoding_t;
+/**
+ * Options passed to the :c:func:`z_put_ext` function.
+ */
+typedef struct z_put_options_t {
+  struct z_encoding_t encoding;
+  enum z_congestion_control congestion_control;
+  enum z_priority priority;
+} z_put_options_t;
 /**
  * A zenoh-allocated data sample.
  *
@@ -172,9 +198,10 @@ typedef struct z_owned_encoding_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_sample_t {
-  struct z_owned_keyexpr_t key;
-  struct z_owned_bytes_t value;
+  struct z_owned_keyexpr_t keyexpr;
+  struct z_owned_bytes_t payload;
   struct z_owned_encoding_t encoding;
+  enum z_sample_kind kind;
 } z_owned_sample_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
@@ -199,7 +226,7 @@ extern const unsigned int Z_INFO_ROUTER_PID_KEY;
  * starting at address `start`.
  * The bytes from `start` are NOT copied.
  */
-struct z_bytes_t z_bytes(const uint8_t *start, uintptr_t len);
+struct z_bytes_t z_bytes(const uint8_t *start, size_t len);
 /**
  * Returns `true` if `b` is valid.
  */
@@ -220,7 +247,7 @@ struct z_bytes_t z_bytes_loan(const struct z_owned_bytes_t *b);
  * starting at address `start`.
  * The bytes from `start` are copied.
  */
-struct z_owned_bytes_t z_bytes_new(const uint8_t *start, uintptr_t len);
+struct z_owned_bytes_t z_bytes_new(const uint8_t *start, size_t len);
 /**
  * Closes a zenoh session. This frees and invalidates `session` for double-free safety.
  */
@@ -303,7 +330,7 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_
  *     session: The zenoh session.
  *     keyexpr: The key expression to subscribe.
  *     callback: The callback function that will be called each time a data matching the subscribed expression is received.
- *     opts: The options to be passed to describer A pointer that will be passed to the **callback** on each call.
+ *     opts: The options to be passed to describe the options to be passed to the subscriber declaration.
  *
  * Returns:
  *    A :c:type:`z_owned_subscriber_t`.
@@ -314,6 +341,44 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_
  *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
  *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *
+ * Example:
+ *    Declaring a subscriber passing `NULL` for the options:
+ *    ```
+ *    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
+ *    ```
+ *
+ *    is equivalent to initializing and passing the default subscriber options:
+ *
+ *    ```
+ *    z_subscriber_options_t opts = z_subscriber_options_default();
+ *    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ *    ```
+ *
+ *    Passing custom arguments to the **callback** can be done by defining a custom structure:
+ *
+ *    ```
+ *    typedef struct {
+ *      z_keyexpr_t forward;
+ *      z_session_t session;
+ *    } myargs_t;
+ *
+ *    void callback(const z_sample_t sample, const void *arg)
+ *    {
+ *      myargs_t *myargs = (myargs_t *)arg;
+ *      z_put(myargs->session, myargs->forward, sample->value, NULL);
+ *    }
+ *
+ *    int main() {
+ *      myargs_t cargs = {
+ *        forward = z_keyexpr("/forward"),
+ *        session = s,
+ *      };
+ *      z_subscriber_options_t opts = z_subscriber_options_default();
+ *      opts.cargs = (void *)&cargs;
+ *      z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ *    }
+ *    ```
  */
 struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_keyexpr_t keyexpr,
@@ -391,6 +456,27 @@ char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
+ * Write data with extended options.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression to write.
+ *     payload: The value to write.
+ *     len: The length of the value to write.
+ *     options: The write options
+ * Returns:
+ *     ``0`` in case of success, ``1`` in case of failure.
+ */
+int z_put(struct z_session_t session,
+          struct z_keyexpr_t keyexpr,
+          const uint8_t *payload,
+          size_t len,
+          const struct z_put_options_t *opts);
+/**
+ * Constructs the default value for write options
+ */
+struct z_put_options_t z_put_options_default(void);
+/**
  * Returns `true` if `sample` is valid.
  */
 bool z_sample_check(const struct z_owned_sample_t *sample);
@@ -417,7 +503,7 @@ bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 /**
  * Create a default subscription info.
  */
-struct z_subscriber_options_t z_subscriber_options(void);
+struct z_subscriber_options_t z_subscriber_options_default(void);
 /**
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
  */

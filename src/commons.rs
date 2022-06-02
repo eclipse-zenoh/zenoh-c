@@ -14,7 +14,7 @@
 use crate::collections::*;
 use crate::keyexpr::*;
 use libc::{c_ulong, c_void};
-use zenoh::prelude::{Sample, Value};
+use zenoh::prelude::{Sample, SampleKind, Value};
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -41,6 +41,33 @@ impl From<CallbackArgs> for *const c_void {
     }
 }
 
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_sample_kind {
+    PUT,
+    DELETE,
+}
+
+impl From<SampleKind> for z_sample_kind {
+    fn from(k: SampleKind) -> Self {
+        match k {
+            SampleKind::Put => z_sample_kind::PUT,
+            SampleKind::Delete => z_sample_kind::DELETE,
+            SampleKind::Patch => z_sample_kind::PUT, // @TODO: to be removed once removed in Rust
+        }
+    }
+}
+
+impl From<z_sample_kind> for SampleKind {
+    fn from(k: z_sample_kind) -> Self {
+        match k {
+            z_sample_kind::PUT => SampleKind::Put,
+            z_sample_kind::DELETE => SampleKind::Delete,
+        }
+    }
+}
+
 /// A zenoh-allocated data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -59,18 +86,21 @@ impl From<CallbackArgs> for *const c_void {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_sample_t {
-    pub key: z_owned_keyexpr_t,
-    pub value: z_owned_bytes_t,
+    pub keyexpr: z_owned_keyexpr_t,
+    pub payload: z_owned_bytes_t,
     pub encoding: z_owned_encoding_t,
+    pub kind: z_sample_kind,
+    // @TODO: add timestamp and source_info
 }
 
 impl From<Sample> for z_owned_sample_t {
     #[inline]
     fn from(s: Sample) -> Self {
         z_owned_sample_t {
-            key: s.key_expr.into(),
-            value: s.value.payload.into(),
+            keyexpr: s.key_expr.into(),
+            payload: s.value.payload.into(),
             encoding: z_encoding_t::from(&s.value.encoding).into(),
+            kind: s.kind.into(),
         }
     }
 }
@@ -100,23 +130,26 @@ impl From<Value> for z_owned_value_t {
 ///   `z_bytes_t value`: The value of this data sample.
 #[repr(C)]
 pub struct z_sample_t {
-    pub key: z_keyexpr_t,
-    pub value: z_bytes_t,
+    pub keyexpr: z_keyexpr_t,
+    pub payload: z_bytes_t,
     pub encoding: z_encoding_t,
+    pub kind: z_sample_kind,
+    // @TODO: add timestamp and source_info
 }
 
 /// Frees `sample`, invalidating it for double-free safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_free(sample: &mut z_owned_sample_t) {
-    z_keyexpr_free(&mut sample.key);
-    z_bytes_free(&mut sample.value);
+    z_keyexpr_free(&mut sample.keyexpr);
+    z_bytes_free(&mut sample.payload);
 }
+
 /// Returns `true` if `sample` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
-    z_keyexpr_check(&sample.key) && z_bytes_check(&sample.value)
+    z_keyexpr_check(&sample.keyexpr) && z_bytes_check(&sample.payload)
 }
 
 /// Returns a :c:type:`z_sample_t` loaned from `sample`.
@@ -124,15 +157,16 @@ pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_loan(sample: &z_owned_sample_t) -> z_sample_t {
     z_sample_t {
-        key: z_keyexpr_loan(&sample.key),
-        value: z_bytes_loan(&sample.value),
+        keyexpr: z_keyexpr_loan(&sample.keyexpr),
+        payload: z_bytes_loan(&sample.payload),
         encoding: z_encoding_loan(&sample.encoding),
+        kind: sample.kind,
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
-pub enum z_known_encoding_t {
+pub enum z_known_encoding {
     Empty = 0,
     AppOctetStream = 1,
     AppCustom = 2,
@@ -156,39 +190,39 @@ pub enum z_known_encoding_t {
     ImageGif = 20,
 }
 
-impl From<z_known_encoding_t> for zenoh_protocol_core::KnownEncoding {
-    fn from(val: z_known_encoding_t) -> Self {
+impl From<z_known_encoding> for zenoh_protocol_core::KnownEncoding {
+    fn from(val: z_known_encoding) -> Self {
         if cfg!(debug_assertions) {
             match val {
-                z_known_encoding_t::Empty => zenoh_protocol_core::KnownEncoding::Empty,
-                z_known_encoding_t::AppOctetStream => {
+                z_known_encoding::Empty => zenoh_protocol_core::KnownEncoding::Empty,
+                z_known_encoding::AppOctetStream => {
                     zenoh_protocol_core::KnownEncoding::AppOctetStream
                 }
-                z_known_encoding_t::AppCustom => zenoh_protocol_core::KnownEncoding::AppCustom,
-                z_known_encoding_t::TextPlain => zenoh_protocol_core::KnownEncoding::TextPlain,
-                z_known_encoding_t::AppProperties => {
+                z_known_encoding::AppCustom => zenoh_protocol_core::KnownEncoding::AppCustom,
+                z_known_encoding::TextPlain => zenoh_protocol_core::KnownEncoding::TextPlain,
+                z_known_encoding::AppProperties => {
                     zenoh_protocol_core::KnownEncoding::AppProperties
                 }
-                z_known_encoding_t::AppJson => zenoh_protocol_core::KnownEncoding::AppJson,
-                z_known_encoding_t::AppSql => zenoh_protocol_core::KnownEncoding::AppSql,
-                z_known_encoding_t::AppInteger => zenoh_protocol_core::KnownEncoding::AppInteger,
-                z_known_encoding_t::AppFloat => zenoh_protocol_core::KnownEncoding::AppFloat,
-                z_known_encoding_t::AppXml => zenoh_protocol_core::KnownEncoding::AppXml,
-                z_known_encoding_t::AppXhtmlXml => zenoh_protocol_core::KnownEncoding::AppXhtmlXml,
-                z_known_encoding_t::AppXWwwFormUrlencoded => {
+                z_known_encoding::AppJson => zenoh_protocol_core::KnownEncoding::AppJson,
+                z_known_encoding::AppSql => zenoh_protocol_core::KnownEncoding::AppSql,
+                z_known_encoding::AppInteger => zenoh_protocol_core::KnownEncoding::AppInteger,
+                z_known_encoding::AppFloat => zenoh_protocol_core::KnownEncoding::AppFloat,
+                z_known_encoding::AppXml => zenoh_protocol_core::KnownEncoding::AppXml,
+                z_known_encoding::AppXhtmlXml => zenoh_protocol_core::KnownEncoding::AppXhtmlXml,
+                z_known_encoding::AppXWwwFormUrlencoded => {
                     zenoh_protocol_core::KnownEncoding::AppXWwwFormUrlencoded
                 }
-                z_known_encoding_t::TextJson => zenoh_protocol_core::KnownEncoding::TextJson,
-                z_known_encoding_t::TextHtml => zenoh_protocol_core::KnownEncoding::TextHtml,
-                z_known_encoding_t::TextXml => zenoh_protocol_core::KnownEncoding::TextXml,
-                z_known_encoding_t::TextCss => zenoh_protocol_core::KnownEncoding::TextCss,
-                z_known_encoding_t::TextCsv => zenoh_protocol_core::KnownEncoding::TextCsv,
-                z_known_encoding_t::TextJavascript => {
+                z_known_encoding::TextJson => zenoh_protocol_core::KnownEncoding::TextJson,
+                z_known_encoding::TextHtml => zenoh_protocol_core::KnownEncoding::TextHtml,
+                z_known_encoding::TextXml => zenoh_protocol_core::KnownEncoding::TextXml,
+                z_known_encoding::TextCss => zenoh_protocol_core::KnownEncoding::TextCss,
+                z_known_encoding::TextCsv => zenoh_protocol_core::KnownEncoding::TextCsv,
+                z_known_encoding::TextJavascript => {
                     zenoh_protocol_core::KnownEncoding::TextJavascript
                 }
-                z_known_encoding_t::ImageJpeg => zenoh_protocol_core::KnownEncoding::ImageJpeg,
-                z_known_encoding_t::ImagePng => zenoh_protocol_core::KnownEncoding::ImagePng,
-                z_known_encoding_t::ImageGif => zenoh_protocol_core::KnownEncoding::ImageGif,
+                z_known_encoding::ImageJpeg => zenoh_protocol_core::KnownEncoding::ImageJpeg,
+                z_known_encoding::ImagePng => zenoh_protocol_core::KnownEncoding::ImagePng,
+                z_known_encoding::ImageGif => zenoh_protocol_core::KnownEncoding::ImageGif,
             }
         } else {
             unsafe { std::mem::transmute(val as u8) }
@@ -196,39 +230,39 @@ impl From<z_known_encoding_t> for zenoh_protocol_core::KnownEncoding {
     }
 }
 
-impl From<zenoh_protocol_core::KnownEncoding> for z_known_encoding_t {
+impl From<zenoh_protocol_core::KnownEncoding> for z_known_encoding {
     fn from(val: zenoh_protocol_core::KnownEncoding) -> Self {
         if cfg!(debug_assertions) {
             match val {
-                zenoh_protocol_core::KnownEncoding::Empty => z_known_encoding_t::Empty,
+                zenoh_protocol_core::KnownEncoding::Empty => z_known_encoding::Empty,
                 zenoh_protocol_core::KnownEncoding::AppOctetStream => {
-                    z_known_encoding_t::AppOctetStream
+                    z_known_encoding::AppOctetStream
                 }
-                zenoh_protocol_core::KnownEncoding::AppCustom => z_known_encoding_t::AppCustom,
-                zenoh_protocol_core::KnownEncoding::TextPlain => z_known_encoding_t::TextPlain,
+                zenoh_protocol_core::KnownEncoding::AppCustom => z_known_encoding::AppCustom,
+                zenoh_protocol_core::KnownEncoding::TextPlain => z_known_encoding::TextPlain,
                 zenoh_protocol_core::KnownEncoding::AppProperties => {
-                    z_known_encoding_t::AppProperties
+                    z_known_encoding::AppProperties
                 }
-                zenoh_protocol_core::KnownEncoding::AppJson => z_known_encoding_t::AppJson,
-                zenoh_protocol_core::KnownEncoding::AppSql => z_known_encoding_t::AppSql,
-                zenoh_protocol_core::KnownEncoding::AppInteger => z_known_encoding_t::AppInteger,
-                zenoh_protocol_core::KnownEncoding::AppFloat => z_known_encoding_t::AppFloat,
-                zenoh_protocol_core::KnownEncoding::AppXml => z_known_encoding_t::AppXml,
-                zenoh_protocol_core::KnownEncoding::AppXhtmlXml => z_known_encoding_t::AppXhtmlXml,
+                zenoh_protocol_core::KnownEncoding::AppJson => z_known_encoding::AppJson,
+                zenoh_protocol_core::KnownEncoding::AppSql => z_known_encoding::AppSql,
+                zenoh_protocol_core::KnownEncoding::AppInteger => z_known_encoding::AppInteger,
+                zenoh_protocol_core::KnownEncoding::AppFloat => z_known_encoding::AppFloat,
+                zenoh_protocol_core::KnownEncoding::AppXml => z_known_encoding::AppXml,
+                zenoh_protocol_core::KnownEncoding::AppXhtmlXml => z_known_encoding::AppXhtmlXml,
                 zenoh_protocol_core::KnownEncoding::AppXWwwFormUrlencoded => {
-                    z_known_encoding_t::AppXWwwFormUrlencoded
+                    z_known_encoding::AppXWwwFormUrlencoded
                 }
-                zenoh_protocol_core::KnownEncoding::TextJson => z_known_encoding_t::TextJson,
-                zenoh_protocol_core::KnownEncoding::TextHtml => z_known_encoding_t::TextHtml,
-                zenoh_protocol_core::KnownEncoding::TextXml => z_known_encoding_t::TextXml,
-                zenoh_protocol_core::KnownEncoding::TextCss => z_known_encoding_t::TextCss,
-                zenoh_protocol_core::KnownEncoding::TextCsv => z_known_encoding_t::TextCsv,
+                zenoh_protocol_core::KnownEncoding::TextJson => z_known_encoding::TextJson,
+                zenoh_protocol_core::KnownEncoding::TextHtml => z_known_encoding::TextHtml,
+                zenoh_protocol_core::KnownEncoding::TextXml => z_known_encoding::TextXml,
+                zenoh_protocol_core::KnownEncoding::TextCss => z_known_encoding::TextCss,
+                zenoh_protocol_core::KnownEncoding::TextCsv => z_known_encoding::TextCsv,
                 zenoh_protocol_core::KnownEncoding::TextJavascript => {
-                    z_known_encoding_t::TextJavascript
+                    z_known_encoding::TextJavascript
                 }
-                zenoh_protocol_core::KnownEncoding::ImageJpeg => z_known_encoding_t::ImageJpeg,
-                zenoh_protocol_core::KnownEncoding::ImagePng => z_known_encoding_t::ImagePng,
-                zenoh_protocol_core::KnownEncoding::ImageGif => z_known_encoding_t::ImageGif,
+                zenoh_protocol_core::KnownEncoding::ImageJpeg => z_known_encoding::ImageJpeg,
+                zenoh_protocol_core::KnownEncoding::ImagePng => z_known_encoding::ImagePng,
+                zenoh_protocol_core::KnownEncoding::ImageGif => z_known_encoding::ImageGif,
             }
         } else {
             unsafe { std::mem::transmute(val as u32) }
@@ -244,7 +278,7 @@ impl From<zenoh_protocol_core::KnownEncoding> for z_known_encoding_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_encoding_t {
-    pub prefix: z_known_encoding_t,
+    pub prefix: z_known_encoding,
     pub suffix: z_bytes_t,
 }
 
@@ -278,7 +312,7 @@ impl From<&zenoh_protocol_core::Encoding> for z_encoding_t {
 
 #[repr(C)]
 pub struct z_owned_encoding_t {
-    pub prefix: z_known_encoding_t,
+    pub prefix: z_known_encoding,
     pub suffix: z_owned_bytes_t,
     pub _freed: bool,
 }

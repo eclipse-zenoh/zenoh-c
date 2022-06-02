@@ -22,9 +22,9 @@
 
 void data_handler(const z_sample_t sample, const void *arg)
 {
-    char *keystr = z_keyexpr_to_string(sample.key);
+    char *keystr = z_keyexpr_to_string(sample.keyexpr);
     printf(">> [Subscriber] Received ('%s': '%.*s')\n",
-           keystr, (int)sample.value.len, sample.value.start);
+           keystr, (int)sample.payload.len, sample.payload.start);
     free(keystr);
 }
 

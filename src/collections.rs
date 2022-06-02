@@ -73,7 +73,7 @@ impl Default for z_bytes_t {
 /// The bytes from `start` are NOT copied.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes(start: *const u8, len: usize) -> z_bytes_t {
+pub unsafe extern "C" fn z_bytes(start: *const u8, len: size_t) -> z_bytes_t {
     z_bytes_t { start, len }
 }
 
@@ -82,7 +82,7 @@ pub unsafe extern "C" fn z_bytes(start: *const u8, len: usize) -> z_bytes_t {
 /// The bytes from `start` are copied.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_new(start: *const u8, len: usize) -> z_owned_bytes_t {
+pub unsafe extern "C" fn z_bytes_new(start: *const u8, len: size_t) -> z_owned_bytes_t {
     let slice = std::slice::from_raw_parts(start, len);
     let boxed = Box::<[u8]>::from(slice);
     let start = Box::into_raw(boxed);

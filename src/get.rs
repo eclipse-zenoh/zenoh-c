@@ -186,7 +186,7 @@
 //                 key: z_owned_keyexpr_t::null(),
 //                 value: z_owned_bytes_t::empty(),
 //                 encoding: z_owned_encoding_t {
-//                     prefix: z_known_encoding_t::Empty,
+//                     prefix: z_known_encoding::Empty,
 //                     suffix: z_owned_bytes_t {
 //                         start: std::ptr::null(),
 //                         len: 0,

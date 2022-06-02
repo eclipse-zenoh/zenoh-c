@@ -46,7 +46,7 @@
 //         }
 //     }
 
-//     printf("Openning session...\n");
+//     printf("Opening session...\n");
 //     z_owned_session_t s = z_open(z_move(config));
 //     if (!z_check(s))
 //     {
@@ -56,7 +56,7 @@
 
 //     printf("Creating Subscriber on '%s'...\n", expr);
 //     z_subinfo_t subinfo;
-//     subinfo.reliability = z_reliability_t_RELIABLE;
+//     subinfo.reliability = z_reliability_RELIABLE;
 //     subinfo.mode = z_submode_t_PULL;
 //     subinfo.period = z_period_NONE;
 //     z_owned_subscriber_t sub = z_subscribe(z_loan(s), z_expr(expr), subinfo, data_handler, NULL);

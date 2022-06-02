@@ -34,7 +34,7 @@
 //         }
 //     }
 
-//     printf("Openning session...\n");
+//     printf("Opening session...\n");
 //     z_owned_session_t s = z_open(z_move(config));
 //     if (!z_check(s))
 //     {

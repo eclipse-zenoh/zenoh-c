@@ -90,20 +90,20 @@
 
 // /// The behavior to adopt in case of congestion while routing some data.
 // ///
-// ///     - **z_congestion_control_t_BLOCK**
-// ///     - **z_congestion_control_t_DROP**
+// ///     - **z_congestion_control_BLOCK**
+// ///     - **z_congestion_control_DROP**
 // #[allow(non_camel_case_types)]
 // #[repr(C)]
-// pub enum z_congestion_control_t {
+// pub enum z_congestion_control {
 //     BLOCK,
 //     DROP,
 // }
 
-// impl From<z_congestion_control_t> for CongestionControl {
-//     fn from(val: z_congestion_control_t) -> Self {
+// impl From<z_congestion_control> for CongestionControl {
+//     fn from(val: z_congestion_control) -> Self {
 //         match val {
-//             z_congestion_control_t::BLOCK => CongestionControl::Block,
-//             z_congestion_control_t::DROP => CongestionControl::Drop,
+//             z_congestion_control::BLOCK => CongestionControl::Block,
+//             z_congestion_control::DROP => CongestionControl::Drop,
 //         }
 //     }
 // }
