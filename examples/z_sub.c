@@ -20,7 +20,7 @@
 #endif
 #include "zenoh.h"
 
-void data_handler(const z_sample_t sample, const void *arg)
+void data_handler(const z_sample_t sample, void *arg)
 {
     char *keystr = z_keyexpr_to_string(sample.keyexpr);
     printf(">> [Subscriber] Received ('%s': '%.*s')\n",

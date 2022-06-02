@@ -93,7 +93,7 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
 #[repr(C)]
 pub struct z_subscriber_options_t {
     pub reliability: z_reliability,
-    pub cargs: *const c_void,
+    pub cargs: *mut c_void,
 }
 
 /// Create a default subscription info.
@@ -102,7 +102,7 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
     let info = SubInfo::default();
     z_subscriber_options_t {
         reliability: info.reliability.into(),
-        cargs: std::ptr::null(),
+        cargs: std::ptr::null_mut(),
     }
 }
 
@@ -166,7 +166,7 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 pub unsafe extern "C" fn z_declare_subscriber(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
-    callback: extern "C" fn(z_sample_t, *const c_void),
+    callback: extern "C" fn(z_sample_t, *mut c_void),
     mut opts: *const z_subscriber_options_t,
 ) -> z_owned_subscriber_t {
     unsafe fn ok(sub: zenoh::subscriber::CallbackSubscriber<'_>) -> z_owned_subscriber_t {

@@ -164,7 +164,7 @@ typedef struct z_sample_t {
  */
 typedef struct z_subscriber_options_t {
   enum z_reliability reliability;
-  const void *cargs;
+  void *cargs;
 } z_subscriber_options_t;
 typedef struct z_owned_encoding_t {
   enum z_known_encoding prefix;
@@ -382,7 +382,7 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_
  */
 struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_keyexpr_t keyexpr,
-                                                 void (*callback)(struct z_sample_t, const void*),
+                                                 void (*callback)(struct z_sample_t, void*),
                                                  const struct z_subscriber_options_t *opts);
 /**
  * Returns `true` if `encoding` is valid.
