@@ -192,13 +192,13 @@ pub unsafe extern "C" fn z_declare_subscriber(
                 .subscribe(keyexpr)
                 .callback(move |sample| {
                     let payload = sample.payload.contiguous();
-                    let payload = z_bytes_t {
+                    let bytes = z_bytes_t {
                         start: payload.as_ptr(),
                         len: payload.len(),
                     };
                     let sample = z_sample_t {
                         keyexpr: (&sample.key_expr).into(),
-                        payload,
+                        payload: bytes,
                         encoding: (&sample.encoding).into(),
                         kind: sample.kind.into(),
                     };

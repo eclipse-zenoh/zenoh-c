@@ -17,33 +17,30 @@
 
 #define N 100000
 
-volatile unsigned long long int count = 0;
-volatile clock_t start;
-volatile clock_t stop;
-
-void print_stats(volatile clock_t *start, volatile clock_t *stop)
+typedef struct
 {
-    clock_t elapsed = stop - start;
-    double thpt = N * (double)CLOCKS_PER_SEC / (double)(elapsed);
-    printf("%f msgs/sec\n", thpt);
-}
+    volatile unsigned long count;
+    volatile clock_t start;
+    volatile clock_t stop;
+} z_stats_t;
 
 void data_handler(const z_sample_t sample, void *arg)
 {
-    if (count == 0)
+    z_stats_t *stats = (z_stats_t *)arg;
+    if (stats->count == 0)
     {
-        start = clock();
-        count++;
+        stats->start = clock();
+        stats->count++;
     }
-    else if (count < N)
+    else if (stats->count < N)
     {
-        count++;
+        stats->count++;
     }
     else
     {
-        stop = clock();
-        print_stats(&start, &stop);
-        count = 0;
+        stats->stop = clock();
+        printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stats->stop - stats->start));
+        stats->count = 0;
     }
 }
 
@@ -69,7 +66,11 @@ int main(int argc, char **argv)
     }
 
     z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("/test/thr"));
-    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), data_handler, NULL);
+
+    z_stats_t stats = {.count = 0};
+    z_subscriber_options_t opts = z_subscriber_options_default();
+    opts.cargs = &stats;
+    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), data_handler, &opts);
     if (!z_check(sub))
     {
         printf("Unable to create subscriber.\n");
