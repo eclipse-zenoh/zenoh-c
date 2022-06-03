@@ -45,32 +45,16 @@ typedef enum z_reliability {
   z_reliability_RELIABLE,
 } z_reliability;
 typedef enum z_sample_kind {
-  z_sample_kind_PUT,
-  z_sample_kind_DELETE,
+  z_sample_kind_PUT = 0,
+  z_sample_kind_DELETE = 1,
 } z_sample_kind;
 /**
- * A loaned array of bytes.
+ * An array of bytes.
  */
 typedef struct z_bytes_t {
   const uint8_t *start;
   size_t len;
 } z_bytes_t;
-/**
- * A zenoh-allocated array of bytes.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_bytes_t {
-  const uint8_t *start;
-  size_t len;
-} z_owned_bytes_t;
 /**
  * A zenoh unsigned integer
  */
@@ -103,7 +87,7 @@ typedef unsigned long z_zint_t;
  */
 typedef struct z_owned_keyexpr_t {
   z_zint_t _id;
-  struct z_owned_bytes_t _suffix;
+  struct z_bytes_t _suffix;
   struct z_session_t _session;
 } z_owned_keyexpr_t;
 /**
@@ -140,7 +124,7 @@ typedef struct z_encoding_t {
   struct z_bytes_t suffix;
 } z_encoding_t;
 /**
- * A loaned data sample.
+ * A data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
  *
@@ -168,7 +152,7 @@ typedef struct z_subscriber_options_t {
 } z_subscriber_options_t;
 typedef struct z_owned_encoding_t {
   enum z_known_encoding prefix;
-  struct z_owned_bytes_t suffix;
+  struct z_bytes_t suffix;
   bool _freed;
 } z_owned_encoding_t;
 /**
@@ -179,30 +163,6 @@ typedef struct z_put_options_t {
   enum z_congestion_control congestion_control;
   enum z_priority priority;
 } z_put_options_t;
-/**
- * A zenoh-allocated data sample.
- *
- * A sample is the value associated to a given resource at a given point in time.
- *
- * Members:
- *   `z_owned_string_t key`: The resource key of this data sample.
- *   `z_owned_bytes_t value`: The value of this data sample.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-typedef struct z_owned_sample_t {
-  struct z_owned_keyexpr_t keyexpr;
-  struct z_owned_bytes_t payload;
-  struct z_owned_encoding_t encoding;
-  enum z_sample_kind kind;
-} z_owned_sample_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
@@ -222,32 +182,9 @@ extern const unsigned int Z_INFO_PID_KEY;
 extern const unsigned int Z_INFO_PEER_PID_KEY;
 extern const unsigned int Z_INFO_ROUTER_PID_KEY;
 /**
- * Constructs a :c:type:`z_bytes_t` of length `len` from the bytes
- * starting at address `start`.
- * The bytes from `start` are NOT copied.
+ * Returns `true` if `b` is initialized.
  */
-struct z_bytes_t z_bytes(const uint8_t *start, size_t len);
-/**
- * Returns `true` if `b` is valid.
- */
-bool z_bytes_check(const struct z_owned_bytes_t *b);
-/**
- * Constructs a :c:type:`z_owned_bytes_t` of length `len` from the loaned z_bytes_t
- * starting at address `start`.
- * The bytes from `start` are copied.
- */
-struct z_owned_bytes_t z_bytes_clone(struct z_bytes_t bytes);
-/**
- * Frees `b` and invalidates it for double-free safety.
- */
-void z_bytes_free(struct z_owned_bytes_t *b);
-struct z_bytes_t z_bytes_loan(const struct z_owned_bytes_t *b);
-/**
- * Constructs a :c:type:`z_owned_bytes_t` of length `len` from the bytes
- * starting at address `start`.
- * The bytes from `start` are copied.
- */
-struct z_owned_bytes_t z_bytes_new(const uint8_t *start, size_t len);
+bool z_bytes_check(const struct z_bytes_t *b);
 /**
  * Closes a zenoh session. This frees and invalidates `session` for double-free safety.
  */
@@ -476,18 +413,6 @@ int z_put(struct z_session_t session,
  * Constructs the default value for write options
  */
 struct z_put_options_t z_put_options_default(void);
-/**
- * Returns `true` if `sample` is valid.
- */
-bool z_sample_check(const struct z_owned_sample_t *sample);
-/**
- * Frees `sample`, invalidating it for double-free safety.
- */
-void z_sample_free(struct z_owned_sample_t *sample);
-/**
- * Returns a :c:type:`z_sample_t` loaned from `sample`.
- */
-struct z_sample_t z_sample_loan(const struct z_owned_sample_t *sample);
 /**
  * Returns `true` if `session` is valid.
  */

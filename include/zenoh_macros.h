@@ -4,8 +4,6 @@
                            : z_keyexpr_loan,      \
                              z_owned_config_t     \
                            : z_config_loan,       \
-                             z_owned_bytes_t      \
-                           : z_bytes_loan,        \
                              z_owned_info_t       \
                            : z_info_loan,         \
                              z_owned_encoding_t   \
@@ -16,8 +14,6 @@
                            : z_keyexpr_free,          \
                              z_owned_config_t         \
                            : z_config_free,           \
-                             z_owned_bytes_t          \
-                           : z_bytes_free,            \
                              z_owned_info_t           \
                            : z_info_free,             \
                              z_owned_subscriber_t     \
@@ -30,7 +26,7 @@
                             : z_keyexpr_check,     \
                               z_owned_config_t     \
                             : z_config_check,      \
-                              z_owned_bytes_t      \
+                              z_bytes_t            \
                             : z_bytes_check,       \
                               z_owned_info_t       \
                             : z_info_check,        \

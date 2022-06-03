@@ -14,7 +14,7 @@
 use crate::collections::*;
 use crate::keyexpr::*;
 use libc::{c_ulong, c_void};
-use zenoh::prelude::{Sample, SampleKind, Value};
+use zenoh::prelude::SampleKind;
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -43,10 +43,10 @@ impl From<CallbackArgs> for *mut c_void {
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum z_sample_kind {
-    PUT,
-    DELETE,
+    PUT = 0,
+    DELETE = 1,
 }
 
 impl From<SampleKind> for z_sample_kind {
@@ -68,60 +68,7 @@ impl From<z_sample_kind> for SampleKind {
     }
 }
 
-/// A zenoh-allocated data sample.
-///
-/// A sample is the value associated to a given resource at a given point in time.
-///
-/// Members:
-///   `z_owned_string_t key`: The resource key of this data sample.
-///   `z_owned_bytes_t value`: The value of this data sample.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_sample_t {
-    pub keyexpr: z_owned_keyexpr_t,
-    pub payload: z_owned_bytes_t,
-    pub encoding: z_owned_encoding_t,
-    pub kind: z_sample_kind,
-    // @TODO: add timestamp and source_info
-}
-
-impl From<Sample> for z_owned_sample_t {
-    #[inline]
-    fn from(s: Sample) -> Self {
-        z_owned_sample_t {
-            keyexpr: s.key_expr.into(),
-            payload: s.value.payload.into(),
-            encoding: z_encoding_t::from(&s.value.encoding).into(),
-            kind: s.kind.into(),
-        }
-    }
-}
-
-#[repr(C)]
-pub struct z_owned_value_t {
-    pub value: z_owned_bytes_t,
-    pub encoding: z_owned_encoding_t,
-}
-
-impl From<Value> for z_owned_value_t {
-    #[inline]
-    fn from(v: Value) -> Self {
-        z_owned_value_t {
-            value: v.payload.into(),
-            encoding: z_encoding_t::from(&v.encoding).into(),
-        }
-    }
-}
-
-/// A loaned data sample.
+/// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
 ///
@@ -135,33 +82,6 @@ pub struct z_sample_t {
     pub encoding: z_encoding_t,
     pub kind: z_sample_kind,
     // @TODO: add timestamp and source_info
-}
-
-/// Frees `sample`, invalidating it for double-free safety.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_free(sample: &mut z_owned_sample_t) {
-    z_keyexpr_free(&mut sample.keyexpr);
-    z_bytes_free(&mut sample.payload);
-}
-
-/// Returns `true` if `sample` is valid.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
-    z_keyexpr_check(&sample.keyexpr) && z_bytes_check(&sample.payload)
-}
-
-/// Returns a :c:type:`z_sample_t` loaned from `sample`.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_loan(sample: &z_owned_sample_t) -> z_sample_t {
-    z_sample_t {
-        keyexpr: z_keyexpr_loan(&sample.keyexpr),
-        payload: z_bytes_loan(&sample.payload),
-        encoding: z_encoding_loan(&sample.encoding),
-        kind: sample.kind,
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -276,7 +196,7 @@ impl From<zenoh_protocol_core::KnownEncoding> for z_known_encoding {
 ///
 /// `suffix` MUST be a valid UTF-8 string.
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct z_encoding_t {
     pub prefix: z_known_encoding,
     pub suffix: z_bytes_t,
@@ -313,7 +233,7 @@ impl From<&zenoh_protocol_core::Encoding> for z_encoding_t {
 #[repr(C)]
 pub struct z_owned_encoding_t {
     pub prefix: z_known_encoding,
-    pub suffix: z_owned_bytes_t,
+    pub suffix: z_bytes_t,
     pub _freed: bool,
 }
 
@@ -345,16 +265,15 @@ pub unsafe extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool
 pub unsafe extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
     z_encoding_t {
         prefix: encoding.prefix,
-        suffix: z_bytes_loan(&encoding.suffix),
+        suffix: encoding.suffix,
     }
 }
 
 impl From<z_encoding_t> for z_owned_encoding_t {
     fn from(val: z_encoding_t) -> Self {
-        let suffix = unsafe { z_bytes_new(val.suffix.start, val.suffix.len) };
         z_owned_encoding_t {
             prefix: val.prefix,
-            suffix,
+            suffix: val.suffix,
             _freed: false,
         }
     }

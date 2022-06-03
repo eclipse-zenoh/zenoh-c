@@ -17,7 +17,7 @@ use crate::collections::*;
 use crate::commons::*;
 use crate::session::*;
 use crate::LOG_INVALID_SESSION;
-use libc::{c_char, c_ulong};
+use libc::c_char;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::{KeyExpr, ZInt};
 
@@ -48,7 +48,7 @@ use zenoh::prelude::{KeyExpr, ZInt};
 #[repr(C)]
 pub struct z_owned_keyexpr_t {
     pub _id: z_zint_t,
-    pub _suffix: z_owned_bytes_t,
+    pub _suffix: z_bytes_t,
     pub _session: z_session_t,
 }
 
@@ -57,7 +57,7 @@ pub struct z_owned_keyexpr_t {
 pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
     z_keyexpr_t {
         _id: keyexpr._id,
-        _suffix: z_bytes_loan(&keyexpr._suffix),
+        _suffix: keyexpr._suffix,
         _session: keyexpr._session,
     }
 }
@@ -80,37 +80,21 @@ pub unsafe extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
 
 impl<'a> From<KeyExpr<'a>> for z_owned_keyexpr_t {
     fn from(key: KeyExpr<'a>) -> Self {
-        let (id, suffix) = key.as_id_and_suffix();
-        z_owned_keyexpr_t {
-            _id: id as c_ulong,
-            _suffix: unsafe { z_bytes_new(suffix.as_ptr() as *const _, suffix.len()) },
-            _session: z_session_t::null(),
-        }
+        let key: z_keyexpr_t = (&key).into();
+        key.into()
     }
 }
 
-impl<'a> From<&'a z_owned_keyexpr_t> for KeyExpr<'a> {
-    fn from(r: &'a z_owned_keyexpr_t) -> Self {
-        unsafe {
-            let len = r._suffix.len;
-            match (r._id, len) {
-                (id, 0) => KeyExpr::from(id as ZInt),
-                (0, _) => KeyExpr::from(
-                    std::str::from_utf8(std::slice::from_raw_parts(
-                        r._suffix.start as *const _,
-                        len,
-                    ))
-                    .unwrap(),
-                ),
-                (id, _) => KeyExpr::from(id as ZInt).with_suffix(
-                    std::str::from_utf8(std::slice::from_raw_parts(
-                        r._suffix.start as *const _,
-                        len,
-                    ))
-                    .unwrap(),
-                ),
-            }
-        }
+impl<'a> From<z_owned_keyexpr_t> for KeyExpr<'a> {
+    fn from(key: z_owned_keyexpr_t) -> Self {
+        let key: z_keyexpr_t = (&key).into();
+        key.into()
+    }
+}
+
+impl From<z_keyexpr_t> for z_owned_keyexpr_t {
+    fn from(oke: z_keyexpr_t) -> Self {
+        unsafe { std::mem::transmute(oke) }
     }
 }
 
@@ -178,11 +162,17 @@ pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_cha
     }
 }
 
-impl<'a> From<&KeyExpr<'a>> for z_keyexpr_t {
-    fn from(key: &KeyExpr<'a>) -> Self {
+impl<'a> From<&'a z_owned_keyexpr_t> for z_keyexpr_t {
+    fn from(oke: &'a z_owned_keyexpr_t) -> Self {
+        unsafe { std::mem::transmute_copy(oke) }
+    }
+}
+
+impl<'a> From<&'a KeyExpr<'a>> for z_keyexpr_t {
+    fn from(key: &'a KeyExpr<'a>) -> Self {
         let (id, suffix) = key.as_id_and_suffix();
         z_keyexpr_t {
-            _id: id as c_ulong,
+            _id: id as z_zint_t,
             _suffix: z_bytes_t {
                 start: suffix.as_ptr() as *const _,
                 len: suffix.len(),
@@ -232,7 +222,7 @@ pub unsafe extern "C" fn z_declare_keyexpr(
     fn ok(session: z_session_t, id: ZInt) -> z_owned_keyexpr_t {
         z_owned_keyexpr_t {
             _id: id,
-            _suffix: z_owned_bytes_t::empty(),
+            _suffix: z_bytes_t::empty(),
             _session: session,
         }
     }
@@ -240,7 +230,7 @@ pub unsafe extern "C" fn z_declare_keyexpr(
     fn err() -> z_owned_keyexpr_t {
         z_owned_keyexpr_t {
             _id: 0,
-            _suffix: z_owned_bytes_t::empty(),
+            _suffix: z_bytes_t::empty(),
             _session: z_session_t::null(),
         }
     }

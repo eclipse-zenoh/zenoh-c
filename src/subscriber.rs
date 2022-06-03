@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use crate::collections::*;
 use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
@@ -18,6 +19,7 @@ use crate::{CallbackArgs, LOG_INVALID_SESSION};
 use libc::c_void;
 use zenoh::net::protocol::core::SubInfo;
 use zenoh::prelude::sync::SyncResolve;
+use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
 
 /// The subscription reliability.
@@ -188,7 +190,20 @@ pub unsafe extern "C" fn z_declare_subscriber(
             let reliability: Reliability = (*opts).reliability.into();
             let res = s
                 .subscribe(keyexpr)
-                .callback(move |sample| callback(z_sample_loan(&sample.into()), cargs.into()))
+                .callback(move |sample| {
+                    let payload = sample.payload.contiguous();
+                    let payload = z_bytes_t {
+                        start: payload.as_ptr(),
+                        len: payload.len(),
+                    };
+                    let sample = z_sample_t {
+                        keyexpr: (&sample.key_expr).into(),
+                        payload,
+                        encoding: (&sample.encoding).into(),
+                        kind: sample.kind.into(),
+                    };
+                    callback(sample, cargs.into());
+                })
                 .reliability(reliability)
                 .mode(zenoh_protocol_core::SubMode::Push)
                 .res();
