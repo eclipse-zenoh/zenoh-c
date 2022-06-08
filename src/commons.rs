@@ -54,7 +54,6 @@ impl From<SampleKind> for z_sample_kind {
         match k {
             SampleKind::Put => z_sample_kind::PUT,
             SampleKind::Delete => z_sample_kind::DELETE,
-            SampleKind::Patch => z_sample_kind::PUT, // @TODO: to be removed once removed in Rust
         }
     }
 }

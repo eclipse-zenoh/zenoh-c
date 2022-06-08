@@ -155,7 +155,7 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 ///
 ///    int main() {
 ///      myargs_t cargs = {
-///        forward = z_keyexpr("/forward"),
+///        forward = z_keyexpr("forward"),
 ///        session = s,
 ///      };
 ///      z_subscriber_options_t opts = z_subscriber_options_default();
@@ -189,7 +189,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
             let cargs = CallbackArgs::from((*opts).cargs);
             let reliability: Reliability = (*opts).reliability.into();
             let res = s
-                .subscribe(keyexpr)
+                .declare_subscriber(keyexpr)
                 .callback(move |sample| {
                     let payload = sample.payload.contiguous();
                     let bytes = z_bytes_t {
@@ -227,7 +227,9 @@ pub unsafe extern "C" fn z_declare_subscriber(
 #[no_mangle]
 pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) {
     if let Some(s) = sub.as_mut().take() {
-        s.close();
+        if let Err(e) = s.undeclare().res_sync() {
+            log::warn!("{}", e)
+        }
     }
 }
 

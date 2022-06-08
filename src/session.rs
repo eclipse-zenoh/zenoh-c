@@ -53,16 +53,6 @@ impl AsRef<Option<Session>> for z_session_t {
 #[repr(C)]
 pub struct z_session_t(*const z_owned_session_t);
 
-impl z_session_t {
-    pub(crate) fn null() -> z_session_t {
-        z_session_t(std::ptr::null())
-    }
-
-    pub(crate) fn check(&self) -> bool {
-        self.as_ref().is_some()
-    }
-}
-
 /// Returns a :c:type:`z_session_t` loaned from `s`.
 #[no_mangle]
 pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {

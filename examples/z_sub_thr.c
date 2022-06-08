@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("/test/thr"));
+    z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
 
     z_stats_t stats = {.count = 0};
     z_subscriber_options_t opts = z_subscriber_options_default();
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     }
 
     z_undeclare_subscriber(z_move(sub));
-    z_undeclare_keyexpr(z_move(ke));
+    z_undeclare_keyexpr(z_loan(s), z_move(ke));
     z_close(z_move(s));
     return 0;
 }

@@ -139,13 +139,20 @@ pub unsafe extern "C" fn z_put(
             if opts.is_null() {
                 opts = &default;
             }
-            s.put(keyexpr, std::slice::from_raw_parts(payload, len as usize))
+            match s
+                .put(keyexpr, std::slice::from_raw_parts(payload, len as usize))
                 .encoding((*opts).encoding)
                 .kind(SampleKind::Put)
                 .congestion_control((*opts).congestion_control.into())
                 .priority((*opts).priority.into())
-                .res()
-                .map_or_else(|_| err(), |_| ok())
+                .res_sync()
+            {
+                Err(e) => {
+                    log::error!("{}", e);
+                    err()
+                }
+                Ok(()) => ok(),
+            }
         }
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);

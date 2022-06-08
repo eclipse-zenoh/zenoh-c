@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    char *keyexpr = "/test/thr";
+    char *keyexpr = "test/thr";
     size_t len = atoi(argv[1]);
     uint8_t *value = (uint8_t *)malloc(len);
     memset(value, 1, len);
@@ -65,6 +65,6 @@ int main(int argc, char **argv)
 
     // @TODO: undeclare publisher
 
-    z_undeclare_keyexpr(z_move(ke));
+    z_undeclare_keyexpr(z_loan(s), z_move(ke));
     z_close(z_move(s));
 }

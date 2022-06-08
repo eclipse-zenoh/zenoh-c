@@ -1,5 +1,3 @@
-use std::ffi::CString;
-
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -13,13 +11,16 @@ use std::ffi::CString;
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::collections::*;
-use crate::commons::*;
+
+use std::convert::TryFrom;
+use std::ops::Deref;
+use std::ops::DerefMut;
+
 use crate::session::*;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
 use zenoh::prelude::sync::SyncResolve;
-use zenoh::prelude::{KeyExpr, ZInt};
+use zenoh::prelude::KeyExpr;
 
 /// A zenoh-allocated key expression.
 ///
@@ -47,49 +48,49 @@ use zenoh::prelude::{KeyExpr, ZInt};
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_keyexpr_t {
-    pub _id: z_zint_t,
-    pub _suffix: z_bytes_t,
-    pub _session: z_session_t,
+    pub _align: [u64; 2],
+    pub _padding: [usize; 2],
+}
+impl From<KeyExpr<'static>> for z_owned_keyexpr_t {
+    fn from(val: KeyExpr<'static>) -> Self {
+        unsafe { std::mem::transmute(Some(val)) }
+    }
+}
+impl Deref for z_owned_keyexpr_t {
+    type Target = Option<KeyExpr<'static>>;
+    fn deref(&self) -> &Self::Target {
+        unsafe { std::mem::transmute(self) }
+    }
+}
+impl DerefMut for z_owned_keyexpr_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { std::mem::transmute(self) }
+    }
+}
+impl z_owned_keyexpr_t {
+    pub fn null() -> Self {
+        unsafe { std::mem::transmute(None::<KeyExpr>) }
+    }
 }
 
 /// Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
-    z_keyexpr_t {
-        _id: keyexpr._id,
-        _suffix: keyexpr._suffix,
-        _session: keyexpr._session,
-    }
+    keyexpr.as_ref().map(|k| k.borrowing_clone()).into()
 }
 
 /// Frees `keyexpr` and invalidates it for double-free safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_free(keyexpr: &mut z_owned_keyexpr_t) {
-    z_bytes_free(&mut keyexpr._suffix);
-    keyexpr._id = 0;
-    keyexpr._session = z_session_t::null();
+    std::mem::drop(keyexpr.take())
 }
 
 /// Returns `true` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
-    (keyexpr._id != 0 && keyexpr._session.check()) || z_bytes_check(&keyexpr._suffix)
-}
-
-impl<'a> From<KeyExpr<'a>> for z_owned_keyexpr_t {
-    fn from(key: KeyExpr<'a>) -> Self {
-        let key: z_keyexpr_t = (&key).into();
-        key.into()
-    }
-}
-
-impl<'a> From<z_owned_keyexpr_t> for KeyExpr<'a> {
-    fn from(key: z_owned_keyexpr_t) -> Self {
-        let key: z_keyexpr_t = (&key).into();
-        key.into()
-    }
+    keyexpr.deref().is_some()
 }
 
 impl From<z_keyexpr_t> for z_owned_keyexpr_t {
@@ -116,19 +117,60 @@ impl From<z_keyexpr_t> for z_owned_keyexpr_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_keyexpr_t {
-    pub _id: z_zint_t,
-    pub _suffix: z_bytes_t,
-    pub _session: z_session_t,
+    pub _align: [u64; 2],
+    pub _padding: [usize; 2],
 }
-
+impl<'a> From<KeyExpr<'a>> for z_keyexpr_t {
+    fn from(val: KeyExpr<'a>) -> Self {
+        Some(val).into()
+    }
+}
+impl<'a> From<Option<KeyExpr<'a>>> for z_keyexpr_t {
+    fn from(val: Option<KeyExpr<'a>>) -> Self {
+        unsafe { std::mem::transmute(val) }
+    }
+}
+impl Deref for z_keyexpr_t {
+    type Target = Option<KeyExpr<'static>>;
+    fn deref(&self) -> &Self::Target {
+        unsafe { std::mem::transmute(self) }
+    }
+}
+impl DerefMut for z_keyexpr_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { std::mem::transmute(self) }
+    }
+}
 impl z_keyexpr_t {
-    pub fn null() -> z_keyexpr_t {
-        z_keyexpr_t {
-            _id: 0,
-            _suffix: z_bytes_t::empty(),
-            _session: z_session_t::null(),
+    pub fn null() -> Self {
+        unsafe { std::mem::transmute(None::<KeyExpr>) }
+    }
+}
+#[derive(Debug, Clone, Copy)]
+pub struct UninitializedKeyExprError;
+impl std::fmt::Display for UninitializedKeyExprError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Uninitialized Key Expression detected, make sure you use `z_keyexpr_check` or `z_loaned_keyexpr_check` after constructing your key expressions")
+    }
+}
+impl std::error::Error for UninitializedKeyExprError {}
+impl<'a> TryFrom<z_keyexpr_t> for KeyExpr<'a> {
+    type Error = UninitializedKeyExprError;
+    fn try_from(value: z_keyexpr_t) -> Result<Self, Self::Error> {
+        match value.as_ref() {
+            Some(ke) => {
+                Ok(unsafe { std::mem::transmute::<KeyExpr, KeyExpr<'a>>(ke.borrowing_clone()) })
+            }
+            None => Err(UninitializedKeyExprError),
         }
     }
+}
+
+/// Returns `true` if `keyexpr` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_loaned_keyexpr_check(keyexpr: &z_keyexpr_t) -> bool {
+    keyexpr.deref().is_some()
 }
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string.
@@ -136,17 +178,18 @@ impl z_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
-    z_keyexpr_t {
-        _id: 0,
-        _suffix: z_bytes_t {
-            start: name as *const _,
-            len: if name.is_null() {
-                0
-            } else {
-                libc::strlen(name)
-            },
+    match std::str::from_utf8(std::slice::from_raw_parts(name as _, libc::strlen(name))) {
+        Ok(name) => match KeyExpr::try_from(name) {
+            Ok(v) => v.into(),
+            Err(e) => {
+                log::error!("{}", e);
+                z_keyexpr_t::null()
+            }
         },
-        _session: z_session_t::null(),
+        Err(e) => {
+            log::error!("{}", e);
+            z_keyexpr_t::null()
+        }
     }
 }
 
@@ -155,10 +198,9 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_char {
-    let ke: KeyExpr<'_> = keyexpr.into();
-    match CString::new(ke.as_str().as_bytes().to_vec()) {
-        Ok(s) => s.into_raw(),
-        Err(_) => std::ptr::null_mut(),
+    match keyexpr.as_ref() {
+        Some(ke) => std::ffi::CString::new(ke.as_str()).unwrap().into_raw(),
+        None => std::ptr::null_mut(),
     }
 }
 
@@ -170,39 +212,7 @@ impl<'a> From<&'a z_owned_keyexpr_t> for z_keyexpr_t {
 
 impl<'a> From<&'a KeyExpr<'a>> for z_keyexpr_t {
     fn from(key: &'a KeyExpr<'a>) -> Self {
-        let (id, suffix) = key.as_id_and_suffix();
-        z_keyexpr_t {
-            _id: id as z_zint_t,
-            _suffix: z_bytes_t {
-                start: suffix.as_ptr() as *const _,
-                len: suffix.len(),
-            },
-            _session: z_session_t::null(),
-        }
-    }
-}
-
-impl<'a> From<z_keyexpr_t> for KeyExpr<'a> {
-    fn from(r: z_keyexpr_t) -> Self {
-        unsafe {
-            let len = r._suffix.len;
-            match (r._id, len) {
-                (id, 0) => KeyExpr::from(id as ZInt),
-                (0, _) => std::str::from_utf8(std::slice::from_raw_parts(
-                    r._suffix.start as *const _,
-                    len,
-                ))
-                .unwrap()
-                .into(),
-                (id, _) => KeyExpr::from(id as ZInt).with_suffix(
-                    std::str::from_utf8(std::slice::from_raw_parts(
-                        r._suffix.start as *const _,
-                        len,
-                    ))
-                    .unwrap(),
-                ),
-            }
-        }
+        key.borrowing_clone().into()
     }
 }
 
@@ -219,33 +229,24 @@ pub unsafe extern "C" fn z_declare_keyexpr(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
 ) -> z_owned_keyexpr_t {
-    fn ok(session: z_session_t, id: ZInt) -> z_owned_keyexpr_t {
-        z_owned_keyexpr_t {
-            _id: id,
-            _suffix: z_bytes_t::empty(),
-            _session: session,
+    let key_expr = match keyexpr.as_ref() {
+        Some(ke) => ke,
+        None => {
+            log::warn!("{}", UninitializedKeyExprError);
+            return z_owned_keyexpr_t::null();
         }
-    }
-
-    fn err() -> z_owned_keyexpr_t {
-        z_owned_keyexpr_t {
-            _id: 0,
-            _suffix: z_bytes_t::empty(),
-            _session: z_session_t::null(),
-        }
-    }
-
+    };
     match session.as_ref() {
-        Some(s) => match s.declare_expr(keyexpr).res() {
-            Ok(id) => ok(session, id),
+        Some(s) => match s.declare_keyexpr(key_expr).res_sync() {
+            Ok(id) => id.into_owned().into(),
             Err(e) => {
                 log::debug!("{}", e);
-                err()
+                z_owned_keyexpr_t::null()
             }
         },
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
-            err()
+            z_owned_keyexpr_t::null()
         }
     }
 }
@@ -253,14 +254,22 @@ pub unsafe extern "C" fn z_declare_keyexpr(
 /// Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_undeclare_keyexpr(keyexpr: &mut z_owned_keyexpr_t) {
-    match keyexpr._session.as_ref() {
-        Some(s) => {
-            if let Err(e) = s.undeclare_expr(keyexpr._id as ZInt).res() {
+pub unsafe extern "C" fn z_undeclare_keyexpr(
+    session: z_session_t,
+    keyexpr: &mut z_owned_keyexpr_t,
+) {
+    match session.as_ref() {
+        Some(s) => match s
+            .undeclare(keyexpr.as_ref().unwrap().borrowing_clone())
+            .res()
+        {
+            Ok(()) => {}
+            Err(e) => {
                 log::debug!("{}", e);
             }
-            z_keyexpr_free(keyexpr);
+        },
+        None => {
+            log::debug!("{}", LOG_INVALID_SESSION);
         }
-        None => log::debug!("{}", LOG_INVALID_SESSION),
     }
 }

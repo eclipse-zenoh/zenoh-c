@@ -17,7 +17,7 @@
 
 int main(int argc, char **argv)
 {
-    char *keyexpr = "/demo/example/zenoh-c-put";
+    char *keyexpr = "demo/example/zenoh-c-put";
     char *value = "Put from C!";
 
     z_init_logger();

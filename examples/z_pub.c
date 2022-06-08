@@ -23,7 +23,7 @@
 
 int main(int argc, char **argv)
 {
-    char *keyexpr = "/demo/example/zenoh-c-pub";
+    char *keyexpr = "demo/example/zenoh-c-pub";
     char *value = "Pub from C!";
 
     z_init_logger();
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
     // @TODO: undeclare publisher
 
-    z_undeclare_keyexpr(z_move(ke));
+    z_undeclare_keyexpr(z_loan(s), z_move(ke));
     z_close(z_move(s));
     return 0;
 }
