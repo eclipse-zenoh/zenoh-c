@@ -77,7 +77,7 @@ typedef struct z_bytes_t {
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
@@ -94,13 +94,8 @@ typedef struct z_owned_keyexpr_t {
  *    - ``"key/expression"``.
  *    - ``"key/ex*"``.
  *
- * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
- * for wire and computation efficiency.
- *
- * A key expression can be either:
- *   - A plain string expression.
- *   - A pure numerical id.
- *   - The combination of a numerical prefix and a string suffix.
+ * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
+ * both for local processing and network-wise.
  */
 typedef struct z_keyexpr_t {
   uint64_t _align[2];
@@ -147,7 +142,7 @@ typedef struct z_subscriber_options_t {
 typedef struct z_owned_encoding_t {
   enum z_known_encoding prefix;
   struct z_bytes_t suffix;
-  bool _freed;
+  bool _dropped;
 } z_owned_encoding_t;
 /**
  * Options passed to the :c:func:`z_put_ext` function.
@@ -180,7 +175,7 @@ extern const unsigned int Z_INFO_ROUTER_PID_KEY;
  */
 bool z_bytes_check(const struct z_bytes_t *b);
 /**
- * Closes a zenoh session. This frees and invalidates `session` for double-free safety.
+ * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  */
 void z_close(struct z_owned_session_t *session);
 /**
@@ -197,13 +192,13 @@ struct z_owned_config_t z_config_client(const char *const *peers, uintptr_t n_pe
  */
 struct z_owned_config_t z_config_default(void);
 /**
+ * Frees `config`, invalidating it for double-drop safety.
+ */
+void z_config_drop(struct z_owned_config_t *config);
+/**
  * Creates an empty, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_empty(void);
-/**
- * Frees `config`, invalidating it for double-free safety.
- */
-void z_config_free(struct z_owned_config_t *config);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  */
@@ -234,7 +229,7 @@ struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
@@ -271,7 +266,7 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_
  *
  *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+ *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * Example:
  *    Declaring a subscriber passing `NULL` for the options:
@@ -320,13 +315,13 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
  */
 bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
- * Frees `encoding`, invalidating it for double-free safety.
+ * Frees `encoding`, invalidating it for double-drop safety.
  */
 struct z_encoding_t z_encoding_default(void);
 /**
- * Frees `encoding`, invalidating it for double-free safety.
+ * Frees `encoding`, invalidating it for double-drop safety.
  */
-void z_encoding_free(struct z_owned_encoding_t *encoding);
+void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
  * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
  */
@@ -344,12 +339,12 @@ char *z_info_as_str(struct z_session_t session);
  */
 bool z_info_check(const struct z_owned_info_t *info);
 /**
- * Frees `info`'s memory, while invalidating `info` for double-free-safety.
+ * Frees `info`'s memory, while invalidating `info` for double-drop-safety.
  */
-void z_info_free(struct z_owned_info_t *info);
+void z_info_drop(struct z_owned_info_t *info);
 /**
  * Returns the information associated with `key` if it exists.
- * If it doesn't, the returned value is invalid, and doesn't need freeing.
+ * If it doesn't, the returned value is invalid, and doesn't need droping.
  */
 char *z_info_get(struct z_info_t info, uint64_t key);
 /**
@@ -362,7 +357,7 @@ struct z_info_t z_info_loan(const struct z_owned_info_t *info);
 void z_init_logger(void);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
- * It is a loaned key expression.
+ * It is a loaned key expression that aliases `name`.
  */
 struct z_keyexpr_t z_keyexpr(const char *name);
 /**
@@ -370,16 +365,16 @@ struct z_keyexpr_t z_keyexpr(const char *name);
  */
 bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
 /**
- * Frees `keyexpr` and invalidates it for double-free safety.
+ * Frees `keyexpr` and invalidates it for double-drop safety.
  */
-void z_keyexpr_free(struct z_owned_keyexpr_t *keyexpr);
+void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
 /**
  * Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
  */
 struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
- * The user is responsible of freeing the allocated string being returned.
+ * The user is responsible of droping the allocated string being returned.
  */
 char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**

@@ -43,7 +43,7 @@ use zenoh::prelude::KeyExpr;
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
@@ -79,10 +79,10 @@ pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
     keyexpr.as_ref().map(|k| k.borrowing_clone()).into()
 }
 
-/// Frees `keyexpr` and invalidates it for double-free safety.
+/// Frees `keyexpr` and invalidates it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_keyexpr_free(keyexpr: &mut z_owned_keyexpr_t) {
+pub unsafe extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
     std::mem::drop(keyexpr.take())
 }
 
@@ -107,13 +107,8 @@ impl From<z_keyexpr_t> for z_owned_keyexpr_t {
 ///    - ``"key/expression"``.
 ///    - ``"key/ex*"``.
 ///
-/// Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
-/// for wire and computation efficiency.
-///
-/// A key expression can be either:
-///   - A plain string expression.
-///   - A pure numerical id.
-///   - The combination of a numerical prefix and a string suffix.
+/// Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
+/// both for local processing and network-wise.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_keyexpr_t {
@@ -174,7 +169,7 @@ pub unsafe extern "C" fn z_loaned_keyexpr_check(keyexpr: &z_keyexpr_t) -> bool {
 }
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string.
-/// It is a loaned key expression.
+/// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
@@ -194,7 +189,7 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
 }
 
 /// Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
-/// The user is responsible of freeing the allocated string being returned.
+/// The user is responsible of droping the allocated string being returned.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_char {

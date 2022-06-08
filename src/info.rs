@@ -36,7 +36,7 @@ pub struct z_info_t<'a>(&'a z_owned_info_t);
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
@@ -57,10 +57,10 @@ impl AsMut<Option<InfoProperties>> for z_owned_info_t {
     }
 }
 
-/// Frees `info`'s memory, while invalidating `info` for double-free-safety.
+/// Frees `info`'s memory, while invalidating `info` for double-drop-safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_info_free(info: &mut z_owned_info_t) {
+pub extern "C" fn z_info_drop(info: &mut z_owned_info_t) {
     std::mem::drop(info.as_mut().take())
 }
 /// Returns `true` if `info` is valid.
@@ -78,7 +78,7 @@ pub extern "C" fn z_info_loan(info: &z_owned_info_t) -> z_info_t {
 }
 
 /// Returns the information associated with `key` if it exists.  
-/// If it doesn't, the returned value is invalid, and doesn't need freeing.
+/// If it doesn't, the returned value is invalid, and doesn't need droping.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_info_get(info: z_info_t, key: u64) -> *mut c_char {

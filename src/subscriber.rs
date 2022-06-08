@@ -66,7 +66,7 @@ type Subscriber = Option<Box<zenoh::subscriber::CallbackSubscriber<'static>>>;
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
@@ -124,7 +124,7 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 ///
 ///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
 ///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// Example:
 ///    Declaring a subscriber passing `NULL` for the options:
@@ -222,7 +222,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
     }
 }
 
-// Unsubscribes from the passed `sub`, freeing it and invalidating it for double-free safety.
+// Unsubscribes from the passed `sub`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) {

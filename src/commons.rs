@@ -233,29 +233,29 @@ impl From<&zenoh_protocol_core::Encoding> for z_encoding_t {
 pub struct z_owned_encoding_t {
     pub prefix: z_known_encoding,
     pub suffix: z_bytes_t,
-    pub _freed: bool,
+    pub _dropped: bool,
 }
 
-/// Frees `encoding`, invalidating it for double-free safety.
+/// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_default() -> z_encoding_t {
     (&zenoh_protocol_core::Encoding::default()).into()
 }
 
-/// Frees `encoding`, invalidating it for double-free safety.
+/// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_free(encoding: &mut z_owned_encoding_t) {
-    z_bytes_free(&mut encoding.suffix);
-    encoding._freed = true
+pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
+    z_bytes_drop(&mut encoding.suffix);
+    encoding._dropped = true
 }
 
 /// Returns `true` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
-    !encoding._freed
+    !encoding._dropped
 }
 
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
@@ -273,7 +273,7 @@ impl From<z_encoding_t> for z_owned_encoding_t {
         z_owned_encoding_t {
             prefix: val.prefix,
             suffix: val.suffix,
-            _freed: false,
+            _dropped: false,
         }
     }
 }

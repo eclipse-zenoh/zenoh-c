@@ -43,9 +43,9 @@ pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
     !b.start.is_null()
 }
 
-/// Frees `b` and invalidates it for double-free safety.
+/// Frees `b` and invalidates it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
-pub(crate) unsafe fn z_bytes_free(b: &mut z_bytes_t) {
+pub(crate) unsafe fn z_bytes_drop(b: &mut z_bytes_t) {
     if !b.start.is_null() {
         std::mem::drop(Box::from_raw(
             std::slice::from_raw_parts(b.start, b.len) as *const [u8] as *mut [u8],

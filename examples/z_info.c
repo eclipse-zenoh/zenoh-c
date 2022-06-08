@@ -40,17 +40,17 @@
 //     z_info_t ps = z_loan(ops);
 //     z_owned_string_t prop = z_info_get(ps, Z_INFO_PID_KEY);
 //     printf("info_pid : %s\n", z_loan(prop));
-//     z_string_free(z_move(prop));
+//     z_string_drop(z_move(prop));
 
 //     prop = z_info_get(ps, Z_INFO_ROUTER_PID_KEY);
 //     printf("info_router_pid : %s\n", z_loan(prop));
-//     z_string_free(z_move(prop));
+//     z_string_drop(z_move(prop));
 
 //     prop = z_info_get(ps, Z_INFO_PEER_PID_KEY);
 //     printf("info_peer_pid : %s\n", z_loan(prop));
-//     z_string_free(z_move(prop));
+//     z_string_drop(z_move(prop));
 
-//     z_info_free(z_move(ops));
+//     z_info_drop(z_move(ops));
 //     z_close(z_move(s));
 // }
 

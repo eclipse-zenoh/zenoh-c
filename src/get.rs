@@ -20,7 +20,7 @@
 // ///
 // /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 // /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 // ///
 // /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 // #[repr(C)]
@@ -209,12 +209,12 @@
 //     }
 // }
 
-// /// Frees `reply_data`, invalidating it for double-free safety.
+// /// Frees `reply_data`, invalidating it for double-drop safety.
 // #[no_mangle]
 // #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_reply_data_free(reply_data: &mut z_owned_reply_data_t) {
-//     z_sample_free(&mut reply_data.sample);
-//     z_bytes_free(&mut reply_data.replier_id);
+// pub unsafe extern "C" fn z_reply_data_drop(reply_data: &mut z_owned_reply_data_t) {
+//     z_sample_drop(&mut reply_data.sample);
+//     z_bytes_drop(&mut reply_data.replier_id);
 // }
 // /// Returns `true` if `reply_data` is valid.
 // #[no_mangle]
@@ -231,7 +231,7 @@
 // ///
 // /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 // /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 // ///
 // /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 // #[repr(C)]
@@ -243,18 +243,18 @@
 // /// Free a :c:type:`z_owned_reply_data_array_t` and it's contained replies.
 // ///
 // /// Parameters:
-// ///     replies: The :c:type:`z_owned_reply_data_array_t` to free.
+// ///     replies: The :c:type:`z_owned_reply_data_array_t` to drop.
 // ///
 // #[allow(clippy::missing_safety_doc)]
 // #[no_mangle]
-// pub unsafe extern "C" fn z_reply_data_array_free(replies: &mut z_owned_reply_data_array_t) {
+// pub unsafe extern "C" fn z_reply_data_array_drop(replies: &mut z_owned_reply_data_array_t) {
 //     let vec = Vec::from_raw_parts(
 //         replies.val as *mut z_owned_reply_data_t,
 //         replies.len,
 //         replies.len,
 //     );
 //     for mut rd in vec {
-//         z_reply_data_free(&mut rd);
+//         z_reply_data_drop(&mut rd);
 //     }
 //     replies.val = std::ptr::null();
 //     replies.len = 0;
@@ -286,7 +286,7 @@
 // ///
 // /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 // /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 // ///
 // /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 // #[allow(non_camel_case_types)]
@@ -295,12 +295,12 @@
 //     pub tag: z_reply_t_Tag,
 //     pub data: z_owned_reply_data_t,
 // }
-// /// Frees `reply`, invalidating it for double-free safety.
+// /// Frees `reply`, invalidating it for double-drop safety.
 // #[no_mangle]
 // #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_reply_free(reply: &mut z_owned_reply_t) {
+// pub unsafe extern "C" fn z_reply_drop(reply: &mut z_owned_reply_t) {
 //     if reply.tag == z_reply_t_Tag::DATA {
-//         z_reply_data_free(&mut reply.data)
+//         z_reply_data_drop(&mut reply.data)
 //     }
 // }
 // /// Returns `true` if `reply` is valid.

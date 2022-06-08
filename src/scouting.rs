@@ -16,7 +16,7 @@
 // ///
 // /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 // /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 // ///
 // /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 // #[repr(C)]
@@ -65,10 +65,10 @@
 //     }
 // }
 
-// /// Frees `strs` and invalidates it for double-free safety.
+// /// Frees `strs` and invalidates it for double-drop safety.
 // #[allow(clippy::missing_safety_doc)]
 // #[no_mangle]
-// pub unsafe extern "C" fn z_str_array_free(strs: &mut z_owned_str_array_t) {
+// pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
 //     let locators = Vec::from_raw_parts(
 //         strs.val as *mut *const c_char,
 //         strs.len as usize,
@@ -117,7 +117,7 @@
 // ///
 // /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 // /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 // ///
 // /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 // #[repr(C)]
@@ -140,12 +140,12 @@
 //     }
 // }
 
-// /// Frees `hello`, invalidating it for double-free safety.
+// /// Frees `hello`, invalidating it for double-drop safety.
 // #[no_mangle]
 // #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_hello_free(hello: &mut z_owned_hello_t) {
-//     z_bytes_free(&mut hello.pid);
-//     z_str_array_free(&mut hello.locators);
+// pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
+//     z_bytes_drop(&mut hello.pid);
+//     z_str_array_drop(&mut hello.locators);
 //     hello.whatami = 0;
 // }
 // /// Returns `true` if `hello` is valid.
@@ -163,7 +163,7 @@
 // ///
 // /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 // /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-free-safe, but other functions will still trust that your `val` is valid.
+// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 // ///
 // /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 // #[repr(C)]
@@ -187,17 +187,17 @@
 //         res
 //     }
 // }
-// /// Frees `hellos`, invalidating it for double-free safety.
+// /// Frees `hellos`, invalidating it for double-drop safety.
 // #[no_mangle]
 // #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_hello_array_free(hellos: &mut z_owned_hello_array_t) {
+// pub unsafe extern "C" fn z_hello_array_drop(hellos: &mut z_owned_hello_array_t) {
 //     let hellos_vec = Vec::from_raw_parts(
 //         hellos.val as *mut z_owned_hello_t,
 //         hellos.len as usize,
 //         hellos.len as usize,
 //     );
 //     for mut hello in hellos_vec {
-//         z_hello_free(&mut hello);
+//         z_hello_drop(&mut hello);
 //     }
 //     hellos.val = std::ptr::null_mut();
 //     hellos.len = 0;

@@ -54,7 +54,7 @@
 //                (int)replies.val[i].sample.key.suffix.len, replies.val[i].sample.key.suffix.start,
 //                (int)replies.val[i].sample.value.len, replies.val[i].sample.value.start);
 //     }
-//     z_reply_data_array_free(z_move(replies));
+//     z_reply_data_array_drop(z_move(replies));
 //     z_close(z_move(s));
 //     return 0;
 // }

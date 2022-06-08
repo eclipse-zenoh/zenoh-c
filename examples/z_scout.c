@@ -94,7 +94,7 @@
 //     {
 //         printf("Did not find any zenoh process.\n");
 //     }
-//     z_hello_array_free(z_move(hellos));
+//     z_hello_array_drop(z_move(hellos));
 //     return 0;
 // }
 
