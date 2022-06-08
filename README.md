@@ -23,7 +23,7 @@ that is able to scale down to extremely constrainded devices and networks.
   $ sudo apt-get install rustc
   ```
 
-  -- MacOS -- 
+  -- macOS -- 
 
   ```bash
   $ brew install rust
@@ -97,7 +97,7 @@ $ ./target/release/examples/z_pub_thgr
 ```
 
 ## API conventions
-Many of the types exposed by the `zenoh-c` API are types for which destruction is necessary. To help you spot these types, we named them with the convention that  any destructible type must start by `z_owned`.
+Many of the types exposed by the `zenoh-c` API are types for which destruction is necessary. To help you spot these types, we named them with the convention that any destructible type must start by `z_owned`.
 
 For maximum performance, we try to make as few copies as possible. Sometimes, this implies moving data that you `z_owned`. Any function that takes a non-const pointer to a `z_owned` type will perform its destruction. To make this pattern more obvious, we encourage you to use the `z_move` macro instead of a simple `&` to create these pointers. Rest assured that all `z_owned` types are double-free safe, and that you may check whether any `z_owned_X_t` typed value is still valid by using `z_X_check(&val)`, or the `z_check(val)` macro if you're using C11.
 

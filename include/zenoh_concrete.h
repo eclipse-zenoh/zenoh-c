@@ -40,7 +40,7 @@
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_session_t {
+typedef struct {
   uintptr_t _0[3];
 } z_owned_session_t;
 /**
@@ -55,20 +55,20 @@ typedef struct z_owned_session_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_config_t {
+typedef struct {
   void *_0;
 } z_owned_config_t;
 /**
  * A loaned zenoh config.
  */
-typedef struct z_config_t {
-  const struct z_owned_config_t *_0;
+typedef struct {
+  const z_owned_config_t *_0;
 } z_config_t;
 /**
  * A loaned zenoh session.
  */
-typedef struct z_session_t {
-  const struct z_owned_session_t *_0;
+typedef struct {
+  const z_owned_session_t *_0;
 } z_session_t;
 /**
  * A map of integers to strings providing informations on the zenoh session.
@@ -82,12 +82,12 @@ typedef struct z_session_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_info_t {
+typedef struct {
   uint64_t _align[2];
   uintptr_t _pad[4];
 } z_owned_info_t;
-typedef struct z_info_t {
-  const struct z_owned_info_t *_0;
+typedef struct {
+  const z_owned_info_t *_0;
 } z_info_t;
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
@@ -101,7 +101,7 @@ typedef struct z_info_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_subscriber_t {
+typedef struct {
   uintptr_t _0[1];
 } z_owned_subscriber_t;
 /**
@@ -116,6 +116,6 @@ typedef struct z_owned_subscriber_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_queryable_t {
+typedef struct {
   uintptr_t _0[1];
 } z_owned_queryable_t;

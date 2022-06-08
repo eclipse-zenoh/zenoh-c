@@ -63,7 +63,7 @@ documentation_style = "auto"
 
 ############################# Codegen Options ##################################
 
-style = "both"
+style = "type"
 
 
 [defines]
