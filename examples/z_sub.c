@@ -25,7 +25,7 @@ void data_handler(const z_sample_t sample, void *arg)
     char *keystr = z_keyexpr_to_string(sample.keyexpr);
     printf(">> [Subscriber] Received ('%s': '%.*s')\n",
            keystr, (int)sample.payload.len, sample.payload.start);
-    drop(keystr);
+    free(keystr);
 }
 
 int main(int argc, char **argv)
@@ -56,8 +56,9 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
+    z_owned_closure_sample_t callback = z_owned_closure_sample_new_stateless(data_handler);
     printf("Declaring Subscriber on '%s'...\n", expr);
-    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), data_handler, NULL);
+    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), z_move(callback), NULL);
     if (!z_check(sub))
     {
         printf("Unable to declare subscriber.\n");

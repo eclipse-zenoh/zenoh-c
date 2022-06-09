@@ -15,8 +15,9 @@ use crate::collections::*;
 use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
-use crate::{CallbackArgs, LOG_INVALID_SESSION};
-use libc::c_void;
+use crate::z_owned_closure_sample_call;
+use crate::z_owned_closure_sample_t;
+use crate::LOG_INVALID_SESSION;
 use zenoh::net::protocol::core::SubInfo;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
@@ -95,7 +96,6 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
 #[repr(C)]
 pub struct z_subscriber_options_t {
     pub reliability: z_reliability,
-    pub cargs: *mut c_void,
 }
 
 /// Create a default subscription info.
@@ -104,7 +104,6 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
     let info = SubInfo::default();
     z_subscriber_options_t {
         reliability: info.reliability.into(),
-        cargs: std::ptr::null_mut(),
     }
 }
 
@@ -168,9 +167,11 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 pub unsafe extern "C" fn z_declare_subscriber(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
-    callback: extern "C" fn(z_sample_t, *mut c_void),
+    callback: &mut z_owned_closure_sample_t,
     mut opts: *const z_subscriber_options_t,
 ) -> z_owned_subscriber_t {
+    let mut closure = z_owned_closure_sample_t::empty();
+    std::mem::swap(callback, &mut closure);
     unsafe fn ok(sub: zenoh::subscriber::CallbackSubscriber<'_>) -> z_owned_subscriber_t {
         std::mem::transmute(Some(Box::new(sub)))
     }
@@ -185,8 +186,6 @@ pub unsafe extern "C" fn z_declare_subscriber(
             if opts.is_null() {
                 opts = &default;
             }
-
-            let cargs = CallbackArgs::from((*opts).cargs);
             let reliability: Reliability = (*opts).reliability.into();
             let res = s
                 .declare_subscriber(keyexpr)
@@ -202,7 +201,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
                         encoding: (&sample.encoding).into(),
                         kind: sample.kind.into(),
                     };
-                    callback(sample, cargs.into());
+                    z_owned_closure_sample_call(&closure, &sample)
                 })
                 .reliability(reliability)
                 .mode(zenoh_protocol_core::SubMode::Push)

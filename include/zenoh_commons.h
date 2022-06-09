@@ -128,6 +128,24 @@ typedef struct z_sample_t {
   enum z_sample_kind kind;
 } z_sample_t;
 /**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * - `this` is a pointer to an arbitrary state.
+ * - `call` is the typical callback function. `this` will be passed as its last argument.
+ * - `drop` allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * We guarantee that:
+ * - `call` will never be called once `drop` has started.
+ * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
+ * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_sample_t {
+  void *this_;
+  void (*call)(const struct z_sample_t*, const void*);
+  void (*drop)(void*);
+} z_owned_closure_sample_t;
+/**
  * Declare a subscriber for a given key expression.
  *
  * Members:
@@ -137,7 +155,6 @@ typedef struct z_sample_t {
  */
 typedef struct z_subscriber_options_t {
   enum z_reliability reliability;
-  void *cargs;
 } z_subscriber_options_t;
 typedef struct z_owned_encoding_t {
   enum z_known_encoding prefix;
@@ -308,7 +325,7 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_
  */
 struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_keyexpr_t keyexpr,
-                                                 void (*callback)(struct z_sample_t, void*),
+                                                 struct z_owned_closure_sample_t *callback,
                                                  const struct z_subscriber_options_t *opts);
 /**
  * Returns `true` if `encoding` is valid.
@@ -365,18 +382,65 @@ struct z_keyexpr_t z_keyexpr(const char *name);
  */
 bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
 /**
+ * Performs string concatenation and returns the result as a `z_owned_keyexpr_t`.
+ * In case of error, the return value will be set to its invalidated state.
+ *
+ * You should probably prefer `z_keyexpr_join` as Zenoh may then take advantage of the hierachical separation it inserts.
+ *
+ * To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
+ * as this would extremely likely cause bugs.
+ */
+struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
+                                          const char *right_start,
+                                          uintptr_t right_len);
+/**
  * Frees `keyexpr` and invalidates it for double-drop safety.
  */
 void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
+/**
+ * Returns `1` if `left` and `right` define equal sets.
+ */
+bool z_keyexpr_equals(struct z_keyexpr_t left, struct z_keyexpr_t right);
+/**
+ * Returns `1` if the set defined by `left` contains every key belonging to the set defined by `right`.
+ */
+bool z_keyexpr_includes(struct z_keyexpr_t left,
+                        struct z_keyexpr_t right);
+/**
+ * Returns `1` if `left` and `right` define sets that have at least one key in common.
+ */
+bool z_keyexpr_intersects(struct z_keyexpr_t left, struct z_keyexpr_t right);
+/**
+ * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
+ * In case of error, the return value will be set to its invalidated state.
+ */
+struct z_owned_keyexpr_t z_keyexpr_join(struct z_keyexpr_t left,
+                                        const char *right_start,
+                                        uintptr_t right_len);
 /**
  * Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
  */
 struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
 /**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
+ */
+struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
+/**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
  * The user is responsible of droping the allocated string being returned.
  */
 char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
+/**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
+ * - `name` MUST be valid UTF8.
+ * - `name` MUST follow the Key Expression specification, ie:
+ *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
+ *   - any instance of `**` may only be lead or followed by `/`.
+ *   - the key expression must have canon form.
+ *
+ * It is a loaned key expression that aliases `name`.
+ */
+struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
 /**
  * Returns `true` if `keyexpr` is valid.
  */
@@ -385,6 +449,20 @@ bool z_loaned_keyexpr_check(const struct z_keyexpr_t *keyexpr);
  * Opens a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+void z_owned_closure_sample_call(const struct z_owned_closure_sample_t *closure,
+                                 const struct z_sample_t *sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_owned_closure_sample_drop(struct z_owned_closure_sample_t *closure);
+/**
+ * Constructs a stateless closure from a pointer to function.
+ * The state pointer will always be a nullptr.
+ */
+struct z_owned_closure_sample_t z_owned_closure_sample_new_stateless(void (*call)(const struct z_sample_t*, const void*));
 /**
  * Write data with extended options.
  *
@@ -427,3 +505,9 @@ struct z_subscriber_options_t z_subscriber_options_default(void);
  */
 void z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *keyexpr);
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
+/**
+ * Returns the key expression's internal string by aliasing it.
+ *
+ * Currently exclusive to zenoh-c
+ */
+struct z_bytes_t zc_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);

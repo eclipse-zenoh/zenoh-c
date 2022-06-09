@@ -33,6 +33,8 @@ mod session;
 pub use crate::session::*;
 mod subscriber;
 pub use crate::subscriber::*;
+mod closures;
+pub use closures::*;
 
 pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";
 

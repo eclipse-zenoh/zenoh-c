@@ -13,33 +13,12 @@
 //
 use crate::collections::*;
 use crate::keyexpr::*;
-use libc::{c_ulong, c_void};
+use libc::c_ulong;
 use zenoh::prelude::SampleKind;
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
 pub type z_zint_t = c_ulong;
-
-// CallbackArgs captures optional arguments provided by the user that
-// need to be passed to the user-provided callback at every call.
-#[repr(transparent)]
-#[derive(Clone, Copy)]
-pub(crate) struct CallbackArgs(*mut c_void);
-
-unsafe impl Send for CallbackArgs {}
-unsafe impl Sync for CallbackArgs {}
-
-impl From<*mut c_void> for CallbackArgs {
-    fn from(ptr: *mut c_void) -> Self {
-        Self(ptr)
-    }
-}
-
-impl From<CallbackArgs> for *mut c_void {
-    fn from(cargs: CallbackArgs) -> Self {
-        cargs.0
-    }
-}
 
 #[allow(non_camel_case_types)]
 #[repr(C)]

@@ -15,21 +15,34 @@
 #include <time.h>
 #include "zenoh.h"
 
-#define N 100000
+#define N 1000000
 
 typedef struct
 {
     volatile unsigned long count;
+    volatile unsigned long finished_rounds;
     volatile clock_t start;
     volatile clock_t stop;
+    volatile clock_t first_start;
 } z_stats_t;
 
-void data_handler(const z_sample_t sample, void *arg)
+void z_stats_init(z_stats_t *stats)
+{
+    stats->count = 0;
+    stats->finished_rounds = 0;
+    stats->first_start = 0;
+}
+
+void data_handler(const z_sample_t *sample, const void *arg)
 {
     z_stats_t *stats = (z_stats_t *)arg;
     if (stats->count == 0)
     {
         stats->start = clock();
+        if (!stats->first_start)
+        {
+            stats->first_start = stats->start;
+        }
         stats->count++;
     }
     else if (stats->count < N)
@@ -39,9 +52,19 @@ void data_handler(const z_sample_t sample, void *arg)
     else
     {
         stats->stop = clock();
+        stats->finished_rounds++;
         printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stats->stop - stats->start));
         stats->count = 0;
     }
+}
+void drop_stats(void *arg)
+{
+    const clock_t end = clock();
+    const z_stats_t *stats = (z_stats_t *)arg;
+    const double elapsed = (double)(end - stats->first_start) / (double)CLOCKS_PER_SEC;
+    const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
+    printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages, elapsed, (double)sent_messages / elapsed);
+    free(arg);
 }
 
 int main(int argc, char **argv)
@@ -67,10 +90,9 @@ int main(int argc, char **argv)
 
     z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
 
-    z_stats_t stats = {.count = 0};
-    z_subscriber_options_t opts = z_subscriber_options_default();
-    opts.cargs = &stats;
-    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), data_handler, &opts);
+    z_owned_closure_sample_t callback = {.this_ = malloc(sizeof(z_stats_t)), .call = data_handler, .drop = drop_stats};
+    z_stats_init(callback.this_);
+    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), z_move(callback), NULL);
     if (!z_check(sub))
     {
         printf("Unable to create subscriber.\n");

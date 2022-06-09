@@ -17,8 +17,10 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 
 use crate::session::*;
+use crate::z_bytes_t;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
+use zenoh::prelude::keyexpr;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
 
@@ -70,6 +72,26 @@ impl DerefMut for z_owned_keyexpr_t {
 impl z_owned_keyexpr_t {
     pub fn null() -> Self {
         unsafe { std::mem::transmute(None::<KeyExpr>) }
+    }
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t {
+    let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
+    match std::str::from_utf8(name) {
+        Ok(name) => match KeyExpr::try_from(name) {
+            Ok(v) => v.into_owned().into(),
+            Err(e) => {
+                log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
+                z_owned_keyexpr_t::null()
+            }
+        },
+        Err(e) => {
+            log::error!("{}", e);
+            z_owned_keyexpr_t::null()
+        }
     }
 }
 
@@ -173,11 +195,12 @@ pub unsafe extern "C" fn z_loaned_keyexpr_check(keyexpr: &z_keyexpr_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
-    match std::str::from_utf8(std::slice::from_raw_parts(name as _, libc::strlen(name))) {
+    let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
+    match std::str::from_utf8(name) {
         Ok(name) => match KeyExpr::try_from(name) {
             Ok(v) => v.into(),
             Err(e) => {
-                log::error!("{}", e);
+                log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
                 z_keyexpr_t::null()
             }
         },
@@ -188,6 +211,23 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
     }
 }
 
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
+/// - `name` MUST be valid UTF8.
+/// - `name` MUST follow the Key Expression specification, ie:
+///   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
+///   - any instance of `**` may only be lead or followed by `/`.
+///   - the key expression must have canon form.
+///
+/// It is a loaned key expression that aliases `name`.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_unchecked(name: *const c_char) -> z_keyexpr_t {
+    let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
+    let name = std::str::from_utf8_unchecked(name);
+    let name: KeyExpr = keyexpr::from_str_unchecked(name).into();
+    name.into()
+}
+
 /// Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
 /// The user is responsible of droping the allocated string being returned.
 #[allow(clippy::missing_safety_doc)]
@@ -196,6 +236,24 @@ pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_cha
     match keyexpr.as_ref() {
         Some(ke) => std::ffi::CString::new(ke.as_str()).unwrap().into_raw(),
         None => std::ptr::null_mut(),
+    }
+}
+
+/// Returns the key expression's internal string by aliasing it.
+///
+/// Currently exclusive to zenoh-c
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_keyexpr_as_bytes(keyexpr: z_keyexpr_t) -> z_bytes_t {
+    match keyexpr.as_ref() {
+        Some(ke) => z_bytes_t {
+            start: ke.as_ptr(),
+            len: ke.len(),
+        },
+        None => z_bytes_t {
+            start: std::ptr::null(),
+            len: 0,
+        },
     }
 }
 
@@ -265,6 +323,108 @@ pub unsafe extern "C" fn z_undeclare_keyexpr(
         },
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
+        }
+    }
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+/// Returns `1` if `left` and `right` define equal sets.
+pub unsafe extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+    *left == *right
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+/// Returns `1` if `left` and `right` define sets that have at least one key in common.
+pub unsafe extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+    match (&*left, &*right) {
+        (Some(l), Some(r)) => l.intersects(r),
+        _ => false,
+    }
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+/// Returns `1` if the set defined by `left` contains every key belonging to the set defined by `right`.
+pub unsafe extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+    match (&*left, &*right) {
+        (Some(l), Some(r)) => l.includes(r),
+        _ => false,
+    }
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+/// Performs string concatenation and returns the result as a `z_owned_keyexpr_t`.
+/// In case of error, the return value will be set to its invalidated state.
+///
+/// You should probably prefer `z_keyexpr_join` as Zenoh may then take advantage of the hierachical separation it inserts.
+///
+/// To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
+/// as this would extremely likely cause bugs.
+pub unsafe extern "C" fn z_keyexpr_concat(
+    left: z_keyexpr_t,
+    right_start: *const c_char,
+    right_len: usize,
+) -> z_owned_keyexpr_t {
+    let left = match left.as_ref() {
+        Some(l) => l,
+        None => return z_owned_keyexpr_t::null(),
+    };
+    let right = std::slice::from_raw_parts(right_start as _, right_len);
+    let right = match std::str::from_utf8(right) {
+        Ok(r) => r,
+        Err(e) => {
+            log::error!(
+                "Couldn't concatenate {:02x?} to {} because it is not valid UTF8: {}",
+                right,
+                left,
+                e
+            );
+            return z_owned_keyexpr_t::null();
+        }
+    };
+    match left.concat(right) {
+        Ok(result) => result.into(),
+        Err(e) => {
+            log::error!("{}", e);
+            z_owned_keyexpr_t::null()
+        }
+    }
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+/// Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
+/// In case of error, the return value will be set to its invalidated state.
+pub unsafe extern "C" fn z_keyexpr_join(
+    left: z_keyexpr_t,
+    right_start: *const c_char,
+    right_len: usize,
+) -> z_owned_keyexpr_t {
+    let left = match left.as_ref() {
+        Some(l) => l,
+        None => return z_owned_keyexpr_t::null(),
+    };
+    let right = std::slice::from_raw_parts(right_start as _, right_len);
+    let right = match std::str::from_utf8(right) {
+        Ok(r) => r,
+        Err(e) => {
+            log::error!(
+                "Couldn't concatenate {:02x?} to {} because it is not valid UTF8: {}",
+                right,
+                left,
+                e
+            );
+            return z_owned_keyexpr_t::null();
+        }
+    };
+    match left.join(right) {
+        Ok(result) => result.into(),
+        Err(e) => {
+            log::error!("{}", e);
+            z_owned_keyexpr_t::null()
         }
     }
 }
