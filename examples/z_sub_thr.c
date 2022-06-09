@@ -33,7 +33,7 @@ void z_stats_init(z_stats_t *stats)
     stats->first_start = 0;
 }
 
-void data_handler(const z_sample_t *sample, const void *arg)
+void on_sample(const z_sample_t *sample, const void *arg)
 {
     z_stats_t *stats = (z_stats_t *)arg;
     if (stats->count == 0)
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 
     z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
 
-    z_owned_closure_sample_t callback = {.this_ = malloc(sizeof(z_stats_t)), .call = data_handler, .drop = drop_stats};
+    z_owned_closure_sample_t callback = {.this_ = malloc(sizeof(z_stats_t)), .call = on_sample, .drop = drop_stats};
     z_stats_init(callback.this_);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), z_move(callback), NULL);
     if (!z_check(sub))

@@ -8,17 +8,19 @@
                            : z_info_loan,         \
                              z_owned_encoding_t   \
                            : z_encoding_loan)(&x)
-#define z_drop(x) _Generic((x), z_owned_session_t     \
-                           : z_close,                 \
-                             z_owned_keyexpr_t        \
-                           : z_keyexpr_drop,          \
-                             z_owned_config_t         \
-                           : z_config_drop,           \
-                             z_owned_info_t           \
-                           : z_info_drop,             \
-                             z_owned_subscriber_t     \
-                           : z_unregister_subscriber, \
-                             z_owned_encoding_t       \
+#define z_drop(x) _Generic((x), z_owned_session_t    \
+                           : z_close,                \
+                             z_owned_keyexpr_t       \
+                           : z_keyexpr_drop,         \
+                             z_owned_config_t        \
+                           : z_config_drop,          \
+                             z_owned_info_t          \
+                           : z_info_drop,            \
+                             z_owned_subscriber_t    \
+                           : z_undeclare_subscriber, \
+                             z_owned_queryable_t     \
+                           : z_undeclare_queryable,  \
+                             z_owned_encoding_t      \
                            : z_encoding_drop)(&x)
 #define z_check(x) _Generic((x), z_owned_session_t    \
                             : z_session_check,        \
@@ -34,6 +36,8 @@
                             : z_info_check,           \
                               z_owned_subscriber_t    \
                             : z_subscriber_check,     \
+                              z_owned_queryable_t     \
+                            : z_queryable_check,      \
                               z_owned_encoding_t      \
                             : z_encoding_check)(&x)
 

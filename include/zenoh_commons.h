@@ -102,6 +102,45 @@ typedef struct z_keyexpr_t {
   uintptr_t _padding[2];
 } z_keyexpr_t;
 /**
+ * An owned zenoh queryable.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_queryable_t {
+  uintptr_t _0[4];
+} z_owned_queryable_t;
+typedef struct z_query_t {
+  const void *_0;
+} z_query_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * - `this` is a pointer to an arbitrary state.
+ * - `call` is the typical callback function. `this` will be passed as its last argument.
+ * - `drop` allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * We guarantee that:
+ * - `call` will never be called once `drop` has started.
+ * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
+ * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_query_t {
+  void *this_;
+  void (*call)(struct z_query_t, const void*);
+  void (*drop)(void*);
+} z_owned_closure_query_t;
+typedef struct z_queryable_opt {
+  bool complete;
+} z_queryable_opt;
+/**
  * The encoding of a payload, in a MIME-like format.
  *
  * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
@@ -266,6 +305,22 @@ char *z_config_to_string(struct z_config_t config);
  * ease the retrieval of the concerned resource in the routing tables.
  */
 struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_keyexpr_t keyexpr);
+/**
+ * Creates a Queryable for the given key expression.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression the Queryable will reply to.
+ *     callback: The callback function that will be called each time a matching query is received.
+ *     options: Options for the queryable.
+ *
+ * Returns:
+ *    The created :c:type:`z_owned_queryable_t` or null if the creation failed.
+ */
+struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
+                                               struct z_keyexpr_t keyexpr,
+                                               struct z_owned_closure_query_t *callback,
+                                               const struct z_queryable_opt *options);
 /**
  * Declare a subscriber for a given key expression.
  *
@@ -452,6 +507,20 @@ struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
+void z_owned_closure_query_call(const struct z_owned_closure_query_t *closure,
+                                struct z_query_t sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_owned_closure_query_drop(struct z_owned_closure_query_t *closure);
+/**
+ * Constructs a stateless closure from a pointer to function.
+ * The state pointer will always be a nullptr.
+ */
+struct z_owned_closure_query_t z_owned_closure_query_new_stateless(void (*call)(struct z_query_t, const void*));
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
 void z_owned_closure_sample_call(const struct z_owned_closure_sample_t *closure,
                                  const struct z_sample_t *sample);
 /**
@@ -485,6 +554,36 @@ int z_put(struct z_session_t session,
  */
 struct z_put_options_t z_put_options_default(void);
 /**
+ * Get a query's key by aliasing it.
+ */
+struct z_keyexpr_t z_query_keyexpr(struct z_query_t query);
+/**
+ * Send a reply to a query.
+ *
+ * This function must be called inside of a Queryable callback passing the
+ * query received as parameters of the callback function. This function can
+ * be called multiple times to send multiple replies to a query. The reply
+ * will be considered complete when the Queryable callback returns.
+ *
+ * Parameters:
+ *     query: The query to reply to.
+ *     key: The key of this reply.
+ *     payload: The value of this reply.
+ *     len: The length of the value of this reply.
+ */
+void z_query_reply(struct z_query_t query,
+                   struct z_keyexpr_t key,
+                   const uint8_t *payload,
+                   uintptr_t len);
+/**
+ * Get a query's value selector by aliasing it.
+ */
+struct z_bytes_t z_query_value_selector(struct z_query_t query);
+/**
+ * Returns `true` if `qable` is valid.
+ */
+bool z_queryable_check(const struct z_owned_queryable_t *qable);
+/**
  * Returns `true` if `session` is valid.
  */
 bool z_session_check(const struct z_owned_session_t *session);
@@ -504,6 +603,13 @@ struct z_subscriber_options_t z_subscriber_options_default(void);
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
  */
 void z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *keyexpr);
+/**
+ * Close a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
+ *
+ * Parameters:
+ *     qable: The :c:type:`z_owned_queryable_t` to close.
+ */
+void z_undeclare_queryable(struct z_owned_queryable_t *qable);
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
 /**
  * Returns the key expression's internal string by aliasing it.

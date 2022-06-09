@@ -10,81 +10,83 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//
-// #include <stdio.h>
-// #include <string.h>
-// #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-// #include <windows.h>
-// #define sleep(x) Sleep(x * 1000)
-// #else
-// #include <unistd.h>
-// #endif
-// #include "zenoh.h"
-
-// char *expr = "demo/example/zenoh-c-queryable";
-// char *value = "Queryable from C!";
-
-// void query_handler(const z_query_t *query, const void *arg)
-// {
-//     z_bytes_t res = z_query_key_expr(query).suffix;
-//     z_bytes_t pred = z_query_predicate(query);
-//     printf(">> [Queryable ] Received Query '%.*s%.*s'\n", (int)res.len, res.start, (int)pred.len, pred.start);
-//     z_send_reply(query, expr, (const unsigned char *)value, strlen(value));
-// }
-
-// int main(int argc, char **argv)
-// {
-//     z_init_logger();
-
-//     if (argc > 1)
-//     {
-//         expr = argv[1];
-//     }
-//     z_owned_config_t config = z_config_default();
-//     if (argc > 2)
-//     {
-//         if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]))
-//         {
-//             printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-//             exit(-1);
-//         }
-//     }
-
-//     printf("Opening session...\n");
-//     z_owned_session_t s = z_open(z_move(config));
-//     if (!z_check(s))
-//     {
-//         printf("Unable to open session!\n");
-//         exit(-1);
-//     }
-
-//     printf("Creating Queryable on '%s'...\n", expr);
-//     z_owned_queryable_t qable = z_queryable_new(z_loan(s), z_expr(expr), query_handler, NULL);
-//     if (!z_check(qable))
-//     {
-//         printf("Unable to create queryable.\n");
-//         exit(-1);
-//     }
-
-//     printf("Enter 'q' to quit...\n");
-//     char c = 0;
-//     while (c != 'q')
-//     {
-//         c = getchar();
-//         if (c == -1)
-//         {
-//             sleep(1);
-//         }
-//     }
-
-//     z_queryable_close(z_move(qable));
-//     z_close(z_move(s));
-//     return 0;
-// }
 
 #include <stdio.h>
+#include <string.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
+#include "zenoh.h"
+
+char *expr = "demo/example/zenoh-c-queryable";
+char *value = "Queryable from C!";
+z_keyexpr_t keyexpr;
+
+void query_handler(z_query_t query, const void *arg)
+{
+    char *res = z_keyexpr_to_string(z_query_keyexpr(query));
+    z_bytes_t pred = z_query_value_selector(query);
+    printf(">> [Queryable ] Received Query '%s%.*s'\n", res, (int)pred.len, pred.start);
+    z_query_reply(query, keyexpr, (const unsigned char *)value, strlen(value));
+    free(res);
+}
+
 int main(int argc, char **argv)
 {
-    printf("Unimplemented\n");
-    return -1;
+    z_init_logger();
+
+    if (argc > 1)
+    {
+        expr = argv[1];
+    }
+    z_owned_config_t config = z_config_default();
+    if (argc > 2)
+    {
+        if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]))
+        {
+            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+            exit(-1);
+        }
+    }
+
+    printf("Opening session...\n");
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
+    {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
+    keyexpr = z_keyexpr(expr);
+    if (!z_check(keyexpr))
+    {
+        printf("%s is not a valid key expression", expr);
+        exit(-1);
+    }
+
+    printf("Creating Queryable on '%s'...\n", expr);
+    z_owned_closure_query_t callback = z_owned_closure_query_new_stateless(query_handler);
+    z_owned_queryable_t qable = z_declare_queryable(z_loan(s), keyexpr, z_move(callback), NULL);
+    if (!z_check(qable))
+    {
+        printf("Unable to create queryable.\n");
+        exit(-1);
+    }
+
+    printf("Enter 'q' to quit...\n");
+    char c = 0;
+    while (c != 'q')
+    {
+        c = getchar();
+        if (c == -1)
+        {
+            sleep(1);
+        }
+    }
+
+    z_undeclare_queryable(z_move(qable));
+    z_close(z_move(s));
+    return 0;
 }
