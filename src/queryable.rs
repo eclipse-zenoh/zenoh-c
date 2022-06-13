@@ -68,7 +68,7 @@ impl Deref for z_query_t {
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub struct z_queryable_opt {
+pub struct z_queryable_options_t {
     pub complete: bool,
 }
 
@@ -88,7 +88,7 @@ pub unsafe extern "C" fn z_declare_queryable(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
-    options: Option<&z_queryable_opt>,
+    options: Option<&z_queryable_options_t>,
 ) -> z_owned_queryable_t {
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);

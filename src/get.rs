@@ -38,30 +38,19 @@
 //     }
 // }
 
-// /// Gets the key expression of a received query as a non null-terminated string.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub extern "C" fn z_query_key_expr(query: &z_query_t) -> z_keyexpr_t {
-//     let (scope, s) = query.0.key_selector().as_id_and_suffix();
-//     let suffix = z_bytes_t {
-//         start: s.as_ptr(),
-//         len: s.len(),
-//     };
-//     z_keyexpr_t {
-//         id: scope as c_ulong,
-//         suffix,
-//     }
-// }
+use libc::c_char;
+use std::{borrow::Cow, convert::TryInto, ffi::CStr};
+use zenoh_protocol_core::{ConsolidationMode, ConsolidationStrategy, QueryTarget};
 
-// /// Gets the predicate of a received query as a non null-terminated string.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub extern "C" fn z_query_predicate(query: &z_query_t) -> z_bytes_t {
-//     let s = query.0.selector().value_selector;
-//     z_bytes_t {
-//         start: s.as_ptr(),
-//         len: s.len(),
-//     }
+use zenoh::{prelude::Selector, query::QueryConsolidation};
+use zenoh_util::core::SyncResolve;
+
+use crate::{z_keyexpr_t, z_session_t, LOG_INVALID_SESSION};
+
+// #[repr(C)]
+// pub struct z_get_options_t {
+//     target: z_query_target_t,
+//     consolidation: z_query_consolidation_t,
 // }
 
 // /// Query data from the matching queryables in the system.
@@ -71,105 +60,32 @@
 // ///     session: The zenoh session.
 // ///     keyexpr: The key expression matching resources to query.
 // ///     predicate: An indication to matching queryables about the queried data.
-// ///     target: The kind of queryables that should be target of this query.
-// ///     consolidation: The kind of consolidation that should be applied on replies.
 // ///     callback: The callback function that will be called on reception of replies for this query.
-// ///     arg: A pointer that will be passed to the **callback** on each call.
+// ///     options: additional options for the get.
 // #[allow(clippy::missing_safety_doc)]
 // #[no_mangle]
 // pub unsafe extern "C" fn z_get(
 //     session: z_session_t,
 //     keyexpr: z_keyexpr_t,
 //     predicate: *const c_char,
-//     target: z_query_target_t,
-//     consolidation: z_query_consolidation_t,
-//     callback: extern "C" fn(z_owned_reply_t, *const c_void),
-//     arg: *mut c_void,
+//     // callback: extern "C" fn(z_owned_reply_t, *const c_void),
+//     options: Option<&z_get_options_t>,
 // ) {
 //     let p = CStr::from_ptr(predicate).to_str().unwrap();
-//     let arg = Box::from_raw(arg);
 //     let mut q = session
 //         .as_ref()
 //         .as_ref()
 //         .expect(LOG_INVALID_SESSION)
 //         .get(Selector {
-//             key_selector: keyexpr.into(),
+//             key_expr: keyexpr.try_into().unwrap(),
 //             value_selector: Cow::Borrowed(p),
-//         })
-//         .target(target.into())
-//         .consolidation(consolidation.into())
-//         .res()
-//         .unwrap();
-
-//     task::spawn_blocking(move || {
-//         task::block_on(async move {
-//             let arg = Box::into_raw(arg);
-//             while let Some(reply) = q.next().await {
-//                 callback(
-//                     z_owned_reply_t {
-//                         tag: z_reply_t_Tag::DATA,
-//                         data: reply.into(),
-//                     },
-//                     arg,
-//                 )
-//             }
-//             callback(
-//                 z_owned_reply_t {
-//                     tag: z_reply_t_Tag::FINAL,
-//                     data: z_owned_reply_data_t::empty(),
-//                 },
-//                 arg,
-//             )
-//             // while let Some(reply) = q.next().await {
-//             //     callback(z_reply_t::DATA { data: reply.into() }, arg)
-//             // }
-//             // callback(z_reply_t::FINAL, arg)
-//         })
-//     });
-// }
-
-// /// Query data from the matching queryables in the system.
-// /// Replies are collected in an array.
-// ///
-// /// Parameters:
-// ///     session: The zenoh session.
-// ///     keyexpr: The key expression matching resources to query.
-// ///     predicate: An indication to matching queryables about the queried data.
-// ///     target: The kind of queryables that should be target of this query.
-// ///     consolidation: The kind of consolidation that should be applied on replies.
-// ///
-// /// Returns:
-// ///    An array containing all the replies for this query.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub unsafe extern "C" fn z_get_collect(
-//     session: z_session_t,
-//     keyexpr: z_keyexpr_t,
-//     predicate: *const c_char,
-//     target: z_query_target_t,
-//     consolidation: z_query_consolidation_t,
-// ) -> z_owned_reply_data_array_t {
-//     let p = CStr::from_ptr(predicate).to_str().unwrap();
-//     let mut replies = session
-//         .as_ref()
-//         .as_ref()
-//         .expect(LOG_INVALID_SESSION)
-//         .get(Selector {
-//             key_selector: keyexpr.into(),
-//             value_selector: Cow::Borrowed(p),
-//         })
-//         .target(target.into())
-//         .consolidation(consolidation.into())
-//         .res()
-//         .unwrap()
-//         .iter()
-//         .map(|r| r.into())
-//         .collect::<Vec<z_owned_reply_data_t>>();
-
-//     replies.shrink_to_fit();
-//     //TODO replace when stable https://github.com/rust-lang/rust/issues/65816
-//     let (val, len, _cap) = vec_into_raw_parts(replies);
-//     z_owned_reply_data_array_t { val, len }
+//         });
+//     if let Some(options) = options {
+//         q = q
+//             .consolidation(options.consolidation.into())
+//             .target(options.target.into());
+//     }
+//     q.callback(move |response| todo!()).res_sync().unwrap();
 // }
 
 // #[allow(non_camel_case_types)]
@@ -311,52 +227,53 @@
 //         || (z_reply_t_Tag::DATA == reply.tag && z_reply_data_check(&reply.data))
 // }
 
-// /// The possible values of :c:member:`z_query_target_t.tag`.
-// ///
-// ///     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
-// ///     - **z_query_target_t_COMPLETE**: A set of complete queryables.
-// ///     - **z_query_target_t_ALL**: All matching queryables.
-// ///     - **z_query_target_t_NONE**: No queryables.
-// #[allow(non_camel_case_types)]
-// #[repr(C)]
-// pub enum z_query_target_t {
-//     BEST_MATCHING,
-//     ALL,
-//     NONE,
-//     ALL_COMPLETE,
-//     // #[cfg(feature = "complete_n")]
-//     // COMPLETE {
-//     //     n: c_uint,
-//     // },
-// }
+/// The possible values of :c:member:`z_query_target_t.tag`.
+///
+///     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+///     - **z_query_target_t_COMPLETE**: A set of complete queryables.
+///     - **z_query_target_t_ALL**: All matching queryables.
+///     - **z_query_target_t_NONE**: No queryables.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_query_target_t {
+    BEST_MATCHING,
+    ALL,
+    NONE,
+    ALL_COMPLETE,
+    // #[cfg(feature = "complete_n")]
+    // COMPLETE {
+    //     n: c_uint,
+    // },
+}
 
-// impl From<QueryTarget> for z_query_target_t {
-//     #[inline]
-//     fn from(t: QueryTarget) -> Self {
-//         match t {
-//             QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
-//             QueryTarget::All => z_query_target_t::ALL,
-//             QueryTarget::None => z_query_target_t::NONE,
-//             QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
-//             // #[cfg(feature = "complete_n")]
-//             // QueryTarget::Complete(n) => z_query_target_t::COMPLETE { n: n as c_uint },
-//         }
-//     }
-// }
+impl From<QueryTarget> for z_query_target_t {
+    #[inline]
+    fn from(t: QueryTarget) -> Self {
+        match t {
+            QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
+            QueryTarget::All => z_query_target_t::ALL,
+            QueryTarget::None => z_query_target_t::NONE,
+            QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
+            // #[cfg(feature = "complete_n")]
+            // QueryTarget::Complete(n) => z_query_target_t::COMPLETE { n: n as c_uint },
+        }
+    }
+}
 
-// impl From<z_query_target_t> for QueryTarget {
-//     #[inline]
-//     fn from(val: z_query_target_t) -> Self {
-//         match val {
-//             z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
-//             z_query_target_t::ALL => QueryTarget::All,
-//             z_query_target_t::NONE => QueryTarget::None,
-//             z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
-//             // #[cfg(feature = "complete_n")]
-//             // z_query_target_t::COMPLETE { n } => QueryTarget::Complete(n as ZInt),
-//         }
-//     }
-// }
+impl From<z_query_target_t> for QueryTarget {
+    #[inline]
+    fn from(val: z_query_target_t) -> Self {
+        match val {
+            z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
+            z_query_target_t::ALL => QueryTarget::All,
+            z_query_target_t::NONE => QueryTarget::None,
+            z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
+            // #[cfg(feature = "complete_n")]
+            // z_query_target_t::COMPLETE { n } => QueryTarget::Complete(n as ZInt),
+        }
+    }
+}
 
 // /// Create a default :c:type:`z_query_target_t`.
 // #[no_mangle]
@@ -364,106 +281,109 @@
 //     QueryTarget::default().into()
 // }
 
-// /// The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
-// ///
-// ///     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
-// ///     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
-// ///     - **z_consolidation_mode_t_NONE**: No consolidation.
-// #[repr(C)]
-// pub enum z_consolidation_mode_t {
-//     FULL,
-//     LAZY,
-//     NONE,
-// }
+/// The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
+///
+///     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
+///     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
+///     - **z_consolidation_mode_t_NONE**: No consolidation.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_consolidation_mode_t {
+    FULL,
+    LAZY,
+    NONE,
+}
 
-// impl From<ConsolidationMode> for z_consolidation_mode_t {
-//     #[inline]
-//     fn from(cm: ConsolidationMode) -> Self {
-//         match cm {
-//             ConsolidationMode::Full => z_consolidation_mode_t::FULL,
-//             ConsolidationMode::Lazy => z_consolidation_mode_t::LAZY,
-//             ConsolidationMode::None => z_consolidation_mode_t::NONE,
-//         }
-//     }
-// }
+impl From<ConsolidationMode> for z_consolidation_mode_t {
+    #[inline]
+    fn from(cm: ConsolidationMode) -> Self {
+        match cm {
+            ConsolidationMode::Full => z_consolidation_mode_t::FULL,
+            ConsolidationMode::Lazy => z_consolidation_mode_t::LAZY,
+            ConsolidationMode::None => z_consolidation_mode_t::NONE,
+        }
+    }
+}
 
-// impl From<z_consolidation_mode_t> for ConsolidationMode {
-//     #[inline]
-//     fn from(val: z_consolidation_mode_t) -> Self {
-//         match val {
-//             z_consolidation_mode_t::NONE => ConsolidationMode::None,
-//             z_consolidation_mode_t::LAZY => ConsolidationMode::Lazy,
-//             z_consolidation_mode_t::FULL => ConsolidationMode::Full,
-//         }
-//     }
-// }
+impl From<z_consolidation_mode_t> for ConsolidationMode {
+    #[inline]
+    fn from(val: z_consolidation_mode_t) -> Self {
+        match val {
+            z_consolidation_mode_t::NONE => ConsolidationMode::None,
+            z_consolidation_mode_t::LAZY => ConsolidationMode::Lazy,
+            z_consolidation_mode_t::FULL => ConsolidationMode::Full,
+        }
+    }
+}
 
-// /// The kind of consolidation that should be applied on replies to a :c:func:`z_get`
-// /// at the different stages of the reply process.
-// ///
-// /// Members:
-// ///   z_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
-// ///   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
-// ///   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
-// #[repr(C)]
-// pub struct z_consolidation_strategy_t {
-//     pub first_routers: z_consolidation_mode_t,
-//     pub last_router: z_consolidation_mode_t,
-//     pub reception: z_consolidation_mode_t,
-// }
+/// The kind of consolidation that should be applied on replies to a :c:func:`z_get`
+/// at the different stages of the reply process.
+///
+/// Members:
+///   z_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
+///   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
+///   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct z_consolidation_strategy_t {
+    pub first_routers: z_consolidation_mode_t,
+    pub last_router: z_consolidation_mode_t,
+    pub reception: z_consolidation_mode_t,
+}
 
-// impl From<ConsolidationStrategy> for z_consolidation_strategy_t {
-//     #[inline]
-//     fn from(cs: ConsolidationStrategy) -> Self {
-//         z_consolidation_strategy_t {
-//             first_routers: cs.first_routers.into(),
-//             last_router: cs.last_router.into(),
-//             reception: cs.reception.into(),
-//         }
-//     }
-// }
+impl From<ConsolidationStrategy> for z_consolidation_strategy_t {
+    #[inline]
+    fn from(cs: ConsolidationStrategy) -> Self {
+        z_consolidation_strategy_t {
+            first_routers: cs.first_routers.into(),
+            last_router: cs.last_router.into(),
+            reception: cs.reception.into(),
+        }
+    }
+}
 
-// impl From<z_consolidation_strategy_t> for ConsolidationStrategy {
-//     #[inline]
-//     fn from(val: z_consolidation_strategy_t) -> Self {
-//         ConsolidationStrategy {
-//             first_routers: val.first_routers.into(),
-//             last_router: val.last_router.into(),
-//             reception: val.reception.into(),
-//         }
-//     }
-// }
+impl From<z_consolidation_strategy_t> for ConsolidationStrategy {
+    #[inline]
+    fn from(val: z_consolidation_strategy_t) -> Self {
+        ConsolidationStrategy {
+            first_routers: val.first_routers.into(),
+            last_router: val.last_router.into(),
+            reception: val.reception.into(),
+        }
+    }
+}
 
-// /// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
-// #[repr(C)]
-// pub enum z_query_consolidation_t {
-//     AUTO,
-//     MANUAL(z_consolidation_strategy_t),
-// }
+/// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_query_consolidation_t {
+    AUTO,
+    MANUAL(z_consolidation_strategy_t),
+}
 
-// impl From<QueryConsolidation> for z_query_consolidation_t {
-//     #[inline]
-//     fn from(qc: QueryConsolidation) -> Self {
-//         match qc {
-//             QueryConsolidation::Auto => z_query_consolidation_t::AUTO,
-//             QueryConsolidation::Manual(strategy) => {
-//                 z_query_consolidation_t::MANUAL(strategy.into())
-//             }
-//         }
-//     }
-// }
+impl From<QueryConsolidation> for z_query_consolidation_t {
+    #[inline]
+    fn from(qc: QueryConsolidation) -> Self {
+        match qc {
+            QueryConsolidation::Auto => z_query_consolidation_t::AUTO,
+            QueryConsolidation::Manual(strategy) => {
+                z_query_consolidation_t::MANUAL(strategy.into())
+            }
+        }
+    }
+}
 
-// impl From<z_query_consolidation_t> for QueryConsolidation {
-//     #[inline]
-//     fn from(val: z_query_consolidation_t) -> Self {
-//         match val {
-//             z_query_consolidation_t::AUTO => QueryConsolidation::Auto,
-//             z_query_consolidation_t::MANUAL(strategy) => {
-//                 QueryConsolidation::Manual(strategy.into())
-//             }
-//         }
-//     }
-// }
+impl From<z_query_consolidation_t> for QueryConsolidation {
+    #[inline]
+    fn from(val: z_query_consolidation_t) -> Self {
+        match val {
+            z_query_consolidation_t::AUTO => QueryConsolidation::Auto,
+            z_query_consolidation_t::MANUAL(strategy) => {
+                QueryConsolidation::Manual(strategy.into())
+            }
+        }
+    }
+}
 
 // /// Automatic query consolidation strategy selection.
 // ///

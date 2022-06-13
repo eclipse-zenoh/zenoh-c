@@ -90,8 +90,8 @@ int main(int argc, char **argv)
 
     z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
 
-    z_owned_closure_sample_t callback = {.this_ = malloc(sizeof(z_stats_t)), .call = on_sample, .drop = drop_stats};
-    z_stats_init(callback.this_);
+    z_owned_closure_sample_t callback = z_closure(on_sample, drop_stats, malloc(sizeof(z_stats_t)));
+    z_stats_init(callback.context);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), z_move(callback), NULL);
     if (!z_check(sub))
     {

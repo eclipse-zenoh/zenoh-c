@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    z_owned_closure_sample_t callback = z_owned_closure_sample_new_stateless(data_handler);
+    z_owned_closure_sample_t callback = z_closure(data_handler);
     printf("Declaring Subscriber on '%s'...\n", expr);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), z_move(callback), NULL);
     if (!z_check(sub))

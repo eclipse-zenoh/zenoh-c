@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     }
 
     printf("Creating Queryable on '%s'...\n", expr);
-    z_owned_closure_query_t callback = z_owned_closure_query_new_stateless(query_handler);
+    z_owned_closure_query_t callback = z_closure(query_handler);
     z_owned_queryable_t qable = z_declare_queryable(z_loan(s), keyexpr, z_move(callback), NULL);
     if (!z_check(qable))
     {

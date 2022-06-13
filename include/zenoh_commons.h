@@ -133,13 +133,13 @@ typedef struct z_query_t {
  * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_query_t {
-  void *this_;
-  void (*call)(struct z_query_t, const void*);
+  void *context;
+  void (*call)(struct z_query_t, const void *context);
   void (*drop)(void*);
 } z_owned_closure_query_t;
-typedef struct z_queryable_opt {
+typedef struct z_queryable_options_t {
   bool complete;
-} z_queryable_opt;
+} z_queryable_options_t;
 /**
  * The encoding of a payload, in a MIME-like format.
  *
@@ -180,8 +180,8 @@ typedef struct z_sample_t {
  * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_sample_t {
-  void *this_;
-  void (*call)(const struct z_sample_t*, const void*);
+  void *context;
+  void (*call)(const struct z_sample_t*, const void *context);
   void (*drop)(void*);
 } z_owned_closure_sample_t;
 /**
@@ -200,6 +200,24 @@ typedef struct z_owned_encoding_t {
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * - `this` is a pointer to an arbitrary state.
+ * - `call` is the typical callback function. `this` will be passed as its last argument.
+ * - `drop` allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * We guarantee that:
+ * - `call` will never be called once `drop` has started.
+ * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
+ * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_response_t {
+  void *context;
+  void (*call)(struct z_query_t, const void*);
+  void (*drop)(void*);
+} z_owned_closure_response_t;
 /**
  * Options passed to the :c:func:`z_put_ext` function.
  */
@@ -320,7 +338,7 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_
 struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
                                                struct z_keyexpr_t keyexpr,
                                                struct z_owned_closure_query_t *callback,
-                                               const struct z_queryable_opt *options);
+                                               const struct z_queryable_options_t *options);
 /**
  * Declare a subscriber for a given key expression.
  *
@@ -508,16 +526,20 @@ struct z_owned_session_t z_open(struct z_owned_config_t *config);
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_owned_closure_query_call(const struct z_owned_closure_query_t *closure,
-                                struct z_query_t sample);
+                                struct z_query_t query);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_owned_closure_query_drop(struct z_owned_closure_query_t *closure);
 /**
- * Constructs a stateless closure from a pointer to function.
- * The state pointer will always be a nullptr.
+ * Calls the closure. Calling an uninitialized closure is a no-op.
  */
-struct z_owned_closure_query_t z_owned_closure_query_new_stateless(void (*call)(struct z_query_t, const void*));
+void z_owned_closure_reply_call(const struct z_owned_closure_response_t *closure,
+                                struct z_query_t sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_owned_closure_reply_drop(struct z_owned_closure_response_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -527,11 +549,6 @@ void z_owned_closure_sample_call(const struct z_owned_closure_sample_t *closure,
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_owned_closure_sample_drop(struct z_owned_closure_sample_t *closure);
-/**
- * Constructs a stateless closure from a pointer to function.
- * The state pointer will always be a nullptr.
- */
-struct z_owned_closure_sample_t z_owned_closure_sample_new_stateless(void (*call)(const struct z_sample_t*, const void*));
 /**
  * Write data with extended options.
  *
