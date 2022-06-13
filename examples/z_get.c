@@ -70,7 +70,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                printf("Received an error");
+                printf("Received an error\n");
             }
         }
     }
