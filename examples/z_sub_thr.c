@@ -26,11 +26,13 @@ typedef struct
     volatile clock_t first_start;
 } z_stats_t;
 
-void z_stats_init(z_stats_t *stats)
+z_stats_t *z_stats_make()
 {
+    z_stats_t *stats = malloc(sizeof(z_stats_t));
     stats->count = 0;
     stats->finished_rounds = 0;
     stats->first_start = 0;
+    return stats;
 }
 
 void on_sample(const z_sample_t *sample, const void *context)
@@ -90,8 +92,8 @@ int main(int argc, char **argv)
 
     z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
 
-    z_owned_closure_sample_t callback = z_closure(on_sample, drop_stats, malloc(sizeof(z_stats_t)));
-    z_stats_init(callback.context);
+    z_stats_t *context = z_stats_make();
+    z_owned_closure_sample_t callback = z_closure(on_sample, drop_stats, context);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), z_move(callback), NULL);
     if (!z_check(sub))
     {

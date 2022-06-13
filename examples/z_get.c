@@ -10,58 +10,72 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//
-// #include <stdio.h>
-// #include <string.h>
-// #include "zenoh.h"
-
-// int main(int argc, char **argv)
-// {
-//     z_init_logger();
-
-//     char *expr = "demo/example/**";
-//     if (argc > 1)
-//     {
-//         expr = argv[1];
-//     }
-//     z_owned_config_t config = z_config_default();
-//     if (argc > 2)
-//     {
-//         if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]))
-//         {
-//             printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-//             exit(-1);
-//         }
-//     }
-
-//     printf("Opening session...\n");
-//     z_owned_session_t s = z_open(z_move(config));
-//     if (!z_check(s))
-//     {
-//         printf("Unable to open session!\n");
-//         exit(-1);
-//     }
-
-//     printf("Sending Query '%s'...\n", expr);
-//     z_query_target_t target = z_query_target_t_ALL;
-//     z_owned_reply_data_array_t replies = z_get_collect(
-//         z_loan(s), z_expr(expr), "",
-//         target, z_query_consolidation_default());
-
-//     for (unsigned int i = 0; i < replies.len; ++i)
-//     {
-//         printf(">> Received ('%.*s': '%.*s')\n",
-//                (int)replies.val[i].sample.key.suffix.len, replies.val[i].sample.key.suffix.start,
-//                (int)replies.val[i].sample.value.len, replies.val[i].sample.value.start);
-//     }
-//     z_reply_data_array_drop(z_move(replies));
-//     z_close(z_move(s));
-//     return 0;
-// }
 
 #include <stdio.h>
+#include <string.h>
+#include "zenoh.h"
+
 int main(int argc, char **argv)
 {
-    printf("Unimplemented\n");
-    return -1;
+    z_init_logger();
+
+    char *expr = "demo/example/**";
+    if (argc > 1)
+    {
+        expr = argv[1];
+    }
+    z_keyexpr_t keyexpr = z_keyexpr(expr);
+    if (!z_check(keyexpr))
+    {
+        printf("%s is not a valid key expression", expr);
+        exit(-1);
+    }
+    z_owned_config_t config = z_config_default();
+    if (argc > 2)
+    {
+        if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]))
+        {
+            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+            exit(-1);
+        }
+    }
+
+    printf("Opening session...\n");
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
+    {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
+
+    printf("Sending Query '%s'...\n", expr);
+    z_get_options_t opts = z_get_options_default();
+    opts.target = z_query_target_t_ALL;
+    z_coowned_reply_channel_t channel = z_reply_fifo_new();     // "coowned" means that each field from the struct must be dropped individually
+    z_get(z_loan(s), keyexpr, "", z_move(channel.send), &opts); // here, the send is moved and will be dropped by zenoh when adequate
+    z_owned_reply_t reply = z_reply_null();
+    for (;;)
+    {
+        if (z_call(channel.recv, &reply)) // `z_call` returns `false` if the call returned without yielding any value, like it can for non-blocking channels.
+        {
+            if (!z_check(reply)) // if the yielded value doesn't `z_check`, `channel.recv` has been disconnected and will never yield new values.
+            {
+                break;
+            }
+            if (z_reply_is_ok(&reply))
+            {
+                z_sample_t sample = z_reply_ok(&reply);
+                char *key = z_keyexpr_to_string(sample.keyexpr);
+                printf(">> Received ('%s': '%.*s')\n", key, (int)sample.payload.len, sample.payload.start);
+            }
+            else
+            {
+                printf("Received an error");
+            }
+        }
+    }
+    z_drop(reply);
+    z_drop(channel.recv); // drop the recv end of the channel
+    z_close(z_move(s));
+    return 0;
 }

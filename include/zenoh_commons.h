@@ -2,6 +2,18 @@ typedef enum z_congestion_control {
   z_congestion_control_BLOCK,
   z_congestion_control_DROP,
 } z_congestion_control;
+/**
+ * The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
+ *
+ *     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
+ *     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
+ *     - **z_consolidation_mode_t_NONE**: No consolidation.
+ */
+typedef enum z_consolidation_mode_t {
+  z_consolidation_mode_t_FULL,
+  z_consolidation_mode_t_LAZY,
+  z_consolidation_mode_t_NONE,
+} z_consolidation_mode_t;
 typedef enum z_known_encoding {
   z_known_encoding_Empty = 0,
   z_known_encoding_AppOctetStream = 1,
@@ -34,6 +46,20 @@ typedef enum z_priority {
   z_priority_DATA_LOW = 6,
   z_priority_BACKGROUND = 7,
 } z_priority;
+/**
+ * The possible values of :c:member:`z_query_target_t.tag`.
+ *
+ *     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+ *     - **z_query_target_t_COMPLETE**: A set of complete queryables.
+ *     - **z_query_target_t_ALL**: All matching queryables.
+ *     - **z_query_target_t_NONE**: No queryables.
+ */
+typedef enum z_query_target_t {
+  z_query_target_t_BEST_MATCHING,
+  z_query_target_t_ALL,
+  z_query_target_t_NONE,
+  z_query_target_t_ALL_COMPLETE,
+} z_query_target_t;
 /**
  * The subscription reliability.
  *
@@ -201,6 +227,23 @@ typedef struct z_owned_encoding_t {
   bool _dropped;
 } z_owned_encoding_t;
 /**
+ * An owned reply to a `z_get` (or `z_get_collect`).
+ *
+ * Members:
+ *   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
+ *   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_reply_t {
+  uint64_t _align[8];
+  uintptr_t _padding[30];
+} z_owned_reply_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
  * - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -213,11 +256,62 @@ typedef struct z_owned_encoding_t {
  * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
  * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
-typedef struct z_owned_closure_response_t {
+typedef struct z_owned_closure_reply_t {
   void *context;
-  void (*call)(struct z_query_t, const void*);
+  void (*call)(struct z_owned_reply_t*, const void*);
   void (*drop)(void*);
-} z_owned_closure_response_t;
+} z_owned_closure_reply_t;
+/**
+ * The kind of consolidation that should be applied on replies to a :c:func:`z_get`
+ * at the different stages of the reply process.
+ *
+ * Members:
+ *   z_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
+ *   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
+ *   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
+ */
+typedef struct z_consolidation_strategy_t {
+  enum z_consolidation_mode_t first_routers;
+  enum z_consolidation_mode_t last_router;
+  enum z_consolidation_mode_t reception;
+} z_consolidation_strategy_t;
+/**
+ * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+ */
+typedef enum z_query_consolidation_t_Tag {
+  z_query_consolidation_t_AUTO,
+  z_query_consolidation_t_MANUAL,
+} z_query_consolidation_t_Tag;
+typedef struct z_query_consolidation_t {
+  z_query_consolidation_t_Tag tag;
+  union {
+    struct {
+      struct z_consolidation_strategy_t manual;
+    };
+  };
+} z_query_consolidation_t;
+typedef struct z_get_options_t {
+  enum z_query_target_t target;
+  struct z_query_consolidation_t consolidation;
+} z_get_options_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * - `this` is a pointer to an arbitrary state.
+ * - `call` is the typical callback function. `this` will be passed as its last argument.
+ * - `drop` allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * We guarantee that:
+ * - `call` will never be called once `drop` has started.
+ * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
+ * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_reply_channel_closure_t {
+  void *context;
+  bool (*call)(struct z_owned_reply_t*, const void*);
+  void (*drop)(void*);
+} z_owned_reply_channel_closure_t;
 /**
  * Options passed to the :c:func:`z_put_ext` function.
  */
@@ -226,6 +320,17 @@ typedef struct z_put_options_t {
   enum z_congestion_control congestion_control;
   enum z_priority priority;
 } z_put_options_t;
+typedef struct z_value_t {
+  struct z_bytes_t payload;
+  struct z_encoding_t encoding;
+} z_value_t;
+/**
+ * A pair of closures, the `send` one accepting
+ */
+typedef struct z_coowned_reply_channel_t {
+  struct z_owned_closure_reply_t send;
+  struct z_owned_reply_channel_closure_t recv;
+} z_coowned_reply_channel_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
@@ -417,6 +522,26 @@ void z_encoding_drop(struct z_owned_encoding_t *encoding);
  */
 struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
+ * Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression matching resources to query.
+ *     predicate: An indication to matching queryables about the queried data.
+ *     callback: The callback function that will be called on reception of replies for this query.
+ *               Note that the `reply` parameter of the callback is passed by mutable reference,
+ *               but WILL be dropped once your callback exits to help you avoid memory leaks.
+ *               If you'd rather take ownership, please refer to the documentation of `z_reply_null`
+ *     options: additional options for the get.
+ */
+void z_get(struct z_session_t session,
+           struct z_keyexpr_t keyexpr,
+           const char *predicate,
+           struct z_owned_closure_reply_t *callback,
+           const struct z_get_options_t *options);
+struct z_get_options_t z_get_options_default(void);
+/**
  * Gets informations about an zenoh session.
  */
 struct z_owned_info_t z_info(struct z_session_t session);
@@ -534,12 +659,12 @@ void z_owned_closure_query_drop(struct z_owned_closure_query_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
-void z_owned_closure_reply_call(const struct z_owned_closure_response_t *closure,
-                                struct z_query_t sample);
+void z_owned_closure_reply_call(const struct z_owned_closure_reply_t *closure,
+                                struct z_owned_reply_t *sample);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-void z_owned_closure_reply_drop(struct z_owned_closure_response_t *closure);
+void z_owned_closure_reply_drop(struct z_owned_closure_reply_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -549,6 +674,15 @@ void z_owned_closure_sample_call(const struct z_owned_closure_sample_t *closure,
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_owned_closure_sample_drop(struct z_owned_closure_sample_t *closure);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+bool z_owned_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *closure,
+                                        struct z_owned_reply_t *sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_owned_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
 /**
  * Write data with extended options.
  *
@@ -570,6 +704,57 @@ int z_put(struct z_session_t session,
  * Constructs the default value for write options
  */
 struct z_put_options_t z_put_options_default(void);
+/**
+ * Automatic query consolidation strategy selection.
+ *
+ * A query consolidation strategy will automatically be selected depending
+ * the query selector. If the selector contains time range properties,
+ * no consolidation is performed. Otherwise the
+ * :c:func:`z_query_consolidation_reception` strategy is used.
+ */
+struct z_query_consolidation_t z_query_consolidation_auto(void);
+/**
+ * Creates a default :c:type:`z_query_consolidation_t`.
+ */
+struct z_query_consolidation_t z_query_consolidation_default(void);
+/**
+ * Full consolidation performed everywhere.
+ *
+ * This mode optimizes bandwidth on all links in the system
+ * but will provide a very poor latency.
+ */
+struct z_query_consolidation_t z_query_consolidation_full(void);
+/**
+ * Full consolidation performed on last router and at reception.
+ *
+ * This mode offers a good latency while optimizing bandwidth on
+ * the last transport link between the router and the application.
+ */
+struct z_query_consolidation_t z_query_consolidation_last_router(void);
+/**
+ * Lazy consolidation performed at all stages.
+ *
+ * This strategy offers the best latency. Replies are directly
+ * transmitted to the application when received without needing
+ * to wait for all replies.
+ *
+ * This mode does not garantie that there will be no duplicates.
+ */
+struct z_query_consolidation_t z_query_consolidation_lazy(void);
+/**
+ * No consolidation performed.
+ *
+ * This is usefull when querying timeseries data bases or
+ * when using quorums.
+ */
+struct z_query_consolidation_t z_query_consolidation_none(void);
+/**
+ * Full consolidation performed at reception.
+ *
+ * This is the default strategy. It offers the best latency while
+ * garantying that there will be no duplicates.
+ */
+struct z_query_consolidation_t z_query_consolidation_reception(void);
 /**
  * Get a query's key by aliasing it.
  */
@@ -600,6 +785,61 @@ struct z_bytes_t z_query_value_selector(struct z_query_t query);
  * Returns `true` if `qable` is valid.
  */
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
+/**
+ * Returns `true` if `reply_data` is valid.
+ */
+bool z_reply_check(const struct z_owned_reply_t *reply_data);
+/**
+ * Frees `reply_data`, invalidating it for double-drop safety.
+ */
+void z_reply_drop(struct z_owned_reply_t *reply_data);
+/**
+ * Yields the contents of the reply by asserting it indicates a failure.
+ *
+ * You should always make sure that `z_reply_is_ok()` returns `false` before calling this function.
+ */
+struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
+/**
+ * Creates a new blocking fifo channel, returned as a pair of closures.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ */
+struct z_coowned_reply_channel_t z_reply_fifo_new(void);
+/**
+ * Returns `true` if the queryable answered with an OK, which allows this value to be treated as a sample.
+ *
+ * If this returns `false`, you should use `z_check` before trying to use `z_reply_err` if you want to process the error that may be here.
+ */
+bool z_reply_is_ok(const struct z_owned_reply_t *reply);
+/**
+ * Creates a new non-blocking fifo channel, returned as a pair of closures.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ */
+struct z_coowned_reply_channel_t z_reply_non_blocking_fifo_new(void);
+/**
+ * Returns an invalidated `z_owned_reply_t`.
+ *
+ * This is useful when you wish to take ownership of a value from a callback to `z_get`:
+ * - copy the value of the callback's argument's pointee,
+ * - overwrite the pointee with this function's return value,
+ * - you are now responsible for dropping your copy of the reply.
+ */
+struct z_owned_reply_t z_reply_null(void);
+/**
+ * Yields the contents of the reply by asserting it indicates a success.
+ *
+ * You should always make sure that `z_reply_is_ok()` returns `true` before calling this function.
+ */
+struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
 /**
  * Returns `true` if `session` is valid.
  */
