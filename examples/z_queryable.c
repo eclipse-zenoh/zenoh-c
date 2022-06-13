@@ -25,7 +25,7 @@ char *expr = "demo/example/zenoh-c-queryable";
 char *value = "Queryable from C!";
 z_keyexpr_t keyexpr;
 
-void query_handler(z_query_t query, const void *arg)
+void query_handler(z_query_t query, const void *context)
 {
     char *res = z_keyexpr_to_string(z_query_keyexpr(query));
     z_bytes_t pred = z_query_value_selector(query);

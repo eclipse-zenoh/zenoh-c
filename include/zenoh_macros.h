@@ -41,16 +41,9 @@
                               z_owned_encoding_t      \
                             : z_encoding_check)(&x)
 
-#define z_stateless_closure(callback)         \
-  {                                           \
-    .call = callback, .drop = 0, .context = 0 \
+#define _z_closure_overloader(callback, droper, ctx, ...) \
+  {                                                       \
+    .call = callback, .drop = droper, .context = ctx      \
   }
-#define _z_closure_error(callback, drop) "Invalid overload of the closure macro, which either takes a single argument (stateless callback), or 3 (callback, drop, context)"
-#define z_stateful_closure(callback, droper, ctx)    \
-  {                                                  \
-    .call = callback, .drop = droper, .context = ctx \
-  }
-#define _z_closure_overload_selector_helper(arg1, arg2, arg3, arg4, ...) arg4
-#define _z_closure_overload_selector(...) _z_closure_overload_selector_helper(__VA_ARGS__, z_stateful_closure, _z_closure_error, z_stateless_closure)
-#define z_closure(...) _z_closure_overload_selector(__VA_ARGS__)(__VA_ARGS__)
+#define z_closure(...) _z_closure_overloader(__VA_ARGS__, 0, 0)
 #define z_move(x) (&x)
