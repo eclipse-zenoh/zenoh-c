@@ -52,7 +52,7 @@ mod sample_closure {
     }
     /// Calls the closure. Calling an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_closure_sample_call(
+    pub extern "C" fn z_closure_sample_call(
         closure: &z_owned_closure_sample_t,
         sample: &z_sample_t,
     ) {
@@ -63,7 +63,7 @@ mod sample_closure {
     }
     /// Drops the closure. Droping an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_closure_sample_drop(closure: &mut z_owned_closure_sample_t) {
+    pub extern "C" fn z_closure_sample_drop(closure: &mut z_owned_closure_sample_t) {
         let mut empty_closure = z_owned_closure_sample_t::empty();
         std::mem::swap(&mut empty_closure, closure);
     }
@@ -127,10 +127,7 @@ mod query_closure {
     }
     /// Calls the closure. Calling an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_closure_query_call(
-        closure: &z_owned_closure_query_t,
-        query: z_query_t,
-    ) {
+    pub extern "C" fn z_closure_query_call(closure: &z_owned_closure_query_t, query: z_query_t) {
         match closure.call {
             Some(call) => call(query, closure.context),
             None => log::error!("Attempted to call an uninitialized closure!"),
@@ -138,7 +135,7 @@ mod query_closure {
     }
     /// Drops the closure. Droping an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_closure_query_drop(closure: &mut z_owned_closure_query_t) {
+    pub extern "C" fn z_closure_query_drop(closure: &mut z_owned_closure_query_t) {
         let mut empty_closure = z_owned_closure_query_t::empty();
         std::mem::swap(&mut empty_closure, closure);
     }
@@ -203,7 +200,7 @@ mod reply_closure {
     }
     /// Calls the closure. Calling an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_closure_reply_call(
+    pub extern "C" fn z_closure_reply_call(
         closure: &z_owned_closure_reply_t,
         sample: &mut z_owned_reply_t,
     ) {
@@ -216,7 +213,7 @@ mod reply_closure {
     }
     /// Drops the closure. Droping an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_closure_reply_drop(closure: &mut z_owned_closure_reply_t) {
+    pub extern "C" fn z_closure_reply_drop(closure: &mut z_owned_closure_reply_t) {
         let mut empty_closure = z_owned_closure_reply_t::empty();
         std::mem::swap(&mut empty_closure, closure);
     }
@@ -244,7 +241,7 @@ mod reply_closure {
 
 pub use response_channel::*;
 mod response_channel {
-    use crate::{z_owned_closure_reply_t, z_owned_reply_t};
+    use crate::{z_closure_reply_drop, z_owned_closure_reply_t, z_owned_reply_t};
     use libc::c_void;
     use std::sync::mpsc::TryRecvError;
     /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -267,12 +264,19 @@ mod response_channel {
 
     /// A pair of closures, the `send` one accepting
     #[repr(C)]
-    pub struct z_coowned_reply_channel_t {
+    pub struct z_owned_reply_channel_t {
         pub send: z_owned_closure_reply_t,
         pub recv: z_owned_reply_channel_closure_t,
     }
+    #[no_mangle]
+    pub extern "C" fn z_reply_channel_drop(channel: &mut z_owned_reply_channel_t) {
+        z_closure_reply_drop(&mut channel.send);
+        z_reply_channel_closure_drop(&mut channel.recv);
+    }
 
     /// Creates a new blocking fifo channel, returned as a pair of closures.
+    ///
+    /// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
     ///
     /// The `send` end should be passed as callback to a `z_get` call.
     ///
@@ -280,61 +284,113 @@ mod response_channel {
     /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
     /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
     #[no_mangle]
-    pub extern "C" fn z_reply_fifo_new() -> z_coowned_reply_channel_t {
-        let (tx, rx) = std::sync::mpsc::channel();
-        z_coowned_reply_channel_t {
-            send: From::from(move |reply: &mut z_owned_reply_t| {
-                if let Some(reply) = reply.take() {
-                    if let Err(e) = tx.send(reply) {
-                        log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+    pub extern "C" fn z_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
+        if bound == 0 {
+            let (tx, rx) = std::sync::mpsc::channel();
+            z_owned_reply_channel_t {
+                send: From::from(move |reply: &mut z_owned_reply_t| {
+                    if let Some(reply) = reply.take() {
+                        if let Err(e) = tx.send(reply) {
+                            log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        }
                     }
-                }
-            }),
-            recv: From::from(move |receptacle: &mut z_owned_reply_t| {
-                *receptacle = match rx.recv() {
-                    Ok(val) => val.into(),
-                    Err(_) => None.into(),
-                };
-                true
-            }),
+                }),
+                recv: From::from(move |receptacle: &mut z_owned_reply_t| {
+                    *receptacle = match rx.recv() {
+                        Ok(val) => val.into(),
+                        Err(_) => None.into(),
+                    };
+                    true
+                }),
+            }
+        } else {
+            let (tx, rx) = std::sync::mpsc::sync_channel(bound);
+            z_owned_reply_channel_t {
+                send: From::from(move |reply: &mut z_owned_reply_t| {
+                    if let Some(reply) = reply.take() {
+                        if let Err(e) = tx.send(reply) {
+                            log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        }
+                    }
+                }),
+                recv: From::from(move |receptacle: &mut z_owned_reply_t| {
+                    *receptacle = match rx.recv() {
+                        Ok(val) => val.into(),
+                        Err(_) => None.into(),
+                    };
+                    true
+                }),
+            }
         }
     }
 
     /// Creates a new non-blocking fifo channel, returned as a pair of closures.
     ///
+    /// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+    ///
     /// The `send` end should be passed as callback to a `z_get` call.
     ///
     /// The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
     /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
     /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
     #[no_mangle]
-    pub extern "C" fn z_reply_non_blocking_fifo_new() -> z_coowned_reply_channel_t {
-        let (tx, rx) = std::sync::mpsc::channel();
-        z_coowned_reply_channel_t {
-            send: From::from(move |reply: &mut z_owned_reply_t| {
-                if let Some(reply) = reply.take() {
-                    if let Err(e) = tx.send(reply) {
-                        log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+    pub extern "C" fn z_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_channel_t {
+        if bound == 0 {
+            let (tx, rx) = std::sync::mpsc::channel();
+            z_owned_reply_channel_t {
+                send: From::from(move |reply: &mut z_owned_reply_t| {
+                    if let Some(reply) = reply.take() {
+                        if let Err(e) = tx.send(reply) {
+                            log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        }
                     }
-                }
-            }),
-            recv: From::from(
-                move |receptacle: &mut z_owned_reply_t| match rx.try_recv() {
-                    Ok(val) => {
-                        let mut tmp = z_owned_reply_t::from(val);
-                        std::mem::swap(&mut tmp, receptacle);
-                        true
+                }),
+                recv: From::from(
+                    move |receptacle: &mut z_owned_reply_t| match rx.try_recv() {
+                        Ok(val) => {
+                            let mut tmp = z_owned_reply_t::from(val);
+                            std::mem::swap(&mut tmp, receptacle);
+                            true
+                        }
+                        Err(TryRecvError::Disconnected) => {
+                            receptacle.take();
+                            true
+                        }
+                        Err(TryRecvError::Empty) => {
+                            receptacle.take();
+                            false
+                        }
+                    },
+                ),
+            }
+        } else {
+            let (tx, rx) = std::sync::mpsc::sync_channel(bound);
+            z_owned_reply_channel_t {
+                send: From::from(move |reply: &mut z_owned_reply_t| {
+                    if let Some(reply) = reply.take() {
+                        if let Err(e) = tx.send(reply) {
+                            log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        }
                     }
-                    Err(TryRecvError::Disconnected) => {
-                        receptacle.take();
-                        true
-                    }
-                    Err(TryRecvError::Empty) => {
-                        receptacle.take();
-                        false
-                    }
-                },
-            ),
+                }),
+                recv: From::from(
+                    move |receptacle: &mut z_owned_reply_t| match rx.try_recv() {
+                        Ok(val) => {
+                            let mut tmp = z_owned_reply_t::from(val);
+                            std::mem::swap(&mut tmp, receptacle);
+                            true
+                        }
+                        Err(TryRecvError::Disconnected) => {
+                            receptacle.take();
+                            true
+                        }
+                        Err(TryRecvError::Empty) => {
+                            receptacle.take();
+                            false
+                        }
+                    },
+                ),
+            }
         }
     }
 
@@ -358,7 +414,7 @@ mod response_channel {
     }
     /// Calls the closure. Calling an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_reply_channel_closure_call(
+    pub extern "C" fn z_reply_channel_closure_call(
         closure: &z_owned_reply_channel_closure_t,
         sample: &mut z_owned_reply_t,
     ) -> bool {
@@ -372,9 +428,7 @@ mod response_channel {
     }
     /// Drops the closure. Droping an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_owned_reply_channel_closure_drop(
-        closure: &mut z_owned_reply_channel_closure_t,
-    ) {
+    pub extern "C" fn z_reply_channel_closure_drop(closure: &mut z_owned_reply_channel_closure_t) {
         let mut empty_closure = z_owned_reply_channel_closure_t::empty();
         std::mem::swap(&mut empty_closure, closure);
     }

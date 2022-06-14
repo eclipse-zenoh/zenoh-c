@@ -15,7 +15,7 @@ use crate::collections::*;
 use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
-use crate::z_owned_closure_sample_call;
+use crate::z_closure_sample_call;
 use crate::z_owned_closure_sample_t;
 use crate::LOG_INVALID_SESSION;
 use zenoh::net::protocol::core::SubInfo;
@@ -201,7 +201,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
                         encoding: (&sample.encoding).into(),
                         kind: sample.kind.into(),
                     };
-                    z_owned_closure_sample_call(&closure, &sample)
+                    z_closure_sample_call(&closure, &sample)
                 })
                 .reliability(reliability)
                 .mode(zenoh_protocol_core::SubMode::Push)

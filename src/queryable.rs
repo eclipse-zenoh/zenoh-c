@@ -23,7 +23,7 @@ use zenoh::{
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    z_bytes_t, z_keyexpr_t, z_owned_closure_query_call, z_owned_closure_query_t, z_session_t,
+    z_bytes_t, z_closure_query_call, z_keyexpr_t, z_owned_closure_query_t, z_session_t,
     LOG_INVALID_SESSION,
 };
 
@@ -105,7 +105,7 @@ pub unsafe extern "C" fn z_declare_queryable(
     }
     builder
         .callback(move |query| {
-            z_owned_closure_query_call(&closure, z_query_t(&query as *const _ as *const c_void))
+            z_closure_query_call(&closure, z_query_t(&query as *const _ as *const c_void))
         })
         .res_sync()
         .map_err(|e| log::error!("{}", e))

@@ -81,67 +81,6 @@ typedef struct z_bytes_t {
   const uint8_t *start;
   size_t len;
 } z_bytes_t;
-/**
- * A zenoh-allocated key expression.
- *
- * Key expressions can identify a single key or a set of keys.
- *
- * Examples :
- *    - ``"key/expression"``.
- *    - ``"key/ex*"``.
- *
- * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
- * for wire and computation efficiency.
- *
- * A key expression can be either:
- *   - A plain string expression.
- *   - A pure numerical id.
- *   - The combination of a numerical prefix and a string suffix.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_keyexpr_t {
-  uint64_t _align[2];
-  uintptr_t _padding[2];
-} z_owned_keyexpr_t;
-/**
- * A loaned key expression.
- *
- * Key expressions can identify a single key or a set of keys.
- *
- * Examples :
- *    - ``"key/expression"``.
- *    - ``"key/ex*"``.
- *
- * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
- * both for local processing and network-wise.
- */
-typedef struct z_keyexpr_t {
-  uint64_t _align[2];
-  uintptr_t _padding[2];
-} z_keyexpr_t;
-/**
- * An owned zenoh queryable.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_queryable_t {
-  uintptr_t _0[4];
-} z_owned_queryable_t;
 typedef struct z_query_t {
   const void *_0;
 } z_query_t;
@@ -163,9 +102,57 @@ typedef struct z_owned_closure_query_t {
   void (*call)(struct z_query_t, const void *context);
   void (*drop)(void*);
 } z_owned_closure_query_t;
-typedef struct z_queryable_options_t {
-  bool complete;
-} z_queryable_options_t;
+/**
+ * An owned reply to a `z_get` (or `z_get_collect`).
+ *
+ * Members:
+ *   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
+ *   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_reply_t {
+  uint64_t _align[8];
+  uintptr_t _padding[30];
+} z_owned_reply_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * - `this` is a pointer to an arbitrary state.
+ * - `call` is the typical callback function. `this` will be passed as its last argument.
+ * - `drop` allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * We guarantee that:
+ * - `call` will never be called once `drop` has started.
+ * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
+ * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_reply_t {
+  void *context;
+  void (*call)(struct z_owned_reply_t*, const void*);
+  void (*drop)(void*);
+} z_owned_closure_reply_t;
+/**
+ * A loaned key expression.
+ *
+ * Key expressions can identify a single key or a set of keys.
+ *
+ * Examples :
+ *    - ``"key/expression"``.
+ *    - ``"key/ex*"``.
+ *
+ * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
+ * both for local processing and network-wise.
+ */
+typedef struct z_keyexpr_t {
+  uint64_t _align[2];
+  uintptr_t _padding[2];
+} z_keyexpr_t;
 /**
  * The encoding of a payload, in a MIME-like format.
  *
@@ -211,6 +198,54 @@ typedef struct z_owned_closure_sample_t {
   void (*drop)(void*);
 } z_owned_closure_sample_t;
 /**
+ * A zenoh-allocated key expression.
+ *
+ * Key expressions can identify a single key or a set of keys.
+ *
+ * Examples :
+ *    - ``"key/expression"``.
+ *    - ``"key/ex*"``.
+ *
+ * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
+ * for wire and computation efficiency.
+ *
+ * A key expression can be either:
+ *   - A plain string expression.
+ *   - A pure numerical id.
+ *   - The combination of a numerical prefix and a string suffix.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_keyexpr_t {
+  uint64_t _align[2];
+  uintptr_t _padding[2];
+} z_owned_keyexpr_t;
+/**
+ * An owned zenoh queryable.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_queryable_t {
+  uintptr_t _0[4];
+} z_owned_queryable_t;
+typedef struct z_queryable_options_t {
+  bool complete;
+} z_queryable_options_t;
+/**
  * Declare a subscriber for a given key expression.
  *
  * Members:
@@ -226,41 +261,6 @@ typedef struct z_owned_encoding_t {
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
-/**
- * An owned reply to a `z_get` (or `z_get_collect`).
- *
- * Members:
- *   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
- *   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-typedef struct z_owned_reply_t {
-  uint64_t _align[8];
-  uintptr_t _padding[30];
-} z_owned_reply_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_closure_reply_t {
-  void *context;
-  void (*call)(struct z_owned_reply_t*, const void*);
-  void (*drop)(void*);
-} z_owned_closure_reply_t;
 /**
  * The kind of consolidation that should be applied on replies to a :c:func:`z_get`
  * at the different stages of the reply process.
@@ -295,6 +295,14 @@ typedef struct z_get_options_t {
   struct z_query_consolidation_t consolidation;
 } z_get_options_t;
 /**
+ * Options passed to the :c:func:`z_put_ext` function.
+ */
+typedef struct z_put_options_t {
+  struct z_encoding_t encoding;
+  enum z_congestion_control congestion_control;
+  enum z_priority priority;
+} z_put_options_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
  * - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -313,24 +321,16 @@ typedef struct z_owned_reply_channel_closure_t {
   void (*drop)(void*);
 } z_owned_reply_channel_closure_t;
 /**
- * Options passed to the :c:func:`z_put_ext` function.
+ * A pair of closures, the `send` one accepting
  */
-typedef struct z_put_options_t {
-  struct z_encoding_t encoding;
-  enum z_congestion_control congestion_control;
-  enum z_priority priority;
-} z_put_options_t;
+typedef struct z_owned_reply_channel_t {
+  struct z_owned_closure_reply_t send;
+  struct z_owned_reply_channel_closure_t recv;
+} z_owned_reply_channel_t;
 typedef struct z_value_t {
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
 } z_value_t;
-/**
- * A pair of closures, the `send` one accepting
- */
-typedef struct z_coowned_reply_channel_t {
-  struct z_owned_closure_reply_t send;
-  struct z_owned_reply_channel_closure_t recv;
-} z_coowned_reply_channel_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
@@ -357,6 +357,32 @@ bool z_bytes_check(const struct z_bytes_t *b);
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  */
 void z_close(struct z_owned_session_t *session);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+void z_closure_query_call(const struct z_owned_closure_query_t *closure, struct z_query_t query);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_closure_query_drop(struct z_owned_closure_query_t *closure);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+void z_closure_reply_call(const struct z_owned_closure_reply_t *closure,
+                          struct z_owned_reply_t *sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_closure_reply_drop(struct z_owned_closure_reply_t *closure);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+void z_closure_sample_call(const struct z_owned_closure_sample_t *closure,
+                           const struct z_sample_t *sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_closure_sample_drop(struct z_owned_closure_sample_t *closure);
 /**
  * Returns `true` if `config` is valid.
  */
@@ -648,42 +674,6 @@ bool z_loaned_keyexpr_check(const struct z_keyexpr_t *keyexpr);
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-void z_owned_closure_query_call(const struct z_owned_closure_query_t *closure,
-                                struct z_query_t query);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-void z_owned_closure_query_drop(struct z_owned_closure_query_t *closure);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-void z_owned_closure_reply_call(const struct z_owned_closure_reply_t *closure,
-                                struct z_owned_reply_t *sample);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-void z_owned_closure_reply_drop(struct z_owned_closure_reply_t *closure);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-void z_owned_closure_sample_call(const struct z_owned_closure_sample_t *closure,
-                                 const struct z_sample_t *sample);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-void z_owned_closure_sample_drop(struct z_owned_closure_sample_t *closure);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-bool z_owned_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *closure,
-                                        struct z_owned_reply_t *sample);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-void z_owned_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
-/**
  * Write data with extended options.
  *
  * Parameters:
@@ -786,6 +776,16 @@ struct z_bytes_t z_query_value_selector(struct z_query_t query);
  */
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
 /**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+bool z_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *closure,
+                                  struct z_owned_reply_t *sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
+void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
+/**
  * Returns `true` if `reply_data` is valid.
  */
 bool z_reply_check(const struct z_owned_reply_t *reply_data);
@@ -802,13 +802,15 @@ struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
 /**
  * Creates a new blocking fifo channel, returned as a pair of closures.
  *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
  * The `send` end should be passed as callback to a `z_get` call.
  *
  * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
  * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
  * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
  */
-struct z_coowned_reply_channel_t z_reply_fifo_new(void);
+struct z_owned_reply_channel_t z_reply_fifo_new(uintptr_t bound);
 /**
  * Returns `true` if the queryable answered with an OK, which allows this value to be treated as a sample.
  *
@@ -818,13 +820,15 @@ bool z_reply_is_ok(const struct z_owned_reply_t *reply);
 /**
  * Creates a new non-blocking fifo channel, returned as a pair of closures.
  *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
  * The `send` end should be passed as callback to a `z_get` call.
  *
  * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
  * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
  * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
  */
-struct z_coowned_reply_channel_t z_reply_non_blocking_fifo_new(void);
+struct z_owned_reply_channel_t z_reply_non_blocking_fifo_new(uintptr_t bound);
 /**
  * Returns an invalidated `z_owned_reply_t`.
  *

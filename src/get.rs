@@ -28,7 +28,7 @@ use zenoh::{
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    z_bytes_t, z_encoding_t, z_keyexpr_t, z_owned_closure_reply_call, z_owned_closure_reply_t,
+    z_bytes_t, z_closure_reply_call, z_encoding_t, z_keyexpr_t, z_owned_closure_reply_t,
     z_sample_t, z_session_t, LOG_INVALID_SESSION,
 };
 
@@ -193,7 +193,7 @@ pub unsafe extern "C" fn z_get(
             .consolidation(options.consolidation.into())
             .target(options.target.into());
     }
-    q.callback(move |response| z_owned_closure_reply_call(&closure, &mut response.into()))
+    q.callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
         .res_sync()
         .unwrap();
 }
