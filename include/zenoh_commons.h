@@ -117,7 +117,7 @@ typedef struct z_owned_closure_query_t {
  */
 typedef struct z_owned_reply_t {
   uint64_t _align[8];
-  uintptr_t _padding[30];
+  uintptr_t _padding[23];
 } z_owned_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:

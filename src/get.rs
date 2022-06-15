@@ -48,7 +48,7 @@ type ReplyInner = Option<Reply>;
 #[repr(C)]
 pub struct z_owned_reply_t {
     _align: [u64; 8],
-    _padding: [usize; 30],
+    _padding: [usize; 23],
 }
 impl From<ReplyInner> for z_owned_reply_t {
     fn from(mut val: ReplyInner) -> Self {
