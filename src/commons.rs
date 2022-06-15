@@ -15,6 +15,7 @@ use crate::collections::*;
 use crate::keyexpr::*;
 use libc::c_ulong;
 use zenoh::prelude::SampleKind;
+use zenoh_protocol_core::Timestamp;
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -46,6 +47,41 @@ impl From<z_sample_kind> for SampleKind {
     }
 }
 
+#[repr(C)]
+pub struct z_timestamp_t {
+    time: u64,
+    id: z_bytes_t,
+}
+
+/// Returns `true` if `ts` is a valid timestamp
+#[no_mangle]
+pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
+    let id = unsafe { std::slice::from_raw_parts(ts.id.start, ts.id.len) };
+    id.iter().any(|byte| *byte != 0)
+}
+impl From<Option<&Timestamp>> for z_timestamp_t {
+    fn from(ts: Option<&Timestamp>) -> Self {
+        if let Some(ts) = ts {
+            let id = ts.get_id().as_slice();
+            z_timestamp_t {
+                time: ts.get_time().as_u64(),
+                id: z_bytes_t {
+                    start: id.as_ptr(),
+                    len: id.len(),
+                },
+            }
+        } else {
+            z_timestamp_t {
+                time: 0,
+                id: z_bytes_t {
+                    start: std::ptr::null(),
+                    len: 0,
+                },
+            }
+        }
+    }
+}
+
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -59,7 +95,7 @@ pub struct z_sample_t {
     pub payload: z_bytes_t,
     pub encoding: z_encoding_t,
     pub kind: z_sample_kind,
-    // @TODO: add timestamp and source_info
+    pub timestamp: z_timestamp_t,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -200,6 +200,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
                         payload: bytes,
                         encoding: (&sample.encoding).into(),
                         kind: sample.kind.into(),
+                        timestamp: sample.timestamp.as_ref().into(),
                     };
                     z_closure_sample_call(&closure, &sample)
                 })

@@ -101,6 +101,7 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
             },
             encoding: (&inner.encoding).into(),
             kind: inner.kind.into(),
+            timestamp: inner.timestamp.as_ref().into()
         }
     } else {
         panic!("Assertion failed: tried to treat `z_owned_reply_t` as Ok despite that not being the case")
@@ -176,7 +177,7 @@ pub unsafe extern "C" fn z_get(
     predicate: *const c_char,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&z_get_options_t>,
-) {
+) -> bool {
     let mut closure = z_owned_closure_reply_t::empty();
     std::mem::swap(callback, &mut closure);
     let p = CStr::from_ptr(predicate).to_str().unwrap();
@@ -193,9 +194,16 @@ pub unsafe extern "C" fn z_get(
             .consolidation(options.consolidation.into())
             .target(options.target.into());
     }
-    q.callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
+    match q
+        .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
         .res_sync()
-        .unwrap();
+    {
+        Ok(()) => false,
+        Err(e) => {
+            log::error!("{}", e);
+            true
+        }
+    }
 }
 
 /// Frees `reply_data`, invalidating it for double-drop safety.

@@ -400,27 +400,17 @@ pub unsafe extern "C" fn z_keyexpr_concat(
 /// In case of error, the return value will be set to its invalidated state.
 pub unsafe extern "C" fn z_keyexpr_join(
     left: z_keyexpr_t,
-    right_start: *const c_char,
-    right_len: usize,
+    right: z_keyexpr_t,
 ) -> z_owned_keyexpr_t {
     let left = match left.as_ref() {
         Some(l) => l,
         None => return z_owned_keyexpr_t::null(),
     };
-    let right = std::slice::from_raw_parts(right_start as _, right_len);
-    let right = match std::str::from_utf8(right) {
-        Ok(r) => r,
-        Err(e) => {
-            log::error!(
-                "Couldn't concatenate {:02x?} to {} because it is not valid UTF8: {}",
-                right,
-                left,
-                e
-            );
-            return z_owned_keyexpr_t::null();
-        }
+    let right = match right.as_ref() {
+        Some(r) => r,
+        None => return z_owned_keyexpr_t::null(),
     };
-    match left.join(right) {
+    match left.join(right.as_str()) {
         Ok(result) => result.into(),
         Err(e) => {
             log::error!("{}", e);
