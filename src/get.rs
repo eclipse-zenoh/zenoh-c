@@ -47,8 +47,8 @@ type ReplyInner = Option<Reply>;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_reply_t {
-    _align: [u64; 8],
-    _padding: [usize; 23],
+    _align: [u64; 5],
+    _padding: [usize; 18],
 }
 impl From<ReplyInner> for z_owned_reply_t {
     fn from(mut val: ReplyInner) -> Self {

@@ -116,8 +116,8 @@ typedef struct z_owned_closure_query_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_reply_t {
-  uint64_t _align[8];
-  uintptr_t _padding[23];
+  uint64_t _align[5];
+  uintptr_t _padding[18];
 } z_owned_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
