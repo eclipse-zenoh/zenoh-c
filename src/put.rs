@@ -90,9 +90,9 @@ impl From<z_congestion_control> for CongestionControl {
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
-    encoding: z_encoding_t,
-    congestion_control: z_congestion_control,
-    priority: z_priority,
+    pub encoding: z_encoding_t,
+    pub congestion_control: z_congestion_control,
+    pub priority: z_priority,
 }
 
 /// Constructs the default value for write options
