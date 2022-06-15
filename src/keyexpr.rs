@@ -16,6 +16,7 @@ use std::convert::TryFrom;
 use std::ops::Deref;
 use std::ops::DerefMut;
 
+use crate::copy_to_libc;
 use crate::session::*;
 use crate::z_bytes_t;
 use crate::LOG_INVALID_SESSION;
@@ -234,7 +235,7 @@ pub unsafe extern "C" fn z_keyexpr_unchecked(name: *const c_char) -> z_keyexpr_t
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_char {
     match keyexpr.as_ref() {
-        Some(ke) => std::ffi::CString::new(ke.as_str()).unwrap().into_raw(),
+        Some(ke) => copy_to_libc(ke.as_bytes()),
         None => std::ptr::null_mut(),
     }
 }

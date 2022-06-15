@@ -11,9 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::session::*;
+use crate::{copy_to_libc, session::*};
 use libc::{c_char, c_uint};
-use std::ffi::CString;
 use zenoh::info::InfoProperties;
 use zenoh::prelude::sync::SyncResolve;
 
@@ -85,7 +84,7 @@ pub unsafe extern "C" fn z_info_get(info: z_info_t, key: u64) -> *mut c_char {
     let info = info.0.as_ref();
     match info.as_ref().and_then(|i| i.get(&key)) {
         None => std::ptr::null_mut(),
-        Some(s) => CString::from_vec_unchecked(s.as_str().as_bytes().to_vec()).into_raw(),
+        Some(s) => copy_to_libc(s.as_bytes()),
     }
 }
 
@@ -104,10 +103,10 @@ pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
 #[no_mangle]
 pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> *mut c_char {
     match session.as_ref() {
-        Some(s) => match CString::new(s.info().res().to_string()) {
-            Ok(s) => s.into_raw(),
-            Err(_) => std::ptr::null_mut(),
-        },
+        Some(s) => {
+            let info_str = s.info().res_sync().to_string();
+            copy_to_libc(info_str.as_bytes())
+        }
         None => std::ptr::null_mut(),
     }
 }

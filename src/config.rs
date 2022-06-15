@@ -12,8 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use libc::{c_char, c_uint};
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
+
+use crate::copy_to_libc;
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -129,10 +131,7 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: *const c_char) ->
 
     let val = config.as_ref().as_ref().and_then(|c| c.get_json(key).ok());
     match val {
-        Some(val) => match CString::new(val.as_bytes().to_vec()) {
-            Ok(s) => s.into_raw(),
-            Err(_) => std::ptr::null_mut(),
-        },
+        Some(val) => copy_to_libc(val.as_bytes()),
         None => std::ptr::null_mut(),
     }
 }
@@ -206,10 +205,7 @@ pub extern "C" fn z_config_to_string(config: z_config_t) -> *mut c_char {
         None => return std::ptr::null_mut(),
     };
     match json5::to_string(config) {
-        Ok(s) => match CString::new(s.as_bytes().to_vec()) {
-            Ok(s) => s.into_raw(),
-            Err(_) => std::ptr::null_mut(),
-        },
+        Ok(s) => copy_to_libc(s.as_bytes()),
         Err(_) => std::ptr::null_mut(),
     }
 }
