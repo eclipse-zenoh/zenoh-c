@@ -11,102 +11,65 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{copy_to_libc, session::*};
+use crate::{copy_to_libc, session::*, z_closure_zid_call, z_owned_closure_zid_t};
 use libc::{c_char, c_uint};
-use zenoh::info::InfoProperties;
 use zenoh::prelude::sync::SyncResolve;
+use zenoh_protocol_core::ZenohId;
 
-// Properties returned by z_info()
-#[no_mangle]
-pub static Z_INFO_PID_KEY: c_uint = zenoh::info::ZN_INFO_PID_KEY as c_uint;
-#[no_mangle]
-pub static Z_INFO_PEER_PID_KEY: c_uint = zenoh::info::ZN_INFO_PEER_PID_KEY as c_uint;
-#[no_mangle]
-pub static Z_INFO_ROUTER_PID_KEY: c_uint = zenoh::info::ZN_INFO_ROUTER_PID_KEY as c_uint;
-
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_info_t<'a>(&'a z_owned_info_t);
-
-/// A map of integers to strings providing informations on the zenoh session.  
+/// Returns the local Zenoh ID as a LSB first u128.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_owned_info_t {
-    _align: [u64; 2],
-    _pad: [usize; 4],
-}
-
-impl AsRef<Option<InfoProperties>> for z_owned_info_t {
-    fn as_ref(&self) -> &Option<InfoProperties> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl AsMut<Option<InfoProperties>> for z_owned_info_t {
-    fn as_mut(&mut self) -> &mut Option<InfoProperties> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-/// Frees `info`'s memory, while invalidating `info` for double-drop-safety.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_info_drop(info: &mut z_owned_info_t) {
-    std::mem::drop(info.as_mut().take())
-}
-/// Returns `true` if `info` is valid.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_info_check(info: &z_owned_info_t) -> bool {
-    info.as_ref().is_some()
-}
-
-/// Returns a :c:type:`z_info_t` loaned from `info`.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_info_loan(info: &z_owned_info_t) -> z_info_t {
-    z_info_t(info)
-}
-
-/// Returns the information associated with `key` if it exists.  
-/// If it doesn't, the returned value is invalid, and doesn't need droping.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_info_get(info: z_info_t, key: u64) -> *mut c_char {
-    let info = info.0.as_ref();
-    match info.as_ref().and_then(|i| i.get(&key)) {
-        None => std::ptr::null_mut(),
-        Some(s) => copy_to_libc(s.as_bytes()),
-    }
-}
-
-/// Gets informations about an zenoh session.
+/// Unless the `session` is invalid, that u128 is guaranteed to be non-zero.
+/// In other words, this function returning an array of 16 zeros means you failed
+/// to pass it a valid session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_info(session: z_session_t) -> z_owned_info_t {
+pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> [u8; 16] {
     match session.as_ref() {
-        Some(s) => std::mem::transmute(s.info().res()),
-        None => std::mem::transmute(None::<InfoProperties>),
+        Some(s) => std::mem::transmute::<ZenohId, [u8; 16]>(s.info().zid().res_sync()),
+        None => [0; 16],
     }
 }
 
-/// Gets informations about an zenoh session as a properties-formatted string.
+/// Fetches the Zenoh IDs of all connected peers.
+///
+/// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
+/// and is guaranteed to be dropped before this function exits.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_info_as_str(session: z_session_t) -> *mut c_char {
+pub unsafe extern "C" fn z_info_peers_zid(
+    session: z_session_t,
+    callback: &mut z_owned_closure_zid_t,
+) -> ! {
+    let mut closure = z_owned_closure_zid_t::empty();
+    std::mem::swap(&mut closure, callback);
     match session.as_ref() {
         Some(s) => {
-            let info_str = s.info().res_sync().to_string();
-            copy_to_libc(info_str.as_bytes())
+            for id in s.info().peers_zid().res_sync() {
+                z_closure_zid_call(&closure, &std::mem::transmute(id));
+            }
         }
-        None => std::ptr::null_mut(),
+        None => (),
+    }
+}
+
+/// Fetches the Zenoh IDs of all connected routers.
+///
+/// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
+/// and is guaranteed to be dropped before this function exits.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_info_routers_zid(
+    session: z_session_t,
+    callback: &mut z_owned_closure_zid_t,
+) -> ! {
+    let mut closure = z_owned_closure_zid_t::empty();
+    std::mem::swap(&mut closure, callback);
+    match session.as_ref() {
+        Some(s) => {
+            for id in s.info().routers_zid().res_sync() {
+                z_closure_zid_call(&closure, &std::mem::transmute(id));
+            }
+        }
+        None => (),
     }
 }

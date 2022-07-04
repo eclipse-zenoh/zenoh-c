@@ -1,7 +1,29 @@
+//
+// Copyright (c) 2022 ZettaScale Technology
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+//
+
+
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+
 typedef enum z_congestion_control {
   z_congestion_control_BLOCK,
   z_congestion_control_DROP,
 } z_congestion_control;
+
 /**
  * The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
  *
@@ -14,6 +36,7 @@ typedef enum z_consolidation_mode_t {
   z_consolidation_mode_t_LAZY,
   z_consolidation_mode_t_NONE,
 } z_consolidation_mode_t;
+
 typedef enum z_known_encoding {
   z_known_encoding_Empty = 0,
   z_known_encoding_AppOctetStream = 1,
@@ -37,6 +60,7 @@ typedef enum z_known_encoding {
   z_known_encoding_ImagePng = 19,
   z_known_encoding_ImageGif = 20,
 } z_known_encoding;
+
 typedef enum z_priority {
   z_priority_REAL_TIME = 1,
   z_priority_INTERACTIVE_HIGH = 2,
@@ -46,6 +70,7 @@ typedef enum z_priority {
   z_priority_DATA_LOW = 6,
   z_priority_BACKGROUND = 7,
 } z_priority;
+
 /**
  * The possible values of :c:member:`z_query_target_t.tag`.
  *
@@ -60,6 +85,7 @@ typedef enum z_query_target_t {
   z_query_target_t_NONE,
   z_query_target_t_ALL_COMPLETE,
 } z_query_target_t;
+
 /**
  * The subscription reliability.
  *
@@ -70,10 +96,12 @@ typedef enum z_reliability {
   z_reliability_BEST_EFFORT,
   z_reliability_RELIABLE,
 } z_reliability;
+
 typedef enum z_sample_kind {
   z_sample_kind_PUT = 0,
   z_sample_kind_DELETE = 1,
 } z_sample_kind;
+
 /**
  * An array of bytes.
  */
@@ -81,9 +109,27 @@ typedef struct z_bytes_t {
   const uint8_t *start;
   size_t len;
 } z_bytes_t;
+
+/**
+ * An owned zenoh session.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_session_t {
+  uintptr_t _0[3];
+} z_owned_session_t;
+
 typedef struct z_query_t {
   const void *_0;
 } z_query_t;
+
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -102,6 +148,7 @@ typedef struct z_owned_closure_query_t {
   void (*call)(struct z_query_t, const void *context);
   void (*drop)(void*);
 } z_owned_closure_query_t;
+
 /**
  * An owned reply to a `z_get` (or `z_get_collect`).
  *
@@ -119,6 +166,7 @@ typedef struct z_owned_reply_t {
   uint64_t _align[5];
   uintptr_t _padding[18];
 } z_owned_reply_t;
+
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -137,6 +185,7 @@ typedef struct z_owned_closure_reply_t {
   void (*call)(struct z_owned_reply_t*, const void*);
   void (*drop)(void*);
 } z_owned_closure_reply_t;
+
 /**
  * A loaned key expression.
  *
@@ -153,6 +202,7 @@ typedef struct z_keyexpr_t {
   uint64_t _align[2];
   uintptr_t _padding[2];
 } z_keyexpr_t;
+
 /**
  * The encoding of a payload, in a MIME-like format.
  *
@@ -164,10 +214,12 @@ typedef struct z_encoding_t {
   enum z_known_encoding prefix;
   struct z_bytes_t suffix;
 } z_encoding_t;
+
 typedef struct z_timestamp_t {
   uint64_t time;
   struct z_bytes_t id;
 } z_timestamp_t;
+
 /**
  * A data sample.
  *
@@ -184,6 +236,7 @@ typedef struct z_sample_t {
   enum z_sample_kind kind;
   struct z_timestamp_t timestamp;
 } z_sample_t;
+
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -202,6 +255,7 @@ typedef struct z_owned_closure_sample_t {
   void (*call)(const struct z_sample_t*, const void *context);
   void (*drop)(void*);
 } z_owned_closure_sample_t;
+
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -220,6 +274,30 @@ typedef struct z_owned_closure_zid_t {
   void (*call)(const uint8_t(*)[16], const void*);
   void (*drop)(void*);
 } z_owned_closure_zid_t;
+
+/**
+ * An owned zenoh configuration.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_config_t {
+  void *_0;
+} z_owned_config_t;
+
+/**
+ * A loaned zenoh config.
+ */
+typedef struct z_config_t {
+  const struct z_owned_config_t *_0;
+} z_config_t;
+
 /**
  * A zenoh-allocated key expression.
  *
@@ -250,10 +328,19 @@ typedef struct z_owned_keyexpr_t {
   uint64_t _align[2];
   uintptr_t _padding[2];
 } z_owned_keyexpr_t;
+
+/**
+ * A loaned zenoh session.
+ */
+typedef struct z_session_t {
+  const struct z_owned_session_t *_0;
+} z_session_t;
+
 typedef struct z_owned_publisher_t {
   uint64_t _align[1];
   uintptr_t _padding[6];
 } z_owned_publisher_t;
+
 /**
  * The options for a publisher.
  *
@@ -265,6 +352,7 @@ typedef struct z_publisher_options_t {
   enum z_congestion_control congestion_control;
   enum z_priority priority;
 } z_publisher_options_t;
+
 /**
  * An owned zenoh queryable.
  *
@@ -280,9 +368,27 @@ typedef struct z_publisher_options_t {
 typedef struct z_owned_queryable_t {
   uintptr_t _0[4];
 } z_owned_queryable_t;
+
 typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
+
+/**
+ * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_subscriber_t {
+  uintptr_t _0[1];
+} z_owned_subscriber_t;
+
 /**
  * Declare a subscriber for a given key expression.
  *
@@ -294,6 +400,7 @@ typedef struct z_queryable_options_t {
 typedef struct z_subscriber_options_t {
   enum z_reliability reliability;
 } z_subscriber_options_t;
+
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
  *
@@ -309,11 +416,13 @@ typedef struct z_subscriber_options_t {
 typedef struct z_owned_pull_subscriber_t {
   uintptr_t _0[1];
 } z_owned_pull_subscriber_t;
+
 typedef struct z_owned_encoding_t {
   enum z_known_encoding prefix;
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
+
 /**
  * The kind of consolidation that should be applied on replies to a :c:func:`z_get`
  * at the different stages of the reply process.
@@ -328,6 +437,7 @@ typedef struct z_consolidation_strategy_t {
   enum z_consolidation_mode_t last_router;
   enum z_consolidation_mode_t reception;
 } z_consolidation_strategy_t;
+
 /**
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
  */
@@ -335,6 +445,7 @@ typedef enum z_query_consolidation_t_Tag {
   z_query_consolidation_t_AUTO,
   z_query_consolidation_t_MANUAL,
 } z_query_consolidation_t_Tag;
+
 typedef struct z_query_consolidation_t {
   z_query_consolidation_t_Tag tag;
   union {
@@ -343,13 +454,16 @@ typedef struct z_query_consolidation_t {
     };
   };
 } z_query_consolidation_t;
+
 typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
 } z_get_options_t;
+
 typedef struct z_publisher_put_options_t {
   struct z_encoding_t encoding;
 } z_publisher_put_options_t;
+
 /**
  * Options passed to the :c:func:`z_put_ext` function.
  */
@@ -358,6 +472,7 @@ typedef struct z_put_options_t {
   enum z_congestion_control congestion_control;
   enum z_priority priority;
 } z_put_options_t;
+
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -376,6 +491,7 @@ typedef struct z_owned_reply_channel_closure_t {
   bool (*call)(struct z_owned_reply_t*, const void*);
   void (*drop)(void*);
 } z_owned_reply_channel_closure_t;
+
 /**
  * A pair of closures, the `send` one accepting
  */
@@ -383,110 +499,147 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
+
 typedef struct z_value_t {
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
 } z_value_t;
+
 extern const unsigned int Z_ROUTER;
+
 extern const unsigned int Z_PEER;
+
 extern const unsigned int Z_CLIENT;
+
 extern const char *Z_CONFIG_MODE_KEY;
+
 extern const char *Z_CONFIG_CONNECT_KEY;
+
 extern const char *Z_CONFIG_LISTEN_KEY;
+
 extern const char *Z_CONFIG_USER_KEY;
+
 extern const char *Z_CONFIG_PASSWORD_KEY;
+
 extern const char *Z_CONFIG_MULTICAST_SCOUTING_KEY;
+
 extern const char *Z_CONFIG_MULTICAST_INTERFACE_KEY;
+
 extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
+
 extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
+
 extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
+
 extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
+
 extern const char *Z_CONFIG_LOCAL_ROUTING_KEY;
+
 /**
  * Returns `true` if `b` is initialized.
  */
 bool z_bytes_check(const struct z_bytes_t *b);
+
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  */
 void z_close(struct z_owned_session_t *session);
+
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_closure_query_call(const struct z_owned_closure_query_t *closure, struct z_query_t query);
+
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_closure_query_drop(struct z_owned_closure_query_t *closure);
+
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_closure_reply_call(const struct z_owned_closure_reply_t *closure,
                           struct z_owned_reply_t *sample);
+
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_closure_reply_drop(struct z_owned_closure_reply_t *closure);
+
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_closure_sample_call(const struct z_owned_closure_sample_t *closure,
                            const struct z_sample_t *sample);
+
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_closure_sample_drop(struct z_owned_closure_sample_t *closure);
+
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_closure_zid_call(const struct z_owned_closure_zid_t *closure, const uint8_t (*sample)[16]);
+
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
+
 /**
  * Returns `true` if `config` is valid.
  */
 bool z_config_check(const struct z_owned_config_t *config);
+
 /**
  * Constructs a default configuration client mode zenoh session.
  * If `peer` is not null, it is added to the configuration as remote peer.
  */
 struct z_owned_config_t z_config_client(const char *const *peers, uintptr_t n_peers);
+
 /**
  * Creates a default, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_default(void);
+
 /**
  * Frees `config`, invalidating it for double-drop safety.
  */
 void z_config_drop(struct z_owned_config_t *config);
+
 /**
  * Creates an empty, zenoh-allocated, configuration.
  */
 struct z_owned_config_t z_config_empty(void);
+
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  */
 struct z_owned_config_t z_config_from_file(const char *path);
+
 /**
  * Reads a configuration from a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
 struct z_owned_config_t z_config_from_str(const char *s);
+
 /**
  * Gets the property with the given integer key from the configuration.
  */
 const char *z_config_get(struct z_config_t config, const char *key);
+
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
  * Returns `true` if insertion was succesful, `false` otherwise.
  */
 bool z_config_insert_json(struct z_config_t config, const char *key, const char *value);
+
 /**
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
 struct z_config_t z_config_loan(const struct z_owned_config_t *s);
+
 /**
  * Return a new, zenoh-allocated, empty configuration.
  *
@@ -500,14 +653,17 @@ struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 struct z_owned_config_t z_config_new(void);
+
 /**
  * Constructs a default configuration peer mode zenoh session.
  */
 struct z_owned_config_t z_config_peer(void);
+
 /**
  * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
  */
 char *z_config_to_string(struct z_config_t config);
+
 /**
  * Declare a key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
  *
@@ -515,6 +671,7 @@ char *z_config_to_string(struct z_config_t config);
  * ease the retrieval of the concerned resource in the routing tables.
  */
 struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_keyexpr_t keyexpr);
+
 /**
  * Declares a publication for the given key expression, returning `true` on success.
  *
@@ -524,6 +681,7 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session, struct z_
 struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
                                                struct z_keyexpr_t keyexpr,
                                                const struct z_publisher_options_t *options);
+
 /**
  * Creates a Queryable for the given key expression.
  *
@@ -540,6 +698,7 @@ struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
                                                struct z_keyexpr_t keyexpr,
                                                struct z_owned_closure_query_t *callback,
                                                const struct z_queryable_options_t *options);
+
 /**
  * Declare a subscriber for a given key expression.
  *
@@ -601,6 +760,7 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_keyexpr_t keyexpr,
                                                  struct z_owned_closure_sample_t *callback,
                                                  const struct z_subscriber_options_t *opts);
+
 /**
  * Declare a subscriber for a given key expression.
  *
@@ -662,22 +822,27 @@ struct z_owned_pull_subscriber_t z_declare_subscriber(struct z_session_t session
                                                       struct z_keyexpr_t keyexpr,
                                                       struct z_owned_closure_sample_t *callback,
                                                       const struct z_subscriber_options_t *opts);
+
 /**
  * Returns `true` if `encoding` is valid.
  */
 bool z_encoding_check(const struct z_owned_encoding_t *encoding);
+
 /**
  * Frees `encoding`, invalidating it for double-drop safety.
  */
 struct z_encoding_t z_encoding_default(void);
+
 /**
  * Frees `encoding`, invalidating it for double-drop safety.
  */
 void z_encoding_drop(struct z_owned_encoding_t *encoding);
+
 /**
  * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
  */
 struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
+
 /**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
@@ -697,7 +862,9 @@ bool z_get(struct z_session_t session,
            const char *predicate,
            struct z_owned_closure_reply_t *callback,
            const struct z_get_options_t *options);
+
 struct z_get_options_t z_get_options_default(void);
+
 /**
  * Fetches the Zenoh IDs of all connected peers.
  *
@@ -705,6 +872,7 @@ struct z_get_options_t z_get_options_default(void);
  * and is guaranteed to be dropped before this function exits.
  */
 void z_info_peers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
+
 /**
  * Fetches the Zenoh IDs of all connected routers.
  *
@@ -712,6 +880,7 @@ void z_info_peers_zid(struct z_session_t session, struct z_owned_closure_zid_t *
  * and is guaranteed to be dropped before this function exits.
  */
 void z_info_routers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
+
 /**
  * Returns the local Zenoh ID as a LSB first u128.
  *
@@ -720,19 +889,23 @@ void z_info_routers_zid(struct z_session_t session, struct z_owned_closure_zid_t
  * to pass it a valid session.
  */
 uint8_t (z_info_zid(struct z_session_t session))[16];
+
 /**
  * Initialises the zenoh runtime logger
  */
 void z_init_logger(void);
+
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
  */
 struct z_keyexpr_t z_keyexpr(const char *name);
+
 /**
  * Returns `true` if `keyexpr` is valid.
  */
 bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
+
 /**
  * Performs string concatenation and returns the result as a `z_owned_keyexpr_t`.
  * In case of error, the return value will be set to its invalidated state.
@@ -745,41 +918,50 @@ bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
 struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
                                           const char *right_start,
                                           uintptr_t right_len);
+
 /**
  * Frees `keyexpr` and invalidates it for double-drop safety.
  */
 void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
+
 /**
  * Returns `1` if `left` and `right` define equal sets.
  */
 bool z_keyexpr_equals(struct z_keyexpr_t left, struct z_keyexpr_t right);
+
 /**
  * Returns `1` if the set defined by `left` contains every key belonging to the set defined by `right`.
  */
 bool z_keyexpr_includes(struct z_keyexpr_t left,
                         struct z_keyexpr_t right);
+
 /**
  * Returns `1` if `left` and `right` define sets that have at least one key in common.
  */
 bool z_keyexpr_intersects(struct z_keyexpr_t left, struct z_keyexpr_t right);
+
 /**
  * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
  * In case of error, the return value will be set to its invalidated state.
  */
 struct z_owned_keyexpr_t z_keyexpr_join(struct z_keyexpr_t left, struct z_keyexpr_t right);
+
 /**
  * Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
  */
 struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
+
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
  */
 struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
+
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
  * The user is responsible of droping the allocated string being returned.
  */
 char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
+
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
  * - `name` MUST be valid UTF8.
@@ -791,21 +973,26 @@ char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  * It is a loaned key expression that aliases `name`.
  */
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
+
 /**
  * Returns `true` if `keyexpr` is valid.
  */
 bool z_loaned_keyexpr_check(const struct z_keyexpr_t *keyexpr);
+
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
+
 /**
  * Sends a `DELETE` message onto the publisher's key expression.
  *
  * Returns 0 if successful.
  */
 int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher);
+
 struct z_publisher_options_t z_publisher_options_default(void);
+
 /**
  * Sends a `PUT` message onto the publisher's key expression.
  *
@@ -817,6 +1004,7 @@ int8_t z_publisher_put(const struct z_owned_publisher_t *publisher,
                        const uint8_t *payload,
                        uintptr_t len,
                        const struct z_publisher_put_options_t *options);
+
 /**
  * Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
  * by calling the **callback** function provided to the :c:func:`z_subscribe` function.
@@ -825,10 +1013,12 @@ int8_t z_publisher_put(const struct z_owned_publisher_t *publisher,
  *     sub: The :c:type:`z_owned_subscriber_t` to pull from.
  */
 int8_t z_pull(const struct z_owned_pull_subscriber_t *sub);
+
 /**
  * Returns `true` if `sub` is valid.
  */
 bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
+
 /**
  * Write data with extended options.
  *
@@ -846,10 +1036,12 @@ int z_put(struct z_session_t session,
           const uint8_t *payload,
           size_t len,
           const struct z_put_options_t *opts);
+
 /**
  * Constructs the default value for write options
  */
 struct z_put_options_t z_put_options_default(void);
+
 /**
  * Automatic query consolidation strategy selection.
  *
@@ -859,10 +1051,12 @@ struct z_put_options_t z_put_options_default(void);
  * :c:func:`z_query_consolidation_reception` strategy is used.
  */
 struct z_query_consolidation_t z_query_consolidation_auto(void);
+
 /**
  * Creates a default :c:type:`z_query_consolidation_t`.
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
+
 /**
  * Full consolidation performed everywhere.
  *
@@ -870,6 +1064,7 @@ struct z_query_consolidation_t z_query_consolidation_default(void);
  * but will provide a very poor latency.
  */
 struct z_query_consolidation_t z_query_consolidation_full(void);
+
 /**
  * Full consolidation performed on last router and at reception.
  *
@@ -877,6 +1072,7 @@ struct z_query_consolidation_t z_query_consolidation_full(void);
  * the last transport link between the router and the application.
  */
 struct z_query_consolidation_t z_query_consolidation_last_router(void);
+
 /**
  * Lazy consolidation performed at all stages.
  *
@@ -887,6 +1083,7 @@ struct z_query_consolidation_t z_query_consolidation_last_router(void);
  * This mode does not garantie that there will be no duplicates.
  */
 struct z_query_consolidation_t z_query_consolidation_lazy(void);
+
 /**
  * No consolidation performed.
  *
@@ -894,6 +1091,7 @@ struct z_query_consolidation_t z_query_consolidation_lazy(void);
  * when using quorums.
  */
 struct z_query_consolidation_t z_query_consolidation_none(void);
+
 /**
  * Full consolidation performed at reception.
  *
@@ -901,10 +1099,12 @@ struct z_query_consolidation_t z_query_consolidation_none(void);
  * garantying that there will be no duplicates.
  */
 struct z_query_consolidation_t z_query_consolidation_reception(void);
+
 /**
  * Get a query's key by aliasing it.
  */
 struct z_keyexpr_t z_query_keyexpr(struct z_query_t query);
+
 /**
  * Send a reply to a query.
  *
@@ -923,38 +1123,47 @@ void z_query_reply(struct z_query_t query,
                    struct z_keyexpr_t key,
                    const uint8_t *payload,
                    uintptr_t len);
+
 /**
  * Get a query's value selector by aliasing it.
  */
 struct z_bytes_t z_query_value_selector(struct z_query_t query);
+
 /**
  * Returns `true` if `qable` is valid.
  */
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
+
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 bool z_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *closure,
                                   struct z_owned_reply_t *sample);
+
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
+
 void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
+
 /**
  * Returns `true` if `reply_data` is valid.
  */
 bool z_reply_check(const struct z_owned_reply_t *reply_data);
+
 /**
  * Frees `reply_data`, invalidating it for double-drop safety.
  */
 void z_reply_drop(struct z_owned_reply_t *reply_data);
+
 /**
  * Yields the contents of the reply by asserting it indicates a failure.
  *
  * You should always make sure that `z_reply_is_ok()` returns `false` before calling this function.
  */
 struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
+
 /**
  * Creates a new blocking fifo channel, returned as a pair of closures.
  *
@@ -967,12 +1176,14 @@ struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
  * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
  */
 struct z_owned_reply_channel_t z_reply_fifo_new(uintptr_t bound);
+
 /**
  * Returns `true` if the queryable answered with an OK, which allows this value to be treated as a sample.
  *
  * If this returns `false`, you should use `z_check` before trying to use `z_reply_err` if you want to process the error that may be here.
  */
 bool z_reply_is_ok(const struct z_owned_reply_t *reply);
+
 /**
  * Creates a new non-blocking fifo channel, returned as a pair of closures.
  *
@@ -985,6 +1196,7 @@ bool z_reply_is_ok(const struct z_owned_reply_t *reply);
  * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
  */
 struct z_owned_reply_channel_t z_reply_non_blocking_fifo_new(uintptr_t bound);
+
 /**
  * Returns an invalidated `z_owned_reply_t`.
  *
@@ -994,41 +1206,51 @@ struct z_owned_reply_channel_t z_reply_non_blocking_fifo_new(uintptr_t bound);
  * - you are now responsible for dropping your copy of the reply.
  */
 struct z_owned_reply_t z_reply_null(void);
+
 /**
  * Yields the contents of the reply by asserting it indicates a success.
  *
  * You should always make sure that `z_reply_is_ok()` returns `true` before calling this function.
  */
 struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
+
 /**
  * Returns `true` if `session` is valid.
  */
 bool z_session_check(const struct z_owned_session_t *session);
+
 /**
  * Returns a :c:type:`z_session_t` loaned from `s`.
  */
 struct z_session_t z_session_loan(const struct z_owned_session_t *s);
+
 /**
  * Returns `true` if `sub` is valid.
  */
 bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
+
 /**
  * Create a default subscription info.
  */
 struct z_subscriber_options_t z_subscriber_options_default(void);
+
 /**
  * Returns `true` if `ts` is a valid timestamp
  */
 bool z_timestamp_check(struct z_timestamp_t ts);
+
 /**
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
  */
 void z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *keyexpr);
+
 /**
  * Undeclares a publication for the given key expression.
  */
 void z_undeclare_publisher(struct z_owned_publisher_t *publisher);
+
 void z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
+
 /**
  * Close a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
  *
@@ -1036,7 +1258,9 @@ void z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
  *     qable: The :c:type:`z_owned_queryable_t` to close.
  */
 void z_undeclare_queryable(struct z_owned_queryable_t *qable);
+
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
+
 /**
  * Returns the key expression's internal string by aliasing it.
  *
