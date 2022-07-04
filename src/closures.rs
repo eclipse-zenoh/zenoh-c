@@ -241,7 +241,6 @@ mod reply_closure {
 
 pub use zenohid_closure::*;
 mod zenohid_closure {
-    use crate::z_owned_reply_t;
     use libc::c_void;
     /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
     /// - `this` is a pointer to an arbitrary state.

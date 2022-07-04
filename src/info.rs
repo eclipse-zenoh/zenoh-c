@@ -11,8 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{copy_to_libc, session::*, z_closure_zid_call, z_owned_closure_zid_t};
-use libc::{c_char, c_uint};
+use crate::{session::*, z_closure_zid_call, z_owned_closure_zid_t};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh_protocol_core::ZenohId;
 
@@ -39,7 +38,7 @@ pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> [u8; 16] {
 pub unsafe extern "C" fn z_info_peers_zid(
     session: z_session_t,
     callback: &mut z_owned_closure_zid_t,
-) -> ! {
+) {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     match session.as_ref() {
@@ -61,7 +60,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 pub unsafe extern "C" fn z_info_routers_zid(
     session: z_session_t,
     callback: &mut z_owned_closure_zid_t,
-) -> ! {
+) {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     match session.as_ref() {

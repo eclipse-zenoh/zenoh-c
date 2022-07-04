@@ -7,8 +7,6 @@ zenoh_concrete.h:
   - :defines
   - z_owned_session_t!
   - z_session_t!
-  - z_owned_info_t!
-  - z_info_t!
   - z_owned_subscriber_t!
   - z_owned_config_t!
   - z_config_t!

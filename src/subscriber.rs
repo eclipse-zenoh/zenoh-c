@@ -27,7 +27,7 @@ use zenoh::subscriber::Reliability;
 ///
 ///     - **z_reliability_BEST_EFFORT**
 ///     - **z_reliability_RELIABLE**
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_reliability {

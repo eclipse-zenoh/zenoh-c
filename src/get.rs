@@ -15,14 +15,14 @@
 use libc::c_char;
 use std::{
     borrow::Cow,
-    convert::TryInto,
+    convert::TryFrom,
     ffi::CStr,
     ops::{Deref, DerefMut},
 };
 use zenoh_protocol_core::{ConsolidationMode, ConsolidationStrategy, QueryTarget};
 
 use zenoh::{
-    prelude::{Selector, SplitBuffer},
+    prelude::{KeyExpr, SplitBuffer},
     query::{QueryConsolidation, Reply},
 };
 use zenoh_util::core::SyncResolve;
@@ -185,10 +185,7 @@ pub unsafe extern "C" fn z_get(
         .as_ref()
         .as_ref()
         .expect(LOG_INVALID_SESSION)
-        .get(Selector {
-            key_expr: keyexpr.try_into().unwrap(),
-            value_selector: Cow::Borrowed(p),
-        });
+        .get(KeyExpr::try_from(keyexpr).unwrap().with_value_selector(p));
     if let Some(options) = options {
         q = q
             .consolidation(options.consolidation.into())
