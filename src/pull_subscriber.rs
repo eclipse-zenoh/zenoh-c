@@ -17,8 +17,9 @@ use crate::keyexpr::*;
 use crate::session::*;
 use crate::z_closure_sample_call;
 use crate::z_owned_closure_sample_t;
+use crate::z_subscriber_options_default;
+use crate::z_subscriber_options_t;
 use crate::LOG_INVALID_SESSION;
-use zenoh::net::protocol::core::SubInfo;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
@@ -58,7 +59,7 @@ impl From<z_reliability> for Reliability {
 /**************************************/
 /*            DECLARATION             */
 /**************************************/
-type Subscriber = Option<Box<zenoh::subscriber::CallbackSubscriber<'static>>>;
+type PullSubscriber = Option<Box<zenoh::subscriber::CallbackPullSubscriber<'static>>>;
 
 /// An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
 ///
@@ -72,38 +73,17 @@ type Subscriber = Option<Box<zenoh::subscriber::CallbackSubscriber<'static>>>;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct z_owned_subscriber_t([usize; 1]);
+pub struct z_owned_pull_subscriber_t([usize; 1]);
 
-impl AsRef<Subscriber> for z_owned_subscriber_t {
-    fn as_ref(&self) -> &Subscriber {
+impl AsRef<PullSubscriber> for z_owned_pull_subscriber_t {
+    fn as_ref(&self) -> &PullSubscriber {
         unsafe { std::mem::transmute(self) }
     }
 }
 
-impl AsMut<Subscriber> for z_owned_subscriber_t {
-    fn as_mut(&mut self) -> &mut Subscriber {
+impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
+    fn as_mut(&mut self) -> &mut PullSubscriber {
         unsafe { std::mem::transmute(self) }
-    }
-}
-
-/// Declare a subscriber for a given key expression.
-///
-/// Members:
-///     `z_reliability reliability`: The subscription reliability.
-///     `void *cargs`: A pointer that will be passed to the **callback** at each call.
-///
-#[allow(non_camel_case_types)]
-#[repr(C)]
-pub struct z_subscriber_options_t {
-    pub reliability: z_reliability,
-}
-
-/// Create a default subscription info.
-#[no_mangle]
-pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
-    let info = SubInfo::default();
-    z_subscriber_options_t {
-        reliability: info.reliability.into(),
     }
 }
 
@@ -169,15 +149,15 @@ pub unsafe extern "C" fn z_declare_subscriber(
     keyexpr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     mut opts: *const z_subscriber_options_t,
-) -> z_owned_subscriber_t {
+) -> z_owned_pull_subscriber_t {
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    unsafe fn ok(sub: zenoh::subscriber::CallbackSubscriber<'_>) -> z_owned_subscriber_t {
+    unsafe fn ok(sub: zenoh::subscriber::CallbackPullSubscriber<'_>) -> z_owned_pull_subscriber_t {
         std::mem::transmute(Some(Box::new(sub)))
     }
 
-    unsafe fn err() -> z_owned_subscriber_t {
-        std::mem::transmute(None::<Box<zenoh::subscriber::CallbackSubscriber<'_>>>)
+    unsafe fn err() -> z_owned_pull_subscriber_t {
+        std::mem::transmute(None::<Box<zenoh::subscriber::CallbackPullSubscriber<'_>>>)
     }
 
     match session.as_ref() {
@@ -205,6 +185,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
                     z_closure_sample_call(&closure, &sample)
                 })
                 .reliability(reliability)
+                .pull_mode()
                 .res();
             match res {
                 Ok(sub) => ok(sub),
@@ -224,7 +205,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
 // Unsubscribes from the passed `sub`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) {
+pub unsafe extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::warn!("{}", e)
@@ -235,22 +216,27 @@ pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) 
 /// Returns `true` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool {
+pub unsafe extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bool {
     sub.as_ref().is_some()
 }
 
-// /// Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
-// /// by calling the **callback** function provided to the :c:func:`z_subscribe` function.
-// ///
-// /// Parameters:
-// ///     sub: The :c:type:`z_owned_subscriber_t` to pull from.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub unsafe extern "C" fn z_pull(sub: &z_owned_subscriber_t) {
-//     match sub.as_ref() {
-//         Some(tx) => {
-//             let _ = async_std::task::block_on(tx.send(SubOps::Pull));
-//         }
-//         None => (),
-//     }
-// }
+/// Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
+/// by calling the **callback** function provided to the :c:func:`z_subscribe` function.
+///
+/// Parameters:
+///     sub: The :c:type:`z_owned_subscriber_t` to pull from.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_pull(sub: &z_owned_pull_subscriber_t) -> i8 {
+    match sub.as_ref() {
+        Some(tx) => {
+            if let Err(e) = tx.pull().res_sync() {
+                log::error!("{}", e);
+                -127
+            } else {
+                0
+            }
+        }
+        None => -1,
+    }
+}

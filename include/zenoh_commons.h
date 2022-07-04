@@ -276,6 +276,21 @@ typedef struct z_queryable_options_t {
 typedef struct z_subscriber_options_t {
   enum z_reliability reliability;
 } z_subscriber_options_t;
+/**
+ * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_pull_subscriber_t {
+  uintptr_t _0[1];
+} z_owned_pull_subscriber_t;
 typedef struct z_owned_encoding_t {
   enum z_known_encoding prefix;
   struct z_bytes_t suffix;
@@ -564,6 +579,67 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_owned_closure_sample_t *callback,
                                                  const struct z_subscriber_options_t *opts);
 /**
+ * Declare a subscriber for a given key expression.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression to subscribe.
+ *     callback: The callback function that will be called each time a data matching the subscribed expression is received.
+ *     opts: The options to be passed to describe the options to be passed to the subscriber declaration.
+ *
+ * Returns:
+ *    A :c:type:`z_owned_subscriber_t`.
+ *
+ *    To check if the subscription succeeded and if the subscriber is still valid,
+ *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ *
+ *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * Example:
+ *    Declaring a subscriber passing `NULL` for the options:
+ *    ```
+ *    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
+ *    ```
+ *
+ *    is equivalent to initializing and passing the default subscriber options:
+ *
+ *    ```
+ *    z_subscriber_options_t opts = z_subscriber_options_default();
+ *    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ *    ```
+ *
+ *    Passing custom arguments to the **callback** can be done by defining a custom structure:
+ *
+ *    ```
+ *    typedef struct {
+ *      z_keyexpr_t forward;
+ *      z_session_t session;
+ *    } myargs_t;
+ *
+ *    void callback(const z_sample_t sample, const void *arg)
+ *    {
+ *      myargs_t *myargs = (myargs_t *)arg;
+ *      z_put(myargs->session, myargs->forward, sample->value, NULL);
+ *    }
+ *
+ *    int main() {
+ *      myargs_t cargs = {
+ *        forward = z_keyexpr("forward"),
+ *        session = s,
+ *      };
+ *      z_subscriber_options_t opts = z_subscriber_options_default();
+ *      opts.cargs = (void *)&cargs;
+ *      z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ *    }
+ *    ```
+ */
+struct z_owned_pull_subscriber_t z_declare_subscriber(struct z_session_t session,
+                                                      struct z_keyexpr_t keyexpr,
+                                                      struct z_owned_closure_sample_t *callback,
+                                                      const struct z_subscriber_options_t *opts);
+/**
  * Returns `true` if `encoding` is valid.
  */
 bool z_encoding_check(const struct z_owned_encoding_t *encoding);
@@ -708,7 +784,7 @@ struct z_owned_session_t z_open(struct z_owned_config_t *config);
  *
  * Returns 0 if successful.
  */
-bool z_publisher_delete(const struct z_owned_publisher_t *publisher);
+int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher);
 struct z_publisher_options_t z_publisher_options_default(void);
 /**
  * Sends a `PUT` message onto the publisher's key expression.
@@ -717,10 +793,22 @@ struct z_publisher_options_t z_publisher_options_default(void);
  *
  * You may specify the payload's encoding through the options.
  */
-bool z_publisher_put(const struct z_owned_publisher_t *publisher,
-                     const uint8_t *payload,
-                     uintptr_t len,
-                     const struct z_publisher_put_options_t *options);
+int8_t z_publisher_put(const struct z_owned_publisher_t *publisher,
+                       const uint8_t *payload,
+                       uintptr_t len,
+                       const struct z_publisher_put_options_t *options);
+/**
+ * Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
+ * by calling the **callback** function provided to the :c:func:`z_subscribe` function.
+ *
+ * Parameters:
+ *     sub: The :c:type:`z_owned_subscriber_t` to pull from.
+ */
+int8_t z_pull(const struct z_owned_pull_subscriber_t *sub);
+/**
+ * Returns `true` if `sub` is valid.
+ */
+bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
 /**
  * Write data with extended options.
  *
@@ -920,6 +1008,7 @@ void z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *k
  * Undeclares a publication for the given key expression.
  */
 void z_undeclare_publisher(struct z_owned_publisher_t *publisher);
+void z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
 /**
  * Close a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
  *

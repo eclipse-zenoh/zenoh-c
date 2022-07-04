@@ -33,6 +33,8 @@ mod session;
 pub use crate::session::*;
 mod subscriber;
 pub use crate::subscriber::*;
+mod pull_subscriber;
+pub use crate::pull_subscriber::*;
 mod publisher;
 pub use crate::publisher::*;
 mod closures;

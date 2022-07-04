@@ -123,7 +123,7 @@ pub unsafe extern "C" fn z_publisher_put(
     payload: *const u8,
     len: usize,
     options: Option<&z_publisher_put_options_t>,
-) -> bool {
+) -> i8 {
     if let Some(p) = publisher.deref() {
         let value: Value = std::slice::from_raw_parts(payload, len).into();
         let put = match options {
@@ -132,12 +132,12 @@ pub unsafe extern "C" fn z_publisher_put(
         };
         if let Err(e) = put.res_sync() {
             log::error!("{}", e);
-            true
+            -127
         } else {
-            false
+            0
         }
     } else {
-        true
+        -1
     }
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
@@ -145,16 +145,16 @@ pub unsafe extern "C" fn z_publisher_put(
 /// Returns 0 if successful.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_publisher_delete(publisher: &z_owned_publisher_t) -> bool {
+pub unsafe extern "C" fn z_publisher_delete(publisher: &z_owned_publisher_t) -> i8 {
     if let Some(p) = publisher.deref() {
         if let Err(e) = p.delete().res_sync() {
             log::error!("{}", e);
-            true
+            -127
         } else {
-            false
+            0
         }
     } else {
-        true
+        -1
     }
 }
 
