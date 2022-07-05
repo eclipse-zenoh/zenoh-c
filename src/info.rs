@@ -15,17 +15,25 @@ use crate::{session::*, z_closure_zid_call, z_owned_closure_zid_t};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh_protocol_core::ZenohId;
 
-/// Returns the local Zenoh ID as a LSB first u128.
+/// Represents a Zenoh ID.
 ///
-/// Unless the `session` is invalid, that u128 is guaranteed to be non-zero.
+/// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
+#[repr(C)]
+pub struct z_id_t {
+    pub id: [u8; 16],
+}
+
+/// Returns the local Zenoh ID.
+///
+/// Unless the `session` is invalid, that ID is guaranteed to be non-zero.
 /// In other words, this function returning an array of 16 zeros means you failed
 /// to pass it a valid session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> [u8; 16] {
+pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
     match session.as_ref() {
-        Some(s) => std::mem::transmute::<ZenohId, [u8; 16]>(s.info().zid().res_sync()),
-        None => [0; 16],
+        Some(s) => std::mem::transmute::<ZenohId, z_id_t>(s.info().zid().res_sync()),
+        None => z_id_t { id: [0; 16] },
     }
 }
 

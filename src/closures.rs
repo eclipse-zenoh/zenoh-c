@@ -242,6 +242,8 @@ mod reply_closure {
 pub use zenohid_closure::*;
 mod zenohid_closure {
     use libc::c_void;
+
+    use crate::z_id_t;
     /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
     /// - `this` is a pointer to an arbitrary state.
     /// - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -256,7 +258,7 @@ mod zenohid_closure {
     #[repr(C)]
     pub struct z_owned_closure_zid_t {
         context: *mut c_void,
-        call: Option<extern "C" fn(&[u8; 16], *const c_void)>,
+        call: Option<extern "C" fn(&z_id_t, *const c_void)>,
         drop: Option<extern "C" fn(*mut c_void)>,
     }
 
@@ -280,7 +282,7 @@ mod zenohid_closure {
     }
     /// Calls the closure. Calling an uninitialized closure is a no-op.
     #[no_mangle]
-    pub extern "C" fn z_closure_zid_call(closure: &z_owned_closure_zid_t, sample: &[u8; 16]) {
+    pub extern "C" fn z_closure_zid_call(closure: &z_owned_closure_zid_t, sample: &z_id_t) {
         match closure.call {
             Some(call) => call(sample, closure.context),
             None => {
@@ -294,10 +296,10 @@ mod zenohid_closure {
         let mut empty_closure = z_owned_closure_zid_t::empty();
         std::mem::swap(&mut empty_closure, closure);
     }
-    impl<F: Fn(&[u8; 16])> From<F> for z_owned_closure_zid_t {
+    impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
         fn from(f: F) -> Self {
             let this = Box::into_raw(Box::new(f)) as _;
-            extern "C" fn call<F: Fn(&[u8; 16])>(response: &[u8; 16], this: *const c_void) {
+            extern "C" fn call<F: Fn(&z_id_t)>(response: &z_id_t, this: *const c_void) {
                 let this = unsafe { &*(this as *const F) };
                 this(response)
             }

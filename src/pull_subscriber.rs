@@ -108,14 +108,14 @@ impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
 /// Example:
 ///    Declaring a subscriber passing `NULL` for the options:
 ///    ```
-///    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
+///    z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
 ///    ```
 ///
 ///    is equivalent to initializing and passing the default subscriber options:
 ///    
 ///    ```
 ///    z_subscriber_options_t opts = z_subscriber_options_default();
-///    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+///    z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 ///    ```
 ///
 ///    Passing custom arguments to the **callback** can be done by defining a custom structure:
@@ -139,12 +139,12 @@ impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
 ///      };
 ///      z_subscriber_options_t opts = z_subscriber_options_default();
 ///      opts.cargs = (void *)&cargs;
-///      z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+///      z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 ///    }
 ///    ```
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_declare_subscriber(
+pub unsafe extern "C" fn z_declare_pull_subscriber(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
