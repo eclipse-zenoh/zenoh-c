@@ -14,29 +14,29 @@ typedef enum z_consolidation_mode_t {
   z_consolidation_mode_t_LAZY,
   z_consolidation_mode_t_NONE,
 } z_consolidation_mode_t;
-typedef enum z_known_encoding {
-  z_known_encoding_Empty = 0,
-  z_known_encoding_AppOctetStream = 1,
-  z_known_encoding_AppCustom = 2,
-  z_known_encoding_TextPlain = 3,
-  z_known_encoding_AppProperties = 4,
-  z_known_encoding_AppJson = 5,
-  z_known_encoding_AppSql = 6,
-  z_known_encoding_AppInteger = 7,
-  z_known_encoding_AppFloat = 8,
-  z_known_encoding_AppXml = 9,
-  z_known_encoding_AppXhtmlXml = 10,
-  z_known_encoding_AppXWwwFormUrlencoded = 11,
-  z_known_encoding_TextJson = 12,
-  z_known_encoding_TextHtml = 13,
-  z_known_encoding_TextXml = 14,
-  z_known_encoding_TextCss = 15,
-  z_known_encoding_TextCsv = 16,
-  z_known_encoding_TextJavascript = 17,
-  z_known_encoding_ImageJpeg = 18,
-  z_known_encoding_ImagePng = 19,
-  z_known_encoding_ImageGif = 20,
-} z_known_encoding;
+typedef enum z_encoding_prefix {
+  z_encoding_prefix_Empty = 0,
+  z_encoding_prefix_AppOctetStream = 1,
+  z_encoding_prefix_AppCustom = 2,
+  z_encoding_prefix_TextPlain = 3,
+  z_encoding_prefix_AppProperties = 4,
+  z_encoding_prefix_AppJson = 5,
+  z_encoding_prefix_AppSql = 6,
+  z_encoding_prefix_AppInteger = 7,
+  z_encoding_prefix_AppFloat = 8,
+  z_encoding_prefix_AppXml = 9,
+  z_encoding_prefix_AppXhtmlXml = 10,
+  z_encoding_prefix_AppXWwwFormUrlencoded = 11,
+  z_encoding_prefix_TextJson = 12,
+  z_encoding_prefix_TextHtml = 13,
+  z_encoding_prefix_TextXml = 14,
+  z_encoding_prefix_TextCss = 15,
+  z_encoding_prefix_TextCsv = 16,
+  z_encoding_prefix_TextJavascript = 17,
+  z_encoding_prefix_ImageJpeg = 18,
+  z_encoding_prefix_ImagePng = 19,
+  z_encoding_prefix_ImageGif = 20,
+} z_encoding_prefix;
 typedef enum z_priority {
   z_priority_REAL_TIME = 1,
   z_priority_INTERACTIVE_HIGH = 2,
@@ -161,7 +161,7 @@ typedef struct z_keyexpr_t {
  * `suffix` MUST be a valid UTF-8 string.
  */
 typedef struct z_encoding_t {
-  enum z_known_encoding prefix;
+  enum z_encoding_prefix prefix;
   struct z_bytes_t suffix;
 } z_encoding_t;
 typedef struct z_timestamp_t {
@@ -318,7 +318,7 @@ typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
 typedef struct z_owned_encoding_t {
-  enum z_known_encoding prefix;
+  enum z_encoding_prefix prefix;
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
