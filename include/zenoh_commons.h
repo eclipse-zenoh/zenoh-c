@@ -332,7 +332,7 @@ typedef struct z_query_consolidation_t {
   z_query_consolidation_tag_t tag;
   union {
     struct {
-      struct z_consolidation_strategy_t MANUAL;
+      struct z_consolidation_strategy_t manual;
     };
   };
 } z_query_consolidation_t;
