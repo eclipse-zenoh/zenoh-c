@@ -1,7 +1,7 @@
-typedef enum z_congestion_control {
-  z_congestion_control_BLOCK,
-  z_congestion_control_DROP,
-} z_congestion_control;
+typedef enum z_congestion_control_t {
+  Z_CONGESTION_CONTROL_BLOCK,
+  Z_CONGESTION_CONTROL_DROP,
+} z_congestion_control_t;
 /**
  * The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
  *
@@ -10,42 +10,42 @@ typedef enum z_congestion_control {
  *     - **z_consolidation_mode_t_NONE**: No consolidation.
  */
 typedef enum z_consolidation_mode_t {
-  z_consolidation_mode_t_FULL,
-  z_consolidation_mode_t_LAZY,
-  z_consolidation_mode_t_NONE,
+  Z_CONSOLIDATION_MODE_FULL,
+  Z_CONSOLIDATION_MODE_LAZY,
+  Z_CONSOLIDATION_MODE_NONE,
 } z_consolidation_mode_t;
-typedef enum z_encoding_prefix {
-  z_encoding_prefix_Empty = 0,
-  z_encoding_prefix_AppOctetStream = 1,
-  z_encoding_prefix_AppCustom = 2,
-  z_encoding_prefix_TextPlain = 3,
-  z_encoding_prefix_AppProperties = 4,
-  z_encoding_prefix_AppJson = 5,
-  z_encoding_prefix_AppSql = 6,
-  z_encoding_prefix_AppInteger = 7,
-  z_encoding_prefix_AppFloat = 8,
-  z_encoding_prefix_AppXml = 9,
-  z_encoding_prefix_AppXhtmlXml = 10,
-  z_encoding_prefix_AppXWwwFormUrlencoded = 11,
-  z_encoding_prefix_TextJson = 12,
-  z_encoding_prefix_TextHtml = 13,
-  z_encoding_prefix_TextXml = 14,
-  z_encoding_prefix_TextCss = 15,
-  z_encoding_prefix_TextCsv = 16,
-  z_encoding_prefix_TextJavascript = 17,
-  z_encoding_prefix_ImageJpeg = 18,
-  z_encoding_prefix_ImagePng = 19,
-  z_encoding_prefix_ImageGif = 20,
-} z_encoding_prefix;
-typedef enum z_priority {
-  z_priority_REAL_TIME = 1,
-  z_priority_INTERACTIVE_HIGH = 2,
-  z_priority_INTERACTIVE_LOW = 3,
-  z_priority_DATA_HIGH = 4,
-  z_priority_DATA = 5,
-  z_priority_DATA_LOW = 6,
-  z_priority_BACKGROUND = 7,
-} z_priority;
+typedef enum z_encoding_prefix_t {
+  Z_ENCODING_PREFIX_EMPTY = 0,
+  Z_ENCODING_PREFIX_APP_OCTET_STREAM = 1,
+  Z_ENCODING_PREFIX_APP_CUSTOM = 2,
+  Z_ENCODING_PREFIX_TEXT_PLAIN = 3,
+  Z_ENCODING_PREFIX_APP_PROPERTIES = 4,
+  Z_ENCODING_PREFIX_APP_JSON = 5,
+  Z_ENCODING_PREFIX_APP_SQL = 6,
+  Z_ENCODING_PREFIX_APP_INTEGER = 7,
+  Z_ENCODING_PREFIX_APP_FLOAT = 8,
+  Z_ENCODING_PREFIX_APP_XML = 9,
+  Z_ENCODING_PREFIX_APP_XHTML_XML = 10,
+  Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED = 11,
+  Z_ENCODING_PREFIX_TEXT_JSON = 12,
+  Z_ENCODING_PREFIX_TEXT_HTML = 13,
+  Z_ENCODING_PREFIX_TEXT_XML = 14,
+  Z_ENCODING_PREFIX_TEXT_CSS = 15,
+  Z_ENCODING_PREFIX_TEXT_CSV = 16,
+  Z_ENCODING_PREFIX_TEXT_JAVASCRIPT = 17,
+  Z_ENCODING_PREFIX_IMAGE_JPEG = 18,
+  Z_ENCODING_PREFIX_IMAGE_PNG = 19,
+  Z_ENCODING_PREFIX_IMAGE_GIF = 20,
+} z_encoding_prefix_t;
+typedef enum z_priority_t {
+  Z_PRIORITY_REAL_TIME = 1,
+  Z_PRIORITY_INTERACTIVE_HIGH = 2,
+  Z_PRIORITY_INTERACTIVE_LOW = 3,
+  Z_PRIORITY_DATA_HIGH = 4,
+  Z_PRIORITY_DATA = 5,
+  Z_PRIORITY_DATA_LOW = 6,
+  Z_PRIORITY_BACKGROUND = 7,
+} z_priority_t;
 /**
  * The possible values of :c:member:`z_query_target_t.tag`.
  *
@@ -55,25 +55,25 @@ typedef enum z_priority {
  *     - **z_query_target_t_NONE**: No queryables.
  */
 typedef enum z_query_target_t {
-  z_query_target_t_BEST_MATCHING,
-  z_query_target_t_ALL,
-  z_query_target_t_NONE,
-  z_query_target_t_ALL_COMPLETE,
+  Z_QUERY_TARGET_BEST_MATCHING,
+  Z_QUERY_TARGET_ALL,
+  Z_QUERY_TARGET_NONE,
+  Z_QUERY_TARGET_ALL_COMPLETE,
 } z_query_target_t;
 /**
  * The subscription reliability.
  *
- *     - **z_reliability_BEST_EFFORT**
- *     - **z_reliability_RELIABLE**
+ *     - **Z_RELIABILITY_BEST_EFFORT**
+ *     - **Z_RELIABILITY_RELIABLE**
  */
-typedef enum z_reliability {
-  z_reliability_BEST_EFFORT,
-  z_reliability_RELIABLE,
-} z_reliability;
-typedef enum z_sample_kind {
-  z_sample_kind_PUT = 0,
-  z_sample_kind_DELETE = 1,
-} z_sample_kind;
+typedef enum z_reliability_t {
+  Z_RELIABILITY_BEST_EFFORT,
+  Z_RELIABILITY_RELIABLE,
+} z_reliability_t;
+typedef enum z_sample_kind_t {
+  Z_SAMPLE_KIND_PUT = 0,
+  Z_SAMPLE_KIND_DELETE = 1,
+} z_sample_kind_t;
 /**
  * An array of bytes.
  */
@@ -161,7 +161,7 @@ typedef struct z_keyexpr_t {
  * `suffix` MUST be a valid UTF-8 string.
  */
 typedef struct z_encoding_t {
-  enum z_encoding_prefix prefix;
+  enum z_encoding_prefix_t prefix;
   struct z_bytes_t suffix;
 } z_encoding_t;
 typedef struct z_timestamp_t {
@@ -181,7 +181,7 @@ typedef struct z_sample_t {
   struct z_keyexpr_t keyexpr;
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
-  enum z_sample_kind kind;
+  enum z_sample_kind_t kind;
   struct z_timestamp_t timestamp;
 } z_sample_t;
 /**
@@ -270,8 +270,8 @@ typedef struct z_owned_publisher_t {
  */
 typedef struct z_publisher_options_t {
   int8_t local_routing;
-  enum z_congestion_control congestion_control;
-  enum z_priority priority;
+  enum z_congestion_control_t congestion_control;
+  enum z_priority_t priority;
 } z_publisher_options_t;
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
@@ -292,33 +292,18 @@ typedef struct z_owned_pull_subscriber_t {
  * Declare a subscriber for a given key expression.
  *
  * Members:
- *     `z_reliability reliability`: The subscription reliability.
+ *     `z_reliability_t reliability`: The subscription reliability.
  *     `void *cargs`: A pointer that will be passed to the **callback** at each call.
  *
  */
 typedef struct z_subscriber_options_t {
-  enum z_reliability reliability;
+  enum z_reliability_t reliability;
 } z_subscriber_options_t;
-/**
- * An owned zenoh queryable.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_queryable_t {
-  uintptr_t _0[4];
-} z_owned_queryable_t;
 typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
 typedef struct z_owned_encoding_t {
-  enum z_encoding_prefix prefix;
+  enum z_encoding_prefix_t prefix;
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
@@ -339,15 +324,15 @@ typedef struct z_consolidation_strategy_t {
 /**
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
  */
-typedef enum z_query_consolidation_t_Tag {
-  z_query_consolidation_t_AUTO,
-  z_query_consolidation_t_MANUAL,
-} z_query_consolidation_t_Tag;
+typedef enum z_query_consolidation_tag_t {
+  Z_QUERY_CONSOLIDATION_AUTO,
+  Z_QUERY_CONSOLIDATION_MANUAL,
+} z_query_consolidation_tag_t;
 typedef struct z_query_consolidation_t {
-  z_query_consolidation_t_Tag tag;
+  z_query_consolidation_tag_t tag;
   union {
     struct {
-      struct z_consolidation_strategy_t manual;
+      struct z_consolidation_strategy_t MANUAL;
     };
   };
 } z_query_consolidation_t;
@@ -363,8 +348,8 @@ typedef struct z_publisher_put_options_t {
  */
 typedef struct z_put_options_t {
   struct z_encoding_t encoding;
-  enum z_congestion_control congestion_control;
-  enum z_priority priority;
+  enum z_congestion_control_t congestion_control;
+  enum z_priority_t priority;
 } z_put_options_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:

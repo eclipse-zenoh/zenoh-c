@@ -24,25 +24,25 @@ pub type z_zint_t = c_ulong;
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub enum z_sample_kind {
+pub enum z_sample_kind_t {
     PUT = 0,
     DELETE = 1,
 }
 
-impl From<SampleKind> for z_sample_kind {
+impl From<SampleKind> for z_sample_kind_t {
     fn from(k: SampleKind) -> Self {
         match k {
-            SampleKind::Put => z_sample_kind::PUT,
-            SampleKind::Delete => z_sample_kind::DELETE,
+            SampleKind::Put => z_sample_kind_t::PUT,
+            SampleKind::Delete => z_sample_kind_t::DELETE,
         }
     }
 }
 
-impl From<z_sample_kind> for SampleKind {
-    fn from(k: z_sample_kind) -> Self {
+impl From<z_sample_kind_t> for SampleKind {
+    fn from(k: z_sample_kind_t) -> Self {
         match k {
-            z_sample_kind::PUT => SampleKind::Put,
-            z_sample_kind::DELETE => SampleKind::Delete,
+            z_sample_kind_t::PUT => SampleKind::Put,
+            z_sample_kind_t::DELETE => SampleKind::Delete,
         }
     }
 }
@@ -94,13 +94,13 @@ pub struct z_sample_t {
     pub keyexpr: z_keyexpr_t,
     pub payload: z_bytes_t,
     pub encoding: z_encoding_t,
-    pub kind: z_sample_kind,
+    pub kind: z_sample_kind_t,
     pub timestamp: z_timestamp_t,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
-pub enum z_encoding_prefix {
+pub enum z_encoding_prefix_t {
     Empty = 0,
     AppOctetStream = 1,
     AppCustom = 2,
@@ -124,39 +124,39 @@ pub enum z_encoding_prefix {
     ImageGif = 20,
 }
 
-impl From<z_encoding_prefix> for zenoh_protocol_core::KnownEncoding {
-    fn from(val: z_encoding_prefix) -> Self {
+impl From<z_encoding_prefix_t> for zenoh_protocol_core::KnownEncoding {
+    fn from(val: z_encoding_prefix_t) -> Self {
         if cfg!(debug_assertions) {
             match val {
-                z_encoding_prefix::Empty => zenoh_protocol_core::KnownEncoding::Empty,
-                z_encoding_prefix::AppOctetStream => {
+                z_encoding_prefix_t::Empty => zenoh_protocol_core::KnownEncoding::Empty,
+                z_encoding_prefix_t::AppOctetStream => {
                     zenoh_protocol_core::KnownEncoding::AppOctetStream
                 }
-                z_encoding_prefix::AppCustom => zenoh_protocol_core::KnownEncoding::AppCustom,
-                z_encoding_prefix::TextPlain => zenoh_protocol_core::KnownEncoding::TextPlain,
-                z_encoding_prefix::AppProperties => {
+                z_encoding_prefix_t::AppCustom => zenoh_protocol_core::KnownEncoding::AppCustom,
+                z_encoding_prefix_t::TextPlain => zenoh_protocol_core::KnownEncoding::TextPlain,
+                z_encoding_prefix_t::AppProperties => {
                     zenoh_protocol_core::KnownEncoding::AppProperties
                 }
-                z_encoding_prefix::AppJson => zenoh_protocol_core::KnownEncoding::AppJson,
-                z_encoding_prefix::AppSql => zenoh_protocol_core::KnownEncoding::AppSql,
-                z_encoding_prefix::AppInteger => zenoh_protocol_core::KnownEncoding::AppInteger,
-                z_encoding_prefix::AppFloat => zenoh_protocol_core::KnownEncoding::AppFloat,
-                z_encoding_prefix::AppXml => zenoh_protocol_core::KnownEncoding::AppXml,
-                z_encoding_prefix::AppXhtmlXml => zenoh_protocol_core::KnownEncoding::AppXhtmlXml,
-                z_encoding_prefix::AppXWwwFormUrlencoded => {
+                z_encoding_prefix_t::AppJson => zenoh_protocol_core::KnownEncoding::AppJson,
+                z_encoding_prefix_t::AppSql => zenoh_protocol_core::KnownEncoding::AppSql,
+                z_encoding_prefix_t::AppInteger => zenoh_protocol_core::KnownEncoding::AppInteger,
+                z_encoding_prefix_t::AppFloat => zenoh_protocol_core::KnownEncoding::AppFloat,
+                z_encoding_prefix_t::AppXml => zenoh_protocol_core::KnownEncoding::AppXml,
+                z_encoding_prefix_t::AppXhtmlXml => zenoh_protocol_core::KnownEncoding::AppXhtmlXml,
+                z_encoding_prefix_t::AppXWwwFormUrlencoded => {
                     zenoh_protocol_core::KnownEncoding::AppXWwwFormUrlencoded
                 }
-                z_encoding_prefix::TextJson => zenoh_protocol_core::KnownEncoding::TextJson,
-                z_encoding_prefix::TextHtml => zenoh_protocol_core::KnownEncoding::TextHtml,
-                z_encoding_prefix::TextXml => zenoh_protocol_core::KnownEncoding::TextXml,
-                z_encoding_prefix::TextCss => zenoh_protocol_core::KnownEncoding::TextCss,
-                z_encoding_prefix::TextCsv => zenoh_protocol_core::KnownEncoding::TextCsv,
-                z_encoding_prefix::TextJavascript => {
+                z_encoding_prefix_t::TextJson => zenoh_protocol_core::KnownEncoding::TextJson,
+                z_encoding_prefix_t::TextHtml => zenoh_protocol_core::KnownEncoding::TextHtml,
+                z_encoding_prefix_t::TextXml => zenoh_protocol_core::KnownEncoding::TextXml,
+                z_encoding_prefix_t::TextCss => zenoh_protocol_core::KnownEncoding::TextCss,
+                z_encoding_prefix_t::TextCsv => zenoh_protocol_core::KnownEncoding::TextCsv,
+                z_encoding_prefix_t::TextJavascript => {
                     zenoh_protocol_core::KnownEncoding::TextJavascript
                 }
-                z_encoding_prefix::ImageJpeg => zenoh_protocol_core::KnownEncoding::ImageJpeg,
-                z_encoding_prefix::ImagePng => zenoh_protocol_core::KnownEncoding::ImagePng,
-                z_encoding_prefix::ImageGif => zenoh_protocol_core::KnownEncoding::ImageGif,
+                z_encoding_prefix_t::ImageJpeg => zenoh_protocol_core::KnownEncoding::ImageJpeg,
+                z_encoding_prefix_t::ImagePng => zenoh_protocol_core::KnownEncoding::ImagePng,
+                z_encoding_prefix_t::ImageGif => zenoh_protocol_core::KnownEncoding::ImageGif,
             }
         } else {
             unsafe { std::mem::transmute(val as u8) }
@@ -164,39 +164,39 @@ impl From<z_encoding_prefix> for zenoh_protocol_core::KnownEncoding {
     }
 }
 
-impl From<zenoh_protocol_core::KnownEncoding> for z_encoding_prefix {
+impl From<zenoh_protocol_core::KnownEncoding> for z_encoding_prefix_t {
     fn from(val: zenoh_protocol_core::KnownEncoding) -> Self {
         if cfg!(debug_assertions) {
             match val {
-                zenoh_protocol_core::KnownEncoding::Empty => z_encoding_prefix::Empty,
+                zenoh_protocol_core::KnownEncoding::Empty => z_encoding_prefix_t::Empty,
                 zenoh_protocol_core::KnownEncoding::AppOctetStream => {
-                    z_encoding_prefix::AppOctetStream
+                    z_encoding_prefix_t::AppOctetStream
                 }
-                zenoh_protocol_core::KnownEncoding::AppCustom => z_encoding_prefix::AppCustom,
-                zenoh_protocol_core::KnownEncoding::TextPlain => z_encoding_prefix::TextPlain,
+                zenoh_protocol_core::KnownEncoding::AppCustom => z_encoding_prefix_t::AppCustom,
+                zenoh_protocol_core::KnownEncoding::TextPlain => z_encoding_prefix_t::TextPlain,
                 zenoh_protocol_core::KnownEncoding::AppProperties => {
-                    z_encoding_prefix::AppProperties
+                    z_encoding_prefix_t::AppProperties
                 }
-                zenoh_protocol_core::KnownEncoding::AppJson => z_encoding_prefix::AppJson,
-                zenoh_protocol_core::KnownEncoding::AppSql => z_encoding_prefix::AppSql,
-                zenoh_protocol_core::KnownEncoding::AppInteger => z_encoding_prefix::AppInteger,
-                zenoh_protocol_core::KnownEncoding::AppFloat => z_encoding_prefix::AppFloat,
-                zenoh_protocol_core::KnownEncoding::AppXml => z_encoding_prefix::AppXml,
-                zenoh_protocol_core::KnownEncoding::AppXhtmlXml => z_encoding_prefix::AppXhtmlXml,
+                zenoh_protocol_core::KnownEncoding::AppJson => z_encoding_prefix_t::AppJson,
+                zenoh_protocol_core::KnownEncoding::AppSql => z_encoding_prefix_t::AppSql,
+                zenoh_protocol_core::KnownEncoding::AppInteger => z_encoding_prefix_t::AppInteger,
+                zenoh_protocol_core::KnownEncoding::AppFloat => z_encoding_prefix_t::AppFloat,
+                zenoh_protocol_core::KnownEncoding::AppXml => z_encoding_prefix_t::AppXml,
+                zenoh_protocol_core::KnownEncoding::AppXhtmlXml => z_encoding_prefix_t::AppXhtmlXml,
                 zenoh_protocol_core::KnownEncoding::AppXWwwFormUrlencoded => {
-                    z_encoding_prefix::AppXWwwFormUrlencoded
+                    z_encoding_prefix_t::AppXWwwFormUrlencoded
                 }
-                zenoh_protocol_core::KnownEncoding::TextJson => z_encoding_prefix::TextJson,
-                zenoh_protocol_core::KnownEncoding::TextHtml => z_encoding_prefix::TextHtml,
-                zenoh_protocol_core::KnownEncoding::TextXml => z_encoding_prefix::TextXml,
-                zenoh_protocol_core::KnownEncoding::TextCss => z_encoding_prefix::TextCss,
-                zenoh_protocol_core::KnownEncoding::TextCsv => z_encoding_prefix::TextCsv,
+                zenoh_protocol_core::KnownEncoding::TextJson => z_encoding_prefix_t::TextJson,
+                zenoh_protocol_core::KnownEncoding::TextHtml => z_encoding_prefix_t::TextHtml,
+                zenoh_protocol_core::KnownEncoding::TextXml => z_encoding_prefix_t::TextXml,
+                zenoh_protocol_core::KnownEncoding::TextCss => z_encoding_prefix_t::TextCss,
+                zenoh_protocol_core::KnownEncoding::TextCsv => z_encoding_prefix_t::TextCsv,
                 zenoh_protocol_core::KnownEncoding::TextJavascript => {
-                    z_encoding_prefix::TextJavascript
+                    z_encoding_prefix_t::TextJavascript
                 }
-                zenoh_protocol_core::KnownEncoding::ImageJpeg => z_encoding_prefix::ImageJpeg,
-                zenoh_protocol_core::KnownEncoding::ImagePng => z_encoding_prefix::ImagePng,
-                zenoh_protocol_core::KnownEncoding::ImageGif => z_encoding_prefix::ImageGif,
+                zenoh_protocol_core::KnownEncoding::ImageJpeg => z_encoding_prefix_t::ImageJpeg,
+                zenoh_protocol_core::KnownEncoding::ImagePng => z_encoding_prefix_t::ImagePng,
+                zenoh_protocol_core::KnownEncoding::ImageGif => z_encoding_prefix_t::ImageGif,
             }
         } else {
             unsafe { std::mem::transmute(val as u32) }
@@ -212,7 +212,7 @@ impl From<zenoh_protocol_core::KnownEncoding> for z_encoding_prefix {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_encoding_t {
-    pub prefix: z_encoding_prefix,
+    pub prefix: z_encoding_prefix_t,
     pub suffix: z_bytes_t,
 }
 
@@ -246,7 +246,7 @@ impl From<&zenoh_protocol_core::Encoding> for z_encoding_t {
 
 #[repr(C)]
 pub struct z_owned_encoding_t {
-    pub prefix: z_encoding_prefix,
+    pub prefix: z_encoding_prefix_t,
     pub suffix: z_bytes_t,
     pub _dropped: bool,
 }

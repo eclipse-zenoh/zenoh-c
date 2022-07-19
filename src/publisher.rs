@@ -22,7 +22,8 @@ use zenoh_protocol_core::CongestionControl;
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    z_congestion_control, z_encoding_t, z_keyexpr_t, z_priority, z_session_t, LOG_INVALID_SESSION,
+    z_congestion_control_t, z_encoding_t, z_keyexpr_t, z_priority_t, z_session_t,
+    LOG_INVALID_SESSION,
 };
 
 /// The options for a publisher.
@@ -32,8 +33,8 @@ use crate::{
 #[repr(C)]
 pub struct z_publisher_options_t {
     pub local_routing: i8,
-    pub congestion_control: z_congestion_control,
-    pub priority: z_priority,
+    pub congestion_control: z_congestion_control_t,
+    pub priority: z_priority_t,
 }
 #[no_mangle]
 pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
