@@ -25,32 +25,32 @@ use zenoh::subscriber::Reliability;
 
 /// The subscription reliability.
 ///
-///     - **z_reliability_BEST_EFFORT**
-///     - **z_reliability_RELIABLE**
+///     - **Z_RELIABILITY_BEST_EFFORT**
+///     - **Z_RELIABILITY_RELIABLE**
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum z_reliability {
+pub enum z_reliability_t {
     BEST_EFFORT,
     RELIABLE,
 }
 
-impl From<Reliability> for z_reliability {
+impl From<Reliability> for z_reliability_t {
     #[inline]
     fn from(r: Reliability) -> Self {
         match r {
-            Reliability::BestEffort => z_reliability::BEST_EFFORT,
-            Reliability::Reliable => z_reliability::RELIABLE,
+            Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
+            Reliability::Reliable => z_reliability_t::RELIABLE,
         }
     }
 }
 
-impl From<z_reliability> for Reliability {
+impl From<z_reliability_t> for Reliability {
     #[inline]
-    fn from(val: z_reliability) -> Self {
+    fn from(val: z_reliability_t) -> Self {
         match val {
-            z_reliability::BEST_EFFORT => Reliability::BestEffort,
-            z_reliability::RELIABLE => Reliability::Reliable,
+            z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
+            z_reliability_t::RELIABLE => Reliability::Reliable,
         }
     }
 }
@@ -89,13 +89,13 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
 /// Declare a subscriber for a given key expression.
 ///
 /// Members:
-///     `z_reliability reliability`: The subscription reliability.
+///     `z_reliability_t reliability`: The subscription reliability.
 ///     `void *cargs`: A pointer that will be passed to the **callback** at each call.
 ///
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
-    pub reliability: z_reliability,
+    pub reliability: z_reliability_t,
 }
 
 /// Create a default subscription info.

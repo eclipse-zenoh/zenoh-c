@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     // @TODO: declare publisher
 
     z_put_options_t opts = z_put_options_default();
-    opts.congestion_control = z_congestion_control_BLOCK;
+    opts.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
     while (1)
     {
         z_put(z_loan(s), z_loan(ke), value, len, &opts);

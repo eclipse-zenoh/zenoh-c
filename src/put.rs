@@ -22,7 +22,7 @@ use zenoh::publication::CongestionControl;
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum z_priority {
+pub enum z_priority_t {
     REAL_TIME = 1,
     INTERACTIVE_HIGH = 2,
     INTERACTIVE_LOW = 3,
@@ -32,30 +32,30 @@ pub enum z_priority {
     BACKGROUND = 7,
 }
 
-impl From<Priority> for z_priority {
+impl From<Priority> for z_priority_t {
     fn from(p: Priority) -> Self {
         match p {
-            Priority::RealTime => z_priority::REAL_TIME,
-            Priority::InteractiveHigh => z_priority::INTERACTIVE_HIGH,
-            Priority::InteractiveLow => z_priority::INTERACTIVE_LOW,
-            Priority::DataHigh => z_priority::DATA_HIGH,
-            Priority::Data => z_priority::DATA,
-            Priority::DataLow => z_priority::DATA_LOW,
-            Priority::Background => z_priority::BACKGROUND,
+            Priority::RealTime => z_priority_t::REAL_TIME,
+            Priority::InteractiveHigh => z_priority_t::INTERACTIVE_HIGH,
+            Priority::InteractiveLow => z_priority_t::INTERACTIVE_LOW,
+            Priority::DataHigh => z_priority_t::DATA_HIGH,
+            Priority::Data => z_priority_t::DATA,
+            Priority::DataLow => z_priority_t::DATA_LOW,
+            Priority::Background => z_priority_t::BACKGROUND,
         }
     }
 }
 
-impl From<z_priority> for Priority {
-    fn from(p: z_priority) -> Self {
+impl From<z_priority_t> for Priority {
+    fn from(p: z_priority_t) -> Self {
         match p {
-            z_priority::REAL_TIME => Priority::RealTime,
-            z_priority::INTERACTIVE_HIGH => Priority::InteractiveHigh,
-            z_priority::INTERACTIVE_LOW => Priority::InteractiveLow,
-            z_priority::DATA_HIGH => Priority::DataHigh,
-            z_priority::DATA => Priority::Data,
-            z_priority::DATA_LOW => Priority::DataLow,
-            z_priority::BACKGROUND => Priority::Background,
+            z_priority_t::REAL_TIME => Priority::RealTime,
+            z_priority_t::INTERACTIVE_HIGH => Priority::InteractiveHigh,
+            z_priority_t::INTERACTIVE_LOW => Priority::InteractiveLow,
+            z_priority_t::DATA_HIGH => Priority::DataHigh,
+            z_priority_t::DATA => Priority::Data,
+            z_priority_t::DATA_LOW => Priority::DataLow,
+            z_priority_t::BACKGROUND => Priority::Background,
         }
     }
 }
@@ -63,25 +63,25 @@ impl From<z_priority> for Priority {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum z_congestion_control {
+pub enum z_congestion_control_t {
     BLOCK,
     DROP,
 }
 
-impl From<CongestionControl> for z_congestion_control {
+impl From<CongestionControl> for z_congestion_control_t {
     fn from(cc: CongestionControl) -> Self {
         match cc {
-            CongestionControl::Block => z_congestion_control::BLOCK,
-            CongestionControl::Drop => z_congestion_control::DROP,
+            CongestionControl::Block => z_congestion_control_t::BLOCK,
+            CongestionControl::Drop => z_congestion_control_t::DROP,
         }
     }
 }
 
-impl From<z_congestion_control> for CongestionControl {
-    fn from(cc: z_congestion_control) -> Self {
+impl From<z_congestion_control_t> for CongestionControl {
+    fn from(cc: z_congestion_control_t) -> Self {
         match cc {
-            z_congestion_control::BLOCK => CongestionControl::Block,
-            z_congestion_control::DROP => CongestionControl::Drop,
+            z_congestion_control_t::BLOCK => CongestionControl::Block,
+            z_congestion_control_t::DROP => CongestionControl::Drop,
         }
     }
 }
@@ -91,8 +91,8 @@ impl From<z_congestion_control> for CongestionControl {
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
     pub encoding: z_encoding_t,
-    pub congestion_control: z_congestion_control,
-    pub priority: z_priority,
+    pub congestion_control: z_congestion_control_t,
+    pub priority: z_priority_t,
 }
 
 /// Constructs the default value for write options
