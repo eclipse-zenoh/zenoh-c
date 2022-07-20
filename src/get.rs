@@ -228,7 +228,6 @@ pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
 pub enum z_query_target_t {
     BEST_MATCHING,
     ALL,
-    NONE,
     ALL_COMPLETE,
     // #[cfg(feature = "complete_n")]
     // COMPLETE {
@@ -242,7 +241,6 @@ impl From<QueryTarget> for z_query_target_t {
         match t {
             QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
             QueryTarget::All => z_query_target_t::ALL,
-            QueryTarget::None => z_query_target_t::NONE,
             QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
             // #[cfg(feature = "complete_n")]
             // QueryTarget::Complete(n) => z_query_target_t::COMPLETE { n: n as c_uint },
@@ -256,7 +254,6 @@ impl From<z_query_target_t> for QueryTarget {
         match val {
             z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
             z_query_target_t::ALL => QueryTarget::All,
-            z_query_target_t::NONE => QueryTarget::None,
             z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
             // #[cfg(feature = "complete_n")]
             // z_query_target_t::COMPLETE { n } => QueryTarget::Complete(n as ZInt),

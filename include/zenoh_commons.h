@@ -57,7 +57,6 @@ typedef enum z_priority_t {
 typedef enum z_query_target_t {
   Z_QUERY_TARGET_BEST_MATCHING,
   Z_QUERY_TARGET_ALL,
-  Z_QUERY_TARGET_NONE,
   Z_QUERY_TARGET_ALL_COMPLETE,
 } z_query_target_t;
 /**
