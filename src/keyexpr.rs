@@ -187,8 +187,94 @@ impl<'a> TryFrom<z_keyexpr_t> for KeyExpr<'a> {
 /// Returns `true` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_loaned_keyexpr_check(keyexpr: &z_keyexpr_t) -> bool {
+pub unsafe extern "C" fn z_keyexpr_is_valid(keyexpr: &z_keyexpr_t) -> bool {
     keyexpr.deref().is_some()
+}
+
+/// Returns 0 if the passed string is a valid (and canon) key expression.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) -> i8 {
+    let name = std::slice::from_raw_parts(start as _, len);
+    match std::str::from_utf8(name) {
+        Ok(name) => match keyexpr::new(name) {
+            Ok(_) => 0,
+            Err(e) => {
+                log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
+                i8::MIN
+            }
+        },
+        Err(e) => {
+            log::error!("{:02x?} is not valid UTF8 {}", name, e);
+            i8::MIN
+        }
+    }
+}
+
+/// Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
+///
+/// Returns 0 upon success.  
+/// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
+/// key expression for reasons other than a non-canon form.
+///
+/// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) -> i8 {
+    let mut len = libc::strlen(start);
+    match z_keyexpr_canonize(start, &mut len) {
+        0 => {
+            *start.add(len) = 0;
+            0
+        }
+        err => err,
+    }
+}
+/// Canonizes the passed string in place, possibly shortening it by modifying `len`.
+///
+/// Returns 0 upon success.  
+/// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
+/// key expression for reasons other than a non-canon form.
+///
+/// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize) -> i8 {
+    let name = std::slice::from_raw_parts(start as _, *len);
+    match std::str::from_utf8(name) {
+        Ok(name) => match keyexpr::new(name) {
+            Ok(_) => 0,
+            Err(e) => {
+                log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
+                i8::MIN
+            }
+        },
+        Err(e) => {
+            log::error!("{:02x?} is not valid UTF8 {}", name, e);
+            i8::MIN
+        }
+    }
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string.
+/// It is a loaned key expression that aliases `name`.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_keyexpr_from_slice(name: *const c_char, len: usize) -> z_keyexpr_t {
+    let name = std::slice::from_raw_parts(name as _, len);
+    match std::str::from_utf8(name) {
+        Ok(name) => match KeyExpr::try_from(name) {
+            Ok(v) => v.into(),
+            Err(e) => {
+                log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
+                z_keyexpr_t::null()
+            }
+        },
+        Err(e) => {
+            log::error!("{:02x?} is not valid UTF8 {}", name, e);
+            z_keyexpr_t::null()
+        }
+    }
 }
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string.
@@ -196,20 +282,27 @@ pub unsafe extern "C" fn z_loaned_keyexpr_check(keyexpr: &z_keyexpr_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
-    let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
-    match std::str::from_utf8(name) {
-        Ok(name) => match KeyExpr::try_from(name) {
-            Ok(v) => v.into(),
-            Err(e) => {
-                log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
-                z_keyexpr_t::null()
-            }
-        },
-        Err(e) => {
-            log::error!("{}", e);
-            z_keyexpr_t::null()
-        }
-    }
+    zc_keyexpr_from_slice(name, libc::strlen(name))
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
+/// - `name` MUST be valid UTF8.
+/// - `name` MUST follow the Key Expression specification, ie:
+///   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
+///   - any instance of `**` may only be lead or followed by `/`.
+///   - the key expression must have canon form.
+///
+/// It is a loaned key expression that aliases `name`.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_keyexpr_from_slice_unchecked(
+    start: *const c_char,
+    len: usize,
+) -> z_keyexpr_t {
+    let name = std::slice::from_raw_parts(start as _, len);
+    let name = std::str::from_utf8_unchecked(name);
+    let name: KeyExpr = keyexpr::from_str_unchecked(name).into();
+    name.into()
 }
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
@@ -223,14 +316,11 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_unchecked(name: *const c_char) -> z_keyexpr_t {
-    let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
-    let name = std::str::from_utf8_unchecked(name);
-    let name: KeyExpr = keyexpr::from_str_unchecked(name).into();
-    name.into()
+    zc_keyexpr_from_slice_unchecked(name, libc::strlen(name))
 }
 
 /// Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
-/// The user is responsible of droping the allocated string being returned.
+/// The user is responsible of droping the returned string using libc's `free`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_char {
@@ -245,7 +335,7 @@ pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_cha
 /// Currently exclusive to zenoh-c
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zc_keyexpr_as_bytes(keyexpr: z_keyexpr_t) -> z_bytes_t {
+pub unsafe extern "C" fn z_keyexpr_as_bytes(keyexpr: z_keyexpr_t) -> z_bytes_t {
     match keyexpr.as_ref() {
         Some(ke) => z_bytes_t {
             start: ke.as_ptr(),

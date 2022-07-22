@@ -32,7 +32,7 @@
                               z_owned_keyexpr_t         \
                             : z_keyexpr_check,          \
                               z_keyexpr_t               \
-                            : z_loaned_keyexpr_check,   \
+                            : z_keyexpr_is_valid,       \
                               z_owned_config_t          \
                             : z_config_check,           \
                               z_bytes_t                 \

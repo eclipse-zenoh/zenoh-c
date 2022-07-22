@@ -221,7 +221,6 @@ pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
 ///     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
 ///     - **z_query_target_t_COMPLETE**: A set of complete queryables.
 ///     - **z_query_target_t_ALL**: All matching queryables.
-///     - **z_query_target_t_NONE**: No queryables.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]

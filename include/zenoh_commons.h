@@ -52,7 +52,6 @@ typedef enum z_priority_t {
  *     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
  *     - **z_query_target_t_COMPLETE**: A set of complete queryables.
  *     - **z_query_target_t_ALL**: All matching queryables.
- *     - **z_query_target_t_NONE**: No queryables.
  */
 typedef enum z_query_target_t {
   Z_QUERY_TARGET_BEST_MATCHING,
@@ -722,6 +721,33 @@ void z_init_logger(void);
  */
 struct z_keyexpr_t z_keyexpr(const char *name);
 /**
+ * Returns the key expression's internal string by aliasing it.
+ *
+ * Currently exclusive to zenoh-c
+ */
+struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
+/**
+ * Canonizes the passed string in place, possibly shortening it by modifying `len`.
+ *
+ * Returns 0 upon success.
+ * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
+ * key expression for reasons other than a non-canon form.
+ *
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ */
+int8_t z_keyexpr_canonize(char *start,
+                          uintptr_t *len);
+/**
+ * Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
+ *
+ * Returns 0 upon success.
+ * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
+ * key expression for reasons other than a non-canon form.
+ *
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ */
+int8_t z_keyexpr_canonize_null_terminated(char *start);
+/**
  * Returns `true` if `keyexpr` is valid.
  */
 bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
@@ -755,6 +781,14 @@ bool z_keyexpr_includes(struct z_keyexpr_t left,
  */
 bool z_keyexpr_intersects(struct z_keyexpr_t left, struct z_keyexpr_t right);
 /**
+ * Returns 0 if the passed string is a valid (and canon) key expression.
+ */
+int8_t z_keyexpr_is_canon(const char *start, uintptr_t len);
+/**
+ * Returns `true` if `keyexpr` is valid.
+ */
+bool z_keyexpr_is_valid(const struct z_keyexpr_t *keyexpr);
+/**
  * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
  * In case of error, the return value will be set to its invalidated state.
  */
@@ -769,7 +803,7 @@ struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
 struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
- * The user is responsible of droping the allocated string being returned.
+ * The user is responsible of droping the returned string using libc's `free`.
  */
 char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**
@@ -783,10 +817,6 @@ char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  * It is a loaned key expression that aliases `name`.
  */
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
-/**
- * Returns `true` if `keyexpr` is valid.
- */
-bool z_loaned_keyexpr_check(const struct z_keyexpr_t *keyexpr);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
  */
@@ -1030,8 +1060,19 @@ void z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
 void z_undeclare_queryable(struct z_owned_queryable_t *qable);
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
 /**
- * Returns the key expression's internal string by aliasing it.
- *
- * Currently exclusive to zenoh-c
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string.
+ * It is a loaned key expression that aliases `name`.
  */
-struct z_bytes_t zc_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
+struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, uintptr_t len);
+/**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
+ * - `name` MUST be valid UTF8.
+ * - `name` MUST follow the Key Expression specification, ie:
+ *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
+ *   - any instance of `**` may only be lead or followed by `/`.
+ *   - the key expression must have canon form.
+ *
+ * It is a loaned key expression that aliases `name`.
+ */
+struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
+                                                   uintptr_t len);

@@ -49,7 +49,7 @@ fn rename_enums() {
             .truncate(true)
             .open(&path)
             .unwrap();
-        file.write(new.as_bytes()).unwrap();
+        file.write_all(new.as_bytes()).unwrap();
         file.unlock().unwrap();
     }
 }
