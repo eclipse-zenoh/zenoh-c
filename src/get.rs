@@ -108,6 +108,11 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
     }
 }
 
+/// A zenoh value.
+///
+/// Members:
+///   z_bytes_t payload: The payload of this zenoh value.
+///   z_encoding_t encoding: The encoding of this zenoh value `payload`.
 #[repr(C)]
 pub struct z_value_t {
     pub payload: z_bytes_t,
@@ -268,9 +273,9 @@ impl From<z_query_target_t> for QueryTarget {
 
 /// The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
 ///
-///     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
-///     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
-///     - **z_consolidation_mode_t_NONE**: No consolidation.
+///     - **Z_CONSOLIDATION_MODE_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
+///     - **Z_CONSOLIDATION_MODE_LAZY**: Does not garanty unicity. Optimizes latency.
+///     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_consolidation_mode_t {

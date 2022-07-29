@@ -5,15 +5,40 @@ typedef enum z_congestion_control_t {
 /**
  * The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
  *
- *     - **z_consolidation_mode_t_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
- *     - **z_consolidation_mode_t_LAZY**: Does not garanty unicity. Optimizes latency.
- *     - **z_consolidation_mode_t_NONE**: No consolidation.
+ *     - **Z_CONSOLIDATION_MODE_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
+ *     - **Z_CONSOLIDATION_MODE_LAZY**: Does not garanty unicity. Optimizes latency.
+ *     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation.
  */
 typedef enum z_consolidation_mode_t {
   Z_CONSOLIDATION_MODE_FULL,
   Z_CONSOLIDATION_MODE_LAZY,
   Z_CONSOLIDATION_MODE_NONE,
 } z_consolidation_mode_t;
+/**
+ * A :c:type:`z_encoding_t` integer `prefix`.
+ *
+ *     - **Z_ENCODING_PREFIX_EMPTY**
+ *     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
+ *     - **Z_ENCODING_PREFIX_APP_CUSTOM**
+ *     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
+ *     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
+ *     - **Z_ENCODING_PREFIX_APP_JSON**
+ *     - **Z_ENCODING_PREFIX_APP_SQL**
+ *     - **Z_ENCODING_PREFIX_APP_INTEGER**
+ *     - **Z_ENCODING_PREFIX_APP_FLOAT**
+ *     - **Z_ENCODING_PREFIX_APP_XML**
+ *     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
+ *     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
+ *     - **Z_ENCODING_PREFIX_TEXT_JSON**
+ *     - **Z_ENCODING_PREFIX_TEXT_HTML**
+ *     - **Z_ENCODING_PREFIX_TEXT_XML**
+ *     - **Z_ENCODING_PREFIX_TEXT_CSS**
+ *     - **Z_ENCODING_PREFIX_TEXT_CSV**
+ *     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
+ *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
+ *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
+ *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
+ */
 typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_EMPTY = 0,
   Z_ENCODING_PREFIX_APP_OCTET_STREAM = 1,
@@ -156,7 +181,9 @@ typedef struct z_keyexpr_t {
  *
  * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
  *
- * `suffix` MUST be a valid UTF-8 string.
+ * Members:
+ *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
+ *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
  */
 typedef struct z_encoding_t {
   enum z_encoding_prefix_t prefix;
@@ -172,8 +199,11 @@ typedef struct z_timestamp_t {
  * A sample is the value associated to a given resource at a given point in time.
  *
  * Members:
- *   `z_string_t key`: The resource key of this data sample.
- *   `z_bytes_t value`: The value of this data sample.
+ *   z_keyexpr_t keyexpr: The resource key of this data sample.
+ *   z_bytes_t payload: The value of this data sample.
+ *   z_encoding_t encoding: The encoding of the value of this data sample.
+ *   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
+ *   z_timestamp_t timestamp: The timestamp of this data sample.
  */
 typedef struct z_sample_t {
   struct z_keyexpr_t keyexpr;
@@ -300,6 +330,19 @@ typedef struct z_subscriber_options_t {
 typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
+/**
+ * An owned payload encoding.
+ *
+ * Members:
+ *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
+ *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ */
 typedef struct z_owned_encoding_t {
   enum z_encoding_prefix_t prefix;
   struct z_bytes_t suffix;
@@ -374,6 +417,13 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
+/**
+ * A zenoh value.
+ *
+ * Members:
+ *   z_bytes_t payload: The payload of this zenoh value.
+ *   z_encoding_t encoding: The encoding of this zenoh value `payload`.
+ */
 typedef struct z_value_t {
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
@@ -440,7 +490,7 @@ void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
  */
 bool z_config_check(const struct z_owned_config_t *config);
 /**
- * Constructs a default configuration client mode zenoh session.
+ * Constructs a default, zenoh-allocated, client mode configuration.
  * If `peer` is not null, it is added to the configuration as remote peer.
  */
 struct z_owned_config_t z_config_client(const char *const *peers, uintptr_t n_peers);
@@ -461,7 +511,7 @@ struct z_owned_config_t z_config_empty(void);
  */
 struct z_owned_config_t z_config_from_file(const char *path);
 /**
- * Reads a configuration from a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
+ * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  */
 struct z_owned_config_t z_config_from_str(const char *s);
 /**
@@ -492,11 +542,11 @@ struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  */
 struct z_owned_config_t z_config_new(void);
 /**
- * Constructs a default configuration peer mode zenoh session.
+ * Constructs a default, zenoh-allocated, peer mode configuration.
  */
 struct z_owned_config_t z_config_peer(void);
 /**
- * Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
+ * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
  */
 char *z_config_to_string(struct z_config_t config);
 /**
@@ -658,7 +708,7 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
  */
 bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
- * Frees `encoding`, invalidating it for double-drop safety.
+ * Constructs a default :c:type:`z_encoding_t`.
  */
 struct z_encoding_t z_encoding_default(void);
 /**
@@ -808,8 +858,10 @@ struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
- * - `name` MUST be valid UTF8.
- * - `name` MUST follow the Key Expression specification, ie:
+ *
+ *  - `name` MUST be valid UTF8.
+ *  - `name` MUST follow the Key Expression specification, ie:
+ *
  *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
  *   - any instance of `**` may only be lead or followed by `/`.
  *   - the key expression must have canon form.
@@ -818,7 +870,7 @@ char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  */
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
 /**
- * Opens a zenoh session. Should the session opening fail, `z_check`ing the returned value will return `false`.
+ * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**

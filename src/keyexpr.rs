@@ -306,12 +306,14 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_unchecked(
 }
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
-/// - `name` MUST be valid UTF8.
-/// - `name` MUST follow the Key Expression specification, ie:
+/// 
+///  - `name` MUST be valid UTF8.
+///  - `name` MUST follow the Key Expression specification, ie:
+/// 
 ///   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
 ///   - any instance of `**` may only be lead or followed by `/`.
 ///   - the key expression must have canon form.
-///
+/// 
 /// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

@@ -183,7 +183,7 @@ pub extern "C" fn z_config_default() -> z_owned_config_t {
     z_config_new()
 }
 
-/// Reads a configuration from a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
+/// Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t {
@@ -196,7 +196,7 @@ pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t
     }
 }
 
-/// Converts `config` into a properties-formated string, such as "mode=client;peer=tcp/127.0.0.1:7447".
+/// Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_to_string(config: z_config_t) -> *mut c_char {
@@ -230,14 +230,14 @@ pub unsafe extern "C" fn z_config_from_file(path: *const c_char) -> z_owned_conf
     }))
 }
 
-/// Constructs a default configuration peer mode zenoh session.
+/// Constructs a default, zenoh-allocated, peer mode configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_peer() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(zenoh::config::peer())))) }
 }
 
-/// Constructs a default configuration client mode zenoh session.
+/// Constructs a default, zenoh-allocated, client mode configuration.
 /// If `peer` is not null, it is added to the configuration as remote peer.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

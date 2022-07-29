@@ -87,8 +87,11 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 /// A sample is the value associated to a given resource at a given point in time.
 ///
 /// Members:
-///   `z_string_t key`: The resource key of this data sample.
-///   `z_bytes_t value`: The value of this data sample.
+///   z_keyexpr_t keyexpr: The resource key of this data sample.
+///   z_bytes_t payload: The value of this data sample.
+///   z_encoding_t encoding: The encoding of the value of this data sample.
+///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
+///   z_timestamp_t timestamp: The timestamp of this data sample.
 #[repr(C)]
 pub struct z_sample_t {
     pub keyexpr: z_keyexpr_t,
@@ -98,6 +101,29 @@ pub struct z_sample_t {
     pub timestamp: z_timestamp_t,
 }
 
+/// A :c:type:`z_encoding_t` integer `prefix`.
+/// 
+///     - **Z_ENCODING_PREFIX_EMPTY**
+///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
+///     - **Z_ENCODING_PREFIX_APP_CUSTOM**
+///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
+///     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
+///     - **Z_ENCODING_PREFIX_APP_JSON**
+///     - **Z_ENCODING_PREFIX_APP_SQL**
+///     - **Z_ENCODING_PREFIX_APP_INTEGER**
+///     - **Z_ENCODING_PREFIX_APP_FLOAT**
+///     - **Z_ENCODING_PREFIX_APP_XML**
+///     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
+///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
+///     - **Z_ENCODING_PREFIX_TEXT_JSON**
+///     - **Z_ENCODING_PREFIX_TEXT_HTML**
+///     - **Z_ENCODING_PREFIX_TEXT_XML**
+///     - **Z_ENCODING_PREFIX_TEXT_CSS**
+///     - **Z_ENCODING_PREFIX_TEXT_CSV**
+///     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
+///     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
+///     - **Z_ENCODING_PREFIX_IMAGE_PNG**
+///     - **Z_ENCODING_PREFIX_IMAGE_GIF**
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub enum z_encoding_prefix_t {
@@ -207,8 +233,10 @@ impl From<zenoh_protocol_core::KnownEncoding> for z_encoding_prefix_t {
 /// The encoding of a payload, in a MIME-like format.
 ///
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
-///
-/// `suffix` MUST be a valid UTF-8 string.
+/// 
+/// Members:
+///   z_encoding_prefix_t prefix: The integer prefix of this encoding.
+///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_encoding_t {
@@ -244,6 +272,17 @@ impl From<&zenoh_protocol_core::Encoding> for z_encoding_t {
     }
 }
 
+/// An owned payload encoding.
+///
+/// Members:
+///   z_encoding_prefix_t prefix: The integer prefix of this encoding.
+///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_encoding_t {
     pub prefix: z_encoding_prefix_t,
@@ -251,7 +290,7 @@ pub struct z_owned_encoding_t {
     pub _dropped: bool,
 }
 
-/// Frees `encoding`, invalidating it for double-drop safety.
+/// Constructs a default :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_default() -> z_encoding_t {
