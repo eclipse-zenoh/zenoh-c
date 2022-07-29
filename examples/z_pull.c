@@ -11,84 +11,76 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-// #include <stdio.h>
-// #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-// #include <windows.h>
-// #define sleep(x) Sleep(x * 1000)
-// #else
-// #include <unistd.h>
-// #endif
-// #include "zenoh.h"
-
-// void data_handler(const z_sample_t *sample, const void *arg)
-// {
-//     printf(">> [Subscriber] Received ('%.*s': '%.*s')\n",
-//            (int)sample->key.suffix.len, sample->key.suffix.start,
-//            (int)sample->value.len, sample->value.start);
-// }
-
-// int main(int argc, char **argv)
-// {
-//     z_init_logger();
-
-//     char *expr = "/demo/example/**";
-//     if (argc > 1)
-//     {
-//         expr = argv[1];
-//     }
-//     z_owned_config_t config = z_config_default();
-//     if (argc > 2)
-//     {
-//         if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]))
-//         {
-//             printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-//             exit(-1);
-//         }
-//     }
-
-//     printf("Opening session...\n");
-//     z_owned_session_t s = z_open(z_move(config));
-//     if (!z_check(s))
-//     {
-//         printf("Unable to open session!\n");
-//         exit(-1);
-//     }
-
-//     printf("Creating Subscriber on '%s'...\n", expr);
-//     z_subinfo_t subinfo;
-//     subinfo.reliability = z_reliability_RELIABLE;
-//     subinfo.mode = z_submode_t_PULL;
-//     subinfo.period = z_period_NONE;
-//     z_owned_subscriber_t sub = z_subscribe(z_loan(s), z_expr(expr), subinfo, data_handler, NULL);
-//     if (!z_check(sub))
-//     {
-//         printf("Unable to create subscriber.\n");
-//         exit(-1);
-//     }
-
-//     printf("Press <enter> to pull data...\n");
-//     char c = 0;
-//     while (c != 'q')
-//     {
-//         c = getchar();
-//         if (c == -1)
-//         {
-//             sleep(1);
-//         }
-//         else
-//         {
-//             z_pull(&sub);
-//         }
-//     }
-
-//     z_subscriber_close(z_move(sub));
-//     z_close(z_move(s));
-//     return 0;
-// }
-
 #include <stdio.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
+#include "zenoh.h"
+
+void data_handler(const z_sample_t *sample, const void *arg)
+{
+    char *keystr = z_keyexpr_to_string(sample->keyexpr);
+    printf(">> [Subscriber] Received ('%s': '%.*s')\n",
+           keystr, (int)sample->payload.len, sample->payload.start);
+    free(keystr);
+}
+
 int main(int argc, char **argv)
 {
-    printf("Unimplemented\n");
-    return -1;
+    z_init_logger();
+
+    char *expr = "demo/example/**";
+    if (argc > 1)
+    {
+        expr = argv[1];
+    }
+
+    z_owned_config_t config = z_config_default();
+    if (argc > 2)
+    {
+        if (!z_config_insert_json(z_loan(config), Z_CONFIG_LISTEN_KEY, argv[2]))
+        {
+            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
+            exit(-1);
+        }
+    }
+
+    printf("Opening session...\n");
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s))
+    {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
+
+    z_owned_closure_sample_t callback = z_closure(data_handler);
+    printf("Declaring Subscriber on '%s'...\n", expr);
+    z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), z_move(callback), NULL);
+    if (!z_check(sub))
+    {
+        printf("Unable to declare subscriber.\n");
+        exit(-1);
+    }
+
+    printf("Press <enter> to pull data...\n");
+    char c = 0;
+    while (c != 'q')
+    {
+        c = getchar();
+        if (c == -1)
+        {
+            sleep(1);
+        }
+        else
+        {
+            z_pull(&sub);
+        }
+    }
+
+    z_undeclare_pull_subscriber(z_move(sub));
+    z_close(z_move(s));
+    return 0;
 }
