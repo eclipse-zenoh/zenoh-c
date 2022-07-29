@@ -63,8 +63,9 @@ int main(int argc, char **argv)
         if (z_reply_is_ok(&reply))
         {
             z_sample_t sample = z_reply_ok(&reply);
-            char *key = z_keyexpr_to_string(sample.keyexpr);
-            printf(">> Received ('%s': '%.*s')\n", key, (int)sample.payload.len, sample.payload.start);
+            char *keystr = z_keyexpr_to_string(sample.keyexpr);
+            printf(">> Received ('%s': '%.*s')\n", keystr, (int)sample.payload.len, sample.payload.start);
+            free(keystr);
         }
         else
         {
