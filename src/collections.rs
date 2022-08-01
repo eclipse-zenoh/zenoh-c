@@ -37,7 +37,7 @@ impl Default for z_bytes_t {
     }
 }
 
-/// Returns `true` if `b` is initialized.
+/// Returns ``true`` if `b` is initialized.
 #[no_mangle]
 pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
     !b.start.is_null()

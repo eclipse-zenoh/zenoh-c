@@ -86,19 +86,18 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
     }
 }
 
-/// Declare a subscriber for a given key expression.
+
+/// Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
 ///
 /// Members:
-///     `z_reliability_t reliability`: The subscription reliability.
-///     `void *cargs`: A pointer that will be passed to the **callback** at each call.
-///
+///     z_reliability_t reliability: The subscription reliability.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
     pub reliability: z_reliability_t,
 }
 
-/// Create a default subscription info.
+/// Constructs the default value for :c:type:`z_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
     let info = SubInfo::default();
@@ -127,41 +126,42 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 ///
 /// Example:
 ///    Declaring a subscriber passing `NULL` for the options:
-///    ```
-///    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
-///    ```
+/// 
+///    .. code-block:: C
+/// 
+///       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
 ///
 ///    is equivalent to initializing and passing the default subscriber options:
-///    
-///    ```
-///    z_subscriber_options_t opts = z_subscriber_options_default();
-///    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
-///    ```
+/// 
+///    .. code-block:: C
+/// 
+///       z_subscriber_options_t opts = z_subscriber_options_default();
+///       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 ///
 ///    Passing custom arguments to the **callback** can be done by defining a custom structure:
 ///
-///    ```
-///    typedef struct {
-///      z_keyexpr_t forward;
-///      z_session_t session;
-///    } myargs_t;
+///    .. code-block:: C
+/// 
+///       typedef struct {
+///         z_keyexpr_t forward;
+///         z_session_t session;
+///       } myargs_t;
 ///
-///    void callback(const z_sample_t sample, const void *arg)
-///    {
-///      myargs_t *myargs = (myargs_t *)arg;
-///      z_put(myargs->session, myargs->forward, sample->value, NULL);
-///    }
+///       void callback(const z_sample_t sample, const void *arg)
+///       {
+///         myargs_t *myargs = (myargs_t *)arg;
+///         z_put(myargs->session, myargs->forward, sample->value, NULL);
+///       }
 ///
-///    int main() {
-///      myargs_t cargs = {
-///        forward = z_keyexpr("forward"),
-///        session = s,
-///      };
-///      z_subscriber_options_t opts = z_subscriber_options_default();
-///      opts.cargs = (void *)&cargs;
-///      z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
-///    }
-///    ```
+///       int main() {
+///         myargs_t cargs = {
+///           forward = z_keyexpr("forward"),
+///           session = s,
+///         };
+///         z_subscriber_options_t opts = z_subscriber_options_default();
+///         opts.cargs = (void *)&cargs;
+///         z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+///       }
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_declare_subscriber(
@@ -221,7 +221,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
     }
 }
 
-// Unsubscribes from the passed `sub`, droping it and invalidating it for double-drop safety.
+/// Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) {
@@ -232,7 +232,7 @@ pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) 
     }
 }
 
-/// Returns `true` if `sub` is valid.
+/// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool {

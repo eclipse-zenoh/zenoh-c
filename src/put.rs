@@ -19,6 +19,15 @@ use libc::{c_int, size_t};
 use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};
 use zenoh::publication::CongestionControl;
 
+/// The priority of zenoh messages.
+///
+///     - **REAL_TIME**
+///     - **INTERACTIVE_HIGH**
+///     - **INTERACTIVE_LOW**
+///     - **DATA_HIGH**
+///     - **DATA**
+///     - **DATA_LOW**
+///     - **BACKGROUND**
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -60,6 +69,10 @@ impl From<z_priority_t> for Priority {
     }
 }
 
+/// The kind of congestion control.
+/// 
+///     - **BLOCK**
+///     - **DROP**
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -86,7 +99,12 @@ impl From<z_congestion_control_t> for CongestionControl {
     }
 }
 
-/// Options passed to the :c:func:`z_put_ext` function.
+/// Options passed to the :c:func:`z_put` function.
+///
+/// Members:
+///     z_encoding_t encoding: The encoding of the payload.
+///     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
+///     z_priority_t priority: The priority of this message.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
@@ -95,7 +113,7 @@ pub struct z_put_options_t {
     pub priority: z_priority_t,
 }
 
-/// Constructs the default value for write options
+/// Constructs the default value for :c:type:`z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
@@ -106,14 +124,16 @@ pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
     }
 }
 
-/// Write data with extended options.
+/// Put data.
+/// 
+/// The payload's encoding can be sepcified through the options.
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     keyexpr: The key expression to write.
-///     payload: The value to write.
-///     len: The length of the value to write.
-///     options: The write options
+///     keyexpr: The key expression to put.
+///     payload: The value to put.
+///     len: The length of the value to put.
+///     options: The put options.
 /// Returns:
 ///     ``0`` in case of success, ``1`` in case of failure.
 #[no_mangle]

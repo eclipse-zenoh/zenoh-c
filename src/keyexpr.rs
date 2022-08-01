@@ -109,7 +109,7 @@ pub unsafe extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
     std::mem::drop(keyexpr.take())
 }
 
-/// Returns `true` if `keyexpr` is valid.
+/// Returns ``true`` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
@@ -184,14 +184,14 @@ impl<'a> TryFrom<z_keyexpr_t> for KeyExpr<'a> {
     }
 }
 
-/// Returns `true` if `keyexpr` is valid.
+/// Returns ``true`` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_is_valid(keyexpr: &z_keyexpr_t) -> bool {
     keyexpr.deref().is_some()
 }
 
-/// Returns 0 if the passed string is a valid (and canon) key expression.
+/// Returns ``0`` if the passed string is a valid (and canon) key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) -> i8 {
@@ -213,7 +213,7 @@ pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) ->
 
 /// Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
 ///
-/// Returns 0 upon success.  
+/// Returns ``0`` upon success.  
 /// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
 /// key expression for reasons other than a non-canon form.
 ///
@@ -232,7 +232,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) 
 }
 /// Canonizes the passed string in place, possibly shortening it by modifying `len`.
 ///
-/// Returns 0 upon success.  
+/// Returns ``0`` upon success.  
 /// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
 /// key expression for reasons other than a non-canon form.
 ///
@@ -422,14 +422,14 @@ pub unsafe extern "C" fn z_undeclare_keyexpr(
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns `1` if `left` and `right` define equal sets.
+/// Returns ``1`` if `left` and `right` define equal sets.
 pub unsafe extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
     *left == *right
 }
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns `1` if `left` and `right` define sets that have at least one key in common.
+/// Returns ``1`` if `left` and `right` define sets that have at least one key in common.
 pub unsafe extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
     match (&*left, &*right) {
         (Some(l), Some(r)) => l.intersects(r),
@@ -439,7 +439,7 @@ pub unsafe extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexp
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns `1` if the set defined by `left` contains every key belonging to the set defined by `right`.
+/// Returns ``1`` if the set defined by `left` contains every key belonging to the set defined by `right`.
 pub unsafe extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
     match (&*left, &*right) {
         (Some(l), Some(r)) => l.includes(r),

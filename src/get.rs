@@ -37,8 +37,8 @@ type ReplyInner = Option<Reply>;
 /// An owned reply to a `z_get` (or `z_get_collect`).
 ///
 /// Members:
-///   `z_owned_sample_t sample`: a :c:type:`z_sample_t` containing the key and value of the reply.
-///   `z_owned_bytes_t replier_id`: The id of the replier that sent this reply.
+///   z_owned_sample_t sample: a :c:type:`z_sample_t` containing the key and value of the reply.
+///   z_owned_bytes_t replier_id: The id of the replier that sent this reply.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -77,9 +77,9 @@ impl DerefMut for z_owned_reply_t {
         unsafe { std::mem::transmute::<&mut Self, &mut Self::Target>(self) }
     }
 }
-/// Returns `true` if the queryable answered with an OK, which allows this value to be treated as a sample.
+/// Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
 ///
-/// If this returns `false`, you should use `z_check` before trying to use `z_reply_err` if you want to process the error that may be here.
+/// If this returns ``false``, you should use `z_check` before trying to use `z_reply_err` if you want to process the error that may be here.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
@@ -88,7 +88,7 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
 
 /// Yields the contents of the reply by asserting it indicates a success.
 ///
-/// You should always make sure that `z_reply_is_ok()` returns `true` before calling this function.
+/// You should always make sure that `z_reply_is_ok()` returns ``true`` before calling this function.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
@@ -121,7 +121,7 @@ pub struct z_value_t {
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
-/// You should always make sure that `z_reply_is_ok()` returns `false` before calling this function.
+/// You should always make sure that `z_reply_is_ok()` returns ``false`` before calling this function.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
@@ -214,7 +214,7 @@ pub unsafe extern "C" fn z_get(
 pub unsafe extern "C" fn z_reply_drop(reply_data: &mut z_owned_reply_t) {
     std::mem::drop(reply_data.take());
 }
-/// Returns `true` if `reply_data` is valid.
+/// Returns ``true`` if `reply_data` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {

@@ -128,7 +128,7 @@ pub unsafe extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) 
     }
 }
 
-/// Returns `true` if `qable` is valid.
+/// Returns ``true`` if `qable` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {

@@ -53,7 +53,7 @@ pub struct z_timestamp_t {
     id: z_bytes_t,
 }
 
-/// Returns `true` if `ts` is a valid timestamp
+/// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
 pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
     let id = unsafe { std::slice::from_raw_parts(ts.id.start, ts.id.len) };
@@ -305,7 +305,7 @@ pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
     encoding._dropped = true
 }
 
-/// Returns `true` if `encoding` is valid.
+/// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {

@@ -81,7 +81,7 @@
 //     strs.len = 0;
 // }
 
-// /// Returns `true` if `strs` is valid.
+// /// Returns ``true`` if `strs` is valid.
 // #[allow(clippy::missing_safety_doc)]
 // #[no_mangle]
 // pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
@@ -111,9 +111,9 @@
 // /// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
 // ///
 // /// Members:
-// ///   `unsigned int whatami`: The kind of zenoh entity.
-// ///   `z_owned_bytes_t pid`: The peer id of the scouted entity (empty if absent).
-// ///   `z_owned_str_array_t locators`: The locators of the scouted entity.
+// ///   unsigned int whatami: The kind of zenoh entity.
+// ///   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
+// ///   z_owned_str_array_t locators: The locators of the scouted entity.
 // ///
 // /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 // /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -148,7 +148,7 @@
 //     z_str_array_drop(&mut hello.locators);
 //     hello.whatami = 0;
 // }
-// /// Returns `true` if `hello` is valid.
+// /// Returns ``true`` if `hello` is valid.
 // #[no_mangle]
 // #[allow(clippy::missing_safety_doc)]
 // pub unsafe extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
@@ -202,7 +202,7 @@
 //     hellos.val = std::ptr::null_mut();
 //     hellos.len = 0;
 // }
-// /// Returns `true` if `hellos` is valid.
+// /// Returns ``true`` if `hellos` is valid.
 // #[no_mangle]
 // #[allow(clippy::missing_safety_doc)]
 // pub unsafe extern "C" fn z_hello_array_check(hellos: &z_owned_hello_array_t) -> bool {
@@ -212,9 +212,9 @@
 // /// Scout for routers and/or peers.
 // ///
 // /// Parameters:
-// ///     `what`: A whatami bitmask of zenoh entities kind to scout for.
-// ///     `config`: A set of properties to configure the scouting.
-// ///     `scout_period`: The time (in milliseconds) that should be spent scouting before returning the results.
+// ///     what: A whatami bitmask of zenoh entities kind to scout for.
+// ///     config: A set of properties to configure the scouting.
+// ///     scout_period: The time (in milliseconds) that should be spent scouting before returning the results.
 // ///
 // /// Returns:
 // ///     An array of `z_hello_t` messages.

@@ -15,17 +15,19 @@ pub use sample_closure::*;
 mod sample_closure {
     use crate::z_sample_t;
     use libc::c_void;
-    /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
-    /// - `this` is a pointer to an arbitrary state.
-    /// - `call` is the typical callback function. `this` will be passed as its last argument.
-    /// - `drop` allows the callback's state to be freed.
+    /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+    /// 
+    /// Members:
+    ///   void *context: a pointer to an arbitrary state.
+    ///   void *call(const struct z_sample_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+    ///   void *drop(void*): allows the callback's state to be freed.
     ///
     /// Closures are not guaranteed not to be called concurrently.
     ///
-    /// We guarantee that:
-    /// - `call` will never be called once `drop` has started.
-    /// - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
-    /// - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+    /// It is guaranteed that:
+    ///   - `call` will never be called once `drop` has started.
+    ///   - `drop` will only be called **once**, and **after every** `call` has ended.
+    ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
     #[repr(C)]
     pub struct z_owned_closure_sample_t {
         context: *mut c_void,
@@ -50,6 +52,7 @@ mod sample_closure {
             }
         }
     }
+
     /// Calls the closure. Calling an uninitialized closure is a no-op.
     #[no_mangle]
     pub extern "C" fn z_closure_sample_call(
@@ -61,6 +64,7 @@ mod sample_closure {
             None => log::error!("Attempted to call an uninitialized closure!"),
         }
     }
+
     /// Drops the closure. Droping an uninitialized closure is a no-op.
     #[no_mangle]
     pub extern "C" fn z_closure_sample_drop(closure: &mut z_owned_closure_sample_t) {

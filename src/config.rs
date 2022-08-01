@@ -138,7 +138,7 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: *const c_char) ->
 
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
 ///
-/// Returns `true` if insertion was succesful, `false` otherwise.
+/// Returns ``true`` if insertion was succesful, `false` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 pub unsafe extern "C" fn z_config_insert_json(
@@ -162,7 +162,7 @@ pub unsafe extern "C" fn z_config_insert_json(
 pub unsafe extern "C" fn z_config_drop(config: &mut z_owned_config_t) {
     std::mem::drop(config.as_mut().take())
 }
-/// Returns `true` if `config` is valid.
+/// Returns ``true`` if `config` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {

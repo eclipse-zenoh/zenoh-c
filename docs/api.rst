@@ -122,48 +122,66 @@ Sample
 
 .. autocstruct:: zenoh_commons.h::z_sample_t
 
-.. Publication
-.. ===========
+Publication
+===========
 
-.. Types
-.. -----
+Types
+-----
 
-.. .. autocstruct:: zenoh_commons.h::z_congestion_control_t
-.. .. autocstruct:: zenoh_commons.h::z_priority_t
+.. autocstruct:: zenoh_commons.h::z_owned_publisher_t
 
-.. .. autocstruct:: zenoh_commons.h::z_put_options_t
-.. .. autocenum:: zenoh_commons.h::z_put_options_field_t
+.. autocstruct:: zenoh_commons.h::z_congestion_control_t
+.. autocstruct:: zenoh_commons.h::z_priority_t
 
-.. Functions
-.. ---------
+.. autocstruct:: zenoh_commons.h::z_put_options_t
+.. autocfunction:: zenoh_commons.h::z_put_options_default
 
-.. .. autocfunction:: zenoh_commons.h::z_put
-.. .. autocfunction:: zenoh_commons.h::z_put_ext
+.. autocstruct:: zenoh_commons.h::z_publisher_options_t
+.. autocfunction:: zenoh_commons.h::z_publisher_options_default
 
-.. .. autocfunction:: zenoh_commons.h::z_declare_publication
-.. .. autocfunction:: zenoh_commons.h::z_undeclare_publication
+.. autocstruct:: zenoh_commons.h::z_publisher_put_options_t
 
-.. Subscription
-.. ============
+Functions
+---------
 
-.. Types
-.. -----
+.. autocfunction:: zenoh_commons.h::z_put
 
-.. .. autocstruct:: zenoh_concrete.h::z_owned_subscriber_t
-.. .. autocenum:: zenoh_commons.h::z_reliability
-.. .. autocenum:: zenoh_commons.h::z_submode_t
-.. .. autocstruct:: zenoh_commons.h::z_period_t
-.. .. autocstruct:: zenoh_commons.h::z_subinfo_t
-.. .. autocfunction:: zenoh_commons.h::z_subinfo_default
-.. .. autocfunction:: zenoh_commons.h::z_subinfo_period
+.. autocfunction:: zenoh_commons.h::z_declare_publisher
+.. autocfunction:: zenoh_commons.h::z_publisher_put
+.. autocfunction:: zenoh_commons.h::z_publisher_delete
+.. autocfunction:: zenoh_commons.h::z_undeclare_publisher
 
-.. Functions
-.. ---------
+Subscription
+============
 
-.. .. autocfunction:: zenoh_commons.h::z_subscribe
-.. .. autocfunction:: zenoh_commons.h::z_pull
-.. .. autocfunction:: zenoh_commons.h::z_subscriber_check
-.. .. autocfunction:: zenoh_commons.h::z_subscriber_close
+Types
+-----
+
+.. autocstruct:: zenoh_concrete.h::z_owned_subscriber_t
+
+.. autocstruct:: zenoh_commons.h::z_owned_pull_subscriber_t
+
+.. autocstruct:: zenoh_commons.h::z_owned_closure_sample_t
+
+.. autocenum:: zenoh_commons.h::z_reliability_t
+
+.. autocstruct:: zenoh_commons.h::z_subscriber_options_t
+.. autocfunction:: zenoh_commons.h::z_subscriber_options_default
+
+Functions
+---------
+
+.. autocfunction:: zenoh_commons.h::z_declare_subscriber
+.. autocfunction:: zenoh_commons.h::z_subscriber_check
+.. autocfunction:: zenoh_commons.h::z_undeclare_subscriber
+
+.. autocfunction:: zenoh_commons.h::z_declare_pull_subscriber
+.. autocfunction:: zenoh_commons.h::z_pull
+.. autocfunction:: zenoh_commons.h::z_pull_subscriber_check
+.. autocfunction:: zenoh_commons.h::z_undeclare_pull_subscriber
+
+.. autocfunction:: zenoh_commons.h::z_closure_sample_call
+.. autocfunction:: zenoh_commons.h::z_closure_sample_drop
 
 .. Query
 .. =====

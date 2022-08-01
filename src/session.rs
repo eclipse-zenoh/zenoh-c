@@ -87,7 +87,7 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
     }
 }
 
-/// Returns `true` if `session` is valid.
+/// Returns ``true`` if `session` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {

@@ -26,16 +26,20 @@ use crate::{
     LOG_INVALID_SESSION,
 };
 
-/// The options for a publisher.
+/// Options passed to the :c:func:`z_declare_publisher` function.
 ///
-/// Note that `local_routing` has 3 legal values: 0 which disables it, 1 which enables it, and -1 which leaves it up to the session.
-/// Other values will behave like -1, but are considered UB.
+/// Members:
+///     int8_t local_routing: ``0``: disabled, ``1``: enabled, ``-1``: apply session level config.
+///     z_congestion_control_t congestion_control: The congestion control to apply when routing messages from this publisher.
+///     z_priority_t priority: The priority of messages from this publisher.
 #[repr(C)]
 pub struct z_publisher_options_t {
     pub local_routing: i8,
     pub congestion_control: z_congestion_control_t,
     pub priority: z_priority_t,
 }
+
+/// Constructs the default value for :c:type:`z_publisher_options_t`.
 #[no_mangle]
 pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
     z_publisher_options_t {
@@ -45,6 +49,16 @@ pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
     }
 }
 
+/// An owned zenoh publisher.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_publisher_t {
     pub _align: [u64; 1],
@@ -67,10 +81,39 @@ impl DerefMut for z_owned_publisher_t {
     }
 }
 
-/// Declares a publication for the given key expression, returning `true` on success.
+/// Declares a publisher for the given key expression.
 ///
-/// Written resources that match the given key will only be sent on the network
-/// if matching subscribers exist in the system.
+/// Data can be put and deleted with this publisher with the help of the
+/// :c:func:`z_publisher_put` and :c:func:`z_publisher_delete` functions.
+/// 
+/// Parameters:
+///     session: The zenoh session.
+///     keyexpr: The key expression to publish.
+///     options: additional options for the publisher.
+///
+/// Returns:
+///    A :c:type:`z_owned_publisherr_t`.
+///
+///    To check if the publisher decalration succeeded and if the publisher is still valid,
+///    you may use `z_publisher_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+///
+///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+///
+/// Example:
+///    Declaring a publisher passing `NULL` for the options:
+/// 
+///    .. code-block:: C
+/// 
+///       z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(expr), NULL);
+///
+///    is equivalent to initializing and passing the default publisher options:
+///    
+///    .. code-block:: C
+/// 
+///       z_publisher_options_t opts = z_publisher_options_default();
+///       z_owned_publisher_t sub = z_declare_publisher(z_loan(s), z_keyexpr(expr), &opts);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_declare_publisher(
@@ -107,6 +150,10 @@ pub unsafe extern "C" fn z_declare_publisher(
     .into()
 }
 
+/// Options passed to the :c:func:`z_publisher_put` function.
+///
+/// Members:
+///     z_encoding_t encoding: The encoding of the payload.
 #[repr(C)]
 pub struct z_publisher_put_options_t {
     pub encoding: z_encoding_t,
@@ -114,9 +161,15 @@ pub struct z_publisher_put_options_t {
 
 /// Sends a `PUT` message onto the publisher's key expression.
 ///
-/// Returns 0 if successful.
-///
-/// You may specify the payload's encoding through the options.
+/// The payload's encoding can be sepcified through the options.
+/// 
+/// Parameters:
+///     session: The zenoh session.
+///     payload: The value to put.
+///     len: The length of the value to put.
+///     options: The publisher put options.
+/// Returns:
+///     ``0`` in case of success, ``1`` in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
@@ -141,9 +194,11 @@ pub unsafe extern "C" fn z_publisher_put(
         -1
     }
 }
+
 /// Sends a `DELETE` message onto the publisher's key expression.
-///
-/// Returns 0 if successful.
+/// 
+/// Returns:
+///     ``0`` in case of success, ``1`` in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_delete(publisher: &z_owned_publisher_t) -> i8 {
@@ -159,7 +214,7 @@ pub unsafe extern "C" fn z_publisher_delete(publisher: &z_owned_publisher_t) -> 
     }
 }
 
-/// Undeclares a publication for the given key expression.
+/// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) {
