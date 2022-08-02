@@ -191,6 +191,8 @@ Types
 
 .. autocenum:: zenoh_commons.h::z_query_target_t
 
+.. autocstruct:: zenoh_commons.h::z_owned_closure_reply_t
+
 .. autocenum:: zenoh_commons.h::z_consolidation_mode_t
 .. autocstruct:: zenoh_commons.h::z_consolidation_strategy_t
 
@@ -223,29 +225,33 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_reply_err
 .. autocfunction:: zenoh_commons.h::z_reply_null
 
+.. autocfunction:: zenoh_commons.h::z_closure_reply_call
+.. autocfunction:: zenoh_commons.h::z_closure_reply_drop
 
-.. Queryable
-.. =========
+Queryable
+=========
 
-.. Types
-.. -----
+Types
+-----
 
-.. .. autocstruct:: zenoh_concrete.h::z_owned_queryable_t
+.. autocstruct:: zenoh_concrete.h::z_owned_queryable_t
 
-.. .. c:type:: z_query_t
+.. autocstruct:: zenoh_commons.h::z_owned_closure_query_t
 
-..   A query received by a Queryable. 
+.. autocstruct:: zenoh_commons.h::z_query_t
 
-.. .. autocfunction:: zenoh_commons.h::z_query_key_expr
-.. .. autocfunction:: zenoh_commons.h::z_query_predicate
+.. autocfunction:: zenoh_commons.h::z_query_keyexpr
+.. autocfunction:: zenoh_commons.h::z_query_value_selector
 
+Functions
+---------
 
-.. Functions
-.. ---------
+.. autocfunction:: zenoh_commons.h::z_declare_queryable
+.. autocfunction:: zenoh_commons.h::z_query_reply
+.. autocfunction:: zenoh_commons.h::z_queryable_check
+.. autocfunction:: zenoh_commons.h::z_undeclare_queryable
 
-.. .. autocfunction:: zenoh_commons.h::z_queryable_new
-.. .. autocfunction:: zenoh_commons.h::z_send_reply
-.. .. autocfunction:: zenoh_commons.h::z_queryable_check
-.. .. autocfunction:: zenoh_commons.h::z_queryable_close
+.. autocfunction:: zenoh_commons.h::z_closure_query_call
+.. autocfunction:: zenoh_commons.h::z_closure_query_drop
 
 

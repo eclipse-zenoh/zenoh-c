@@ -121,21 +121,27 @@ typedef struct z_bytes_t {
   const uint8_t *start;
   size_t len;
 } z_bytes_t;
+/**
+ * Structs received by a Queryable.
+ */
 typedef struct z_query_t {
   const void *_0;
 } z_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
+ *
+ * Members:
+ *   void *context: a pointer to an arbitrary state.
+ *   void *call(const struct z_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+ *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * It is guaranteed that:
+ *
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_query_t {
   void *context;
@@ -157,16 +163,19 @@ typedef struct z_owned_reply_t {
 } z_owned_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
+ *
+ * Members:
+ *   void *context: a pointer to an arbitrary state.
+ *   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+ *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * It is guaranteed that:
+ *
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_reply_t {
   void *context;
@@ -355,6 +364,12 @@ typedef struct z_owned_pull_subscriber_t {
 typedef struct z_subscriber_options_t {
   enum z_reliability_t reliability;
 } z_subscriber_options_t;
+/**
+ * Options passed to the :c:func:`z_declare_queryable` function.
+ *
+ * Members:
+ *     bool complete: The completeness of the Queryable.
+ */
 typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
@@ -705,7 +720,7 @@ struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t se
  *     options: Options for the queryable.
  *
  * Returns:
- *    The created :c:type:`z_owned_queryable_t` or null if the creation failed.
+ *    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
  */
 struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
                                                struct z_keyexpr_t keyexpr,
@@ -1190,10 +1205,10 @@ void z_undeclare_publisher(struct z_owned_publisher_t *publisher);
  */
 void z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
 /**
- * Close a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
+ * Undeclares a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
  *
  * Parameters:
- *     qable: The :c:type:`z_owned_queryable_t` to close.
+ *     qable: The :c:type:`z_owned_queryable_t` to undeclare.
  */
 void z_undeclare_queryable(struct z_owned_queryable_t *qable);
 /**

@@ -56,6 +56,8 @@ impl AsMut<Queryable> for z_owned_queryable_t {
         unsafe { std::mem::transmute(self) }
     }
 }
+
+/// Structs received by a Queryable.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_t(*const c_void);
@@ -66,6 +68,10 @@ impl Deref for z_query_t {
     }
 }
 
+/// Options passed to the :c:func:`z_declare_queryable` function.
+///
+/// Members:
+///     bool complete: The completeness of the Queryable.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_queryable_options_t {
@@ -81,7 +87,7 @@ pub struct z_queryable_options_t {
 ///     options: Options for the queryable.
 ///
 /// Returns:
-///    The created :c:type:`z_owned_queryable_t` or null if the creation failed.
+///    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_declare_queryable(
@@ -113,10 +119,10 @@ pub unsafe extern "C" fn z_declare_queryable(
         .into()
 }
 
-/// Close a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
+/// Undeclares a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
 ///
 /// Parameters:
-///     qable: The :c:type:`z_owned_queryable_t` to close.
+///     qable: The :c:type:`z_owned_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) {

@@ -96,16 +96,19 @@ mod query_closure {
     use crate::z_query_t;
     use libc::c_void;
     /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
-    /// - `this` is a pointer to an arbitrary state.
-    /// - `call` is the typical callback function. `this` will be passed as its last argument.
-    /// - `drop` allows the callback's state to be freed.
+    /// 
+    /// Members:
+    ///   void *context: a pointer to an arbitrary state.
+    ///   void *call(const struct z_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+    ///   void *drop(void*): allows the callback's state to be freed.
     ///
     /// Closures are not guaranteed not to be called concurrently.
     ///
-    /// We guarantee that:
-    /// - `call` will never be called once `drop` has started.
-    /// - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
-    /// - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+    /// It is guaranteed that:
+    ///
+    ///   - `call` will never be called once `drop` has started.
+    ///   - `drop` will only be called **once**, and **after every** `call` has ended.
+    ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
     #[repr(C)]
     pub struct z_owned_closure_query_t {
         context: *mut c_void,
@@ -168,16 +171,19 @@ mod reply_closure {
     use crate::z_owned_reply_t;
     use libc::c_void;
     /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
-    /// - `this` is a pointer to an arbitrary state.
-    /// - `call` is the typical callback function. `this` will be passed as its last argument.
-    /// - `drop` allows the callback's state to be freed.
+    /// 
+    /// Members:
+    ///   void *context: a pointer to an arbitrary state.
+    ///   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+    ///   void *drop(void*): allows the callback's state to be freed.
     ///
     /// Closures are not guaranteed not to be called concurrently.
     ///
-    /// We guarantee that:
-    /// - `call` will never be called once `drop` has started.
-    /// - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
-    /// - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+    /// It is guaranteed that:
+    ///
+    ///   - `call` will never be called once `drop` has started.
+    ///   - `drop` will only be called **once**, and **after every** `call` has ended.
+    ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
     #[repr(C)]
     pub struct z_owned_closure_reply_t {
         context: *mut c_void,
