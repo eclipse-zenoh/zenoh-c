@@ -34,11 +34,7 @@ use crate::{
 
 type ReplyInner = Option<Reply>;
 
-/// An owned reply to a `z_get` (or `z_get_collect`).
-///
-/// Members:
-///   z_owned_sample_t sample: a :c:type:`z_sample_t` containing the key and value of the reply.
-///   z_owned_bytes_t replier_id: The id of the replier that sent this reply.
+/// An owned reply to a :c:func:`z_get`.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -79,7 +75,7 @@ impl DerefMut for z_owned_reply_t {
 }
 /// Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
 ///
-/// If this returns ``false``, you should use `z_check` before trying to use `z_reply_err` if you want to process the error that may be here.
+/// If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
@@ -88,7 +84,7 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
 
 /// Yields the contents of the reply by asserting it indicates a success.
 ///
-/// You should always make sure that `z_reply_is_ok()` returns ``true`` before calling this function.
+/// You should always make sure that :c:func:`z_reply_is_ok` returns ``true`` before calling this function.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
@@ -121,7 +117,7 @@ pub struct z_value_t {
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
-/// You should always make sure that `z_reply_is_ok()` returns ``false`` before calling this function.
+/// You should always make sure that :c:func:`z_reply_is_ok` returns ``false`` before calling this function.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
@@ -138,12 +134,13 @@ pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
     }
 }
 
-/// Returns an invalidated `z_owned_reply_t`.
+/// Returns an invalidated :c:type:`z_owned_reply_t`.
 ///
-/// This is useful when you wish to take ownership of a value from a callback to `z_get`:
-/// - copy the value of the callback's argument's pointee,
-/// - overwrite the pointee with this function's return value,
-/// - you are now responsible for dropping your copy of the reply.
+/// This is useful when you wish to take ownership of a value from a callback to :c:func:`z_get`:
+/// 
+///     - copy the value of the callback's argument's pointee,
+///     - overwrite the pointee with this function's return value,
+///     - you are now responsible for dropping your copy of the reply.
 #[no_mangle]
 pub extern "C" fn z_reply_null() -> z_owned_reply_t {
     None.into()
@@ -171,8 +168,8 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
 ///     predicate: An indication to matching queryables about the queried data.
 ///     callback: The callback function that will be called on reception of replies for this query.
 ///               Note that the `reply` parameter of the callback is passed by mutable reference,
-///               but WILL be dropped once your callback exits to help you avoid memory leaks.
-///               If you'd rather take ownership, please refer to the documentation of `z_reply_null`
+///               but **will** be dropped once your callback exits to help you avoid memory leaks.
+///               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
 ///     options: additional options for the get.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -221,11 +218,11 @@ pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
     reply_data.is_some()
 }
 
-/// The possible values of :c:member:`z_query_target_t.tag`.
+/// The Queryables that should be target of a :c:func:`z_get`.
 ///
-///     - **z_query_target_t_BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
-///     - **z_query_target_t_COMPLETE**: A set of complete queryables.
-///     - **z_query_target_t_ALL**: All matching queryables.
+///     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+///     - **ALL_COMPLETE**: All complete queryables.
+///     - **ALL**: All matching queryables.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -273,9 +270,9 @@ impl From<z_query_target_t> for QueryTarget {
 
 /// The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
 ///
-///     - **Z_CONSOLIDATION_MODE_FULL**: Guaranties unicity of replies. Optimizes bandwidth.
-///     - **Z_CONSOLIDATION_MODE_LAZY**: Does not garanty unicity. Optimizes latency.
-///     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation.
+///     - **FULL**: Guaranties unicity of replies. Optimizes bandwidth.
+///     - **LAZY**: Does not garanty unicity. Optimizes latency.
+///     - **NONE**: No consolidation.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_consolidation_mode_t {

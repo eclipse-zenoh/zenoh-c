@@ -25,6 +25,7 @@ mod sample_closure {
     /// Closures are not guaranteed not to be called concurrently.
     ///
     /// It is guaranteed that:
+    ///
     ///   - `call` will never be called once `drop` has started.
     ///   - `drop` will only be called **once**, and **after every** `call` has ended.
     ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.

@@ -183,54 +183,46 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_closure_sample_call
 .. autocfunction:: zenoh_commons.h::z_closure_sample_drop
 
-.. Query
-.. =====
+Query
+=====
 
-.. Types
-.. -----
+Types
+-----
 
-.. .. c:struct:: z_query_target_t
+.. autocenum:: zenoh_commons.h::z_query_target_t
 
-..   Which amongst the matching queryables should be target of a :c:func:`get`.
+.. autocenum:: zenoh_commons.h::z_consolidation_mode_t
+.. autocstruct:: zenoh_commons.h::z_consolidation_strategy_t
 
-..   .. c:member:: z_query_target_t_Tag tag;
+.. c:type:: z_query_consolidation_t
 
-..   .. c:member:: z_query_target_t_COMPLETE_Body complete;
+   The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
 
-..     Members of z_query_target_t when :c:member:`z_query_target_t.tag` is set to ``z_target_t_COMPLETE``.
+    - **AUTO**: Automatic query consolidation strategy selection.
+    - **MANUAL**: Manual query consolidation strategy selection.
 
-..     .. c:member:: unsigned int n
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_default
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_auto
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_none
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_lazy
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_reception
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_last_router
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_full
 
-..       The number of complete queryables that should be target of a :c:func:`z_get`.
+.. autocstruct:: zenoh_commons.h::z_owned_reply_t
+.. autocfunction:: zenoh_commons.h::z_reply_check
+.. autocfunction:: zenoh_commons.h::z_reply_drop
 
-.. .. autocenum:: zenoh_commons.h::z_query_target_t_Tag
+Functions
+---------
 
-.. .. autocfunction:: zenoh_commons.h::z_query_target_default
+.. autocfunction:: zenoh_commons.h::z_get
 
-.. .. autocenum:: zenoh_commons.h::z_consolidation_mode_t
-.. .. autocstruct:: zenoh_commons.h::z_query_consolidation_t
-.. .. autocfunction:: zenoh_commons.h::z_query_consolidation_default
+.. autocfunction:: zenoh_commons.h::z_reply_is_ok
+.. autocfunction:: zenoh_commons.h::z_reply_ok
+.. autocfunction:: zenoh_commons.h::z_reply_err
+.. autocfunction:: zenoh_commons.h::z_reply_null
 
-.. .. autocstruct:: zenoh_commons.h::z_owned_reply_data_t
-.. .. autocfunction:: zenoh_commons.h::z_reply_data_check
-.. .. autocfunction:: zenoh_commons.h::z_reply_data_free
-
-
-.. .. autocstruct:: zenoh_commons.h::z_owned_reply_data_array_t
-.. .. autocfunction:: zenoh_commons.h::z_reply_data_array_check
-.. .. autocfunction:: zenoh_commons.h::z_reply_data_array_free
-
-.. .. autocstruct:: zenoh_commons.h::z_owned_reply_t
-.. .. autocenum:: zenoh_commons.h::z_reply_t_Tag
-.. .. autocfunction:: zenoh_commons.h::z_reply_check
-.. .. autocfunction:: zenoh_commons.h::z_reply_free
-
-.. Functions
-.. ---------
-
-.. .. autocfunction:: zenoh_commons.h::z_get
-
-.. .. autocfunction:: zenoh_commons.h::z_get_collect
 
 .. Queryable
 .. =========
