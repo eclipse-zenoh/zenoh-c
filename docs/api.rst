@@ -61,17 +61,24 @@ Types
 .. autocstruct:: zenoh_concrete.h::z_session_t
 .. autocstruct:: zenoh_concrete.h::z_owned_session_t
 
+.. autocstruct:: zenoh_commons.h::z_owned_closure_zid_t
+
 Functions
 ^^^^^^^^^
 
 .. autocfunction:: zenoh_commons.h::z_open
-.. autocfunction:: zenoh_commons.h::z_info_zid
-.. autocfunction:: zenoh_commons.h::z_info_routers_zid
-.. autocfunction:: zenoh_commons.h::z_info_peers_zid
 .. autocfunction:: zenoh_commons.h::z_close
 
 .. autocfunction:: zenoh_commons.h::z_session_loan
 .. autocfunction:: zenoh_commons.h::z_session_check
+
+.. autocfunction:: zenoh_commons.h::z_info_zid
+.. autocfunction:: zenoh_commons.h::z_info_routers_zid
+.. autocfunction:: zenoh_commons.h::z_info_peers_zid
+
+.. autocfunction:: zenoh_commons.h::z_closure_zid_call
+.. autocfunction:: zenoh_commons.h::z_closure_zid_drop
+
 
 Key expression
 ==============
