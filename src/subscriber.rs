@@ -18,10 +18,10 @@ use crate::session::*;
 use crate::z_closure_sample_call;
 use crate::z_owned_closure_sample_t;
 use crate::LOG_INVALID_SESSION;
-use zenoh::net::protocol::core::SubInfo;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
+use zenoh_protocol_core::SubInfo;
 
 /// The subscription reliability.
 ///
@@ -58,7 +58,7 @@ impl From<z_reliability_t> for Reliability {
 /**************************************/
 /*            DECLARATION             */
 /**************************************/
-type Subscriber = Option<Box<zenoh::subscriber::CallbackSubscriber<'static>>>;
+type Subscriber = Option<Box<zenoh::subscriber::Subscriber<'static, ()>>>;
 
 /// An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
 ///
@@ -85,7 +85,6 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
         unsafe { std::mem::transmute(self) }
     }
 }
-
 
 /// Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
 ///
@@ -126,22 +125,22 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 ///
 /// Example:
 ///    Declaring a subscriber passing `NULL` for the options:
-/// 
+///
 ///    .. code-block:: C
-/// 
+///
 ///       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
 ///
 ///    is equivalent to initializing and passing the default subscriber options:
-/// 
+///
 ///    .. code-block:: C
-/// 
+///
 ///       z_subscriber_options_t opts = z_subscriber_options_default();
 ///       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 ///
 ///    Passing custom arguments to the **callback** can be done by defining a custom structure:
 ///
 ///    .. code-block:: C
-/// 
+///
 ///       typedef struct {
 ///         z_keyexpr_t forward;
 ///         z_session_t session;
@@ -172,12 +171,12 @@ pub unsafe extern "C" fn z_declare_subscriber(
 ) -> z_owned_subscriber_t {
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    unsafe fn ok(sub: zenoh::subscriber::CallbackSubscriber<'_>) -> z_owned_subscriber_t {
+    unsafe fn ok(sub: zenoh::subscriber::Subscriber<'_, ()>) -> z_owned_subscriber_t {
         std::mem::transmute(Some(Box::new(sub)))
     }
 
     unsafe fn err() -> z_owned_subscriber_t {
-        std::mem::transmute(None::<Box<zenoh::subscriber::CallbackSubscriber<'_>>>)
+        std::mem::transmute(None::<Box<zenoh::subscriber::Subscriber<'_, ()>>>)
     }
 
     match session.as_ref() {

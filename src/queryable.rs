@@ -17,7 +17,7 @@ use std::ops::Deref;
 use libc::c_void;
 use zenoh::{
     prelude::Sample,
-    queryable::{CallbackQueryable, Query},
+    queryable::{Query, Queryable as CallbackQueryable},
     Session,
 };
 use zenoh_util::core::SyncResolve;
@@ -27,7 +27,7 @@ use crate::{
     LOG_INVALID_SESSION,
 };
 
-type Queryable = Option<CallbackQueryable<'static>>;
+type Queryable = Option<CallbackQueryable<'static, ()>>;
 /// An owned zenoh queryable.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.

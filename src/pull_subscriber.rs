@@ -59,7 +59,7 @@ impl From<z_reliability> for Reliability {
 /**************************************/
 /*            DECLARATION             */
 /**************************************/
-type PullSubscriber = Option<Box<zenoh::subscriber::CallbackPullSubscriber<'static>>>;
+type PullSubscriber = Option<Box<zenoh::subscriber::PullSubscriber<'static, ()>>>;
 
 /// An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
 ///
@@ -107,22 +107,22 @@ impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
 ///
 /// Example:
 ///    Declaring a subscriber passing ``NULL`` for the options:
-/// 
+///
 ///    .. code-block:: C
-/// 
+///
 ///       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
 ///
 ///    is equivalent to initializing and passing the default subscriber options:
-/// 
+///
 ///    .. code-block:: C
-/// 
+///
 ///       z_subscriber_options_t opts = z_subscriber_options_default();
 ///       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 ///
 ///    Passing custom arguments to the **callback** can be done by defining a custom structure:
 ///
 ///    .. code-block:: C
-/// 
+///
 ///       typedef struct {
 ///         z_keyexpr_t forward;
 ///         z_session_t session;
@@ -153,12 +153,12 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
 ) -> z_owned_pull_subscriber_t {
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    unsafe fn ok(sub: zenoh::subscriber::CallbackPullSubscriber<'_>) -> z_owned_pull_subscriber_t {
+    unsafe fn ok(sub: zenoh::subscriber::PullSubscriber<'_, ()>) -> z_owned_pull_subscriber_t {
         std::mem::transmute(Some(Box::new(sub)))
     }
 
     unsafe fn err() -> z_owned_pull_subscriber_t {
-        std::mem::transmute(None::<Box<zenoh::subscriber::CallbackPullSubscriber<'_>>>)
+        std::mem::transmute(None::<Box<zenoh::subscriber::PullSubscriber<'_, ()>>>)
     }
 
     match session.as_ref() {
