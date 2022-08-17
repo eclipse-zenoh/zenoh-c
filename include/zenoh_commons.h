@@ -9,16 +9,24 @@ typedef enum z_congestion_control_t {
   Z_CONGESTION_CONTROL_DROP,
 } z_congestion_control_t;
 /**
- * The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
+ * Consolidation mode values.
  *
- *     - **FULL**: Guaranties unicity of replies. Optimizes bandwidth.
- *     - **LAZY**: Does not garanty unicity. Optimizes latency.
- *     - **NONE**: No consolidation.
+ * Enumerators:
+ *      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector.
+ *      - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+ *      - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
+ *          w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+ *          replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+ *          ts2 > ts1. It optimizes latency.
+ *      - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
+ *          It optimizes bandwidth.
+ *
  */
 typedef enum z_consolidation_mode_t {
-  Z_CONSOLIDATION_MODE_FULL,
-  Z_CONSOLIDATION_MODE_LAZY,
-  Z_CONSOLIDATION_MODE_NONE,
+  Z_CONSOLIDATION_MODE_AUTO = -1,
+  Z_CONSOLIDATION_MODE_NONE = 0,
+  Z_CONSOLIDATION_MODE_MONOTONIC = 1,
+  Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
 /**
  * A :c:type:`z_encoding_t` integer `prefix`.
@@ -395,33 +403,10 @@ typedef struct z_owned_encoding_t {
   bool _dropped;
 } z_owned_encoding_t;
 /**
- * The kind of consolidation that should be applied on replies to a :c:func:`z_get`
- * at the different stages of the reply process.
- *
- * Members:
- *   z_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
- *   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
- *   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
- */
-typedef struct z_consolidation_strategy_t {
-  enum z_consolidation_mode_t first_routers;
-  enum z_consolidation_mode_t last_router;
-  enum z_consolidation_mode_t reception;
-} z_consolidation_strategy_t;
-/**
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
  */
-typedef enum z_query_consolidation_tag_t {
-  Z_QUERY_CONSOLIDATION_AUTO,
-  Z_QUERY_CONSOLIDATION_MANUAL,
-} z_query_consolidation_tag_t;
 typedef struct z_query_consolidation_t {
-  z_query_consolidation_tag_t tag;
-  union {
-    struct {
-      struct z_consolidation_strategy_t manual;
-    };
-  };
+  enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 typedef struct z_get_options_t {
   enum z_query_target_t target;
@@ -1038,21 +1023,14 @@ struct z_query_consolidation_t z_query_consolidation_auto(void);
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
- * Full consolidation performed everywhere.
+ * Latest value consolidation performed everywhere.
  *
  * This mode optimizes bandwidth on all links in the system
  * but will provide a very poor latency.
  */
-struct z_query_consolidation_t z_query_consolidation_full(void);
+struct z_query_consolidation_t z_query_consolidation_latest(void);
 /**
- * Full consolidation performed on last router and at reception.
- *
- * This mode offers a good latency while optimizing bandwidth on
- * the last transport link between the router and the application.
- */
-struct z_query_consolidation_t z_query_consolidation_last_router(void);
-/**
- * Lazy consolidation performed at all stages.
+ * Monotonic consolidation performed at all stages.
  *
  * This strategy offers the best latency. Replies are directly
  * transmitted to the application when received without needing
@@ -1060,7 +1038,7 @@ struct z_query_consolidation_t z_query_consolidation_last_router(void);
  *
  * This mode does not garantie that there will be no duplicates.
  */
-struct z_query_consolidation_t z_query_consolidation_lazy(void);
+struct z_query_consolidation_t z_query_consolidation_monotonic(void);
 /**
  * No consolidation performed.
  *
@@ -1068,13 +1046,6 @@ struct z_query_consolidation_t z_query_consolidation_lazy(void);
  * when using quorums.
  */
 struct z_query_consolidation_t z_query_consolidation_none(void);
-/**
- * Full consolidation performed at reception.
- *
- * This is the default strategy. It offers the best latency while
- * garantying that there will be no duplicates.
- */
-struct z_query_consolidation_t z_query_consolidation_reception(void);
 /**
  * Get a query's key by aliasing it.
  */
@@ -1097,6 +1068,10 @@ void z_query_reply(struct z_query_t query,
                    struct z_keyexpr_t key,
                    const uint8_t *payload,
                    uintptr_t len);
+/**
+ * Create a default :c:type:`z_query_target_t`.
+ */
+enum z_query_target_t z_query_target_default(void);
 /**
  * Get a query's value selector by aliasing it.
  */
