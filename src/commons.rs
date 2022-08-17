@@ -102,7 +102,7 @@ pub struct z_sample_t {
 }
 
 /// A :c:type:`z_encoding_t` integer `prefix`.
-/// 
+///
 ///     - **Z_ENCODING_PREFIX_EMPTY**
 ///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
 ///     - **Z_ENCODING_PREFIX_APP_CUSTOM**
@@ -233,7 +233,7 @@ impl From<zenoh_protocol_core::KnownEncoding> for z_encoding_prefix_t {
 /// The encoding of a payload, in a MIME-like format.
 ///
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
-/// 
+///
 /// Members:
 ///   z_encoding_prefix_t prefix: The integer prefix of this encoding.
 ///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.

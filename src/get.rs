@@ -19,7 +19,7 @@ use std::{
     ffi::CStr,
     ops::{Deref, DerefMut},
 };
-use zenoh_protocol_core::{ConsolidationMode, ConsolidationStrategy, QueryTarget};
+use zenoh_protocol_core::{ConsolidationMode, QueryTarget};
 
 use zenoh::{
     prelude::{KeyExpr, SplitBuffer},
@@ -137,7 +137,7 @@ pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
 /// Returns an invalidated :c:type:`z_owned_reply_t`.
 ///
 /// This is useful when you wish to take ownership of a value from a callback to :c:func:`z_get`:
-/// 
+///
 ///     - copy the value of the callback's argument's pointee,
 ///     - overwrite the pointee with this function's return value,
 ///     - you are now responsible for dropping your copy of the reply.
@@ -190,7 +190,7 @@ pub unsafe extern "C" fn z_get(
         .get(KeyExpr::try_from(keyexpr).unwrap().with_value_selector(p));
     if let Some(options) = options {
         q = q
-            .consolidation(options.consolidation.into())
+            .consolidation(options.consolidation)
             .target(options.target.into());
     }
     match q
@@ -230,10 +230,6 @@ pub enum z_query_target_t {
     BEST_MATCHING,
     ALL,
     ALL_COMPLETE,
-    // #[cfg(feature = "complete_n")]
-    // COMPLETE {
-    //     n: c_uint,
-    // },
 }
 
 impl From<QueryTarget> for z_query_target_t {
@@ -243,8 +239,6 @@ impl From<QueryTarget> for z_query_target_t {
             QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
             QueryTarget::All => z_query_target_t::ALL,
             QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
-            // #[cfg(feature = "complete_n")]
-            // QueryTarget::Complete(n) => z_query_target_t::COMPLETE { n: n as c_uint },
         }
     }
 }
@@ -256,106 +250,88 @@ impl From<z_query_target_t> for QueryTarget {
             z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
             z_query_target_t::ALL => QueryTarget::All,
             z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
-            // #[cfg(feature = "complete_n")]
-            // z_query_target_t::COMPLETE { n } => QueryTarget::Complete(n as ZInt),
         }
     }
 }
 
-// /// Create a default :c:type:`z_query_target_t`.
-// #[no_mangle]
-// pub extern "C" fn z_query_target_default() -> z_query_target_t {
-//     QueryTarget::default().into()
-// }
+/// Create a default :c:type:`z_query_target_t`.
+#[no_mangle]
+pub extern "C" fn z_query_target_default() -> z_query_target_t {
+    QueryTarget::default().into()
+}
 
-/// The kind of consolidation that should be applied on replies to a :c:func:`z_get`.
+/// Consolidation mode values.
 ///
-///     - **FULL**: Guaranties unicity of replies. Optimizes bandwidth.
-///     - **LAZY**: Does not garanty unicity. Optimizes latency.
-///     - **NONE**: No consolidation.
+/// Enumerators:
+///      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector.
+///      - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+///      - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
+///          w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+///          replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+///          ts2 > ts1. It optimizes latency.
+///      - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
+///          It optimizes bandwidth.
+///
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_consolidation_mode_t {
-    FULL,
-    LAZY,
-    NONE,
+    AUTO = -1,
+    NONE = 0,
+    MONOTONIC = 1,
+    LATEST = 2,
+}
+
+impl From<Option<ConsolidationMode>> for z_consolidation_mode_t {
+    #[inline]
+    fn from(cm: Option<ConsolidationMode>) -> Self {
+        match cm {
+            Some(cm) => Self::from(cm),
+            None => z_consolidation_mode_t::AUTO,
+        }
+    }
 }
 
 impl From<ConsolidationMode> for z_consolidation_mode_t {
     #[inline]
     fn from(cm: ConsolidationMode) -> Self {
         match cm {
-            ConsolidationMode::Full => z_consolidation_mode_t::FULL,
-            ConsolidationMode::Lazy => z_consolidation_mode_t::LAZY,
             ConsolidationMode::None => z_consolidation_mode_t::NONE,
+            ConsolidationMode::Monotonic => z_consolidation_mode_t::MONOTONIC,
+            ConsolidationMode::Latest => z_consolidation_mode_t::LATEST,
         }
     }
 }
 
-impl From<z_consolidation_mode_t> for ConsolidationMode {
+impl From<z_consolidation_mode_t> for Option<ConsolidationMode> {
     #[inline]
     fn from(val: z_consolidation_mode_t) -> Self {
         match val {
-            z_consolidation_mode_t::NONE => ConsolidationMode::None,
-            z_consolidation_mode_t::LAZY => ConsolidationMode::Lazy,
-            z_consolidation_mode_t::FULL => ConsolidationMode::Full,
+            z_consolidation_mode_t::AUTO => None,
+            z_consolidation_mode_t::NONE => Some(ConsolidationMode::None),
+            z_consolidation_mode_t::MONOTONIC => Some(ConsolidationMode::Monotonic),
+            z_consolidation_mode_t::LATEST => Some(ConsolidationMode::Latest),
         }
     }
 }
 
-/// The kind of consolidation that should be applied on replies to a :c:func:`z_get`
-/// at the different stages of the reply process.
-///
-/// Members:
-///   z_consolidation_mode_t first_routers: The consolidation mode to apply on first routers of the replies routing path.
-///   z_consolidation_mode_t last_router: The consolidation mode to apply on last router of the replies routing path.
-///   z_consolidation_mode_t reception: The consolidation mode to apply at reception of the replies.
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct z_consolidation_strategy_t {
-    pub first_routers: z_consolidation_mode_t,
-    pub last_router: z_consolidation_mode_t,
-    pub reception: z_consolidation_mode_t,
-}
-
-impl From<ConsolidationStrategy> for z_consolidation_strategy_t {
-    #[inline]
-    fn from(cs: ConsolidationStrategy) -> Self {
-        z_consolidation_strategy_t {
-            first_routers: cs.first_routers.into(),
-            last_router: cs.last_router.into(),
-            reception: cs.reception.into(),
-        }
-    }
-}
-
-impl From<z_consolidation_strategy_t> for ConsolidationStrategy {
-    #[inline]
-    fn from(val: z_consolidation_strategy_t) -> Self {
-        ConsolidationStrategy {
-            first_routers: val.first_routers.into(),
-            last_router: val.last_router.into(),
-            reception: val.reception.into(),
-        }
+impl Default for z_consolidation_mode_t {
+    fn default() -> Self {
+        z_consolidation_mode_t::NONE
     }
 }
 
 /// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum z_query_consolidation_t {
-    AUTO,
-    MANUAL(z_consolidation_strategy_t),
+pub struct z_query_consolidation_t {
+    mode: z_consolidation_mode_t,
 }
 
 impl From<QueryConsolidation> for z_query_consolidation_t {
     #[inline]
     fn from(qc: QueryConsolidation) -> Self {
-        match qc {
-            QueryConsolidation::Auto => z_query_consolidation_t::AUTO,
-            QueryConsolidation::Manual(strategy) => {
-                z_query_consolidation_t::MANUAL(strategy.into())
-            }
+        z_query_consolidation_t {
+            mode: qc.mode().into(),
         }
     }
 }
@@ -363,11 +339,10 @@ impl From<QueryConsolidation> for z_query_consolidation_t {
 impl From<z_query_consolidation_t> for QueryConsolidation {
     #[inline]
     fn from(val: z_query_consolidation_t) -> Self {
-        match val {
-            z_query_consolidation_t::AUTO => QueryConsolidation::Auto,
-            z_query_consolidation_t::MANUAL(strategy) => {
-                QueryConsolidation::Manual(strategy.into())
-            }
+        let cm: Option<ConsolidationMode> = val.mode.into();
+        match cm {
+            Some(cm) => QueryConsolidation::from(cm),
+            None => QueryConsolidation::AUTO,
         }
     }
 }
@@ -380,7 +355,7 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
 /// :c:func:`z_query_consolidation_reception` strategy is used.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
-    QueryConsolidation::auto().into()
+    QueryConsolidation::AUTO.into()
 }
 
 /// No consolidation performed.
@@ -389,10 +364,10 @@ pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
 /// when using quorums.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
-    QueryConsolidation::none().into()
+    QueryConsolidation::from(ConsolidationMode::None).into()
 }
 
-/// Lazy consolidation performed at all stages.
+/// Monotonic consolidation performed at all stages.
 ///
 /// This strategy offers the best latency. Replies are directly
 /// transmitted to the application when received without needing
@@ -400,35 +375,17 @@ pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
 ///
 /// This mode does not garantie that there will be no duplicates.
 #[no_mangle]
-pub extern "C" fn z_query_consolidation_lazy() -> z_query_consolidation_t {
-    QueryConsolidation::lazy().into()
+pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
+    QueryConsolidation::from(ConsolidationMode::Monotonic).into()
 }
 
-/// Full consolidation performed at reception.
-///
-/// This is the default strategy. It offers the best latency while
-/// garantying that there will be no duplicates.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_reception() -> z_query_consolidation_t {
-    QueryConsolidation::reception().into()
-}
-
-/// Full consolidation performed on last router and at reception.
-///
-/// This mode offers a good latency while optimizing bandwidth on
-/// the last transport link between the router and the application.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_last_router() -> z_query_consolidation_t {
-    QueryConsolidation::last_router().into()
-}
-
-/// Full consolidation performed everywhere.
+/// Latest value consolidation performed everywhere.
 ///
 /// This mode optimizes bandwidth on all links in the system
 /// but will provide a very poor latency.
 #[no_mangle]
-pub extern "C" fn z_query_consolidation_full() -> z_query_consolidation_t {
-    QueryConsolidation::full().into()
+pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
+    QueryConsolidation::from(ConsolidationMode::Latest).into()
 }
 
 /// Creates a default :c:type:`z_query_consolidation_t`.
