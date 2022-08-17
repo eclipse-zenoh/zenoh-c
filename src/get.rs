@@ -331,7 +331,7 @@ impl From<QueryConsolidation> for z_query_consolidation_t {
     #[inline]
     fn from(qc: QueryConsolidation) -> Self {
         z_query_consolidation_t {
-            mode: qc.mode().map(|m| m.into()).into(),
+            mode: qc.mode().into(),
         }
     }
 }
