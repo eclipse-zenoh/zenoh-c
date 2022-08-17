@@ -40,8 +40,6 @@ fn rename_enums() {
         let new = buf.replace("_T_", "_");
         // Replace _t_Tag from union variant name
         let new = new.replace("_t_Tag", "_tag_t");
-        // Replace z_option_z from union variant name
-        let new = new.replace("z_option_t_z", "z_option");
 
         // OVerwrite content
         let mut file = std::fs::File::options()
