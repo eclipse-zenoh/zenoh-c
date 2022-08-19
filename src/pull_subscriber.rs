@@ -17,12 +17,12 @@ use crate::keyexpr::*;
 use crate::session::*;
 use crate::z_closure_sample_call;
 use crate::z_owned_closure_sample_t;
-use crate::z_subscriber_options_default;
-use crate::z_subscriber_options_t;
+use crate::z_reliability_t;
 use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
+use zenoh_protocol_core::SubInfo;
 
 /**************************************/
 /*            DECLARATION             */
@@ -52,6 +52,26 @@ impl AsRef<PullSubscriber> for z_owned_pull_subscriber_t {
 impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
     fn as_mut(&mut self) -> &mut PullSubscriber {
         unsafe { std::mem::transmute(self) }
+    }
+}
+
+/// Represents the set of options that can be applied to a pull subscriber,
+/// upon its declaration via :c:func:`z_declare_pull_subscriber`.
+///
+/// Members:
+///   z_reliability_t reliability: The subscription reliability.
+#[repr(C)]
+#[allow(non_camel_case_types)]
+pub struct z_pull_subscriber_options_t {
+    reliability: z_reliability_t,
+}
+
+/// Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
+#[no_mangle]
+pub extern "C" fn z_pull_subscriber_options_default() -> z_pull_subscriber_options_t {
+    let info = SubInfo::default();
+    z_pull_subscriber_options_t {
+        reliability: info.reliability.into(),
     }
 }
 
@@ -107,7 +127,7 @@ impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
 ///           forward = z_keyexpr("forward"),
 ///           session = s,
 ///         };
-///         z_subscriber_options_t opts = z_subscriber_options_default();
+///         z_pull_subscriber_options_t opts = z_pull_subscriber_options_default();
 ///         opts.cargs = (void *)&cargs;
 ///         z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 ///       }
@@ -117,7 +137,7 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
-    mut opts: *const z_subscriber_options_t,
+    mut opts: *const z_pull_subscriber_options_t,
 ) -> z_owned_pull_subscriber_t {
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -132,7 +152,7 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
     match session.as_ref() {
         Some(s) => {
             if opts.is_null() {
-                let default = z_subscriber_options_default();
+                let default = z_pull_subscriber_options_default();
                 opts = &default;
             }
             let reliability: Reliability = (*opts).reliability.into();

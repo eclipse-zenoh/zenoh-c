@@ -346,14 +346,15 @@ typedef struct z_publisher_options_t {
   enum z_priority_t priority;
 } z_publisher_options_t;
 /**
- * Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
+ * Represents the set of options that can be applied to a pull subscriber,
+ * upon its declaration via :c:func:`z_declare_pull_subscriber`.
  *
  * Members:
- *     z_reliability_t reliability: The subscription reliability.
+ *   z_reliability_t reliability: The subscription reliability.
  */
-typedef struct z_subscriber_options_t {
+typedef struct z_pull_subscriber_options_t {
   enum z_reliability_t reliability;
-} z_subscriber_options_t;
+} z_pull_subscriber_options_t;
 /**
  * Options passed to the :c:func:`z_declare_queryable` function.
  *
@@ -363,6 +364,15 @@ typedef struct z_subscriber_options_t {
 typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
+/**
+ * Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
+ *
+ * Members:
+ *     z_reliability_t reliability: The subscription reliability.
+ */
+typedef struct z_subscriber_options_t {
+  enum z_reliability_t reliability;
+} z_subscriber_options_t;
 /**
  * Options passed to the :c:func:`z_delete` function.
  */
@@ -634,7 +644,7 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
  *           forward = z_keyexpr("forward"),
  *           session = s,
  *         };
- *         z_subscriber_options_t opts = z_subscriber_options_default();
+ *         z_pull_subscriber_options_t opts = z_pull_subscriber_options_default();
  *         opts.cargs = (void *)&cargs;
  *         z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
  *       }
@@ -642,7 +652,7 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
 struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t session,
                                                            struct z_keyexpr_t keyexpr,
                                                            struct z_owned_closure_sample_t *callback,
-                                                           const struct z_subscriber_options_t *opts);
+                                                           const struct z_pull_subscriber_options_t *opts);
 /**
  * Creates a Queryable for the given key expression.
  *
@@ -972,6 +982,10 @@ int8_t z_pull(const struct z_owned_pull_subscriber_t *sub);
  * Returns ``true`` if `sub` is valid.
  */
 bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
+/**
+ * Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
+ */
+struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
 /**
  * Put data.
  *
