@@ -44,6 +44,12 @@ typedef struct z_owned_session_t {
   uintptr_t _0[3];
 } z_owned_session_t;
 /**
+ * Structs received by a Queryable.
+ */
+typedef struct z_query_t {
+  const void *_0;
+} z_query_t;
+/**
  * A loaned zenoh session.
  */
 typedef struct z_session_t {

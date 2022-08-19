@@ -130,12 +130,6 @@ typedef struct z_bytes_t {
   size_t len;
 } z_bytes_t;
 /**
- * Structs received by a Queryable.
- */
-typedef struct z_query_t {
-  const void *_0;
-} z_query_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
