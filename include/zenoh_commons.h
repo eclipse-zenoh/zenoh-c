@@ -31,27 +31,27 @@ typedef enum z_consolidation_mode_t {
 /**
  * A :c:type:`z_encoding_t` integer `prefix`.
  *
- *     - **Z_ENCODING_EMPTY**
- *     - **Z_ENCODING_APP_OCTET_STREAM**
- *     - **Z_ENCODING_APP_CUSTOM**
- *     - **Z_ENCODING_TEXT_PLAIN**
- *     - **Z_ENCODING_APP_PROPERTIES**
- *     - **Z_ENCODING_APP_JSON**
- *     - **Z_ENCODING_APP_SQL**
- *     - **Z_ENCODING_APP_INTEGER**
- *     - **Z_ENCODING_APP_FLOAT**
- *     - **Z_ENCODING_APP_XML**
- *     - **Z_ENCODING_APP_XHTML_XML**
- *     - **Z_ENCODING_APP_X_WWW_FORM_URLENCODED**
- *     - **Z_ENCODING_TEXT_JSON**
- *     - **Z_ENCODING_TEXT_HTML**
- *     - **Z_ENCODING_TEXT_XML**
- *     - **Z_ENCODING_TEXT_CSS**
- *     - **Z_ENCODING_TEXT_CSV**
- *     - **Z_ENCODING_TEXT_JAVASCRIPT**
- *     - **Z_ENCODING_IMAGE_JPEG**
- *     - **Z_ENCODING_IMAGE_PNG**
- *     - **Z_ENCODING_IMAGE_GIF**
+ *     - **Z_ENCODING_PREFIX_EMPTY**
+ *     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
+ *     - **Z_ENCODING_PREFIX_APP_CUSTOM**
+ *     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
+ *     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
+ *     - **Z_ENCODING_PREFIX_APP_JSON**
+ *     - **Z_ENCODING_PREFIX_APP_SQL**
+ *     - **Z_ENCODING_PREFIX_APP_INTEGER**
+ *     - **Z_ENCODING_PREFIX_APP_FLOAT**
+ *     - **Z_ENCODING_PREFIX_APP_XML**
+ *     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
+ *     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
+ *     - **Z_ENCODING_PREFIX_TEXT_JSON**
+ *     - **Z_ENCODING_PREFIX_TEXT_HTML**
+ *     - **Z_ENCODING_PREFIX_TEXT_XML**
+ *     - **Z_ENCODING_PREFIX_TEXT_CSS**
+ *     - **Z_ENCODING_PREFIX_TEXT_CSV**
+ *     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
+ *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
+ *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
+ *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
  */
 typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_EMPTY = 0,
@@ -544,70 +544,6 @@ void z_closure_zid_call(const struct z_owned_closure_zid_t *closure, const struc
  */
 void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
 /**
- * Returns ``true`` if `config` is valid.
- */
-bool z_config_check(const struct z_owned_config_t *config);
-/**
- * Constructs a default, zenoh-allocated, client mode configuration.
- * If `peer` is not null, it is added to the configuration as remote peer.
- */
-struct z_owned_config_t z_config_client(const char *const *peers, uintptr_t n_peers);
-/**
- * Creates a default, zenoh-allocated, configuration.
- */
-struct z_owned_config_t z_config_default(void);
-/**
- * Frees `config`, invalidating it for double-drop safety.
- */
-void z_config_drop(struct z_owned_config_t *config);
-/**
- * Creates an empty, zenoh-allocated, configuration.
- */
-struct z_owned_config_t z_config_empty(void);
-/**
- * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
- */
-struct z_owned_config_t z_config_from_file(const char *path);
-/**
- * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
- */
-struct z_owned_config_t z_config_from_str(const char *s);
-/**
- * Gets the property with the given integer key from the configuration.
- */
-const char *z_config_get(struct z_config_t config, const char *key);
-/**
- * Inserts a JSON-serialized `value` at the `key` position of the configuration.
- *
- * Returns ``true`` if insertion was succesful, `false` otherwise.
- */
-bool z_config_insert_json(struct z_config_t config, const char *key, const char *value);
-/**
- * Returns a :c:type:`z_config_t` loaned from `s`.
- */
-struct z_config_t z_config_loan(const struct z_owned_config_t *s);
-/**
- * Return a new, zenoh-allocated, empty configuration.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-struct z_owned_config_t z_config_new(void);
-/**
- * Constructs a default, zenoh-allocated, peer mode configuration.
- */
-struct z_owned_config_t z_config_peer(void);
-/**
- * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
- */
-char *z_config_to_string(struct z_config_t config);
-/**
  * Declare a key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
  *
  * This numerical id will be used on the network to save bandwidth and
@@ -965,7 +901,7 @@ struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
  */
-struct z_owned_session_t z_open(struct z_owned_config_t *config);
+struct z_owned_session_t z_open(struct zc_owned_config_t *config);
 /**
  * Returns ``true`` if `pub` is valid.
  */
@@ -1231,6 +1167,70 @@ void z_undeclare_queryable(struct z_owned_queryable_t *qable);
  * Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
  */
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
+/**
+ * Returns ``true`` if `config` is valid.
+ */
+bool zc_config_check(const struct zc_owned_config_t *config);
+/**
+ * Constructs a default, zenoh-allocated, client mode configuration.
+ * If `peer` is not null, it is added to the configuration as remote peer.
+ */
+struct zc_owned_config_t zc_config_client(const char *const *peers, uintptr_t n_peers);
+/**
+ * Creates a default, zenoh-allocated, configuration.
+ */
+struct zc_owned_config_t zc_config_default(void);
+/**
+ * Frees `config`, invalidating it for double-drop safety.
+ */
+void zc_config_drop(struct zc_owned_config_t *config);
+/**
+ * Creates an empty, zenoh-allocated, configuration.
+ */
+struct zc_owned_config_t zc_config_empty(void);
+/**
+ * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+ */
+struct zc_owned_config_t zc_config_from_file(const char *path);
+/**
+ * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+ */
+struct zc_owned_config_t zc_config_from_str(const char *s);
+/**
+ * Gets the property with the given integer key from the configuration.
+ */
+const char *zc_config_get(struct zc_config_t config, const char *key);
+/**
+ * Inserts a JSON-serialized `value` at the `key` position of the configuration.
+ *
+ * Returns ``true`` if insertion was succesful, `false` otherwise.
+ */
+bool zc_config_insert_json(struct zc_config_t config, const char *key, const char *value);
+/**
+ * Returns a :c:type:`zc_config_t` loaned from `s`.
+ */
+struct zc_config_t zc_config_loan(const struct zc_owned_config_t *s);
+/**
+ * Return a new, zenoh-allocated, empty configuration.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+struct zc_owned_config_t zc_config_new(void);
+/**
+ * Constructs a default, zenoh-allocated, peer mode configuration.
+ */
+struct zc_owned_config_t zc_config_peer(void);
+/**
+ * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+ */
+char *zc_config_to_string(struct zc_config_t config);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.

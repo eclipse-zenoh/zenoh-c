@@ -62,7 +62,7 @@ pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
+pub unsafe extern "C" fn z_open(config: &mut zc_owned_config_t) -> z_owned_session_t {
     fn ok(session: Session) -> z_owned_session_t {
         unsafe { std::mem::transmute(Some(session)) }
     }

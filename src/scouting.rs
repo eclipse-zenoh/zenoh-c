@@ -222,7 +222,7 @@
 // #[no_mangle]
 // pub unsafe extern "C" fn z_scout(
 //     what: c_uint,
-//     config: &mut z_owned_config_t,
+//     config: &mut zc_owned_config_t,
 //     scout_period: c_ulong,
 // ) -> z_owned_hello_array_t {
 //     let what = WhatAmIMatcher::try_from(what as ZInt).unwrap_or(WhatAmI::Router | WhatAmI::Peer);

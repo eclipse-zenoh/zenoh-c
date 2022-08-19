@@ -103,27 +103,27 @@ pub struct z_sample_t {
 
 /// A :c:type:`z_encoding_t` integer `prefix`.
 ///
-///     - **Z_ENCODING_EMPTY**
-///     - **Z_ENCODING_APP_OCTET_STREAM**
-///     - **Z_ENCODING_APP_CUSTOM**
-///     - **Z_ENCODING_TEXT_PLAIN**
-///     - **Z_ENCODING_APP_PROPERTIES**
-///     - **Z_ENCODING_APP_JSON**
-///     - **Z_ENCODING_APP_SQL**
-///     - **Z_ENCODING_APP_INTEGER**
-///     - **Z_ENCODING_APP_FLOAT**
-///     - **Z_ENCODING_APP_XML**
-///     - **Z_ENCODING_APP_XHTML_XML**
-///     - **Z_ENCODING_APP_X_WWW_FORM_URLENCODED**
-///     - **Z_ENCODING_TEXT_JSON**
-///     - **Z_ENCODING_TEXT_HTML**
-///     - **Z_ENCODING_TEXT_XML**
-///     - **Z_ENCODING_TEXT_CSS**
-///     - **Z_ENCODING_TEXT_CSV**
-///     - **Z_ENCODING_TEXT_JAVASCRIPT**
-///     - **Z_ENCODING_IMAGE_JPEG**
-///     - **Z_ENCODING_IMAGE_PNG**
-///     - **Z_ENCODING_IMAGE_GIF**
+///     - **Z_ENCODING_PREFIX_EMPTY**
+///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
+///     - **Z_ENCODING_PREFIX_APP_CUSTOM**
+///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
+///     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
+///     - **Z_ENCODING_PREFIX_APP_JSON**
+///     - **Z_ENCODING_PREFIX_APP_SQL**
+///     - **Z_ENCODING_PREFIX_APP_INTEGER**
+///     - **Z_ENCODING_PREFIX_APP_FLOAT**
+///     - **Z_ENCODING_PREFIX_APP_XML**
+///     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
+///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
+///     - **Z_ENCODING_PREFIX_TEXT_JSON**
+///     - **Z_ENCODING_PREFIX_TEXT_HTML**
+///     - **Z_ENCODING_PREFIX_TEXT_XML**
+///     - **Z_ENCODING_PREFIX_TEXT_CSS**
+///     - **Z_ENCODING_PREFIX_TEXT_CSV**
+///     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
+///     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
+///     - **Z_ENCODING_PREFIX_IMAGE_PNG**
+///     - **Z_ENCODING_PREFIX_IMAGE_GIF**
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub enum z_encoding_prefix_t {

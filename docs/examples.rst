@@ -25,7 +25,7 @@ Publish
   #include "zenoh.h"
 
   int main(int argc, char **argv) {
-      z_owned_config_t config = z_config_default();
+      zc_owned_config_t config = zc_config_default();
       z_owned_session_t s = z_open(z_move(config));
 
       char* value = "value";
@@ -51,7 +51,7 @@ Subscribe
   }
 
   int main(int argc, char **argv) {
-      z_owned_config_t config = z_config_default();
+      zc_owned_config_t config = zc_config_default();
       z_owned_session_t s = z_open(z_move(config));
 
       z_owned_closure_sample_t callback = z_closure(data_handler);
@@ -76,7 +76,7 @@ Query
   #include "zenoh.h"
 
   int main(int argc, char** argv) {
-      z_owned_config_t config = z_config_default();
+      zc_owned_config_t config = zc_config_default();
       z_owned_session_t s = z_open(z_move(config));
 
       z_owned_reply_channel_t channel = z_reply_fifo_new(16);
