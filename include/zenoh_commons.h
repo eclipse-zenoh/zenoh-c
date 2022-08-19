@@ -364,6 +364,13 @@ typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
 /**
+ * Options passed to the :c:func:`z_delete` function.
+ */
+typedef struct z_delete_options_t {
+  enum z_congestion_control_t congestion_control;
+  enum z_priority_t priority;
+} z_delete_options_t;
+/**
  * An owned payload encoding.
  *
  * Members:
@@ -707,6 +714,23 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_keyexpr_t keyexpr,
                                                  struct z_owned_closure_sample_t *callback,
                                                  const struct z_subscriber_options_t *opts);
+/**
+ * Delete data.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression to delete.
+ *     options: The put options.
+ * Returns:
+ *     ``0`` in case of success, ``1`` in case of failure.
+ */
+int z_delete(struct z_session_t session,
+             struct z_keyexpr_t keyexpr,
+             const struct z_delete_options_t *opts);
+/**
+ * Constructs the default value for :c:type:`z_put_options_t`.
+ */
+struct z_delete_options_t z_delete_options_default(void);
 /**
  * Constructs a specific :c:type:`z_encoding_t`.
  */
