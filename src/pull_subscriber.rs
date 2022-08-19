@@ -24,38 +24,6 @@ use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
 
-/// The subscription reliability.
-///
-///     - **z_reliability_BEST_EFFORT**
-///     - **z_reliability_RELIABLE**
-#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_reliability {
-    BEST_EFFORT,
-    RELIABLE,
-}
-
-impl From<Reliability> for z_reliability {
-    #[inline]
-    fn from(r: Reliability) -> Self {
-        match r {
-            Reliability::BestEffort => z_reliability::BEST_EFFORT,
-            Reliability::Reliable => z_reliability::RELIABLE,
-        }
-    }
-}
-
-impl From<z_reliability> for Reliability {
-    #[inline]
-    fn from(val: z_reliability) -> Self {
-        match val {
-            z_reliability::BEST_EFFORT => Reliability::BestEffort,
-            z_reliability::RELIABLE => Reliability::Reliable,
-        }
-    }
-}
-
 /**************************************/
 /*            DECLARATION             */
 /**************************************/
