@@ -399,6 +399,13 @@ typedef struct z_get_options_t {
   struct z_query_consolidation_t consolidation;
 } z_get_options_t;
 /**
+ * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
+ * whenever issued via :c:func:`z_publisher_delete`.
+ */
+typedef struct z_publisher_delete_options_t {
+  uint8_t __dummy;
+} z_publisher_delete_options_t;
+/**
  * A loaned zenoh publisher.
  */
 typedef struct z_publisher_t {
@@ -915,7 +922,15 @@ bool z_publisher_check(const struct z_owned_publisher_t *pbl);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher);
+int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher,
+                          const struct z_publisher_delete_options_t *_options);
+/**
+ * Constructs the default values for the delete operation via a publisher entity.
+ *
+ * Returns:
+ *   Returns the constructed :c:type:`z_publisher_delete_options_t`.
+ */
+struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
 /**
  * Returns a :c:type:`z_publisher_t` loaned from `p`.
  */

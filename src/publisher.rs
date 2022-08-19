@@ -240,17 +240,37 @@ pub unsafe extern "C" fn z_publisher_put(
     }
 }
 
+/// Represents the set of options that can be applied to the delete operation by a previously declared publisher,
+/// whenever issued via :c:func:`z_publisher_delete`.
+#[repr(C)]
+pub struct z_publisher_delete_options_t {
+    __dummy: u8,
+}
+
+/// Constructs the default values for the delete operation via a publisher entity.
+///
+/// Returns:
+///   Returns the constructed :c:type:`z_publisher_delete_options_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_options_t {
+    z_publisher_delete_options_t { __dummy: 0 }
+}
+
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
 /// Returns:
 ///     ``0`` in case of success, ``1`` in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_publisher_delete(publisher: &z_owned_publisher_t) -> i8 {
+pub unsafe extern "C" fn z_publisher_delete(
+    publisher: &z_owned_publisher_t,
+    _options: *const z_publisher_delete_options_t,
+) -> i8 {
     if let Some(p) = publisher.deref() {
         if let Err(e) = p.delete().res_sync() {
             log::error!("{}", e);
-            -127
+            i8::MIN
         } else {
             0
         }
