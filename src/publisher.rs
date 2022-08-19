@@ -198,6 +198,7 @@ pub struct z_publisher_put_options_t {
 
 /// Constructs the default value for :c:type:`z_publisher_put_options_t`.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t {
     z_publisher_put_options_t {
         encoding: z_encoding_default(),
