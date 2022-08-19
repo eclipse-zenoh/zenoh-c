@@ -20,38 +20,34 @@
 #endif
 #include "zenoh.h"
 
-void data_handler(const z_sample_t *sample, const void *arg)
-{
+void data_handler(const z_sample_t *sample, const void *arg) {
     char *keystr = z_keyexpr_to_string(sample->keyexpr);
-    printf(">> [Subscriber] Received ('%s': '%.*s')\n",
-           keystr, (int)sample->payload.len, sample->payload.start);
+    printf(">> [Subscriber] Received ('%s': '%.*s')\n", keystr, (int)sample->payload.len, sample->payload.start);
     free(keystr);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     z_init_logger();
 
     char *expr = "demo/example/**";
-    if (argc > 1)
-    {
+    if (argc > 1) {
         expr = argv[1];
     }
 
     z_owned_config_t config = z_config_default();
-    if (argc > 2)
-    {
-        if (!z_config_insert_json(z_loan(config), Z_CONFIG_LISTEN_KEY, argv[2]))
-        {
-            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
+    if (argc > 2) {
+        if (!z_config_insert_json(z_loan(config), Z_CONFIG_LISTEN_KEY, argv[2])) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                "JSON-serialized list of strings\n",
+                argv[2], Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
             exit(-1);
         }
     }
 
     printf("Opening session...\n");
     z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s))
-    {
+    if (!z_check(s)) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -59,19 +55,16 @@ int main(int argc, char **argv)
     z_owned_closure_sample_t callback = z_closure(data_handler);
     printf("Declaring Subscriber on '%s'...\n", expr);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), z_move(callback), NULL);
-    if (!z_check(sub))
-    {
+    if (!z_check(sub)) {
         printf("Unable to declare subscriber.\n");
         exit(-1);
     }
 
     printf("Enter 'q' to quit...\n");
     char c = 0;
-    while (c != 'q')
-    {
+    while (c != 'q') {
         c = getchar();
-        if (c == -1)
-        {
+        if (c == -1) {
             sleep(1);
         }
     }

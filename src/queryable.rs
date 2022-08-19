@@ -23,8 +23,8 @@ use zenoh::{
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    z_bytes_t, z_closure_query_call, z_keyexpr_t, z_owned_closure_query_t, z_session_t,
-    LOG_INVALID_SESSION,
+    z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
+    z_owned_closure_query_t, z_session_t, LOG_INVALID_SESSION,
 };
 
 type Queryable = Option<CallbackQueryable<'static, ()>>;
@@ -76,6 +76,26 @@ impl Deref for z_query_t {
 #[repr(C)]
 pub struct z_queryable_options_t {
     pub complete: bool,
+}
+
+/// Represents the set of options that can be applied to a query reply,
+/// sent via :c:func:`z_query_reply`.
+///
+/// Members:
+///   z_encoding_t encoding: The encoding of the payload.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct z_query_reply_options_t {
+    pub encoding: z_encoding_t,
+}
+
+/// Constructs the default value for :c:type:`z_query_reply_options_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
+    z_query_reply_options_t {
+        encoding: z_encoding_default(),
+    }
 }
 
 /// Creates a Queryable for the given key expression.
@@ -153,6 +173,7 @@ pub unsafe extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool 
 ///     key: The key of this reply.
 ///     payload: The value of this reply.
 ///     len: The length of the value of this reply.
+///     options: The options of this reply.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply(
@@ -160,12 +181,16 @@ pub unsafe extern "C" fn z_query_reply(
     key: z_keyexpr_t,
     payload: *const u8,
     len: usize,
+    options: Option<&z_query_reply_options_t>,
 ) {
     if let Some(key) = &*key {
-        let s = Sample::new(
+        let mut s = Sample::new(
             key.clone().into_owned(),
             std::slice::from_raw_parts(payload as *const u8, len as usize),
         );
+        if let Some(o) = options {
+            s.encoding = o.encoding.into();
+        }
         if let Err(e) = query.reply(Ok(s)).res_sync() {
             log::error!("{}", e)
         }

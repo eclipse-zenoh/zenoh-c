@@ -22,8 +22,8 @@ use zenoh_protocol_core::CongestionControl;
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    z_congestion_control_t, z_encoding_t, z_keyexpr_t, z_priority_t, z_session_t,
-    LOG_INVALID_SESSION,
+    z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t, z_priority_t,
+    z_session_t, LOG_INVALID_SESSION,
 };
 
 /// Options passed to the :c:func:`z_declare_publisher` function.
@@ -85,7 +85,7 @@ impl DerefMut for z_owned_publisher_t {
 ///
 /// Data can be put and deleted with this publisher with the help of the
 /// :c:func:`z_publisher_put` and :c:func:`z_publisher_delete` functions.
-/// 
+///
 /// Parameters:
 ///     session: The zenoh session.
 ///     keyexpr: The key expression to publish.
@@ -103,15 +103,15 @@ impl DerefMut for z_owned_publisher_t {
 ///
 /// Example:
 ///    Declaring a publisher passing `NULL` for the options:
-/// 
+///
 ///    .. code-block:: C
-/// 
+///
 ///       z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(expr), NULL);
 ///
 ///    is equivalent to initializing and passing the default publisher options:
 ///    
 ///    .. code-block:: C
-/// 
+///
 ///       z_publisher_options_t opts = z_publisher_options_default();
 ///       z_owned_publisher_t sub = z_declare_publisher(z_loan(s), z_keyexpr(expr), &opts);
 #[no_mangle]
@@ -150,6 +150,43 @@ pub unsafe extern "C" fn z_declare_publisher(
     .into()
 }
 
+/// Returns ``true`` if `pub` is valid.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_publisher_check(pbl: &z_owned_publisher_t) -> bool {
+    pbl.as_ref().is_some()
+}
+
+/// A loaned zenoh publisher.
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct z_publisher_t(*const z_owned_publisher_t);
+
+impl<'a> AsRef<Option<Publisher<'a>>> for z_owned_publisher_t {
+    fn as_ref(&self) -> &'a Option<Publisher<'a>> {
+        unsafe { std::mem::transmute(self) }
+    }
+}
+
+impl<'a> AsMut<Option<Publisher<'a>>> for z_owned_publisher_t {
+    fn as_mut(&mut self) -> &'a mut Option<Publisher<'a>> {
+        unsafe { std::mem::transmute(self) }
+    }
+}
+
+impl<'a> AsRef<Option<Publisher<'a>>> for z_publisher_t {
+    fn as_ref(&self) -> &'a Option<Publisher<'a>> {
+        unsafe { (&*self.0).as_ref() }
+    }
+}
+
+/// Returns a :c:type:`z_publisher_t` loaned from `p`.
+#[no_mangle]
+pub extern "C" fn z_publisher_loan(p: &z_owned_publisher_t) -> z_publisher_t {
+    z_publisher_t(p)
+}
+
 /// Options passed to the :c:func:`z_publisher_put` function.
 ///
 /// Members:
@@ -159,10 +196,18 @@ pub struct z_publisher_put_options_t {
     pub encoding: z_encoding_t,
 }
 
+/// Constructs the default value for :c:type:`z_publisher_put_options_t`.
+#[no_mangle]
+pub unsafe extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t {
+    z_publisher_put_options_t {
+        encoding: z_encoding_default(),
+    }
+}
+
 /// Sends a `PUT` message onto the publisher's key expression.
 ///
 /// The payload's encoding can be sepcified through the options.
-/// 
+///
 /// Parameters:
 ///     session: The zenoh session.
 ///     payload: The value to put.
@@ -173,12 +218,12 @@ pub struct z_publisher_put_options_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
-    publisher: &z_owned_publisher_t,
+    publisher: z_publisher_t,
     payload: *const u8,
     len: usize,
     options: Option<&z_publisher_put_options_t>,
 ) -> i8 {
-    if let Some(p) = publisher.deref() {
+    if let Some(p) = publisher.as_ref() {
         let value: Value = std::slice::from_raw_parts(payload, len).into();
         let put = match options {
             Some(options) => p.put(value.encoding(options.encoding.into())),
@@ -186,7 +231,7 @@ pub unsafe extern "C" fn z_publisher_put(
         };
         if let Err(e) = put.res_sync() {
             log::error!("{}", e);
-            -127
+            i8::MIN
         } else {
             0
         }
@@ -196,7 +241,7 @@ pub unsafe extern "C" fn z_publisher_put(
 }
 
 /// Sends a `DELETE` message onto the publisher's key expression.
-/// 
+///
 /// Returns:
 ///     ``0`` in case of success, ``1`` in case of failure.
 #[no_mangle]

@@ -31,27 +31,27 @@ typedef enum z_consolidation_mode_t {
 /**
  * A :c:type:`z_encoding_t` integer `prefix`.
  *
- *     - **Z_ENCODING_PREFIX_EMPTY**
- *     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
- *     - **Z_ENCODING_PREFIX_APP_CUSTOM**
- *     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
- *     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
- *     - **Z_ENCODING_PREFIX_APP_JSON**
- *     - **Z_ENCODING_PREFIX_APP_SQL**
- *     - **Z_ENCODING_PREFIX_APP_INTEGER**
- *     - **Z_ENCODING_PREFIX_APP_FLOAT**
- *     - **Z_ENCODING_PREFIX_APP_XML**
- *     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
- *     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
- *     - **Z_ENCODING_PREFIX_TEXT_JSON**
- *     - **Z_ENCODING_PREFIX_TEXT_HTML**
- *     - **Z_ENCODING_PREFIX_TEXT_XML**
- *     - **Z_ENCODING_PREFIX_TEXT_CSS**
- *     - **Z_ENCODING_PREFIX_TEXT_CSV**
- *     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
- *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
- *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
- *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
+ *     - **Z_ENCODING_EMPTY**
+ *     - **Z_ENCODING_APP_OCTET_STREAM**
+ *     - **Z_ENCODING_APP_CUSTOM**
+ *     - **Z_ENCODING_TEXT_PLAIN**
+ *     - **Z_ENCODING_APP_PROPERTIES**
+ *     - **Z_ENCODING_APP_JSON**
+ *     - **Z_ENCODING_APP_SQL**
+ *     - **Z_ENCODING_APP_INTEGER**
+ *     - **Z_ENCODING_APP_FLOAT**
+ *     - **Z_ENCODING_APP_XML**
+ *     - **Z_ENCODING_APP_XHTML_XML**
+ *     - **Z_ENCODING_APP_X_WWW_FORM_URLENCODED**
+ *     - **Z_ENCODING_TEXT_JSON**
+ *     - **Z_ENCODING_TEXT_HTML**
+ *     - **Z_ENCODING_TEXT_XML**
+ *     - **Z_ENCODING_TEXT_CSS**
+ *     - **Z_ENCODING_TEXT_CSV**
+ *     - **Z_ENCODING_TEXT_JAVASCRIPT**
+ *     - **Z_ENCODING_IMAGE_JPEG**
+ *     - **Z_ENCODING_IMAGE_PNG**
+ *     - **Z_ENCODING_IMAGE_GIF**
  */
 typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_EMPTY = 0,
@@ -413,6 +413,12 @@ typedef struct z_get_options_t {
   struct z_query_consolidation_t consolidation;
 } z_get_options_t;
 /**
+ * A loaned zenoh publisher.
+ */
+typedef struct z_publisher_t {
+  const struct z_owned_publisher_t *_0;
+} z_publisher_t;
+/**
  * Options passed to the :c:func:`z_publisher_put` function.
  *
  * Members:
@@ -434,6 +440,16 @@ typedef struct z_put_options_t {
   enum z_congestion_control_t congestion_control;
   enum z_priority_t priority;
 } z_put_options_t;
+/**
+ * Represents the set of options that can be applied to a query reply,
+ * sent via :c:func:`z_query_reply`.
+ *
+ * Members:
+ *   z_encoding_t encoding: The encoding of the payload.
+ */
+typedef struct z_query_reply_options_t {
+  struct z_encoding_t encoding;
+} z_query_reply_options_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -777,6 +793,10 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_owned_closure_sample_t *callback,
                                                  const struct z_subscriber_options_t *opts);
 /**
+ * Constructs a specific :c:type:`z_encoding_t`.
+ */
+struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix);
+/**
  * Returns ``true`` if `encoding` is valid.
  */
 bool z_encoding_check(const struct z_owned_encoding_t *encoding);
@@ -947,12 +967,20 @@ struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
+ * Returns ``true`` if `pub` is valid.
+ */
+bool z_publisher_check(const struct z_owned_publisher_t *pbl);
+/**
  * Sends a `DELETE` message onto the publisher's key expression.
  *
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
 int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher);
+/**
+ * Returns a :c:type:`z_publisher_t` loaned from `p`.
+ */
+struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
 /**
  * Constructs the default value for :c:type:`z_publisher_options_t`.
  */
@@ -970,10 +998,14 @@ struct z_publisher_options_t z_publisher_options_default(void);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int8_t z_publisher_put(const struct z_owned_publisher_t *publisher,
+int8_t z_publisher_put(struct z_publisher_t publisher,
                        const uint8_t *payload,
                        uintptr_t len,
                        const struct z_publisher_put_options_t *options);
+/**
+ * Constructs the default value for :c:type:`z_publisher_put_options_t`.
+ */
+struct z_publisher_put_options_t z_publisher_put_options_default(void);
 /**
  * Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
  * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
@@ -1063,11 +1095,17 @@ struct z_keyexpr_t z_query_keyexpr(struct z_query_t query);
  *     key: The key of this reply.
  *     payload: The value of this reply.
  *     len: The length of the value of this reply.
+ *     options: The options of this reply.
  */
 void z_query_reply(struct z_query_t query,
                    struct z_keyexpr_t key,
                    const uint8_t *payload,
-                   uintptr_t len);
+                   uintptr_t len,
+                   const struct z_query_reply_options_t *options);
+/**
+ * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ */
+struct z_query_reply_options_t z_query_reply_options_default(void);
 /**
  * Create a default :c:type:`z_query_target_t`.
  */
