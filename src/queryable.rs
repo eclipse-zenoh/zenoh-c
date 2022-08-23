@@ -179,7 +179,7 @@ pub unsafe extern "C" fn z_query_keyexpr(query: z_query_t) -> z_keyexpr_t {
     query.key_expr().borrowing_clone().into()
 }
 
-/// Get a query's value selector by aliasing it.
+/// Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_value_selector(query: z_query_t) -> z_bytes_t {
