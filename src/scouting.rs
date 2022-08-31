@@ -12,233 +12,167 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-// /// An owned array of owned NULL terminated strings, allocated by zenoh.
-// ///
-// /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-// /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-// ///
-// /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-// #[repr(C)]
-// pub struct z_owned_str_array_t {
-//     pub val: *const *const c_char,
-//     pub len: size_t,
-// }
+use async_std::task;
+use libc::{c_char, c_uint, c_ulong, size_t};
+use std::ffi::CString;
+use zenoh::scouting::Hello;
+use zenoh_protocol_core::{whatami::WhatAmIMatcher, WhatAmI};
+use zenoh_util::core::AsyncResolve;
 
-// impl<T> From<Vec<T>> for z_owned_str_array_t
-// where
-//     T: ToString,
-// {
-//     #[inline]
-//     fn from(v: Vec<T>) -> Self {
-//         let v = v
-//             .into_iter()
-//             .map(|t| {
-//                 let s = CString::new(t.to_string()).unwrap();
-//                 let res = s.as_ptr();
-//                 std::mem::forget(s);
-//                 res
-//             })
-//             .collect::<Vec<*const c_char>>();
-//         let res = z_owned_str_array_t {
-//             val: v.as_ptr(),
-//             len: v.len() as size_t,
-//         };
-//         std::mem::forget(v);
-//         res
-//     }
-// }
+use crate::{z_closure_hello_call, z_id_t, z_owned_closure_hello_t, z_owned_config_t, Z_ROUTER};
 
-// impl<T> From<Option<Vec<T>>> for z_owned_str_array_t
-// where
-//     T: ToString,
-// {
-//     #[inline]
-//     fn from(v: Option<Vec<T>>) -> Self {
-//         match v {
-//             Some(v) => v.into(),
-//             None => z_owned_str_array_t {
-//                 val: std::ptr::null(),
-//                 len: 0,
-//             },
-//         }
-//     }
-// }
+/// An owned array of owned, zenoh allocated, NULL terminated strings.
+///
+/// Note that `val`
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+#[repr(C)]
+pub struct z_owned_str_array_t {
+    pub val: *mut *mut c_char,
+    pub len: size_t,
+}
 
-// /// Frees `strs` and invalidates it for double-drop safety.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
-//     let locators = Vec::from_raw_parts(
-//         strs.val as *mut *const c_char,
-//         strs.len as usize,
-//         strs.len as usize,
-//     );
-//     for locator in locators {
-//         std::mem::drop(CString::from_raw(locator as *mut c_char));
-//     }
-//     strs.val = std::ptr::null();
-//     strs.len = 0;
-// }
+/// Frees `strs` and invalidates it for double-drop safety.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
+    let locators = Vec::from_raw_parts(
+        strs.val as *mut *const c_char,
+        strs.len as usize,
+        strs.len as usize,
+    );
+    for locator in locators {
+        std::mem::drop(CString::from_raw(locator as *mut c_char));
+    }
+    strs.val = std::ptr::null_mut();
+    strs.len = 0;
+}
 
-// /// Returns ``true`` if `strs` is valid.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
-//     !strs.val.is_null() || strs.len == 0
-// }
+/// Returns ``true`` if `strs` is valid.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
+    !strs.val.is_null()
+}
 
-// /// The behavior to adopt in case of congestion while routing some data.
-// ///
-// ///     - **z_congestion_control_BLOCK**
-// ///     - **z_congestion_control_DROP**
-// #[allow(non_camel_case_types)]
-// #[repr(C)]
-// pub enum z_congestion_control {
-//     BLOCK,
-//     DROP,
-// }
+/// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
+///
+/// Members:
+///   unsigned int whatami: The kind of zenoh entity.
+///   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
+///   z_owned_str_array_t locators: The locators of the scouted entity.
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+#[repr(C)]
+pub struct z_owned_hello_t {
+    pub whatami: c_uint,
+    pub pid: z_id_t,
+    pub locators: z_owned_str_array_t,
+}
+impl From<Hello> for z_owned_hello_t {
+    fn from(h: Hello) -> Self {
+        z_owned_hello_t {
+            whatami: match h.whatami {
+                Some(whatami) => whatami as c_uint,
+                None => Z_ROUTER,
+            },
+            pid: match h.zid {
+                Some(id) => unsafe { std::mem::transmute(id) },
+                None => z_id_t { id: [0; 16] },
+            },
+            locators: match h.locators {
+                Some(locators) => {
+                    let mut locators = locators
+                        .into_iter()
+                        .map(|l| CString::new(l.to_string()).unwrap().into_raw())
+                        .collect::<Vec<_>>();
+                    let val = locators.as_mut_ptr();
+                    let len = locators.len();
+                    std::mem::forget(locators);
+                    z_owned_str_array_t { val, len }
+                }
+                None => z_owned_str_array_t {
+                    val: std::ptr::null_mut(),
+                    len: 0,
+                },
+            },
+        }
+    }
+}
 
-// impl From<z_congestion_control> for CongestionControl {
-//     fn from(val: z_congestion_control) -> Self {
-//         match val {
-//             z_congestion_control::BLOCK => CongestionControl::Block,
-//             z_congestion_control::DROP => CongestionControl::Drop,
-//         }
-//     }
-// }
+/// Frees `hello`, invalidating it for double-drop safety.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
+    z_str_array_drop(&mut hello.locators);
+    hello.whatami = 0;
+}
 
-// /// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
-// ///
-// /// Members:
-// ///   unsigned int whatami: The kind of zenoh entity.
-// ///   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
-// ///   z_owned_str_array_t locators: The locators of the scouted entity.
-// ///
-// /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-// /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-// ///
-// /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-// #[repr(C)]
-// pub struct z_owned_hello_t {
-//     pub whatami: c_uint,
-//     pub pid: z_owned_bytes_t,
-//     pub locators: z_owned_str_array_t,
-// }
-// impl From<Hello> for z_owned_hello_t {
-//     #[inline]
-//     fn from(h: Hello) -> Self {
-//         z_owned_hello_t {
-//             whatami: match h.whatami {
-//                 Some(whatami) => whatami as c_uint,
-//                 None => Z_ROUTER,
-//             },
-//             pid: h.pid.into(),
-//             locators: h.locators.into(),
-//         }
-//     }
-// }
+/// Constructs a gravestone value for hello, useful to steal one from a callback
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_null() -> z_owned_hello_t {
+    z_owned_hello_t {
+        whatami: 0,
+        pid: z_id_t { id: [0; 16] },
+        locators: z_owned_str_array_t {
+            val: std::ptr::null_mut(),
+            len: 0,
+        },
+    }
+}
+impl Drop for z_owned_hello_t {
+    fn drop(&mut self) {
+        unsafe { z_hello_drop(self) };
+    }
+}
+/// Returns ``true`` if `hello` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
+    hello.whatami != 0 && z_str_array_check(&hello.locators)
+}
 
-// /// Frees `hello`, invalidating it for double-drop safety.
-// #[no_mangle]
-// #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
-//     z_bytes_drop(&mut hello.pid);
-//     z_str_array_drop(&mut hello.locators);
-//     hello.whatami = 0;
-// }
-// /// Returns ``true`` if `hello` is valid.
-// #[no_mangle]
-// #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
-//     hello.whatami != 0 && z_bytes_check(&hello.pid) && z_str_array_check(&hello.locators)
-// }
+/// Scout for routers and/or peers.
+///
+/// Parameters:
+///     what: A whatami bitmask of zenoh entities kind to scout for.
+///     config: A set of properties to configure the scouting.
+///     timeout: The time (in milliseconds) that should be spent scouting.
+///
+/// Returns:
+///     An array of `z_hello_t` messages.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_scout(
+    what: c_uint,
+    config: &mut z_owned_config_t,
+    callback: &mut z_owned_closure_hello_t,
+    timeout: c_ulong,
+) {
+    let what = WhatAmIMatcher::try_from(what as u64).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
+    let config = config.as_mut().take().expect("invalid config");
+    let mut closure = z_owned_closure_hello_t::empty();
+    std::mem::swap(&mut closure, callback);
 
-// /// A zenoh-allocated array of `z_hello_t` messages.
-// ///
-// /// Members:
-// ///   const z_hello_t *val: A pointer to the array.
-// ///   unsigned int len: The length of the array.
-// ///
-// /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-// /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-// /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-// ///
-// /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-// #[repr(C)]
-// pub struct z_owned_hello_array_t {
-//     pub val: *const z_owned_hello_t,
-//     pub len: size_t,
-// }
-// impl From<Vec<Hello>> for z_owned_hello_array_t {
-//     #[inline]
-//     fn from(hvec: Vec<Hello>) -> Self {
-//         let mut hvec = hvec
-//             .into_iter()
-//             .map(|h| h.into())
-//             .collect::<Vec<z_owned_hello_t>>();
-//         hvec.shrink_to_fit();
-//         let res = z_owned_hello_array_t {
-//             val: hvec.as_ptr(),
-//             len: hvec.len() as size_t,
-//         };
-//         std::mem::forget(hvec);
-//         res
-//     }
-// }
-// /// Frees `hellos`, invalidating it for double-drop safety.
-// #[no_mangle]
-// #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_hello_array_drop(hellos: &mut z_owned_hello_array_t) {
-//     let hellos_vec = Vec::from_raw_parts(
-//         hellos.val as *mut z_owned_hello_t,
-//         hellos.len as usize,
-//         hellos.len as usize,
-//     );
-//     for mut hello in hellos_vec {
-//         z_hello_drop(&mut hello);
-//     }
-//     hellos.val = std::ptr::null_mut();
-//     hellos.len = 0;
-// }
-// /// Returns ``true`` if `hellos` is valid.
-// #[no_mangle]
-// #[allow(clippy::missing_safety_doc)]
-// pub unsafe extern "C" fn z_hello_array_check(hellos: &z_owned_hello_array_t) -> bool {
-//     !hellos.val.is_null() || hellos.len == 0
-// }
-
-// /// Scout for routers and/or peers.
-// ///
-// /// Parameters:
-// ///     what: A whatami bitmask of zenoh entities kind to scout for.
-// ///     config: A set of properties to configure the scouting.
-// ///     scout_period: The time (in milliseconds) that should be spent scouting before returning the results.
-// ///
-// /// Returns:
-// ///     An array of `z_hello_t` messages.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub unsafe extern "C" fn z_scout(
-//     what: c_uint,
-//     config: &mut z_owned_config_t,
-//     scout_period: c_ulong,
-// ) -> z_owned_hello_array_t {
-//     let what = WhatAmIMatcher::try_from(what as ZInt).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
-//     let config = config.as_mut().take().expect("invalid config");
-
-//     let hellos = task::block_on(async move {
-//         let mut hs = std::vec::Vec::<Hello>::new();
-//         let mut stream = zenoh::scout(what, *config).res().unwrap();
-//         let scout = async {
-//             while let Some(hello) = stream.next().await {
-//                 hs.push(hello)
-//             }
-//         };
-//         let timeout = async_std::task::sleep(std::time::Duration::from_millis(scout_period as u64));
-//         FutureExt::race(scout, timeout).await;
-//         hs
-//     });
-//     hellos.into()
-// }
+    task::block_on(async move {
+        let scout = zenoh::scout(what, *config)
+            .callback(move |h| {
+                let mut hello = h.into();
+                z_closure_hello_call(&closure, &mut hello)
+            })
+            .res_async()
+            .await
+            .unwrap();
+        async_std::task::sleep(std::time::Duration::from_millis(timeout as u64)).await;
+        std::mem::drop(scout);
+    });
+}
