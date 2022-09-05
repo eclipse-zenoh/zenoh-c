@@ -148,8 +148,8 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
 
 #[repr(C)]
 pub struct z_get_options_t {
-    target: z_query_target_t,
-    consolidation: z_query_consolidation_t,
+    pub target: z_query_target_t,
+    pub consolidation: z_query_consolidation_t,
 }
 #[no_mangle]
 pub extern "C" fn z_get_options_default() -> z_get_options_t {
@@ -263,7 +263,9 @@ pub extern "C" fn z_query_target_default() -> z_query_target_t {
 /// Consolidation mode values.
 ///
 /// Enumerators:
-///      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector.
+///      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
+///          If the selector contains time range properties, consolidation mode `NONE` is used.
+///          Otherwise the `LATEST` consolidation mode is used.
 ///      - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
 ///      - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
 ///          w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
@@ -324,7 +326,7 @@ impl Default for z_consolidation_mode_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_query_consolidation_t {
-    mode: z_consolidation_mode_t,
+    pub mode: z_consolidation_mode_t,
 }
 
 impl From<QueryConsolidation> for z_query_consolidation_t {
@@ -347,48 +349,7 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
     }
 }
 
-/// Automatic query consolidation strategy selection.
-///
-/// A query consolidation strategy will automatically be selected depending
-/// the query selector. If the selector contains time range properties,
-/// no consolidation is performed. Otherwise the
-/// :c:func:`z_query_consolidation_reception` strategy is used.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
-    QueryConsolidation::AUTO.into()
-}
-
-/// No consolidation performed.
-///
-/// This is usefull when querying timeseries data bases or
-/// when using quorums.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
-    QueryConsolidation::from(ConsolidationMode::None).into()
-}
-
-/// Monotonic consolidation performed at all stages.
-///
-/// This strategy offers the best latency. Replies are directly
-/// transmitted to the application when received without needing
-/// to wait for all replies.
-///
-/// This mode does not garantie that there will be no duplicates.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
-    QueryConsolidation::from(ConsolidationMode::Monotonic).into()
-}
-
-/// Latest value consolidation performed everywhere.
-///
-/// This mode optimizes bandwidth on all links in the system
-/// but will provide a very poor latency.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
-    QueryConsolidation::from(ConsolidationMode::Latest).into()
-}
-
-/// Creates a default :c:type:`z_query_consolidation_t`.
+/// Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()

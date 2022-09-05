@@ -36,7 +36,7 @@ use zenoh::prelude::KeyExpr;
 /// Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
 /// for wire and computation efficiency.
 ///
-/// A key expression can be either:
+/// A [key expression](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md) can be either:
 ///   - A plain string expression.
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.

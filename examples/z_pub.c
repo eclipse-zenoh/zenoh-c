@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
     }
 
     printf("Declaring publisher for '%s'...\n", keyexpr);
-    z_owned_publisher_t pub = z_declare_publisher(z_session_loan(&s), z_keyexpr(keyexpr), NULL);
-    if (!z_publisher_check(&pub)) {
+    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), NULL);
+    if (!z_check(pub)) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }

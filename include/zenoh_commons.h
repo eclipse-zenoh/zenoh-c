@@ -12,7 +12,9 @@ typedef enum z_congestion_control_t {
  * Consolidation mode values.
  *
  * Enumerators:
- *      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector.
+ *      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
+ *          If the selector contains time range properties, consolidation mode `NONE` is used.
+ *          Otherwise the `LATEST` consolidation mode is used.
  *      - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
  *      - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
  *          w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
@@ -129,6 +131,69 @@ typedef struct z_bytes_t {
   const uint8_t *start;
   size_t len;
 } z_bytes_t;
+/**
+ * Represents a Zenoh ID.
+ *
+ * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
+ */
+typedef struct z_id_t {
+  uint8_t id[16];
+} z_id_t;
+/**
+ * An owned array of owned, zenoh allocated, NULL terminated strings.
+ *
+ * Note that `val`
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_str_array_t {
+  char **val;
+  size_t len;
+} z_owned_str_array_t;
+/**
+ * A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
+ *
+ * Members:
+ *   unsigned int whatami: The kind of zenoh entity.
+ *   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
+ *   z_owned_str_array_t locators: The locators of the scouted entity.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_hello_t {
+  unsigned int whatami;
+  struct z_id_t pid;
+  struct z_owned_str_array_t locators;
+} z_owned_hello_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Members:
+ *   void *context: a pointer to an arbitrary state.
+ *   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+ *   void *drop(void*): allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_hello_t {
+  void *context;
+  void (*call)(struct z_owned_hello_t*, const void*);
+  void (*drop)(void*);
+} z_owned_closure_hello_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -258,14 +323,6 @@ typedef struct z_owned_closure_sample_t {
   void (*drop)(void*);
 } z_owned_closure_sample_t;
 /**
- * Represents a Zenoh ID.
- *
- * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
- */
-typedef struct z_id_t {
-  uint8_t id[16];
-} z_id_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
@@ -287,6 +344,27 @@ typedef struct z_owned_closure_zid_t {
   void (*drop)(void*);
 } z_owned_closure_zid_t;
 /**
+ * An owned zenoh configuration.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_config_t {
+  void *_0;
+} z_owned_config_t;
+/**
+ * A loaned zenoh config.
+ */
+typedef struct z_config_t {
+  const struct z_owned_config_t *_0;
+} z_config_t;
+/**
  * A zenoh-allocated key expression.
  *
  * Key expressions can identify a single key or a set of keys.
@@ -298,7 +376,7 @@ typedef struct z_owned_closure_zid_t {
  * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
  * for wire and computation efficiency.
  *
- * A key expression can be either:
+ * A [key expression](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md) can be either:
  *   - A plain string expression.
  *   - A pure numerical id.
  *   - The combination of a numerical prefix and a string suffix.
@@ -512,6 +590,15 @@ bool z_bytes_check(const struct z_bytes_t *b);
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  */
 void z_close(struct z_owned_session_t *session);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+void z_closure_hello_call(const struct z_owned_closure_hello_t *closure,
+                          struct z_owned_hello_t *hello);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -847,6 +934,18 @@ bool z_get(struct z_session_t session,
            const struct z_get_options_t *options);
 struct z_get_options_t z_get_options_default(void);
 /**
+ * Returns ``true`` if `hello` is valid.
+ */
+bool z_hello_check(const struct z_owned_hello_t *hello);
+/**
+ * Frees `hello`, invalidating it for double-drop safety.
+ */
+void z_hello_drop(struct z_owned_hello_t *hello);
+/**
+ * Constructs a gravestone value for hello, useful to steal one from a callback
+ */
+struct z_owned_hello_t z_hello_null(void);
+/**
  * Fetches the Zenoh IDs of all connected peers.
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
@@ -1068,42 +1167,9 @@ int z_put(struct z_session_t session,
  */
 struct z_put_options_t z_put_options_default(void);
 /**
- * Automatic query consolidation strategy selection.
- *
- * A query consolidation strategy will automatically be selected depending
- * the query selector. If the selector contains time range properties,
- * no consolidation is performed. Otherwise the
- * :c:func:`z_query_consolidation_reception` strategy is used.
- */
-struct z_query_consolidation_t z_query_consolidation_auto(void);
-/**
- * Creates a default :c:type:`z_query_consolidation_t`.
+ * Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
-/**
- * Latest value consolidation performed everywhere.
- *
- * This mode optimizes bandwidth on all links in the system
- * but will provide a very poor latency.
- */
-struct z_query_consolidation_t z_query_consolidation_latest(void);
-/**
- * Monotonic consolidation performed at all stages.
- *
- * This strategy offers the best latency. Replies are directly
- * transmitted to the application when received without needing
- * to wait for all replies.
- *
- * This mode does not garantie that there will be no duplicates.
- */
-struct z_query_consolidation_t z_query_consolidation_monotonic(void);
-/**
- * No consolidation performed.
- *
- * This is usefull when querying timeseries data bases or
- * when using quorums.
- */
-struct z_query_consolidation_t z_query_consolidation_none(void);
 /**
  * Get a query's key by aliasing it.
  */
@@ -1137,7 +1203,7 @@ struct z_query_reply_options_t z_query_reply_options_default(void);
  */
 enum z_query_target_t z_query_target_default(void);
 /**
- * Get a query's value selector by aliasing it.
+ * Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
  */
 struct z_bytes_t z_query_value_selector(struct z_query_t query);
 /**
@@ -1215,6 +1281,21 @@ struct z_owned_reply_t z_reply_null(void);
  */
 struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
 /**
+ * Scout for routers and/or peers.
+ *
+ * Parameters:
+ *     what: A whatami bitmask of zenoh entities kind to scout for.
+ *     config: A set of properties to configure the scouting.
+ *     timeout: The time (in milliseconds) that should be spent scouting.
+ *
+ * Returns:
+ *     An array of `z_hello_t` messages.
+ */
+void z_scout(unsigned int what,
+             struct z_owned_config_t *config,
+             struct z_owned_closure_hello_t *callback,
+             unsigned long timeout);
+/**
  * Returns ``true`` if `session` is valid.
  */
 bool z_session_check(const struct z_owned_session_t *session);
@@ -1222,6 +1303,14 @@ bool z_session_check(const struct z_owned_session_t *session);
  * Returns a :c:type:`z_session_t` loaned from `s`.
  */
 struct z_session_t z_session_loan(const struct z_owned_session_t *s);
+/**
+ * Returns ``true`` if `strs` is valid.
+ */
+bool z_str_array_check(const struct z_owned_str_array_t *strs);
+/**
+ * Frees `strs` and invalidates it for double-drop safety.
+ */
+void z_str_array_drop(struct z_owned_str_array_t *strs);
 /**
  * Returns ``true`` if `sub` is valid.
  */

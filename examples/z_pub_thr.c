@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     z_publisher_options_t options = z_publisher_options_default();
     options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
 
-    z_owned_publisher_t pub = z_declare_publisher(z_session_loan(&s), z_keyexpr(keyexpr), &options);
+    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), &options);
     if (!z_check(pub)) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);

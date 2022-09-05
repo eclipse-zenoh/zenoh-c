@@ -17,7 +17,8 @@
              : z_reply_drop, z_owned_closure_sample_t                \
              : z_closure_sample_drop, z_owned_closure_query_t        \
              : z_closure_query_drop, z_owned_closure_reply_t         \
-             : z_closure_reply_drop, z_owned_reply_channel_closure_t \
+             : z_closure_reply_drop, z_owned_closure_hello_t         \
+             : z_closure_hello_drop, z_owned_reply_channel_closure_t \
              : z_reply_channel_closure_drop, z_owned_reply_channel_t \
              : z_reply_channel_drop)(&x)
 #define z_check(x)                                           \
@@ -38,7 +39,8 @@
     _Generic((x), z_owned_closure_sample_t                           \
              : z_closure_sample_call, z_owned_closure_query_t        \
              : z_closure_query_call, z_owned_closure_reply_t         \
-             : z_closure_reply_call, z_owned_reply_channel_closure_t \
+             : z_closure_reply_call, z_owned_closure_hello_t         \
+             : z_closure_hello_call, z_owned_reply_channel_closure_t \
              : z_reply_channel_closure_call)(&x, __VA_ARGS__)
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
