@@ -809,7 +809,7 @@ struct z_delete_options_t z_delete_options_default(void);
 /**
  * Constructs a specific :c:type:`z_encoding_t`.
  */
-struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix);
+struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
 /**
  * Returns ``true`` if `encoding` is valid.
  */
