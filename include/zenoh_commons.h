@@ -12,7 +12,9 @@ typedef enum z_congestion_control_t {
  * Consolidation mode values.
  *
  * Enumerators:
- *      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector.
+ *      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
+ *          If the selector contains time range properties, consolidation mode `NONE` is used.
+ *          Otherwise the `LATEST` consolidation mode is used.
  *      - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
  *      - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
  *          w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
@@ -461,7 +463,7 @@ typedef struct z_owned_encoding_t {
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
  */
 typedef struct z_query_consolidation_t {
-  enum z_consolidation_mode_t _mode;
+  enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 typedef struct z_get_options_t {
   enum z_query_target_t target;
@@ -1086,42 +1088,9 @@ int z_put(struct z_session_t session,
  */
 struct z_put_options_t z_put_options_default(void);
 /**
- * Automatic query consolidation strategy selection.
- *
- * A query consolidation strategy will automatically be selected depending
- * the query selector. If the selector contains time range properties,
- * no consolidation is performed. Otherwise the
- * :c:func:`z_query_consolidation_reception` strategy is used.
- */
-struct z_query_consolidation_t z_query_consolidation_auto(void);
-/**
- * Creates a default :c:type:`z_query_consolidation_t`.
+ * Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
-/**
- * Latest value consolidation performed everywhere.
- *
- * This mode optimizes bandwidth on all links in the system
- * but will provide a very poor latency.
- */
-struct z_query_consolidation_t z_query_consolidation_latest(void);
-/**
- * Monotonic consolidation performed at all stages.
- *
- * This strategy offers the best latency. Replies are directly
- * transmitted to the application when received without needing
- * to wait for all replies.
- *
- * This mode does not garantie that there will be no duplicates.
- */
-struct z_query_consolidation_t z_query_consolidation_monotonic(void);
-/**
- * No consolidation performed.
- *
- * This is usefull when querying timeseries data bases or
- * when using quorums.
- */
-struct z_query_consolidation_t z_query_consolidation_none(void);
 /**
  * Get a query's key by aliasing it.
  */
