@@ -580,12 +580,6 @@ struct z_owned_config_t z_config_from_str(const char *s);
  */
 const char *z_config_get(struct z_config_t config, const char *key);
 /**
- * Inserts a JSON-serialized `value` at the `key` position of the configuration.
- *
- * Returns ``true`` if insertion was succesful, `false` otherwise.
- */
-bool z_config_insert_json(struct z_config_t config, const char *key, const char *value);
-/**
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
 struct z_config_t z_config_loan(const struct z_owned_config_t *s);
@@ -1263,6 +1257,12 @@ void z_undeclare_queryable(struct z_owned_queryable_t *qable);
  * Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
  */
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
+/**
+ * Inserts a JSON-serialized `value` at the `key` position of the configuration.
+ *
+ * Returns ``true`` if insertion was succesful, `false` otherwise.
+ */
+bool zc_config_insert_json(struct z_config_t config, const char *key, const char *value);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.

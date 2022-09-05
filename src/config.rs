@@ -141,7 +141,7 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: *const c_char) ->
 /// Returns ``true`` if insertion was succesful, `false` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn z_config_insert_json(
+pub unsafe extern "C" fn zc_config_insert_json(
     mut config: z_config_t,
     key: *const c_char,
     value: *const c_char,

@@ -45,7 +45,7 @@ Session configuration
 .. autocfunction:: zenoh_commons.h::z_config_peer
 .. autocfunction:: zenoh_commons.h::z_config_from_file
 .. autocfunction:: zenoh_commons.h::z_config_from_str
-.. autocfunction:: zenoh_commons.h::z_config_insert_json
+.. autocfunction:: zenoh_commons.h::zc_config_insert_json
 .. autocfunction:: zenoh_commons.h::z_config_get
 .. autocfunction:: zenoh_commons.h::z_config_to_string
 .. autocfunction:: zenoh_commons.h::z_config_loan
