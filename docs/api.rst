@@ -35,22 +35,22 @@ Session
 Session configuration
 ---------------------
 
-.. autocstruct:: zenoh_concrete.h::zc_config_t
-.. autocstruct:: zenoh_concrete.h::zc_owned_config_t
+.. autocstruct:: zenoh_concrete.h::z_config_t
+.. autocstruct:: zenoh_concrete.h::z_owned_config_t
 
-.. autocfunction:: zenoh_commons.h::zc_config_new
-.. autocfunction:: zenoh_commons.h::zc_config_default
-.. autocfunction:: zenoh_commons.h::zc_config_empty
-.. autocfunction:: zenoh_commons.h::zc_config_client
-.. autocfunction:: zenoh_commons.h::zc_config_peer
-.. autocfunction:: zenoh_commons.h::zc_config_from_file
-.. autocfunction:: zenoh_commons.h::zc_config_from_str
-.. autocfunction:: zenoh_commons.h::zc_config_insert_json
-.. autocfunction:: zenoh_commons.h::zc_config_get
-.. autocfunction:: zenoh_commons.h::zc_config_to_string
-.. autocfunction:: zenoh_commons.h::zc_config_loan
-.. autocfunction:: zenoh_commons.h::zc_config_check
-.. autocfunction:: zenoh_commons.h::zc_config_drop
+.. autocfunction:: zenoh_commons.h::z_config_new
+.. autocfunction:: zenoh_commons.h::z_config_default
+.. autocfunction:: zenoh_commons.h::z_config_empty
+.. autocfunction:: zenoh_commons.h::z_config_client
+.. autocfunction:: zenoh_commons.h::z_config_peer
+.. autocfunction:: zenoh_commons.h::z_config_from_file
+.. autocfunction:: zenoh_commons.h::z_config_from_str
+.. autocfunction:: zenoh_commons.h::z_config_insert_json
+.. autocfunction:: zenoh_commons.h::z_config_get
+.. autocfunction:: zenoh_commons.h::z_config_to_string
+.. autocfunction:: zenoh_commons.h::z_config_loan
+.. autocfunction:: zenoh_commons.h::z_config_check
+.. autocfunction:: zenoh_commons.h::z_config_drop
 
 Session management
 ------------------
