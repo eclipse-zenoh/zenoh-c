@@ -70,7 +70,7 @@ impl From<z_priority_t> for Priority {
 }
 
 /// The kind of congestion control.
-/// 
+///
 ///     - **BLOCK**
 ///     - **DROP**
 #[allow(non_camel_case_types)]
@@ -125,7 +125,7 @@ pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
 }
 
 /// Put data.
-/// 
+///
 /// The payload's encoding can be sepcified through the options.
 ///
 /// Parameters:
@@ -174,6 +174,71 @@ pub unsafe extern "C" fn z_put(
                 Ok(()) => ok(),
             }
         }
+        None => {
+            log::debug!("{}", LOG_INVALID_SESSION);
+            err()
+        }
+    }
+}
+
+/// Options passed to the :c:func:`z_delete` function.
+#[repr(C)]
+#[allow(non_camel_case_types)]
+pub struct z_delete_options_t {
+    pub congestion_control: z_congestion_control_t,
+    pub priority: z_priority_t,
+}
+
+/// Constructs the default value for :c:type:`z_put_options_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
+    z_delete_options_t {
+        congestion_control: CongestionControl::default().into(),
+        priority: Priority::default().into(),
+    }
+}
+
+/// Delete data.
+///
+/// Parameters:
+///     session: The zenoh session.
+///     keyexpr: The key expression to delete.
+///     options: The put options.
+/// Returns:
+///     ``0`` in case of success, ``1`` in case of failure.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_delete(
+    session: z_session_t,
+    keyexpr: z_keyexpr_t,
+    mut opts: *const z_delete_options_t,
+) -> c_int {
+    const fn ok() -> c_int {
+        true as c_int
+    }
+
+    const fn err() -> c_int {
+        false as c_int
+    }
+
+    let default = z_delete_options_default();
+    if opts.is_null() {
+        opts = &default;
+    }
+    match session.as_ref() {
+        Some(s) => match s
+            .delete(keyexpr)
+            .congestion_control((*opts).congestion_control.into())
+            .priority((*opts).priority.into())
+            .res_sync()
+        {
+            Err(e) => {
+                log::error!("{}", e);
+                err()
+            }
+            Ok(()) => ok(),
+        },
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
             err()

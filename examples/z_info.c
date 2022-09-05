@@ -12,35 +12,33 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #include <stdio.h>
+
 #include "zenoh.h"
 
-void print_zid(const z_id_t *id, const void *ctx)
-{
-    for (int i = 15; i >= 0; i--)
-    {
+void print_zid(const z_id_t *id, const void *ctx) {
+    for (int i = 15; i >= 0; i--) {
         printf("%02x", id->id[i]);
     }
     printf("\n");
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     z_init_logger();
 
     z_owned_config_t config = z_config_default();
-    if (argc > 1)
-    {
-        if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]))
-        {
-            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+    if (argc > 1) {
+        if (!zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1])) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                "JSON-serialized list of strings\n",
+                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
     }
 
     printf("Opening session...\n");
     z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s))
-    {
+    if (!z_check(s)) {
         printf("Unable to open session!\n");
         exit(-1);
     }

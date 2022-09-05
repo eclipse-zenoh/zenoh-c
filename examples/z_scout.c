@@ -78,6 +78,7 @@ void callback(z_owned_hello_t *hello, const void *context) {
     fprintf(stdout, "\n");
     (*(int *)context)++;
 }
+
 void drop(void *context) {
     printf("Dropping scout\n");
     int count = *(int *)context;

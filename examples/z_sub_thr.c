@@ -13,12 +13,12 @@
 //
 #include <stdio.h>
 #include <time.h>
+
 #include "zenoh.h"
 
 #define N 1000000
 
-typedef struct
-{
+typedef struct {
     volatile unsigned long count;
     volatile unsigned long finished_rounds;
     volatile clock_t start;
@@ -26,8 +26,7 @@ typedef struct
     volatile clock_t first_start;
 } z_stats_t;
 
-z_stats_t *z_stats_make()
-{
+z_stats_t *z_stats_make() {
     z_stats_t *stats = malloc(sizeof(z_stats_t));
     stats->count = 0;
     stats->finished_rounds = 0;
@@ -35,57 +34,49 @@ z_stats_t *z_stats_make()
     return stats;
 }
 
-void on_sample(const z_sample_t *sample, const void *context)
-{
+void on_sample(const z_sample_t *sample, const void *context) {
     z_stats_t *stats = (z_stats_t *)context;
-    if (stats->count == 0)
-    {
+    if (stats->count == 0) {
         stats->start = clock();
-        if (!stats->first_start)
-        {
+        if (!stats->first_start) {
             stats->first_start = stats->start;
         }
         stats->count++;
-    }
-    else if (stats->count < N)
-    {
+    } else if (stats->count < N) {
         stats->count++;
-    }
-    else
-    {
+    } else {
         stats->stop = clock();
         stats->finished_rounds++;
         printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stats->stop - stats->start));
         stats->count = 0;
     }
 }
-void drop_stats(void *context)
-{
+void drop_stats(void *context) {
     const clock_t end = clock();
     const z_stats_t *stats = (z_stats_t *)context;
     const double elapsed = (double)(end - stats->first_start) / (double)CLOCKS_PER_SEC;
     const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
-    printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages, elapsed, (double)sent_messages / elapsed);
+    printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
+           elapsed, (double)sent_messages / elapsed);
     free(context);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     z_init_logger();
 
     z_owned_config_t config = z_config_default();
-    if (argc > 1)
-    {
-        if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]))
-        {
-            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+    if (argc > 1) {
+        if (!zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1])) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                "JSON-serialized list of strings\n",
+                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
     }
 
     z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s))
-    {
+    if (!z_check(s)) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -95,15 +86,13 @@ int main(int argc, char **argv)
     z_stats_t *context = z_stats_make();
     z_owned_closure_sample_t callback = z_closure(on_sample, drop_stats, context);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), z_move(callback), NULL);
-    if (!z_check(sub))
-    {
+    if (!z_check(sub)) {
         printf("Unable to create subscriber.\n");
         exit(-1);
     }
 
     char c = 0;
-    while (c != 'q')
-    {
+    while (c != 'q') {
         c = fgetc(stdin);
     }
 

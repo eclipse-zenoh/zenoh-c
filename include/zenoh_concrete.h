@@ -44,7 +44,19 @@ typedef struct z_owned_session_t {
   uintptr_t _0[3];
 } z_owned_session_t;
 /**
- * An owned zenoh configuration.
+ * Structs received by a Queryable.
+ */
+typedef struct z_query_t {
+  const void *_0;
+} z_query_t;
+/**
+ * A loaned zenoh session.
+ */
+typedef struct z_session_t {
+  const struct z_owned_session_t *_0;
+} z_session_t;
+/**
+ * An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
  * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
@@ -55,21 +67,9 @@ typedef struct z_owned_session_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_config_t {
-  void *_0;
-} z_owned_config_t;
-/**
- * A loaned zenoh config.
- */
-typedef struct z_config_t {
-  const struct z_owned_config_t *_0;
-} z_config_t;
-/**
- * A loaned zenoh session.
- */
-typedef struct z_session_t {
-  const struct z_owned_session_t *_0;
-} z_session_t;
+typedef struct z_owned_pull_subscriber_t {
+  uintptr_t _0[1];
+} z_owned_pull_subscriber_t;
 /**
  * An owned zenoh queryable.
  *

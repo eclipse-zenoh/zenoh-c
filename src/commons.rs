@@ -13,7 +13,7 @@
 //
 use crate::collections::*;
 use crate::keyexpr::*;
-use libc::c_ulong;
+use libc::{c_char, c_ulong};
 use zenoh::prelude::SampleKind;
 use zenoh_protocol_core::Timestamp;
 
@@ -288,6 +288,24 @@ pub struct z_owned_encoding_t {
     pub prefix: z_encoding_prefix_t,
     pub suffix: z_bytes_t,
     pub _dropped: bool,
+}
+
+/// Constructs a specific :c:type:`z_encoding_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_encoding(
+    prefix: z_encoding_prefix_t,
+    suffix: *const c_char,
+) -> z_encoding_t {
+    let suffix = if suffix.is_null() {
+        z_bytes_t::empty()
+    } else {
+        z_bytes_t {
+            start: suffix as *const u8,
+            len: libc::strlen(suffix),
+        }
+    };
+    z_encoding_t { prefix, suffix }
 }
 
 /// Constructs a default :c:type:`z_encoding_t`.

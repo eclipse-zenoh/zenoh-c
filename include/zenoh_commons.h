@@ -195,12 +195,6 @@ typedef struct z_owned_closure_hello_t {
   void (*drop)(void*);
 } z_owned_closure_hello_t;
 /**
- * Structs received by a Queryable.
- */
-typedef struct z_query_t {
-  const void *_0;
-} z_query_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
@@ -350,6 +344,27 @@ typedef struct z_owned_closure_zid_t {
   void (*drop)(void*);
 } z_owned_closure_zid_t;
 /**
+ * An owned zenoh configuration.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct z_owned_config_t {
+  void *_0;
+} z_owned_config_t;
+/**
+ * A loaned zenoh config.
+ */
+typedef struct z_config_t {
+  const struct z_owned_config_t *_0;
+} z_config_t;
+/**
  * A zenoh-allocated key expression.
  *
  * Key expressions can identify a single key or a set of keys.
@@ -409,20 +424,24 @@ typedef struct z_publisher_options_t {
   enum z_priority_t priority;
 } z_publisher_options_t;
 /**
- * An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
+ * Represents the set of options that can be applied to a pull subscriber,
+ * upon its declaration via :c:func:`z_declare_pull_subscriber`.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * Members:
+ *   z_reliability_t reliability: The subscription reliability.
  */
-typedef struct z_owned_pull_subscriber_t {
-  uintptr_t _0[1];
-} z_owned_pull_subscriber_t;
+typedef struct z_pull_subscriber_options_t {
+  enum z_reliability_t reliability;
+} z_pull_subscriber_options_t;
+/**
+ * Options passed to the :c:func:`z_declare_queryable` function.
+ *
+ * Members:
+ *     bool complete: The completeness of the Queryable.
+ */
+typedef struct z_queryable_options_t {
+  bool complete;
+} z_queryable_options_t;
 /**
  * Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
  *
@@ -433,14 +452,12 @@ typedef struct z_subscriber_options_t {
   enum z_reliability_t reliability;
 } z_subscriber_options_t;
 /**
- * Options passed to the :c:func:`z_declare_queryable` function.
- *
- * Members:
- *     bool complete: The completeness of the Queryable.
+ * Options passed to the :c:func:`z_delete` function.
  */
-typedef struct z_queryable_options_t {
-  bool complete;
-} z_queryable_options_t;
+typedef struct z_delete_options_t {
+  enum z_congestion_control_t congestion_control;
+  enum z_priority_t priority;
+} z_delete_options_t;
 /**
  * An owned payload encoding.
  *
@@ -470,6 +487,19 @@ typedef struct z_get_options_t {
   struct z_query_consolidation_t consolidation;
 } z_get_options_t;
 /**
+ * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
+ * whenever issued via :c:func:`z_publisher_delete`.
+ */
+typedef struct z_publisher_delete_options_t {
+  uint8_t __dummy;
+} z_publisher_delete_options_t;
+/**
+ * A loaned zenoh publisher.
+ */
+typedef struct z_publisher_t {
+  const struct z_owned_publisher_t *_0;
+} z_publisher_t;
+/**
  * Options passed to the :c:func:`z_publisher_put` function.
  *
  * Members:
@@ -491,6 +521,16 @@ typedef struct z_put_options_t {
   enum z_congestion_control_t congestion_control;
   enum z_priority_t priority;
 } z_put_options_t;
+/**
+ * Represents the set of options that can be applied to a query reply,
+ * sent via :c:func:`z_query_reply`.
+ *
+ * Members:
+ *   z_encoding_t encoding: The encoding of the payload.
+ */
+typedef struct z_query_reply_options_t {
+  struct z_encoding_t encoding;
+} z_query_reply_options_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -627,12 +667,6 @@ struct z_owned_config_t z_config_from_str(const char *s);
  */
 const char *z_config_get(struct z_config_t config, const char *key);
 /**
- * Inserts a JSON-serialized `value` at the `key` position of the configuration.
- *
- * Returns ``true`` if insertion was succesful, `false` otherwise.
- */
-bool z_config_insert_json(struct z_config_t config, const char *key, const char *value);
-/**
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
 struct z_config_t z_config_loan(const struct z_owned_config_t *s);
@@ -755,7 +789,7 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
  *           forward = z_keyexpr("forward"),
  *           session = s,
  *         };
- *         z_subscriber_options_t opts = z_subscriber_options_default();
+ *         z_pull_subscriber_options_t opts = z_pull_subscriber_options_default();
  *         opts.cargs = (void *)&cargs;
  *         z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
  *       }
@@ -763,7 +797,7 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
 struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t session,
                                                            struct z_keyexpr_t keyexpr,
                                                            struct z_owned_closure_sample_t *callback,
-                                                           const struct z_subscriber_options_t *opts);
+                                                           const struct z_pull_subscriber_options_t *opts);
 /**
  * Creates a Queryable for the given key expression.
  *
@@ -842,6 +876,27 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
                                                  struct z_keyexpr_t keyexpr,
                                                  struct z_owned_closure_sample_t *callback,
                                                  const struct z_subscriber_options_t *opts);
+/**
+ * Delete data.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression to delete.
+ *     options: The put options.
+ * Returns:
+ *     ``0`` in case of success, ``1`` in case of failure.
+ */
+int z_delete(struct z_session_t session,
+             struct z_keyexpr_t keyexpr,
+             const struct z_delete_options_t *opts);
+/**
+ * Constructs the default value for :c:type:`z_put_options_t`.
+ */
+struct z_delete_options_t z_delete_options_default(void);
+/**
+ * Constructs a specific :c:type:`z_encoding_t`.
+ */
+struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
 /**
  * Returns ``true`` if `encoding` is valid.
  */
@@ -1025,12 +1080,28 @@ struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
+ * Returns ``true`` if `pub` is valid.
+ */
+bool z_publisher_check(const struct z_owned_publisher_t *pbl);
+/**
  * Sends a `DELETE` message onto the publisher's key expression.
  *
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher);
+int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher,
+                          const struct z_publisher_delete_options_t *_options);
+/**
+ * Constructs the default values for the delete operation via a publisher entity.
+ *
+ * Returns:
+ *   Returns the constructed :c:type:`z_publisher_delete_options_t`.
+ */
+struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
+/**
+ * Returns a :c:type:`z_publisher_t` loaned from `p`.
+ */
+struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
 /**
  * Constructs the default value for :c:type:`z_publisher_options_t`.
  */
@@ -1048,10 +1119,14 @@ struct z_publisher_options_t z_publisher_options_default(void);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int8_t z_publisher_put(const struct z_owned_publisher_t *publisher,
+int8_t z_publisher_put(struct z_publisher_t publisher,
                        const uint8_t *payload,
                        uintptr_t len,
                        const struct z_publisher_put_options_t *options);
+/**
+ * Constructs the default value for :c:type:`z_publisher_put_options_t`.
+ */
+struct z_publisher_put_options_t z_publisher_put_options_default(void);
 /**
  * Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
  * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
@@ -1064,6 +1139,10 @@ int8_t z_pull(const struct z_owned_pull_subscriber_t *sub);
  * Returns ``true`` if `sub` is valid.
  */
 bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
+/**
+ * Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
+ */
+struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
 /**
  * Put data.
  *
@@ -1108,11 +1187,17 @@ struct z_keyexpr_t z_query_keyexpr(struct z_query_t query);
  *     key: The key of this reply.
  *     payload: The value of this reply.
  *     len: The length of the value of this reply.
+ *     options: The options of this reply.
  */
 void z_query_reply(struct z_query_t query,
                    struct z_keyexpr_t key,
                    const uint8_t *payload,
-                   uintptr_t len);
+                   uintptr_t len,
+                   const struct z_query_reply_options_t *options);
+/**
+ * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ */
+struct z_query_reply_options_t z_query_reply_options_default(void);
 /**
  * Create a default :c:type:`z_query_target_t`.
  */
@@ -1261,6 +1346,12 @@ void z_undeclare_queryable(struct z_owned_queryable_t *qable);
  * Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
  */
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
+/**
+ * Inserts a JSON-serialized `value` at the `key` position of the configuration.
+ *
+ * Returns ``true`` if insertion was succesful, `false` otherwise.
+ */
+bool zc_config_insert_json(struct z_config_t config, const char *key, const char *value);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
