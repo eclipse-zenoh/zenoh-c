@@ -461,7 +461,7 @@ typedef struct z_owned_encoding_t {
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
  */
 typedef struct z_query_consolidation_t {
-  enum z_consolidation_mode_t mode;
+  enum z_consolidation_mode_t _mode;
 } z_query_consolidation_t;
 typedef struct z_get_options_t {
   enum z_query_target_t target;

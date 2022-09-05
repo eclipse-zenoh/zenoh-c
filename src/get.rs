@@ -324,14 +324,14 @@ impl Default for z_consolidation_mode_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_query_consolidation_t {
-    mode: z_consolidation_mode_t,
+    _mode: z_consolidation_mode_t,
 }
 
 impl From<QueryConsolidation> for z_query_consolidation_t {
     #[inline]
     fn from(qc: QueryConsolidation) -> Self {
         z_query_consolidation_t {
-            mode: qc.mode().into(),
+            _mode: qc.mode().into(),
         }
     }
 }
@@ -339,7 +339,7 @@ impl From<QueryConsolidation> for z_query_consolidation_t {
 impl From<z_query_consolidation_t> for QueryConsolidation {
     #[inline]
     fn from(val: z_query_consolidation_t) -> Self {
-        let cm: Option<ConsolidationMode> = val.mode.into();
+        let cm: Option<ConsolidationMode> = val._mode.into();
         match cm {
             Some(cm) => QueryConsolidation::from(cm),
             None => QueryConsolidation::AUTO,
