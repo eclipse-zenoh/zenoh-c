@@ -248,7 +248,7 @@ Types
 .. autocstruct:: zenoh_commons.h::z_query_t
 
 .. autocfunction:: zenoh_commons.h::z_query_keyexpr
-.. autocfunction:: zenoh_commons.h::z_query_value_selector
+.. autocfunction:: zenoh_commons.h::z_query_parameters
 
 Functions
 ---------

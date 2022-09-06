@@ -187,7 +187,7 @@ pub unsafe extern "C" fn z_get(
         .as_ref()
         .as_ref()
         .expect(LOG_INVALID_SESSION)
-        .get(KeyExpr::try_from(keyexpr).unwrap().with_value_selector(p));
+        .get(KeyExpr::try_from(keyexpr).unwrap().with_parameters(p));
     if let Some(options) = options {
         q = q
             .consolidation(options.consolidation)

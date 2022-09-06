@@ -1175,6 +1175,10 @@ struct z_query_consolidation_t z_query_consolidation_default(void);
  */
 struct z_keyexpr_t z_query_keyexpr(struct z_query_t query);
 /**
+ * Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
+ */
+struct z_bytes_t z_query_parameters(struct z_query_t query);
+/**
  * Send a reply to a query.
  *
  * This function must be called inside of a Queryable callback passing the
@@ -1202,10 +1206,6 @@ struct z_query_reply_options_t z_query_reply_options_default(void);
  * Create a default :c:type:`z_query_target_t`.
  */
 enum z_query_target_t z_query_target_default(void);
-/**
- * Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
- */
-struct z_bytes_t z_query_value_selector(struct z_query_t query);
 /**
  * Returns ``true`` if `qable` is valid.
  */

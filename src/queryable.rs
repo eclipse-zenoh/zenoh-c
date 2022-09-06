@@ -207,8 +207,8 @@ pub unsafe extern "C" fn z_query_keyexpr(query: z_query_t) -> z_keyexpr_t {
 /// Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_value_selector(query: z_query_t) -> z_bytes_t {
-    let complement = query.value_selector();
+pub unsafe extern "C" fn z_query_parameters(query: z_query_t) -> z_bytes_t {
+    let complement = query.parameters();
     z_bytes_t {
         start: complement.as_ptr(),
         len: complement.len(),
