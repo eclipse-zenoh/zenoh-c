@@ -28,6 +28,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#define DEFAULT_SCOUTING_TIMEOUT 1000
 /**
  * An owned zenoh session.
  *

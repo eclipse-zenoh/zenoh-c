@@ -567,6 +567,11 @@ typedef struct z_value_t {
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
 } z_value_t;
+typedef struct z_owned_scouting_config_t {
+  struct z_owned_config_t _config;
+  unsigned long timeout_ms;
+  unsigned int what;
+} z_owned_scouting_config_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
@@ -683,6 +688,7 @@ struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 struct z_owned_config_t z_config_new(void);
+struct z_owned_config_t z_config_null(void);
 /**
  * Constructs a default, zenoh-allocated, peer mode configuration.
  */
@@ -1128,14 +1134,6 @@ int8_t z_publisher_put(struct z_publisher_t publisher,
  */
 struct z_publisher_put_options_t z_publisher_put_options_default(void);
 /**
- * Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
- * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
- *
- * Parameters:
- *     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
- */
-int8_t z_pull(const struct z_owned_pull_subscriber_t *sub);
-/**
  * Returns ``true`` if `sub` is valid.
  */
 bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
@@ -1291,10 +1289,10 @@ struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
  * Returns:
  *     An array of `z_hello_t` messages.
  */
-void z_scout(unsigned int what,
-             struct z_owned_config_t *config,
-             struct z_owned_closure_hello_t *callback,
-             unsigned long timeout);
+void z_scout(struct z_owned_scouting_config_t *config, struct z_owned_closure_hello_t *callback);
+struct z_owned_scouting_config_t z_scouting_config_default(void);
+struct z_owned_scouting_config_t z_scouting_config_from(struct z_owned_config_t *config);
+struct z_owned_scouting_config_t z_scouting_config_null(void);
 /**
  * Returns ``true`` if `session` is valid.
  */
@@ -1319,6 +1317,14 @@ bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
  * Constructs the default value for :c:type:`z_subscriber_options_t`.
  */
 struct z_subscriber_options_t z_subscriber_options_default(void);
+/**
+ * Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
+ * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
+ *
+ * Parameters:
+ *     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
+ */
+int8_t z_subscriber_pull(const struct z_owned_pull_subscriber_t *sub);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
  */
