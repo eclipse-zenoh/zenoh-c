@@ -119,8 +119,8 @@ impl AsMut<Option<Box<Config>>> for z_owned_config_t {
 pub extern "C" fn z_config_new() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(Config::default())))) }
 }
-#[no_mangle]
-pub extern "C" fn z_config_null() -> z_owned_config_t {
+
+pub(crate) extern "C" fn _z_config_null() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(None::<Box<Config>>)) }
 }
 

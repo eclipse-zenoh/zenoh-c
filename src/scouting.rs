@@ -20,8 +20,8 @@ use zenoh_protocol_core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
 
 use crate::{
-    z_closure_hello_call, z_config_default, z_config_null, z_id_t, z_owned_closure_hello_t,
-    z_owned_config_t, Z_ROUTER,
+    _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_id_t,
+    z_owned_closure_hello_t, z_owned_config_t, Z_ROUTER,
 };
 
 /// An owned array of owned, zenoh allocated, NULL terminated strings.
@@ -154,11 +154,10 @@ pub struct z_owned_scouting_config_t {
 pub const DEFAULT_SCOUTING_WHAT: c_uint = (WhatAmI::Router as u8 | WhatAmI::Peer as u8) as c_uint;
 pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
-#[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
+pub(crate) extern "C" fn _z_scouting_config_null() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
-        _config: z_config_null(),
+        _config: _z_config_null(),
         timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         what: DEFAULT_SCOUTING_WHAT,
     }
@@ -180,10 +179,22 @@ pub extern "C" fn z_scouting_config_from(
     config: &mut z_owned_config_t,
 ) -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
-        _config: std::mem::replace(config, z_config_null()),
+        _config: std::mem::replace(config, _z_config_null()),
         timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         what: DEFAULT_SCOUTING_WHAT,
     }
+}
+
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_scouting_config_check(config: &z_owned_scouting_config_t) -> bool {
+    z_config_check(&config._config)
+}
+
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t) {
+    std::mem::drop(std::mem::replace(config, _z_scouting_config_null()));
 }
 
 /// Scout for routers and/or peers.
@@ -201,7 +212,7 @@ pub unsafe extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
 ) {
-    let config = std::mem::replace(config, z_scouting_config_null());
+    let config = std::mem::replace(config, _z_scouting_config_null());
     let what = WhatAmIMatcher::try_from(config.what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     let timeout = config.timeout_ms as u64;
     let mut config = config._config;

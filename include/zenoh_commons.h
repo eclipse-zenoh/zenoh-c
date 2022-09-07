@@ -688,7 +688,6 @@ struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 struct z_owned_config_t z_config_new(void);
-struct z_owned_config_t z_config_null(void);
 /**
  * Constructs a default, zenoh-allocated, peer mode configuration.
  */
@@ -1290,9 +1289,10 @@ struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
  *     An array of `z_hello_t` messages.
  */
 void z_scout(struct z_owned_scouting_config_t *config, struct z_owned_closure_hello_t *callback);
+bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_default(void);
+void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_from(struct z_owned_config_t *config);
-struct z_owned_scouting_config_t z_scouting_config_null(void);
 /**
  * Returns ``true`` if `session` is valid.
  */
