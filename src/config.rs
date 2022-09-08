@@ -120,6 +120,10 @@ pub extern "C" fn z_config_new() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(Config::default())))) }
 }
 
+pub(crate) extern "C" fn _z_config_null() -> z_owned_config_t {
+    unsafe { z_owned_config_t(std::mem::transmute(None::<Box<Config>>)) }
+}
+
 /// Gets the property with the given integer key from the configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

@@ -9,7 +9,8 @@
     _Generic((x), z_owned_session_t                                  \
              : z_close, z_owned_keyexpr_t                            \
              : z_keyexpr_drop, z_owned_config_t                      \
-             : z_config_drop, z_owned_pull_subscriber_t              \
+             : z_config_drop, z_owned_scouting_config_t              \
+             : z_scouting_config_drop, z_owned_pull_subscriber_t     \
              : z_undeclare_pull_subscriber, z_owned_subscriber_t     \
              : z_undeclare_subscriber, z_owned_queryable_t           \
              : z_undeclare_queryable, z_owned_encoding_t             \
@@ -27,7 +28,8 @@
              : z_publisher_check, z_owned_keyexpr_t          \
              : z_keyexpr_check, z_keyexpr_t                  \
              : z_keyexpr_is_valid, z_owned_config_t          \
-             : z_config_check, z_bytes_t                     \
+             : z_config_check, z_owned_scouting_config_t     \
+             : z_scouting_config_check, z_bytes_t            \
              : z_bytes_check, z_owned_subscriber_t           \
              : z_subscriber_check, z_owned_pull_subscriber_t \
              : z_pull_subscriber_check, z_owned_queryable_t  \

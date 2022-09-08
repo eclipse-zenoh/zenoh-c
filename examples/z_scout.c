@@ -90,12 +90,12 @@ void drop(void *context) {
 
 int main(int argc, char **argv) {
     z_init_logger();
-    z_owned_config_t config = z_config_default();
-    printf("Scouting...\n");
     int *context = malloc(sizeof(int));
     *context = 0;
+    z_owned_scouting_config_t config = z_scouting_config_default();
     z_owned_closure_hello_t closure = z_closure(callback, drop, context);
-    z_scout(Z_ROUTER | Z_PEER, z_move(config), z_move(closure), 1000);
+    printf("Scouting...\n");
+    z_scout(z_move(config), z_move(closure));
     sleep(1);
     return 0;
 }

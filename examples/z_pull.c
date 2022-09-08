@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         if (c == -1) {
             sleep(1);
         } else {
-            z_pull(&sub);
+            z_subscriber_pull(&sub);
         }
     }
 

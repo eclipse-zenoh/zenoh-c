@@ -216,7 +216,7 @@ pub unsafe extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t
 ///     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_pull(sub: &z_owned_pull_subscriber_t) -> i8 {
+pub unsafe extern "C" fn z_subscriber_pull(sub: &z_owned_pull_subscriber_t) -> i8 {
     match sub.as_ref() {
         Some(tx) => {
             if let Err(e) = tx.pull().res_sync() {
