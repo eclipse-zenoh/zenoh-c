@@ -569,8 +569,8 @@ typedef struct z_value_t {
 } z_value_t;
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
-  unsigned long timeout_ms;
-  unsigned int what;
+  unsigned long zc_timeout_ms;
+  unsigned int zc_what;
 } z_owned_scouting_config_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
@@ -1292,7 +1292,7 @@ void z_scout(struct z_owned_scouting_config_t *config, struct z_owned_closure_he
 bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_default(void);
 void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
-struct z_owned_scouting_config_t z_scouting_config_from(struct z_owned_config_t *config);
+struct z_owned_scouting_config_t z_scouting_config_from(struct z_config_t config);
 /**
  * Returns ``true`` if `session` is valid.
  */
