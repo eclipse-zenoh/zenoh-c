@@ -15,7 +15,7 @@
 use std::ops::{Deref, DerefMut};
 
 use zenoh::{
-    prelude::{Priority, Value},
+    prelude::{Priority, Value, Locality},
     publication::Publisher,
 };
 use zenoh_protocol_core::CongestionControl;
@@ -129,8 +129,8 @@ pub unsafe extern "C" fn z_declare_publisher(
                     .congestion_control(options.congestion_control.into())
                     .priority(options.priority.into());
                 match options.local_routing {
-                    0 => p = p.local_routing(false),
-                    1 => p = p.local_routing(true),
+                    0 => p = p.allowed_destination(Locality::Remote),
+                    1 => p = p.allowed_destination(Locality::Any),
                     _ => {}
                 }
             }
