@@ -20,7 +20,7 @@ use zenoh_protocol_core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
 
 use crate::{
-    _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_id_t,
+    _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_config_t, z_id_t,
     z_owned_closure_hello_t, z_owned_config_t, Z_ROUTER,
 };
 
@@ -147,8 +147,8 @@ pub unsafe extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
 #[repr(C)]
 pub struct z_owned_scouting_config_t {
     _config: z_owned_config_t,
-    pub timeout_ms: c_ulong,
-    pub what: c_uint,
+    pub zc_timeout_ms: c_ulong,
+    pub zc_what: c_uint,
 }
 
 pub const DEFAULT_SCOUTING_WHAT: c_uint = (WhatAmI::Router as u8 | WhatAmI::Peer as u8) as c_uint;
@@ -158,8 +158,8 @@ pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 pub(crate) extern "C" fn _z_scouting_config_null() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: _z_config_null(),
-        timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-        what: DEFAULT_SCOUTING_WHAT,
+        zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
+        zc_what: DEFAULT_SCOUTING_WHAT,
     }
 }
 
@@ -168,20 +168,18 @@ pub(crate) extern "C" fn _z_scouting_config_null() -> z_owned_scouting_config_t 
 pub extern "C" fn z_scouting_config_default() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: z_config_default(),
-        timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-        what: DEFAULT_SCOUTING_WHAT,
+        zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
+        zc_what: DEFAULT_SCOUTING_WHAT,
     }
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_from(
-    config: &mut z_owned_config_t,
-) -> z_owned_scouting_config_t {
+pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
-        _config: std::mem::replace(config, _z_config_null()),
-        timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-        what: DEFAULT_SCOUTING_WHAT,
+        _config: config.as_ref().clone().into(),
+        zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
+        zc_what: DEFAULT_SCOUTING_WHAT,
     }
 }
 
@@ -213,8 +211,8 @@ pub unsafe extern "C" fn z_scout(
     callback: &mut z_owned_closure_hello_t,
 ) {
     let config = std::mem::replace(config, _z_scouting_config_null());
-    let what = WhatAmIMatcher::try_from(config.what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
-    let timeout = config.timeout_ms as u64;
+    let what = WhatAmIMatcher::try_from(config.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
+    let timeout = config.zc_timeout_ms as u64;
     let mut config = config._config;
     let config = config.as_mut().take().expect("invalid config");
     let mut closure = z_owned_closure_hello_t::empty();

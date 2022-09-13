@@ -78,7 +78,11 @@ pub struct z_config_t(*const z_owned_config_t);
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_owned_config_t(*mut ());
-
+impl From<Option<Box<Config>>> for z_owned_config_t {
+    fn from(v: Option<Box<Config>>) -> Self {
+        unsafe { std::mem::transmute(v) }
+    }
+}
 /// Returns a :c:type:`z_config_t` loaned from `s`.
 #[no_mangle]
 pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
