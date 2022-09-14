@@ -414,12 +414,10 @@ typedef struct z_owned_publisher_t {
  * Options passed to the :c:func:`z_declare_publisher` function.
  *
  * Members:
- *     int8_t local_routing: ``0``: disabled, ``1``: enabled, ``-1``: apply session level config.
  *     z_congestion_control_t congestion_control: The congestion control to apply when routing messages from this publisher.
  *     z_priority_t priority: The priority of messages from this publisher.
  */
 typedef struct z_publisher_options_t {
-  int8_t local_routing;
   enum z_congestion_control_t congestion_control;
   enum z_priority_t priority;
 } z_publisher_options_t;
@@ -586,7 +584,6 @@ extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
 extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
-extern const char *Z_CONFIG_LOCAL_ROUTING_KEY;
 /**
  * Returns ``true`` if `b` is initialized.
  */
