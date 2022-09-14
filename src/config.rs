@@ -56,9 +56,6 @@ pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
 #[no_mangle]
 pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"add_timestamp\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_LOCAL_ROUTING_KEY: &c_char =
-    unsafe { &*(b"local_routing\0".as_ptr() as *const c_char) };
 
 /// A loaned zenoh config.
 #[repr(C)]

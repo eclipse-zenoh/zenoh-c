@@ -15,7 +15,7 @@
 use std::ops::{Deref, DerefMut};
 
 use zenoh::{
-    prelude::{Priority, Value, Locality},
+    prelude::{Priority, Value},
     publication::Publisher,
 };
 use zenoh_protocol_core::CongestionControl;
@@ -29,12 +29,10 @@ use crate::{
 /// Options passed to the :c:func:`z_declare_publisher` function.
 ///
 /// Members:
-///     int8_t local_routing: ``0``: disabled, ``1``: enabled, ``-1``: apply session level config.
 ///     z_congestion_control_t congestion_control: The congestion control to apply when routing messages from this publisher.
 ///     z_priority_t priority: The priority of messages from this publisher.
 #[repr(C)]
 pub struct z_publisher_options_t {
-    pub local_routing: i8,
     pub congestion_control: z_congestion_control_t,
     pub priority: z_priority_t,
 }
@@ -43,7 +41,6 @@ pub struct z_publisher_options_t {
 #[no_mangle]
 pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
     z_publisher_options_t {
-        local_routing: -1,
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
     }
@@ -128,11 +125,6 @@ pub unsafe extern "C" fn z_declare_publisher(
                 p = p
                     .congestion_control(options.congestion_control.into())
                     .priority(options.priority.into());
-                match options.local_routing {
-                    0 => p = p.allowed_destination(Locality::Remote),
-                    1 => p = p.allowed_destination(Locality::Any),
-                    _ => {}
-                }
             }
             match p.res_sync() {
                 Err(e) => {
