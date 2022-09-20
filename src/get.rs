@@ -23,7 +23,7 @@ use zenoh_protocol_core::{ConsolidationMode, QueryTarget};
 
 use zenoh::{
     prelude::{KeyExpr, SplitBuffer},
-    query::{QueryConsolidation, Reply},
+    query::{Mode, QueryConsolidation, Reply},
 };
 use zenoh_util::core::SyncResolve;
 
@@ -283,12 +283,12 @@ pub enum z_consolidation_mode_t {
     LATEST = 2,
 }
 
-impl From<Option<ConsolidationMode>> for z_consolidation_mode_t {
+impl From<Mode<ConsolidationMode>> for z_consolidation_mode_t {
     #[inline]
-    fn from(cm: Option<ConsolidationMode>) -> Self {
+    fn from(cm: Mode<ConsolidationMode>) -> Self {
         match cm {
-            Some(cm) => Self::from(cm),
-            None => z_consolidation_mode_t::AUTO,
+            Mode::Manual(cm) => Self::from(cm),
+            Mode::Auto => z_consolidation_mode_t::AUTO,
         }
     }
 }
@@ -304,14 +304,14 @@ impl From<ConsolidationMode> for z_consolidation_mode_t {
     }
 }
 
-impl From<z_consolidation_mode_t> for Option<ConsolidationMode> {
+impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
     #[inline]
     fn from(val: z_consolidation_mode_t) -> Self {
         match val {
-            z_consolidation_mode_t::AUTO => None,
-            z_consolidation_mode_t::NONE => Some(ConsolidationMode::None),
-            z_consolidation_mode_t::MONOTONIC => Some(ConsolidationMode::Monotonic),
-            z_consolidation_mode_t::LATEST => Some(ConsolidationMode::Latest),
+            z_consolidation_mode_t::AUTO => Mode::Auto,
+            z_consolidation_mode_t::NONE => Mode::Manual(ConsolidationMode::None),
+            z_consolidation_mode_t::MONOTONIC => Mode::Manual(ConsolidationMode::Monotonic),
+            z_consolidation_mode_t::LATEST => Mode::Manual(ConsolidationMode::Latest),
         }
     }
 }
@@ -341,10 +341,10 @@ impl From<QueryConsolidation> for z_query_consolidation_t {
 impl From<z_query_consolidation_t> for QueryConsolidation {
     #[inline]
     fn from(val: z_query_consolidation_t) -> Self {
-        let cm: Option<ConsolidationMode> = val.mode.into();
+        let cm: Mode<ConsolidationMode> = val.mode.into();
         match cm {
-            Some(cm) => QueryConsolidation::from(cm),
-            None => QueryConsolidation::AUTO,
+            Mode::Manual(cm) => QueryConsolidation::from(cm),
+            Mode::Auto => QueryConsolidation::AUTO,
         }
     }
 }
