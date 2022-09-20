@@ -76,22 +76,41 @@ pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_hello_t {
+    pub _whatami: c_uint,
+    pub _pid: z_id_t,
+    pub _locators: z_owned_str_array_t,
+}
+/// A reference-type hello message returned by a zenoh entity to a scout message sent with `z_scout`.
+///
+/// Members:
+///   unsigned int whatami: The kind of zenoh entity.
+///   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
+///   z_owned_str_array_t locators: The locators of the scouted entity.
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+#[repr(C)]
+pub struct z_hello_t {
     pub whatami: c_uint,
     pub pid: z_id_t,
-    pub locators: z_owned_str_array_t,
+    pub locators: *const z_owned_str_array_t,
 }
+
 impl From<Hello> for z_owned_hello_t {
     fn from(h: Hello) -> Self {
         z_owned_hello_t {
-            whatami: match h.whatami {
+            _whatami: match h.whatami {
                 Some(whatami) => whatami as c_uint,
                 None => Z_ROUTER,
             },
-            pid: match h.zid {
+            _pid: match h.zid {
                 Some(id) => unsafe { std::mem::transmute(id) },
                 None => z_id_t { id: [0; 16] },
             },
-            locators: match h.locators {
+            _locators: match h.locators {
                 Some(locators) => {
                     let mut locators = locators
                         .into_iter()
@@ -115,8 +134,19 @@ impl From<Hello> for z_owned_hello_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
-    z_str_array_drop(&mut hello.locators);
-    hello.whatami = 0;
+    z_str_array_drop(&mut hello._locators);
+    hello._whatami = 0;
+}
+
+/// Frees `hello`, invalidating it for double-drop safety.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
+    z_hello_t {
+        whatami: hello._whatami,
+        pid: hello._pid,
+        locators: &hello._locators,
+    }
 }
 
 /// Constructs a gravestone value for hello, useful to steal one from a callback
@@ -124,9 +154,9 @@ pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_null() -> z_owned_hello_t {
     z_owned_hello_t {
-        whatami: 0,
-        pid: z_id_t { id: [0; 16] },
-        locators: z_owned_str_array_t {
+        _whatami: 0,
+        _pid: z_id_t { id: [0; 16] },
+        _locators: z_owned_str_array_t {
             val: std::ptr::null_mut(),
             len: 0,
         },
@@ -141,7 +171,7 @@ impl Drop for z_owned_hello_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
-    hello.whatami != 0 && z_str_array_check(&hello.locators)
+    hello._whatami != 0 && z_str_array_check(&hello._locators)
 }
 
 #[repr(C)]

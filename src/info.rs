@@ -19,6 +19,7 @@ use zenoh_protocol_core::ZenohId;
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct z_id_t {
     pub id: [u8; 16],
 }

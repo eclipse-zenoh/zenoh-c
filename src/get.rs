@@ -165,7 +165,7 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
 /// Parameters:
 ///     session: The zenoh session.
 ///     keyexpr: The key expression matching resources to query.
-///     predicate: An indication to matching queryables about the queried data.
+///     parameters: The query's parameters, similar to a url's query segment.
 ///     callback: The callback function that will be called on reception of replies for this query.
 ///               Note that the `reply` parameter of the callback is passed by mutable reference,
 ///               but **will** be dropped once your callback exits to help you avoid memory leaks.
@@ -176,13 +176,17 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
 pub unsafe extern "C" fn z_get(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
-    predicate: *const c_char,
+    parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&z_get_options_t>,
 ) -> bool {
     let mut closure = z_owned_closure_reply_t::empty();
     std::mem::swap(callback, &mut closure);
-    let p = CStr::from_ptr(predicate).to_str().unwrap();
+    let p = if parameters.is_null() {
+        ""
+    } else {
+        CStr::from_ptr(parameters).to_str().unwrap()
+    };
     let mut q = session
         .as_ref()
         .as_ref()

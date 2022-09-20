@@ -169,9 +169,9 @@ typedef struct z_owned_str_array_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_hello_t {
-  unsigned int whatami;
-  struct z_id_t pid;
-  struct z_owned_str_array_t locators;
+  unsigned int _whatami;
+  struct z_id_t _pid;
+  struct z_owned_str_array_t _locators;
 } z_owned_hello_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -484,6 +484,25 @@ typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
 } z_get_options_t;
+/**
+ * A reference-type hello message returned by a zenoh entity to a scout message sent with `z_scout`.
+ *
+ * Members:
+ *   unsigned int whatami: The kind of zenoh entity.
+ *   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
+ *   z_owned_str_array_t locators: The locators of the scouted entity.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ */
+typedef struct z_hello_t {
+  unsigned int whatami;
+  struct z_id_t pid;
+  const struct z_owned_str_array_t *locators;
+} z_hello_t;
 /**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
  * whenever issued via :c:func:`z_publisher_delete`.
@@ -922,7 +941,7 @@ struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
  * Parameters:
  *     session: The zenoh session.
  *     keyexpr: The key expression matching resources to query.
- *     predicate: An indication to matching queryables about the queried data.
+ *     parameters: The query's parameters, similar to a url's query segment.
  *     callback: The callback function that will be called on reception of replies for this query.
  *               Note that the `reply` parameter of the callback is passed by mutable reference,
  *               but **will** be dropped once your callback exits to help you avoid memory leaks.
@@ -931,7 +950,7 @@ struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
  */
 bool z_get(struct z_session_t session,
            struct z_keyexpr_t keyexpr,
-           const char *predicate,
+           const char *parameters,
            struct z_owned_closure_reply_t *callback,
            const struct z_get_options_t *options);
 struct z_get_options_t z_get_options_default(void);
@@ -943,6 +962,10 @@ bool z_hello_check(const struct z_owned_hello_t *hello);
  * Frees `hello`, invalidating it for double-drop safety.
  */
 void z_hello_drop(struct z_owned_hello_t *hello);
+/**
+ * Frees `hello`, invalidating it for double-drop safety.
+ */
+struct z_hello_t z_hello_loan(const struct z_owned_hello_t *hello);
 /**
  * Constructs a gravestone value for hello, useful to steal one from a callback
  */
