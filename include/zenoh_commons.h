@@ -952,15 +952,19 @@ struct z_owned_hello_t z_hello_null(void);
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
  * and is guaranteed to be dropped before this function exits.
+ *
+ * Retuns 0 on success
  */
-void z_info_peers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
+int8_t z_info_peers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
 /**
  * Fetches the Zenoh IDs of all connected routers.
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
  * and is guaranteed to be dropped before this function exits.
+ *
+ * Retuns 0 on success
  */
-void z_info_routers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
+int8_t z_info_routers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
 /**
  * Returns the local Zenoh ID.
  *
@@ -1039,9 +1043,9 @@ bool z_keyexpr_intersects(struct z_keyexpr_t left, struct z_keyexpr_t right);
  */
 int8_t z_keyexpr_is_canon(const char *start, uintptr_t len);
 /**
- * Returns ``true`` if `keyexpr` is valid.
+ * Returns ``true`` if `keyexpr` is initialized.
  */
-bool z_keyexpr_is_valid(const struct z_keyexpr_t *keyexpr);
+bool z_keyexpr_is_initialized(const struct z_keyexpr_t *keyexpr);
 /**
  * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
  * In case of error, the return value will be set to its invalidated state.
@@ -1278,10 +1282,9 @@ struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
  *     config: A set of properties to configure the scouting.
  *     timeout: The time (in milliseconds) that should be spent scouting.
  *
- * Returns:
- *     An array of `z_hello_t` messages.
+ * Returns 0 if successful
  */
-void z_scout(struct z_owned_scouting_config_t *config, struct z_owned_closure_hello_t *callback);
+int8_t z_scout(struct z_owned_scouting_config_t *config, struct z_owned_closure_hello_t *callback);
 bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_default(void);
 void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
