@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::config::*;
+use crate::{config::*, zc_init_logger};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::Session;
 
@@ -69,6 +69,9 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
 
     fn err() -> z_owned_session_t {
         unsafe { std::mem::transmute(None::<Session>) }
+    }
+    if cfg!(feature = "logger-autoinit") {
+        zc_init_logger();
     }
 
     let config = match config.as_mut().take() {

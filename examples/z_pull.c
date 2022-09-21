@@ -27,8 +27,6 @@ void data_handler(const z_sample_t *sample, const void *arg) {
 }
 
 int main(int argc, char **argv) {
-    z_init_logger();
-
     char *expr = "demo/example/**";
     if (argc > 1) {
         expr = argv[1];

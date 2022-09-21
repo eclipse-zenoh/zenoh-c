@@ -17,8 +17,6 @@
 #include "zenoh.h"
 
 int main(int argc, char **argv) {
-    z_init_logger();
-
     if (argc < 2) {
         printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
         exit(-1);

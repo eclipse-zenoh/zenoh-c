@@ -21,7 +21,7 @@ use zenoh_util::core::AsyncResolve;
 
 use crate::{
     _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_config_t, z_id_t,
-    z_owned_closure_hello_t, z_owned_config_t, Z_ROUTER,
+    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, Z_ROUTER,
 };
 
 /// An owned array of owned, zenoh allocated, NULL terminated strings.
@@ -210,6 +210,9 @@ pub unsafe extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
 ) {
+    if cfg!(feature = "logger-autoinit") {
+        zc_init_logger();
+    }
     let config = std::mem::replace(config, _z_scouting_config_null());
     let what = WhatAmIMatcher::try_from(config.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     let timeout = config.zc_timeout_ms as u64;

@@ -42,9 +42,12 @@ pub use closures::*;
 
 pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";
 
-/// Initialises the zenoh runtime logger
+/// Initialises the zenoh runtime logger.
+///
+/// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
+/// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
-pub extern "C" fn z_init_logger() {
+pub extern "C" fn zc_init_logger() {
     let _ = env_logger::try_init();
 }
 
