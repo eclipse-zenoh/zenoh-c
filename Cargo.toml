@@ -32,7 +32,6 @@ readme = "README.md"
 
 [features]
 logger-autoinit = []
-default = ["logger-autoinit"]
 
 [badges]
 maintenance = { status = "actively-developed" }

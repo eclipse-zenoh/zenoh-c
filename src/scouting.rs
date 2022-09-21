@@ -210,7 +210,7 @@ pub unsafe extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
 ) {
-    if cfg!(not(feature = "logger-autoinit")) {
+    if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
     let config = std::mem::replace(config, _z_scouting_config_null());

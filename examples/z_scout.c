@@ -89,7 +89,6 @@ void drop(void *context) {
 }
 
 int main(int argc, char **argv) {
-    z_init_logger();
     int *context = malloc(sizeof(int));
     *context = 0;
     z_owned_scouting_config_t config = z_scouting_config_default();

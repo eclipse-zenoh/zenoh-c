@@ -115,3 +115,6 @@ The examples have been written with C11 in mind, using the conventions we encour
 Finally, we strongly advise that you refrain from using structure field that starts with `_`:
 * We try to maintain a common API between `zenoh-c` and [`zenoh-pico`](https://github.com/eclipse-zenoh/zenoh-pico), such that porting code from one to the other is, ideally, trivial. However, some types must have distinct representations in either library, meaning that using these representations explicitly will get you in trouble when porting.
 * We reserve the right to change the memory layout of any type which has `_`-prefixed fields, so trying to use them might cause your code to break on updates.
+
+## Logging
+By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behaviour can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logger` function.

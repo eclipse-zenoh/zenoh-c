@@ -26,8 +26,6 @@ int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
     char *value = "Pub from C!";
 
-    z_init_logger();
-
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
 

@@ -36,8 +36,6 @@ void query_handler(z_query_t query, const void *context) {
 }
 
 int main(int argc, char **argv) {
-    z_init_logger();
-
     if (argc > 1) {
         expr = argv[1];
     }
