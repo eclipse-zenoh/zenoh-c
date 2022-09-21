@@ -26,8 +26,6 @@ use crate::{
 
 /// An owned array of owned, zenoh allocated, NULL terminated strings.
 ///
-/// Note that `val`
-///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
@@ -62,6 +60,22 @@ pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
     !strs.val.is_null()
 }
 
+/// An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
+#[repr(C)]
+pub struct z_str_array_t {
+    pub val: *const *const c_char,
+    pub len: size_t,
+}
+
+/// Returns ``true`` if `strs` is valid.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
+    z_str_array_t {
+        val: strs.val as *const _,
+        len: strs.len,
+    }
+}
 /// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
 ///
 /// Members:
@@ -96,7 +110,7 @@ pub struct z_owned_hello_t {
 pub struct z_hello_t {
     pub whatami: c_uint,
     pub pid: z_id_t,
-    pub locators: *const z_owned_str_array_t,
+    pub locators: z_str_array_t,
 }
 
 impl From<Hello> for z_owned_hello_t {
@@ -145,7 +159,7 @@ pub unsafe extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
     z_hello_t {
         whatami: hello._whatami,
         pid: hello._pid,
-        locators: &hello._locators,
+        locators: z_str_array_loan(&hello._locators),
     }
 }
 

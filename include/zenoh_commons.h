@@ -142,8 +142,6 @@ typedef struct z_id_t {
 /**
  * An owned array of owned, zenoh allocated, NULL terminated strings.
  *
- * Note that `val`
- *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
@@ -485,6 +483,13 @@ typedef struct z_get_options_t {
   struct z_query_consolidation_t consolidation;
 } z_get_options_t;
 /**
+ * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
+ */
+typedef struct z_str_array_t {
+  const char *const *val;
+  size_t len;
+} z_str_array_t;
+/**
  * A reference-type hello message returned by a zenoh entity to a scout message sent with `z_scout`.
  *
  * Members:
@@ -501,7 +506,7 @@ typedef struct z_get_options_t {
 typedef struct z_hello_t {
   unsigned int whatami;
   struct z_id_t pid;
-  const struct z_owned_str_array_t *locators;
+  struct z_str_array_t locators;
 } z_hello_t;
 /**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
@@ -1329,6 +1334,10 @@ bool z_str_array_check(const struct z_owned_str_array_t *strs);
  * Frees `strs` and invalidates it for double-drop safety.
  */
 void z_str_array_drop(struct z_owned_str_array_t *strs);
+/**
+ * Returns ``true`` if `strs` is valid.
+ */
+struct z_str_array_t z_str_array_loan(const struct z_owned_str_array_t *strs);
 /**
  * Returns ``true`` if `sub` is valid.
  */
