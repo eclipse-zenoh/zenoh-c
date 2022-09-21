@@ -970,10 +970,6 @@ void z_info_routers_zid(struct z_session_t session, struct z_owned_closure_zid_t
  */
 struct z_id_t z_info_zid(struct z_session_t session);
 /**
- * Initialises the zenoh runtime logger
- */
-void z_init_logger(void);
-/**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
  */
@@ -1355,6 +1351,13 @@ void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
  * Returns ``true`` if insertion was succesful, `false` otherwise.
  */
 bool zc_config_insert_json(struct z_config_t config, const char *key, const char *value);
+/**
+ * Initialises the zenoh runtime logger.
+ *
+ * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
+ * this will be performed automatically by `z_open` and `z_scout`.
+ */
+void zc_init_logger(void);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
