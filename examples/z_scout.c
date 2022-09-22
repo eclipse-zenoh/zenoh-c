@@ -50,7 +50,7 @@ void fprintwhatami(FILE *stream, unsigned int whatami) {
     }
 }
 
-void fprintlocators(FILE *stream, const z_owned_str_array_t *locs) {
+void fprintlocators(FILE *stream, const z_str_array_t *locs) {
     fprintf(stream, "[");
     for (unsigned int i = 0; i < locs->len; i++) {
         fprintf(stream, "\"");
@@ -63,7 +63,7 @@ void fprintlocators(FILE *stream, const z_owned_str_array_t *locs) {
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, const z_owned_hello_t *hello) {
+void fprinthello(FILE *stream, const z_hello_t *hello) {
     fprintf(stream, "Hello { pid: ");
     fprintpid(stream, hello->pid);
     fprintf(stream, ", whatami: ");
@@ -74,7 +74,8 @@ void fprinthello(FILE *stream, const z_owned_hello_t *hello) {
 }
 
 void callback(z_owned_hello_t *hello, const void *context) {
-    fprinthello(stdout, hello);
+    z_hello_t lhello = z_loan(*hello);
+    fprinthello(stdout, &lhello);
     fprintf(stdout, "\n");
     (*(int *)context)++;
 }
