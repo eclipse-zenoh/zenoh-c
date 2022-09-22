@@ -41,7 +41,7 @@ fn rename_enums() {
         // Replace _t_Tag from union variant name
         let new = new.replace("_t_Tag", "_tag_t");
 
-        // OVerwrite content
+        // Overwrite content
         let mut file = std::fs::File::options()
             .read(false)
             .create(false)
@@ -49,8 +49,9 @@ fn rename_enums() {
             .truncate(true)
             .open(&path)
             .unwrap();
+        file.lock_exclusive().unwrap();
         file.write_all(new.as_bytes()).unwrap();
-        let _ = file.unlock();
+        file.unlock().unwrap();
     }
 }
 
