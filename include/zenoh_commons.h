@@ -653,22 +653,6 @@ struct z_owned_config_t z_config_default(void);
  */
 void z_config_drop(struct z_owned_config_t *config);
 /**
- * Creates an empty, zenoh-allocated, configuration.
- */
-struct z_owned_config_t z_config_empty(void);
-/**
- * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
- */
-struct z_owned_config_t z_config_from_file(const char *path);
-/**
- * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
- */
-struct z_owned_config_t z_config_from_str(const char *s);
-/**
- * Gets the property with the given integer key from the configuration.
- */
-const char *z_config_get(struct z_config_t config, const char *key);
-/**
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
 struct z_config_t z_config_loan(const struct z_owned_config_t *s);
@@ -689,10 +673,6 @@ struct z_owned_config_t z_config_new(void);
  * Constructs a default, zenoh-allocated, peer mode configuration.
  */
 struct z_owned_config_t z_config_peer(void);
-/**
- * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
- */
-char *z_config_to_string(struct z_config_t config);
 /**
  * Declare a key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
  *
@@ -1225,35 +1205,11 @@ void z_reply_drop(struct z_owned_reply_t *reply_data);
  */
 struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
 /**
- * Creates a new blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
- * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
- * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
- */
-struct z_owned_reply_channel_t z_reply_fifo_new(uintptr_t bound);
-/**
  * Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
  *
  * If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
  */
 bool z_reply_is_ok(const struct z_owned_reply_t *reply);
-/**
- * Creates a new non-blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
- * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
- * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
- */
-struct z_owned_reply_channel_t z_reply_non_blocking_fifo_new(uintptr_t bound);
 /**
  * Returns an invalidated :c:type:`z_owned_reply_t`.
  *
@@ -1346,11 +1302,30 @@ void z_undeclare_queryable(struct z_owned_queryable_t *qable);
  */
 void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
 /**
+ * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+ */
+struct z_owned_config_t zc_config_from_file(const char *path);
+/**
+ * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+ *
+ * Passing a null-ptr will result in a gravestone value (`z_check(x) == false`).
+ */
+struct z_owned_config_t zc_config_from_str(const char *s);
+/**
+ * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
+ */
+char *zc_config_get(struct z_config_t config,
+                    const char *key);
+/**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
- * Returns ``true`` if insertion was succesful, `false` otherwise.
+ * Returns 0 if successful, a negative value otherwise.
  */
-bool zc_config_insert_json(struct z_config_t config, const char *key, const char *value);
+int8_t zc_config_insert_json(struct z_config_t config, const char *key, const char *value);
+/**
+ * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+ */
+char *zc_config_to_string(struct z_config_t config);
 /**
  * Initialises the zenoh runtime logger.
  *
@@ -1375,3 +1350,27 @@ struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, uintptr_t len);
  */
 struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
                                                    uintptr_t len);
+/**
+ * Creates a new blocking fifo channel, returned as a pair of closures.
+ *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ */
+struct z_owned_reply_channel_t zc_reply_fifo_new(uintptr_t bound);
+/**
+ * Creates a new non-blocking fifo channel, returned as a pair of closures.
+ *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ */
+struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(uintptr_t bound);
