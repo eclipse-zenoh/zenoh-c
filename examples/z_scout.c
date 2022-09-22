@@ -10,63 +10,62 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//
+
 #include <stdio.h>
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#else
+#include <unistd.h>
+#endif
+
 #include "zenoh.h"
 
-void fprintpid(FILE *stream, z_bytes_t pid)
-{
-    if (pid.start == NULL)
-    {
-        fprintf(stream, "None");
+void fprintpid(FILE *stream, z_id_t pid) {
+    int len = 0;
+    for (int i = 0; i < 16; i++) {
+        if (pid.id[i]) {
+            len = i + 1;
+        }
     }
-    else
-    {
+    if (!len) {
+        fprintf(stream, "None");
+    } else {
         fprintf(stream, "Some(");
-        for (unsigned int i = 0; i < pid.len; i++)
-        {
-            fprintf(stream, "%02X", (int)pid.start[i]);
+        for (unsigned int i = 0; i < len; i++) {
+            fprintf(stream, "%02X", (int)pid.id[i]);
         }
         fprintf(stream, ")");
     }
 }
 
-void fprintwhatami(FILE *stream, unsigned int whatami)
-{
-    if (whatami == Z_ROUTER)
-    {
+void fprintwhatami(FILE *stream, unsigned int whatami) {
+    if (whatami == Z_ROUTER) {
         fprintf(stream, "\"Router\"");
-    }
-    else if (whatami == Z_PEER)
-    {
+    } else if (whatami == Z_PEER) {
         fprintf(stream, "\"Peer\"");
-    }
-    else
-    {
+    } else {
         fprintf(stream, "\"Other\"");
     }
 }
 
-void fprintlocators(FILE *stream, const z_owned_str_array_t *locs)
-{
+void fprintlocators(FILE *stream, const z_str_array_t *locs) {
     fprintf(stream, "[");
-    for (unsigned int i = 0; i < locs->len; i++)
-    {
+    for (unsigned int i = 0; i < locs->len; i++) {
         fprintf(stream, "\"");
         fprintf(stream, "%s", locs->val[i]);
         fprintf(stream, "\"");
-        if (i < locs->len - 1)
-        {
+        if (i < locs->len - 1) {
             fprintf(stream, ", ");
         }
     }
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, const z_owned_hello_t *hello)
-{
+void fprinthello(FILE *stream, const z_hello_t *hello) {
     fprintf(stream, "Hello { pid: ");
-    fprintpid(stream, z_loan(hello->pid));
+    fprintpid(stream, hello->pid);
     fprintf(stream, ", whatami: ");
     fprintwhatami(stream, hello->whatami);
     fprintf(stream, ", locators: ");
@@ -74,26 +73,29 @@ void fprinthello(FILE *stream, const z_owned_hello_t *hello)
     fprintf(stream, " }");
 }
 
-int main(int argc, char **argv)
-{
-    z_init_logger();
+void callback(z_owned_hello_t *hello, const void *context) {
+    z_hello_t lhello = z_loan(*hello);
+    fprinthello(stdout, &lhello);
+    fprintf(stdout, "\n");
+    (*(int *)context)++;
+}
 
-    z_owned_config_t config = z_config_default();
-
-    printf("Scouting...\n");
-    z_owned_hello_array_t hellos = z_scout(Z_ROUTER | Z_PEER, z_move(config), 1000);
-    if (hellos.len > 0)
-    {
-        for (unsigned int i = 0; i < hellos.len; ++i)
-        {
-            fprinthello(stdout, &hellos.val[i]);
-            fprintf(stdout, "\n");
-        }
-    }
-    else
-    {
+void drop(void *context) {
+    printf("Dropping scout\n");
+    int count = *(int *)context;
+    free(context);
+    if (!count) {
         printf("Did not find any zenoh process.\n");
     }
-    z_hello_array_free(z_move(hellos));
+}
+
+int main(int argc, char **argv) {
+    int *context = malloc(sizeof(int));
+    *context = 0;
+    z_owned_scouting_config_t config = z_scouting_config_default();
+    z_owned_closure_hello_t closure = z_closure(callback, drop, context);
+    printf("Scouting...\n");
+    z_scout(z_move(config), z_move(closure));
+    sleep(1);
     return 0;
 }

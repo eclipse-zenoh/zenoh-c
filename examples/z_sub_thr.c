@@ -13,77 +13,89 @@
 //
 #include <stdio.h>
 #include <time.h>
+
 #include "zenoh.h"
 
-#define N 100000
+#define N 1000000
 
-volatile unsigned long long int count = 0;
-volatile clock_t start;
-volatile clock_t stop;
+typedef struct {
+    volatile unsigned long count;
+    volatile unsigned long finished_rounds;
+    volatile clock_t start;
+    volatile clock_t stop;
+    volatile clock_t first_start;
+} z_stats_t;
 
-void print_stats(volatile clock_t *start, volatile clock_t *stop)
-{
-    clock_t elapsed = stop - start;
-    double thpt = N * (double)CLOCKS_PER_SEC / (double)(elapsed);
-    printf("%f msgs/sec\n", thpt);
+z_stats_t *z_stats_make() {
+    z_stats_t *stats = malloc(sizeof(z_stats_t));
+    stats->count = 0;
+    stats->finished_rounds = 0;
+    stats->first_start = 0;
+    return stats;
 }
 
-void data_handler(const z_sample_t *sample, const void *arg)
-{
-    if (count == 0)
-    {
-        start = clock();
-        count++;
-    }
-    else if (count < N)
-    {
-        count++;
-    }
-    else
-    {
-        stop = clock();
-        print_stats(&start, &stop);
-        count = 0;
+void on_sample(const z_sample_t *sample, const void *context) {
+    z_stats_t *stats = (z_stats_t *)context;
+    if (stats->count == 0) {
+        stats->start = clock();
+        if (!stats->first_start) {
+            stats->first_start = stats->start;
+        }
+        stats->count++;
+    } else if (stats->count < N) {
+        stats->count++;
+    } else {
+        stats->stop = clock();
+        stats->finished_rounds++;
+        printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stats->stop - stats->start));
+        stats->count = 0;
     }
 }
+void drop_stats(void *context) {
+    const clock_t end = clock();
+    const z_stats_t *stats = (z_stats_t *)context;
+    const double elapsed = (double)(end - stats->first_start) / (double)CLOCKS_PER_SEC;
+    const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
+    printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
+           elapsed, (double)sent_messages / elapsed);
+    free(context);
+}
 
-int main(int argc, char **argv)
-{
-    z_init_logger();
-
+int main(int argc, char **argv) {
     z_owned_config_t config = z_config_default();
-    if (argc > 1)
-    {
-        if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]))
-        {
-            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+    if (argc > 1) {
+        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                "JSON-serialized list of strings\n",
+                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
     }
 
     z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s))
-    {
+    if (!z_check(s)) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    z_keyexpr_t rid = z_declare_expr(z_loan(s), z_expr("/test/thr"));
-    z_owned_subscriber_t sub = z_subscribe(z_loan(s), rid, z_subinfo_default(), data_handler, NULL);
-    if (!z_check(sub))
-    {
+    z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
+
+    z_stats_t *context = z_stats_make();
+    z_owned_closure_sample_t callback = z_closure(on_sample, drop_stats, context);
+    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), z_move(callback), NULL);
+    if (!z_check(sub)) {
         printf("Unable to create subscriber.\n");
         exit(-1);
     }
 
     char c = 0;
-    while (c != 'q')
-    {
+    while (c != 'q') {
         c = fgetc(stdin);
     }
 
-    z_subscriber_close(z_move(sub));
-    z_undeclare_expr(z_loan(s), rid);
+    z_undeclare_subscriber(z_move(sub));
+    z_undeclare_keyexpr(z_loan(s), z_move(ke));
     z_close(z_move(s));
     return 0;
 }

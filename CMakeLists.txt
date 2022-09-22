@@ -1,17 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
 project(
-	zenohc 
+	zenohc
 	VERSION 0.6.0.0
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
 )
 set(CARGO_PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-if (NOT PROJECT_VERSION_TWEAK)
+
+if(NOT PROJECT_VERSION_TWEAK)
 	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-dev")
 elseif(PROJECT_VERSION_TWEAK LESS 255)
 	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-beta.${PROJECT_VERSION_TWEAK}")
 endif()
+
 message(STATUS "CARGO_PROJECT_VERSION: ${CARGO_PROJECT_VERSION}")
 configure_file("${CMAKE_SOURCE_DIR}/Cargo.toml.in" "${CMAKE_SOURCE_DIR}/Cargo.toml" @ONLY)
 
@@ -19,13 +21,15 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(default_build_type "RelWithDebInfo")
 	message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
 	set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
-		STRING "Choose the type of build." FORCE)	
+		STRING "Choose the type of build." FORCE)
+
 	# Set the possible values of build type for cmake-gui
 	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
 		"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 set(CARGO_FLAGS "")
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -41,10 +45,15 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 else()
 	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 endif()
+
 message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+
+if(NOT DISABLE_LOGGER_AUTOINIT)
+	set(CARGO_FLAGS ${CARGO_FLAGS} "--features=logger-autoinit")
+endif()
+
 set(RUSTFLAGS $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}")
-
 
 if(APPLE)
 	set(libzenohc "${CMAKE_BINARY_DIR}/libzenohc.dylib")
@@ -71,6 +80,7 @@ target_include_directories(zenohc INTERFACE "${CMAKE_SOURCE_DIR}/include")
 if(APPLE OR UNIX OR WIN32)
 	file(GLOB files "${CMAKE_SOURCE_DIR}/examples/*.c")
 	add_custom_target(examples)
+
 	foreach(file ${files})
 		get_filename_component(target ${file} NAME_WE)
 		add_executable(${target} EXCLUDE_FROM_ALL ${file})
@@ -80,6 +90,7 @@ if(APPLE OR UNIX OR WIN32)
 		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
 		target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
 		target_link_libraries(${target} PUBLIC ${libzenohc_static})
+
 		if(APPLE)
 			find_library(FFoundation Foundation)
 			find_library(FSecurity Security)
@@ -94,12 +105,12 @@ else()
 	message(WARNING "You platform doesn't seem to support building the examples.")
 endif()
 
-
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohc")
 install(FILES ${libzenohc} CONFIGURATIONS Release RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" CONFIGURATIONS Release RelWithDebInfo DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 configure_file("${CMAKE_SOURCE_DIR}/zenohc.pc.in" "${CMAKE_SOURCE_DIR}/zenohc.pc" @ONLY)
+
 if(APPLE OR UNIX)
 	install(FILES "${CMAKE_SOURCE_DIR}/zenohc.pc" CONFIGURATIONS Release RelWithDebInfo DESTINATION "/usr/lib/pkgconfig")
 endif()

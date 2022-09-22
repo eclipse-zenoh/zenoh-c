@@ -27,32 +27,32 @@ license = " EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
 description = "The zenoh C client API"
 readme = "README.md"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+logger-autoinit = []
 
 [badges]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh" }
-zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh" }
-async-std = "=1.11.0"
-futures = "0.3.12"
-async-trait = "0.1.42"
-spin = "0.9.2"
-rand = "0.8.3"
-libc = "0.2.85"
-log = "0.4"
-json5 = "0.4"
-env_logger = "0.9.0"
+async-std = "=1.12.0"
+async-trait = "0.1.57"
+env_logger = "0.9.1"
+futures = "0.3.24"
+json5 = "0.4.1"
+libc = "0.2.133"
+log = "0.4.17"
+rand = "0.8.5"
+spin = "0.9.4"
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
+zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
 
 [build-dependencies]
-cbindgen = "0.20.0"
-serde_yaml = "0.8"
-fs2 = "0.4"
+cbindgen = "0.24.3"
+fs2 = "0.4.3"
+serde_yaml = "0.9.13"
 
 [lib]
 name = "zenohc"
@@ -62,19 +62,18 @@ doctest = false
 [package.metadata.deb.variants.libzenohc]
 name = "libzenohc"
 maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology."
+copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
 
 [package.metadata.deb.variants.libzenohc-dev]
 name = "libzenohc-dev"
 maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology."
+copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
 depends = "libzenohc (=0.6.0~dev)"
 assets = [["include/*", "usr/include/", "755"]]
-
 
 [profile.dev]
 debug = true
