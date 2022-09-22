@@ -50,7 +50,7 @@ fn rename_enums() {
             .open(&path)
             .unwrap();
         file.write_all(new.as_bytes()).unwrap();
-        file.unlock().unwrap();
+        let _ = file.unlock();
     }
 }
 
