@@ -87,12 +87,12 @@ pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
 }
 impl AsRef<Option<Box<Config>>> for z_config_t {
     fn as_ref(&self) -> &Option<Box<Config>> {
-        unsafe { (&*self.0).as_ref() }
+        unsafe { (*self.0).as_ref() }
     }
 }
 impl AsMut<Option<Box<Config>>> for z_config_t {
     fn as_mut(&mut self) -> &mut Option<Box<Config>> {
-        unsafe { (&mut *(self.0 as *mut z_owned_config_t)).as_mut() }
+        unsafe { (*(self.0 as *mut z_owned_config_t)).as_mut() }
     }
 }
 impl AsRef<Option<Box<Config>>> for z_owned_config_t {

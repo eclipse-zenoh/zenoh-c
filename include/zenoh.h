@@ -3,8 +3,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "zenoh_commons.h"
 #include "zenoh_concrete.h"
+//
+#include "zenoh_commons.h"
 #include "zenoh_macros.h"
 #define ZENOH_C "0.6.0"
 #define ZENOH_C_MAJOR 0

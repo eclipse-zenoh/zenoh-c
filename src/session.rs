@@ -43,7 +43,7 @@ impl AsMut<Option<Session>> for z_owned_session_t {
 
 impl AsRef<Option<Session>> for z_session_t {
     fn as_ref(&self) -> &Option<Session> {
-        unsafe { (&*self.0).as_ref() }
+        unsafe { (*self.0).as_ref() }
     }
 }
 

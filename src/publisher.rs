@@ -169,7 +169,7 @@ impl<'a> AsMut<Option<Publisher<'a>>> for z_owned_publisher_t {
 
 impl<'a> AsRef<Option<Publisher<'a>>> for z_publisher_t {
     fn as_ref(&self) -> &'a Option<Publisher<'a>> {
-        unsafe { (&*self.0).as_ref() }
+        unsafe { (*self.0).as_ref() }
     }
 }
 
