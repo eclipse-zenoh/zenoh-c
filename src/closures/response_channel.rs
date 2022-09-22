@@ -41,7 +41,7 @@ pub extern "C" fn z_reply_channel_drop(channel: &mut z_owned_reply_channel_t) {
 /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
-pub extern "C" fn z_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
+pub extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
     if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
         z_owned_reply_channel_t {
@@ -91,7 +91,7 @@ pub extern "C" fn z_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
 /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
-pub extern "C" fn z_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_channel_t {
+pub extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_channel_t {
     if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
         z_owned_reply_channel_t {

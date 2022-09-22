@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     }
     z_owned_config_t config = z_config_default();
     if (argc > 2) {
-        if (!zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2])) {
+        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     printf("Sending Query '%s'...\n", expr);
     z_get_options_t opts = z_get_options_default();
     opts.target = Z_QUERY_TARGET_ALL;
-    z_owned_reply_channel_t channel = z_reply_fifo_new(16);
+    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
     z_get(z_loan(s), keyexpr, "", z_move(channel.send),
           &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply = z_reply_null();

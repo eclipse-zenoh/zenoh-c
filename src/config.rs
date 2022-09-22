@@ -125,10 +125,10 @@ pub(crate) extern "C" fn _z_config_null() -> z_owned_config_t {
     unsafe { z_owned_config_t(std::mem::transmute(None::<Box<Config>>)) }
 }
 
-/// Gets the property with the given integer key from the configuration.
+/// Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_get(config: z_config_t, key: *const c_char) -> *const c_char {
+pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -> *mut c_char {
     let key = match CStr::from_ptr(key).to_str() {
         Ok(s) => s,
         Err(_) => return std::ptr::null_mut(),
@@ -143,22 +143,25 @@ pub unsafe extern "C" fn z_config_get(config: z_config_t, key: *const c_char) ->
 
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
 ///
-/// Returns ``true`` if insertion was succesful, `false` otherwise.
+/// Returns 0 if successful, a negative value otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 pub unsafe extern "C" fn zc_config_insert_json(
     mut config: z_config_t,
     key: *const c_char,
     value: *const c_char,
-) -> bool {
+) -> i8 {
     let key = CStr::from_ptr(key);
     let value = CStr::from_ptr(value);
-    config
+    match config
         .as_mut()
         .as_mut()
         .expect("uninitialized config")
         .insert_json5(&key.to_string_lossy(), &value.to_string_lossy())
-        .is_ok()
+    {
+        Ok(_) => 0,
+        Err(_) => i8::MIN,
+    }
 }
 
 /// Frees `config`, invalidating it for double-drop safety.
@@ -174,13 +177,6 @@ pub unsafe extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
     config.as_ref().is_some()
 }
 
-/// Creates an empty, zenoh-allocated, configuration.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_config_empty() -> z_owned_config_t {
-    z_config_new()
-}
-
 /// Creates a default, zenoh-allocated, configuration.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -189,11 +185,13 @@ pub extern "C" fn z_config_default() -> z_owned_config_t {
 }
 
 /// Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+///
+/// Passing a null-ptr will result in a gravestone value (`z_check(x) == false`).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t {
+pub unsafe extern "C" fn zc_config_from_str(s: *const c_char) -> z_owned_config_t {
     if s.is_null() {
-        z_config_empty()
+        _z_config_null()
     } else {
         let conf_str = CStr::from_ptr(s);
         let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();
@@ -204,7 +202,7 @@ pub unsafe extern "C" fn z_config_from_str(s: *const c_char) -> z_owned_config_t
 /// Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_config_to_string(config: z_config_t) -> *mut c_char {
+pub extern "C" fn zc_config_to_string(config: z_config_t) -> *mut c_char {
     let config: &Config = match config.as_ref() {
         Some(c) => c,
         None => return std::ptr::null_mut(),
@@ -218,7 +216,7 @@ pub extern "C" fn z_config_to_string(config: z_config_t) -> *mut c_char {
 /// Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_config_from_file(path: *const c_char) -> z_owned_config_t {
+pub unsafe extern "C" fn zc_config_from_file(path: *const c_char) -> z_owned_config_t {
     let path_str = CStr::from_ptr(path);
     z_owned_config_t(std::mem::transmute(match path_str.to_str() {
         Ok(path) => match zenoh::config::Config::from_file(path) {

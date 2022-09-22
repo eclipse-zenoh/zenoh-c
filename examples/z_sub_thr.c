@@ -64,7 +64,7 @@ void drop_stats(void *context) {
 int main(int argc, char **argv) {
     z_owned_config_t config = z_config_default();
     if (argc > 1) {
-        if (!zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1])) {
+        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
