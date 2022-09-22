@@ -27,7 +27,6 @@ license = " EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
 description = "The zenoh C client API"
 readme = "README.md"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
@@ -37,23 +36,23 @@ logger-autoinit = []
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "api-changes" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "api-changes" }
-zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "api-changes" }
 async-std = "=1.12.0"
-futures = "0.3.24"
 async-trait = "0.1.57"
-spin = "0.9.4"
-rand = "0.8.5"
+env_logger = "0.9.1"
+futures = "0.3.24"
+json5 = "0.4.1"
 libc = "0.2.133"
 log = "0.4.17"
-json5 = "0.4.1"
-env_logger = "0.9.1"
+rand = "0.8.5"
+spin = "0.9.4"
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
+zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
 
 [build-dependencies]
 cbindgen = "0.24.3"
-serde_yaml = "0.9.13"
 fs2 = "0.4.3"
+serde_yaml = "0.9.13"
 
 [lib]
 name = "zenohc"
@@ -75,7 +74,6 @@ section = "net"
 license-file = ["LICENSE", "0"]
 depends = "libzenohc (=0.6.0~dev)"
 assets = [["include/*", "usr/include/", "755"]]
-
 
 [profile.dev]
 debug = true
