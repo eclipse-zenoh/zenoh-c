@@ -41,12 +41,14 @@ pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
 ///
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
+///
+/// Retuns 0 on success
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_peers_zid(
     session: z_session_t,
     callback: &mut z_owned_closure_zid_t,
-) {
+) -> i8 {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     match session.as_ref() {
@@ -54,8 +56,9 @@ pub unsafe extern "C" fn z_info_peers_zid(
             for id in s.info().peers_zid().res_sync() {
                 z_closure_zid_call(&closure, &std::mem::transmute(id));
             }
+            0
         }
-        None => (),
+        None => i8::MIN,
     }
 }
 
@@ -63,12 +66,14 @@ pub unsafe extern "C" fn z_info_peers_zid(
 ///
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
+///
+/// Retuns 0 on success
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_routers_zid(
     session: z_session_t,
     callback: &mut z_owned_closure_zid_t,
-) {
+) -> i8 {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     match session.as_ref() {
@@ -76,7 +81,8 @@ pub unsafe extern "C" fn z_info_routers_zid(
             for id in s.info().routers_zid().res_sync() {
                 z_closure_zid_call(&closure, &std::mem::transmute(id));
             }
+            0
         }
-        None => (),
+        None => i8::MIN,
     }
 }

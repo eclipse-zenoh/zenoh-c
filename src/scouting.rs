@@ -202,14 +202,13 @@ pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t)
 ///     config: A set of properties to configure the scouting.
 ///     timeout: The time (in milliseconds) that should be spent scouting.
 ///
-/// Returns:
-///     An array of `z_hello_t` messages.
+/// Returns 0 if successful
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
-) {
+) -> i8 {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
@@ -233,4 +232,5 @@ pub unsafe extern "C" fn z_scout(
         async_std::task::sleep(std::time::Duration::from_millis(timeout)).await;
         std::mem::drop(scout);
     });
+    0
 }
