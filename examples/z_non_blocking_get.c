@@ -47,11 +47,15 @@ int main(int argc, char **argv) {
     printf("Sending Query '%s'...\n", expr);
     z_get_options_t opts = z_get_options_default();
     opts.target = Z_QUERY_TARGET_ALL;
-    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
+    z_owned_reply_channel_t channel = zc_reply_non_blocking_fifo_new(16);
     z_get(z_loan(s), keyexpr, "", z_move(channel.send),
           &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply = z_reply_null();
-    for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
+    for (bool call_success = z_call(channel.recv, &reply); !call_success || z_check(reply);
+         call_success = z_call(channel.recv, &reply)) {
+        if (!call_success) {
+            continue;
+        }
         if (z_reply_is_ok(&reply)) {
             z_sample_t sample = z_reply_ok(&reply);
             char *keystr = z_keyexpr_to_string(sample.keyexpr);

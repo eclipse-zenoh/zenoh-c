@@ -1,3 +1,5 @@
+use fs2::FileExt;
+use std::io::{Read, Write};
 use std::{borrow::Cow, collections::HashMap, io::BufWriter, path::Path};
 
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
@@ -7,16 +9,53 @@ fn main() {
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
         .expect("Unable to generate bindings")
         .write_to_file(GENERATION_PATH);
+
     split_bindings();
+    rename_enums();
+
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=splitguide.yaml");
     println!("cargo:rerun-if-changed=cbindgen.toml")
 }
 
+fn rename_enums() {
+    let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
+    for (name, _) in split_guide.rules.iter() {
+        let path = format!("include/{}", name);
+
+        // Read content
+        let mut file = std::fs::File::options()
+            .read(true)
+            .create(false)
+            .write(false)
+            .open(&path)
+            .unwrap();
+        file.lock_exclusive().unwrap();
+        let mut buf = String::new();
+        file.read_to_string(&mut buf).unwrap();
+        file.unlock().unwrap();
+
+        // Remove _T_ from enum variant name
+        let new = buf.replace("_T_", "_");
+        // Replace _t_Tag from union variant name
+        let new = new.replace("_t_Tag", "_tag_t");
+
+        // Overwrite content
+        let mut file = std::fs::File::options()
+            .read(false)
+            .create(false)
+            .write(true)
+            .truncate(true)
+            .open(&path)
+            .unwrap();
+        file.lock_exclusive().unwrap();
+        file.write_all(new.as_bytes()).unwrap();
+        file.unlock().unwrap();
+    }
+}
+
 fn split_bindings() {
-    use fs2::FileExt;
-    use std::io::Write;
     let mut errors = Vec::new();
     let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
     let bindings = std::fs::read_to_string(GENERATION_PATH).unwrap();
@@ -24,7 +63,7 @@ fn split_bindings() {
         .rules
         .iter()
         .map(|(name, _)| {
-            let file = std::fs::OpenOptions::new()
+            let file = std::fs::File::options()
                 .write(true)
                 .append(false)
                 .create(true)
@@ -201,6 +240,7 @@ impl<'a> Token<'a> {
             span: span.into(),
         }
     }
+
     fn next(s: &'a str) -> Option<Self> {
         Self::whitespace(s)
             .or_else(|| Self::comment(s))
@@ -212,6 +252,7 @@ impl<'a> Token<'a> {
             .or_else(|| Self::r#const(s))
             .or_else(|| Self::function(s))
     }
+
     fn typedef(s: &'a str) -> Option<Self> {
         if s.starts_with("typedef") {
             let mut len = 0;
@@ -239,6 +280,7 @@ impl<'a> Token<'a> {
             None
         }
     }
+
     fn function(s: &'a str) -> Option<Self> {
         s.until_incl(";").and_then(|span| {
             span.contains('(').then(|| {
@@ -255,6 +297,7 @@ impl<'a> Token<'a> {
             })
         })
     }
+
     fn r#const(s: &'a str) -> Option<Self> {
         s.until_incl(";").and_then(|span| {
             span.contains("const").then(|| {
@@ -269,6 +312,7 @@ impl<'a> Token<'a> {
             })
         })
     }
+
     fn whitespace(s: &'a str) -> Option<Self> {
         let mut len = 0;
         for c in s.chars() {
@@ -284,6 +328,7 @@ impl<'a> Token<'a> {
             None
         }
     }
+
     fn comment(s: &'a str) -> Option<Self> {
         if s.starts_with("/*") {
             Some(Token::new(
@@ -301,6 +346,7 @@ impl<'a> Token<'a> {
             None
         }
     }
+
     fn ifndef(s: &'a str) -> Option<Self> {
         let start = "#ifndef ";
         s.starts_with(start).then(|| {
@@ -308,6 +354,7 @@ impl<'a> Token<'a> {
             Token::new(TokenType::Ifndef, &span[start.len()..], span)
         })
     }
+
     fn define(s: &'a str) -> Option<Self> {
         let start = "#define ";
         s.starts_with(start).then(|| {
@@ -319,13 +366,16 @@ impl<'a> Token<'a> {
             )
         })
     }
+
     fn endif(s: &'a str) -> Option<Self> {
         s.starts_with("#endif")
             .then(|| Token::new(TokenType::Endif, "", "#endif"))
     }
+
     fn include(s: &'a str) -> Option<Self> {
         Self::_include(s, "#include \"", "\"").or_else(|| Self::_include(s, "#include <", ">"))
     }
+
     fn _include(s: &'a str, start: &str, end: &str) -> Option<Self> {
         if s.starts_with(start) {
             let span = s.until_incl(end).expect("detected unterminated #include");

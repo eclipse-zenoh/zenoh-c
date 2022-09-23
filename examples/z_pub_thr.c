@@ -13,51 +13,51 @@
 //
 #include <stdio.h>
 #include <string.h>
+
 #include "zenoh.h"
 
-int main(int argc, char **argv)
-{
-    z_init_logger();
-
-    if (argc < 2)
-    {
+int main(int argc, char **argv) {
+    if (argc < 2) {
         printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
         exit(-1);
     }
+
+    char *keyexpr = "test/thr";
     size_t len = atoi(argv[1]);
+    uint8_t *value = (uint8_t *)malloc(len);
+    memset(value, 1, len);
+
     z_owned_config_t config = z_config_default();
-    if (argc > 2)
-    {
-        if (!z_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]))
-        {
-            printf("Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a JSON-serialized list of strings\n", argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+    if (argc > 2) {
+        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                "JSON-serialized list of strings\n",
+                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
     }
 
-    z_owned_session_t os = z_open(z_move(config));
-    if (!z_check(os))
-    {
+    z_owned_session_t s = z_open(z_move(config));
+    if (!z_check(s)) {
         printf("Unable to open session!\n");
         exit(-1);
     }
-    z_session_t s = z_loan(os);
 
-    char *data = (char *)malloc(len);
-    memset(data, 1, len);
+    printf("Declaring publisher for '%s'...\n", keyexpr);
+    z_publisher_options_t options = z_publisher_options_default();
+    options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
 
-    z_keyexpr_t keyexpr = z_declare_expr(s, z_expr("/test/thr"));
-    if (!z_declare_publication(s, keyexpr))
-    {
-        printf("Unable to declare publication.\n");
+    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), &options);
+    if (!z_check(pub)) {
+        printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
 
-    while (1)
-    {
-        z_put(s, keyexpr, (const uint8_t *)data, len);
+    while (1) {
+        z_publisher_put(z_loan(pub), (const uint8_t *)value, len, NULL);
     }
-    z_undeclare_publication(s, keyexpr);
-    z_undeclare_expr(s, keyexpr);
-    z_close(z_move(os));
+
+    z_undeclare_publisher(z_move(pub));
+    z_close(z_move(s));
 }

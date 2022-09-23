@@ -107,7 +107,7 @@ derive_gte = false
 
 
 [enum]
-rename_variants = "None"
+rename_variants = "ScreamingSnakeCase"
 # must_use = "MUST_USE_ENUM"
 add_sentinel = false
 prefix_with_name = true
