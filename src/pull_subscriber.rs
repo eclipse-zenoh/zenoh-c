@@ -42,6 +42,9 @@ type PullSubscriber = Option<Box<zenoh::subscriber::PullSubscriber<'static, ()>>
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_owned_pull_subscriber_t([usize; 1]);
+#[repr(C)]
+#[allow(non_camel_case_types)]
+pub struct z_pull_subscriber_t<'a>(&'a z_owned_pull_subscriber_t);
 
 impl AsRef<PullSubscriber> for z_owned_pull_subscriber_t {
     fn as_ref(&self) -> &PullSubscriber {
@@ -194,12 +197,14 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
 /// Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) {
+pub unsafe extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
-            log::warn!("{}", e)
+            log::warn!("{}", e);
+            return i8::MIN;
         }
     }
+    0
 }
 
 /// Returns ``true`` if `sub` is valid.
@@ -209,6 +214,15 @@ pub unsafe extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t
     sub.as_ref().is_some()
 }
 
+/// Returns ``true`` if `sub` is valid.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_pull_subscriber_loan(
+    sub: &z_owned_pull_subscriber_t,
+) -> z_pull_subscriber_t {
+    z_pull_subscriber_t(sub)
+}
+
 /// Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
 /// by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
 ///
@@ -216,8 +230,8 @@ pub unsafe extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t
 ///     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_subscriber_pull(sub: &z_owned_pull_subscriber_t) -> i8 {
-    match sub.as_ref() {
+pub unsafe extern "C" fn z_subscriber_pull(sub: z_pull_subscriber_t) -> i8 {
+    match sub.0.as_ref() {
         Some(tx) => {
             if let Err(e) = tx.pull().res_sync() {
                 log::error!("{}", e);

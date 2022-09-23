@@ -18,7 +18,7 @@ use crate::z_id_t;
 #[repr(C)]
 pub struct z_owned_closure_zid_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(&z_id_t, *const c_void)>,
+    call: Option<extern "C" fn(&z_id_t, *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 
@@ -59,7 +59,7 @@ pub extern "C" fn z_closure_zid_drop(closure: &mut z_owned_closure_zid_t) {
 impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_id_t)>(response: &z_id_t, this: *const c_void) {
+        extern "C" fn call<F: Fn(&z_id_t)>(response: &z_id_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
             this(response)
         }

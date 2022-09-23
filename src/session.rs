@@ -100,6 +100,7 @@ pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 /// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) {
+pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
     session.as_mut().take().map(|s| s.close().res());
+    0
 }

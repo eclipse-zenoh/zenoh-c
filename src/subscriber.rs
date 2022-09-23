@@ -223,12 +223,14 @@ pub unsafe extern "C" fn z_declare_subscriber(
 /// Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) {
+pub unsafe extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
-            log::warn!("{}", e)
+            log::warn!("{}", e);
+            return i8::MIN;
         }
     }
+    0
 }
 
 /// Returns ``true`` if `sub` is valid.

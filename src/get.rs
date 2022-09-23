@@ -358,3 +358,34 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
 }
+
+/// Automatic query consolidation strategy selection.
+///
+/// A query consolidation strategy will automatically be selected depending the query selector.
+/// If the selector contains time range properties, no consolidation is performed.
+/// Otherwise the :c:func:`z_query_consolidation_latest` strategy is used.
+///
+/// Returns:
+///   Returns the constructed :c:type:`z_query_consolidation_t`.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
+    QueryConsolidation::AUTO.into()
+}
+
+/// Latest value consolidation.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
+    QueryConsolidation::from(ConsolidationMode::Latest).into()
+}
+
+/// Monotonic consolidation.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
+    QueryConsolidation::from(ConsolidationMode::Monotonic).into()
+}
+
+/// Disable consolidation.
+#[no_mangle]
+pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
+    QueryConsolidation::from(ConsolidationMode::None).into()
+}

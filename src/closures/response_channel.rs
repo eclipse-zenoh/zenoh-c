@@ -15,7 +15,7 @@ use std::sync::mpsc::TryRecvError;
 #[repr(C)]
 pub struct z_owned_reply_channel_closure_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(&mut z_owned_reply_t, *const c_void) -> bool>,
+    call: Option<extern "C" fn(&mut z_owned_reply_t, *mut c_void) -> bool>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 
@@ -194,7 +194,7 @@ impl<F: Fn(&mut z_owned_reply_t) -> bool> From<F> for z_owned_reply_channel_clos
         let this = Box::into_raw(Box::new(f)) as _;
         extern "C" fn call<F: Fn(&mut z_owned_reply_t) -> bool>(
             response: &mut z_owned_reply_t,
-            this: *const c_void,
+            this: *mut c_void,
         ) -> bool {
             let this = unsafe { &*(this as *const F) };
             this(response)

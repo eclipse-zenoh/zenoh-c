@@ -189,7 +189,7 @@ typedef struct z_owned_hello_t {
  */
 typedef struct z_owned_closure_hello_t {
   void *context;
-  void (*call)(struct z_owned_hello_t*, const void*);
+  void (*call)(struct z_owned_hello_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_hello_t;
 /**
@@ -210,7 +210,7 @@ typedef struct z_owned_closure_hello_t {
  */
 typedef struct z_owned_closure_query_t {
   void *context;
-  void (*call)(struct z_query_t, const void *context);
+  void (*call)(const struct z_query_t*, void *context);
   void (*drop)(void*);
 } z_owned_closure_query_t;
 /**
@@ -244,7 +244,7 @@ typedef struct z_owned_reply_t {
  */
 typedef struct z_owned_closure_reply_t {
   void *context;
-  void (*call)(struct z_owned_reply_t*, const void*);
+  void (*call)(struct z_owned_reply_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_reply_t;
 /**
@@ -317,7 +317,7 @@ typedef struct z_sample_t {
  */
 typedef struct z_owned_closure_sample_t {
   void *context;
-  void (*call)(const struct z_sample_t*, const void *context);
+  void (*call)(const struct z_sample_t*, void *context);
   void (*drop)(void*);
 } z_owned_closure_sample_t;
 /**
@@ -338,7 +338,7 @@ typedef struct z_owned_closure_sample_t {
  */
 typedef struct z_owned_closure_zid_t {
   void *context;
-  void (*call)(const struct z_id_t*, const void*);
+  void (*call)(const struct z_id_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_zid_t;
 /**
@@ -509,18 +509,18 @@ typedef struct z_hello_t {
   struct z_str_array_t locators;
 } z_hello_t;
 /**
+ * A loaned zenoh publisher.
+ */
+typedef struct z_publisher_t {
+  const struct z_owned_publisher_t *_0;
+} z_publisher_t;
+/**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
  * whenever issued via :c:func:`z_publisher_delete`.
  */
 typedef struct z_publisher_delete_options_t {
   uint8_t __dummy;
 } z_publisher_delete_options_t;
-/**
- * A loaned zenoh publisher.
- */
-typedef struct z_publisher_t {
-  const struct z_owned_publisher_t *_0;
-} z_publisher_t;
 /**
  * Options passed to the :c:func:`z_publisher_put` function.
  *
@@ -530,6 +530,9 @@ typedef struct z_publisher_t {
 typedef struct z_publisher_put_options_t {
   struct z_encoding_t encoding;
 } z_publisher_put_options_t;
+typedef struct z_pull_subscriber_t {
+  const struct z_owned_pull_subscriber_t *_0;
+} z_pull_subscriber_t;
 /**
  * Options passed to the :c:func:`z_put` function.
  *
@@ -568,7 +571,7 @@ typedef struct z_query_reply_options_t {
  */
 typedef struct z_owned_reply_channel_closure_t {
   void *context;
-  bool (*call)(struct z_owned_reply_t*, const void*);
+  bool (*call)(struct z_owned_reply_t*, void*);
   void (*drop)(void*);
 } z_owned_reply_channel_closure_t;
 /**
@@ -615,7 +618,7 @@ bool z_bytes_check(const struct z_bytes_t *b);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  */
-void z_close(struct z_owned_session_t *session);
+int8_t z_close(struct z_owned_session_t *session);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -628,7 +631,8 @@ void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
-void z_closure_query_call(const struct z_owned_closure_query_t *closure, struct z_query_t query);
+void z_closure_query_call(const struct z_owned_closure_query_t *closure,
+                          const struct z_query_t *query);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
@@ -1034,18 +1038,21 @@ struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
  */
 void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
 /**
- * Returns ``1`` if `left` and `right` define equal sets.
+ * Returns ``1`` if `left` and `right` define equal sets, ``0`` otherwise.
  */
-bool z_keyexpr_equals(struct z_keyexpr_t left, struct z_keyexpr_t right);
+int8_t z_keyexpr_equals(struct z_keyexpr_t left, struct z_keyexpr_t right);
 /**
- * Returns ``1`` if the set defined by `left` contains every key belonging to the set defined by `right`.
+ * Returns ``1`` if the set defined by `left` contains every key belonging to the set defined by `right`, ``0`` if they don't.
+ * Returns negative values in case of error (if one of the key expressions is in an invalid state).
  */
-bool z_keyexpr_includes(struct z_keyexpr_t left,
-                        struct z_keyexpr_t right);
+int8_t z_keyexpr_includes(struct z_keyexpr_t left,
+                          struct z_keyexpr_t right);
 /**
- * Returns ``1`` if `left` and `right` define sets that have at least one key in common.
+ * Returns ``1`` if `left` and `right` define sets that have at least one key in common, ``0`` if they don't.
+ * Returns negative values in case of error (if one of the key expressions is in an invalid state).
  */
-bool z_keyexpr_intersects(struct z_keyexpr_t left, struct z_keyexpr_t right);
+int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
+                            struct z_keyexpr_t right);
 /**
  * Returns ``0`` if the passed string is a valid (and canon) key expression.
  */
@@ -1099,7 +1106,7 @@ bool z_publisher_check(const struct z_owned_publisher_t *pbl);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int8_t z_publisher_delete(const struct z_owned_publisher_t *publisher,
+int8_t z_publisher_delete(struct z_publisher_t publisher,
                           const struct z_publisher_delete_options_t *_options);
 /**
  * Constructs the default values for the delete operation via a publisher entity.
@@ -1142,6 +1149,10 @@ struct z_publisher_put_options_t z_publisher_put_options_default(void);
  */
 bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
 /**
+ * Returns ``true`` if `sub` is valid.
+ */
+struct z_pull_subscriber_t z_pull_subscriber_loan(const struct z_owned_pull_subscriber_t *sub);
+/**
  * Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
  */
 struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
@@ -1169,17 +1180,40 @@ int z_put(struct z_session_t session,
  */
 struct z_put_options_t z_put_options_default(void);
 /**
+ * Automatic query consolidation strategy selection.
+ *
+ * A query consolidation strategy will automatically be selected depending the query selector.
+ * If the selector contains time range properties, no consolidation is performed.
+ * Otherwise the :c:func:`z_query_consolidation_latest` strategy is used.
+ *
+ * Returns:
+ *   Returns the constructed :c:type:`z_query_consolidation_t`.
+ */
+struct z_query_consolidation_t z_query_consolidation_auto(void);
+/**
  * Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
  */
 struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
+ * Latest value consolidation.
+ */
+struct z_query_consolidation_t z_query_consolidation_latest(void);
+/**
+ * Monotonic consolidation.
+ */
+struct z_query_consolidation_t z_query_consolidation_monotonic(void);
+/**
+ * Disable consolidation.
+ */
+struct z_query_consolidation_t z_query_consolidation_none(void);
+/**
  * Get a query's key by aliasing it.
  */
-struct z_keyexpr_t z_query_keyexpr(struct z_query_t query);
+struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
 /**
  * Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
  */
-struct z_bytes_t z_query_parameters(struct z_query_t query);
+struct z_bytes_t z_query_parameters(const struct z_query_t *query);
 /**
  * Send a reply to a query.
  *
@@ -1195,7 +1229,7 @@ struct z_bytes_t z_query_parameters(struct z_query_t query);
  *     len: The length of the value of this reply.
  *     options: The options of this reply.
  */
-void z_query_reply(struct z_query_t query,
+void z_query_reply(const struct z_query_t *query,
                    struct z_keyexpr_t key,
                    const uint8_t *payload,
                    uintptr_t len,
@@ -1212,6 +1246,10 @@ enum z_query_target_t z_query_target_default(void);
  * Returns ``true`` if `qable` is valid.
  */
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
+/**
+ * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ */
+struct z_queryable_options_t z_queryable_options_default(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -1308,7 +1346,7 @@ struct z_subscriber_options_t z_subscriber_options_default(void);
  * Parameters:
  *     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
  */
-int8_t z_subscriber_pull(const struct z_owned_pull_subscriber_t *sub);
+int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
  */
@@ -1316,26 +1354,26 @@ bool z_timestamp_check(struct z_timestamp_t ts);
 /**
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
  */
-void z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *keyexpr);
+int8_t z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *keyexpr);
 /**
  * Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
  */
-void z_undeclare_publisher(struct z_owned_publisher_t *publisher);
+int8_t z_undeclare_publisher(struct z_owned_publisher_t *publisher);
 /**
  * Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
  */
-void z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
+int8_t z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
 /**
  * Undeclares a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
  *
  * Parameters:
  *     qable: The :c:type:`z_owned_queryable_t` to undeclare.
  */
-void z_undeclare_queryable(struct z_owned_queryable_t *qable);
+int8_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
 /**
  * Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
  */
-void z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
+int8_t z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  */

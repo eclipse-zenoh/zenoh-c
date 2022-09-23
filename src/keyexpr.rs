@@ -403,47 +403,51 @@ pub unsafe extern "C" fn z_declare_keyexpr(
 pub unsafe extern "C" fn z_undeclare_keyexpr(
     session: z_session_t,
     keyexpr: &mut z_owned_keyexpr_t,
-) {
+) -> i8 {
     match session.as_ref() {
         Some(s) => match s
             .undeclare(keyexpr.as_ref().unwrap().borrowing_clone())
             .res()
         {
-            Ok(()) => {}
+            Ok(()) => 0,
             Err(e) => {
                 log::debug!("{}", e);
+                i8::MIN
             }
         },
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
+            i8::MIN
         }
     }
 }
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns ``1`` if `left` and `right` define equal sets.
-pub unsafe extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
-    *left == *right
+/// Returns ``1`` if `left` and `right` define equal sets, ``0`` otherwise.
+pub unsafe extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
+    (*left == *right) as i8
 }
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns ``1`` if `left` and `right` define sets that have at least one key in common.
-pub unsafe extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+/// Returns ``1`` if `left` and `right` define sets that have at least one key in common, ``0`` if they don't.
+/// Returns negative values in case of error (if one of the key expressions is in an invalid state).
+pub unsafe extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
-        (Some(l), Some(r)) => l.intersects(r),
-        _ => false,
+        (Some(l), Some(r)) => l.intersects(r) as i8,
+        _ => i8::MIN,
     }
 }
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns ``1`` if the set defined by `left` contains every key belonging to the set defined by `right`.
-pub unsafe extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+/// Returns ``1`` if the set defined by `left` contains every key belonging to the set defined by `right`, ``0`` if they don't.
+/// Returns negative values in case of error (if one of the key expressions is in an invalid state).
+pub unsafe extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
-        (Some(l), Some(r)) => l.includes(r),
-        _ => false,
+        (Some(l), Some(r)) => l.includes(r) as i8,
+        _ => i8::MIN,
     }
 }
 
