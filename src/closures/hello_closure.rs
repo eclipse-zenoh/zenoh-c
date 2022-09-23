@@ -18,7 +18,7 @@ use libc::c_void;
 #[repr(C)]
 pub struct z_owned_closure_hello_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(&mut z_owned_hello_t, *const c_void)>,
+    call: Option<extern "C" fn(&mut z_owned_hello_t, *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 
@@ -64,7 +64,7 @@ impl<F: Fn(&mut z_owned_hello_t)> From<F> for z_owned_closure_hello_t {
         let this = Box::into_raw(Box::new(f)) as _;
         extern "C" fn call<F: Fn(&mut z_owned_hello_t)>(
             response: &mut z_owned_hello_t,
-            this: *const c_void,
+            this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };
             this(response)

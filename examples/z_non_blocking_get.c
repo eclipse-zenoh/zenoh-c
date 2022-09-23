@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
             printf("Received an error\n");
         }
     }
-    z_drop(reply);
-    z_drop(channel);
+    z_drop(z_move(reply));
+    z_drop(z_move(channel));
     z_close(z_move(s));
     return 0;
 }

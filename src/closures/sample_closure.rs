@@ -17,7 +17,7 @@ use libc::c_void;
 #[repr(C)]
 pub struct z_owned_closure_sample_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(&z_sample_t, context: *const c_void)>,
+    call: Option<extern "C" fn(&z_sample_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 impl z_owned_closure_sample_t {
@@ -57,7 +57,7 @@ pub extern "C" fn z_closure_sample_drop(closure: &mut z_owned_closure_sample_t) 
 impl<F: Fn(&z_sample_t)> From<F> for z_owned_closure_sample_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_sample_t)>(sample: &z_sample_t, this: *const c_void) {
+        extern "C" fn call<F: Fn(&z_sample_t)>(sample: &z_sample_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
             this(sample)
         }

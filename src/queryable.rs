@@ -60,7 +60,7 @@ impl AsMut<Queryable> for z_owned_queryable_t {
 /// Structs received by a Queryable.
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub struct z_query_t(*const c_void);
+pub struct z_query_t(*mut c_void);
 impl Deref for z_query_t {
     type Target = Query;
     fn deref(&self) -> &Self::Target {
@@ -76,6 +76,12 @@ impl Deref for z_query_t {
 #[repr(C)]
 pub struct z_queryable_options_t {
     pub complete: bool,
+}
+/// Constructs the default value for :c:type:`z_query_reply_options_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
+    z_queryable_options_t { complete: false }
 }
 
 /// Represents the set of options that can be applied to a query reply,
@@ -131,7 +137,7 @@ pub unsafe extern "C" fn z_declare_queryable(
     }
     builder
         .callback(move |query| {
-            z_closure_query_call(&closure, z_query_t(&query as *const _ as *const c_void))
+            z_closure_query_call(&closure, &z_query_t(&query as *const _ as *mut c_void))
         })
         .res_sync()
         .map_err(|e| log::error!("{}", e))
@@ -145,13 +151,14 @@ pub unsafe extern "C" fn z_declare_queryable(
 ///     qable: The :c:type:`z_owned_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) {
+pub unsafe extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
     if let Some(qable) = qable.as_mut().take() {
-        match qable.undeclare().res_sync() {
-            Ok(()) => {}
-            Err(e) => log::error!("{}", e),
+        if let Err(e) = qable.undeclare().res_sync() {
+            log::error!("{}", e);
+            return i8::MIN;
         }
     }
+    0
 }
 
 /// Returns ``true`` if `qable` is valid.
@@ -177,7 +184,7 @@ pub unsafe extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply(
-    query: z_query_t,
+    query: &z_query_t,
     key: z_keyexpr_t,
     payload: *const u8,
     len: usize,
@@ -200,14 +207,14 @@ pub unsafe extern "C" fn z_query_reply(
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_keyexpr(query: z_query_t) -> z_keyexpr_t {
+pub unsafe extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
     query.key_expr().borrowing_clone().into()
 }
 
 /// Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_parameters(query: z_query_t) -> z_bytes_t {
+pub unsafe extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
     let complement = query.parameters();
     z_bytes_t {
         start: complement.as_ptr(),

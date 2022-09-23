@@ -257,10 +257,10 @@ pub unsafe extern "C" fn z_publisher_delete_options_default() -> z_publisher_del
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_delete(
-    publisher: &z_owned_publisher_t,
+    publisher: z_publisher_t,
     _options: *const z_publisher_delete_options_t,
 ) -> i8 {
-    if let Some(p) = publisher.deref() {
+    if let Some(p) = publisher.as_ref() {
         if let Err(e) = p.delete().res_sync() {
             log::error!("{}", e);
             i8::MIN
@@ -275,10 +275,12 @@ pub unsafe extern "C" fn z_publisher_delete(
 /// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) {
+pub unsafe extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> i8 {
     if let Some(p) = publisher.take() {
         if let Err(e) = p.undeclare().res_sync() {
-            log::error!("{}", e)
+            log::error!("{}", e);
+            return i8::MIN;
         }
     }
+    0
 }
