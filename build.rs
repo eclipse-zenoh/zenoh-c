@@ -95,7 +95,8 @@ fn split_bindings() {
         }
     }
     for record in records {
-        if !record.used && !record.token.id.is_empty() {
+        if !record.used && !record.token.id.is_empty() && record.token.tt != TokenType::PrivateToken
+        {
             errors.push(format!(
                 "Unused {:?} record: {}",
                 record.token.tt, record.token.id
@@ -216,6 +217,7 @@ enum TokenType {
     Function,
     Const,
     Define,
+    PrivateToken,
     Include,
     Ifndef,
     Endif,
@@ -275,7 +277,15 @@ impl<'a> Token<'a> {
                 .take_while(|&c| c.is_alphanumeric() || c == '_')
                 .fold(1, |acc, c| acc + c.len_utf8());
             let id = &span[(span.len() - id_len)..(span.len() - 1)];
-            Some(Token::new(TokenType::Typedef, id, span))
+            Some(Token::new(
+                if id.starts_with('_') {
+                    TokenType::PrivateToken
+                } else {
+                    TokenType::Typedef
+                },
+                id,
+                span,
+            ))
         } else {
             None
         }
@@ -357,10 +367,14 @@ impl<'a> Token<'a> {
 
     fn define(s: &'a str) -> Option<Self> {
         let start = "#define ";
-        s.starts_with(start).then(|| {
+        s.strip_prefix(start).map(|defined| {
             let span = s.until("\n").unwrap_or(s);
             Token::new(
-                TokenType::Define,
+                if defined.starts_with('_') {
+                    TokenType::PrivateToken
+                } else {
+                    TokenType::Define
+                },
                 span[start.len()..].split_whitespace().next().unwrap(),
                 span,
             )
