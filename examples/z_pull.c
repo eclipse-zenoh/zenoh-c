@@ -20,9 +20,12 @@
 #endif
 #include "zenoh.h"
 
+const char *kind_to_str(z_sample_kind_t kind);
+
 void data_handler(const z_sample_t *sample, void *arg) {
     char *keystr = z_keyexpr_to_string(sample->keyexpr);
-    printf(">> [Subscriber] Received ('%s': '%.*s')\n", keystr, (int)sample->payload.len, sample->payload.start);
+    printf(">> [Subscriber] Received %s ('%s': '%.*s')\n", kind_to_str(sample->kind), keystr, (int)sample->payload.len,
+           sample->payload.start);
     free(keystr);
 }
 
@@ -72,4 +75,15 @@ int main(int argc, char **argv) {
     z_undeclare_pull_subscriber(z_move(sub));
     z_close(z_move(s));
     return 0;
+}
+
+const char *kind_to_str(z_sample_kind_t kind) {
+    switch (kind) {
+        case Z_SAMPLE_KIND_PUT:
+            return "PUT";
+        case Z_SAMPLE_KIND_DELETE:
+            return "DELETE";
+        default:
+            return "UNKNOWN";
+    }
 }
