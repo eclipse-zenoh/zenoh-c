@@ -31,7 +31,7 @@ void query_handler(const z_query_t *query, void *context) {
     printf(">> [Queryable ] Received Query '%s%.*s'\n", keystr, (int)pred.len, pred.start);
     z_query_reply_options_t options = z_query_reply_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    z_query_reply(query, z_keyexpr(keystr), (const unsigned char *)value, strlen(value), &options);
+    z_query_reply(query, z_keyexpr(context), (const unsigned char *)value, strlen(value), &options);
     free(keystr);
 }
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Declaring Queryable on '%s'...\n", expr);
-    z_owned_closure_query_t callback = z_closure(query_handler);
+    z_owned_closure_query_t callback = z_closure(query_handler, NULL, expr);
     z_owned_queryable_t qable = z_declare_queryable(z_loan(s), keyexpr, z_move(callback), NULL);
     if (!z_check(qable)) {
         printf("Unable to create queryable.\n");
