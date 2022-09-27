@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
     int res = z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)value, strlen(value), &options);
     if (!res) {
-        printf("Oh no! Put has failed...\n");
+        printf("Put failed...\n");
     }
 
     z_close(z_move(s));
