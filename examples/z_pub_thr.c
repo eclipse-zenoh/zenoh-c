@@ -44,7 +44,6 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Declaring publisher for '%s'...\n", keyexpr);
     z_publisher_options_t options = z_publisher_options_default();
     options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
 
