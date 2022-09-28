@@ -16,7 +16,7 @@
 #include "zenoh.h"
 
 void print_zid(const z_id_t *id, void *ctx) {
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 16; i++) {
         printf("%02x", id->id[i]);
     }
     printf("\n");
