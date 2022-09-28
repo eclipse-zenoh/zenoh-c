@@ -35,19 +35,19 @@ Session
 Session configuration
 ---------------------
 
-.. autocstruct:: zenoh_concrete.h::z_config_t
-.. autocstruct:: zenoh_concrete.h::z_owned_config_t
+
+.. autocstruct:: zenoh_commons.h::z_owned_config_t
+.. autocstruct:: zenoh_commons.h::z_owned_scouting_config_t
 
 .. autocfunction:: zenoh_commons.h::z_config_new
 .. autocfunction:: zenoh_commons.h::z_config_default
-.. autocfunction:: zenoh_commons.h::z_config_empty
 .. autocfunction:: zenoh_commons.h::z_config_client
 .. autocfunction:: zenoh_commons.h::z_config_peer
-.. autocfunction:: zenoh_commons.h::z_config_from_file
-.. autocfunction:: zenoh_commons.h::z_config_from_str
+.. autocfunction:: zenoh_commons.h::zc_config_from_file
+.. autocfunction:: zenoh_commons.h::zc_config_from_str
 .. autocfunction:: zenoh_commons.h::zc_config_insert_json
-.. autocfunction:: zenoh_commons.h::z_config_get
-.. autocfunction:: zenoh_commons.h::z_config_to_string
+.. autocfunction:: zenoh_commons.h::zc_config_get
+.. autocfunction:: zenoh_commons.h::zc_config_to_string
 .. autocfunction:: zenoh_commons.h::z_config_loan
 .. autocfunction:: zenoh_commons.h::z_config_check
 .. autocfunction:: zenoh_commons.h::z_config_drop
@@ -93,7 +93,7 @@ Key expression
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize_null_terminated
 .. autocfunction:: zenoh_commons.h::z_keyexpr_is_canon
-.. autocfunction:: zenoh_commons.h::z_keyexpr_is_valid
+.. autocfunction:: zenoh_commons.h::z_keyexpr_is_initialized
 .. autocfunction:: zenoh_commons.h::z_keyexpr_concat
 .. autocfunction:: zenoh_commons.h::z_keyexpr_join
 .. autocfunction:: zenoh_commons.h::z_keyexpr_equals
@@ -166,7 +166,7 @@ Types
 
 .. autocstruct:: zenoh_concrete.h::z_owned_subscriber_t
 
-.. autocstruct:: zenoh_commons.h::z_owned_pull_subscriber_t
+.. autocstruct:: zenoh_concrete.h::z_owned_pull_subscriber_t
 
 .. autocstruct:: zenoh_commons.h::z_owned_closure_sample_t
 
@@ -183,7 +183,7 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_undeclare_subscriber
 
 .. autocfunction:: zenoh_commons.h::z_declare_pull_subscriber
-.. autocfunction:: zenoh_commons.h::z_pull
+.. autocfunction:: zenoh_commons.h::z_subscriber_pull
 .. autocfunction:: zenoh_commons.h::z_pull_subscriber_check
 .. autocfunction:: zenoh_commons.h::z_undeclare_pull_subscriber
 
@@ -201,7 +201,6 @@ Types
 .. autocstruct:: zenoh_commons.h::z_owned_closure_reply_t
 
 .. autocenum:: zenoh_commons.h::z_consolidation_mode_t
-.. autocstruct:: zenoh_commons.h::z_consolidation_strategy_t
 
 .. c:type:: z_query_consolidation_t
 
@@ -213,10 +212,8 @@ Types
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_default
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_auto
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_none
-.. autocfunction:: zenoh_commons.h::z_query_consolidation_lazy
-.. autocfunction:: zenoh_commons.h::z_query_consolidation_reception
-.. autocfunction:: zenoh_commons.h::z_query_consolidation_last_router
-.. autocfunction:: zenoh_commons.h::z_query_consolidation_full
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_monotonic
+.. autocfunction:: zenoh_commons.h::z_query_consolidation_latest
 
 .. autocstruct:: zenoh_commons.h::z_owned_reply_t
 .. autocfunction:: zenoh_commons.h::z_reply_check
@@ -244,8 +241,6 @@ Types
 .. autocstruct:: zenoh_concrete.h::z_owned_queryable_t
 
 .. autocstruct:: zenoh_commons.h::z_owned_closure_query_t
-
-.. autocstruct:: zenoh_commons.h::z_query_t
 
 .. autocfunction:: zenoh_commons.h::z_query_keyexpr
 .. autocfunction:: zenoh_commons.h::z_query_parameters
