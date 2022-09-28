@@ -76,6 +76,23 @@ impl z_owned_keyexpr_t {
     }
 }
 
+#[repr(C)]
+pub struct _zc_stack_ke {
+    _0: u64,
+    _1: [usize; 2],
+    _2: u32,
+    _3: u16,
+    _4: u8,
+}
+fn _zc_stack_ke_size_check() {
+    use core::mem::MaybeUninit;
+    unsafe {
+        core::mem::transmute::<MaybeUninit<KeyExpr>, MaybeUninit<_zc_stack_ke>>(
+            MaybeUninit::uninit(),
+        );
+    }
+}
+
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

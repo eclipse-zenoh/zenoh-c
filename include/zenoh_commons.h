@@ -223,9 +223,9 @@ typedef struct z_owned_closure_query_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_reply_t {
-  _z_u128 _align[_Z_OWNED_REPLY_N_U128];
-  uint64_t _pad_u64[_Z_OWNED_REPLY_N_U64];
-  uintptr_t _pad_usize[_Z_OWNED_REPLY_N_USIZE];
+  _z_u128 _0;
+  struct _zc_res_s_v _1;
+  uint8_t _2;
 } z_owned_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -406,8 +406,8 @@ typedef struct z_owned_keyexpr_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_publisher_t {
-  uint64_t _align[1];
-  uintptr_t _padding[6];
+  struct _zc_stack_ke _ke;
+  uintptr_t _padding[3];
 } z_owned_publisher_t;
 /**
  * Options passed to the :c:func:`z_declare_publisher` function.

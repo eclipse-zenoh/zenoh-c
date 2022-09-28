@@ -22,8 +22,8 @@ use zenoh_protocol_core::CongestionControl;
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t, z_priority_t,
-    z_session_t, LOG_INVALID_SESSION,
+    _zc_stack_ke, z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t,
+    z_priority_t, z_session_t, LOG_INVALID_SESSION,
 };
 
 /// Options passed to the :c:func:`z_declare_publisher` function.
@@ -58,8 +58,8 @@ pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_publisher_t {
-    pub _align: [u64; 1],
-    pub _padding: [usize; 6],
+    pub _ke: _zc_stack_ke,
+    pub _padding: [usize; 3],
 }
 impl<'a> From<Option<Publisher<'a>>> for z_owned_publisher_t {
     fn from(val: Option<Publisher>) -> Self {
