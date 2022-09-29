@@ -45,9 +45,9 @@ libc = "0.2.133"
 log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.4"
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
-zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh", branch = "master" }
+zenoh = { version = "0.6.0-beta.1" }
+zenoh-protocol-core = { version = "0.6.0-beta.1" }
+zenoh-util = { version = "0.6.0-beta.1" }
 
 [build-dependencies]
 cbindgen = "0.24.3"
