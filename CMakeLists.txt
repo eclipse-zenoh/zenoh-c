@@ -136,5 +136,5 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" CONFIGURATIONS Release RelWithD
 configure_file("${CMAKE_SOURCE_DIR}/zenohc.pc.in" "${CMAKE_SOURCE_DIR}/zenohc.pc" @ONLY)
 
 if(APPLE OR UNIX)
-	install(FILES "${CMAKE_SOURCE_DIR}/zenohc.pc" CONFIGURATIONS Release RelWithDebInfo DESTINATION "/usr/lib/pkgconfig" OPTIONAL)
+	install(FILES "${CMAKE_SOURCE_DIR}/zenohc.pc" CONFIGURATIONS Release RelWithDebInfo DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
 endif()
