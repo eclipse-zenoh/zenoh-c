@@ -52,6 +52,7 @@ if(NOT DISABLE_LOGGER_AUTOINIT)
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--features=logger-autoinit")
 endif()
 
+set(CARGO_FLAGS ${CARGO_FLAGS} "--manifest-path=${CMAKE_SOURCE_DIR}/Cargo.toml")
 set(RUSTFLAGS $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}")
 
