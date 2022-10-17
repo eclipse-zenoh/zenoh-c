@@ -91,7 +91,7 @@ if(APPLE OR UNIX OR WIN32)
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
 		target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
-		target_link_libraries(${target} PUBLIC ${libzenohc_static})
+		target_link_libraries(${target} PUBLIC "${CMAKE_BINARY_DIR}/${libzenohc_static}")
 
 		if(APPLE)
 			find_library(FFoundation Foundation)
