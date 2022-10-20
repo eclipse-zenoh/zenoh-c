@@ -57,25 +57,29 @@ set(RUSTFLAGS $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}")
 
 if(APPLE)
-	set(libzenohc "${CMAKE_BINARY_DIR}/libzenohc.dylib")
-	set(libzenohc_static "${CMAKE_BINARY_DIR}/libzenohc.a")
+	set(libzenohc "libzenohc.dylib")
+	set(libzenohc_static "libzenohc.a")
 elseif(UNIX)
-	set(libzenohc "${CMAKE_BINARY_DIR}/libzenohc.so")
-	set(libzenohc_static "${CMAKE_BINARY_DIR}/libzenohc.a")
+	set(libzenohc "libzenohc.so")
+	set(libzenohc_static "libzenohc.a")
 elseif(WIN32)
-	set(libzenohc "${CMAKE_BINARY_DIR}/zenohc.dll")
-	set(libzenohc_static "${CMAKE_BINARY_DIR}/zenohc.lib")
+	set(libzenohc "zenohc.dll")
+	set(libzenohc_static "zenohc.lib")
 endif()
 
 add_library(zenohc_static STATIC IMPORTED)
+set_target_properties(zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
+add_library(zenohc::static ALIAS zenohc_static)
 add_dependencies(zenohc_static cargo)
-message(STATUS "zenoh-c static library will be built at: ${libzenohc_static}")
-set_property(TARGET zenohc_static PROPERTY IMPORTED_LOCATION ${libzenohc_static})
+message(STATUS "zenoh-c static library will be built at: ${CMAKE_BINARY_DIR}/${libzenohc_static}")
+set_property(TARGET zenohc_static PROPERTY IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/${libzenohc_static}")
 
 add_library(zenohc SHARED IMPORTED)
+set_target_properties(zenohc PROPERTIES IMPORTED_GLOBAL TRUE)
+add_library(zenohc::lib ALIAS zenohc)
 add_dependencies(zenohc cargo)
-message(STATUS "zenoh-c dynamic library will be built at: ${libzenohc}")
-set_property(TARGET zenohc PROPERTY IMPORTED_LOCATION ${libzenohc})
+message(STATUS "zenoh-c dynamic library will be built at: ${CMAKE_BINARY_DIR}/${libzenohc}")
+set_property(TARGET zenohc PROPERTY IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/${libzenohc}")
 target_include_directories(zenohc INTERFACE "${CMAKE_SOURCE_DIR}/include")
 
 if(APPLE OR UNIX OR WIN32)
@@ -90,7 +94,7 @@ if(APPLE OR UNIX OR WIN32)
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
 		target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
-		target_link_libraries(${target} PUBLIC ${libzenohc_static})
+		target_link_libraries(${target} PUBLIC "${CMAKE_BINARY_DIR}/${libzenohc_static}")
 
 		if(APPLE)
 			find_library(FFoundation Foundation)
@@ -114,7 +118,7 @@ if(APPLE OR UNIX OR WIN32)
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 		target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
-		target_link_libraries(${target} PUBLIC ${libzenohc_static})
+		target_link_libraries(${target} PUBLIC "${CMAKE_BINARY_DIR}/${libzenohc_static}")
 
 		if(APPLE)
 			find_library(FFoundation Foundation)
@@ -132,10 +136,32 @@ endif()
 
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohc")
-install(FILES ${libzenohc} CONFIGURATIONS Release RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES "${CMAKE_BINARY_DIR}/${libzenohc}" CONFIGURATIONS Release RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES "${CMAKE_BINARY_DIR}/${libzenohc_static}" CONFIGURATIONS Release RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" CONFIGURATIONS Release RelWithDebInfo DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 configure_file("${CMAKE_SOURCE_DIR}/zenohc.pc.in" "${CMAKE_SOURCE_DIR}/zenohc.pc" @ONLY)
 
 if(APPLE OR UNIX)
 	install(FILES "${CMAKE_SOURCE_DIR}/zenohc.pc" CONFIGURATIONS Release RelWithDebInfo DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
 endif()
+
+set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
+# Generate <Package>Config.cmake
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  "PackageConfig.cmake.in"
+  "${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+
+# Generate <Package>Version.cmake
+write_basic_package_version_file(
+  "${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+  COMPONENT dev)
