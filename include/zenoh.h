@@ -16,6 +16,6 @@ extern "C" {
 #include "zenoh_commons.h"
 #ifdef __cplusplus
 }
-#include "zenoh_macros.h"
 #endif
+#include "zenoh_macros.h"
 #endif

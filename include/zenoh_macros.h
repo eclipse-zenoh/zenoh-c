@@ -53,7 +53,7 @@
              : z_reply_channel_closure_call)(&x, __VA_ARGS__)
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
-    { .call = callback, .drop = droper, .context = ctx }
+    { .context = ctx, .call = callback, .drop = droper }
 #define z_closure(...) _z_closure_overloader(__VA_ARGS__, NULL, NULL)
 #define z_move(x) (&x)
 
@@ -140,7 +140,7 @@ bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owne
     { return z_reply_channel_closure_call(&closure, sample); }
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
-    { .call = callback, .drop = droper, .context = const_cast<void*>(static_cast<const void*>(ctx)) }
+    { .context = const_cast<void*>(static_cast<const void*>(ctx)), .call = callback, .drop = droper }
 #define z_closure(...) _z_closure_overloader(__VA_ARGS__, NULL, NULL)
 #define z_move(x) (&x)
 
