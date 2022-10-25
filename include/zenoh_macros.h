@@ -144,5 +144,4 @@ bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owne
 #define z_closure(...) _z_closure_overloader(__VA_ARGS__, NULL, NULL)
 #define z_move(x) (&x)
 
-
 #endif
