@@ -1,0 +1,24 @@
+#
+# Copyright (c) 2022 ZettaScale Technology.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+#
+# Contributors:
+#   ZettaScale Zenoh team, <zenoh@zettascale.tech>
+#
+
+@PACKAGE_INIT@
+
+add_library(__zenohc_static STATIC IMPORTED)
+add_library(zenohc::static ALIAS __zenohc_static)
+set_property(TARGET __zenohc_static PROPERTY IMPORTED_LOCATION "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@libzenohc_static@")
+
+add_library(__zenohc_lib STATIC IMPORTED)
+add_library(zenohc::lib ALIAS __zenohc_lib)
+set_property(TARGET __zenohc_lib PROPERTY IMPORTED_LOCATION "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@libzenohc@")
+target_include_directories(__zenohc_lib INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
