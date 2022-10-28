@@ -53,7 +53,7 @@
              : z_reply_channel_closure_call)(&x, __VA_ARGS__)
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
-    { .context = ctx, .call = callback, .drop = droper }
+    { .context = (void*)ctx, .call = callback, .drop = droper }
 #define z_closure(...) _z_closure_overloader(__VA_ARGS__, NULL, NULL)
 #define z_move(x) (&x)
 
