@@ -21,8 +21,8 @@
 #endif
 #include "zenoh.h"
 
-char *expr = "demo/example/zenoh-c-queryable";
-char *value = "Queryable from C!";
+const char *expr = "demo/example/zenoh-c-queryable";
+const char *value = "Queryable from C!";
 z_keyexpr_t keyexpr;
 
 void query_handler(const z_query_t *query, void *context) {

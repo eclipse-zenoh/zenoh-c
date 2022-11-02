@@ -14,8 +14,8 @@ extern "C" {
 #include "zenoh_concrete.h"
 //
 #include "zenoh_commons.h"
-#include "zenoh_macros.h"
 #ifdef __cplusplus
 }
 #endif
+#include "zenoh_macros.h"
 #endif
