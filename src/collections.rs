@@ -80,18 +80,6 @@ impl From<Option<ZenohId>> for z_bytes_t {
     }
 }
 
-// impl<'a> From<&'a ZBuf> for z_bytes_t {
-//     fn from(buf: &'a ZBuf) -> Self {
-//         let data = buf.contiguous();
-//         let res = z_bytes_t {
-//             start: data.as_ptr(),
-//             len: data.len(),
-//         };
-//         std::mem::forget(data);
-//         res
-//     }
-// }
-
 impl From<z_bytes_t> for String {
     fn from(s: z_bytes_t) -> Self {
         unsafe {
