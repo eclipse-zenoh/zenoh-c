@@ -46,7 +46,7 @@ pub type _z_u128 = u128;
 #[repr(C)]
 pub struct z_owned_reply_t {
     _1: _zc_res_s_v,
-    _2: u128,
+    _2: _z_u128,
 }
 #[repr(C)]
 pub struct _zc_res_s_v {
