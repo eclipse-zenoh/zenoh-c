@@ -48,7 +48,7 @@ pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
 pub(crate) unsafe fn z_bytes_drop(b: &mut z_bytes_t) {
     if !b.start.is_null() {
         std::mem::drop(Box::from_raw(
-            std::slice::from_raw_parts(b.start, b.len) as *const [u8] as *mut [u8],
+            core::ptr::slice_from_raw_parts(b.start, b.len).cast_mut(),
         ));
         b.start = std::ptr::null();
     }
@@ -79,18 +79,6 @@ impl From<Option<ZenohId>> for z_bytes_t {
         }
     }
 }
-
-// impl<'a> From<&'a ZBuf> for z_bytes_t {
-//     fn from(buf: &'a ZBuf) -> Self {
-//         let data = buf.contiguous();
-//         let res = z_bytes_t {
-//             start: data.as_ptr(),
-//             len: data.len(),
-//         };
-//         std::mem::forget(data);
-//         res
-//     }
-// }
 
 impl From<z_bytes_t> for String {
     fn from(s: z_bytes_t) -> Self {

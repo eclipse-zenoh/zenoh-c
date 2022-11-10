@@ -45,17 +45,15 @@ pub type _z_u128 = u128;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_reply_t {
-    _0: _z_u128,
     _1: _zc_res_s_v,
-    _2: u8,
+    _2: _z_u128,
 }
 #[repr(C)]
 pub struct _zc_res_s_v {
-    __0: u8,
+    _3: u8,
     _0: _z_u128,
     _1: _zc_stack_ke,
-    _2: [usize; 12],
-    _3: u8,
+    _2: [usize; 11],
 }
 
 impl From<ReplyInner> for z_owned_reply_t {
