@@ -478,9 +478,21 @@ typedef struct z_owned_encoding_t {
 typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
+/**
+ * A zenoh value.
+ *
+ * Members:
+ *   z_bytes_t payload: The payload of this zenoh value.
+ *   z_encoding_t encoding: The encoding of this zenoh value `payload`.
+ */
+typedef struct z_value_t {
+  struct z_bytes_t payload;
+  struct z_encoding_t encoding;
+} z_value_t;
 typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
+  struct z_value_t with_value;
 } z_get_options_t;
 /**
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
@@ -581,17 +593,6 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
-/**
- * A zenoh value.
- *
- * Members:
- *   z_bytes_t payload: The payload of this zenoh value.
- *   z_encoding_t encoding: The encoding of this zenoh value `payload`.
- */
-typedef struct z_value_t {
-  struct z_bytes_t payload;
-  struct z_encoding_t encoding;
-} z_value_t;
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
   unsigned long zc_timeout_ms;
@@ -1214,6 +1215,10 @@ struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
  * Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
  */
 struct z_bytes_t z_query_parameters(const struct z_query_t *query);
+/**
+ * Get a query's [payload value](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md) by aliasing it.
+ */
+struct z_value_t z_query_payload_value(const struct z_query_t *query);
 /**
  * Send a reply to a query.
  *

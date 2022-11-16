@@ -311,7 +311,7 @@ pub unsafe extern "C" fn z_encoding(
 /// Constructs a default :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_default() -> z_encoding_t {
+pub extern "C" fn z_encoding_default() -> z_encoding_t {
     (&zenoh_protocol_core::Encoding::default()).into()
 }
 

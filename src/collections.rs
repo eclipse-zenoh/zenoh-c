@@ -90,3 +90,12 @@ impl From<z_bytes_t> for String {
         }
     }
 }
+
+impl From<String> for z_bytes_t {
+    fn from(s: String) -> Self {
+        z_bytes_t {
+            start: s.as_ptr(),
+            len: s.len(),
+        }
+    }
+}
