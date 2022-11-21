@@ -24,6 +24,7 @@ use libc::c_char;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
+use zenoh_util::core::zresult::ErrNo;
 
 /// A zenoh-allocated key expression.
 ///
@@ -218,7 +219,7 @@ pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) ->
             Ok(_) => 0,
             Err(e) => {
                 log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
-                i8::MIN
+                e.errno().get()
             }
         },
         Err(e) => {
@@ -263,7 +264,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
             Ok(_) => 0,
             Err(e) => {
                 log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
-                i8::MIN
+                e.errno().get()
             }
         },
         Err(e) => {
@@ -429,7 +430,7 @@ pub unsafe extern "C" fn z_undeclare_keyexpr(
             Ok(()) => 0,
             Err(e) => {
                 log::debug!("{}", e);
-                i8::MIN
+                e.errno().get()
             }
         },
         None => {

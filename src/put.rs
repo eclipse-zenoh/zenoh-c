@@ -15,9 +15,10 @@ use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
 use crate::LOG_INVALID_SESSION;
-use libc::{c_int, size_t};
+use libc::size_t;
 use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};
 use zenoh::publication::CongestionControl;
+use zenoh_util::core::zresult::ErrNo;
 
 /// The priority of zenoh messages.
 ///
@@ -144,15 +145,7 @@ pub unsafe extern "C" fn z_put(
     payload: *const u8,
     len: size_t,
     mut opts: *const z_put_options_t,
-) -> c_int {
-    const fn ok() -> c_int {
-        true as c_int
-    }
-
-    const fn err() -> c_int {
-        false as c_int
-    }
-
+) -> i8 {
     match session.as_ref() {
         Some(s) => {
             let default = z_put_options_default();
@@ -169,14 +162,14 @@ pub unsafe extern "C" fn z_put(
             {
                 Err(e) => {
                     log::error!("{}", e);
-                    err()
+                    e.errno().get()
                 }
-                Ok(()) => ok(),
+                Ok(()) => 0,
             }
         }
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
-            err()
+            i8::MIN
         }
     }
 }
@@ -213,15 +206,7 @@ pub unsafe extern "C" fn z_delete(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     mut opts: *const z_delete_options_t,
-) -> c_int {
-    const fn ok() -> c_int {
-        true as c_int
-    }
-
-    const fn err() -> c_int {
-        false as c_int
-    }
-
+) -> i8 {
     let default = z_delete_options_default();
     if opts.is_null() {
         opts = &default;
@@ -235,13 +220,13 @@ pub unsafe extern "C" fn z_delete(
         {
             Err(e) => {
                 log::error!("{}", e);
-                err()
+                e.errno().get()
             }
-            Ok(()) => ok(),
+            Ok(()) => 0,
         },
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
-            err()
+            i8::MIN
         }
     }
 }

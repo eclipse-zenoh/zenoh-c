@@ -14,6 +14,7 @@
 use crate::{config::*, zc_init_logger};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::Session;
+use zenoh_util::core::zresult::ErrNo;
 
 /// An owned zenoh session.
 ///
@@ -101,6 +102,8 @@ pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
-    session.as_mut().take().map(|s| s.close().res());
+    if let Some(Err(e)) = session.as_mut().take().map(|s| s.close().res()) {
+        return e.errno().get();
+    }
     0
 }
