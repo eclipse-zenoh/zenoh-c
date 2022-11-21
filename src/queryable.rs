@@ -14,10 +14,9 @@
 
 use std::ops::Deref;
 
-use async_std::io::Empty;
 use libc::c_void;
 use zenoh::{
-    prelude::Sample,
+    prelude::{Sample, SplitBuffer},
     queryable::{Query, Queryable as CallbackQueryable},
     value::Value,
     Session,
@@ -227,9 +226,15 @@ pub unsafe extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
 /// Get a query's [payload value](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md) by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_payload_value(query: &z_query_t) -> z_value_t {
+pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
     match query.value() {
-        Some(value) => value.into(),
+        Some(value) => {
+            #[allow(mutable_transmutes)]
+            if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
+                unsafe { std::mem::transmute::<_, &mut Value>(value).payload = payload.into() }
+            }
+            value.into()
+        }
         None => (&Value::empty()).into(),
     }
 }
