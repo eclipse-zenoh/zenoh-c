@@ -46,6 +46,12 @@ pub struct z_owned_pull_subscriber_t([usize; 1]);
 #[allow(non_camel_case_types)]
 pub struct z_pull_subscriber_t<'a>(&'a z_owned_pull_subscriber_t);
 
+impl From<PullSubscriber> for z_owned_pull_subscriber_t {
+    fn from(val: PullSubscriber) -> Self {
+        unsafe { std::mem::transmute(val) }
+    }
+}
+
 impl AsRef<PullSubscriber> for z_owned_pull_subscriber_t {
     fn as_ref(&self) -> &PullSubscriber {
         unsafe { std::mem::transmute(self) }
@@ -56,6 +62,22 @@ impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
     fn as_mut(&mut self) -> &mut PullSubscriber {
         unsafe { std::mem::transmute(self) }
     }
+}
+
+impl z_owned_pull_subscriber_t {
+    pub fn new(sub: zenoh::subscriber::PullSubscriber<'static, ()>) -> Self {
+        Some(Box::new(sub)).into()
+    }
+    pub fn null() -> Self {
+        None.into()
+    }
+}
+
+/// Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_pull_subscriber_null() -> z_owned_pull_subscriber_t {
+    z_owned_pull_subscriber_t::null()
 }
 
 /// Represents the set of options that can be applied to a pull subscriber,
@@ -144,14 +166,8 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
 ) -> z_owned_pull_subscriber_t {
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    unsafe fn ok(sub: zenoh::subscriber::PullSubscriber<'_, ()>) -> z_owned_pull_subscriber_t {
-        std::mem::transmute(Some(Box::new(sub)))
-    }
 
-    unsafe fn err() -> z_owned_pull_subscriber_t {
-        std::mem::transmute(None::<Box<zenoh::subscriber::PullSubscriber<'_, ()>>>)
-    }
-
+    let session: &'static z_owned_session_t = session.into();
     match session.as_ref() {
         Some(s) => {
             if opts.is_null() {
@@ -180,16 +196,16 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
                 .pull_mode()
                 .res();
             match res {
-                Ok(sub) => ok(sub),
+                Ok(sub) => z_owned_pull_subscriber_t::new(sub),
                 Err(e) => {
                     log::debug!("{}", e);
-                    err()
+                    z_owned_pull_subscriber_t::null() 
                 }
             }
         }
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
-            err()
+            z_owned_pull_subscriber_t::null() 
         }
     }
 }
@@ -197,7 +213,7 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
 /// Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) -> i8 {
+pub extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::warn!("{}", e);
@@ -210,14 +226,14 @@ pub unsafe extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subs
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bool {
+pub extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bool {
     sub.as_ref().is_some()
 }
 
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_pull_subscriber_loan(
+pub extern "C" fn z_pull_subscriber_loan(
     sub: &z_owned_pull_subscriber_t,
 ) -> z_pull_subscriber_t {
     z_pull_subscriber_t(sub)
@@ -230,7 +246,7 @@ pub unsafe extern "C" fn z_pull_subscriber_loan(
 ///     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_subscriber_pull(sub: z_pull_subscriber_t) -> i8 {
+pub extern "C" fn z_subscriber_pull(sub: z_pull_subscriber_t) -> i8 {
     match sub.0.as_ref() {
         Some(tx) => {
             if let Err(e) = tx.pull().res_sync() {

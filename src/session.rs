@@ -29,6 +29,12 @@ use zenoh::Session;
 #[allow(non_camel_case_types)]
 pub struct z_owned_session_t([usize; 3]);
 
+impl From<Option<Session>> for z_owned_session_t {
+    fn from(val: Option<Session>) -> Self {
+        unsafe { std::mem::transmute(val) }
+    }
+}
+
 impl AsRef<Option<Session>> for z_owned_session_t {
     fn as_ref(&self) -> &Option<Session> {
         unsafe { std::mem::transmute(self) }
@@ -47,11 +53,26 @@ impl AsRef<Option<Session>> for z_session_t {
     }
 }
 
+impl From<z_session_t> for &'static z_owned_session_t {
+    fn from(val: z_session_t) -> Self {
+        unsafe { std::mem::transmute(val.0) }
+    }
+}
+
+impl z_owned_session_t {
+    pub fn new(session: Session) -> Self {
+        Some(session).into()
+    }
+    pub fn null() -> Self {
+        None::<Session>.into()
+    }
+}
+
 /// A loaned zenoh session.
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct z_session_t(*const z_owned_session_t);
+pub struct z_session_t(* const z_owned_session_t);
 
 /// Returns a :c:type:`z_session_t` loaned from `s`.
 #[no_mangle]
@@ -59,17 +80,17 @@ pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
     z_session_t(s)
 }
 
+/// Constructs a null safe-to-drop value of 'z_owned_session_t' type
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_session_null() -> z_owned_session_t {
+    z_owned_session_t::null()
+}
+
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
-    fn ok(session: Session) -> z_owned_session_t {
-        unsafe { std::mem::transmute(Some(session)) }
-    }
-
-    fn err() -> z_owned_session_t {
-        unsafe { std::mem::transmute(None::<Session>) }
-    }
+pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
@@ -78,14 +99,14 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
         Some(c) => c,
         None => {
             log::error!("Config not provided");
-            return err();
+            return z_owned_session_t::null();
         }
     };
     match zenoh::open(*config).res() {
-        Ok(s) => ok(s),
+        Ok(s) => z_owned_session_t::new(s),
         Err(e) => {
             log::error!("Error opening session: {}", e);
-            err()
+            z_owned_session_t::null()
         }
     }
 }
@@ -93,14 +114,14 @@ pub unsafe extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_sessio
 /// Returns ``true`` if `session` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
+pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
     session.as_ref().is_some()
 }
 
 /// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
+pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
     session.as_mut().take().map(|s| s.close().res());
     0
 }

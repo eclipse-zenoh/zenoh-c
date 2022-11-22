@@ -1,0 +1,175 @@
+//
+// Copyright (c) 2022 ZettaScale Technology
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+
+#include <assert.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "zenoh.h"
+
+int main(int argc, char **argv) {
+
+    //
+    // Check that all null functions exists
+    //
+    z_owned_session_t session_null_1 = z_session_null();
+    z_owned_publisher_t publisher_null_1 = z_publisher_null();
+    z_owned_keyexpr_t keyexpr_null_1 = z_keyexpr_null();
+    z_owned_config_t config_null_1 = z_config_null();
+    z_owned_scouting_config_t scouting_config_null_1 = z_scouting_config_null();
+    z_owned_pull_subscriber_t pull_subscriber_null_1 = z_pull_subscriber_null();
+    z_owned_subscriber_t subscriber_null_1 = z_subscriber_null();
+    z_owned_queryable_t queryable_null_1 = z_queryable_null();
+    z_owned_encoding_t encoding_null_1 = z_encoding_null();
+    z_owned_reply_t reply_null_1 = z_reply_null();
+    z_owned_closure_sample_t closure_sample_null_1 = z_closure_sample_null();
+    z_owned_closure_query_t closure_query_null_1 = z_closure_query_null();
+    z_owned_closure_reply_t closure_reply_null_1 = z_closure_reply_null();
+    z_owned_closure_hello_t closure_hello_null_1 = z_closure_hello_null();
+    z_owned_reply_channel_closure_t reply_channel_closure_null_1 = z_reply_channel_closure_null();
+    z_owned_reply_channel_t reply_channel_null_1 = z_reply_channel_null();
+
+    //
+    // Test that they actually make invalid value
+    //
+    assert(!z_check(&session_null_1));
+    assert(!z_check(&publisher_null_1));
+    assert(!z_check(&keyexpr_null_1));
+    assert(!z_check(&config_null_1));
+    assert(!z_check(&scouting_config_null_1));
+    assert(!z_check(&pull_subscriber_null_1));
+    assert(!z_check(&subscriber_null_1));
+    assert(!z_check(&queryable_null_1));
+    assert(!z_check(&encoding_null_1));
+    assert(!z_check(&reply_null_1));
+    assert(!z_check(&closure_sample_null_1));
+    assert(!z_check(&closure_query_null_1));
+    assert(!z_check(&closure_reply_null_1));
+    assert(!z_check(&closure_hello_null_1));
+    assert(!z_check(&reply_channel_closure_null_1));
+    assert(!z_check(&reply_channel_null_1));
+
+    //
+    // Test that z_null macro defined for all types
+    //
+    z_owned_session_t session_null_2
+    z_owned_publisher_t publisher_null_2
+    z_owned_keyexpr_t keyexpr_null_2
+    z_owned_config_t config_null_2
+    z_owned_scouting_config_t scouting_config_null_2
+    z_owned_pull_subscriber_t pull_subscriber_null_2
+    z_owned_subscriber_t subscriber_null_2
+    z_owned_queryable_t queryable_null_2
+    z_owned_encoding_t encoding_null_2
+    z_owned_reply_t reply_null_2
+    z_owned_closure_sample_t closure_sample_null_2
+    z_owned_closure_query_t closure_query_null_2
+    z_owned_closure_reply_t closure_reply_null_2
+    z_owned_closure_hello_t closure_hello_null_2
+    z_owned_reply_channel_closure_t reply_channel_closure_null_2
+    z_owned_reply_channel_t reply_channel_null_2
+
+    z_null(&session_null_2);
+    z_null(&publisher_null_2);
+    z_null(&keyexpr_null_2);
+    z_null(&config_null_2);
+    z_null(&scouting_config_null_2);
+    z_null(&pull_subscriber_null_2);
+    z_null(&subscriber_null_2);
+    z_null(&queryable_null_2);
+    z_null(&encoding_null_2);
+    z_null(&reply_null_2);
+    z_null(&closure_sample_null_2);
+    z_null(&closure_query_null_2);
+    z_null(&closure_reply_null_2);
+    z_null(&closure_hello_null_2);
+    z_null(&reply_channel_closure_null_2);
+    z_null(&reply_channel_null_2);
+
+    //
+    // Test that null macro works the same as direct call
+    //
+    assert(!z_check(&session_null_2));
+    assert(!z_check(&publisher_null_2));
+    assert(!z_check(&keyexpr_null_2));
+    assert(!z_check(&config_null_2));
+    assert(!z_check(&scouting_config_null_2));
+    assert(!z_check(&pull_subscriber_null_2));
+    assert(!z_check(&subscriber_null_2));
+    assert(!z_check(&queryable_null_2));
+    assert(!z_check(&encoding_null_2));
+    assert(!z_check(&reply_null_2));
+    assert(!z_check(&closure_sample_null_2));
+    assert(!z_check(&closure_query_null_2));
+    assert(!z_check(&closure_reply_null_2));
+    assert(!z_check(&closure_hello_null_2));
+    assert(!z_check(&reply_channel_closure_null_2));
+    assert(!z_check(&reply_channel_null_2));
+
+    assert(session_null_2 == session_null_1);
+    assert(publisher_null_2 == publisher_null_1);
+    assert(keyexpr_null_2 == keyexpr_null_1);
+    assert(config_null_2 == config_null_1);
+    assert(scouting_config_null_2 == scouting_config_null_1);
+    assert(pull_subscriber_null_2 == pull_subscriber_null_1);
+    assert(subscriber_null_2 == subscriber_null_1);
+    assert(queryable_null_2 == queryable_null_1);
+    assert(encoding_null_2 == encoding_null_1);
+    assert(reply_null_2 == reply_null_1);
+    assert(closure_sample_null_2 == closure_sample_null_1);
+    assert(closure_query_null_2 == closure_query_null_1);
+    assert(closure_reply_null_2 == closure_reply_null_1);
+    assert(closure_hello_null_2 == closure_hello_null_1);
+    assert(reply_channel_closure_null_2 == reply_channel_closure_null_1);
+    assert(reply_channel_null_2 == reply_channel_null_1);
+
+    //
+    // Test drop null and double drop it
+    //
+    z_drop(&session_null_1);
+    z_drop(&publisher_null_1);
+    z_drop(&keyexpr_null_1);
+    z_drop(&config_null_1);
+    z_drop(&scouting_config_null_1);
+    z_drop(&pull_subscriber_null_1);
+    z_drop(&subscriber_null_1);
+    z_drop(&queryable_null_1);
+    z_drop(&encoding_null_1);
+    z_drop(&reply_null_1);
+    z_drop(&closure_sample_null_1);
+    z_drop(&closure_query_null_1);
+    z_drop(&closure_reply_null_1);
+    z_drop(&closure_hello_null_1);
+    z_drop(&reply_channel_closure_null_1);
+    z_drop(&reply_channel_null_1);
+
+    z_drop(&session_null_1);
+    z_drop(&publisher_null_1);
+    z_drop(&keyexpr_null_1);
+    z_drop(&config_null_1);
+    z_drop(&scouting_config_null_1);
+    z_drop(&pull_subscriber_null_1);
+    z_drop(&subscriber_null_1);
+    z_drop(&queryable_null_1);
+    z_drop(&encoding_null_1);
+    z_drop(&reply_null_1);
+    z_drop(&closure_sample_null_1);
+    z_drop(&closure_query_null_1);
+    z_drop(&closure_reply_null_1);
+    z_drop(&closure_hello_null_1);
+    z_drop(&reply_channel_closure_null_1);
+    z_drop(&reply_channel_null_1);
+
+    return 0;
+}

@@ -30,6 +30,14 @@ pub extern "C" fn z_reply_channel_drop(channel: &mut z_owned_reply_channel_t) {
     z_closure_reply_drop(&mut channel.send);
     z_reply_channel_closure_drop(&mut channel.recv);
 }
+/// Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
+#[no_mangle]
+pub extern "C" fn z_reply_channel_null() -> z_owned_reply_channel_t {
+    z_owned_reply_channel_t {
+        send: z_owned_closure_reply_t::empty(),
+        recv: z_owned_reply_channel_closure_t::empty(),
+    }
+}
 
 /// Creates a new blocking fifo channel, returned as a pair of closures.
 ///
@@ -169,6 +177,13 @@ impl Drop for z_owned_reply_channel_closure_t {
         }
     }
 }
+
+/// Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
+#[no_mangle]
+pub extern "C" fn z_owned_reply_channel_closure() -> z_owned_reply_channel_closure_t {
+    z_owned_reply_channel_closure_t::empty()
+}
+
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_reply_channel_closure_call(

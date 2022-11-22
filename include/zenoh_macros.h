@@ -29,6 +29,26 @@
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop, \
                   z_owned_reply_channel_t * : z_reply_channel_drop                  \
             )(x)
+
+#define z_null(x) (*x = \
+    _Generic((x), z_owned_session_t * : z_session_null,                             \
+                  z_owned_publisher_t * : z_publisher_null,                         \
+                  z_owned_keyexpr_t * : z_keyexpr_null,                             \
+                  z_owned_config_t * : z_config_null,                               \
+                  z_owned_scouting_config_t * : z_scouting_config_null,             \
+                  z_owned_pull_subscriber_t * : z_pull_subscriber_null,             \
+                  z_owned_subscriber_t * : z_subscriber_null,                       \
+                  z_owned_queryable_t * : z_queryable_null,                         \
+                  z_owned_encoding_t * : z_encoding_null,                           \
+                  z_owned_reply_t * : z_reply_null,                                 \
+                  z_owned_closure_sample_t * : z_closure_sample_null,               \
+                  z_owned_closure_query_t * : z_closure_query_null,                 \
+                  z_owned_closure_reply_t * : z_closure_reply_null,                 \
+                  z_owned_closure_hello_t * : z_closure_hello_null,                 \
+                  z_owned_reply_channel_closure_t * : z_reply_channel_closure_null, \
+                  z_owned_reply_channel_t * : z_reply_channel_null                  \
+            )())
+
 #define z_check(x) \
     _Generic((x), z_owned_session_t : z_session_check,                 \
                   z_owned_publisher_t : z_publisher_check,             \

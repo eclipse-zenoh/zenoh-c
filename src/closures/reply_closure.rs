@@ -22,7 +22,7 @@ pub struct z_owned_closure_reply_t {
 }
 
 impl z_owned_closure_reply_t {
-    pub fn empty() -> Self {
+    pub(crate) fn empty() -> Self {
         z_owned_closure_reply_t {
             context: std::ptr::null_mut(),
             call: None,
@@ -38,6 +38,11 @@ impl Drop for z_owned_closure_reply_t {
             drop(self.context)
         }
     }
+}
+/// Constructs a null safe-to-drop value of 'z_owned_closure_reply_t' type
+#[no_mangle]
+pub extern "C" fn z_closure_reply_null() -> z_owned_closure_reply_t {
+    z_owned_closure_reply_t::empty()
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
