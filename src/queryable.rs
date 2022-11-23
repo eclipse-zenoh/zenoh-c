@@ -19,7 +19,7 @@ use zenoh::{
     prelude::Sample,
     queryable::{Query, Queryable as CallbackQueryable},
 };
-use zenoh_util::core::SyncResolve;
+use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
     z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
@@ -168,7 +168,7 @@ pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
     if let Some(qable) = qable.as_mut().take() {
         if let Err(e) = qable.undeclare().res_sync() {
             log::error!("{}", e);
-            return i8::MIN;
+            return e.errno().get();
         }
     }
     0
@@ -202,7 +202,7 @@ pub unsafe extern "C" fn z_query_reply(
     payload: *const u8,
     len: usize,
     options: Option<&z_query_reply_options_t>,
-) {
+) -> i8 {
     if let Some(key) = &*key {
         let mut s = Sample::new(
             key.clone().into_owned(),
@@ -212,8 +212,12 @@ pub unsafe extern "C" fn z_query_reply(
             s.encoding = o.encoding.into();
         }
         if let Err(e) = query.reply(Ok(s)).res_sync() {
-            log::error!("{}", e)
+            log::error!("{}", e);
+            return e.errno().get();
         }
+        0
+    } else {
+        i8::MIN
     }
 }
 

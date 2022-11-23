@@ -23,6 +23,7 @@ use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
 use zenoh_protocol_core::SubInfo;
+use zenoh_util::core::zresult::ErrNo;
 
 /**************************************/
 /*            DECLARATION             */
@@ -217,7 +218,7 @@ pub extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::warn!("{}", e);
-            return i8::MIN;
+            return e.errno().get();
         }
     }
     0
@@ -251,11 +252,11 @@ pub extern "C" fn z_subscriber_pull(sub: z_pull_subscriber_t) -> i8 {
         Some(tx) => {
             if let Err(e) = tx.pull().res_sync() {
                 log::error!("{}", e);
-                -127
+                e.errno().get()
             } else {
                 0
             }
         }
-        None => -1,
+        None => i8::MIN,
     }
 }

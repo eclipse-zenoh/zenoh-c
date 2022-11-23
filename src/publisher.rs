@@ -19,7 +19,7 @@ use zenoh::{
     publication::Publisher,
 };
 use zenoh_protocol_core::CongestionControl;
-use zenoh_util::core::SyncResolve;
+use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
     _zc_stack_ke, z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t,
@@ -236,12 +236,12 @@ pub unsafe extern "C" fn z_publisher_put(
         };
         if let Err(e) = put.res_sync() {
             log::error!("{}", e);
-            i8::MIN
+            e.errno().get()
         } else {
             0
         }
     } else {
-        -1
+        i8::MIN
     }
 }
 
@@ -275,12 +275,12 @@ pub extern "C" fn z_publisher_delete(
     if let Some(p) = publisher.as_ref() {
         if let Err(e) = p.delete().res_sync() {
             log::error!("{}", e);
-            i8::MIN
+            e.errno().get()
         } else {
             0
         }
     } else {
-        -1
+        i8::MIN
     }
 }
 
@@ -291,7 +291,7 @@ pub extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> 
     if let Some(p) = publisher.take() {
         if let Err(e) = p.undeclare().res_sync() {
             log::error!("{}", e);
-            return i8::MIN;
+            return e.errno().get();
         }
     }
     0

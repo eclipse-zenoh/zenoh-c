@@ -25,7 +25,7 @@ use zenoh::{
     prelude::{KeyExpr, SplitBuffer},
     query::{Mode, QueryConsolidation, Reply},
 };
-use zenoh_util::core::SyncResolve;
+use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
     _zc_stack_ke, z_bytes_t, z_closure_reply_call, z_encoding_t, z_keyexpr_t,
@@ -135,7 +135,7 @@ pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
         z_value_t {
             payload: match &inner.payload.contiguous() {
                 Cow::Borrowed(payload) => crate::z_bytes_t { start: payload.as_ptr(), len: payload.len() },
-                Cow::Owned(_) => unreachable!("z_reply_as_sample_t found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions."),
+                Cow::Owned(_) => unreachable!("z_reply_err found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions."),
             },
             encoding: (&inner.encoding).into(),
         }
@@ -173,6 +173,8 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
 /// Query data from the matching queryables in the system.
 /// Replies are provided through a callback function.
 ///
+/// Returns a negative value upon failure.
+///
 /// Parameters:
 ///     session: The zenoh session.
 ///     keyexpr: The key expression matching resources to query.
@@ -190,7 +192,7 @@ pub unsafe extern "C" fn z_get(
     parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&z_get_options_t>,
-) -> bool {
+) -> i8 {
     let mut closure = z_owned_closure_reply_t::empty();
     std::mem::swap(callback, &mut closure);
     let p = if parameters.is_null() {
@@ -212,10 +214,10 @@ pub unsafe extern "C" fn z_get(
         .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
         .res_sync()
     {
-        Ok(()) => false,
+        Ok(()) => 0,
         Err(e) => {
             log::error!("{}", e);
-            true
+            e.errno().get()
         }
     }
 }

@@ -916,9 +916,9 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int z_delete(struct z_session_t session,
-             struct z_keyexpr_t keyexpr,
-             const struct z_delete_options_t *opts);
+int8_t z_delete(struct z_session_t session,
+                struct z_keyexpr_t keyexpr,
+                const struct z_delete_options_t *opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
@@ -951,6 +951,8 @@ struct z_owned_encoding_t z_encoding_null(void);
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
+ * Returns a negative value upon failure.
+ *
  * Parameters:
  *     session: The zenoh session.
  *     keyexpr: The key expression matching resources to query.
@@ -961,11 +963,11 @@ struct z_owned_encoding_t z_encoding_null(void);
  *               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
  *     options: additional options for the get.
  */
-bool z_get(struct z_session_t session,
-           struct z_keyexpr_t keyexpr,
-           const char *parameters,
-           struct z_owned_closure_reply_t *callback,
-           const struct z_get_options_t *options);
+int8_t z_get(struct z_session_t session,
+             struct z_keyexpr_t keyexpr,
+             const char *parameters,
+             struct z_owned_closure_reply_t *callback,
+             const struct z_get_options_t *options);
 struct z_get_options_t z_get_options_default(void);
 /**
  * Returns ``true`` if `hello` is valid.
@@ -1206,11 +1208,11 @@ struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int z_put(struct z_session_t session,
-          struct z_keyexpr_t keyexpr,
-          const uint8_t *payload,
-          size_t len,
-          const struct z_put_options_t *opts);
+int8_t z_put(struct z_session_t session,
+             struct z_keyexpr_t keyexpr,
+             const uint8_t *payload,
+             size_t len,
+             const struct z_put_options_t *opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
@@ -1265,11 +1267,11 @@ struct z_bytes_t z_query_parameters(const struct z_query_t *query);
  *     len: The length of the value of this reply.
  *     options: The options of this reply.
  */
-void z_query_reply(const struct z_query_t *query,
-                   struct z_keyexpr_t key,
-                   const uint8_t *payload,
-                   uintptr_t len,
-                   const struct z_query_reply_options_t *options);
+int8_t z_query_reply(const struct z_query_t *query,
+                     struct z_keyexpr_t key,
+                     const uint8_t *payload,
+                     uintptr_t len,
+                     const struct z_query_reply_options_t *options);
 /**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */

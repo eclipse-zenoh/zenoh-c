@@ -22,6 +22,7 @@ use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
 use zenoh_protocol_core::SubInfo;
+use zenoh_util::core::zresult::ErrNo;
 
 /// The subscription reliability.
 ///
@@ -242,7 +243,7 @@ pub extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::warn!("{}", e);
-            return i8::MIN;
+            return e.errno().get();
         }
     }
     0
@@ -254,19 +255,3 @@ pub extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) -> i8 {
 pub extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool {
     sub.as_ref().is_some()
 }
-
-// /// Pull data for a pull mode :c:type:`z_owned_subscriber_t`. The pulled data will be provided
-// /// by calling the **callback** function provided to the :c:func:`z_subscribe` function.
-// ///
-// /// Parameters:
-// ///     sub: The :c:type:`z_owned_subscriber_t` to pull from.
-// #[allow(clippy::missing_safety_doc)]
-// #[no_mangle]
-// pub unsafe extern "C" fn z_pull(sub: &z_owned_subscriber_t) {
-//     match sub.as_ref() {
-//         Some(tx) => {
-//             let _ = async_std::task::block_on(tx.send(SubOps::Pull));
-//         }
-//         None => (),
-//     }
-// }
