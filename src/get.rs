@@ -19,7 +19,7 @@ use std::{
     ffi::CStr,
     ops::{Deref, DerefMut},
 };
-use zenoh_protocol_core::{ConsolidationMode, QueryTarget};
+use zenoh_protocol::core::{ConsolidationMode, QueryTarget};
 
 use zenoh::{
     prelude::{KeyExpr, SplitBuffer},
@@ -53,7 +53,7 @@ pub struct _zc_res_s_v {
     _3: u8,
     _0: _z_u128,
     _1: _zc_stack_ke,
-    _2: [usize; 11],
+    _2: [usize; 9],
 }
 
 impl From<ReplyInner> for z_owned_reply_t {

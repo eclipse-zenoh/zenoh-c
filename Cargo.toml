@@ -47,9 +47,9 @@ rand = "0.8.5"
 spin = "0.9.4"
 zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", features = [
     "unstable",
-] }
-zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh.git" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git" }
+], branch = "new-buffers" }
+zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "new-buffers" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "new-buffers" }
 
 [build-dependencies]
 cbindgen = "0.24.3"

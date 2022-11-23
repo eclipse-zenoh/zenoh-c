@@ -21,7 +21,7 @@ use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
-use zenoh_protocol_core::SubInfo;
+use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
 
 /// The subscription reliability.

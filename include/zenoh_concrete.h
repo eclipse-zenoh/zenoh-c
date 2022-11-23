@@ -61,7 +61,7 @@ typedef struct _zc_res_s_v {
   uint8_t _3;
   _z_u128 _0;
   struct _zc_stack_ke _1;
-  uintptr_t _2[11];
+  uintptr_t _2[9];
 } _zc_res_s_v;
 /**
  * A loaned zenoh session.

@@ -12,17 +12,16 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use crate::{
+    _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_config_t, z_id_t,
+    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, 
+};
 use async_std::task;
 use libc::{c_char, c_uint, c_ulong, size_t};
 use std::ffi::CString;
 use zenoh::scouting::Hello;
-use zenoh_protocol_core::{whatami::WhatAmIMatcher, WhatAmI};
+use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
-
-use crate::{
-    _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_config_t, z_id_t,
-    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, Z_ROUTER,
-};
 
 /// An owned array of owned, zenoh allocated, NULL terminated strings.
 ///
@@ -116,29 +115,25 @@ pub struct z_hello_t {
 impl From<Hello> for z_owned_hello_t {
     fn from(h: Hello) -> Self {
         z_owned_hello_t {
-            _whatami: match h.whatami {
-                Some(whatami) => whatami as c_uint,
-                None => Z_ROUTER,
-            },
+            _whatami: h.whatami as c_uint,
             _pid: match h.zid {
                 Some(id) => unsafe { std::mem::transmute(id) },
                 None => z_id_t { id: [0; 16] },
             },
-            _locators: match h.locators {
-                Some(locators) => {
-                    let mut locators = locators
-                        .into_iter()
-                        .map(|l| CString::new(l.to_string()).unwrap().into_raw())
-                        .collect::<Vec<_>>();
-                    let val = locators.as_mut_ptr();
-                    let len = locators.len();
-                    std::mem::forget(locators);
-                    z_owned_str_array_t { val, len }
-                }
-                None => z_owned_str_array_t {
+            _locators: if !h.locators.is_empty() {
+                let mut locators = h.locators
+                    .into_iter()
+                    .map(|l| CString::new(l.to_string()).unwrap().into_raw())
+                    .collect::<Vec<_>>();
+                let val = locators.as_mut_ptr();
+                let len = locators.len();
+                std::mem::forget(locators);
+                z_owned_str_array_t { val, len }
+            } else {
+                z_owned_str_array_t {
                     val: std::ptr::null_mut(),
                     len: 0,
-                },
+                }
             },
         }
     }

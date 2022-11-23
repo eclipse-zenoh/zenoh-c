@@ -18,7 +18,7 @@ use zenoh::{
     prelude::{Priority, Value},
     publication::Publisher,
 };
-use zenoh_protocol_core::CongestionControl;
+use zenoh_protocol::core::CongestionControl;
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
