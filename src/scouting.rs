@@ -199,6 +199,7 @@ pub const DEFAULT_SCOUTING_WHAT: c_uint = (WhatAmI::Router as u8 | WhatAmI::Peer
 pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 #[allow(clippy::missing_safety_doc)]
+#[no_mangle]
 pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: z_config_null(),

@@ -180,7 +180,7 @@ impl Drop for z_owned_reply_channel_closure_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
 #[no_mangle]
-pub extern "C" fn z_owned_reply_channel_closure() -> z_owned_reply_channel_closure_t {
+pub extern "C" fn z_reply_channel_closure_null() -> z_owned_reply_channel_closure_t {
     z_owned_reply_channel_closure_t::empty()
 }
 

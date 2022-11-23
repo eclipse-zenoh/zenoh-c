@@ -301,6 +301,7 @@ impl z_owned_encoding_t {
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
+#[no_mangle]
 pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
     z_owned_encoding_t::null()
 }

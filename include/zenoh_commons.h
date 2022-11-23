@@ -509,24 +509,6 @@ typedef struct z_hello_t {
   struct z_str_array_t locators;
 } z_hello_t;
 /**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_reply_channel_closure_t {
-  void *context;
-  bool (*call)(struct z_owned_reply_t*, void*);
-  void (*drop)(void*);
-} z_owned_reply_channel_closure_t;
-/**
  * A loaned zenoh publisher.
  */
 typedef struct z_publisher_t {
@@ -574,6 +556,24 @@ typedef struct z_put_options_t {
 typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
 } z_query_reply_options_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * - `this` is a pointer to an arbitrary state.
+ * - `call` is the typical callback function. `this` will be passed as its last argument.
+ * - `drop` allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * We guarantee that:
+ * - `call` will never be called once `drop` has started.
+ * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
+ * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_reply_channel_closure_t {
+  void *context;
+  bool (*call)(struct z_owned_reply_t*, void*);
+  void (*drop)(void*);
+} z_owned_reply_channel_closure_t;
 /**
  * A pair of closures, the `send` one accepting
  */
@@ -713,6 +713,10 @@ struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 struct z_owned_config_t z_config_new(void);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_config_t' type
+ */
+struct z_owned_config_t z_config_null(void);
 /**
  * Constructs a default, zenoh-allocated, peer mode configuration.
  */
@@ -940,6 +944,10 @@ void z_encoding_drop(struct z_owned_encoding_t *encoding);
  */
 struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
+ */
+struct z_owned_encoding_t z_encoding_null(void);
+/**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
@@ -1117,10 +1125,6 @@ struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
  */
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
- */
-struct z_owned_reply_channel_closure_t z_owned_reply_channel_closure(void);
-/**
  * Returns ``true`` if `pub` is valid.
  */
 bool z_publisher_check(const struct z_owned_publisher_t *pbl);
@@ -1295,6 +1299,10 @@ bool z_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
+ */
+struct z_owned_reply_channel_closure_t z_reply_channel_closure_null(void);
 void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
@@ -1351,6 +1359,7 @@ bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_default(void);
 void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_from(struct z_config_t config);
+struct z_owned_scouting_config_t z_scouting_config_null(void);
 /**
  * Returns ``true`` if `session` is valid.
  */

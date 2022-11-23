@@ -127,6 +127,7 @@ pub extern "C" fn z_config_new() -> z_owned_config_t {
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_config_t' type
+#[no_mangle]
 pub extern "C" fn z_config_null() -> z_owned_config_t {
     z_owned_config_t::null()
 }
