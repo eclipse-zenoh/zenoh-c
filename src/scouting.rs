@@ -14,7 +14,7 @@
 
 use crate::{
     _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_config_t, z_id_t,
-    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, 
+    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger,
 };
 use async_std::task;
 use libc::{c_char, c_uint, c_ulong, size_t};
@@ -121,7 +121,8 @@ impl From<Hello> for z_owned_hello_t {
                 None => z_id_t { id: [0; 16] },
             },
             _locators: if !h.locators.is_empty() {
-                let mut locators = h.locators
+                let mut locators = h
+                    .locators
                     .into_iter()
                     .map(|l| CString::new(l.to_string()).unwrap().into_raw())
                     .collect::<Vec<_>>();
