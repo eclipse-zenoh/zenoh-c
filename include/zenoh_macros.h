@@ -135,6 +135,23 @@ template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
 
+void z_null(z_owned_session_t& v) { v = z_session_null(); }
+void z_null(z_owned_publisher_t& v) { v = z_publisher_null(); }
+void z_null(z_owned_keyexpr_t& v) { v = z_keyexpr_null(); }
+void z_null(z_owned_config_t& v) { v = z_config_null(); }
+void z_null(z_owned_scouting_config_t& v) { v = z_scouting_config_null(); }
+void z_null(z_owned_pull_subscriber_t& v) { v = z_pull_subscriber_null(); }
+void z_null(z_owned_subscriber_t& v) { v = z_subscriber_null(); }
+void z_null(z_owned_queryable_t& v) { v = z_queryable_null(); }
+void z_null(z_owned_encoding_t& v) { v = z_encoding_null(); }
+void z_null(z_owned_reply_t& v) { v = z_reply_null(); }
+void z_null(z_owned_closure_sample_t& v) { v = z_closure_sample_null(); }
+void z_null(z_owned_closure_query_t& v) { v = z_closure_query_null(); }
+void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
+void z_null(z_owned_closure_hello_t& v) { v = z_closure_hello_null(); }
+void z_null(z_owned_reply_channel_closure_t& v) { v = z_reply_channel_closure_null(); }
+void z_null(z_owned_reply_channel_t& v) { v = z_reply_channel_null(); }
+
 bool z_check(const z_owned_session_t& v) { return z_session_check(&v); }
 bool z_check(const z_owned_publisher_t& v) { return z_publisher_check(&v); }
 bool z_check(const z_owned_keyexpr_t& v) { return z_keyexpr_check(&v); }
