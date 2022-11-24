@@ -20,7 +20,7 @@ use zenoh_protocol_core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
 
 use crate::{
-    z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_config_t, z_id_t,
+    z_closure_hello_call, z_config_check, z_config_default, z_config_null, z_config_t, z_id_t,
     z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, Z_ROUTER,
 };
 

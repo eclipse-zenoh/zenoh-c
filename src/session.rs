@@ -73,7 +73,7 @@ impl z_owned_session_t {
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct z_session_t(* const z_owned_session_t);
+pub struct z_session_t(*const z_owned_session_t);
 
 /// Returns a :c:type:`z_session_t` loaned from `s`.
 #[no_mangle]

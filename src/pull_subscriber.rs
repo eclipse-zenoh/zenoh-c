@@ -200,13 +200,13 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
                 Ok(sub) => z_owned_pull_subscriber_t::new(sub),
                 Err(e) => {
                     log::debug!("{}", e);
-                    z_owned_pull_subscriber_t::null() 
+                    z_owned_pull_subscriber_t::null()
                 }
             }
         }
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
-            z_owned_pull_subscriber_t::null() 
+            z_owned_pull_subscriber_t::null()
         }
     }
 }
@@ -234,9 +234,7 @@ pub extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bo
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_pull_subscriber_loan(
-    sub: &z_owned_pull_subscriber_t,
-) -> z_pull_subscriber_t {
+pub extern "C" fn z_pull_subscriber_loan(sub: &z_owned_pull_subscriber_t) -> z_pull_subscriber_t {
     z_pull_subscriber_t(sub)
 }
 
