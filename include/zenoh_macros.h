@@ -115,28 +115,28 @@ template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
 
-bool z_check(const z_owned_session_t& v) { return z_session_check(&v); }
-bool z_check(const z_owned_publisher_t& v) { return z_publisher_check(&v); }
-bool z_check(const z_owned_keyexpr_t& v) { return z_keyexpr_check(&v); }
-bool z_check(const z_keyexpr_t& v) { return z_keyexpr_is_initialized(&v); }
-bool z_check(const z_owned_config_t& v) { return z_config_check(&v); }
-bool z_check(const z_owned_scouting_config_t& v) { return z_scouting_config_check(&v); }
-bool z_check(const z_bytes_t& v) { return z_bytes_check(&v); }
-bool z_check(const z_owned_subscriber_t& v) { return z_subscriber_check(&v); }
-bool z_check(const z_owned_pull_subscriber_t& v) { return z_pull_subscriber_check(&v); }
-bool z_check(const z_owned_queryable_t& v) { return z_queryable_check(&v); }
-bool z_check(const z_owned_encoding_t& v) { return z_encoding_check(&v); }
-bool z_check(const z_owned_reply_t& v) { return z_reply_check(&v); }
+inline bool z_check(const z_owned_session_t& v) { return z_session_check(&v); }
+inline bool z_check(const z_owned_publisher_t& v) { return z_publisher_check(&v); }
+inline bool z_check(const z_owned_keyexpr_t& v) { return z_keyexpr_check(&v); }
+inline bool z_check(const z_keyexpr_t& v) { return z_keyexpr_is_initialized(&v); }
+inline bool z_check(const z_owned_config_t& v) { return z_config_check(&v); }
+inline bool z_check(const z_owned_scouting_config_t& v) { return z_scouting_config_check(&v); }
+inline bool z_check(const z_bytes_t& v) { return z_bytes_check(&v); }
+inline bool z_check(const z_owned_subscriber_t& v) { return z_subscriber_check(&v); }
+inline bool z_check(const z_owned_pull_subscriber_t& v) { return z_pull_subscriber_check(&v); }
+inline bool z_check(const z_owned_queryable_t& v) { return z_queryable_check(&v); }
+inline bool z_check(const z_owned_encoding_t& v) { return z_encoding_check(&v); }
+inline bool z_check(const z_owned_reply_t& v) { return z_reply_check(&v); }
 
-void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample) 
+inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample) 
     { z_closure_sample_call(&closure, sample); }
-void z_call(const struct z_owned_closure_query_t &closure, const struct z_query_t *query)
+inline void z_call(const struct z_owned_closure_query_t &closure, const struct z_query_t *query)
     { z_closure_query_call(&closure, query); }
-void z_call(const struct z_owned_closure_reply_t &closure, struct z_owned_reply_t *sample)
+inline void z_call(const struct z_owned_closure_reply_t &closure, struct z_owned_reply_t *sample)
     { z_closure_reply_call(&closure, sample); }
-void z_call(const struct z_owned_closure_hello_t &closure, struct z_owned_hello_t *hello)
+inline void z_call(const struct z_owned_closure_hello_t &closure, struct z_owned_hello_t *hello)
     { z_closure_hello_call(&closure, hello); }
-bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owned_reply_t *sample)
+inline bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owned_reply_t *sample)
     { return z_reply_channel_closure_call(&closure, sample); }
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
