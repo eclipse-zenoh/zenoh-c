@@ -2,6 +2,7 @@
 
 #ifndef __cplusplus
 
+// clang-format off
 #define z_loan(x) \
     _Generic((x), z_owned_session_t : z_session_loan,                 \
                   z_owned_keyexpr_t : z_keyexpr_loan,                 \
@@ -71,6 +72,7 @@
                   z_owned_closure_hello_t : z_closure_hello_call,                \
                   z_owned_reply_channel_closure_t : z_reply_channel_closure_call \
             ) (&x, __VA_ARGS__)
+// clang-format on
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
     { .context = (void*)ctx, .call = callback, .drop = droper }
@@ -79,6 +81,7 @@
 
 #else
 
+// clang-format off
 template<class T> struct zenoh_loan_type { typedef T type; };
 template<class T> inline typename zenoh_loan_type<T>::type z_loan(T&);
 
@@ -175,6 +178,7 @@ inline void z_call(const struct z_owned_closure_hello_t &closure, struct z_owned
     { z_closure_hello_call(&closure, hello); }
 inline bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owned_reply_t *sample)
     { return z_reply_channel_closure_call(&closure, sample); }
+// clang-format on
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
     { .context = const_cast<void*>(static_cast<const void*>(ctx)), .call = callback, .drop = droper }
