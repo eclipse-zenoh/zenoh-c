@@ -246,7 +246,7 @@ pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t)
 ///     config: A set of properties to configure the scouting.
 ///     timeout: The time (in milliseconds) that should be spent scouting.
 ///
-/// Returns 0 if successful
+/// Returns 0 if successful, negative values upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_scout(

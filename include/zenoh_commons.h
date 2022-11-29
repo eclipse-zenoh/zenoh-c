@@ -894,7 +894,7 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
  *     keyexpr: The key expression to delete.
  *     options: The put options.
  * Returns:
- *     ``0`` in case of success, ``1`` in case of failure.
+ *     ``0`` in case of success, negative values in case of failure.
  */
 int8_t z_delete(struct z_session_t session,
                 struct z_keyexpr_t keyexpr,
@@ -967,7 +967,7 @@ struct z_owned_hello_t z_hello_null(void);
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
  * and is guaranteed to be dropped before this function exits.
  *
- * Retuns 0 on success
+ * Retuns 0 on success, negative values on failure
  */
 int8_t z_info_peers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
 /**
@@ -976,7 +976,7 @@ int8_t z_info_peers_zid(struct z_session_t session, struct z_owned_closure_zid_t
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
  * and is guaranteed to be dropped before this function exits.
  *
- * Retuns 0 on success
+ * Retuns 0 on success, negative values on failure.
  */
 int8_t z_info_routers_zid(struct z_session_t session, struct z_owned_closure_zid_t *callback);
 /**
@@ -1001,7 +1001,7 @@ struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
 /**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
- * Returns ``0`` upon success.
+ * Returns ``0`` upon success, negative values upon failure.
  * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
  * key expression for reasons other than a non-canon form.
  *
@@ -1012,7 +1012,7 @@ int8_t z_keyexpr_canonize(char *start,
 /**
  * Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
  *
- * Returns ``0`` upon success.
+ * Returns ``0`` upon success, negative values upon failure.
  * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
  * key expression for reasons other than a non-canon form.
  *
@@ -1136,7 +1136,7 @@ struct z_publisher_options_t z_publisher_options_default(void);
  *     len: The length of the value to put.
  *     options: The publisher put options.
  * Returns:
- *     ``0`` in case of success, ``1`` in case of failure.
+ *     ``0`` in case of success, negative values in case of failure.
  */
 int8_t z_publisher_put(struct z_publisher_t publisher,
                        const uint8_t *payload,
@@ -1170,7 +1170,7 @@ struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
  *     len: The length of the value to put.
  *     options: The put options.
  * Returns:
- *     ``0`` in case of success, ``1`` in case of failure.
+ *     ``0`` in case of success, negative values in case of failure.
  */
 int8_t z_put(struct z_session_t session,
              struct z_keyexpr_t keyexpr,
@@ -1306,7 +1306,7 @@ struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
  *     config: A set of properties to configure the scouting.
  *     timeout: The time (in milliseconds) that should be spent scouting.
  *
- * Returns 0 if successful
+ * Returns 0 if successful, negative values upon failure.
  */
 int8_t z_scout(struct z_owned_scouting_config_t *config, struct z_owned_closure_hello_t *callback);
 bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
