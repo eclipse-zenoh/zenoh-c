@@ -489,11 +489,22 @@ typedef struct z_value_t {
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
 } z_value_t;
+
+/**
+ * Represents the set of options that can be applied to the get operation,
+ * whenever issued via :c:func:`z_get`.
+ *
+ * Members:
+ *   z_query_target_t target: The queryables that should be targeted by this get.
+ *   z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies.
+ *   z_value_t with_value: The payload to include in the query. Note: This parameter has been marked as unstable: it works as advertised, but we may change it in a future release.
+ */
 typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
   struct z_value_t with_value;
 } z_get_options_t;
+
 /**
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
  */
@@ -1245,6 +1256,7 @@ struct z_query_reply_options_t z_query_reply_options_default(void);
 enum z_query_target_t z_query_target_default(void);
 /**
  * Get a query's [payload value](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md) by aliasing it.
+ * Note: This API has been marked as unstable: it works as advertised, but we may change it in a future release.
  */
 struct z_value_t z_query_value(const struct z_query_t *query);
 /**
