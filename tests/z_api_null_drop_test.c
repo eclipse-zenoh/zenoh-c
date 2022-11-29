@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
     z_owned_closure_query_t closure_query_null_1 = z_closure_query_null();
     z_owned_closure_reply_t closure_reply_null_1 = z_closure_reply_null();
     z_owned_closure_hello_t closure_hello_null_1 = z_closure_hello_null();
+    z_owned_closure_zid_t closure_zid_null_1 = z_closure_zid_null();
     z_owned_reply_channel_closure_t reply_channel_closure_null_1 = z_reply_channel_closure_null();
     z_owned_reply_channel_t reply_channel_null_1 = z_reply_channel_null();
 
@@ -71,6 +72,7 @@ int main(int argc, char **argv) {
     z_owned_closure_query_t closure_query_null_2;
     z_owned_closure_reply_t closure_reply_null_2;
     z_owned_closure_hello_t closure_hello_null_2;
+    z_owned_closure_zid_t closure_zid_null_2;
     z_owned_reply_channel_closure_t reply_channel_closure_null_2;
     z_owned_reply_channel_t reply_channel_null_2;
 
@@ -88,6 +90,7 @@ int main(int argc, char **argv) {
     z_null(&closure_query_null_2);
     z_null(&closure_reply_null_2);
     z_null(&closure_hello_null_2);
+    z_null(&closure_zid_null_2);
     z_null(&reply_channel_closure_null_2);
     z_null(&reply_channel_null_2);
 
@@ -122,6 +125,7 @@ int main(int argc, char **argv) {
     z_drop(&closure_query_null_1);
     z_drop(&closure_reply_null_1);
     z_drop(&closure_hello_null_1);
+    z_drop(&closure_zid_null_1);
     z_drop(&reply_channel_closure_null_1);
     z_drop(&reply_channel_null_1);
 
@@ -139,6 +143,7 @@ int main(int argc, char **argv) {
     z_drop(&closure_query_null_1);
     z_drop(&closure_reply_null_1);
     z_drop(&closure_hello_null_1);
+    z_drop(&closure_zid_null_1);
     z_drop(&reply_channel_closure_null_1);
     z_drop(&reply_channel_null_1);
 
@@ -156,6 +161,7 @@ int main(int argc, char **argv) {
     z_drop(&closure_query_null_2);
     z_drop(&closure_reply_null_2);
     z_drop(&closure_hello_null_2);
+    z_drop(&closure_zid_null_2);
     z_drop(&reply_channel_closure_null_2);
     z_drop(&reply_channel_null_2);
 
@@ -173,6 +179,7 @@ int main(int argc, char **argv) {
     z_drop(&closure_query_null_2);
     z_drop(&closure_reply_null_2);
     z_drop(&closure_hello_null_2);
+    z_drop(&closure_zid_null_2);
     z_drop(&reply_channel_closure_null_2);
     z_drop(&reply_channel_null_2);
 

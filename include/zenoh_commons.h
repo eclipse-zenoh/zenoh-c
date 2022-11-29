@@ -680,6 +680,10 @@ void z_closure_zid_call(const struct z_owned_closure_zid_t *closure, const struc
  */
 void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_zid_t' type
+ */
+struct z_owned_closure_zid_t z_closure_zid_null(void);
+/**
  * Returns ``true`` if `config` is valid.
  */
 bool z_config_check(const struct z_owned_config_t *config);
