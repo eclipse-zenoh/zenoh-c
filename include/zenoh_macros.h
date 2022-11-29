@@ -182,7 +182,7 @@ inline void z_call(const struct z_owned_closure_reply_t &closure, struct z_owned
     { z_closure_reply_call(&closure, sample); }
 inline void z_call(const struct z_owned_closure_hello_t &closure, struct z_owned_hello_t *hello)
     { z_closure_hello_call(&closure, hello); }
-inline void z_call(const struct z_owned_closure_zid_t &closure, struct z_owned_zid_t *zid)
+inline void z_call(const struct z_owned_closure_zid_t &closure, const struct z_id_t *zid)
     { z_closure_zid_call(&closure, zid); }
 inline bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owned_reply_t *sample)
     { return z_reply_channel_closure_call(&closure, sample); }
