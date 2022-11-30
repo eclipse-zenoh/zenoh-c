@@ -38,6 +38,11 @@ impl Drop for z_owned_closure_query_t {
         }
     }
 }
+/// Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
+#[no_mangle]
+pub extern "C" fn z_closure_query_null() -> z_owned_closure_query_t {
+    z_owned_closure_query_t::empty()
+}
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_query_call(closure: &z_owned_closure_query_t, query: &z_query_t) {

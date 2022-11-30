@@ -40,6 +40,11 @@ impl Drop for z_owned_closure_hello_t {
         }
     }
 }
+/// Constructs a null safe-to-drop value of 'z_owned_closure_hello_t' type
+#[no_mangle]
+pub extern "C" fn z_closure_hello_null() -> z_owned_closure_hello_t {
+    z_owned_closure_hello_t::empty()
+}
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_hello_call(

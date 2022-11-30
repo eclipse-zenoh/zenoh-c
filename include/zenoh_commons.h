@@ -629,6 +629,10 @@ void z_closure_hello_call(const struct z_owned_closure_hello_t *closure,
  */
 void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_hello_t' type
+ */
+struct z_owned_closure_hello_t z_closure_hello_null(void);
+/**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_closure_query_call(const struct z_owned_closure_query_t *closure,
@@ -637,6 +641,10 @@ void z_closure_query_call(const struct z_owned_closure_query_t *closure,
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_closure_query_drop(struct z_owned_closure_query_t *closure);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
+ */
+struct z_owned_closure_query_t z_closure_query_null(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -647,6 +655,10 @@ void z_closure_reply_call(const struct z_owned_closure_reply_t *closure,
  */
 void z_closure_reply_drop(struct z_owned_closure_reply_t *closure);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_reply_t' type
+ */
+struct z_owned_closure_reply_t z_closure_reply_null(void);
+/**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_closure_sample_call(const struct z_owned_closure_sample_t *closure,
@@ -656,6 +668,10 @@ void z_closure_sample_call(const struct z_owned_closure_sample_t *closure,
  */
 void z_closure_sample_drop(struct z_owned_closure_sample_t *closure);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_sample_t' type
+ */
+struct z_owned_closure_sample_t z_closure_sample_null(void);
+/**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 void z_closure_zid_call(const struct z_owned_closure_zid_t *closure, const struct z_id_t *sample);
@@ -663,6 +679,10 @@ void z_closure_zid_call(const struct z_owned_closure_zid_t *closure, const struc
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_zid_t' type
+ */
+struct z_owned_closure_zid_t z_closure_zid_null(void);
 /**
  * Returns ``true`` if `config` is valid.
  */
@@ -697,6 +717,10 @@ struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 struct z_owned_config_t z_config_new(void);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_config_t' type
+ */
+struct z_owned_config_t z_config_null(void);
 /**
  * Constructs a default, zenoh-allocated, peer mode configuration.
  */
@@ -924,6 +948,10 @@ void z_encoding_drop(struct z_owned_encoding_t *encoding);
  */
 struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
+ */
+struct z_owned_encoding_t z_encoding_null(void);
+/**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
@@ -1077,6 +1105,10 @@ struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
  */
 struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
+ */
+struct z_owned_keyexpr_t z_keyexpr_null(void);
+/**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
  * The user is responsible of droping the returned string using libc's `free`.
  */
@@ -1122,6 +1154,10 @@ struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
  */
 struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
+ */
+struct z_owned_publisher_t z_publisher_null(void);
+/**
  * Constructs the default value for :c:type:`z_publisher_options_t`.
  */
 struct z_publisher_options_t z_publisher_options_default(void);
@@ -1154,6 +1190,10 @@ bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
  * Returns ``true`` if `sub` is valid.
  */
 struct z_pull_subscriber_t z_pull_subscriber_loan(const struct z_owned_pull_subscriber_t *sub);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
+ */
+struct z_owned_pull_subscriber_t z_pull_subscriber_null(void);
 /**
  * Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
  */
@@ -1249,6 +1289,10 @@ enum z_query_target_t z_query_target_default(void);
  */
 bool z_queryable_check(const struct z_owned_queryable_t *qable);
 /**
+ * Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
+ */
+struct z_owned_queryable_t z_queryable_null(void);
+/**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
 struct z_queryable_options_t z_queryable_options_default(void);
@@ -1261,7 +1305,15 @@ bool z_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
+ */
+struct z_owned_reply_channel_closure_t z_reply_channel_closure_null(void);
 void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
+ */
+struct z_owned_reply_channel_t z_reply_channel_null(void);
 /**
  * Returns ``true`` if `reply_data` is valid.
  */
@@ -1313,6 +1365,7 @@ bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_default(void);
 void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
 struct z_owned_scouting_config_t z_scouting_config_from(struct z_config_t config);
+struct z_owned_scouting_config_t z_scouting_config_null(void);
 /**
  * Returns ``true`` if `session` is valid.
  */
@@ -1321,6 +1374,10 @@ bool z_session_check(const struct z_owned_session_t *session);
  * Returns a :c:type:`z_session_t` loaned from `s`.
  */
 struct z_session_t z_session_loan(const struct z_owned_session_t *s);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_session_t' type
+ */
+struct z_owned_session_t z_session_null(void);
 /**
  * Returns ``true`` if `strs` is valid.
  */
@@ -1337,6 +1394,10 @@ struct z_str_array_t z_str_array_loan(const struct z_owned_str_array_t *strs);
  * Returns ``true`` if `sub` is valid.
  */
 bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
+ */
+struct z_owned_subscriber_t z_subscriber_null(void);
 /**
  * Constructs the default value for :c:type:`z_subscriber_options_t`.
  */

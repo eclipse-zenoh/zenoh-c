@@ -39,6 +39,12 @@ impl Drop for z_owned_closure_sample_t {
     }
 }
 
+/// Constructs a null safe-to-drop value of 'z_owned_closure_sample_t' type
+#[no_mangle]
+pub extern "C" fn z_closure_sample_null() -> z_owned_closure_sample_t {
+    z_owned_closure_sample_t::empty()
+}
+
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_sample_call(closure: &z_owned_closure_sample_t, sample: &z_sample_t) {
