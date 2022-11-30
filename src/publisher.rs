@@ -219,7 +219,7 @@ pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t
 ///     len: The length of the value to put.
 ///     options: The publisher put options.
 /// Returns:
-///     ``0`` in case of success, ``1`` in case of failure.
+///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(

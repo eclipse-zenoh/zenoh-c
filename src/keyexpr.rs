@@ -243,7 +243,7 @@ pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) ->
 
 /// Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
 ///
-/// Returns ``0`` upon success.  
+/// Returns ``0`` upon success, negative values upon failure.  
 /// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
 /// key expression for reasons other than a non-canon form.
 ///
@@ -262,7 +262,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) 
 }
 /// Canonizes the passed string in place, possibly shortening it by modifying `len`.
 ///
-/// Returns ``0`` upon success.  
+/// Returns ``0`` upon success, negative values upon failure.  
 /// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
 /// key expression for reasons other than a non-canon form.
 ///
