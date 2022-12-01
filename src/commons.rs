@@ -290,6 +290,22 @@ pub struct z_owned_encoding_t {
     pub _dropped: bool,
 }
 
+impl z_owned_encoding_t {
+    pub fn null() -> Self {
+        z_owned_encoding_t {
+            prefix: z_encoding_prefix_t::Empty,
+            suffix: z_bytes_t::default(),
+            _dropped: true,
+        }
+    }
+}
+
+/// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
+#[no_mangle]
+pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
+    z_owned_encoding_t::null()
+}
+
 /// Constructs a specific :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -326,14 +342,14 @@ pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
+pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
     !encoding._dropped
 }
 
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
+pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
     z_encoding_t {
         prefix: encoding.prefix,
         suffix: encoding.suffix,

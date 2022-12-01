@@ -158,6 +158,9 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
     None.into()
 }
 
+/// WARNING: These options have been marked as unstable:
+///     - with_value
+/// They work as advertised, but we may change them in a future release.
 #[repr(C)]
 pub struct z_get_options_t {
     pub target: z_query_target_t,

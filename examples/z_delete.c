@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
     printf("Deleting resources matching '%s'...\n", keyexpr);
     z_delete_options_t options = z_delete_options_default();
     int res = z_delete(z_loan(s), z_keyexpr(keyexpr), &options);
-    if (!res) {
+    if (res < 0) {
         printf("Delete failed...\n");
     }
 
