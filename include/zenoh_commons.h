@@ -489,22 +489,11 @@ typedef struct z_value_t {
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
 } z_value_t;
-
-/**
- * Represents the set of options that can be applied to the get operation,
- * whenever issued via :c:func:`z_get`.
- *
- * Members:
- *   z_query_target_t target: The queryables that should be targeted by this get.
- *   z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies.
- *   z_value_t with_value: The payload to include in the query. Note: This parameter has been marked as unstable: it works as advertised, but we may change it in a future release.
- */
 typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
   struct z_value_t with_value;
 } z_get_options_t;
-
 /**
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
  */
@@ -908,9 +897,9 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int z_delete(struct z_session_t session,
-             struct z_keyexpr_t keyexpr,
-             const struct z_delete_options_t *opts);
+int8_t z_delete(struct z_session_t session,
+                struct z_keyexpr_t keyexpr,
+                const struct z_delete_options_t *opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
@@ -939,6 +928,8 @@ struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
+ * Returns a negative value upon failure.
+ *
  * Parameters:
  *     session: The zenoh session.
  *     keyexpr: The key expression matching resources to query.
@@ -949,11 +940,11 @@ struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
  *               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
  *     options: additional options for the get.
  */
-bool z_get(struct z_session_t session,
-           struct z_keyexpr_t keyexpr,
-           const char *parameters,
-           struct z_owned_closure_reply_t *callback,
-           const struct z_get_options_t *options);
+int8_t z_get(struct z_session_t session,
+             struct z_keyexpr_t keyexpr,
+             const char *parameters,
+             struct z_owned_closure_reply_t *callback,
+             const struct z_get_options_t *options);
 struct z_get_options_t z_get_options_default(void);
 /**
  * Returns ``true`` if `hello` is valid.
@@ -1182,11 +1173,11 @@ struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
  */
-int z_put(struct z_session_t session,
-          struct z_keyexpr_t keyexpr,
-          const uint8_t *payload,
-          size_t len,
-          const struct z_put_options_t *opts);
+int8_t z_put(struct z_session_t session,
+             struct z_keyexpr_t keyexpr,
+             const uint8_t *payload,
+             size_t len,
+             const struct z_put_options_t *opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
@@ -1241,11 +1232,11 @@ struct z_bytes_t z_query_parameters(const struct z_query_t *query);
  *     len: The length of the value of this reply.
  *     options: The options of this reply.
  */
-void z_query_reply(const struct z_query_t *query,
-                   struct z_keyexpr_t key,
-                   const uint8_t *payload,
-                   uintptr_t len,
-                   const struct z_query_reply_options_t *options);
+int8_t z_query_reply(const struct z_query_t *query,
+                     struct z_keyexpr_t key,
+                     const uint8_t *payload,
+                     uintptr_t len,
+                     const struct z_query_reply_options_t *options);
 /**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
@@ -1256,7 +1247,6 @@ struct z_query_reply_options_t z_query_reply_options_default(void);
 enum z_query_target_t z_query_target_default(void);
 /**
  * Get a query's [payload value](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md) by aliasing it.
- * Note: This API has been marked as unstable: it works as advertised, but we may change it in a future release.
  */
 struct z_value_t z_query_value(const struct z_query_t *query);
 /**
