@@ -56,7 +56,7 @@ impl AsRef<Option<Session>> for z_session_t {
 
 impl From<z_session_t> for &'static z_owned_session_t {
     fn from(val: z_session_t) -> Self {
-        unsafe { std::mem::transmute(val.0) }
+        unsafe { &*val.0 }
     }
 }
 
