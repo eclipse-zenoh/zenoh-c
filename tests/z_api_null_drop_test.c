@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
     z_owned_queryable_t queryable_null_1 = z_queryable_null();
     z_owned_encoding_t encoding_null_1 = z_encoding_null();
     z_owned_reply_t reply_null_1 = z_reply_null();
+    z_owned_hello_t hello_null_1 = z_hello_null();
     z_owned_closure_sample_t closure_sample_null_1 = z_closure_sample_null();
     z_owned_closure_query_t closure_query_null_1 = z_closure_query_null();
     z_owned_closure_reply_t closure_reply_null_1 = z_closure_reply_null();
@@ -54,6 +55,7 @@ int main(int argc, char **argv) {
     assert(!z_check(queryable_null_1));
     assert(!z_check(encoding_null_1));
     assert(!z_check(reply_null_1));
+    assert(!z_check(hello_null_1));
 
     //
     // Test that z_null macro defined for all types
@@ -68,6 +70,7 @@ int main(int argc, char **argv) {
     z_owned_queryable_t queryable_null_2;
     z_owned_encoding_t encoding_null_2;
     z_owned_reply_t reply_null_2;
+    z_owned_hello_t hello_null_2;
     z_owned_closure_sample_t closure_sample_null_2;
     z_owned_closure_query_t closure_query_null_2;
     z_owned_closure_reply_t closure_reply_null_2;
@@ -86,6 +89,7 @@ int main(int argc, char **argv) {
     z_null(&queryable_null_2);
     z_null(&encoding_null_2);
     z_null(&reply_null_2);
+    z_null(&hello_null_2);
     z_null(&closure_sample_null_2);
     z_null(&closure_query_null_2);
     z_null(&closure_reply_null_2);
@@ -107,81 +111,50 @@ int main(int argc, char **argv) {
     assert(!z_check(queryable_null_2));
     assert(!z_check(encoding_null_2));
     assert(!z_check(reply_null_2));
+    assert(!z_check(hello_null_2));
 
     //
     // Test drop null and double drop it
     //
-    z_drop(&session_null_1);
-    z_drop(&publisher_null_1);
-    z_drop(&keyexpr_null_1);
-    z_drop(&config_null_1);
-    z_drop(&scouting_config_null_1);
-    z_drop(&pull_subscriber_null_1);
-    z_drop(&subscriber_null_1);
-    z_drop(&queryable_null_1);
-    z_drop(&encoding_null_1);
-    z_drop(&reply_null_1);
-    z_drop(&closure_sample_null_1);
-    z_drop(&closure_query_null_1);
-    z_drop(&closure_reply_null_1);
-    z_drop(&closure_hello_null_1);
-    z_drop(&closure_zid_null_1);
-    z_drop(&reply_channel_closure_null_1);
-    z_drop(&reply_channel_null_1);
+    for (int i = 0; i < 2; ++i) {
+        z_drop(&session_null_1);
+        z_drop(&publisher_null_1);
+        z_drop(&keyexpr_null_1);
+        z_drop(&config_null_1);
+        z_drop(&scouting_config_null_1);
+        z_drop(&pull_subscriber_null_1);
+        z_drop(&subscriber_null_1);
+        z_drop(&queryable_null_1);
+        z_drop(&encoding_null_1);
+        z_drop(&reply_null_1);
+        z_drop(&hello_null_1);
+        z_drop(&closure_sample_null_1);
+        z_drop(&closure_query_null_1);
+        z_drop(&closure_reply_null_1);
+        z_drop(&closure_hello_null_1);
+        z_drop(&closure_zid_null_1);
+        z_drop(&reply_channel_closure_null_1);
+        z_drop(&reply_channel_null_1);
 
-    z_drop(&session_null_1);
-    z_drop(&publisher_null_1);
-    z_drop(&keyexpr_null_1);
-    z_drop(&config_null_1);
-    z_drop(&scouting_config_null_1);
-    z_drop(&pull_subscriber_null_1);
-    z_drop(&subscriber_null_1);
-    z_drop(&queryable_null_1);
-    z_drop(&encoding_null_1);
-    z_drop(&reply_null_1);
-    z_drop(&closure_sample_null_1);
-    z_drop(&closure_query_null_1);
-    z_drop(&closure_reply_null_1);
-    z_drop(&closure_hello_null_1);
-    z_drop(&closure_zid_null_1);
-    z_drop(&reply_channel_closure_null_1);
-    z_drop(&reply_channel_null_1);
-
-    z_drop(&session_null_2);
-    z_drop(&publisher_null_2);
-    z_drop(&keyexpr_null_2);
-    z_drop(&config_null_2);
-    z_drop(&scouting_config_null_2);
-    z_drop(&pull_subscriber_null_2);
-    z_drop(&subscriber_null_2);
-    z_drop(&queryable_null_2);
-    z_drop(&encoding_null_2);
-    z_drop(&reply_null_2);
-    z_drop(&closure_sample_null_2);
-    z_drop(&closure_query_null_2);
-    z_drop(&closure_reply_null_2);
-    z_drop(&closure_hello_null_2);
-    z_drop(&closure_zid_null_2);
-    z_drop(&reply_channel_closure_null_2);
-    z_drop(&reply_channel_null_2);
-
-    z_drop(&session_null_2);
-    z_drop(&publisher_null_2);
-    z_drop(&keyexpr_null_2);
-    z_drop(&config_null_2);
-    z_drop(&scouting_config_null_2);
-    z_drop(&pull_subscriber_null_2);
-    z_drop(&subscriber_null_2);
-    z_drop(&queryable_null_2);
-    z_drop(&encoding_null_2);
-    z_drop(&reply_null_2);
-    z_drop(&closure_sample_null_2);
-    z_drop(&closure_query_null_2);
-    z_drop(&closure_reply_null_2);
-    z_drop(&closure_hello_null_2);
-    z_drop(&closure_zid_null_2);
-    z_drop(&reply_channel_closure_null_2);
-    z_drop(&reply_channel_null_2);
+        z_drop(&session_null_2);
+        z_drop(&publisher_null_2);
+        z_drop(&keyexpr_null_2);
+        z_drop(&config_null_2);
+        z_drop(&scouting_config_null_2);
+        z_drop(&pull_subscriber_null_2);
+        z_drop(&subscriber_null_2);
+        z_drop(&queryable_null_2);
+        z_drop(&encoding_null_2);
+        z_drop(&reply_null_2);
+        z_drop(&hello_null_2);
+        z_drop(&closure_sample_null_2);
+        z_drop(&closure_query_null_2);
+        z_drop(&closure_reply_null_2);
+        z_drop(&closure_hello_null_2);
+        z_drop(&closure_zid_null_2);
+        z_drop(&reply_channel_closure_null_2);
+        z_drop(&reply_channel_null_2);
+    }
 
     return 0;
 }
