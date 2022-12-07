@@ -90,12 +90,3 @@ impl From<z_bytes_t> for String {
         }
     }
 }
-
-impl From<&[u8]> for z_bytes_t {
-    fn from(s: &[u8]) -> Self {
-        z_bytes_t {
-            start: s.as_ptr(),
-            len: s.len(),
-        }
-    }
-}
