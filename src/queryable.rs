@@ -11,20 +11,18 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
-use std::ops::Deref;
-
-use libc::c_void;
-use zenoh::{
-    prelude::Sample,
-    queryable::{Query, Queryable as CallbackQueryable},
-};
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
-
 use crate::{
     z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_owned_closure_query_t, z_owned_session_t, z_session_t, LOG_INVALID_SESSION,
+    z_owned_closure_query_t, z_owned_session_t, z_session_t, z_value_t, LOG_INVALID_SESSION,
 };
+use libc::c_void;
+use std::ops::Deref;
+use zenoh::{
+    prelude::{Sample, SplitBuffer},
+    queryable::{Query, Queryable as CallbackQueryable},
+    value::Value,
+};
+use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 type Queryable = Option<CallbackQueryable<'static, ()>>;
 /// An owned zenoh queryable.
@@ -236,5 +234,22 @@ pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
     z_bytes_t {
         start: complement.as_ptr(),
         len: complement.len(),
+    }
+}
+
+/// Get a query's [payload value](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md) by aliasing it.
+/// WARNING: This API has been marked as unstable: it works as advertised, but we may change it in a future release.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
+    match query.value() {
+        Some(value) => {
+            #[allow(mutable_transmutes)]
+            if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
+                unsafe { std::mem::transmute::<_, &mut Value>(value).payload = payload.into() }
+            }
+            value.into()
+        }
+        None => (&Value::empty()).into(),
     }
 }

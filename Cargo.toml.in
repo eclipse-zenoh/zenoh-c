@@ -37,19 +37,19 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 async-std = "=1.12.0"
-async-trait = "0.1.57"
-env_logger = "0.9.1"
-futures = "0.3.24"
+async-trait = "0.1.59"
+env_logger = "0.10.0"
+futures = "0.3.25"
 json5 = "0.4.1"
-libc = "0.2.133"
+libc = "0.2.138"
 log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.4"
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", features = [
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "query-body", features = [
     "unstable",
 ] }
-zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh.git" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git" }
+zenoh-protocol-core = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "query-body" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "query-body" }
 
 [build-dependencies]
 cbindgen = "0.24.3"
