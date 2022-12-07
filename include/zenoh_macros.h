@@ -23,6 +23,7 @@
                   z_owned_queryable_t * : z_undeclare_queryable,                    \
                   z_owned_encoding_t * : z_encoding_drop,                           \
                   z_owned_reply_t * : z_reply_drop,                                 \
+                  z_owned_hello_t * : z_hello_drop,                                 \
                   z_owned_closure_sample_t * : z_closure_sample_drop,               \
                   z_owned_closure_query_t * : z_closure_query_drop,                 \
                   z_owned_closure_reply_t * : z_closure_reply_drop,                 \
@@ -43,6 +44,7 @@
                   z_owned_queryable_t * : z_queryable_null,                         \
                   z_owned_encoding_t * : z_encoding_null,                           \
                   z_owned_reply_t * : z_reply_null,                                 \
+                  z_owned_hello_t * : z_hello_null,                                 \
                   z_owned_closure_sample_t * : z_closure_sample_null,               \
                   z_owned_closure_query_t * : z_closure_query_null,                 \
                   z_owned_closure_reply_t * : z_closure_reply_null,                 \
@@ -64,7 +66,8 @@
                   z_owned_pull_subscriber_t : z_pull_subscriber_check, \
                   z_owned_queryable_t : z_queryable_check,             \
                   z_owned_encoding_t : z_encoding_check,               \
-                  z_owned_reply_t : z_reply_check                      \
+                  z_owned_reply_t : z_reply_check,                     \
+                  z_owned_hello_t : z_hello_check                      \
             )(&x)
 
 #define z_call(x, ...) \
@@ -117,6 +120,7 @@ template<> struct zenoh_drop_type<z_owned_subscriber_t> { typedef int8_t type; }
 template<> struct zenoh_drop_type<z_owned_queryable_t> { typedef int8_t type; };
 template<> struct zenoh_drop_type<z_owned_encoding_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_hello_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_sample_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_query_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_reply_t> { typedef void type; };
@@ -135,6 +139,7 @@ template<> inline int8_t z_drop(z_owned_subscriber_t* v) { return z_undeclare_su
 template<> inline int8_t z_drop(z_owned_queryable_t* v) { return z_undeclare_queryable(v); }
 template<> inline void z_drop(z_owned_encoding_t* v) { z_encoding_drop(v); }
 template<> inline void z_drop(z_owned_reply_t* v) { z_reply_drop(v); }
+template<> inline void z_drop(z_owned_hello_t* v) { z_hello_drop(v); }
 template<> inline void z_drop(z_owned_closure_sample_t* v) { z_closure_sample_drop(v); }
 template<> inline void z_drop(z_owned_closure_query_t* v) { z_closure_query_drop(v); }
 template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop(v); }
@@ -153,6 +158,7 @@ inline void z_null(z_owned_subscriber_t& v) { v = z_subscriber_null(); }
 inline void z_null(z_owned_queryable_t& v) { v = z_queryable_null(); }
 inline void z_null(z_owned_encoding_t& v) { v = z_encoding_null(); }
 inline void z_null(z_owned_reply_t& v) { v = z_reply_null(); }
+inline void z_null(z_owned_hello_t& v) { v = z_hello_null(); }
 inline void z_null(z_owned_closure_sample_t& v) { v = z_closure_sample_null(); }
 inline void z_null(z_owned_closure_query_t& v) { v = z_closure_query_null(); }
 inline void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
@@ -173,6 +179,7 @@ inline bool z_check(const z_owned_pull_subscriber_t& v) { return z_pull_subscrib
 inline bool z_check(const z_owned_queryable_t& v) { return z_queryable_check(&v); }
 inline bool z_check(const z_owned_encoding_t& v) { return z_encoding_check(&v); }
 inline bool z_check(const z_owned_reply_t& v) { return z_reply_check(&v); }
+inline bool z_check(const z_owned_hello_t& v) { return z_hello_check(&v); }
 
 inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample) 
     { z_closure_sample_call(&closure, sample); }
