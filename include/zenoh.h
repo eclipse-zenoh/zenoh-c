@@ -1,5 +1,8 @@
 #ifndef ZENOH_H
 #define ZENOH_H
+
+#include <assert.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -9,7 +12,14 @@ extern "C" {
 #define ZENOH_C_MINOR 7
 #define ZENOH_C_PATCH 0
 
-#define _z_u128 long double  // used for alignment.
+// 128-bit type used for alignment.
+#ifdef __SIZEOF_INT128__
+#define _z_u128 __uint128_t
+#else
+#define _z_u128 long double
+#endif
+
+static_assert(sizeof(_z_u128) == 16, "Size of _z_u128 must be 128 bit");
 
 #include "zenoh_concrete.h"
 //
