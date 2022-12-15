@@ -152,7 +152,7 @@ pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
     hello._whatami = 0;
 }
 
-/// Frees `hello`, invalidating it for double-drop safety.
+/// Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {

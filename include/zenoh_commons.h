@@ -988,7 +988,7 @@ bool z_hello_check(const struct z_owned_hello_t *hello);
  */
 void z_hello_drop(struct z_owned_hello_t *hello);
 /**
- * Frees `hello`, invalidating it for double-drop safety.
+ * Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
  */
 struct z_hello_t z_hello_loan(const struct z_owned_hello_t *hello);
 /**
