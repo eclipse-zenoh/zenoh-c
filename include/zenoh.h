@@ -4,9 +4,9 @@
 extern "C" {
 #endif
 
-#define ZENOH_C "0.6.0"
+#define ZENOH_C "0.7.0"
 #define ZENOH_C_MAJOR 0
-#define ZENOH_C_MINOR 6
+#define ZENOH_C_MINOR 7
 #define ZENOH_C_PATCH 0
 
 #define _z_u128 long double  // used for alignment.

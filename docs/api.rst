@@ -244,6 +244,7 @@ Types
 
 .. autocfunction:: zenoh_commons.h::z_query_keyexpr
 .. autocfunction:: zenoh_commons.h::z_query_parameters
+.. autocfunction:: zenoh_commons.h::z_query_value
 
 Functions
 ---------

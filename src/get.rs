@@ -24,11 +24,12 @@ use zenoh_protocol_core::{ConsolidationMode, QueryTarget};
 use zenoh::{
     prelude::{KeyExpr, SplitBuffer},
     query::{Mode, QueryConsolidation, Reply},
+    value::Value,
 };
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
-    _zc_stack_ke, z_bytes_t, z_closure_reply_call, z_encoding_t, z_keyexpr_t,
+    _zc_stack_ke, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
     z_owned_closure_reply_t, z_sample_t, z_session_t, LOG_INVALID_SESSION,
 };
 
@@ -51,7 +52,7 @@ pub struct z_owned_reply_t {
 #[repr(C)]
 pub struct _zc_res_s_v {
     _3: u8,
-    _0: _z_u128,
+    _0: [_z_u128; 3],
     _1: _zc_stack_ke,
     _2: [usize; 11],
 }
@@ -157,16 +158,26 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
     None.into()
 }
 
+/// WARNING: These options have been marked as unstable:
+///     - with_value
+/// They work as advertised, but we may change them in a future release.
 #[repr(C)]
 pub struct z_get_options_t {
     pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
+    pub with_value: z_value_t,
 }
 #[no_mangle]
 pub extern "C" fn z_get_options_default() -> z_get_options_t {
     z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
+        with_value: {
+            z_value_t {
+                payload: z_bytes_t::empty(),
+                encoding: z_encoding_default(),
+            }
+        },
     }
 }
 
@@ -208,7 +219,8 @@ pub unsafe extern "C" fn z_get(
     if let Some(options) = options {
         q = q
             .consolidation(options.consolidation)
-            .target(options.target.into());
+            .target(options.target.into())
+            .with_value(&options.with_value);
     }
     match q
         .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
@@ -267,6 +279,28 @@ impl From<z_query_target_t> for QueryTarget {
             z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
             z_query_target_t::ALL => QueryTarget::All,
             z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
+        }
+    }
+}
+
+impl From<&z_value_t> for Value {
+    #[inline]
+    fn from(val: &z_value_t) -> Value {
+        unsafe {
+            let value: Value =
+                std::slice::from_raw_parts(val.payload.start, val.payload.len).into();
+            value
+        }
+    }
+}
+
+impl From<&Value> for z_value_t {
+    #[inline]
+    fn from(val: &Value) -> z_value_t {
+        let std::borrow::Cow::Borrowed(payload) = val.payload.contiguous() else{ panic!("Would have returned a reference to a temporary, make sure you the Value's payload is contiguous BEFORE calling this constructor.")};
+        z_value_t {
+            encoding: (&val.encoding).into(),
+            payload: payload.into(),
         }
     }
 }
