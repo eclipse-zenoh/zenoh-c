@@ -36,7 +36,7 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
    ```sh
    git clone https://github.com/eclipse-zenoh/zenoh-c.git
-   cd rust
+   cd zenoh-c
    ```
 
 [source]: https://github.com/eclipse-zenoh/zenoh-c
