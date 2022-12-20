@@ -255,7 +255,8 @@ pub extern "C" fn z_scout(
     }
     let config = std::mem::replace(config, z_scouting_config_null());
     let what = WhatAmIMatcher::try_from(config.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
-    let timeout = config.zc_timeout_ms;
+    #[allow(clippy::unnecessary_cast)] // Required for multi-target
+    let timeout = config.zc_timeout_ms as u64;
     let mut config = config._config;
     let config = config.as_mut().take().expect("invalid config");
     let mut closure = z_owned_closure_hello_t::empty();
