@@ -204,7 +204,7 @@ pub unsafe extern "C" fn z_query_reply(
     if let Some(key) = &*key {
         let mut s = Sample::new(
             key.clone().into_owned(),
-            std::slice::from_raw_parts(payload as *const u8, len as usize),
+            std::slice::from_raw_parts(payload as *const u8, len),
         );
         if let Some(o) = options {
             s.encoding = o.encoding.into();

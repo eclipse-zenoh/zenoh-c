@@ -123,7 +123,8 @@ impl z_owned_config_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
 pub extern "C" fn z_config_new() -> z_owned_config_t {
-    unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(Config::default())))) }
+    let config: Box<Config> = Box::default();
+    unsafe { z_owned_config_t(std::mem::transmute(Some(config))) }
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_config_t' type

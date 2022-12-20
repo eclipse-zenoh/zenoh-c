@@ -41,11 +41,7 @@ pub struct z_owned_str_array_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
-    let locators = Vec::from_raw_parts(
-        strs.val as *mut *const c_char,
-        strs.len as usize,
-        strs.len as usize,
-    );
+    let locators = Vec::from_raw_parts(strs.val as *mut *const c_char, strs.len, strs.len);
     for locator in locators {
         std::mem::drop(CString::from_raw(locator as *mut c_char));
     }
@@ -259,7 +255,7 @@ pub extern "C" fn z_scout(
     }
     let config = std::mem::replace(config, z_scouting_config_null());
     let what = WhatAmIMatcher::try_from(config.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
-    let timeout = config.zc_timeout_ms as u64;
+    let timeout = config.zc_timeout_ms;
     let mut config = config._config;
     let config = config.as_mut().take().expect("invalid config");
     let mut closure = z_owned_closure_hello_t::empty();
