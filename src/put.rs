@@ -153,7 +153,7 @@ pub unsafe extern "C" fn z_put(
                 opts = &default;
             }
             match s
-                .put(keyexpr, std::slice::from_raw_parts(payload, len as usize))
+                .put(keyexpr, std::slice::from_raw_parts(payload, len))
                 .encoding((*opts).encoding)
                 .kind(SampleKind::Put)
                 .congestion_control((*opts).congestion_control.into())
