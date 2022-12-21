@@ -51,10 +51,11 @@ pub struct z_owned_reply_t {
 }
 #[repr(C)]
 pub struct _zc_res_s_v {
-    _3: u8,
-    _0: [_z_u128; 3],
-    _1: _zc_stack_ke,
-    _2: [usize; 11],
+    _0: u8,
+    _1: [_z_u128; 2],
+    _2: _zc_stack_ke,
+    _3: [usize; 11],
+    _4: u64,
 }
 
 impl From<ReplyInner> for z_owned_reply_t {
