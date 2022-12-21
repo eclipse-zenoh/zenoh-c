@@ -2,6 +2,7 @@
 #define ZENOH_H
 
 #include <assert.h>
+#include <stdint.h>
 
 #include "zenoh_configure.h"
 
@@ -21,7 +22,7 @@ extern "C" {
 typedef __uint128_t _z_u128;
 #elif _MSC_VER
 typedef __declspec(align(16)) struct _z_u128 {
-    __int64 _0[2];
+    uint64_t _0[2];
 } _z_u128;
 #else
 // Let's hope that long double is 128 bit. If no, the assert below fires
@@ -31,7 +32,7 @@ typedef long double _z_u128;
 #elif RUST_U128_ALIGNMENT == 8
 
 typedef struct _z_u128 {
-    __int64 _0[2];
+    uint64_t _0[2];
 } _z_u128;
 
 #else
