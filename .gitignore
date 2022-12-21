@@ -67,3 +67,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 .cache
+
+# Platform dependent generated files
+include/zenoh_configure.h
