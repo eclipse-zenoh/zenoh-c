@@ -22,47 +22,47 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 This repository provides a C binding based on the main [Zenoh implementation written in Rust](https://github.com/eclipse-zenoh/zenoh).
 
 -------------------------------
-## How to build it 
+## How to build it
 
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project. 
+> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
-1. Make sure that [rust](https://www.rust-lang.org) is available on your platform:
-
-  -- Ubuntu -- 
-
-  ```bash
-  $ sudo apt-get install rustc
-  ```
-
-  -- MacOS -- 
-
-  ```bash
-  $ brew install rust
-  ```
+1. Make sure that [Rust](https://www.rust-lang.org) is available on your platform.
+    Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
 
 2. Clone the [source] with `git`:
 
    ```sh
    git clone https://github.com/eclipse-zenoh/zenoh-c.git
-   cd zenoh-c
-   ```
 
 [source]: https://github.com/eclipse-zenoh/zenoh-c
 
 3. Build and install:
 
+* Globally
+
   ```bash
   $ cd /path/to/zenoh-c
-  $ mkdir -p build && cd build 
-  $ cmake -DCMAKE_BUILD_TYPE=Release ..
-  $ cmake --build .
-  $ cmake --build . --target install # on linux use **sudo**
+  $ cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
+  $ cmake --build build
+  $ sudo cmake --install build
+  ```
+
+* Locally
+
+The default installation path in CMake is `/usr/local`, which requires root privileges to write.
+Users can specify the install prefix to install it locally. For example, under `~/.local`.
+
+  ```bash
+  $ cd /path/to/zenoh-c
+  $ cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.local
+  $ cmake --build build
+  $ cmake --install build
   ```
 
 You may alternatively use `-DCMAKE_BUILD_TYPE=RelWithDebInfo` if you wish to keep the debug symbols.
 
-Note that the `install` target is only available for `Release` and `RelWithDebInfo` builds.  
-CMake also offers the `Debug` build type, which we do not allow as an `install` target since you may suffer a significant performance hit if accidentally using this one.  
+Note that the `install` target is only available for `Release` and `RelWithDebInfo` builds.
+CMake also offers the `Debug` build type, which we do not allow as an `install` target since you may suffer a significant performance hit if accidentally using this one.
 Finally, CMake typicall offers a `MinSizeRel` build type. While we do not prevent you from using it, note that it is strictly equivalent to running a `Release` build.
 
 ## Building the Examples
