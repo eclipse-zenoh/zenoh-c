@@ -43,10 +43,12 @@ typedef struct _z_u128 {
 
 static_assert(sizeof(_z_u128) == 16, "Size of _z_u128 must be 128 bit");
 
-static_assert(sizeof(struct {
-                  char c;
-                  _z_u128 u;
-              }) == RUST_U128_ALIGNMENT + 16,
+typedef struct _z_u128_align_test {
+    char c;
+    _z_u128 u128;
+} _z_u128_align_test;
+
+static_assert(sizeof(_z_u128_align_test) == RUST_U128_ALIGNMENT + 16,
               "_z_u128 type must be aligned in the same way as in Rust");
 
 #include "zenoh_concrete.h"
