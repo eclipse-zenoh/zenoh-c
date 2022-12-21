@@ -2,6 +2,9 @@
 #define ZENOH_H
 
 #include <assert.h>
+#include <stdint.h>
+
+#include "zenoh_configure.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,17 +15,30 @@ extern "C" {
 #define ZENOH_C_MINOR 7
 #define ZENOH_C_PATCH 0
 
+#if RUST_U128_ALIGNMENT == 16
+
 // 128-bit type used for alignment.
 #ifdef __SIZEOF_INT128__
-#define _z_u128 __uint128_t
+typedef __uint128_t _z_u128;
 #elif _MSC_VER
-typedef __declspec(align(16)) struct _z_u128_aligned {
-    __int64 _0[2];
-} _z_u128_aligned;
-#define _z_u128 _z_u128_aligned
+typedef __declspec(align(16)) struct _z_u128 {
+    uint64_t _0[2];
+} _z_u128;
 #else
 // Let's hope that long double is 128 bit. If no, the assert below fires
-#define _z_u128 long double
+typedef long double _z_u128;
+#endif
+
+#elif RUST_U128_ALIGNMENT == 8
+
+typedef struct _z_u128 {
+    uint64_t _0[2];
+} _z_u128;
+
+#else
+
+#error "Unexpected or undefined RUST_U128_ALIGNMENT"
+
 #endif
 
 static_assert(sizeof(_z_u128) == 16, "Size of _z_u128 must be 128 bit");
@@ -32,7 +48,8 @@ typedef struct _z_u128_align_test {
     _z_u128 u128;
 } _z_u128_align_test;
 
-static_assert(sizeof(_z_u128_align_test) == 32, "_z_u128 type must be aligned by 16-byte boundary");
+static_assert(sizeof(_z_u128_align_test) == RUST_U128_ALIGNMENT + 16,
+              "_z_u128 type must be aligned in the same way as in Rust");
 
 #include "zenoh_concrete.h"
 //

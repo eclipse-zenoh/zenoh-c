@@ -10,6 +10,7 @@ fn main() {
         .expect("Unable to generate bindings")
         .write_to_file(GENERATION_PATH);
 
+    configure();
     split_bindings();
     rename_enums();
 
@@ -17,6 +18,25 @@ fn main() {
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=splitguide.yaml");
     println!("cargo:rerun-if-changed=cbindgen.toml")
+}
+
+fn configure() {
+    let content = format!(
+        r#"
+#pragma once
+#define RUST_U128_ALIGNMENT {}
+"#,
+        std::mem::align_of::<u128>()
+    );
+    let mut file = std::fs::File::options()
+        .write(true)
+        .append(false)
+        .create(true)
+        .open("include/zenoh_configure.h")
+        .unwrap();
+    file.lock_exclusive().unwrap();
+    file.write_all(content.as_bytes()).unwrap();
+    file.unlock().unwrap();
 }
 
 fn rename_enums() {
