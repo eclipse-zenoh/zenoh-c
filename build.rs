@@ -21,11 +21,19 @@ fn main() {
 }
 
 fn configure() {
-    let content = format!(r#"
+    let content = format!(
+        r#"
 #pragma once
 #define RUST_U128_ALIGNMENT {}
-"#, std::mem::align_of::<u128>());
-    let mut file = std::fs::File::options().write(true).append(false).create(true).open("include/zenoh_configure.h").unwrap();
+"#,
+        std::mem::align_of::<u128>()
+    );
+    let mut file = std::fs::File::options()
+        .write(true)
+        .append(false)
+        .create(true)
+        .open("include/zenoh_configure.h")
+        .unwrap();
     file.lock_exclusive().unwrap();
     file.write_all(content.as_bytes()).unwrap();
     file.unlock().unwrap();
