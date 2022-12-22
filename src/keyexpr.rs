@@ -37,7 +37,7 @@ use zenoh_util::core::zresult::ErrNo;
 /// Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
 /// for wire and computation efficiency.
 ///
-/// A [key expression](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md) can be either:
+/// A `key expression <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md>`_ can be either:
 ///   - A plain string expression.
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.
@@ -318,8 +318,8 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
 /// - `name` MUST be valid UTF8.
 /// - `name` MUST follow the Key Expression specification, ie:
-///   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
-///   - any instance of `**` may only be lead or followed by `/`.
+///   - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
+///   - any instance of ``**`` may only be lead or followed by ``/``.
 ///   - the key expression must have canon form.
 ///
 /// It is a loaned key expression that aliases `name`.

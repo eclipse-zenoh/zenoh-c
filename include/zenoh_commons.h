@@ -11,18 +11,16 @@ typedef enum z_congestion_control_t {
 /**
  * Consolidation mode values.
  *
- * Enumerators:
- *      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
- *          If the selector contains time range properties, consolidation mode `NONE` is used.
- *          Otherwise the `LATEST` consolidation mode is used.
- *      - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
- *      - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
- *          w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
- *          replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
- *          ts2 > ts1. It optimizes latency.
- *      - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
- *          It optimizes bandwidth.
- *
+ *     - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
+ *       If the selector contains time range properties, consolidation mode `NONE` is used.
+ *       Otherwise the `LATEST` consolidation mode is used.
+ *     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+ *     - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
+ *       w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+ *       replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+ *       ts2 > ts1. It optimizes latency.
+ *     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
+ *       It optimizes bandwidth.
  */
 typedef enum z_consolidation_mode_t {
   Z_CONSOLIDATION_MODE_AUTO = -1,
@@ -357,7 +355,7 @@ typedef struct z_owned_config_t {
   void *_0;
 } z_owned_config_t;
 /**
- * A loaned zenoh config.
+ * A loaned zenoh configuration.
  */
 typedef struct z_config_t {
   const struct z_owned_config_t *_0;
@@ -374,7 +372,7 @@ typedef struct z_config_t {
  * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
  * for wire and computation efficiency.
  *
- * A [key expression](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md) can be either:
+ * A `key expression <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md>`_ can be either:
  *   - A plain string expression.
  *   - A pure numerical id.
  *   - The combination of a numerical prefix and a string suffix.
@@ -490,9 +488,15 @@ typedef struct z_value_t {
   struct z_encoding_t encoding;
 } z_value_t;
 /**
- * WARNING: These options have been marked as unstable:
- *     - with_value
- * They work as advertised, but we may change them in a future release.
+ * Options passed to the :c:func:`z_get` function.
+ *
+ * Members:
+ *     z_query_target_t target: The Queryables that should be target of the query.
+ *     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
+ *     z_value_t with_value: An optional value to attach to the query.
+ *
+ *         **WARNING: This option has been marked as unstable:
+ *         It works as advertised, but may change in a future release.**
  */
 typedef struct z_get_options_t {
   enum z_query_target_t target;
@@ -1259,7 +1263,7 @@ struct z_query_consolidation_t z_query_consolidation_none(void);
  */
 struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
 /**
- * Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
+ * Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
  */
 struct z_bytes_t z_query_parameters(const struct z_query_t *query);
 /**
@@ -1291,8 +1295,9 @@ struct z_query_reply_options_t z_query_reply_options_default(void);
  */
 enum z_query_target_t z_query_target_default(void);
 /**
- * Get a query's [payload value](https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md) by aliasing it.
- * WARNING: This API has been marked as unstable: it works as advertised, but we may change it in a future release.
+ * Get a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
+ *
+ * **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
  */
 struct z_value_t z_query_value(const struct z_query_t *query);
 /**
@@ -1489,8 +1494,8 @@ struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, uintptr_t len);
  * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
  * - `name` MUST be valid UTF8.
  * - `name` MUST follow the Key Expression specification, ie:
- *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
- *   - any instance of `**` may only be lead or followed by `/`.
+ *   - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
+ *   - any instance of ``**`` may only be lead or followed by ``/``.
  *   - the key expression must have canon form.
  *
  * It is a loaned key expression that aliases `name`.

@@ -57,7 +57,7 @@ pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
 pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"add_timestamp\0".as_ptr() as *const c_char) };
 
-/// A loaned zenoh config.
+/// A loaned zenoh configuration.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_config_t(*const z_owned_config_t);

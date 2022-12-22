@@ -36,6 +36,7 @@ Session configuration
 ---------------------
 
 
+.. autocstruct:: zenoh_commons.h::z_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_scouting_config_t
 
@@ -104,6 +105,8 @@ Key expression
 .. autocfunction:: zenoh_commons.h::z_keyexpr_loan
 .. autocfunction:: zenoh_commons.h::z_keyexpr_check
 .. autocfunction:: zenoh_commons.h::z_keyexpr_drop
+
+.. autocfunction:: zenoh_commons.h::z_declare_keyexpr
 
 Encoding
 ========
@@ -196,9 +199,11 @@ Query
 Types
 -----
 
-.. autocenum:: zenoh_commons.h::z_query_target_t
-
 .. autocstruct:: zenoh_commons.h::z_owned_closure_reply_t
+
+.. autocstruct:: zenoh_commons.h::z_get_options_t
+
+.. autocenum:: zenoh_commons.h::z_query_target_t
 
 .. autocenum:: zenoh_commons.h::z_consolidation_mode_t
 
