@@ -159,7 +159,6 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
     None.into()
 }
 
-
 /// Options passed to the :c:func:`z_get` function.
 ///
 /// Members:
