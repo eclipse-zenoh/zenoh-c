@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(
 	zenohc
-	VERSION 0.6.0.1
+	VERSION 0.7.0.1
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
@@ -11,11 +11,11 @@ set(CARGO_PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${P
 if(NOT PROJECT_VERSION_TWEAK)
 	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-dev")
 elseif(PROJECT_VERSION_TWEAK LESS 255)
-	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-beta.${PROJECT_VERSION_TWEAK}")
+	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-rc.${PROJECT_VERSION_TWEAK}")
 endif()
 
 message(STATUS "CARGO_PROJECT_VERSION: ${CARGO_PROJECT_VERSION}")
-configure_file("${CMAKE_SOURCE_DIR}/Cargo.toml.in" "${CMAKE_SOURCE_DIR}/Cargo.toml" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml" @ONLY)
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(default_build_type "RelWithDebInfo")
@@ -31,17 +31,17 @@ endif()
 set(CARGO_FLAGS "")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/debug")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
 	set(ENV{RUSTFLAGS} "-g")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
-	set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/target/release")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/release")
 else()
 	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 endif()
@@ -52,9 +52,9 @@ if(NOT DISABLE_LOGGER_AUTOINIT)
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--features=logger-autoinit")
 endif()
 
-set(CARGO_FLAGS ${CARGO_FLAGS} "--manifest-path=${CMAKE_SOURCE_DIR}/Cargo.toml")
+set(CARGO_FLAGS ${CARGO_FLAGS} "--manifest-path=${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml")
 set(RUSTFLAGS $ENV{RUSTFLAGS})
-add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}")
+add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 if(APPLE)
 	set(libzenohc "libzenohc.dylib")
@@ -80,10 +80,10 @@ add_library(zenohc::lib ALIAS zenohc)
 add_dependencies(zenohc cargo)
 message(STATUS "zenoh-c dynamic library will be built at: ${CMAKE_BINARY_DIR}/${libzenohc}")
 set_property(TARGET zenohc PROPERTY IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/${libzenohc}")
-target_include_directories(zenohc INTERFACE "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(zenohc INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 if(APPLE OR UNIX OR WIN32)
-	file(GLOB examples_files "${CMAKE_SOURCE_DIR}/examples/*.c")
+	file(GLOB examples_files "${CMAKE_CURRENT_SOURCE_DIR}/examples/*.c")
 	add_custom_target(examples)
 
 	foreach(file ${examples_files})
@@ -93,7 +93,7 @@ if(APPLE OR UNIX OR WIN32)
 		add_dependencies(${target} zenohc_static)
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
-		target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
+		target_include_directories(${target} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 		target_link_libraries(${target} PUBLIC "${CMAKE_BINARY_DIR}/${libzenohc_static}")
 
 		if(APPLE)
@@ -107,7 +107,7 @@ if(APPLE OR UNIX OR WIN32)
 		endif()
 	endforeach()
 
-	file(GLOB tests_files "${CMAKE_SOURCE_DIR}/tests/*.c")
+	file(GLOB tests_files "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c")
 	add_custom_target(tests)
 
 	foreach(file ${tests_files})
@@ -117,7 +117,7 @@ if(APPLE OR UNIX OR WIN32)
 		add_dependencies(${target} zenohc_static)
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-		target_include_directories(${target} PUBLIC "${CMAKE_SOURCE_DIR}/include")
+		target_include_directories(${target} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 		target_link_libraries(${target} PUBLIC "${CMAKE_BINARY_DIR}/${libzenohc_static}")
 
 		if(APPLE)
@@ -150,11 +150,11 @@ install(FILES ${CMAKE_BINARY_DIR}/${libzenohc} CONFIGURATIONS ${ZENOHC_INSTALL_C
 if (${ZENOHC_INSTALL_STATIC_LIBRARY})
 	install(FILES ${CMAKE_BINARY_DIR}/${libzenohc_static} CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-configure_file("${CMAKE_SOURCE_DIR}/zenohc.pc.in" "${CMAKE_SOURCE_DIR}/zenohc.pc" @ONLY)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in" "${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc" @ONLY)
 
 if(APPLE OR UNIX)
-	install(FILES "${CMAKE_SOURCE_DIR}/zenohc.pc" CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
+	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc" CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
 endif()
 
 set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")

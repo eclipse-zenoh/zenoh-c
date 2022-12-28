@@ -11,21 +11,18 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
-use std::ops::Deref;
-
-use libc::c_void;
-use zenoh::{
-    prelude::Sample,
-    queryable::{Query, Queryable as CallbackQueryable},
-    Session,
-};
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
-
 use crate::{
     z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_owned_closure_query_t, z_session_t, LOG_INVALID_SESSION,
+    z_owned_closure_query_t, z_owned_session_t, z_session_t, z_value_t, LOG_INVALID_SESSION,
 };
+use libc::c_void;
+use std::ops::Deref;
+use zenoh::{
+    prelude::{Sample, SplitBuffer},
+    queryable::{Query, Queryable as CallbackQueryable},
+    value::Value,
+};
+use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 type Queryable = Option<CallbackQueryable<'static, ()>>;
 /// An owned zenoh queryable.
@@ -57,6 +54,19 @@ impl AsMut<Queryable> for z_owned_queryable_t {
     }
 }
 
+impl z_owned_queryable_t {
+    pub fn null() -> Self {
+        None.into()
+    }
+}
+
+/// Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
+    z_owned_queryable_t::null()
+}
+
 /// Structs received by a Queryable.
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -80,7 +90,7 @@ pub struct z_queryable_options_t {
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
+pub extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
     z_queryable_options_t { complete: false }
 }
 
@@ -98,7 +108,7 @@ pub struct z_query_reply_options_t {
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
+pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
     z_query_reply_options_t {
         encoding: z_encoding_default(),
     }
@@ -116,7 +126,7 @@ pub unsafe extern "C" fn z_query_reply_options_default() -> z_query_reply_option
 ///    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_declare_queryable(
+pub extern "C" fn z_declare_queryable(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
@@ -124,8 +134,9 @@ pub unsafe extern "C" fn z_declare_queryable(
 ) -> z_owned_queryable_t {
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = match session.as_ref().as_ref() {
-        Some(s) => std::mem::transmute::<&Session, &'static Session>(s),
+    let session: &'static z_owned_session_t = session.into();
+    let session = match session.as_ref() {
+        Some(s) => s,
         None => {
             log::error!("{}", LOG_INVALID_SESSION);
             return None.into();
@@ -151,7 +162,7 @@ pub unsafe extern "C" fn z_declare_queryable(
 ///     qable: The :c:type:`z_owned_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
+pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
     if let Some(qable) = qable.as_mut().take() {
         if let Err(e) = qable.undeclare().res_sync() {
             log::error!("{}", e);
@@ -164,7 +175,7 @@ pub unsafe extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) 
 /// Returns ``true`` if `qable` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
+pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
     qable.as_ref().is_some()
 }
 
@@ -193,7 +204,7 @@ pub unsafe extern "C" fn z_query_reply(
     if let Some(key) = &*key {
         let mut s = Sample::new(
             key.clone().into_owned(),
-            std::slice::from_raw_parts(payload as *const u8, len as usize),
+            std::slice::from_raw_parts(payload as *const u8, len),
         );
         if let Some(o) = options {
             s.encoding = o.encoding.into();
@@ -211,17 +222,35 @@ pub unsafe extern "C" fn z_query_reply(
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
+pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
     query.key_expr().borrowing_clone().into()
 }
 
-/// Get a query's [value selector](https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors) by aliasing it.
+/// Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
+pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
     let complement = query.parameters();
     z_bytes_t {
         start: complement.as_ptr(),
         len: complement.len(),
+    }
+}
+
+/// Get a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
+///
+/// **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
+    match query.value() {
+        Some(value) => {
+            #[allow(mutable_transmutes)]
+            if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
+                unsafe { std::mem::transmute::<_, &mut Value>(value).payload = payload.into() }
+            }
+            value.into()
+        }
+        None => (&Value::empty()).into(),
     }
 }

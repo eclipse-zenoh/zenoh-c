@@ -24,11 +24,12 @@ use zenoh_protocol::core::{ConsolidationMode, QueryTarget};
 use zenoh::{
     prelude::{KeyExpr, SplitBuffer},
     query::{Mode, QueryConsolidation, Reply},
+    value::Value,
 };
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
-    _zc_stack_ke, z_bytes_t, z_closure_reply_call, z_encoding_t, z_keyexpr_t,
+    _zc_stack_ke, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
     z_owned_closure_reply_t, z_sample_t, z_session_t, LOG_INVALID_SESSION,
 };
 
@@ -50,10 +51,11 @@ pub struct z_owned_reply_t {
 }
 #[repr(C)]
 pub struct _zc_res_s_v {
-    _3: u8,
-    _0: _z_u128,
-    _1: _zc_stack_ke,
-    _2: [usize; 9],
+    _0: u8,
+    _1: [_z_u128; 2],
+    _2: _zc_stack_ke,
+    _3: [usize; 10],
+    _4: u64,
 }
 
 impl From<ReplyInner> for z_owned_reply_t {
@@ -157,16 +159,32 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
     None.into()
 }
 
+/// Options passed to the :c:func:`z_get` function.
+///
+/// Members:
+///     z_query_target_t target: The Queryables that should be target of the query.
+///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
+///     z_value_t with_value: An optional value to attach to the query.
+///
+///         **WARNING: This option has been marked as unstable:
+///         It works as advertised, but may change in a future release.**
 #[repr(C)]
 pub struct z_get_options_t {
     pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
+    pub with_value: z_value_t,
 }
 #[no_mangle]
 pub extern "C" fn z_get_options_default() -> z_get_options_t {
     z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
+        with_value: {
+            z_value_t {
+                payload: z_bytes_t::empty(),
+                encoding: z_encoding_default(),
+            }
+        },
     }
 }
 
@@ -208,7 +226,8 @@ pub unsafe extern "C" fn z_get(
     if let Some(options) = options {
         q = q
             .consolidation(options.consolidation)
-            .target(options.target.into());
+            .target(options.target.into())
+            .with_value(&options.with_value);
     }
     match q
         .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
@@ -271,6 +290,28 @@ impl From<z_query_target_t> for QueryTarget {
     }
 }
 
+impl From<&z_value_t> for Value {
+    #[inline]
+    fn from(val: &z_value_t) -> Value {
+        unsafe {
+            let value: Value =
+                std::slice::from_raw_parts(val.payload.start, val.payload.len).into();
+            value
+        }
+    }
+}
+
+impl From<&Value> for z_value_t {
+    #[inline]
+    fn from(val: &Value) -> z_value_t {
+        let std::borrow::Cow::Borrowed(payload) = val.payload.contiguous() else{ panic!("Would have returned a reference to a temporary, make sure you the Value's payload is contiguous BEFORE calling this constructor.")};
+        z_value_t {
+            encoding: (&val.encoding).into(),
+            payload: payload.into(),
+        }
+    }
+}
+
 /// Create a default :c:type:`z_query_target_t`.
 #[no_mangle]
 pub extern "C" fn z_query_target_default() -> z_query_target_t {
@@ -279,18 +320,16 @@ pub extern "C" fn z_query_target_default() -> z_query_target_t {
 
 /// Consolidation mode values.
 ///
-/// Enumerators:
-///      - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
-///          If the selector contains time range properties, consolidation mode `NONE` is used.
-///          Otherwise the `LATEST` consolidation mode is used.
-///      - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
-///      - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
-///          w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
-///          replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
-///          ts2 > ts1. It optimizes latency.
-///      - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
-///          It optimizes bandwidth.
-///
+///     - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
+///       If the selector contains time range properties, consolidation mode `NONE` is used.
+///       Otherwise the `LATEST` consolidation mode is used.
+///     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+///     - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
+///       w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+///       replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+///       ts2 > ts1. It optimizes latency.
+///     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
+///       It optimizes bandwidth.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_consolidation_mode_t {

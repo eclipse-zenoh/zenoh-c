@@ -11,9 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
 use crate::{
-    _z_config_null, z_closure_hello_call, z_config_check, z_config_default, z_config_t, z_id_t,
+    z_closure_hello_call, z_config_check, z_config_default, z_config_null, z_config_t, z_id_t,
     z_owned_closure_hello_t, z_owned_config_t, zc_init_logger,
 };
 use async_std::task;
@@ -40,11 +39,7 @@ pub struct z_owned_str_array_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
-    let locators = Vec::from_raw_parts(
-        strs.val as *mut *const c_char,
-        strs.len as usize,
-        strs.len as usize,
-    );
+    let locators = Vec::from_raw_parts(strs.val as *mut *const c_char, strs.len, strs.len);
     for locator in locators {
         std::mem::drop(CString::from_raw(locator as *mut c_char));
     }
@@ -55,7 +50,7 @@ pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
 /// Returns ``true`` if `strs` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
+pub extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
     !strs.val.is_null()
 }
 
@@ -69,7 +64,7 @@ pub struct z_str_array_t {
 /// Returns ``true`` if `strs` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
+pub extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
     z_str_array_t {
         val: strs.val as *const _,
         len: strs.len,
@@ -148,10 +143,10 @@ pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
     hello._whatami = 0;
 }
 
-/// Frees `hello`, invalidating it for double-drop safety.
+/// Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
+pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
     z_hello_t {
         whatami: hello._whatami,
         pid: hello._pid,
@@ -162,7 +157,7 @@ pub unsafe extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
 /// Constructs a gravestone value for hello, useful to steal one from a callback
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_null() -> z_owned_hello_t {
+pub extern "C" fn z_hello_null() -> z_owned_hello_t {
     z_owned_hello_t {
         _whatami: 0,
         _pid: z_id_t { id: [0; 16] },
@@ -180,7 +175,7 @@ impl Drop for z_owned_hello_t {
 /// Returns ``true`` if `hello` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
+pub extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
     hello._whatami != 0 && z_str_array_check(&hello._locators)
 }
 
@@ -195,9 +190,10 @@ pub const DEFAULT_SCOUTING_WHAT: c_uint = (WhatAmI::Router as u8 | WhatAmI::Peer
 pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 #[allow(clippy::missing_safety_doc)]
-pub(crate) extern "C" fn _z_scouting_config_null() -> z_owned_scouting_config_t {
+#[no_mangle]
+pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
-        _config: _z_config_null(),
+        _config: z_config_null(),
         zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         zc_what: DEFAULT_SCOUTING_WHAT,
     }
@@ -225,14 +221,14 @@ pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_scouting_config_check(config: &z_owned_scouting_config_t) -> bool {
+pub extern "C" fn z_scouting_config_check(config: &z_owned_scouting_config_t) -> bool {
     z_config_check(&config._config)
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t) {
-    std::mem::drop(std::mem::replace(config, _z_scouting_config_null()));
+    std::mem::drop(std::mem::replace(config, z_scouting_config_null()));
 }
 
 /// Scout for routers and/or peers.
@@ -242,18 +238,19 @@ pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t)
 ///     config: A set of properties to configure the scouting.
 ///     timeout: The time (in milliseconds) that should be spent scouting.
 ///
-/// Returns 0 if successful
+/// Returns 0 if successful, negative values upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_scout(
+pub extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
 ) -> i8 {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let config = std::mem::replace(config, _z_scouting_config_null());
+    let config = std::mem::replace(config, z_scouting_config_null());
     let what = WhatAmIMatcher::try_from(config.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
+    #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = config.zc_timeout_ms as u64;
     let mut config = config._config;
     let config = config.as_mut().take().expect("invalid config");

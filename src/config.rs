@@ -57,7 +57,7 @@ pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
 pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"add_timestamp\0".as_ptr() as *const c_char) };
 
-/// A loaned zenoh config.
+/// A loaned zenoh configuration.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_config_t(*const z_owned_config_t);
@@ -105,6 +105,11 @@ impl AsMut<Option<Box<Config>>> for z_owned_config_t {
         unsafe { std::mem::transmute(self) }
     }
 }
+impl z_owned_config_t {
+    pub fn null() -> Self {
+        None.into()
+    }
+}
 
 /// Return a new, zenoh-allocated, empty configuration.
 ///
@@ -118,11 +123,14 @@ impl AsMut<Option<Box<Config>>> for z_owned_config_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
 pub extern "C" fn z_config_new() -> z_owned_config_t {
-    unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(Config::default())))) }
+    let config: Box<Config> = Box::default();
+    unsafe { z_owned_config_t(std::mem::transmute(Some(config))) }
 }
 
-pub(crate) extern "C" fn _z_config_null() -> z_owned_config_t {
-    unsafe { z_owned_config_t(std::mem::transmute(None::<Box<Config>>)) }
+/// Constructs a null safe-to-drop value of 'z_owned_config_t' type
+#[no_mangle]
+pub extern "C" fn z_config_null() -> z_owned_config_t {
+    z_owned_config_t::null()
 }
 
 /// Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
@@ -167,13 +175,13 @@ pub unsafe extern "C" fn zc_config_insert_json(
 /// Frees `config`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_drop(config: &mut z_owned_config_t) {
+pub extern "C" fn z_config_drop(config: &mut z_owned_config_t) {
     std::mem::drop(config.as_mut().take())
 }
 /// Returns ``true`` if `config` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
+pub extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
     config.as_ref().is_some()
 }
 
@@ -191,7 +199,7 @@ pub extern "C" fn z_config_default() -> z_owned_config_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_config_from_str(s: *const c_char) -> z_owned_config_t {
     if s.is_null() {
-        _z_config_null()
+        z_config_null()
     } else {
         let conf_str = CStr::from_ptr(s);
         let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();

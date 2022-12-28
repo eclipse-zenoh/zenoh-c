@@ -136,7 +136,7 @@ pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
 ///     len: The length of the value to put.
 ///     options: The put options.
 /// Returns:
-///     ``0`` in case of success, ``1`` in case of failure.
+///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_put(
@@ -153,7 +153,7 @@ pub unsafe extern "C" fn z_put(
                 opts = &default;
             }
             match s
-                .put(keyexpr, std::slice::from_raw_parts(payload, len as usize))
+                .put(keyexpr, std::slice::from_raw_parts(payload, len))
                 .encoding((*opts).encoding)
                 .kind(SampleKind::Put)
                 .congestion_control((*opts).congestion_control.into())
@@ -199,7 +199,7 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 ///     keyexpr: The key expression to delete.
 ///     options: The put options.
 /// Returns:
-///     ``0`` in case of success, ``1`` in case of failure.
+///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_delete(

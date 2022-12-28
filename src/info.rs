@@ -43,7 +43,7 @@ pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
 ///
-/// Retuns 0 on success
+/// Retuns 0 on success, negative values on failure
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_peers_zid(
@@ -68,7 +68,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
 ///
-/// Retuns 0 on success
+/// Retuns 0 on success, negative values on failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_routers_zid(
