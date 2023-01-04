@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{config::*, zc_init_logger};
+use crate::{config::*, zc_init_logger, impl_guarded_transmute, GuardedTransmute};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::Session;
 use zenoh_util::core::zresult::ErrNo;
@@ -26,13 +26,13 @@ use zenoh_util::core::zresult::ErrNo;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-#[allow(non_camel_case_types)]
+#[repr(C, align(8))]
 pub struct z_owned_session_t([usize; 3]);
+impl_guarded_transmute!(Option<Session>, z_owned_session_t);
 
 impl From<Option<Session>> for z_owned_session_t {
     fn from(val: Option<Session>) -> Self {
-        unsafe { std::mem::transmute(val) }
+        val.transmute()
     }
 }
 

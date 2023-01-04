@@ -1,3 +1,4 @@
+use crate::GuardedTransmute;
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -13,6 +14,7 @@
 //
 use crate::collections::*;
 use crate::commons::*;
+use crate::impl_guarded_transmute;
 use crate::keyexpr::*;
 use crate::session::*;
 use crate::z_closure_sample_call;
@@ -40,16 +42,17 @@ type PullSubscriber = Option<Box<zenoh::subscriber::PullSubscriber<'static, ()>>
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_owned_pull_subscriber_t([usize; 1]);
+#[repr(C, align(8))]
+pub struct z_owned_pull_subscriber_t([u64; 1]);
+impl_guarded_transmute!(PullSubscriber, z_owned_pull_subscriber_t);
+
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_pull_subscriber_t<'a>(&'a z_owned_pull_subscriber_t);
 
 impl From<PullSubscriber> for z_owned_pull_subscriber_t {
     fn from(val: PullSubscriber) -> Self {
-        unsafe { std::mem::transmute(val) }
+        val.transmute()
     }
 }
 

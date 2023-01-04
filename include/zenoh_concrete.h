@@ -41,7 +41,7 @@
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_session_t {
+typedef struct ALIGN(8) z_owned_session_t {
   uintptr_t _0[3];
 } z_owned_session_t;
 /**
@@ -50,20 +50,6 @@ typedef struct z_owned_session_t {
 typedef struct z_query_t {
   void *_0;
 } z_query_t;
-typedef struct _zc_stack_ke {
-  uint64_t _0;
-  uintptr_t _1[2];
-  uint32_t _2;
-  uint16_t _3;
-  uint8_t _4;
-} _zc_stack_ke;
-typedef struct _zc_res_s_v {
-  uint8_t _0;
-  _z_u128 _1[2];
-  struct _zc_stack_ke _2;
-  uintptr_t _3[11];
-  uint64_t _4;
-} _zc_res_s_v;
 /**
  * A loaned zenoh session.
  */
@@ -82,8 +68,8 @@ typedef struct z_session_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_pull_subscriber_t {
-  uintptr_t _0[1];
+typedef struct ALIGN(8) z_owned_pull_subscriber_t {
+  uint64_t _0[1];
 } z_owned_pull_subscriber_t;
 /**
  * An owned zenoh queryable.
@@ -97,8 +83,8 @@ typedef struct z_owned_pull_subscriber_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_queryable_t {
-  uintptr_t _0[4];
+typedef struct ALIGN(8) z_owned_queryable_t {
+  uint64_t _0[4];
 } z_owned_queryable_t;
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
@@ -112,6 +98,6 @@ typedef struct z_owned_queryable_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_subscriber_t {
-  uintptr_t _0[1];
+typedef struct ALIGN(8) z_owned_subscriber_t {
+  uint64_t _0[1];
 } z_owned_subscriber_t;

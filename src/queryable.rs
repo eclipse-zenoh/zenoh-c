@@ -13,7 +13,7 @@
 //
 use crate::{
     z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_owned_closure_query_t, z_owned_session_t, z_session_t, z_value_t, LOG_INVALID_SESSION,
+    z_owned_closure_query_t, z_owned_session_t, z_session_t, z_value_t, LOG_INVALID_SESSION, impl_guarded_transmute, GuardedTransmute,
 };
 use libc::c_void;
 use std::ops::Deref;
@@ -35,12 +35,13 @@ type Queryable = Option<CallbackQueryable<'static, ()>>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_owned_queryable_t([usize; 4]);
+#[repr(C, align(8))]
+pub struct z_owned_queryable_t([u64; 4]);
+impl_guarded_transmute!(Queryable, z_owned_queryable_t);
+
 impl From<Queryable> for z_owned_queryable_t {
     fn from(val: Queryable) -> Self {
-        unsafe { std::mem::transmute(val) }
+        val.transmute()
     }
 }
 impl AsRef<Queryable> for z_owned_queryable_t {

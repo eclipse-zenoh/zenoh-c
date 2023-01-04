@@ -129,6 +129,8 @@ allow_constexpr = false
 [macro_expansion]
 bitflags = false
 
+[layout]
+aligned_n = "ALIGN"
 
 ############## Options for How Your Rust library Should Be Parsed ##############
 

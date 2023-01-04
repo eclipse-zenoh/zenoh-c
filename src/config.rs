@@ -15,7 +15,7 @@ use libc::{c_char, c_uint};
 use std::ffi::CStr;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
-use crate::copy_to_libc;
+use crate::{copy_to_libc, impl_guarded_transmute, GuardedTransmute};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -73,11 +73,12 @@ pub struct z_config_t(*const z_owned_config_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
-#[allow(non_camel_case_types)]
 pub struct z_owned_config_t(*mut ());
+impl_guarded_transmute!(Option<Box<Config>>, z_owned_config_t);
+
 impl From<Option<Box<Config>>> for z_owned_config_t {
     fn from(v: Option<Box<Config>>) -> Self {
-        unsafe { std::mem::transmute(v) }
+        v.transmute()
     }
 }
 /// Returns a :c:type:`z_config_t` loaned from `s`.
