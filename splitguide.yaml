@@ -2,6 +2,7 @@ zenoh_commons.h:
   - :functions
   - :const
   - :typedefs
+  - :multiples
 zenoh_concrete.h:
   - :includes
   - :defines

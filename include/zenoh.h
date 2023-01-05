@@ -15,12 +15,26 @@ extern "C" {
 #define ZENOH_C_MINOR 7
 #define ZENOH_C_PATCH 0
 
-#define ALIGN(n)
-// __attribute__((aligned(n)))
+#define ALIGN(n) __attribute__((aligned(n)))
 
+#include "zenoh_configure.h"
+
+#if TARGET_ARCH == aarch64
+#define TARGET_ARCH_AARCH64
+#elif TARGET_ARCH == x86_64
+#define TARGET_ARCH_X86_64
+#elif TARGET_ARCH
+#error TARGET_ARCH = #TARGET_ARCH not supported
+#else
+#error TARGET_ARCH not defined
+#endif
+
+// clang-format off
+// include order is important
 #include "zenoh_concrete.h"
-//
 #include "zenoh_commons.h"
+// clang-format on
+
 #ifdef __cplusplus
 }
 #endif

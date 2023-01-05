@@ -35,8 +35,6 @@ use crate::{
 
 type ReplyInner = Option<Reply>;
 
-#[allow(non_camel_case_types)]
-pub type _z_u128 = u128;
 /// An owned reply to a :c:func:`z_get`.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
@@ -44,8 +42,14 @@ pub type _z_u128 = u128;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+#[cfg(target_arch="x86_64")]
 #[repr(C,align(8))]
 pub struct z_owned_reply_t([u64; 23]);
+
+#[cfg(target_arch="aarch64")]
+#[repr(C,align(16))]
+pub struct z_owned_reply_t([u64; 24]);
+
 impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
 
 impl From<ReplyInner> for z_owned_reply_t {

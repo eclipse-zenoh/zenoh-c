@@ -67,9 +67,8 @@ style = "both"
 
 
 [defines]
-# "target_os = freebsd" = "DEFINE_FREEBSD"
-# "feature = complete_n" = "DEFINE_COMPLETE_N"
-
+"target_arch = aarch64" = "TARGET_ARCH_AARCH64"
+"target_arch = x86_64" = "TARGET_ARCH_X86_64"
 
 [export]
 include = []
