@@ -1,29 +1,16 @@
 //
-
 // Copyright (c) 2022 ZettaScale Technology
-
 //
-
 // This program and the accompanying materials are made available under the
-
 // terms of the Eclipse Public License 2.0 which is available at
-
 // http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
-
 // which is available at https://www.apache.org/licenses/LICENSE-2.0.
-
 //
-
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
-
 //
-
 // Contributors:
-
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-
 //
-
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -41,29 +28,22 @@
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_session_t {
-  uintptr_t _0[3];
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_session_t {
+  uint64_t _0[3];
 } z_owned_session_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_session_t {
+  uint32_t _0[3];
+} z_owned_session_t;
+#endif
 /**
  * Structs received by a Queryable.
  */
 typedef struct z_query_t {
   void *_0;
 } z_query_t;
-typedef struct _zc_stack_ke {
-  uint64_t _0;
-  uintptr_t _1[2];
-  uint32_t _2;
-  uint16_t _3;
-  uint8_t _4;
-} _zc_stack_ke;
-typedef struct _zc_res_s_v {
-  uint8_t _0;
-  _z_u128 _1[2];
-  struct _zc_stack_ke _2;
-  uintptr_t _3[11];
-  uint64_t _4;
-} _zc_res_s_v;
 /**
  * A loaned zenoh session.
  */
@@ -82,9 +62,16 @@ typedef struct z_session_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_pull_subscriber_t {
-  uintptr_t _0[1];
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_pull_subscriber_t {
+  uint64_t _0[1];
 } z_owned_pull_subscriber_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_pull_subscriber_t {
+  uint32_t _0[1];
+} z_owned_pull_subscriber_t;
+#endif
 /**
  * An owned zenoh queryable.
  *
@@ -97,9 +84,16 @@ typedef struct z_owned_pull_subscriber_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_queryable_t {
-  uintptr_t _0[4];
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_queryable_t {
+  uint64_t _0[4];
 } z_owned_queryable_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_queryable_t {
+  uint32_t _0[4];
+} z_owned_queryable_t;
+#endif
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
  *
@@ -112,6 +106,13 @@ typedef struct z_owned_queryable_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_subscriber_t {
-  uintptr_t _0[1];
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_subscriber_t {
+  uint64_t _0[1];
 } z_owned_subscriber_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_subscriber_t {
+  uint32_t _0[1];
+} z_owned_subscriber_t;
+#endif

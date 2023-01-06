@@ -220,10 +220,21 @@ typedef struct z_owned_closure_query_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
-typedef struct z_owned_reply_t {
-  struct _zc_res_s_v _1;
-  _z_u128 _2;
+#if defined(TARGET_ARCH_X86_64)
+typedef struct ALIGN(8) z_owned_reply_t {
+  uint64_t _0[23];
 } z_owned_reply_t;
+#endif
+#if defined(TARGET_ARCH_AARCH64)
+typedef struct ALIGN(16) z_owned_reply_t {
+  uint64_t _0[24];
+} z_owned_reply_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_reply_t {
+  uint64_t _0[17];
+} z_owned_reply_t;
+#endif
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -386,10 +397,16 @@ typedef struct z_config_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_keyexpr_t {
-  uint64_t _align[2];
-  uintptr_t _padding[2];
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_keyexpr_t {
+  uint64_t _0[4];
 } z_owned_keyexpr_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_keyexpr_t {
+  uint64_t _0[3];
+} z_owned_keyexpr_t;
+#endif
 /**
  * An owned zenoh publisher.
  *
@@ -402,10 +419,16 @@ typedef struct z_owned_keyexpr_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct z_owned_publisher_t {
-  struct _zc_stack_ke _ke;
-  uintptr_t _padding[3];
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_publisher_t {
+  uint64_t _0[7];
 } z_owned_publisher_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_publisher_t {
+  uint64_t _0[5];
+} z_owned_publisher_t;
+#endif
 /**
  * Options passed to the :c:func:`z_declare_publisher` function.
  *

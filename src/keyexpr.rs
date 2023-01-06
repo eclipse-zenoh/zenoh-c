@@ -17,8 +17,10 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 
 use crate::copy_to_libc;
+use crate::impl_guarded_transmute;
 use crate::session::*;
 use crate::z_bytes_t;
+use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
 use zenoh::prelude::keyexpr;
@@ -50,14 +52,18 @@ use zenoh_util::core::zresult::ErrNo;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_keyexpr_t {
-    pub _align: [u64; 2],
-    pub _padding: [usize; 2],
-}
+#[cfg(not(target_arch = "arm"))]
+#[repr(C, align(8))]
+pub struct z_owned_keyexpr_t([u64; 4]);
+#[cfg(target_arch = "arm")]
+#[repr(C, align(8))]
+pub struct z_owned_keyexpr_t([u64; 3]);
+
+impl_guarded_transmute!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
+
 impl From<Option<KeyExpr<'static>>> for z_owned_keyexpr_t {
     fn from(val: Option<KeyExpr<'static>>) -> Self {
-        unsafe { std::mem::transmute(val) }
+        val.transmute()
     }
 }
 impl From<KeyExpr<'static>> for z_owned_keyexpr_t {
@@ -79,23 +85,6 @@ impl DerefMut for z_owned_keyexpr_t {
 impl z_owned_keyexpr_t {
     pub fn null() -> Self {
         None::<KeyExpr>.into()
-    }
-}
-
-#[repr(C)]
-pub struct _zc_stack_ke {
-    _0: u64,
-    _1: [usize; 2],
-    _2: u32,
-    _3: u16,
-    _4: u8,
-}
-fn _zc_stack_ke_size_check() {
-    use core::mem::MaybeUninit;
-    unsafe {
-        core::mem::transmute::<MaybeUninit<KeyExpr>, MaybeUninit<_zc_stack_ke>>(
-            MaybeUninit::uninit(),
-        );
     }
 }
 
