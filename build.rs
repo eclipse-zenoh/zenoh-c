@@ -95,7 +95,7 @@ fn split_bindings() -> Result<(), String> {
         .collect::<HashMap<_, _>>();
     let mut records = group_tokens(Tokenizer { inner: &bindings })?;
     for id in split_guide.requested_ids() {
-        if records.iter().any(|r| r.tokens.iter().any(|t| t.id == id)) {
+        if !records.iter().any(|r| r.contains_id(id)) {
             return Err(format!(
                 "{} not found (requested explicitly by splitguide.yaml)",
                 id,
@@ -107,9 +107,7 @@ fn split_bindings() -> Result<(), String> {
         for file in appropriate_files {
             let writer = files.get_mut(file).unwrap();
             record.used = true;
-            for token in &record.tokens {
-                writeln!(writer, "{}", &token).unwrap();
-            }
+            writeln!(writer, "{}", &record).unwrap();
         }
     }
     for record in &records {
@@ -118,7 +116,7 @@ fn split_bindings() -> Result<(), String> {
     for (_, file) in files {
         file.into_inner().unwrap().unlock().unwrap();
     }
-    std::fs::remove_file(GENERATION_PATH).unwrap();
+    // std::fs::remove_file(GENERATION_PATH).unwrap();
     Ok(())
 }
 
@@ -282,7 +280,7 @@ impl<'a> Record<'a> {
         self.push_token(token)
     }
 
-    fn push_prepr_endif(&mut self, token: Token<'a>) -> Result<(),String> {
+    fn push_prepr_endif(&mut self, token: Token<'a>) -> Result<(), String> {
         self.nesting -= 1;
         if self.nesting < 0 {
             return Err(format!("unmatched #endif"));
@@ -304,6 +302,32 @@ impl<'a> Record<'a> {
             TokenType::PreprEndif => self.push_prepr_endif(token)?,
             TokenType::Whitespace => self.push_token(token),
         }
+        Ok(())
+    }
+}
+
+// Print comments first, skip whitespaces,
+impl<'a> std::fmt::Display for Record<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.tokens
+            .iter()
+            .filter(|t| t.tt == TokenType::Comment)
+            .map(|t| {
+                t.fmt(f)?;
+                // f.write_str("\n")?;
+                Ok(())
+            })
+            .find(|r| r.is_err())
+            .unwrap_or(Ok(()))?;
+        self.tokens
+            .iter()
+            .filter(|t| t.tt != TokenType::Comment && t.tt != TokenType::Whitespace)
+            .map(|t| {
+                t.fmt(f)?;
+                Ok(())
+            })
+            .find(|r| r.is_err())
+            .unwrap_or(Ok(()))?;
         Ok(())
     }
 }
@@ -442,13 +466,13 @@ impl<'a> Token<'a> {
             Some(Token::new(
                 TokenType::Comment,
                 "",
-                s.until_incl("*/").unwrap_or(s),
+                s.until_incl("*/\n").or(s.until_incl("*/")).unwrap_or(s),
             ))
         } else if s.starts_with("//") {
             Some(Token::new(
                 TokenType::Comment,
                 "",
-                s.until("\n").unwrap_or(s),
+                s.until_incl("\n").unwrap_or(s),
             ))
         } else {
             None
@@ -457,7 +481,7 @@ impl<'a> Token<'a> {
 
     fn prepr_if(s: &'a str) -> Option<Self> {
         if s.starts_with("#if ") || s.starts_with("#ifdef ") || s.starts_with("#ifndef ") {
-            let span = s.until("\n").unwrap_or(s);
+            let span = s.until_incl("\n").unwrap_or(s);
             Some(Token::new(TokenType::PreprIf, span, span))
         } else {
             None
@@ -482,7 +506,7 @@ impl<'a> Token<'a> {
 
     fn prepr_endif(s: &'a str) -> Option<Self> {
         s.starts_with("#endif")
-            .then(|| Token::new(TokenType::PreprEndif, "", "#endif"))
+            .then(|| Token::new(TokenType::PreprEndif, "", s.until_incl("\n").unwrap_or(s)))
     }
 
     fn prepr_include(s: &'a str) -> Option<Self> {
