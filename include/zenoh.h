@@ -15,7 +15,11 @@ extern "C" {
 #define ZENOH_C_MINOR 7
 #define ZENOH_C_PATCH 0
 
+#ifdef _MSC_VER
+#define ALIGN(n) __declspec(align(n))
+#else
 #define ALIGN(n) __attribute__((aligned(n)))
+#endif
 
 #include "zenoh_configure.h"
 

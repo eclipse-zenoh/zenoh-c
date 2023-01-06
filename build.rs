@@ -23,7 +23,7 @@ fn main() {
 fn configure() {
     let content = format!(
         r#"#pragma once
-#define TARGET_ARCH {}_
+#define TARGET_ARCH {}
 "#,
         std::env::var("CARGO_CFG_TARGET_ARCH").unwrap()
     );
