@@ -51,6 +51,10 @@ pub struct z_owned_reply_t([u64; 23]);
 #[repr(C, align(16))]
 pub struct z_owned_reply_t([u64; 24]);
 
+#[cfg(target_arch = "arm")]
+#[repr(C, align(8))]
+pub struct z_owned_reply_t([u64; 17]);
+
 impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
 
 impl From<ReplyInner> for z_owned_reply_t {

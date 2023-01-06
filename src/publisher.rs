@@ -56,8 +56,14 @@ pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+#[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_owned_publisher_t([u64; 7]);
+
+#[cfg(target_arch = "arm")]
+#[repr(C, align(8))]
+pub struct z_owned_publisher_t([u64; 5]);
+
 impl_guarded_transmute!(Option<Publisher<'_>>, z_owned_publisher_t);
 
 impl<'a> From<Option<Publisher<'a>>> for z_owned_publisher_t {

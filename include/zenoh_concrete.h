@@ -28,9 +28,16 @@
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
+#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_session_t {
-  uintptr_t _0[3];
+  uint64_t _0[3];
 } z_owned_session_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_session_t {
+  uint32_t _0[3];
+} z_owned_session_t;
+#endif
 /**
  * Structs received by a Queryable.
  */
@@ -55,9 +62,16 @@ typedef struct z_session_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
+#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_pull_subscriber_t {
   uint64_t _0[1];
 } z_owned_pull_subscriber_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_pull_subscriber_t {
+  uint32_t _0[1];
+} z_owned_pull_subscriber_t;
+#endif
 /**
  * An owned zenoh queryable.
  *
@@ -70,9 +84,16 @@ typedef struct ALIGN(8) z_owned_pull_subscriber_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
+#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_queryable_t {
   uint64_t _0[4];
 } z_owned_queryable_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_queryable_t {
+  uint32_t _0[4];
+} z_owned_queryable_t;
+#endif
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
  *
@@ -85,6 +106,13 @@ typedef struct ALIGN(8) z_owned_queryable_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
+#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_subscriber_t {
   uint64_t _0[1];
 } z_owned_subscriber_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_subscriber_t {
+  uint32_t _0[1];
+} z_owned_subscriber_t;
+#endif

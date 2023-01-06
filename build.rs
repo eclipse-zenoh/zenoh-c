@@ -30,6 +30,7 @@ fn configure() {
 
     let mut file = std::fs::File::options()
         .write(true)
+        .truncate(true)
         .append(false)
         .create(true)
         .open("include/zenoh_configure.h")
@@ -84,6 +85,7 @@ fn split_bindings() -> Result<(), String> {
         .map(|(name, _)| {
             let file = std::fs::File::options()
                 .write(true)
+                .truncate(true)
                 .append(false)
                 .create(true)
                 .open(format!("include/{}", name))

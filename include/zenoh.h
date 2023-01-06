@@ -27,6 +27,8 @@ extern "C" {
 #define TARGET_ARCH_AARCH64
 #elif TARGET_ARCH == x86_64
 #define TARGET_ARCH_X86_64
+#elif TARGET_ARCH == arm
+#define TARGET_ARCH_ARM
 #elif TARGET_ARCH
 #error TARGET_ARCH = #TARGET_ARCH not supported
 #else

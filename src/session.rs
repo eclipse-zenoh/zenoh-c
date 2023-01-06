@@ -26,8 +26,14 @@ use zenoh_util::core::zresult::ErrNo;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+#[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
-pub struct z_owned_session_t([usize; 3]);
+pub struct z_owned_session_t([u64; 3]);
+
+#[cfg(target_arch = "arm")]
+#[repr(C, align(4))]
+pub struct z_owned_session_t([u32; 3]);
+
 impl_guarded_transmute!(Option<Session>, z_owned_session_t);
 
 impl From<Option<Session>> for z_owned_session_t {
