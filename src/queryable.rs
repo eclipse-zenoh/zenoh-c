@@ -12,8 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_owned_closure_query_t, z_owned_session_t, z_session_t, z_value_t, LOG_INVALID_SESSION, impl_guarded_transmute, GuardedTransmute,
+    impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
+    z_keyexpr_t, z_owned_closure_query_t, z_owned_session_t, z_session_t, z_value_t,
+    GuardedTransmute, LOG_INVALID_SESSION,
 };
 use libc::c_void;
 use std::ops::Deref;
