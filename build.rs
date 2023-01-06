@@ -107,7 +107,7 @@ fn split_bindings() -> Result<(), String> {
         for file in appropriate_files {
             let writer = files.get_mut(file).unwrap();
             record.used = true;
-            writeln!(writer, "{}", &record).unwrap();
+            write!(writer, "{}", &record).unwrap();
         }
     }
     for record in &records {
@@ -116,7 +116,7 @@ fn split_bindings() -> Result<(), String> {
     for (_, file) in files {
         file.into_inner().unwrap().unlock().unwrap();
     }
-    // std::fs::remove_file(GENERATION_PATH).unwrap();
+    std::fs::remove_file(GENERATION_PATH).unwrap();
     Ok(())
 }
 
@@ -306,26 +306,19 @@ impl<'a> Record<'a> {
     }
 }
 
-// Print comments first, skip whitespaces,
+// Print all comments first, skip whitespaces
 impl<'a> std::fmt::Display for Record<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.tokens
             .iter()
             .filter(|t| t.tt == TokenType::Comment)
-            .map(|t| {
-                t.fmt(f)?;
-                // f.write_str("\n")?;
-                Ok(())
-            })
+            .map(|t| t.fmt(f))
             .find(|r| r.is_err())
             .unwrap_or(Ok(()))?;
         self.tokens
             .iter()
             .filter(|t| t.tt != TokenType::Comment && t.tt != TokenType::Whitespace)
-            .map(|t| {
-                t.fmt(f)?;
-                Ok(())
-            })
+            .map(|t| t.fmt(f))
             .find(|r| r.is_err())
             .unwrap_or(Ok(()))?;
         Ok(())
@@ -353,7 +346,13 @@ struct Token<'a> {
 }
 impl<'a> std::fmt::Display for Token<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.span)
+        // f.write_str(format!("{:?} [", self.tt).as_str())?;
+        f.write_str(&self.span)?;
+        // f.write_str("]")?;
+        
+        // Each token is finalized with endline character on output
+        f.write_str("\n")?;
+        Ok(())
     }
 }
 impl<'a> Token<'a> {
@@ -377,6 +376,11 @@ impl<'a> Token<'a> {
             .or_else(|| Self::function(s))
     }
 
+    //
+    // Each token is consumed without end of line characters.
+    // When performing output of tokens, endline is added to each token.
+    // This guarantees that tokens can be shuffled as necessary
+    //
     fn typedef(s: &'a str) -> Option<Self> {
         if s.starts_with("typedef") {
             let mut len = 0;
@@ -466,13 +470,13 @@ impl<'a> Token<'a> {
             Some(Token::new(
                 TokenType::Comment,
                 "",
-                s.until_incl("*/\n").or(s.until_incl("*/")).unwrap_or(s),
+                s.until_incl("*/").unwrap_or(s),
             ))
         } else if s.starts_with("//") {
             Some(Token::new(
                 TokenType::Comment,
                 "",
-                s.until_incl("\n").unwrap_or(s),
+                s.until("\n").unwrap_or(s),
             ))
         } else {
             None
@@ -481,7 +485,7 @@ impl<'a> Token<'a> {
 
     fn prepr_if(s: &'a str) -> Option<Self> {
         if s.starts_with("#if ") || s.starts_with("#ifdef ") || s.starts_with("#ifndef ") {
-            let span = s.until_incl("\n").unwrap_or(s);
+            let span = s.until("\n").unwrap_or(s);
             Some(Token::new(TokenType::PreprIf, span, span))
         } else {
             None
@@ -506,7 +510,7 @@ impl<'a> Token<'a> {
 
     fn prepr_endif(s: &'a str) -> Option<Self> {
         s.starts_with("#endif")
-            .then(|| Token::new(TokenType::PreprEndif, "", s.until_incl("\n").unwrap_or(s)))
+            .then(|| Token::new(TokenType::PreprEndif, "", s.until("\n").unwrap_or(s)))
     }
 
     fn prepr_include(s: &'a str) -> Option<Self> {
