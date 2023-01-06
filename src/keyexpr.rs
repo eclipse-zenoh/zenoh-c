@@ -16,11 +16,11 @@ use std::convert::TryFrom;
 use std::ops::Deref;
 use std::ops::DerefMut;
 
-use crate::GuardedTransmute;
 use crate::copy_to_libc;
 use crate::impl_guarded_transmute;
 use crate::session::*;
 use crate::z_bytes_t;
+use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
 use zenoh::prelude::keyexpr;
@@ -53,7 +53,7 @@ use zenoh_util::core::zresult::ErrNo;
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C, align(8))]
-pub struct z_owned_keyexpr_t([u64;4]);
+pub struct z_owned_keyexpr_t([u64; 4]);
 impl_guarded_transmute!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
 
 impl From<Option<KeyExpr<'static>>> for z_owned_keyexpr_t {

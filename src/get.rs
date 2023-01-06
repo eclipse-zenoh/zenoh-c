@@ -29,8 +29,9 @@ use zenoh::{
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
-    z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_owned_closure_reply_t, z_sample_t, z_session_t, LOG_INVALID_SESSION, impl_guarded_transmute, GuardedTransmute,
+    impl_guarded_transmute, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t,
+    z_keyexpr_t, z_owned_closure_reply_t, z_sample_t, z_session_t, GuardedTransmute,
+    LOG_INVALID_SESSION,
 };
 
 type ReplyInner = Option<Reply>;
@@ -42,12 +43,12 @@ type ReplyInner = Option<Reply>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(target_arch="x86_64")]
-#[repr(C,align(8))]
+#[cfg(target_arch = "x86_64")]
+#[repr(C, align(8))]
 pub struct z_owned_reply_t([u64; 23]);
 
-#[cfg(target_arch="aarch64")]
-#[repr(C,align(16))]
+#[cfg(target_arch = "aarch64")]
+#[repr(C, align(16))]
 pub struct z_owned_reply_t([u64; 24]);
 
 impl_guarded_transmute!(ReplyInner, z_owned_reply_t);

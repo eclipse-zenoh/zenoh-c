@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{config::*, zc_init_logger, impl_guarded_transmute, GuardedTransmute};
+use crate::{config::*, impl_guarded_transmute, zc_init_logger, GuardedTransmute};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::Session;
 use zenoh_util::core::zresult::ErrNo;

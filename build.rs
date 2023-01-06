@@ -349,7 +349,7 @@ impl<'a> std::fmt::Display for Token<'a> {
         // f.write_str(format!("{:?} [", self.tt).as_str())?;
         f.write_str(&self.span)?;
         // f.write_str("]")?;
-        
+
         // Each token is finalized with endline character on output
         f.write_str("\n")?;
         Ok(())
