@@ -75,7 +75,7 @@ add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running 
 # 
 # rustup target list --installed
 #
-add_custom_target(check_targets)
+add_custom_target(crosscheck)
 
 set(targets
 aarch64-unknown-linux-gnu
@@ -88,7 +88,7 @@ foreach(target ${targets})
 		COMMAND cargo check --target ${target} ${CARGO_FLAGS} 
 		COMMENT "cargo check on ${target}" 
 		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-	add_dependencies(check_targets cargo_check_${target})
+	add_dependencies(crosscheck cargo_check_${target})
 endforeach()
 
 if(APPLE)
