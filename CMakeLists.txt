@@ -64,23 +64,24 @@ add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running 
 
 #
 # Rust cross-build check for supported processor architectures
+# This check works on linux only
+# It requires that the following packages are installed:
 #
-add_custom_target(check_proc_arch)
+# apt install gcc-arm-linux-gnueabi
+# apt install gcc-x86-64-linux-gnu
+#
+add_custom_target(check_targets)
 
-set(supported_targets
-aarch64-apple-darwin
-aarch64-unknown-linux-gnu
-x86_64-apple-darwin
+set(targets
+# aarch64-unknown-linux-gnu
 x86_64-unknown-linux-gnu
-x86_64-pc-windows-msvc
-arm-unknown-linux-gnueabi
-arm-unknown-linux-gnueabihf
+# arm-unknown-linux-gnueabi
 )
 
-foreach(target ${supported_targets})
-	add_custom_target(target_rustup_add_${target} COMMAND rustup target add ${target} "rustup add ${target}")
-	add_custom_target(target_cargo_check_${target} COMMAND cargo check --target ${target} ${CARGO_FLAGS} "cargo check on ${target}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-	add_dependencies(targets target_cargo_check_${target})
+foreach(target ${targets})
+	add_custom_target(target_rustup_add_${target} COMMAND rustup target add ${target} COMMENT "rustup add ${target}")
+	add_custom_target(target_cargo_check_${target} COMMAND cargo check --target ${target} ${CARGO_FLAGS} COMMENT "cargo check on ${target}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+	add_dependencies(check_targets target_cargo_check_${target})
 	add_dependencies(target_cargo_check_${target} target_rustup_add_${target})
 endforeach()
 
