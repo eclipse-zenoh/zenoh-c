@@ -62,6 +62,28 @@ set(CARGO_FLAGS ${CARGO_FLAGS} "--manifest-path=${CMAKE_CURRENT_SOURCE_DIR}/Carg
 set(RUSTFLAGS $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
+#
+# Rust cross-build check for supported processor architectures
+#
+add_custom_target(check_proc_arch)
+
+set(supported_targets
+aarch64-apple-darwin
+aarch64-unknown-linux-gnu
+x86_64-apple-darwin
+x86_64-unknown-linux-gnu
+x86_64-pc-windows-msvc
+arm-unknown-linux-gnueabi
+arm-unknown-linux-gnueabihf
+)
+
+foreach(target ${supported_targets})
+	add_custom_target(target_rustup_add_${target} COMMAND rustup target add ${target} "rustup add ${target}")
+	add_custom_target(target_cargo_check_${target} COMMAND cargo check --target ${target} ${CARGO_FLAGS} "cargo check on ${target}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+	add_dependencies(targets target_cargo_check_${target})
+	add_dependencies(target_cargo_check_${target} target_rustup_add_${target})
+endforeach()
+
 if(APPLE)
 	set(libzenohc "libzenohc.dylib")
 	set(libzenohc_static "libzenohc.a")
