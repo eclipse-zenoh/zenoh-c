@@ -11,7 +11,7 @@ fn main() {
         .write_to_file(GENERATION_PATH);
 
     configure();
-    split_bindings();
+    split_bindings().unwrap();
     rename_enums();
 
     println!("cargo:rerun-if-changed=build.rs");
@@ -22,14 +22,15 @@ fn main() {
 
 fn configure() {
     let content = format!(
-        r#"
-#pragma once
-#define RUST_U128_ALIGNMENT {}
+        r#"#pragma once
+#define TARGET_ARCH {}
 "#,
-        std::mem::align_of::<u128>()
+        std::env::var("CARGO_CFG_TARGET_ARCH").unwrap()
     );
+
     let mut file = std::fs::File::options()
         .write(true)
+        .truncate(true)
         .append(false)
         .create(true)
         .open("include/zenoh_configure.h")
@@ -75,8 +76,7 @@ fn rename_enums() {
     }
 }
 
-fn split_bindings() {
-    let mut errors = Vec::new();
+fn split_bindings() -> Result<(), String> {
     let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
     let bindings = std::fs::read_to_string(GENERATION_PATH).unwrap();
     let mut files = split_guide
@@ -85,6 +85,7 @@ fn split_bindings() {
         .map(|(name, _)| {
             let file = std::fs::File::options()
                 .write(true)
+                .truncate(true)
                 .append(false)
                 .create(true)
                 .open(format!("include/{}", name))
@@ -94,13 +95,13 @@ fn split_bindings() {
             (name.as_str(), BufWriter::new(file))
         })
         .collect::<HashMap<_, _>>();
-    let mut records = group_tokens(Tokenizer { inner: &bindings });
+    let mut records = group_tokens(Tokenizer { inner: &bindings })?;
     for id in split_guide.requested_ids() {
-        if !records.iter().any(|r| r.token.id == id) {
-            errors.push(format!(
+        if !records.iter().any(|r| r.contains_id(id)) {
+            return Err(format!(
                 "{} not found (requested explicitly by splitguide.yaml)",
                 id,
-            ))
+            ));
         }
     }
     for record in &mut records {
@@ -108,32 +109,21 @@ fn split_bindings() {
         for file in appropriate_files {
             let writer = files.get_mut(file).unwrap();
             record.used = true;
-            for comment in &record.comments {
-                writeln!(writer, "{}", comment).unwrap();
-            }
-            writeln!(writer, "{}", &record.token).unwrap();
+            write!(writer, "{}", &record).unwrap();
         }
     }
-    for record in records {
-        if !record.used && !record.token.id.is_empty() && record.token.tt != TokenType::PrivateToken
-        {
-            errors.push(format!(
-                "Unused {:?} record: {}",
-                record.token.tt, record.token.id
-            ))
-        }
-    }
-    if !errors.is_empty() {
-        panic!("Errors in splitting: {:?}", errors)
+    for record in &records {
+        record.is_used()?;
     }
     for (_, file) in files {
         file.into_inner().unwrap().unlock().unwrap();
     }
     std::fs::remove_file(GENERATION_PATH).unwrap();
+    Ok(())
 }
 
 enum SplitRule {
-    Brand(TokenType),
+    Brand(RecordType),
     Exclusive(String),
     Shared(String),
 }
@@ -153,11 +143,12 @@ impl SplitGuide {
                         rules
                             .into_iter()
                             .map(|mut s| match s.as_str() {
-                                ":functions" => SplitRule::Brand(TokenType::Function),
-                                ":typedefs" => SplitRule::Brand(TokenType::Typedef),
-                                ":includes" => SplitRule::Brand(TokenType::Include),
-                                ":defines" => SplitRule::Brand(TokenType::Define),
-                                ":const" => SplitRule::Brand(TokenType::Const),
+                                ":functions" => SplitRule::Brand(RecordType::Function),
+                                ":typedefs" => SplitRule::Brand(RecordType::Typedef),
+                                ":includes" => SplitRule::Brand(RecordType::PreprInclude),
+                                ":defines" => SplitRule::Brand(RecordType::PreprDefine),
+                                ":const" => SplitRule::Brand(RecordType::Const),
+                                ":multiples" => SplitRule::Brand(RecordType::Multiple),
                                 _ if s.ends_with('!') => {
                                     s.pop();
                                     SplitRule::Exclusive(s)
@@ -176,13 +167,11 @@ impl SplitGuide {
         for (file, rules) in &self.rules {
             for rule in rules {
                 match rule {
-                    SplitRule::Brand(brand) if *brand == record.token.tt => {
-                        shared.push(file.as_str())
-                    }
-                    SplitRule::Exclusive(id) if id == record.token.id => {
+                    SplitRule::Brand(brand) if *brand == record.rt => shared.push(file.as_str()),
+                    SplitRule::Exclusive(id) if record.contains_id(id) => {
                         exclusives.push(file.as_str())
                     }
-                    SplitRule::Shared(id) if id == record.token.id => shared.push(file.as_str()),
+                    SplitRule::Shared(id) if record.contains_id(id) => shared.push(file.as_str()),
                     _ => {}
                 }
             }
@@ -203,31 +192,139 @@ impl SplitGuide {
     }
 }
 
-fn group_tokens(stream: Tokenizer) -> Vec<Record> {
-    let mut comments_stack = Vec::new();
+fn group_tokens(stream: Tokenizer) -> Result<Vec<Record>, String> {
     let mut records = Vec::new();
+    let mut record_collect = Record::new();
     for token in stream {
-        match token.tt {
-            TokenType::Comment => comments_stack.push(token),
-            TokenType::Whitespace => {}
-            _ => {
-                let comments = comments_stack;
-                comments_stack = Vec::new();
-                records.push(Record {
-                    token,
-                    used: false,
-                    comments,
-                });
-            }
+        record_collect.add_token(token)?;
+        if record_collect.is_ready() {
+            let mut record = Record::new();
+            std::mem::swap(&mut record_collect, &mut record);
+            records.push(record);
         }
     }
-    records
+    records.push(record_collect);
+    Ok(records)
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+enum RecordType {
+    Empty,
+    Multiple,
+    PrivateToken,
+    Typedef,
+    Function,
+    Const,
+    PreprDefine,
+    PreprInclude,
+}
+
+impl RecordType {
+    fn update(&mut self, rt: RecordType) {
+        match *self {
+            RecordType::Empty => *self = rt,
+            RecordType::Multiple => return,
+            _ => *self = RecordType::Multiple,
+        }
+    }
 }
 
 struct Record<'a> {
-    token: Token<'a>,
     used: bool,
-    comments: Vec<Token<'a>>,
+    rt: RecordType,
+    nesting: i32,
+    ids: Vec<Cow<'a, str>>,
+    tokens: Vec<Token<'a>>,
+}
+
+impl<'a> Record<'a> {
+    fn new() -> Self {
+        Self {
+            used: false,
+            rt: RecordType::Empty,
+            nesting: 0,
+            ids: Vec::new(),
+            tokens: Vec::new(),
+        }
+    }
+
+    fn is_used(&self) -> Result<(), String> {
+        if self.used || self.rt == RecordType::Empty || self.rt == RecordType::PrivateToken {
+            Ok(())
+        } else {
+            let token_ids = self.tokens.iter().map(|t| t.id).collect::<Vec<_>>();
+            Err(format!("Unused {:?} record: {:?}", self.rt, token_ids))
+        }
+    }
+
+    fn is_ready(&self) -> bool {
+        return self.nesting == 0 && self.rt != RecordType::Empty;
+    }
+
+    fn contains_id(&self, id: &str) -> bool {
+        self.ids.iter().any(|v| v == id)
+    }
+
+    fn push_token(&mut self, token: Token<'a>) {
+        self.tokens.push(token);
+    }
+
+    fn push_record_type_token(&mut self, token: Token<'a>, rt: RecordType) {
+        self.rt.update(rt);
+        if !token.id.is_empty() {
+            self.ids.push(token.id.into());
+        }
+        self.push_token(token)
+    }
+
+    fn push_prepr_if(&mut self, token: Token<'a>) {
+        self.nesting += 1;
+        self.push_token(token)
+    }
+
+    fn push_prepr_endif(&mut self, token: Token<'a>) -> Result<(), String> {
+        self.nesting -= 1;
+        if self.nesting < 0 {
+            return Err(format!("unmatched #endif"));
+        }
+        self.push_token(token);
+        Ok(())
+    }
+
+    fn add_token(&mut self, token: Token<'a>) -> Result<(), String> {
+        match token.tt {
+            TokenType::Comment => self.push_token(token),
+            TokenType::Typedef => self.push_record_type_token(token, RecordType::Typedef),
+            TokenType::Function => self.push_record_type_token(token, RecordType::Function),
+            TokenType::Const => self.push_record_type_token(token, RecordType::Const),
+            TokenType::PrivateToken => self.push_record_type_token(token, RecordType::PrivateToken),
+            TokenType::PreprDefine => self.push_record_type_token(token, RecordType::PreprDefine),
+            TokenType::PreprInclude => self.push_record_type_token(token, RecordType::PreprInclude),
+            TokenType::PreprIf => self.push_prepr_if(token),
+            TokenType::PreprEndif => self.push_prepr_endif(token)?,
+            TokenType::Whitespace => self.push_token(token),
+        }
+        Ok(())
+    }
+}
+
+// Print all comments first, skip whitespaces
+impl<'a> std::fmt::Display for Record<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.tokens
+            .iter()
+            .filter(|t| t.tt == TokenType::Comment)
+            .map(|t| t.fmt(f))
+            .find(|r| r.is_err())
+            .unwrap_or(Ok(()))?;
+        self.tokens
+            .iter()
+            .filter(|t| t.tt != TokenType::Comment && t.tt != TokenType::Whitespace)
+            .map(|t| t.fmt(f))
+            .find(|r| r.is_err())
+            .unwrap_or(Ok(()))?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -236,11 +333,11 @@ enum TokenType {
     Typedef,
     Function,
     Const,
-    Define,
     PrivateToken,
-    Include,
-    Ifndef,
-    Endif,
+    PreprDefine,
+    PreprInclude,
+    PreprIf,
+    PreprEndif,
     Whitespace,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -251,7 +348,13 @@ struct Token<'a> {
 }
 impl<'a> std::fmt::Display for Token<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.span)
+        // f.write_str(format!("{:?} [", self.tt).as_str())?;
+        f.write_str(&self.span)?;
+        // f.write_str("]")?;
+
+        // Each token is finalized with endline character on output
+        f.write_str("\n")?;
+        Ok(())
     }
 }
 impl<'a> Token<'a> {
@@ -266,15 +369,20 @@ impl<'a> Token<'a> {
     fn next(s: &'a str) -> Option<Self> {
         Self::whitespace(s)
             .or_else(|| Self::comment(s))
-            .or_else(|| Self::endif(s))
-            .or_else(|| Self::include(s))
-            .or_else(|| Self::ifndef(s))
-            .or_else(|| Self::define(s))
+            .or_else(|| Self::prepr_endif(s))
+            .or_else(|| Self::prepr_include(s))
+            .or_else(|| Self::prepr_define(s))
+            .or_else(|| Self::prepr_if(s))
             .or_else(|| Self::typedef(s))
             .or_else(|| Self::r#const(s))
             .or_else(|| Self::function(s))
     }
 
+    //
+    // Each token is consumed without end of line characters.
+    // When performing output of tokens, endline is added to each token.
+    // This guarantees that tokens can be shuffled as necessary
+    //
     fn typedef(s: &'a str) -> Option<Self> {
         if s.starts_with("typedef") {
             let mut len = 0;
@@ -370,22 +478,23 @@ impl<'a> Token<'a> {
             Some(Token::new(
                 TokenType::Comment,
                 "",
-                s.until_incl("\n").unwrap_or(s),
+                s.until("\n").unwrap_or(s),
             ))
         } else {
             None
         }
     }
 
-    fn ifndef(s: &'a str) -> Option<Self> {
-        let start = "#ifndef ";
-        s.starts_with(start).then(|| {
+    fn prepr_if(s: &'a str) -> Option<Self> {
+        if s.starts_with("#if ") || s.starts_with("#ifdef ") || s.starts_with("#ifndef ") {
             let span = s.until("\n").unwrap_or(s);
-            Token::new(TokenType::Ifndef, &span[start.len()..], span)
-        })
+            Some(Token::new(TokenType::PreprIf, span, span))
+        } else {
+            None
+        }
     }
 
-    fn define(s: &'a str) -> Option<Self> {
+    fn prepr_define(s: &'a str) -> Option<Self> {
         let start = "#define ";
         s.strip_prefix(start).map(|defined| {
             let span = s.until("\n").unwrap_or(s);
@@ -393,7 +502,7 @@ impl<'a> Token<'a> {
                 if defined.starts_with('_') {
                     TokenType::PrivateToken
                 } else {
-                    TokenType::Define
+                    TokenType::PreprDefine
                 },
                 span[start.len()..].split_whitespace().next().unwrap(),
                 span,
@@ -401,12 +510,12 @@ impl<'a> Token<'a> {
         })
     }
 
-    fn endif(s: &'a str) -> Option<Self> {
+    fn prepr_endif(s: &'a str) -> Option<Self> {
         s.starts_with("#endif")
-            .then(|| Token::new(TokenType::Endif, "", "#endif"))
+            .then(|| Token::new(TokenType::PreprEndif, "", s.until("\n").unwrap_or(s)))
     }
 
-    fn include(s: &'a str) -> Option<Self> {
+    fn prepr_include(s: &'a str) -> Option<Self> {
         Self::_include(s, "#include \"", "\"").or_else(|| Self::_include(s, "#include <", ">"))
     }
 
@@ -414,7 +523,7 @@ impl<'a> Token<'a> {
         if s.starts_with(start) {
             let span = s.until_incl(end).expect("detected unterminated #include");
             Some(Token::new(
-                TokenType::Include,
+                TokenType::PreprInclude,
                 &span[start.len()..(span.len() - end.len())],
                 span,
             ))

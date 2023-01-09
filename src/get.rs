@@ -29,14 +29,13 @@ use zenoh::{
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
-    _zc_stack_ke, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_owned_closure_reply_t, z_sample_t, z_session_t, LOG_INVALID_SESSION,
+    impl_guarded_transmute, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t,
+    z_keyexpr_t, z_owned_closure_reply_t, z_sample_t, z_session_t, GuardedTransmute,
+    LOG_INVALID_SESSION,
 };
 
 type ReplyInner = Option<Reply>;
 
-#[allow(non_camel_case_types)]
-pub type _z_u128 = u128;
 /// An owned reply to a :c:func:`z_get`.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
@@ -44,19 +43,19 @@ pub type _z_u128 = u128;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_reply_t {
-    _1: _zc_res_s_v,
-    _2: _z_u128,
-}
-#[repr(C)]
-pub struct _zc_res_s_v {
-    _0: u8,
-    _1: [_z_u128; 2],
-    _2: _zc_stack_ke,
-    _3: [usize; 10],
-    _4: u64,
-}
+#[cfg(target_arch = "x86_64")]
+#[repr(C, align(8))]
+pub struct z_owned_reply_t([u64; 23]);
+
+#[cfg(target_arch = "aarch64")]
+#[repr(C, align(16))]
+pub struct z_owned_reply_t([u64; 24]);
+
+#[cfg(target_arch = "arm")]
+#[repr(C, align(8))]
+pub struct z_owned_reply_t([u64; 17]);
+
+impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
 
 impl From<ReplyInner> for z_owned_reply_t {
     fn from(mut val: ReplyInner) -> Self {
@@ -66,7 +65,7 @@ impl From<ReplyInner> for z_owned_reply_t {
                 Err(inner) => inner.payload = inner.payload.contiguous().into_owned().into(),
             };
         }
-        unsafe { std::mem::transmute(val) }
+        val.transmute()
     }
 }
 impl From<Reply> for z_owned_reply_t {

@@ -2,6 +2,7 @@ zenoh_commons.h:
   - :functions
   - :const
   - :typedefs
+  - :multiples
 zenoh_concrete.h:
   - :includes
   - :defines
@@ -11,5 +12,3 @@ zenoh_concrete.h:
   - z_owned_pull_subscriber_t!
   - z_query_t!
   - z_owned_queryable_t!
-  - _zc_stack_ke!
-  - _zc_res_s_v!

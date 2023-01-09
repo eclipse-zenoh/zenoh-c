@@ -30,6 +30,12 @@ endif()
 
 set(CARGO_FLAGS "")
 
+# allow to set cross-compilation cargo target
+set(CARGO_TARGET "" CACHE STRING "Set target triple for cargo or leave empty for default")
+if(${CARGO_TARGET})
+	set(CARGO_FLAGS ${CARGO_FLAGS} "--target ${CARGO_TARGET}")
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
