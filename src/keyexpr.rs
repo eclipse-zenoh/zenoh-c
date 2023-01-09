@@ -135,12 +135,6 @@ pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
     keyexpr.deref().is_some()
 }
 
-impl From<z_keyexpr_t> for z_owned_keyexpr_t {
-    fn from(oke: z_keyexpr_t) -> Self {
-        unsafe { std::mem::transmute(oke) }
-    }
-}
-
 /// A loaned key expression.
 ///
 /// Key expressions can identify a single key or a set of keys.
@@ -151,20 +145,31 @@ impl From<z_keyexpr_t> for z_owned_keyexpr_t {
 ///
 /// Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
 /// both for local processing and network-wise.
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct z_keyexpr_t {
-    pub _align: [u64; 2],
-    pub _padding: [usize; 2],
-}
+#[cfg(not(target_arch = "arm"))]
+#[repr(C, align(8))]
+pub struct z_keyexpr_t([u64; 4]);
+#[cfg(target_arch = "arm")]
+#[repr(C, align(8))]
+pub struct z_keyexpr_t([u64; 3]);
+
+impl_guarded_transmute!(Option<KeyExpr<'_>>, z_keyexpr_t);
+impl_guarded_transmute!(z_keyexpr_t, z_owned_keyexpr_t);
+
 impl<'a> From<KeyExpr<'a>> for z_keyexpr_t {
     fn from(val: KeyExpr<'a>) -> Self {
         Some(val).into()
     }
 }
+
+impl From<z_keyexpr_t> for z_owned_keyexpr_t {
+    fn from(oke: z_keyexpr_t) -> Self {
+        oke.transmute()
+    }
+}
+
 impl<'a> From<Option<KeyExpr<'a>>> for z_keyexpr_t {
     fn from(val: Option<KeyExpr<'a>>) -> Self {
-        unsafe { std::mem::transmute(val) }
+        val.transmute()
     }
 }
 impl Deref for z_keyexpr_t {
