@@ -30,12 +30,6 @@ endif()
 
 set(CARGO_FLAGS "")
 
-# allow to set cross-compilation cargo target
-set(CARGO_TARGET "" CACHE STRING "Set target triple for cargo or leave empty for default")
-if(${CARGO_TARGET})
-	set(CARGO_FLAGS ${CARGO_FLAGS} "--target ${CARGO_TARGET}")
-endif()
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -73,9 +67,9 @@ add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running 
 add_custom_target(check_targets)
 
 set(targets
-# aarch64-unknown-linux-gnu
+aarch64-unknown-linux-gnu
 x86_64-unknown-linux-gnu
-# arm-unknown-linux-gnueabi
+arm-unknown-linux-gnueabi
 )
 
 foreach(target ${targets})
