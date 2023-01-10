@@ -259,12 +259,15 @@ pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize) -> i8 {
-    let name = std::slice::from_raw_parts(start as _, *len);
-    match std::str::from_utf8(name) {
-        Ok(name) => match keyexpr::new(name) {
-            Ok(_) => 0,
+    let name = std::slice::from_raw_parts_mut(start as _, *len);
+    match std::str::from_utf8_mut(name) {
+        Ok(mut name) => match keyexpr::autocanonize(&mut name) {
+            Ok(k) => {
+                *len = k.len();
+                0
+            }
             Err(e) => {
-                log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
+                log::error!("Canonization error: {e}");
                 e.errno().get()
             }
         },
