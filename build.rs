@@ -223,7 +223,7 @@ impl RecordType {
     fn update(&mut self, rt: RecordType) {
         match *self {
             RecordType::Empty => *self = rt,
-            RecordType::Multiple => return,
+            RecordType::Multiple => {}
             _ => *self = RecordType::Multiple,
         }
     }
@@ -258,7 +258,7 @@ impl<'a> Record<'a> {
     }
 
     fn is_ready(&self) -> bool {
-        return self.nesting == 0 && self.rt != RecordType::Empty;
+        self.nesting == 0 && self.rt != RecordType::Empty
     }
 
     fn contains_id(&self, id: &str) -> bool {
@@ -285,7 +285,7 @@ impl<'a> Record<'a> {
     fn push_prepr_endif(&mut self, token: Token<'a>) -> Result<(), String> {
         self.nesting -= 1;
         if self.nesting < 0 {
-            return Err(format!("unmatched #endif"));
+            return Err("unmatched #endif".into());
         }
         self.push_token(token);
         Ok(())
