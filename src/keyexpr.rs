@@ -99,6 +99,9 @@ pub extern "C" fn z_keyexpr_null() -> z_owned_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t {
+    if name.is_null() {
+        return z_owned_keyexpr_t::null();
+    }
     let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
     match std::str::from_utf8(name) {
         Ok(name) => match KeyExpr::try_from(name) {

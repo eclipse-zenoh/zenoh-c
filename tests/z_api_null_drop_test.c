@@ -11,15 +11,16 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
+#undef NDEBUG
+#include <assert.h>
+
 #include "zenoh.h"
 
 int main(int argc, char **argv) {
-
     //
     // Check that all null functions exists
     //

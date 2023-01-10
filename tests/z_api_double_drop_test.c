@@ -11,12 +11,14 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "zenoh.h"
+
+#undef NDEBUG
+#include <assert.h>
 
 #define URL "demo/example"
 
@@ -84,8 +86,7 @@ void test_pull_subscriber() {
     z_drop(z_move(s));
 }
 
-void test_subscriber()
-{
+void test_subscriber() {
     z_owned_config_t config = z_config_default();
     z_owned_session_t s = z_open(z_move(config));
     z_owned_closure_sample_t callback = z_closure(data_handler);
@@ -100,8 +101,7 @@ void test_subscriber()
 
 void query_handler(const z_query_t *query, void *context) {}
 
-void test_queryable()
-{
+void test_queryable() {
     z_owned_config_t config = z_config_default();
     z_owned_session_t s = z_open(z_move(config));
     z_owned_closure_query_t callback = z_closure(query_handler);
@@ -115,7 +115,6 @@ void test_queryable()
 }
 
 int main(int argc, char **argv) {
-
     test_session();
     test_publisher();
     test_keyexpr();
