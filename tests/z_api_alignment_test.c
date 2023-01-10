@@ -11,10 +11,12 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#undef NDEBUG
+#include <assert.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <windows.h>
@@ -103,8 +105,6 @@ void data_handler(const z_sample_t *sample, void *arg) {
 }
 
 int main(int argc, char **argv) {
-    assert(argc == 2);
-    (void)(argc);
     setbuf(stdout, NULL);
 
 #ifdef ZENOH_C
