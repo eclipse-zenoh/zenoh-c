@@ -268,10 +268,16 @@ typedef struct z_owned_closure_reply_t {
  * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
  * both for local processing and network-wise.
  */
-typedef struct z_keyexpr_t {
-  uint64_t _align[2];
-  uintptr_t _padding[2];
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_keyexpr_t {
+  uint64_t _0[4];
 } z_keyexpr_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_keyexpr_t {
+  uint64_t _0[3];
+} z_keyexpr_t;
+#endif
 /**
  * The encoding of a payload, in a MIME-like format.
  *
