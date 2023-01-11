@@ -30,12 +30,6 @@ endif()
 
 set(CARGO_FLAGS "")
 
-# allow to set cross-compilation cargo target
-set(CARGO_TARGET "" CACHE STRING "Set target triple for cargo or leave empty for default")
-if(${CARGO_TARGET})
-	set(CARGO_FLAGS ${CARGO_FLAGS} "--target ${CARGO_TARGET}")
-endif()
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -61,6 +55,41 @@ endif()
 set(CARGO_FLAGS ${CARGO_FLAGS} "--manifest-path=${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml")
 set(RUSTFLAGS $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+#
+# Rust cross-build check for supported processor architectures
+# This check works on linux only
+# It requires that the following packages are installed for cross compilation:
+#
+# sudo apt install gcc-arm-linux-gnueabi
+# sudo apt install gcc-x86-64-linux-gnu
+# sudo apt install gcc-aarch64-linux-gnu
+#
+# and the following targets in rustup
+#
+# rustup target add arm-unknown-linux-gnueabi
+# rustup target add aarch64-unknown-linux-gnu
+# rustup target add x86_64-unknown-linux-gnu
+# 
+# check which targets are already installed with
+# 
+# rustup target list --installed
+#
+add_custom_target(crosscheck)
+
+set(targets
+aarch64-unknown-linux-gnu
+x86_64-unknown-linux-gnu
+arm-unknown-linux-gnueabi
+)
+
+foreach(target ${targets})
+	add_custom_target(cargo_check_${target} 
+		COMMAND cargo check --target ${target} ${CARGO_FLAGS} 
+		COMMENT "cargo check on ${target}" 
+		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+	add_dependencies(crosscheck cargo_check_${target})
+endforeach()
 
 if(APPLE)
 	set(libzenohc "libzenohc.dylib")
