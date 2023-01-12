@@ -219,6 +219,7 @@ pub extern "C" fn z_keyexpr_is_initialized(keyexpr: &z_keyexpr_t) -> bool {
 }
 
 /// Returns ``0`` if the passed string is a valid (and canon) key expression.
+/// Otherwise returns error value
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) -> i8 {
@@ -312,7 +313,11 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice(name: *const c_char, len: usize) 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
-    zc_keyexpr_from_slice(name, libc::strlen(name))
+    if name.is_null() {
+        z_keyexpr_t::null()
+    } else {
+        zc_keyexpr_from_slice(name, libc::strlen(name))
+    }
 }
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:

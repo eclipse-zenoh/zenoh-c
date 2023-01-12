@@ -1124,6 +1124,7 @@ int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
                             struct z_keyexpr_t right);
 /**
  * Returns ``0`` if the passed string is a valid (and canon) key expression.
+ * Otherwise returns error value
  */
 int8_t z_keyexpr_is_canon(const char *start, uintptr_t len);
 /**
