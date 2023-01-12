@@ -22,6 +22,9 @@
 #include <assert.h>
 
 int main(int argc, char **argv) {
-    z_owned_keyexpr_t keyexpr = z_keyexpr_new(NULL);
+    z_owned_keyexpr_t owned_keyexpr = z_keyexpr_new(NULL);
+    assert(!z_check(owned_keyexpr));
+
+    z_keyexpr_t keyexpr = z_keyexpr(NULL);
     assert(!z_check(keyexpr));
 }
