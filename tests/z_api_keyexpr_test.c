@@ -64,8 +64,18 @@ void intersects() {
     assert(z_keyexpr_intersects(foobar, nul) < 0);
 }
 
+void undeclare() {
+    z_owned_config_t config = z_config_default();
+    z_owned_session_t s = z_open(z_move(config));
+    z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
+    assert(z_keyexpr_check(&ke));
+    z_undeclare_keyexpr(z_loan(s), &ke);
+    assert(!z_keyexpr_check(&ke));
+}
+
 int main(int argc, char **argv) {
     canonize();
     includes();
     intersects();
+    undeclare();
 }
