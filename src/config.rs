@@ -265,7 +265,11 @@ pub unsafe extern "C" fn z_config_client(
         .fold(
             Ok(Vec::<zenoh::prelude::Locator>::new()),
             |acc, it| match (acc, it) {
-                (Err(_), _) | (_, Err(_)) => Err(()),
+                (Err(_), _) => Err(()),
+                (_, Err(e)) => {
+                    log::error!("Error parsing peer address: {}", e);
+                    Err(())
+                }
                 (Ok(mut vec), Ok(loc)) => {
                     vec.push(loc);
                     Ok(vec)
