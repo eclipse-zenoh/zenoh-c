@@ -436,9 +436,7 @@ pub extern "C" fn z_declare_keyexpr(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_keyexpr_t) -> i8 {
-    let kexpr = if let Some(kexpr) = kexpr.deref_mut().take() {
-        kexpr
-    } else {
+    let Some(kexpr) = kexpr.deref_mut().take() else {
         log::debug!("Attempted to undeclare dropped keyexpr");
         return i8::MIN;
     };
