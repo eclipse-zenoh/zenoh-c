@@ -37,7 +37,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 async-std = "=1.12.0"
-async-trait = "0.1.60"
+async-trait = "0.1.59"
 env_logger = "0.10.0"
 futures = "0.3.25"
 json5 = "0.4.1"
@@ -52,7 +52,7 @@ zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "mas
 [build-dependencies]
 cbindgen = "0.24.3"
 fs2 = "0.4.3"
-serde_yaml = "0.9.14"
+serde_yaml = "0.9.13"
 
 [lib]
 name = "zenohc"

@@ -18,10 +18,21 @@
 #undef NDEBUG
 #include <assert.h>
 
-int main(int argc, char **argv) {
-    zc_init_logger();
+void config_client() {
     const char *peers[] = {"tcp/127.0.0.1", "tcp/192.168.0.1", "tcp/10.0.0.1"};
     z_owned_config_t config = z_config_client(peers, 3);
     const char *key = zc_config_get(z_loan(config), "connect/endpoints");
     assert(strcmp(key, "[\"tcp/127.0.0.1\",\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]") == 0);
+}
+
+void config_peer() {
+    z_owned_config_t config = z_config_peer();
+    const char *key = zc_config_get(z_loan(config), "mode");
+    assert(strcmp(key, "\"peer\"") == 0);
+}
+
+int main(int argc, char **argv) {
+    zc_init_logger();
+    config_client();
+    config_peer();
 }
