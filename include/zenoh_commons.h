@@ -1150,7 +1150,7 @@ struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 struct z_owned_keyexpr_t z_keyexpr_null(void);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
- * The user is responsible of droping the returned string using libc's `free`.
+ * The user is responsible of droping the returned string using `zc_free`
  */
 char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**
@@ -1495,6 +1495,7 @@ struct z_owned_config_t zc_config_from_file(const char *path);
 struct z_owned_config_t zc_config_from_str(const char *s);
 /**
  * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
+ * Use `zc_free` to safely deallocate this string
  */
 char *zc_config_get(struct z_config_t config,
                     const char *key);
@@ -1508,6 +1509,10 @@ int8_t zc_config_insert_json(struct z_config_t config, const char *key, const ch
  * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
  */
 char *zc_config_to_string(struct z_config_t config);
+/**
+ * Free memory allocated by zenoh-c functions like `z_keyexpr_to_string`, `zc_config_get`, etc.
+ */
+void zc_free(void *p);
 /**
  * Initialises the zenoh runtime logger.
  *

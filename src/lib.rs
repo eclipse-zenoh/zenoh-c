@@ -76,3 +76,9 @@ fn copy_to_libc(s: &[u8]) -> *mut libc::c_char {
         string
     }
 }
+
+/// Free memory allocated by zenoh-c functions like `z_keyexpr_to_string`, `zc_config_get`, etc.
+#[no_mangle]
+pub unsafe extern "C" fn zc_free(p: *mut libc::c_void) {
+    libc::free(p)
+}

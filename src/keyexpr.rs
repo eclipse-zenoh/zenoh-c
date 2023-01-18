@@ -357,7 +357,7 @@ pub unsafe extern "C" fn z_keyexpr_unchecked(name: *const c_char) -> z_keyexpr_t
 }
 
 /// Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
-/// The user is responsible of droping the returned string using libc's `free`.
+/// The user is responsible of droping the returned string using `zc_free`
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> *mut c_char {
