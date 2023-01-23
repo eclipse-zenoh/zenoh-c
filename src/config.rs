@@ -15,7 +15,7 @@ use libc::{c_char, c_uint};
 use std::ffi::CStr;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
-use crate::{copy_to_libc, impl_guarded_transmute, GuardedTransmute};
+use crate::{impl_guarded_transmute, z_owned_str_t, z_str_null, GuardedTransmute};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -135,18 +135,19 @@ pub extern "C" fn z_config_null() -> z_owned_config_t {
 }
 
 /// Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
+/// Use `z_drop` to safely deallocate this string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -> z_owned_str_t {
     let key = match CStr::from_ptr(key).to_str() {
         Ok(s) => s,
-        Err(_) => return std::ptr::null_mut(),
+        Err(_) => return z_str_null(),
     };
 
     let val = config.as_ref().as_ref().and_then(|c| c.get_json(key).ok());
     match val {
-        Some(val) => copy_to_libc(val.as_bytes()),
-        None => std::ptr::null_mut(),
+        Some(val) => val.as_bytes().into(),
+        None => z_str_null(),
     }
 }
 
@@ -211,14 +212,14 @@ pub unsafe extern "C" fn zc_config_from_str(s: *const c_char) -> z_owned_config_
 /// Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_config_to_string(config: z_config_t) -> *mut c_char {
+pub extern "C" fn zc_config_to_string(config: z_config_t) -> z_owned_str_t {
     let config: &Config = match config.as_ref() {
         Some(c) => c,
-        None => return std::ptr::null_mut(),
+        None => return z_str_null(),
     };
     match json5::to_string(config) {
-        Ok(s) => copy_to_libc(s.as_bytes()),
-        Err(_) => std::ptr::null_mut(),
+        Ok(s) => s.as_bytes().into(),
+        Err(_) => z_str_null(),
     }
 }
 
@@ -265,7 +266,11 @@ pub unsafe extern "C" fn z_config_client(
         .fold(
             Ok(Vec::<zenoh::prelude::Locator>::new()),
             |acc, it| match (acc, it) {
-                (Err(_), _) | (_, Err(_)) => Err(()),
+                (Err(_), _) => Err(()),
+                (_, Err(e)) => {
+                    log::error!("Error parsing peer address: {}", e);
+                    Err(())
+                }
                 (Ok(mut vec), Ok(loc)) => {
                     vec.push(loc);
                     Ok(vec)

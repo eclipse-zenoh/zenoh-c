@@ -559,6 +559,14 @@ typedef struct z_hello_t {
   struct z_str_array_t locators;
 } z_hello_t;
 /**
+ * The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
+ * should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
+ * `z_check` and `z_str_check` correspondently
+ */
+typedef struct z_owned_str_t {
+  char *_cstr;
+} z_owned_str_t;
+/**
  * A loaned zenoh publisher.
  */
 typedef struct z_publisher_t {
@@ -1150,9 +1158,9 @@ struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 struct z_owned_keyexpr_t z_keyexpr_null(void);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
- * The user is responsible of droping the returned string using libc's `free`.
+ * The user is responsible of droping the returned string using `z_drop`
  */
-char *z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
+struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
  *
@@ -1433,9 +1441,25 @@ bool z_str_array_check(const struct z_owned_str_array_t *strs);
  */
 void z_str_array_drop(struct z_owned_str_array_t *strs);
 /**
- * Returns ``true`` if `strs` is valid.
+ * Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
  */
 struct z_str_array_t z_str_array_loan(const struct z_owned_str_array_t *strs);
+/**
+ * Returns ``true`` if `s` is a valid string
+ */
+bool z_str_check(const struct z_owned_str_t *s);
+/**
+ * Frees `z_owned_str_t`, invalidating it for double-drop safety.
+ */
+void z_str_drop(struct z_owned_str_t *s);
+/**
+ * Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
+ */
+const char *z_str_loan(const struct z_owned_str_t *s);
+/**
+ * Returns undefined `z_owned_str_t`
+ */
+struct z_owned_str_t z_str_null(void);
 /**
  * Returns ``true`` if `sub` is valid.
  */
@@ -1495,9 +1519,10 @@ struct z_owned_config_t zc_config_from_file(const char *path);
 struct z_owned_config_t zc_config_from_str(const char *s);
 /**
  * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
+ * Use `z_drop` to safely deallocate this string
  */
-char *zc_config_get(struct z_config_t config,
-                    const char *key);
+struct z_owned_str_t zc_config_get(struct z_config_t config,
+                                   const char *key);
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
@@ -1507,7 +1532,7 @@ int8_t zc_config_insert_json(struct z_config_t config, const char *key, const ch
 /**
  * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
  */
-char *zc_config_to_string(struct z_config_t config);
+struct z_owned_str_t zc_config_to_string(struct z_config_t config);
 /**
  * Initialises the zenoh runtime logger.
  *
