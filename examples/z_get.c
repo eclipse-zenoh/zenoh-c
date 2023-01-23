@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
             z_sample_t sample = z_reply_ok(&reply);
             z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
             printf(">> Received ('%s': '%.*s')\n", z_loan(keystr), (int)sample.payload.len, sample.payload.start);
-            z_drop(&keystr);
+            z_drop(z_move(keystr));
         } else {
             printf("Received an error\n");
         }

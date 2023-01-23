@@ -375,7 +375,7 @@ impl From<z_encoding_t> for z_owned_encoding_t {
 /// `z_check` and `z_str_check` correspondently
 #[repr(C)]
 pub struct z_owned_str_t {
-    pub cstr: *mut libc::c_char,
+    pub _cstr: *mut libc::c_char,
 }
 
 impl From<&[u8]> for z_owned_str_t {
@@ -384,7 +384,7 @@ impl From<&[u8]> for z_owned_str_t {
             let cstr = libc::malloc(value.len() + 1) as *mut libc::c_char;
             std::ptr::copy_nonoverlapping(value.as_ptr(), cstr as _, value.len());
             *cstr.add(value.len()) = 0;
-            z_owned_str_t { cstr }
+            z_owned_str_t { _cstr: cstr }
         }
     }
 }
@@ -399,26 +399,26 @@ impl Drop for z_owned_str_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
-    libc::free(std::mem::transmute(s.cstr));
-    s.cstr = std::ptr::null_mut();
+    libc::free(std::mem::transmute(s._cstr));
+    s._cstr = std::ptr::null_mut();
 }
 
 /// Returns ``true`` if `s` is a valid string
 #[no_mangle]
 pub extern "C" fn z_str_check(s: &z_owned_str_t) -> bool {
-    !s.cstr.is_null()
+    !s._cstr.is_null()
 }
 
 /// Returns undefined `z_owned_str_t`
 #[no_mangle]
 pub extern "C" fn z_str_null() -> z_owned_str_t {
     z_owned_str_t {
-        cstr: std::ptr::null_mut(),
+        _cstr: std::ptr::null_mut(),
     }
 }
 
 /// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
 #[no_mangle]
 pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
-    s.cstr
+    s._cstr
 }

@@ -564,7 +564,7 @@ typedef struct z_hello_t {
  * `z_check` and `z_str_check` correspondently
  */
 typedef struct z_owned_str_t {
-  char *cstr;
+  char *_cstr;
 } z_owned_str_t;
 /**
  * A loaned zenoh publisher.
