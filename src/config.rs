@@ -135,7 +135,7 @@ pub extern "C" fn z_config_null() -> z_owned_config_t {
 }
 
 /// Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
-/// Use `zc_free` to safely deallocate this string
+/// Use `z_drop` to safely deallocate this string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -> z_owned_str_t {

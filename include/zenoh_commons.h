@@ -1158,7 +1158,7 @@ struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 struct z_owned_keyexpr_t z_keyexpr_null(void);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
- * The user is responsible of droping the returned string using `zc_free`
+ * The user is responsible of droping the returned string using `z_drop`
  */
 struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**
@@ -1519,7 +1519,7 @@ struct z_owned_config_t zc_config_from_file(const char *path);
 struct z_owned_config_t zc_config_from_str(const char *s);
 /**
  * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
- * Use `zc_free` to safely deallocate this string
+ * Use `z_drop` to safely deallocate this string
  */
 struct z_owned_str_t zc_config_get(struct z_config_t config,
                                    const char *key);
