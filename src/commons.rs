@@ -369,3 +369,56 @@ impl From<z_encoding_t> for z_owned_encoding_t {
         }
     }
 }
+
+/// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
+/// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
+/// `z_check` and `z_str_check` correspondently
+#[repr(C)]
+pub struct z_owned_str_t {
+    pub cstr: *mut libc::c_char,
+}
+
+impl From<&[u8]> for z_owned_str_t {
+    fn from(value: &[u8]) -> Self {
+        unsafe {
+            let cstr = libc::malloc(value.len() + 1) as *mut libc::c_char;
+            std::ptr::copy_nonoverlapping(value.as_ptr(), cstr as _, value.len());
+            *cstr.add(value.len()) = 0;
+            z_owned_str_t { cstr }
+        }
+    }
+}
+
+impl Drop for z_owned_str_t {
+    fn drop(&mut self) {
+        unsafe { z_str_drop(self) }
+    }
+}
+
+/// Frees `z_owned_str_t`, invalidating it for double-drop safety.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
+    libc::free(std::mem::transmute(s.cstr));
+    s.cstr = std::ptr::null_mut();
+}
+
+/// Returns ``true`` if `s` is a valid string
+#[no_mangle]
+pub extern "C" fn z_str_check(s: &z_owned_str_t) -> bool {
+    !s.cstr.is_null()
+}
+
+/// Returns undefined `z_owned_str_t`
+#[no_mangle]
+pub extern "C" fn z_str_null() -> z_owned_str_t {
+    z_owned_str_t {
+        cstr: std::ptr::null_mut(),
+    }
+}
+
+/// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
+#[no_mangle]
+pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
+    s.cstr
+}

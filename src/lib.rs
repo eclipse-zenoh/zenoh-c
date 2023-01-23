@@ -67,18 +67,3 @@ pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";
 pub extern "C" fn zc_init_logger() {
     let _ = env_logger::try_init();
 }
-
-fn copy_to_libc(s: &[u8]) -> *mut libc::c_char {
-    unsafe {
-        let string = libc::malloc(s.len() + 1) as *mut libc::c_char;
-        std::ptr::copy_nonoverlapping(s.as_ptr(), string as _, s.len());
-        *string.add(s.len()) = 0;
-        string
-    }
-}
-
-/// Free memory allocated by zenoh-c functions like `z_keyexpr_to_string`, `zc_config_get`, etc.
-#[no_mangle]
-pub unsafe extern "C" fn zc_free(p: *mut libc::c_void) {
-    libc::free(p)
-}

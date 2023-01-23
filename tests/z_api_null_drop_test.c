@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
     z_owned_closure_zid_t closure_zid_null_1 = z_closure_zid_null();
     z_owned_reply_channel_closure_t reply_channel_closure_null_1 = z_reply_channel_closure_null();
     z_owned_reply_channel_t reply_channel_null_1 = z_reply_channel_null();
+    z_owned_str_t str_null_1 = z_str_null();
 
     //
     // Test that they actually make invalid value (where applicable)
@@ -57,6 +58,7 @@ int main(int argc, char **argv) {
     assert(!z_check(encoding_null_1));
     assert(!z_check(reply_null_1));
     assert(!z_check(hello_null_1));
+    assert(!z_check(str_null_1));
 
     //
     // Test that z_null macro defined for all types
@@ -79,6 +81,7 @@ int main(int argc, char **argv) {
     z_owned_closure_zid_t closure_zid_null_2;
     z_owned_reply_channel_closure_t reply_channel_closure_null_2;
     z_owned_reply_channel_t reply_channel_null_2;
+    z_owned_str_t str_null_2;
 
     z_null(&session_null_2);
     z_null(&publisher_null_2);
@@ -98,6 +101,7 @@ int main(int argc, char **argv) {
     z_null(&closure_zid_null_2);
     z_null(&reply_channel_closure_null_2);
     z_null(&reply_channel_null_2);
+    z_null(&str_null_2);
 
     //
     // Test that null macro works the same as direct call
@@ -113,6 +117,7 @@ int main(int argc, char **argv) {
     assert(!z_check(encoding_null_2));
     assert(!z_check(reply_null_2));
     assert(!z_check(hello_null_2));
+    assert(!z_check(str_null_2));
 
     //
     // Test drop null and double drop it
@@ -136,6 +141,7 @@ int main(int argc, char **argv) {
         z_drop(&closure_zid_null_1);
         z_drop(&reply_channel_closure_null_1);
         z_drop(&reply_channel_null_1);
+        z_drop(&str_null_1);
 
         z_drop(&session_null_2);
         z_drop(&publisher_null_2);
@@ -155,6 +161,7 @@ int main(int argc, char **argv) {
         z_drop(&closure_zid_null_2);
         z_drop(&reply_channel_closure_null_2);
         z_drop(&reply_channel_null_2);
+        z_drop(&str_null_2);
     }
 
     return 0;

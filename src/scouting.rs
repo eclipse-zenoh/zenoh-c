@@ -61,7 +61,7 @@ pub struct z_str_array_t {
     pub len: size_t,
 }
 
-/// Returns ``true`` if `strs` is valid.
+/// Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
