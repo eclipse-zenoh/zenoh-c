@@ -23,9 +23,11 @@ fn main() {
 fn configure() {
     let content = format!(
         r#"#pragma once
-#define TARGET_ARCH {}
+#define TARGET_ARCH_{}
 "#,
-        std::env::var("CARGO_CFG_TARGET_ARCH").unwrap()
+        std::env::var("CARGO_CFG_TARGET_ARCH")
+            .unwrap()
+            .to_uppercase()
     );
 
     let mut file = std::fs::File::options()
