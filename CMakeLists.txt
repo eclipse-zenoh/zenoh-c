@@ -28,20 +28,31 @@ if(NOT CMAKE_BUILD_TYPE)
 		"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-set(CARGO_FLAGS "")
+
+if (NOT DEFINED CARGO_FLAGS)
+  set(CARGO_FLAGS "")
+endif()
+
+if (NOT DEFINED CUSTOM_TARGET)
+  set (CUSTOM_TARGET "")
+endif()
+
+if (NOT DEFINED CARGO_CHANNEL)
+	set (CARGO_CHANNEL "")
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/debug")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/${CUSTOM_TARGET}/debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
-	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/release")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/${CUSTOM_TARGET}/release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
 	set(ENV{RUSTFLAGS} "-g")
-	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/release")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/${CUSTOM_TARGET}/release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--release")
-	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/release")
+	set(CMAKE_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/target/${CUSTOM_TARGET}/release")
 else()
 	message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 endif()
@@ -52,9 +63,13 @@ if(NOT DISABLE_LOGGER_AUTOINIT)
 	set(CARGO_FLAGS ${CARGO_FLAGS} "--features=logger-autoinit")
 endif()
 
+if(DEFINED CUSTOM_TARGET)
+	set(CARGO_FLAGS ${CARGO_FLAGS} "--target=${CUSTOM_TARGET}")
+endif()
+
 set(CARGO_FLAGS ${CARGO_FLAGS} "--manifest-path=${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml")
 set(RUSTFLAGS $ENV{RUSTFLAGS})
-add_custom_target(cargo ALL COMMAND cargo build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo build ${CARGO_FLAGS}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+add_custom_target(cargo ALL COMMAND cargo ${CARGO_CHANNEL} build ${CARGO_FLAGS} COMMENT "Running RUSTFLAGS=${RUSTFLAGS} cargo ${CARGO_CHANNEL} build ${CARGO_FLAGS}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 #
 # Rust cross-build check for supported processor architectures

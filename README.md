@@ -126,3 +126,34 @@ Finally, we strongly advise that you refrain from using structure field that sta
 
 ## Logging
 By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behaviour can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logger` function.
+
+## Cross-Compilation
+* The following alternative options have been introduced to facilitate cross-compilation.
+> :warning: **WARNING** :warning: : Perhaps aditional efforts are neccesary, that will depend of your enviroment.
+
+- `-DCARGO_CHANNEL=<+nightly>,<beta>,<stable>`: refers to a specific rust toolchain release [`rust-channels`] https://rust-lang.github.io/rustup/concepts/channels.html
+- `-DCARGO_FLAGS`: several optional flags can be used for compilation. [`cargo flags`] https://doc.rust-lang.org/cargo/commands/cargo-build.html
+- `-DCUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tire-1, Tire-2 and Tire-3 targets [`targets`] https://doc.rust-lang.org/nightly/rustc/platform-support.html. But keep in mind that zenoh-c only have support for following targets: `aarch64-unknown-linux-gnu`, `x86_64-unknown-linux-gnu`, `arm-unknown-linux-gnueabi`
+
+Lets put all together in an example:
+Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
+
+1. install required packages
+  - `sudo apt install gcc-aarch64-linux-gnu`
+
+  ```bash
+  $ cd /path/to/zenoh-c
+  $ mkdir -p aarch64/stage
+  $ mkdir -p build && cd build build
+  $ cmake -DCMAKE_BUILD_TYPE=Release -DCARGO_CHANNEL="+nightly" -DCARGO_FLAGS="-Zbuild-std=std,panic_abort" -DCUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
+  $ cmake --build .
+  $ cmake --build . --target install # on linux use **sudo**
+  ```
+Additionaly you can use `RUSTFLAGS` enviroment variable for lead the compilation. 
+
+
+If all goes right the building files will be located at:
+`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+and release files will be located at
+`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+
