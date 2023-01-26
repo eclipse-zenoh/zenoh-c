@@ -140,16 +140,22 @@ Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
 
 1. install required packages
   - `sudo apt install gcc-aarch64-linux-gnu`
+2. *(Only if you use `nightly` ) 
+  - `rustup component add rust-src --toolchain nightly`
 
+3. Compile Zenoh
   ```bash
   $ cd /path/to/zenoh-c
+  $ export RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
   $ mkdir -p aarch64/stage
   $ mkdir -p build && cd build build
   $ cmake -DCMAKE_BUILD_TYPE=Release -DCARGO_CHANNEL="+nightly" -DCARGO_FLAGS="-Zbuild-std=std,panic_abort" -DCUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
   $ cmake --build .
   $ cmake --build . --target install # on linux use **sudo**
   ```
-Additionaly you can use `RUSTFLAGS` enviroment variable for lead the compilation. 
+Additionaly you can use `RUSTFLAGS` enviroment variable for lead the compilation.
+
+- 
 
 
 If all goes right the building files will be located at:

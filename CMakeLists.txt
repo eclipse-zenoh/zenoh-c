@@ -33,10 +33,6 @@ if (NOT DEFINED CARGO_FLAGS)
   set(CARGO_FLAGS "")
 endif()
 
-if (NOT DEFINED CUSTOM_TARGET)
-  set (CUSTOM_TARGET "")
-endif()
-
 if (NOT DEFINED CARGO_CHANNEL)
 	set (CARGO_CHANNEL "")
 endif()
