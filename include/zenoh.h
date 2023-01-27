@@ -23,18 +23,6 @@ extern "C" {
 
 #include "zenoh_configure.h"
 
-#if TARGET_ARCH == aarch64
-#define TARGET_ARCH_AARCH64
-#elif TARGET_ARCH == x86_64
-#define TARGET_ARCH_X86_64
-#elif TARGET_ARCH == arm
-#define TARGET_ARCH_ARM
-#elif TARGET_ARCH
-#error TARGET_ARCH = #TARGET_ARCH not supported
-#else
-#error TARGET_ARCH not defined
-#endif
-
 // clang-format off
 // include order is important
 #include "zenoh_concrete.h"
