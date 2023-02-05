@@ -27,6 +27,7 @@ license = " EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
 description = "The zenoh C client API"
 readme = "README.md"
+build = "@CARGO_PROJECT_PATH@build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
@@ -55,6 +56,7 @@ fs2 = "0.4.3"
 serde_yaml = "0.9.13"
 
 [lib]
+path="@CARGO_PROJECT_PATH@src/lib.rs"
 name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
