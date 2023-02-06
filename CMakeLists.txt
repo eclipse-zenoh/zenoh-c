@@ -27,13 +27,11 @@ get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG
 if(GENERATOR_IS_MULTI_CONFIG)
 	status_print(CMAKE_CONFIGURATION_TYPES)
 else()
-	if(NOT DEFINED CMAKE_BUILD_TYPE)
+	if(CMAKE_BUILD_TYPE STREQUAL "")
 		set(CMAKE_BUILD_TYPE Release)
 	endif()
 	status_print(CMAKE_BUILD_TYPE)
 endif()
-
-
 
 #
 # Prepare to build rust sources:
@@ -55,14 +53,14 @@ status_print(BUILD_IN_SOURCE_TREE)
 
 if(BUILD_IN_SOURCE_TREE)
 	set(CARGO_TOML_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-	set(CARGO_SOURCE_DIR "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
+	set(CARGO_PROJECT_DIR "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
 else()
 	set(CARGO_TOML_DIR ${CMAKE_CURRENT_BINARY_DIR})
-	set(CARGO_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
+	set(CARGO_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 	file(COPY 
-		${CARGO_SOURCE_DIR}/splitguide.yaml 
-		${CARGO_SOURCE_DIR}/cbindgen.toml
-		${CARGO_SOURCE_DIR}/rust-toolchain 
+		${CARGO_PROJECT_DIR}/splitguide.yaml 
+		${CARGO_PROJECT_DIR}/cbindgen.toml
+		${CARGO_PROJECT_DIR}/rust-toolchain 
 		DESTINATION ${CARGO_TOML_DIR})
 	set(CARGO_GENERATED_INCLUDE_DIR ${CARGO_TOML_DIR}/include)
 endif()
@@ -112,12 +110,15 @@ debug_print(zenohc_implib)
 debug_print(zenohc_dylib)
 debug_print(zenohc_staticlib)
 
-
+# todo - add implib to byproducts
 set(RUSTFLAGS $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = ${RUSTFLAGS}\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${CARGO_FLAGS}\"
 	COMMAND cargo build ${CARGO_FLAGS}
+	BYPRODUCTS 
+		${CARGO_TARGET_DIR}/${zenohc_dylib}
+		${CARGO_TARGET_DIR}/${zenohc_staticlib}
 )
 
 #
