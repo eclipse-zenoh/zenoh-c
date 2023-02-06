@@ -6,7 +6,34 @@ project(
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
 )
-set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+# set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+#
+# Generated expression are available only on build stage. Build 'debug' target to see values of
+# variables printed with 'debug_print' function
+#
+add_custom_target(debug)
+function(debug_print var)
+	add_custom_command(
+		COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
+		TARGET debug
+	)
+endfunction()
+
+function(status_print var)
+	message(STATUS "${var} = ${${var}}")
+endfunction()
+
+get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(GENERATOR_IS_MULTI_CONFIG)
+	status_print(CMAKE_CONFIGURATION_TYPES)
+else()
+	if(NOT DEFINED CMAKE_BUILD_TYPE)
+		set(CMAKE_BUILD_TYPE Release)
+	endif()
+	status_print(CMAKE_BUILD_TYPE)
+endif()
+
+
 
 #
 # Prepare to build rust sources:
@@ -24,7 +51,7 @@ if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
 	set(in_ide TRUE)
 endif()
 option(BUILD_IN_SOURCE_TREE "Do build inside source tree" ${in_ide})
-message(STATUS "Building inside source tree: ${BUILD_IN_SOURCE_TREE}")
+status_print(BUILD_IN_SOURCE_TREE)
 
 if(BUILD_IN_SOURCE_TREE)
 	set(CARGO_TOML_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -37,13 +64,17 @@ else()
 		${CARGO_SOURCE_DIR}/cbindgen.toml
 		${CARGO_SOURCE_DIR}/rust-toolchain 
 		DESTINATION ${CARGO_TOML_DIR})
+	set(CARGO_GENERATED_INCLUDE_DIR ${CARGO_TOML_DIR}/include)
 endif()
 set(is_debug $<CONFIG:Debug>)
 set(is_release $<NOT:$<CONFIG:Debug>>)
 set(CARGO_TARGET_DIR_DEBUG ${CARGO_TOML_DIR}/target/debug)
 set(CARGO_TARGET_DIR_RELEASE ${CARGO_TOML_DIR}/target/release)
 set(CARGO_TARGET_DIR $<IF:${is_debug},${CARGO_TARGET_DIR_DEBUG},${CARGO_TARGET_DIR_RELEASE}>)
-set(CARGO_GENERATED_INCLUDE_DIR ${CARGO_TOML_DIR}/include)
+
+debug_print(is_debug)
+debug_print(CARGO_TARGET_DIR)
+debug_print(CARGO_GENERATED_INCLUDE_DIR)
 
 set(CARGO_PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
@@ -53,7 +84,7 @@ elseif(PROJECT_VERSION_TWEAK LESS 255)
 	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-rc.${PROJECT_VERSION_TWEAK}")
 endif()
 
-message(STATUS "CARGO_PROJECT_VERSION: ${CARGO_PROJECT_VERSION}")
+status_print(CARGO_PROJECT_VERSION)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${CARGO_TOML_DIR}/Cargo.toml" @ONLY)
 
 set(CARGO_FLAGS $<${is_release}:--release>)
@@ -76,6 +107,10 @@ elseif(WIN32)
 	set(zenohc_dylib "zenohc.dll")
 	set(zenohc_staticlib "zenohc.lib")
 endif()
+
+debug_print(zenohc_implib)
+debug_print(zenohc_dylib)
+debug_print(zenohc_staticlib)
 
 
 set(RUSTFLAGS $ENV{RUSTFLAGS})
@@ -121,13 +156,13 @@ foreach(target ${targets})
 endforeach()
 
 #
-# Import libraries built by cargo as targets
+# Define libraries built by cargo as targets
 #
-
 function(set_target_imported_locations target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
+		IMPORTED_LOCATION ${CARGO_TARGET_DIR}/${libname}
 		IMPORTED_LOCATION_DEBUG ${CARGO_TARGET_DIR_DEBUG}/${libname}
 		IMPORTED_LOCATION_RELEASE ${CARGO_TARGET_DIR_RELEASE}/${libname}
 		IMPORTED_LOCATION_MINSIZEREL ${CARGO_TARGET_DIR_RELEASE}/${libname}
@@ -139,6 +174,7 @@ function(set_target_imported_implib target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
+		IMPORTED_IMPLIB ${CARGO_TARGET_DIR}/${libname}
 		IMPORTED_IMPLIB_DEBUG ${CARGO_TARGET_DIR_DEBUG}/${libname}
 		IMPORTED_IMPLIB_RELEASE ${CARGO_TARGET_DIR_RELEASE}/${libname}
 		IMPORTED_IMPLIB_MINSIZEREL ${CARGO_TARGET_DIR_RELEASE}/${libname}
@@ -148,50 +184,36 @@ endfunction()
 
 add_library(zenohc_static STATIC IMPORTED)
 add_dependencies(zenohc_static cargo)
-target_include_directories(zenohc_static 
-	INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include 
-	INTERFACE ${CARGO_GENERATED_INCLUDE_DIR}
-)
+
 set_target_imported_locations(zenohc_static ${zenohc_staticlib})
 
 add_library(zenohc SHARED IMPORTED)
 add_dependencies(zenohc cargo)
-target_include_directories(zenohc 
-	INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include 
-	INTERFACE ${CARGO_GENERATED_INCLUDE_DIR}
-)
 set_target_imported_locations(zenohc ${zenohc_dylib})
 if(DEFINED zenohc_implib)
 	set_target_imported_implib(zenohc ${zenohc_implib})
+endif()
+
+target_include_directories(zenohc_static INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(zenohc INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if(DEFINED CARGO_GENERATED_INCLUDE_DIR)
+	file(MAKE_DIRECTORY ${CARGO_GENERATED_INCLUDE_DIR})
+	target_include_directories(zenohc_static INTERFACE ${CARGO_GENERATED_INCLUDE_DIR})
+	target_include_directories(zenohc INTERFACE ${CARGO_GENERATED_INCLUDE_DIR})
 endif()
 
 set_target_properties(zenohc zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 add_library(zenohc::static ALIAS zenohc_static)
 add_library(zenohc::lib ALIAS zenohc)
 
-#
-# Generated expression are available only on build stage. Build this target to see their actual values
-#
-add_custom_target(debug)
-function(debug_print var)
-	add_custom_command(
-		COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
-		TARGET debug
-	)
-endfunction()
-debug_print(CARGO_TARGET_DIR)
-debug_print(CARGO_GENERATED_INCLUDE_DIR)
-debug_print(zenohc_implib)
-debug_print(zenohc_dylib)
-debug_print(zenohc_staticlib)
 
 #
 # Tests and examples
 #
-option(USE_STATIC_LIB "Use static zenohc lib for examples and tests" FALSE)
-message(STATUS "Build examples and tests with static lib : USE_STATIC_LIB = ${USE_STATIC_LIB}")
+option(BUILD_EXAMPLES_WITH_STATIC_LIB "Use static zenohc lib for examples and tests" FALSE)
+status_print(BUILD_EXAMPLES_WITH_STATIC_LIB)
 function(add_libraries target)
-	if(USE_STATIC_LIB)
+	if(BUILD_EXAMPLES_WITH_STATIC_LIB)
 		add_dependencies(${target} zenohc::static )
 		target_link_libraries(${target} PUBLIC zenohc::static)
 	else()
