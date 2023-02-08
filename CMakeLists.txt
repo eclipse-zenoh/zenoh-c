@@ -6,7 +6,35 @@ project(
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
 )
-# set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+
+#
+# Utility functions
+#
+function(status_print var)
+	message(STATUS "${var} = ${${var}}")
+endfunction()
+function(declare_cache_var var default_value type docstring)
+	set(${var} ${default_value} CACHE ${type} ${docstring})
+	status_print(${var})
+endfunction()
+
+#
+# Build configuration options
+# 
+# All names starts from "BUILD_" - it's convenient to see all options together
+# in alpabetically-sorted options list
+#
+
+# By default do build in source if current CMakeLists.txt is the root one
+# and binary dir is "build" in it
+set(in_ide FALSE)
+if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
+	set(in_ide TRUE)
+endif()
+declare_cache_var(BUILD_IN_SOURCE_TREE ${in_ide} BOOL "Do build inside source tree")
+declare_cache_var(BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples and tests")
+declare_cache_var(BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
+
 #
 # Generated expression are available only on build stage. Build 'debug' target to see values of
 # variables printed with 'debug_print' function
@@ -19,13 +47,13 @@ function(debug_print var)
 	)
 endfunction()
 
-function(status_print var)
-	message(STATUS "${var} = ${${var}}")
-endfunction()
-
+#
+# Select 'Release' as default config for single-config generator
+# Remind user to select config type on build stage for multi-config generator
+#
 get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(GENERATOR_IS_MULTI_CONFIG)
-	status_print(CMAKE_CONFIGURATION_TYPES)
+	message(STATUS "Multi-config generator selected, use cmake --build . --config [${CMAKE_CONFIGURATION_TYPES}]")
 else()
 	if(CMAKE_BUILD_TYPE STREQUAL "")
 		set(CMAKE_BUILD_TYPE Release)
@@ -38,18 +66,6 @@ endif()
 # configure Cargo.toml, copy files necessary for cargo, 
 # create variables with path to cargo target directory
 #
-
-# When work in IDE it's convenient to build rust sources into "target" 
-# in source tree and place generated headers. Otherwise it's better to keep
-# source tree untouched.
-# By default do build in source if current CMakeLists.txt is the root one
-# and binary dir is "build" in it
-set(in_ide FALSE)
-if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
-	set(in_ide TRUE)
-endif()
-option(BUILD_IN_SOURCE_TREE "Do build inside source tree" ${in_ide})
-status_print(BUILD_IN_SOURCE_TREE)
 
 if(BUILD_IN_SOURCE_TREE)
 	set(CARGO_TOML_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -86,8 +102,7 @@ status_print(CARGO_PROJECT_VERSION)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${CARGO_TOML_DIR}/Cargo.toml" @ONLY)
 
 set(CARGO_FLAGS $<${is_release}:--release>)
-option(DISABLE_LOGGER_AUTOINIT "Disable logger-autoinit feature" FALSE)
-if(NOT DISABLE_LOGGER_AUTOINIT)
+if(BUILD_WITH_LOGGER_AUTOINIT)
 	set(CARGO_FLAGS ${CARGO_FLAGS} --features=logger-autoinit)
 endif()
 
@@ -185,12 +200,12 @@ endfunction()
 
 add_library(zenohc_static STATIC IMPORTED)
 add_dependencies(zenohc_static cargo)
-
 set_target_imported_locations(zenohc_static ${zenohc_staticlib})
 
 add_library(zenohc SHARED IMPORTED)
 add_dependencies(zenohc cargo)
 set_target_imported_locations(zenohc ${zenohc_dylib})
+set_target_properties(zenohc PROPERTIES IMPORTED_NO_SONAME TRUE)
 if(DEFINED zenohc_implib)
 	set_target_imported_implib(zenohc ${zenohc_implib})
 endif()
@@ -211,14 +226,10 @@ add_library(zenohc::lib ALIAS zenohc)
 #
 # Tests and examples
 #
-option(BUILD_EXAMPLES_WITH_STATIC_LIB "Use static zenohc lib for examples and tests" FALSE)
-status_print(BUILD_EXAMPLES_WITH_STATIC_LIB)
 function(add_libraries target)
 	if(BUILD_EXAMPLES_WITH_STATIC_LIB)
-		add_dependencies(${target} zenohc::static )
 		target_link_libraries(${target} PUBLIC zenohc::static)
 	else()
-		add_dependencies(${target} zenohc::lib )
 		target_link_libraries(${target} PUBLIC zenohc::lib)
 	endif()
 	if(APPLE)
