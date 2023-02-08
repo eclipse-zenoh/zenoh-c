@@ -109,31 +109,32 @@ endif()
 #
 # Build rust sources
 #
+macro(set_lib var value)
+	set(${var} ${value})
+	list(APPEND LIB_FILES ${value})
+endmacro()
+
 if(APPLE)
-	set(zenohc_dylib "libzenohc.dylib")
-	set(zenohc_staticlib "libzenohc.a")
+	set_lib(zenohc_dylib "libzenohc.dylib")
+	set_lib(zenohc_staticlib "libzenohc.a")
 elseif(UNIX)
-	set(zenohc_dylib "libzenohc.so")
-	set(zenohc_staticlib "libzenohc.a")
+	set_lib(zenohc_dylib "libzenohc.so")
+	set_lib(zenohc_staticlib "libzenohc.a")
 elseif(WIN32)
-	set(zenohc_implib "zenohc.dll.lib")
-	set(zenohc_dylib "zenohc.dll")
-	set(zenohc_staticlib "zenohc.lib")
+	set_lib(zenohc_implib "zenohc.dll.lib")
+	set_lib(zenohc_dylib "zenohc.dll")
+	set_lib(zenohc_staticlib "zenohc.lib")
 endif()
+status_print(LIB_FILES)
+list(TRANSFORM LIB_FILES PREPEND "${CARGO_TARGET_DIR}/")
+debug_print(LIB_FILES)
 
-debug_print(zenohc_implib)
-debug_print(zenohc_dylib)
-debug_print(zenohc_staticlib)
-
-# todo - add implib to byproducts
 set(RUSTFLAGS $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = ${RUSTFLAGS}\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${CARGO_FLAGS}\"
 	COMMAND cargo build ${CARGO_FLAGS}
-	BYPRODUCTS 
-		${CARGO_TARGET_DIR}/${zenohc_dylib}
-		${CARGO_TARGET_DIR}/${zenohc_staticlib}
+	BYPRODUCTS ${LIB_FILES}
 )
 
 #
@@ -240,6 +241,13 @@ function(add_libraries target)
 		target_link_libraries(${target} PUBLIC rt pthread m dl)
 	elseif(WIN32)
 		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
+	endif()
+
+	if(WIN32)
+		add_custom_command(TARGET ${target} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+			COMMAND_EXPAND_LISTS
+		)
 	endif()
 endfunction()
 
