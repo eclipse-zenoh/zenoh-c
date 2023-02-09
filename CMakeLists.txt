@@ -7,16 +7,9 @@ project(
 	LANGUAGES C
 )
 
-#
-# Utility functions
-#
-function(status_print var)
-	message(STATUS "${var} = ${${var}}")
-endfunction()
-function(declare_cache_var var default_value type docstring)
-	set(${var} ${default_value} CACHE ${type} ${docstring})
-	status_print(${var})
-endfunction()
+include(helpers.cmake)
+declare_target_debug(debug)
+set_default_build_type(Release)
 
 #
 # Build configuration options
@@ -32,32 +25,6 @@ declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static z
 declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
 declare_cache_var(ZENOHC_INSTALL_STATIC_LIBRARY FALSE BOOL "Install static librayr")
 declare_cache_var(ZENOHC_INSTALL_DEBUG FALSE BOOL "Protection from accidental installation of debug configuration")
-
-#
-# Generated expression are available only on build stage. Build 'debug' target to see values of
-# variables printed with 'debug_print' function
-#
-add_custom_target(debug)
-function(debug_print var)
-	add_custom_command(
-		COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
-		TARGET debug
-	)
-endfunction()
-
-#
-# Select 'Release' as default config for single-config generator
-# Remind user to select config type on build stage for multi-config generator
-#
-get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-if(GENERATOR_IS_MULTI_CONFIG)
-	message(STATUS "Multi-config generator selected, use cmake --build . --config [${CMAKE_CONFIGURATION_TYPES}]")
-else()
-	if(CMAKE_BUILD_TYPE STREQUAL "")
-		set(CMAKE_BUILD_TYPE Release)
-	endif()
-	status_print(CMAKE_BUILD_TYPE)
-endif()
 
 #
 # Prepare to build rust sources:
