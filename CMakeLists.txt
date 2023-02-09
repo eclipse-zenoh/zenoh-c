@@ -33,14 +33,14 @@ declare_cache_var(ZENOHC_INSTALL_DEBUG FALSE BOOL "Protection from accidental in
 #
 if(ZENOHC_BUILD_IN_SOURCE_TREE)
 	set(cargo_toml_dir ${CMAKE_CURRENT_SOURCE_DIR})
-	set(cargo_project_dir "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
+	set(CARGO_PROJECT_DIR "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
 else()
 	set(cargo_toml_dir ${CMAKE_CURRENT_BINARY_DIR})
-	set(cargo_project_dir "${CMAKE_CURRENT_SOURCE_DIR}/")
+	set(CARGO_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 	file(COPY 
-		${cargo_project_dir}/splitguide.yaml 
-		${cargo_project_dir}/cbindgen.toml
-		${cargo_project_dir}/rust-toolchain 
+		${CARGO_PROJECT_DIR}/splitguide.yaml 
+		${CARGO_PROJECT_DIR}/cbindgen.toml
+		${CARGO_PROJECT_DIR}/rust-toolchain 
 		DESTINATION ${cargo_toml_dir})
 	set(cargo_generated_include_dir ${cargo_toml_dir}/include)
 endif()
@@ -264,9 +264,9 @@ install(FILES ${dylibs} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INS
 if (${ZENOHC_INSTALL_STATIC_LIBRARY})
 	install(FILES ${staticlibs} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
-install(DIRECTORY ${source_include_dir} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY "${source_include_dir}/" CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(DEFINED ${cargo_generated_include_dir})
-	install(DIRECTORY ${cargo_generated_include_dir} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+	install(DIRECTORY "${cargo_generated_include_dir}/" CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 if(APPLE OR UNIX)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${cargo_toml_dir}/zenohc.pc @ONLY)
