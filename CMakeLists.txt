@@ -21,19 +21,17 @@ endfunction()
 #
 # Build configuration options
 # 
-# All names starts from "BUILD_" - it's convenient to see all options together
-# in alpabetically-sorted options list
-#
-
 # By default do build in source if current CMakeLists.txt is the root one
 # and binary dir is "build" in it
 set(in_ide FALSE)
 if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
 	set(in_ide TRUE)
 endif()
-declare_cache_var(BUILD_IN_SOURCE_TREE ${in_ide} BOOL "Do build inside source tree")
-declare_cache_var(BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples and tests")
-declare_cache_var(BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
+declare_cache_var(ZENOHC_BUILD_IN_SOURCE_TREE ${in_ide} BOOL "Do build inside source tree")
+declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples and tests")
+declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
+declare_cache_var(ZENOHC_INSTALL_STATIC_LIBRARY FALSE BOOL "Install static librayr")
+declare_cache_var(ZENOHC_INSTALL_DEBUG FALSE BOOL "Protection from accidental installation of debug configuration")
 
 #
 # Generated expression are available only on build stage. Build 'debug' target to see values of
@@ -66,29 +64,30 @@ endif()
 # configure Cargo.toml, copy files necessary for cargo, 
 # create variables with path to cargo target directory
 #
-
-if(BUILD_IN_SOURCE_TREE)
-	set(CARGO_TOML_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-	set(CARGO_PROJECT_DIR "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
+if(ZENOHC_BUILD_IN_SOURCE_TREE)
+	set(cargo_toml_dir ${CMAKE_CURRENT_SOURCE_DIR})
+	set(cargo_project_dir "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
 else()
-	set(CARGO_TOML_DIR ${CMAKE_CURRENT_BINARY_DIR})
-	set(CARGO_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
+	set(cargo_toml_dir ${CMAKE_CURRENT_BINARY_DIR})
+	set(cargo_project_dir "${CMAKE_CURRENT_SOURCE_DIR}/")
 	file(COPY 
-		${CARGO_PROJECT_DIR}/splitguide.yaml 
-		${CARGO_PROJECT_DIR}/cbindgen.toml
-		${CARGO_PROJECT_DIR}/rust-toolchain 
-		DESTINATION ${CARGO_TOML_DIR})
-	set(CARGO_GENERATED_INCLUDE_DIR ${CARGO_TOML_DIR}/include)
+		${cargo_project_dir}/splitguide.yaml 
+		${cargo_project_dir}/cbindgen.toml
+		${cargo_project_dir}/rust-toolchain 
+		DESTINATION ${cargo_toml_dir})
+	set(cargo_generated_include_dir ${cargo_toml_dir}/include)
 endif()
+set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(is_debug $<CONFIG:Debug>)
-set(is_release $<NOT:$<CONFIG:Debug>>)
-set(CARGO_TARGET_DIR_DEBUG ${CARGO_TOML_DIR}/target/debug)
-set(CARGO_TARGET_DIR_RELEASE ${CARGO_TOML_DIR}/target/release)
-set(CARGO_TARGET_DIR $<IF:${is_debug},${CARGO_TARGET_DIR_DEBUG},${CARGO_TARGET_DIR_RELEASE}>)
+set(is_release $<NOT:${is_debug}>)
+set(cargo_target_dir_debug ${cargo_toml_dir}/target/debug)
+set(cargo_target_dir_release ${cargo_toml_dir}/target/release)
+set(cargo_target_dir $<IF:${is_debug},${cargo_target_dir_debug},${cargo_target_dir_release}>)
 
 debug_print(is_debug)
-debug_print(CARGO_TARGET_DIR)
-debug_print(CARGO_GENERATED_INCLUDE_DIR)
+debug_print(cargo_target_dir)
+debug_print(source_include_dir)
+debug_print(cargo_generated_include_dir)
 
 set(CARGO_PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
@@ -99,44 +98,46 @@ elseif(PROJECT_VERSION_TWEAK LESS 255)
 endif()
 
 status_print(CARGO_PROJECT_VERSION)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${CARGO_TOML_DIR}/Cargo.toml" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
 
-set(CARGO_FLAGS $<${is_release}:--release>)
-if(BUILD_WITH_LOGGER_AUTOINIT)
-	set(CARGO_FLAGS ${CARGO_FLAGS} --features=logger-autoinit)
+set(cargo_flags $<${is_release}:--release>)
+if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
+	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
 endif()
 
 #
 # Build rust sources
 #
-macro(set_lib var value)
-	set(${var} ${value})
-	list(APPEND LIB_FILES ${value})
+macro(set_lib list var value)
+	set(${var} ${value}) 
+	list(APPEND ${list} ${value})
 endmacro()
 
 if(APPLE)
-	set_lib(zenohc_dylib "libzenohc.dylib")
-	set_lib(zenohc_staticlib "libzenohc.a")
+	set_lib(dylibs dylib "libzenohc.dylib")
+	set_lib(staticlibs staticlib "libzenohc.a")
 elseif(UNIX)
-	set_lib(zenohc_dylib "libzenohc.so")
-	set_lib(zenohc_staticlib "libzenohc.a")
+	set_lib(dylibs dylib "libzenohc.so")
+	set_lib(staticlibs staticlib "libzenohc.a")
 elseif(WIN32)
-	set_lib(zenohc_implib "zenohc.dll.lib")
-	set_lib(zenohc_dylib "zenohc.dll")
-	set_lib(zenohc_staticlib "zenohc.lib")
+	set_lib(dylibs implib "zenohc.dll.lib")
+	set_lib(dylibs dylib "zenohc.dll")
+	set_lib(staticlibs staticlib "zenohc.lib")
 endif()
-status_print(LIB_FILES)
-list(TRANSFORM LIB_FILES PREPEND "${CARGO_TARGET_DIR}/")
-debug_print(LIB_FILES)
+status_print(dylibs)
+status_print(staticlibs)
+list(TRANSFORM dylibs PREPEND "${cargo_target_dir}/")
+list(TRANSFORM staticlibs PREPEND "${cargo_target_dir}/")
+debug_print(dylibs)
+debug_print(staticlibs)
 
-set(RUSTFLAGS $ENV{RUSTFLAGS})
+set(rustflags $ENV{RUSTFLAGS})
 add_custom_target(cargo ALL
-	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = ${RUSTFLAGS}\"
-	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${CARGO_FLAGS}\"
-	COMMAND cargo build ${CARGO_FLAGS}
-	BYPRODUCTS ${LIB_FILES}
+	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = ${rustflags}\"
+	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${cargo_flags}\"
+	COMMAND cargo build ${cargo_flags}
+	BYPRODUCTS ${dylibs} ${staticlibs}
 )
-
 #
 # Rust cross-build check for supported processor architectures
 # This check works on linux only
@@ -166,7 +167,7 @@ arm-unknown-linux-gnueabi
 
 foreach(target ${targets})
 	add_custom_target(cargo_check_${target} 
-		COMMAND cargo check --target ${target} ${CARGO_FLAGS} 
+		COMMAND cargo check --target ${target} ${cargo_flags} 
 		COMMENT "cargo check on ${target}" 
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 	add_dependencies(crosscheck cargo_check_${target})
@@ -175,15 +176,23 @@ endforeach()
 #
 # Define libraries built by cargo as targets
 #
+add_library(zenohc_static STATIC IMPORTED)
+add_library(zenohc SHARED IMPORTED)
+add_dependencies(zenohc_static cargo)
+add_dependencies(zenohc cargo)
+# Workaroud for https://github.com/rust-lang/cargo/issues/5045
+# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
+set_target_properties(zenohc PROPERTIES IMPORTED_NO_SONAME TRUE)
+
 function(set_target_imported_locations target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_LOCATION ${CARGO_TARGET_DIR}/${libname}
-		IMPORTED_LOCATION_DEBUG ${CARGO_TARGET_DIR_DEBUG}/${libname}
-		IMPORTED_LOCATION_RELEASE ${CARGO_TARGET_DIR_RELEASE}/${libname}
-		IMPORTED_LOCATION_MINSIZEREL ${CARGO_TARGET_DIR_RELEASE}/${libname}
-		IMPORTED_LOCATION_RELWITHDEBINFO ${CARGO_TARGET_DIR_RELEASE}/${libname}
+		IMPORTED_LOCATION ${cargo_target_dir}/${libname}
+		IMPORTED_LOCATION_DEBUG ${cargo_target_dir_debug}/${libname}
+		IMPORTED_LOCATION_RELEASE ${cargo_target_dir_release}/${libname}
+		IMPORTED_LOCATION_MINSIZEREL ${cargo_target_dir_release}/${libname}
+		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_target_dir_release}/${libname}
 	)
 endfunction()
 
@@ -191,44 +200,40 @@ function(set_target_imported_implib target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_IMPLIB ${CARGO_TARGET_DIR}/${libname}
-		IMPORTED_IMPLIB_DEBUG ${CARGO_TARGET_DIR_DEBUG}/${libname}
-		IMPORTED_IMPLIB_RELEASE ${CARGO_TARGET_DIR_RELEASE}/${libname}
-		IMPORTED_IMPLIB_MINSIZEREL ${CARGO_TARGET_DIR_RELEASE}/${libname}
-		IMPORTED_IMPLIB_RELWITHDEBINFO ${CARGO_TARGET_DIR_RELEASE}/${libname}
+		IMPORTED_IMPLIB ${cargo_target_dir}/${libname}
+		IMPORTED_IMPLIB_DEBUG ${cargo_target_dir_debug}/${libname}
+		IMPORTED_IMPLIB_RELEASE ${cargo_target_dir_release}/${libname}
+		IMPORTED_IMPLIB_MINSIZEREL ${cargo_target_dir_release}/${libname}
+		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_target_dir_release}/${libname}
 	)
 endfunction()
 
-add_library(zenohc_static STATIC IMPORTED)
-add_dependencies(zenohc_static cargo)
-set_target_imported_locations(zenohc_static ${zenohc_staticlib})
-
-add_library(zenohc SHARED IMPORTED)
-add_dependencies(zenohc cargo)
-set_target_imported_locations(zenohc ${zenohc_dylib})
-set_target_properties(zenohc PROPERTIES IMPORTED_NO_SONAME TRUE)
+set_target_imported_locations(zenohc_static ${staticlib})
+set_target_imported_locations(zenohc ${dylib})
 if(DEFINED zenohc_implib)
-	set_target_imported_implib(zenohc ${zenohc_implib})
+	set_target_imported_implib(zenohc ${implib})
 endif()
 
-target_include_directories(zenohc_static INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(zenohc INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-if(DEFINED CARGO_GENERATED_INCLUDE_DIR)
-	file(MAKE_DIRECTORY ${CARGO_GENERATED_INCLUDE_DIR})
-	target_include_directories(zenohc_static INTERFACE ${CARGO_GENERATED_INCLUDE_DIR})
-	target_include_directories(zenohc INTERFACE ${CARGO_GENERATED_INCLUDE_DIR})
+#
+# Define include directories for library targets
+#
+target_include_directories(zenohc_static INTERFACE ${source_include_dir})
+target_include_directories(zenohc INTERFACE ${source_include_dir})
+if(DEFINED cargo_generated_include_dir)
+	file(MAKE_DIRECTORY ${cargo_generated_include_dir})
+	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
+	target_include_directories(zenohc INTERFACE ${cargo_generated_include_dir})
 endif()
 
 set_target_properties(zenohc zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 add_library(zenohc::static ALIAS zenohc_static)
 add_library(zenohc::lib ALIAS zenohc)
 
-
 #
 # Tests and examples
 #
 function(add_libraries target)
-	if(BUILD_EXAMPLES_WITH_STATIC_LIB)
+	if(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB)
 		target_link_libraries(${target} PUBLIC zenohc::static)
 	else()
 		target_link_libraries(${target} PUBLIC zenohc::lib)
@@ -261,7 +266,7 @@ if(APPLE OR UNIX OR WIN32)
 		add_dependencies(examples ${target})
 		add_libraries(${target})
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
-		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CARGO_TARGET_DIR}/examples")
+		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${cargo_target_dir}/examples")
 	endforeach()
 
 	enable_testing()	
@@ -274,53 +279,50 @@ if(APPLE OR UNIX OR WIN32)
 		add_dependencies(tests ${target})
 		add_libraries(${target})
 		set_property(TARGET ${target} PROPERTY C_STANDARD 11)
-		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CARGO_TARGET_DIR}/tests")
+		set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${cargo_target_dir}/tests")
 		add_test(NAME "test_${file}" COMMAND ${target})
 	endforeach()
 else()
 	message(WARNING "You platform doesn't seem to support building the examples or tests.")
 endif()
 
-# if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-# 	set(ZENOHC_INSTALL_CONFIGURATIONS "Release;RelWithDebInfo" CACHE STRING "Configurations allowed to install")
-# 	set(ZENOHC_INSTALL_STATIC_LIBRARY FALSE CACHE BOOL "Install static library")
-# else()
-# 	set(ZENOHC_INSTALL_CONFIGURATIONS "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE INTERNAL "Configurations allowed to install")
-# 	set(ZENOHC_INSTALL_STATIC_LIBRARY TRUE CACHE BOOL "Install static library")
-# endif()
-# message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
-# message(STATUS "Configurations allowed to install: ${ZENOHC_INSTALL_CONFIGURATIONS}")
-# message(STATUS "Static library will be installed: ${ZENOHC_INSTALL_STATIC_LIBRARY}")
-# include(GNUInstallDirs)
-# set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohc")
-# install(FILES ${CMAKE_BINARY_DIR}/${libzenohc} CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-# if (${ZENOHC_INSTALL_STATIC_LIBRARY})
-# 	install(FILES ${CMAKE_BINARY_DIR}/${libzenohc_static} CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-# endif()
-# install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-# configure_file("${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in" "${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc" @ONLY)
+if(ZENOHC_INSTALL_DEBUG)
+	set(configurations $<CONFIG>)
+else()
+	set(configurations "Release;RelWithDebInfo")
+endif()
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohc")
+install(FILES ${dylibs} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if (${ZENOHC_INSTALL_STATIC_LIBRARY})
+	install(FILES ${staticlibs} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+install(DIRECTORY ${source_include_dir} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+if(DEFINED ${cargo_generated_include_dir})
+	install(DIRECTORY ${cargo_generated_include_dir} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
+if(APPLE OR UNIX)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${cargo_toml_dir}/zenohc.pc @ONLY)
+	install(FILES ${cargo_toml_dir}/zenohc.pc CONFIGURATIONS ${configurations} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
+endif()
 
-# if(APPLE OR UNIX)
-# 	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc" CONFIGURATIONS ${ZENOHC_INSTALL_CONFIGURATIONS} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
-# endif()
+set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
-# set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+# Generate <Package>Config.cmake
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  "PackageConfig.cmake.in"
+  "${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 
-# # Generate <Package>Config.cmake
-# include(CMakePackageConfigHelpers)
-# configure_package_config_file(
-#   "PackageConfig.cmake.in"
-#   "${PROJECT_NAME}Config.cmake"
-#   INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+# Generate <Package>Version.cmake
+write_basic_package_version_file(
+  "${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion)
 
-# # Generate <Package>Version.cmake
-# write_basic_package_version_file(
-#   "${PROJECT_NAME}ConfigVersion.cmake"
-#   VERSION ${PROJECT_VERSION}
-#   COMPATIBILITY SameMajorVersion)
-
-# install(
-#   FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-#         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-#   DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
-#   COMPONENT dev)
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+  COMPONENT dev)
