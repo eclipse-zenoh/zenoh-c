@@ -1,3 +1,20 @@
+include_guard()
+
+#
+# Set variable ${is_root} to true if project is not included into other project
+# Set variable ${is_ide} to ture if project is root and supposedly loaded to ide
+#
+function(check_project_usage is_root is_ide)
+    set(${is_root} FALSE PARENT_SCOPE)
+    set(${is_ide} FALSE PARENT_SCOPE)
+    if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+        set(${is_root} TRUE PARENT_SCOPE)
+        if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
+            set(${is_ide} TRUE PARENT_SCOPE)
+        endif()
+    endif()
+endfunction()
+
 #
 # Show VARIABLE = value on configuration stage
 #
@@ -14,15 +31,15 @@ function(declare_cache_var var default_value type docstring)
 endfunction()
 
 #
-# Create target 'debug' and add function 'debug_print' which prints VARIABLE = value
-# when target 'debug' is built. Useful to debug generated expressions.
-#
-macro(declare_target_debug debug)
-    add_custom_target(${debug})
+# Create target named '${PROJECT_NAME}_debug' and add function 'debug_print' which prints VARIABLE = value
+# when this target is built. Useful to debug generated expressions.
+#`
+macro(declare_target_projectname_debug)
+    add_custom_target(${PROJECT_NAME}_debug)
     function(debug_print var)
         add_custom_command(
             COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
-            TARGET ${debug}
+            TARGET ${PROJECT_NAME}_debug
         )
     endfunction()
 endmacro()
