@@ -1,8 +1,11 @@
+#
+# Build script executed only if project is root project
+# Contains tests, examples and installation procedure
+#
 set_default_build_type(Release)
 
 declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples and tests")
-declare_cache_var(ZENOHC_INSTALL_STATIC_LIBRARY FALSE BOOL "Install static librayr")
-declare_cache_var(ZENOHC_INSTALL_DEBUG FALSE BOOL "Protection from accidental installation of debug configuration")
+declare_cache_var(ZENOHC_INSTALL_STATIC_LIBRARY FALSE BOOL "Install static library")
 
 #
 # Rust cross-build check for supported processor architectures
@@ -97,50 +100,73 @@ else()
 endif()
 
 #
+# Get filename property from library target,
+# copy <name>.<ext> to <name>d.<ext> for install debug configuration
+#
+function(lib_property_to_install_file var target property)
+	# avoid CMake behavior - setting variable to <VAR>-NOTFOUND for undefined property
+    get_property(is_set TARGET ${target} PROPERTY ${property} SET)
+    if (NOT is_set)
+		unset(${var} PARENT_SCOPE)
+		return()
+	endif()
+	get_property(oldname TARGET ${target} PROPERTY ${property})
+	set(d $<$<CONFIG:Debug>:d>)
+    get_filename_component(dir ${oldname} DIRECTORY)
+    get_filename_component(name_we ${oldname} NAME_WE)
+    get_filename_component(ext ${oldname} EXT)
+    set(newname ${dir}/${name_we}${d}${ext})
+	add_custom_command(TARGET cargo POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy ${oldname} ${newname}
+	)
+	set(${var} ${newname} PARENT_SCOPE)
+endfunction()
+
+#
 # Installation
+# For debug configuration installs libraries with 'd' added to filename and
+# package named 'zenohc_debug'
 #
 status_print(CMAKE_INSTALL_PREFIX)
-list(TRANSFORM DYLIBS PREPEND "${cargo_target_dir}/")
-list(TRANSFORM STATICLIBS PREPEND "${cargo_target_dir}/")
-debug_print(DYLIBS)
-debug_print(STATICLIBS)
-if(ZENOHC_INSTALL_DEBUG)
-	set(configurations $<CONFIG>)
-else()
-	set(configurations "Release;RelWithDebInfo")
-endif()
+lib_property_to_install_file(DYLIB zenohc::lib IMPORTED_LOCATION)
+lib_property_to_install_file(IMPLIB zenohc::lib IMPORTED_IMPLIB)
+lib_property_to_install_file(STATICLIB zenohc::static IMPORTED_LOCATION)
+debug_print(DYLIB)
+debug_print(IMPLIB)
+debug_print(STATICLIB)
+
 include(GNUInstallDirs)
-set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/zenohc")
-install(FILES ${DYLIBS} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-if (${ZENOHC_INSTALL_STATIC_LIBRARY})
-	install(FILES ${STATICLIBS} CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-endif()
-install(DIRECTORY "${source_include_dir}/" CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-if(DEFINED ${cargo_generated_include_dir})
-	install(DIRECTORY "${cargo_generated_include_dir}/" CONFIGURATIONS ${configurations} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-endif()
-if(APPLE OR UNIX)
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${cargo_toml_dir}/zenohc.pc @ONLY)
-	install(FILES ${cargo_toml_dir}/zenohc.pc CONFIGURATIONS ${configurations} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
-endif()
+set(CMAKE_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/zenohc)
+install(FILES ${DYLIB} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# if (${ZENOHC_INSTALL_STATIC_LIBRARY})
+# 	install(FILES ${STATICLIB} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# endif()
+# get_target_property(include_dirs zenohc::lib INTERFACE_INCLUDE_DIRECTORIES)
+# foreach(dir ${include_dirs})
+# 	install(DIRECTORY "${dir}/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+# endforeach()
+# if(APPLE OR UNIX)
+# 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/zenohc.pc @ONLY)
+# 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/zenohc.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" OPTIONAL)
+# endif()
 
-set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+# set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
-# Generate <Package>Config.cmake
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-  "PackageConfig.cmake.in"
-  "${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+# # Generate <Package>Config.cmake
+# include(CMakePackageConfigHelpers)
+# configure_package_config_file(
+#   "PackageConfig.cmake.in"
+#   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+#   INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 
-# Generate <Package>Version.cmake
-write_basic_package_version_file(
-  "${PROJECT_NAME}ConfigVersion.cmake"
-  VERSION ${PROJECT_VERSION}
-  COMPATIBILITY SameMajorVersion)
+# # Generate <Package>Version.cmake
+# write_basic_package_version_file(
+#   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+#   VERSION ${PROJECT_VERSION}
+#   COMPATIBILITY SameMajorVersion)
 
-install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
-  COMPONENT dev)
+# install(
+#   FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+#         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+#   DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+#   COMPONENT dev)

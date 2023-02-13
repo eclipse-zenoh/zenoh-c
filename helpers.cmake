@@ -1,21 +1,6 @@
 include_guard()
 
 #
-# Set variable ${is_root} to true if project is not included into other project
-# Set variable ${is_ide} to ture if project is root and supposedly loaded to ide
-#
-function(check_project_usage is_root is_ide)
-    set(${is_root} FALSE PARENT_SCOPE)
-    set(${is_ide} FALSE PARENT_SCOPE)
-    if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-        set(${is_root} TRUE PARENT_SCOPE)
-        if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
-            set(${is_ide} TRUE PARENT_SCOPE)
-        endif()
-    endif()
-endfunction()
-
-#
 # Show VARIABLE = value on configuration stage
 #
 function(status_print var)
@@ -28,6 +13,17 @@ endfunction()
 function(declare_cache_var var default_value type docstring)
 	set(${var} ${default_value} CACHE ${type} ${docstring})
 	status_print(${var})
+endfunction()
+
+#
+# Declare cache variable which is set to TRUE if project is supposedly
+# loaded as root project into vscode
+#
+function(declare_cache_var_true_if_vscode var docstring)
+    if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
+        set(in_vscode TRUE)
+    endif()
+    declare_cache_var(${var} ${in_vscode} BOOL ${docstring})
 endfunction()
 
 #
@@ -72,3 +68,36 @@ macro(set_default_build_type config_type)
          status_print(CMAKE_BUILD_TYPE)
     endif()
 endmacro()
+
+
+#
+# If target property is set, get it to var
+# (necessary to avoid CMake behavior - setting variable to <VAR>-NOTFOUND)
+#
+function(get_target_property_if_set var target property)
+    unset(${${var}})
+    get_property(is_set TARGET ${target} PROPERTY ${property} SET)
+    if (is_set)
+        get_property(value TARGET ${target} PROPERTY ${property})
+        set(${var} ${value} PARENT_SCOPE)
+    endif()
+endfunction()
+
+#
+# If <var> is not empty, join string <s> to filename part of it
+#
+function(join_string_to_filename var s)
+    if((${${var}} STREQUAL "") OR (${s} STREQUAL ""))
+        return()
+    endif()
+    get_filename_component(dir "${${var}}" DIRECTORY)
+    get_filename_component(name_we "${${var}}" NAME_WE)
+    get_filename_component(ext "${${var}}" EXT)
+    set(${${var}} ${dir}${name_we}${s}${ext} PARENT_SCOPE)
+endfunction()
+
+
+
+# and rename file to new name. This is necessary to be able to install file its new name. 
+# The 'install' operation have 'RENAME' option, but generator
+# expressions are not supported there in CMake < 3.20
