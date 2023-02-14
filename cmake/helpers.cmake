@@ -27,18 +27,18 @@ function(declare_cache_var_true_if_vscode var docstring)
 endfunction()
 
 #
-# Create target named '${PROJECT_NAME}_debug' and add function 'debug_print' which prints VARIABLE = value
+# Create target named 'debug_print' which prints VARIABLE = value
 # when this target is built. Useful to debug generated expressions.
 #`
-macro(declare_target_projectname_debug)
-    add_custom_target(${PROJECT_NAME}_debug)
-    function(debug_print var)
-        add_custom_command(
-            COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
-            TARGET ${PROJECT_NAME}_debug
-        )
-    endfunction()
-endmacro()
+function(debug_print var)
+    if(NOT TARGET debug_print)
+        add_custom_target(${target} GLOBAL)
+    endif()
+    add_custom_command(
+        COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}
+        TARGET debug_print
+    )
+endfunction()
 
 #
 # Select default build config with support of multi config generators
@@ -69,35 +69,30 @@ macro(set_default_build_type config_type)
     endif()
 endmacro()
 
+#
+# Add default set of libraries depending on platform
+#
+function(add_platfrom_libraries target)
+	if(APPLE)
+		find_library(FFoundation Foundation)
+		find_library(FSecurity Security)
+		target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
+	elseif(UNIX)
+		target_link_libraries(${target} PUBLIC rt pthread m dl)
+	elseif(WIN32)
+		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
+	endif()
 
-#
-# If target property is set, get it to var
-# (necessary to avoid CMake behavior - setting variable to <VAR>-NOTFOUND)
-#
-function(get_target_property_if_set var target property)
-    unset(${${var}})
-    get_property(is_set TARGET ${target} PROPERTY ${property} SET)
-    if (is_set)
-        get_property(value TARGET ${target} PROPERTY ${property})
-        set(${var} ${value} PARENT_SCOPE)
-    endif()
 endfunction()
 
 #
-# If <var> is not empty, join string <s> to filename part of it
+# Copy mecessary dlls to target runtime directory
 #
-function(join_string_to_filename var s)
-    if((${${var}} STREQUAL "") OR (${s} STREQUAL ""))
-        return()
-    endif()
-    get_filename_component(dir "${${var}}" DIRECTORY)
-    get_filename_component(name_we "${${var}}" NAME_WE)
-    get_filename_component(ext "${${var}}" EXT)
-    set(${${var}} ${dir}${name_we}${s}${ext} PARENT_SCOPE)
+function(copy_dlls target)
+	if(WIN32)
+		add_custom_command(TARGET ${target} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+			COMMAND_EXPAND_LISTS
+		)
+	endif()   
 endfunction()
-
-
-
-# and rename file to new name. This is necessary to be able to install file its new name. 
-# The 'install' operation have 'RENAME' option, but generator
-# expressions are not supported there in CMake < 3.20
