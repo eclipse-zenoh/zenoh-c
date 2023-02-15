@@ -96,3 +96,17 @@ function(copy_dlls target)
 		)
 	endif()   
 endfunction()
+
+# 
+# get property value avoiding CMake behavior - setting variable to <VAR>-NOTFOUND for undefined property
+#
+function(get_target_property_if_set var target property)
+    get_property(is_set TARGET ${target} PROPERTY ${property} SET)
+    if (NOT is_set)
+		unset(${var} PARENT_SCOPE)
+		return()
+	endif()
+	get_property(value TARGET ${target} PROPERTY ${property})
+	set(${var} ${value} PARENT_SCOPE)
+endfunction()
+
