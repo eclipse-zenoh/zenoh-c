@@ -28,9 +28,6 @@ declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-aut
 # configure Cargo.toml, copy files necessary for cargo, 
 # create variables with path to cargo target directory
 #
-# CARGO_PROJECT_DIR value used in Cargo.toml.in
-# CMAKE_CURRENT_BINARY_DIR is set to rust
-#
 if(ZENOHC_BUILD_IN_SOURCE_TREE)
 	set(cargo_toml_dir ${CMAKE_CURRENT_SOURCE_DIR})
     set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/target)
@@ -92,8 +89,8 @@ list(APPEND libs_debug ${dylibs})
 list(APPEND libs_debug ${staticlibs})
 list(APPEND libs_release ${dylibs})
 list(APPEND libs_release ${staticlibs})
-list(TRANSFORM libs_debug PREPEND "${CMAKE_CURRENT_BINARY_DIR}/debug/")
-list(TRANSFORM libs_release PREPEND "${CMAKE_CURRENT_BINARY_DIR}/release/")
+list(TRANSFORM libs_debug PREPEND "${cargo_toml_dir}/target/debug/")
+list(TRANSFORM libs_release PREPEND "${cargo_toml_dir}/target/release/")
 
 #
 # Build rust sources
@@ -103,7 +100,7 @@ if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
 endif()
 set(rustflags $ENV{RUSTFLAGS})
-set(ENV{CARGO_TARGET_DIR} ${CMAKE_CURRENT_BINARY_DIR}) # result always in ${CMAKE_CURRENT_BINARY_DIR}/release or ../debug
+set(ENV{CARGO_TARGET_DIR} ${cargo_toml_dir})
 add_custom_target(cargo ALL
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = ${rustflags}\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${cargo_flags}\"
@@ -123,17 +120,18 @@ add_dependencies(zenohc cargo)
 
 # Workaroud for https://github.com/rust-lang/cargo/issues/5045
 # mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
+# If it's fixed, do not forget to correct PackageConfig.cmake.in also
 set_target_properties(zenohc PROPERTIES IMPORTED_NO_SONAME TRUE)
 
 function(set_target_imported_locations target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_LOCATION $<IF:$<CONFIG:Debug>,${CMAKE_CURRENT_BINARY_DIR}/debug,${CMAKE_CURRENT_BINARY_DIR}/release>/${libname}
-		IMPORTED_LOCATION_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/debug/${libname}
-		IMPORTED_LOCATION_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/release/${libname}
-		IMPORTED_LOCATION_MINSIZEREL ${CMAKE_CURRENT_BINARY_DIR}/release/${libname}
-		IMPORTED_LOCATION_RELWITHDEBINFO ${CMAKE_CURRENT_BINARY_DIR}/release/${libname}
+		IMPORTED_LOCATION $<IF:$<CONFIG:Debug>,${cargo_toml_dir}/target/debug,${cargo_toml_dir}/target/release>/${libname}
+		IMPORTED_LOCATION_DEBUG ${cargo_toml_dir}/target/debug/${libname}
+		IMPORTED_LOCATION_RELEASE ${cargo_toml_dir}/target/release/${libname}
+		IMPORTED_LOCATION_MINSIZEREL ${cargo_toml_dir}/target/release/${libname}
+		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_toml_dir}/target/release/${libname}
 	)
 endfunction()
 
@@ -141,11 +139,11 @@ function(set_target_imported_implib target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_IMPLIB $<IF:$<CONFIG:Debug>,${CMAKE_CURRENT_BINARY_DIR}/debug,${CMAKE_CURRENT_BINARY_DIR}/release>/${libname}
-		IMPORTED_IMPLIB_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/debug/${libname}
-		IMPORTED_IMPLIB_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/release/${libname}
-		IMPORTED_IMPLIB_MINSIZEREL ${CMAKE_CURRENT_BINARY_DIR}/release/${libname}
-		IMPORTED_IMPLIB_RELWITHDEBINFO ${CMAKE_CURRENT_BINARY_DIR}/release/${libname}
+		IMPORTED_IMPLIB $<IF:$<CONFIG:Debug>,${cargo_toml_dir}/target/debug,${cargo_toml_dir}/target/release>/${libname}
+		IMPORTED_IMPLIB_DEBUG ${cargo_toml_dir}/target/debug/${libname}
+		IMPORTED_IMPLIB_RELEASE ${cargo_toml_dir}/target/release/${libname}
+		IMPORTED_IMPLIB_MINSIZEREL ${cargo_toml_dir}/target/release/${libname}
+		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_toml_dir}/target/release/${libname}
 	)
 endfunction()
 

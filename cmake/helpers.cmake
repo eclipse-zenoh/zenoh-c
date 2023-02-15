@@ -112,3 +112,101 @@ function(get_target_property_if_set var target property)
 	set(${var} ${value} PARENT_SCOPE)
 endfunction()
 
+#
+# Unset variables if they have empty string value
+#
+macro(unset_if_empty vars)
+    foreach(var ${vars})
+        if(${var} STREQUAL "")
+            unset(${var})
+        endif()
+    endforeach()
+endmacro()
+
+#
+# Usage:
+#
+# include_project(<project_name> TARGET <target> 
+#  [PATH <project_path>] |
+#  [PACKAGE <package_name>] | 
+#  [GIT_URL <git_url> [GIT_TAG <git_tag>]]
+# )
+#
+# includes CMake project with one of the following ways:
+#   add_subdirectory(project_path) or
+#   find_package(package_name) or
+#   FetchContent(git_url)
+#
+# Example:
+# include_project(zenohc TARGET zenohc::lib PATH "${CMAKE_CURRENT_SOURCE_DIR}..\zenoh_c" )
+#
+function(include_project project_name)
+    cmake_parse_arguments(PARSE_ARGV 1 "ARG" "" "TARGET;PATH;PACKAGE;GIT_URL;GIT_TAG" "")
+    unset_if_empty(ARG_PATH ARG_TARGET ARG_PACKAGE ARG_GIT_URL)
+    if(NOT DEFINED ARG_TARGET)
+        message(FATAL_ERROR "Non-empty TARGET parameter is required")
+    endif()
+    if(TARGET ${ARG_TARGET})
+        message(FATAL_ERROR "Target '${ARG_TARGET}' already defined")
+    endif()
+
+    if(DEFINED ARG_PATH)
+        message(STATUS "include project '${project_name} from directory '${ARG_PATH}'")
+        list(APPEND CMAKE_MESSAGE_INDENT "  ")
+        add_subdirectory(${ARG_PATH} ${project_name})
+        list(POP_BACK CMAKE_MESSAGE_INDENT)
+        if(TARGET ${ARG_TARGET})
+            return()
+        endif()
+        message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
+    elseif(DEFINED ARG_PACKAGE)
+        # Give priority to install directory
+        # Useful for development when older version of the project version may be installed in system
+        #
+        # TODO: "if( NOT TARGET" below should be not necessary 
+        # (see https://cmake.org/cmake/help/latest/command/find_package.html, search for "override the order")
+        # but in fact cmake fails without it when zenohc is present both in CMAKE_INSTALL_PREFIX and in /usr/local.
+        # Consider is it still necessary after next bumping up cmake version
+        find_package(${ARG_PACKAGE} PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH QUIET)
+        if(NOT TARGET ${ARG_TARGET})
+            find_package(${ARG_PACKAGE} QUIET)
+        endif()
+        set(package_path ${${ARG_PACKAGE}_CONFIG})
+        if(TARGET ${ARG_TARGET})
+            message(STATUS "included project '${project_name}' from package '${ARG_PACKAGE}' on path '${package_path}'")
+            return()
+        endif()
+        if("${package_path}" STREQUAL "")
+            message(FATAL_ERROR "Package '${ARG_PACKAGE}' not found")
+        else()
+            message(FATAL_ERROR "Package '${ARG_PACKAGE}' on path '${package_path}' doesn't define target '${ARG_TARGET}")
+        endif()
+    elseif(DEFINED ARG_GIT_URL)
+        if(DEFINED ARG_GIT_TAG)
+            set(git_url "${ARG_GIT_URL}#{ARG_GIT_TAG}")
+        else()
+            set(git_url ${ARG_GIT_URL})
+        endif()
+        message(STATUS "including project '${project_name} from git '${git_url}'")
+        list(APPEND CMAKE_MESSAGE_INDENT "  ")
+        if(DEFINED ARG_GIT_TAG)
+            FetchContent_Declare(${project_name}
+                GIT_REPOSITORY ${ARG_GIT_URL}
+                GIT_TAG ${ARG_GIT_TAG}
+            )
+        else()
+            FetchContent_Declare(${project_name}
+                GIT_REPOSITORY ${ARG_GIT_URL}
+            )
+        endif()
+        FetchContent_MakeAvailable(${project_name})
+        list(POP_BACK CMAKE_MESSAGE_INDENT)
+        if(TARGET ${ARG_TARGET})
+            return()
+        endif()
+        message(FATAL_ERROR "Project at ${git_url} should define target ${ARG_TARGET}")
+    else()
+        message(FATAL_ERROR "No source for project '${project_name}' specified")
+    endif()
+
+endfunction()
