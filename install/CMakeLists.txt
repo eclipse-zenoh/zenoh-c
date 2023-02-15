@@ -18,11 +18,6 @@ function(install_zenohc_lib configurations property_postfix package_name libname
     get_target_property(dylib_path zenohc::lib IMPORTED_LOCATION_${property_postfix})
     get_target_property_if_set(implib_path zenohc::lib IMPORTED_IMPLIB_${property_postfix})
     get_target_property(staticlib_path zenohc::static IMPORTED_LOCATION_${property_postfix})
-
-    status_print(dylib_path)
-    status_print(implib_path)
-    status_print(staticlib_path)
-
     macro(add_postfix_to_filename dstvar srcvar)
         if(DEFINED ${srcvar})
             get_filename_component(name_we ${${srcvar}} NAME_WE)
@@ -33,9 +28,6 @@ function(install_zenohc_lib configurations property_postfix package_name libname
     add_postfix_to_filename(DYLIB dylib_path)
     add_postfix_to_filename(IMPLIB implib_path)
     add_postfix_to_filename(STATICLIB staticlib_path)
-    status_print(DYLIB)
-    status_print(IMPLIB)
-    status_print(STATICLIB)
 
     # Install dynamic, import and static library
     install(FILES ${dylib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations} RENAME ${DYLIB})

@@ -114,8 +114,8 @@ add_custom_target(cargo ALL
 #
 # Define libraries built by cargo as targets
 #
-add_library(zenohc_static STATIC IMPORTED)
-add_library(zenohc SHARED IMPORTED)
+add_library(zenohc_static STATIC IMPORTED GLOBAL)
+add_library(zenohc SHARED IMPORTED GLOBAL)
 add_library(zenohc::static ALIAS zenohc_static)
 add_library(zenohc::lib ALIAS zenohc)
 add_dependencies(zenohc_static cargo)
@@ -156,6 +156,8 @@ if(DEFINED zenohc_implib)
 endif()
 
 # Define include directories for library targets
+status_print(source_include_dir)
+status_print(cargo_generated_include_dir)
 target_include_directories(zenohc_static INTERFACE ${source_include_dir})
 target_include_directories(zenohc INTERFACE ${source_include_dir})
 if(DEFINED cargo_generated_include_dir)

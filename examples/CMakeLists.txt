@@ -1,8 +1,16 @@
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    cmake_minimum_required(VERSION 3.20)
+    project(zenohc_examples LANGUAGES C)
+    include(../cmake/helpers.cmake)
+    set_default_build_type(Release)
+    add_subdirectory(.. zenohc)
+    add_custom_target(examples ALL)
+else()
+    add_custom_target(examples)
+endif()
+
 message(STATUS "zenoh-c examples")
-
 declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples")
-
-add_custom_target(examples)
 
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 foreach(file ${files})
@@ -12,11 +20,12 @@ foreach(file ${files})
     add_platfrom_libraries(${target})
     if(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB)
         add_dependencies(${target} zenohc::static)
+        target_link_libraries(${target} PRIVATE zenohc::static)
     else()
         add_dependencies(${target} zenohc::lib)
+        target_link_libraries(${target} PRIVATE zenohc::lib)
         copy_dlls(${target})
     endif()
     set_property(TARGET ${target} PROPERTY C_STANDARD 11)
-    # set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${cargo_target_dir}/examples")
 endforeach()
 

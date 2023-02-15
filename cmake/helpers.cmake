@@ -3,9 +3,9 @@ include_guard()
 #
 # Show VARIABLE = value on configuration stage
 #
-function(status_print var)
+macro(status_print var)
 	message(STATUS "${var} = ${${var}}")
-endfunction()
+endmacro()
 
 #
 # Declare cache variable and print VARIABLE = value on configuration stage
@@ -22,6 +22,8 @@ endfunction()
 function(declare_cache_var_true_if_vscode var docstring)
     if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/build")
         set(in_vscode TRUE)
+    else()
+        set(in_vscode FALSE)
     endif()
     declare_cache_var(${var} ${in_vscode} BOOL ${docstring})
 endfunction()
