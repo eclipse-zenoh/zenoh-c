@@ -40,9 +40,8 @@ jobs:
       - name: build and install
         shell: bash
         run: |
-          INSTALL_PATH=`pwd`/local
           mkdir -p build && cd build 
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
           cmake --build . --target install
 
       - name: make examples
@@ -62,7 +61,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build_examples_findproj && cd build_examples_findproj
-          cmake ../examples -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DZENOHC_SOURCE_TYPE=PACKAGE -DZENOHC_SOURCE=zenohc
+          cmake ../examples -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE_TYPE=PACKAGE -DZENOHC_SOURCE=zenohc
           cmake --build .
 
       - name: Run tests
