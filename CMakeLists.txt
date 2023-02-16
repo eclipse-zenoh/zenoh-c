@@ -9,6 +9,7 @@ project(
 
 include(cmake/helpers.cmake)
 set_default_build_type(Release)
+enable_testing()	
 
 #
 # Build zenohc library from rust sources

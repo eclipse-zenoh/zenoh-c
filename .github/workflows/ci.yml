@@ -37,18 +37,33 @@ jobs:
           command: fmt
           args: -- --check
 
-      - name: build
+      - name: build and install
         shell: bash
         run: |
+          INSTALL_PATH=`pwd`/local
           mkdir -p build && cd build 
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build .
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH
+          cmake --build . --target install
 
       - name: make examples
         shell: bash
         run: |
           cd build
           cmake --build . --target examples
+
+      - name: make examples with zenoh-c as subbroject
+        shell: bash
+        run: |
+          mkdir -p build_examples_subproj && cd build_examples_subproj
+          cmake ../examples -DCMAKE_BUILD_TYPE=Debug
+          cmake --build .
+
+      - name: make examples with zenoh-c as installed package
+        shell: bash
+        run: |
+          mkdir -p build_examples_findproj && cd build_examples_findproj
+          cmake ../examples -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DZENOHC_SOURCE_TYPE=PACKAGE -DZENOHC_SOURCE=zenohc
+          cmake --build .
 
       - name: Run tests
         uses: actions-rs/cargo@v1

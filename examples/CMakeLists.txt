@@ -1,19 +1,19 @@
-message(STATUS "zenoh-c examples")
-cmake_minimum_required(VERSION 3.14)
-project(zenohc_examples LANGUAGES C)
-include(../cmake/helpers.cmake)
-
-declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples")
-
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    # Settings when 'examples' is the root projet
+    cmake_minimum_required(VERSION 3.14)
+    project(zenohc_examples LANGUAGES C)
+    include(../cmake/helpers.cmake)
     declare_cache_var(ZENOHC_SOURCE_TYPE PATH STRING "zenohc source type: [PATH|PACKAGE|GIT_URL]")
     declare_cache_var(ZENOHC_SOURCE ".." STRING "zenohc source: filesystem path, package name, git url")
     include_project(zenohc TARGET zenohc::lib ${ZENOHC_SOURCE_TYPE} ${ZENOHC_SOURCE})
     set_default_build_type(Release)
     add_custom_target(examples ALL)
 else()
+    message(STATUS "zenoh-c examples")
     add_custom_target(examples)
 endif()
+
+declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples")
 
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 foreach(file ${files})

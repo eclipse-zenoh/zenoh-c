@@ -2,8 +2,6 @@ message(STATUS "zenoh-c install")
 
 declare_cache_var(ZENOHC_INSTALL_STATIC_LIBRARY FALSE BOOL "Install zenoh-c static library")
 
-add_custom_target(zenohc_prepare_files_to_install ALL)
-
 #
 # Installation
 # For debug configuration installs libraries with 'd' added to filename and
