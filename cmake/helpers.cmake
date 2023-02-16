@@ -34,7 +34,7 @@ endfunction()
 #`
 function(debug_print var)
     if(NOT TARGET debug_print)
-        add_custom_target(${target} GLOBAL)
+        add_custom_target(debug_print GLOBAL)
     endif()
     add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E echo ${var} = ${${var}}

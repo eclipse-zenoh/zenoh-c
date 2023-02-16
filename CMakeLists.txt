@@ -29,9 +29,8 @@ declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-aut
 # configure Cargo.toml, copy files necessary for cargo, 
 # create variables with path to cargo target directory
 #
-if(ZENOHC_BUILD_IN_SOURCE_TREE)
-	set(cargo_toml_dir ${CMAKE_CURRENT_SOURCE_DIR})
-    set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/target)
+if(ZENOHC_BUILD_IN_SOURCE_TREE AND (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR}))
+	set(cargo_toml_dir ${CMAKE_SOURCE_DIR})
 	set(CARGO_PROJECT_DIR "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
 else()
 	set(cargo_toml_dir ${CMAKE_CURRENT_BINARY_DIR})
@@ -44,6 +43,9 @@ else()
 	set(cargo_generated_include_dir ${cargo_toml_dir}/include)
 endif()
 set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(cargo_binary_dir_debug ${cargo_toml_dir}/target/debug)
+set(cargo_binary_dir_release ${cargo_toml_dir}/target/release)
+set(cargo_binary_dir ${cargo_toml_dir}/target/$<IF:$<CONFIG:Debug>,debug,release>)
 
 #
 # Configure Cargo.toml
@@ -128,11 +130,11 @@ function(set_target_imported_locations target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_LOCATION $<IF:$<CONFIG:Debug>,${cargo_toml_dir}/target/debug,${cargo_toml_dir}/target/release>/${libname}
-		IMPORTED_LOCATION_DEBUG ${cargo_toml_dir}/target/debug/${libname}
-		IMPORTED_LOCATION_RELEASE ${cargo_toml_dir}/target/release/${libname}
-		IMPORTED_LOCATION_MINSIZEREL ${cargo_toml_dir}/target/release/${libname}
-		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_toml_dir}/target/release/${libname}
+		IMPORTED_LOCATION ${cargo_binary_dir}/${libname}
+		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/${libname}
+		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${libname}
+		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${libname}
+		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/${libname}
 	)
 endfunction()
 
@@ -140,11 +142,11 @@ function(set_target_imported_implib target libname)
 	set_target_properties(${target}
 		PROPERTIES 
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_IMPLIB $<IF:$<CONFIG:Debug>,${cargo_toml_dir}/target/debug,${cargo_toml_dir}/target/release>/${libname}
-		IMPORTED_IMPLIB_DEBUG ${cargo_toml_dir}/target/debug/${libname}
-		IMPORTED_IMPLIB_RELEASE ${cargo_toml_dir}/target/release/${libname}
-		IMPORTED_IMPLIB_MINSIZEREL ${cargo_toml_dir}/target/release/${libname}
-		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_toml_dir}/target/release/${libname}
+		IMPORTED_IMPLIB ${cargo_binary_dir}/${libname}
+		IMPORTED_IMPLIB_DEBUG ${cargo_binary_dir_debug}/${libname}
+		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${libname}
+		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${libname}
+		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_binary_dir_release}/${libname}
 	)
 endfunction()
 
@@ -173,6 +175,8 @@ set_target_properties(zenohc zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	include(cmake/cross_build_check.cmake)
 	add_subdirectory(install)
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/tests)
 	add_subdirectory(tests)
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/examples)
 	add_subdirectory(examples)
 endif()
