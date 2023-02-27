@@ -74,7 +74,7 @@ endmacro()
 #
 # Add default set of libraries depending on platform
 #
-function(add_platfrom_libraries target)
+function(add_platform_libraries target)
 	if(APPLE)
 		find_library(FFoundation Foundation)
 		find_library(FSecurity Security)
@@ -84,11 +84,10 @@ function(add_platfrom_libraries target)
 	elseif(WIN32)
 		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
 	endif()
-
 endfunction()
 
 #
-# Copy mecessary dlls to target runtime directory
+# Copy necessary dlls to target runtime directory
 #
 function(copy_dlls target)
 	if(WIN32)

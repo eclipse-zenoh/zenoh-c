@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 project(
 	zenohc
 	VERSION 0.7.0.1
@@ -83,17 +83,9 @@ elseif(WIN32)
 	set_lib(dylibs dylib "zenohc.dll")
 	set_lib(staticlibs staticlib "zenohc.lib")
 endif()
-#
-# add_custom_target(...BYPRODUCTS) do not support generator expressions in CMake < 3.20
-# So pretend that cargo always builds both debug and release libraries
-# instead of using generator expression which selects between debug/release
-#
-list(APPEND libs_debug ${dylibs})
-list(APPEND libs_debug ${staticlibs})
-list(APPEND libs_release ${dylibs})
-list(APPEND libs_release ${staticlibs})
-list(TRANSFORM libs_debug PREPEND "${cargo_toml_dir}/target/debug/")
-list(TRANSFORM libs_release PREPEND "${cargo_toml_dir}/target/release/")
+list(APPEND libs ${dylibs})
+list(APPEND libs ${staticlibs})
+list(TRANSFORM libs PREPEND "${cargo_binary_dir}/")
 
 #
 # Build rust sources
@@ -104,12 +96,13 @@ if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 endif()
 set(rustflags $ENV{RUSTFLAGS})
 set(ENV{CARGO_TARGET_DIR} ${cargo_toml_dir})
-add_custom_target(cargo ALL
+add_custom_command(
+	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = ${rustflags}\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${cargo_flags}\"
 	COMMAND cargo build ${cargo_flags}
-	BYPRODUCTS ${libs_debug} ${libs_releasegg}
 )
+add_custom_target(cargo ALL DEPENDS ${libs})
 
 #
 # Define libraries built by cargo as targets
