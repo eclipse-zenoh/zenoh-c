@@ -42,7 +42,7 @@ jobs:
         run: |
           mkdir -p build && cd build 
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
-          cmake --build . --target install
+          cmake --build . --target install --config Release
 
       - name: make examples
         shell: bash
@@ -55,14 +55,14 @@ jobs:
         run: |
           mkdir -p build_examples_subproj && cd build_examples_subproj
           cmake ../examples -DCMAKE_BUILD_TYPE=Debug
-          cmake --build .
+          cmake --build . --config Debug
 
       - name: make examples with zenoh-c as installed package
         shell: bash
         run: |
           mkdir -p build_examples_findproj && cd build_examples_findproj
-          cmake ../examples -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE_TYPE=PACKAGE -DZENOHC_SOURCE=zenohc
-          cmake --build .
+          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE_TYPE=PACKAGE -DZENOHC_SOURCE=zenohc
+          cmake --build . --config Release
 
       - name: Run tests
         uses: actions-rs/cargo@v1
