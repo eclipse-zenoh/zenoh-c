@@ -38,7 +38,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 async-std = "=1.12.0"
-async-trait = "0.1.59"
+async-trait = "0.1.60"
 env_logger = "0.10.0"
 futures = "0.3.25"
 json5 = "0.4.1"
