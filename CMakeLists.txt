@@ -23,6 +23,9 @@ enable_testing()
 #
 declare_cache_var_true_if_vscode(ZENOHC_BUILD_IN_SOURCE_TREE "Do build inside source tree")
 declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
+declare_cache_var(ZENOHC_CUSTOM_TARGET "" STRING "Rust target for cross compilation, 'aarch64-unknown-linux-gnu' for example")
+declare_cache_var(ZENOHC_CARGO_CHANNEL "stable" STRING "Cargo channel selected: stable or nightly")
+declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 
 #
 # Prepare to build rust sources:
@@ -43,9 +46,11 @@ else()
 	set(cargo_generated_include_dir ${cargo_toml_dir}/include)
 endif()
 set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(cargo_binary_dir_debug ${cargo_toml_dir}/target/debug)
-set(cargo_binary_dir_release ${cargo_toml_dir}/target/release)
-set(cargo_binary_dir ${cargo_toml_dir}/target/$<IF:$<CONFIG:Debug>,debug,release>)
+set(cargo_target_dir ${cargo_toml_dir}/target)
+cmake_path(APPEND cargo_target_dir ${ZENOHC_CUSTOM_TARGET})
+set(cargo_binary_dir_debug ${cargo_target_dir}/debug)
+set(cargo_binary_dir_release ${cargo_target_dir}/release)
+set(cargo_binary_dir ${cargo_target_dir}/$<IF:$<CONFIG:Debug>,debug,release>)
 
 #
 # Configure Cargo.toml
@@ -90,17 +95,19 @@ list(TRANSFORM libs PREPEND "${cargo_binary_dir}/")
 #
 # Build rust sources
 #
-set(cargo_flags $<$<NOT:$<CONFIG:Debug>>:--release>)
+set(cargo_flags ${ZENOHC_CARGO_FLAGS} $<$<NOT:$<CONFIG:Debug>>:--release>)
 if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
 endif()
-set(rustflags $ENV{RUSTFLAGS})
-set(ENV{CARGO_TARGET_DIR} ${cargo_toml_dir})
+if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
+	set(cargo_flags ${cargo_flags} --target=${ZENOHC_CUSTOM_TARGET})
+endif()
+status_print(cargo_flags)
 add_custom_command(
 	OUTPUT ${libs}
-	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = ${rustflags}\"
-	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${cargo_flags}\"
-	COMMAND cargo build ${cargo_flags}
+	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
+	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
+	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 )
 add_custom_target(cargo ALL DEPENDS ${libs})
 

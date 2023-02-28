@@ -126,3 +126,36 @@ Finally, we strongly advise that you refrain from using structure field that sta
 
 ## Logging
 By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behaviour can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logger` function.
+
+## Cross-Compilation
+* The following alternative options have been introduced to facilitate cross-compilation.
+> :warning: **WARNING** :warning: : Perhaps aditional efforts are neccesary, that will depend of your enviroment.
+
+- `-DZENOHC_CARGO_CHANNEL=nightly|beta|stable`: refers to a specific rust toolchain release [`rust-channels`] https://rust-lang.github.io/rustup/concepts/channels.html
+- `-DZENOHC_CARGO_FLAGS`: several optional flags can be used for compilation. [`cargo flags`] https://doc.rust-lang.org/cargo/commands/cargo-build.html
+- `-DZENOHC_CUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tire-1, Tire-2 and Tire-3 targets [`targets`] https://doc.rust-lang.org/nightly/rustc/platform-support.html. But keep in mind that zenoh-c only have support for following targets: `aarch64-unknown-linux-gnu`, `x86_64-unknown-linux-gnu`, `arm-unknown-linux-gnueabi`
+
+Lets put all together in an example:
+Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
+
+1. install required packages
+  - `sudo apt install gcc-aarch64-linux-gnu`
+2. *(Only if you use `nightly` ) 
+  - `rustup component add rust-src --toolchain nightly`
+3. Compile Zenoh-C. Assume that it's in 'zenoh-c' directory. Notice that build in this sample is performed outside of source directory
+  ```bash
+  $ export RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
+  $ mkdir -p build && cd build
+  $ cmake ../zenoh-c  -DZENOHC_CARGO_CHANNEL=nightly -DZENOHC_CARGO_FLAGS="-Zbuild-std=std,panic_abort" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
+  $ cmake --build . --target install
+  ```
+Additionaly you can use `RUSTFLAGS` enviroment variable for lead the compilation.
+
+- 
+
+
+If all goes right the building files will be located at:
+`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+and release files will be located at
+`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+
