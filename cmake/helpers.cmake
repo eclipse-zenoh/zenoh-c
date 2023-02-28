@@ -126,9 +126,9 @@ endmacro()
 # Usage:
 #
 # include_project(<project_name> TARGET <target> 
-#  [PATH <project_path>] |
-#  [PACKAGE <package_name>] | 
-#  [GIT_URL <git_url> [GIT_TAG <git_tag>]]
+#  < PATH <project_path>] [QUIET] |
+#    PACKAGE <package_name>] [QUIET] | 
+#    GIT_URL <git_url> [GIT_TAG <git_tag>] >
 # )
 #
 # includes CMake project with one of the following ways:
@@ -136,29 +136,53 @@ endmacro()
 #   find_package(package_name) or
 #   FetchContent(git_url)
 #
-# Example:
-# include_project(zenohc TARGET zenohc::lib PATH "${CMAKE_CURRENT_SOURCE_DIR}..\zenoh_c" )
+# If target <target> is already defined, does nothing. If parameter QUIET is passed, does nothing
+# in case of failure to incude project from requested source. This allows to try to load project
+# from first available source, like this:
 #
-function(include_project project_name)
-    cmake_parse_arguments(PARSE_ARGV 1 "ARG" "" "TARGET;PATH;PACKAGE;GIT_URL;GIT_TAG" "")
+# include_project(zenohc TARGET zenohc::lib PATH ..\zenoh_c QUIET)
+# include_project(zenohc TARGET zenohc::lib PACKAGE zenohc QUIET)
+# include_project(zenohc TARGET zenohc::lib GIT_URL https://github.com/eclipse-zenoh/zenoh-c)
+#
+# QUIET parameter not supported for GIT_URL due to lack of support of such mode in FetchContent
+#
+function(include_project)
+    __include_project(${ARGN})
+    # recover functions which may be replaced by included project
+    include(${CMAKE_CURRENT_FUNCTION_LIST_FILE})
+endfunction()
+
+function(__include_project project_name)
+    include(FetchContent)
+    include(CMakeParseArguments)
+    cmake_parse_arguments(PARSE_ARGV 1 "ARG" "QUIET" "TARGET;PATH;PACKAGE;GIT_URL;GIT_TAG" "")
     unset_if_empty(ARG_PATH ARG_TARGET ARG_PACKAGE ARG_GIT_URL)
     if(NOT DEFINED ARG_TARGET)
         message(FATAL_ERROR "Non-empty TARGET parameter is required")
     endif()
     if(TARGET ${ARG_TARGET})
-        message(FATAL_ERROR "Target '${ARG_TARGET}' already defined")
+        return()
     endif()
 
     if(DEFINED ARG_PATH)
-        message(STATUS "include project '${project_name} from directory '${ARG_PATH}'")
-        list(APPEND CMAKE_MESSAGE_INDENT "  ")
-        add_subdirectory(${ARG_PATH} ${project_name})
-        list(POP_BACK CMAKE_MESSAGE_INDENT)
-        if(TARGET ${ARG_TARGET})
+        message(STATUS "trying to include project '${project_name} from directory '${ARG_PATH}'")
+        file(GLOB cmakelists ${ARG_PATH}/CMakeLists.txt)
+        if(NOT(cmakelists STREQUAL ""))
+            message(STATUS "found cmake project in directory, including it")
+            list(APPEND CMAKE_MESSAGE_INDENT "  ")
+            add_subdirectory(${ARG_PATH} ${project_name})
+            list(POP_BACK CMAKE_MESSAGE_INDENT)
+            if(TARGET ${ARG_TARGET} OR ARG_QUIET)
+                return()
+            endif()
+            message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
+        elseif(ARG_QUIET)
             return()
+        else()
+            message(FATAL_ERROR "no CMakeLists.txt file in '${ARG_PATH}'")
         endif()
-        message(FATAL_ERROR "Project at '${ARG_PATH}' should define target ${ARG_TARGET}")
     elseif(DEFINED ARG_PACKAGE)
+        message(STATUS "trying to include project '${project_name}' from package '${ARG_PACKAGE}'")
         # Give priority to install directory
         # Useful for development when older version of the project version may be installed in system
         #
@@ -172,10 +196,13 @@ function(include_project project_name)
         endif()
         set(package_path ${${ARG_PACKAGE}_CONFIG})
         if(TARGET ${ARG_TARGET})
-            message(STATUS "included project '${project_name}' from package '${ARG_PACKAGE}' on path '${package_path}'")
+            message(STATUS "found the package on path '${package_path}'")
             return()
         endif()
-        if("${package_path}" STREQUAL "")
+        if(ARG_QUIET)
+            return()
+        endif()
+         if("${package_path}" STREQUAL "")
             message(FATAL_ERROR "Package '${ARG_PACKAGE}' not found")
         else()
             message(FATAL_ERROR "Package '${ARG_PACKAGE}' on path '${package_path}' doesn't define target '${ARG_TARGET}")
@@ -186,7 +213,7 @@ function(include_project project_name)
         else()
             set(git_url ${ARG_GIT_URL})
         endif()
-        message(STATUS "including project '${project_name} from git '${git_url}'")
+        message(STATUS "trying to include project '${project_name}' from git '${git_url}'")
         list(APPEND CMAKE_MESSAGE_INDENT "  ")
         if(DEFINED ARG_GIT_TAG)
             FetchContent_Declare(${project_name}
@@ -207,5 +234,24 @@ function(include_project project_name)
     else()
         message(FATAL_ERROR "No source for project '${project_name}' specified")
     endif()
+endfunction()
 
+#
+# Configure set of cache variables and includes requested project accordingly to these variables
+#
+function(configure_include_project var_prefix project target path package git_url)
+    declare_cache_var(${var_prefix}_FORCE_TYPE "" STRING "Explicit ${project} source type. Can be PATH, PACKAGE or GIT_URL. If empty, tries all these variants in order")
+    declare_cache_var(${var_prefix}_FORCE_SRC "" STRING "${project} source: filesystem path, package name or git url. If empty, uses the default value from corresponding variable")
+    declare_cache_var(${var_prefix}_PATH ${path} STRING "PATH to ${project} source directory")
+    declare_cache_var(${var_prefix}_PACKAGE ${package} STRING "name of ${project} PACKAGE")
+    declare_cache_var(${var_prefix}_GIT_URL ${git_url} STRING "GIT_URL of ${project} repository")
+    if(${var_prefix}_FORCE_TYPE STREQUAL "")
+        include_project(${project} TARGET ${target} PATH ${${var_prefix}_PATH} QUIET)
+        include_project(${project} TARGET ${target} PACKAGE ${${var_prefix}_PACKAGE} QUIET)
+        include_project(${project} TARGET ${target} GIT_URL ${${var_prefix}_GIT_URL})
+    elseif(${var_prefix}_FORCE_SRC STREQUAL "")
+        include_project(${project} TARGET ${target} ${${var_prefix}_FORCE_TYPE} ${ZENOHCPP_ZENOHC_${ZENOHCPP_ZENOHC_FORCE_TYPE}})
+    else()
+        include_project(${project} TARGET ${target} ${${var_prefix}_FORCE_TYPE} ${ZENOHCPP_ZENOHC_FORCE_SRC})
+    endif()
 endfunction()

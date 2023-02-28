@@ -61,7 +61,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build_examples_findproj && cd build_examples_findproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE_TYPE=PACKAGE -DZENOHC_SOURCE=zenohc
+          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_FORCE_TYPE=PACKAGE
           cmake --build . --config Release
 
       - name: Run tests
