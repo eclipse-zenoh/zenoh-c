@@ -116,7 +116,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
   In this case the examples will be built in the current directory.
 
-  As a root project the `examples` project by default links main `zenoh-c` with CMake's [add_subdirectory] command. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
+  As a root project the `examples` project links `zenoh-c` with CMake's [add_subdirectory] command by default. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
 
 [add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
 [find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
