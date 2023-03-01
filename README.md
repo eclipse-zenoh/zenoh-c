@@ -22,61 +22,116 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 This repository provides a C binding based on the main [Zenoh implementation written in Rust](https://github.com/eclipse-zenoh/zenoh).
 
 -------------------------------
-## How to build it 
+## How to build it
 
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project. 
+> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
-1. Make sure that [rust](https://www.rust-lang.org) is available on your platform:
-
-  -- Ubuntu -- 
-
-  ```bash
-  $ sudo apt-get install rustc
-  ```
-
-  -- MacOS -- 
-
-  ```bash
-  $ brew install rust
-  ```
+1. Make sure that [Rust](https://www.rust-lang.org) is available on your platform.
+    Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
 
 2. Clone the [source] with `git`:
 
-   ```sh
+   ```bash
    git clone https://github.com/eclipse-zenoh/zenoh-c.git
-   cd zenoh-c
    ```
 
 [source]: https://github.com/eclipse-zenoh/zenoh-c
 
-3. Build and install:
+3. Build:
+
+  Good CMake practice is to perform build outside of source directory, leaving source tree untouched. The example below demonstrates this mode of building. On the other hand VScode by default creates build directory named 'build' inside source tree. In this case build script sligthly changes behavior, see more about it in section 'VScode'.
+
+  Default build configuration is set to `Release` so it's not necessary to add `-DCMAKE_BUILD_TYPE=Release` option on configuration step. But if your platform uses multi-config generator by dafault (this is the case on Windows), you may need to add option `--config Release` on build step. See more here: [generators]. I will skip option`--config Release` in further examples for brewity. It's actually necessary for Visual Studio generators only. For Ninja Multi-Config generator the build script is able to select `Release` as the default configuration.
 
   ```bash
-  $ cd /path/to/zenoh-c
   $ mkdir -p build && cd build 
-  $ cmake -DCMAKE_BUILD_TYPE=Release ..
-  $ cmake --build .
-  $ cmake --build . --target install # on linux use **sudo**
+  $ cmake ../zenoh-c
+  $ cmake --build . --config Release
   ```
 
-You may alternatively use `-DCMAKE_BUILD_TYPE=RelWithDebInfo` if you wish to keep the debug symbols.
+  The generator to use is selected with option `-G`. If Ninja is installed on your system, adding `-GNinja` to `cmake` command can greatly speed up the build time:
 
-Note that the `install` target is only available for `Release` and `RelWithDebInfo` builds.  
-CMake also offers the `Debug` build type, which we do not allow as an `install` target since you may suffer a significant performance hit if accidentally using this one.  
-Finally, CMake typicall offers a `MinSizeRel` build type. While we do not prevent you from using it, note that it is strictly equivalent to running a `Release` build.
+  ```bash
+  $ cmake ../zenoh-c -GNinja
+  $ cmake --build .
+   ```
+
+[generators]: https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#build-configurations
+
+3. Install:
+
+  To install zenoh-c library into system just build target `install`. You need root privileges to do it, as the default install location is `/usr/local`.
+
+  ```bash
+  $ cmake --build . --target install
+  ```  
+
+  If you want to install zenoh-c libraries locally, you can set the installation directory with `CMAKE_INSTALL_PREFIX`. This sample shows also how to install zenoh-c with static library.
+
+  ```bash
+  $ cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local -DZENOHC_INSTALL_STATIC_LIBRARY=TRUE
+  $ cmake --build . --target install
+  ``` 
+
+  The result of installation is the header files in `include` directory, the library files in `lib` directory and cmake package configuration files for package `zenohc` in `lib/cmake` directory. The library later can be loaded with CMake command `find_package(zenohc)`.
+
+  Installation of debug configuration will install package `zenohc_debug` installed side-by-side with release configuration.
+
+4. VScode
+
+  When zenoh-c project is opened in VSCode the build directory is set to `build` inside source tree (by standard Microsoft [CMake Tools]). The project build script detects this situation. In this case it places build files in `target` directory and `Cargo.toml` file (which is generated from `Cargo.toml.in`) into the root of source tree, as the rust developers used to and as the rust build tools expects by default.
+
+[CMake Tools]: https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools
 
 ## Building the Examples
 
+  The examples can be built in two ways. One is to select `examples` as a build target of zenoh-c project (assuming that we are inside build directory located side-by-side with zenoh-c):
+
   ```bash
-  $ cd /path/to/zenoh-c
-  $ mkdir -p build && cd build #
-  $ cmake -DCMAKE_BUILD_TYPE=Release .. # If Ninja is installed on your system, adding `-GNinja` to this command can greatly speed up the build time
+  $ cmake ../zenoh-c
   $ cmake --build . --target examples
   ```
 
-You may also use `--target <example_name>` if you wish to only build a specific example.
+  You may also use `--target <example_name>` if you wish to only build a specific example.
 
-All build artifacts will be in the `/path/to/zenoh-c/target/release` directory.
+  All build artifacts will be in the `target/release/examples` directory.
+
+  Second way is to build examples as separate project:
+
+  ```bash
+  $ cmake ../zenoh-c/examples
+  $ cmake --build .
+  ```
+
+  In this case the examples will be built in the current directory.
+
+  The `examples` project by default links main `zenoh-c` project as it's subproject - with CMake's [add_subdirectory] command. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
+
+[add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
+[find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
+[FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
+
+  Link to library installed into default location in the system (with [find_package]):
+
+  ```bash
+  $ cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE
+  ```
+
+  Link to library installed in `~/.local` directory:
+
+  ```bash
+  $ cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE -DCMAKE_INSTALL_PREFIX=~/.local
+  ```
+
+  Download specific library version from git and link to it (with [FetchContent])
+
+  ```bash
+  $ cmake ../zenoh-c/examples -DZENOHC_SOURCE=GIT_URL -DZENOHC_GIT_TAG=0.8.0-rc
+  ```
+
+  See also `configure_include_project` function in [helpers.cmake] for more information
+
+[helpers.cmake]: cmake/helpers.cmake
 
 ## Running the Examples
 
