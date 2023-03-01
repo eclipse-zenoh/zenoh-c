@@ -86,7 +86,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
   The result of installation is the header files in `include` directory, the library files in `lib` directory and cmake package configuration files for package `zenohc` in `lib/cmake` directory. The library later can be loaded with CMake command `find_package(zenohc)`.
   Link to targets `zenohc::lib` for dynamic library and `zenohc::static` for static one in your CMakeLists.txt configuration file.
 
-  For `Debug` configuration the library package `zenohc_debug` is installed side-by-side with release `zenohc` library. Suffix `d` is added to names of library files (libzenohc*d*.so).
+  For `Debug` configuration the library package `zenohc_debug` is installed side-by-side with release `zenohc` library. Suffix `d` is added to names of library files (libzenohc**d**.so).
 
 4. VScode
 
@@ -107,14 +107,14 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
   All build artifacts will be in the `target/release/examples` directory in this case.
 
-  Second way is to build `examples` as separate project:
+  Second way is to directly build `examples` as a root project:
 
   ```bash
   $ cmake ../zenoh-c/examples
   $ cmake --build .
   ```
 
-  In this case the examples will be built in the current directory.
+  In this case the examples executables will be built in the current directory.
 
   As a root project the `examples` project links `zenoh-c` with CMake's [add_subdirectory] command by default. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
 
