@@ -237,7 +237,8 @@ function(__include_project project_name)
 endfunction()
 
 #
-# Configure set of cache variables and includes requested project accordingly to these variables
+# Configure set of cache variables
+# Include external project accordingly to these variables
 #
 # Example: 
 #
