@@ -114,9 +114,9 @@ endfunction()
 #
 # Unset variables if they have empty string value
 #
-macro(unset_if_empty vars)
-    foreach(var ${vars})
-        if(${var} STREQUAL "")
+macro(unset_if_empty)
+    foreach(var ${ARGN})
+        if("${${var}}" STREQUAL "")
             unset(${var})
         endif()
     endforeach()
