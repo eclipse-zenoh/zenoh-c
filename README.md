@@ -22,61 +22,127 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 This repository provides a C binding based on the main [Zenoh implementation written in Rust](https://github.com/eclipse-zenoh/zenoh).
 
 -------------------------------
-## How to build it 
+## How to build it
 
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project. 
+> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
 
-1. Make sure that [rust](https://www.rust-lang.org) is available on your platform:
-
-  -- Ubuntu -- 
-
-  ```bash
-  $ sudo apt-get install rustc
-  ```
-
-  -- MacOS -- 
-
-  ```bash
-  $ brew install rust
-  ```
+1. Make sure that [Rust](https://www.rust-lang.org) is available on your platform.
+    Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
 
 2. Clone the [source] with `git`:
 
-   ```sh
+   ```bash
    git clone https://github.com/eclipse-zenoh/zenoh-c.git
-   cd zenoh-c
    ```
 
 [source]: https://github.com/eclipse-zenoh/zenoh-c
 
-3. Build and install:
+3. Build:
+
+  Good CMake practice is to perform build outside of source directory, leaving source tree untouched. The examples below demonstrates this mode of building. On the other hand VScode by default creates build directory named 'build' inside source tree. In this case build script sligthly changes it's behavior. See more about it in section 'VScode'.
+
+  By default build configuration is set to `Release`, it's not necessary to add `-DCMAKE_BUILD_TYPE=Release` option on configuration step. But if your platform uses multi-config generator by default (this is the case on Windows), you may need to add option `--config Release` on build step. See more in CMake [build-configurations] documenation. Option`--config Release` is skipped in further examples for brewity. It's actually necessary for [Visual Studio generators] only. For [Ninja Multi-Config] the build script is able to select `Release` as the default configuration.
 
   ```bash
-  $ cd /path/to/zenoh-c
   $ mkdir -p build && cd build 
-  $ cmake -DCMAKE_BUILD_TYPE=Release ..
-  $ cmake --build .
-  $ cmake --build . --target install # on linux use **sudo**
+  $ cmake ../zenoh-c
+  $ cmake --build . --config Release
   ```
 
-You may alternatively use `-DCMAKE_BUILD_TYPE=RelWithDebInfo` if you wish to keep the debug symbols.
+  The generator to use is selected with option `-G`. If Ninja is installed on your system, adding `-GNinja` to `cmake` command can greatly speed up the build time:
 
-Note that the `install` target is only available for `Release` and `RelWithDebInfo` builds.  
-CMake also offers the `Debug` build type, which we do not allow as an `install` target since you may suffer a significant performance hit if accidentally using this one.  
-Finally, CMake typicall offers a `MinSizeRel` build type. While we do not prevent you from using it, note that it is strictly equivalent to running a `Release` build.
+  ```bash
+  $ cmake ../zenoh-c -GNinja
+  $ cmake --build .
+   ```
+
+[build-configurations]: https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#build-configurations
+[Visual Studio generators]: https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#id14
+[Ninja]: https://cmake.org/cmake/help/latest/generator/Ninja.html
+[Ninja Multi-Config]: https://cmake.org/cmake/help/latest/generator/Ninja%20Multi-Config.html
+
+3. Install:
+
+  To install zenoh-c library into system just build target `install`. You need root privileges to do it, as the default install location is `/usr/local`.
+
+  ```bash
+  $ cmake --build . --target install
+  ```  
+
+  If you want to install zenoh-c libraries locally, you can set the installation directory with `CMAKE_INSTALL_PREFIX`
+
+  ```bash
+  $ cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local
+  $ cmake --build . --target install
+  ``` 
+
+  By default only dynamic library is installed. Set `ZENOHC_INSTALL_STATIC_LIBRARY` variable to install static library also:
+
+  ```bash
+  $ cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local -DZENOHC_INSTALL_STATIC_LIBRARY=TRUE
+  $ cmake --build . --target install
+  ``` 
+
+  The result of installation is the header files in `include` directory, the library files in `lib` directory and cmake package configuration files for package `zenohc` in `lib/cmake` directory. The library later can be loaded with CMake command `find_package(zenohc)`.
+  Link to targets `zenohc::lib` for dynamic library and `zenohc::static` for static one in your CMakeLists.txt configuration file.
+
+  For `Debug` configuration the library package `zenohc_debug` is installed side-by-side with release `zenohc` library. Suffix `d` is added to names of library files (libzenohc**d**.so).
+
+4. VScode
+
+  When zenoh-c project is opened in VSCode the build directory is set to `build` inside source tree (this is default behavior of Microsoft [CMake Tools]). The project build script detects this situation. In this case it places build files in `target` directory and `Cargo.toml` file (which is generated from `Cargo.toml.in`) into the root of source tree, as the rust developers used to and as the rust build tools expects by default. This behavior also can be explicitly enabled by setting `ZENOHC_BUILD_IN_SOURCE_TREE` variable to `TRUE`.
+
+[CMake Tools]: https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools
 
 ## Building the Examples
 
+  The examples can be built in two ways. One is to select `examples` as a build target of zenoh-c project (assuming here that the current directory is side-by-side with zenoh-c directory):
+
   ```bash
-  $ cd /path/to/zenoh-c
-  $ mkdir -p build && cd build #
-  $ cmake -DCMAKE_BUILD_TYPE=Release .. # If Ninja is installed on your system, adding `-GNinja` to this command can greatly speed up the build time
+  $ cmake ../zenoh-c
   $ cmake --build . --target examples
   ```
 
-You may also use `--target <example_name>` if you wish to only build a specific example.
+  You may also use `--target <example_name>` if you wish to only build a specific example.
 
-All build artifacts will be in the `/path/to/zenoh-c/target/release` directory.
+  All build artifacts will be in the `target/release/examples` directory in this case.
+
+  Second way is to directly build `examples` as a root project:
+
+  ```bash
+  $ cmake ../zenoh-c/examples
+  $ cmake --build .
+  ```
+
+  In this case the examples executables will be built in the current directory.
+
+  As a root project the `examples` project links `zenoh-c` with CMake's [add_subdirectory] command by default. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
+
+[add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
+[find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
+[FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
+
+  Link with `zenoh-c` installed into default location in the system (with [find_package]):
+
+  ```bash
+  $ cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE
+  ```
+
+  Link with `zenoh-c` installed in `~/.local` directory:
+
+  ```bash
+  $ cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE -DCMAKE_INSTALL_PREFIX=~/.local
+  ```
+
+  Download specific `zenoh-c` version from git with [FetchContent]:
+
+  ```bash
+  $ cmake ../zenoh-c/examples -DZENOHC_SOURCE=GIT_URL -DZENOHC_GIT_TAG=0.8.0-rc
+  ```
+
+  See also `configure_include_project` function in [helpers.cmake] for more information
+
+[helpers.cmake]: cmake/helpers.cmake
 
 ## Running the Examples
 
@@ -131,9 +197,9 @@ By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `
 * The following alternative options have been introduced to facilitate cross-compilation.
 > :warning: **WARNING** :warning: : Perhaps aditional efforts are neccesary, that will depend of your enviroment.
 
-- `-DCARGO_CHANNEL=<+nightly>,<beta>,<stable>`: refers to a specific rust toolchain release [`rust-channels`] https://rust-lang.github.io/rustup/concepts/channels.html
-- `-DCARGO_FLAGS`: several optional flags can be used for compilation. [`cargo flags`] https://doc.rust-lang.org/cargo/commands/cargo-build.html
-- `-DCUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tire-1, Tire-2 and Tire-3 targets [`targets`] https://doc.rust-lang.org/nightly/rustc/platform-support.html. But keep in mind that zenoh-c only have support for following targets: `aarch64-unknown-linux-gnu`, `x86_64-unknown-linux-gnu`, `arm-unknown-linux-gnueabi`
+- `-DZENOHC_CARGO_CHANNEL=nightly|beta|stable`: refers to a specific rust toolchain release [`rust-channels`] https://rust-lang.github.io/rustup/concepts/channels.html
+- `-DZENOHC_CARGO_FLAGS`: several optional flags can be used for compilation. [`cargo flags`] https://doc.rust-lang.org/cargo/commands/cargo-build.html
+- `-DZENOHC_CUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tire-1, Tire-2 and Tire-3 targets [`targets`] https://doc.rust-lang.org/nightly/rustc/platform-support.html. But keep in mind that zenoh-c only have support for following targets: `aarch64-unknown-linux-gnu`, `x86_64-unknown-linux-gnu`, `arm-unknown-linux-gnueabi`
 
 Lets put all together in an example:
 Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
@@ -142,16 +208,12 @@ Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
   - `sudo apt install gcc-aarch64-linux-gnu`
 2. *(Only if you use `nightly` ) 
   - `rustup component add rust-src --toolchain nightly`
-
-3. Compile Zenoh
+3. Compile Zenoh-C. Assume that it's in 'zenoh-c' directory. Notice that build in this sample is performed outside of source directory
   ```bash
-  $ cd /path/to/zenoh-c
   $ export RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
-  $ mkdir -p aarch64/stage
-  $ mkdir -p build && cd build build
-  $ cmake -DCMAKE_BUILD_TYPE=Release -DCARGO_CHANNEL="+nightly" -DCARGO_FLAGS="-Zbuild-std=std,panic_abort" -DCUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
-  $ cmake --build .
-  $ cmake --build . --target install # on linux use **sudo**
+  $ mkdir -p build && cd build
+  $ cmake ../zenoh-c  -DZENOHC_CARGO_CHANNEL=nightly -DZENOHC_CARGO_FLAGS="-Zbuild-std=std,panic_abort" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
+  $ cmake --build . --target install
   ```
 Additionaly you can use `RUSTFLAGS` enviroment variable for lead the compilation.
 

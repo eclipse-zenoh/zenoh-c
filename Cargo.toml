@@ -27,6 +27,7 @@ license = " EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
 description = "The zenoh C client API"
 readme = "README.md"
+build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
@@ -45,18 +46,17 @@ libc = "0.2.138"
 log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.4"
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [
-    "unstable",
-] }
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "unstable" ] }
 zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
 zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
 
 [build-dependencies]
 cbindgen = "0.24.3"
 fs2 = "0.4.3"
-serde_yaml = "0.9.14"
+serde_yaml = "0.9.13"
 
 [lib]
+path="src/lib.rs"
 name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
