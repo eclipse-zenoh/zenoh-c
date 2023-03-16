@@ -463,7 +463,13 @@ pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_
 /// Returns negative values in case of error (if one of the key expressions is in an invalid state).
 pub extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
-        (Some(l), Some(r)) => if *l == *r {0} else {1}
+        (Some(l), Some(r)) => {
+            if *l == *r {
+                0
+            } else {
+                1
+            }
+        }
         _ => i8::MIN,
     }
 }
@@ -474,7 +480,13 @@ pub extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 
 /// Returns negative values in case of error (if one of the key expressions is in an invalid state).
 pub extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
-        (Some(l), Some(r)) => if l.intersects(r) {0} else {1},
+        (Some(l), Some(r)) => {
+            if l.intersects(r) {
+                0
+            } else {
+                1
+            }
+        }
         _ => i8::MIN,
     }
 }
@@ -485,7 +497,13 @@ pub extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) ->
 /// Returns negative values in case of error (if one of the key expressions is in an invalid state).
 pub extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
-        (Some(l), Some(r)) => if l.includes(r) {0} else {1},
+        (Some(l), Some(r)) => {
+            if l.includes(r) {
+                0
+            } else {
+                1
+            }
+        }
         _ => i8::MIN,
     }
 }
