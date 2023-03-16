@@ -115,20 +115,21 @@ int main(int argc, char **argv) {
     _Bool _ret_bool = z_keyexpr_is_initialized(&key);
     assert(_ret_bool == true);
 
-    _ret_bool = z_keyexpr_includes(z_keyexpr("demo/example/**"), z_keyexpr("demo/example/a"));
-    assert(_ret_bool == true);
+    int8_t _ret_int;
+    _ret_int = z_keyexpr_includes(z_keyexpr("demo/example/**"), z_keyexpr("demo/example/a"));
+    assert(_ret_int == 0);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_includes_null_terminated("demo/example/**", "demo/example/a");
     assert(_ret_bool == true);
 #endif
-    _ret_bool = z_keyexpr_intersects(z_keyexpr("demo/example/**"), z_keyexpr("demo/example/a"));
-    assert(_ret_bool == true);
+    _ret_int = z_keyexpr_intersects(z_keyexpr("demo/example/**"), z_keyexpr("demo/example/a"));
+    assert(_ret_int == 0);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_intersect_null_terminated("demo/example/**", "demo/example/a");
     assert(_ret_bool == true);
 #endif
-    _ret_bool = z_keyexpr_equals(z_keyexpr("demo/example/**"), z_keyexpr("demo/example"));
-    assert(_ret_bool == false);
+    _ret_int = z_keyexpr_equals(z_keyexpr("demo/example/**"), z_keyexpr("demo/example"));
+    assert(_ret_int == 1);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_equals_null_terminated("demo/example/**", "demo/example");
     assert(_ret_bool == false);

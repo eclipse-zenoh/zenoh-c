@@ -47,8 +47,8 @@ void includes() {
     z_keyexpr_t nul = z_keyexpr(NULL);
     z_keyexpr_t foobar = z_keyexpr("foo/bar");
     z_keyexpr_t foostar = z_keyexpr("foo/*");
-    assert(z_keyexpr_includes(foostar, foobar) == 1);
-    assert(z_keyexpr_includes(foobar, foostar) == 0);
+    assert(z_keyexpr_includes(foostar, foobar) == 0);
+    assert(z_keyexpr_includes(foobar, foostar) == 1);
     assert(z_keyexpr_includes(nul, foobar) < 0);
     assert(z_keyexpr_includes(foobar, nul) < 0);
 }
@@ -58,8 +58,8 @@ void intersects() {
     z_keyexpr_t foobar = z_keyexpr("foo/bar");
     z_keyexpr_t foostar = z_keyexpr("foo/*");
     z_keyexpr_t barstar = z_keyexpr("bar/*");
-    assert(z_keyexpr_intersects(foostar, foobar) == 1);
-    assert(z_keyexpr_intersects(barstar, foobar) == 0);
+    assert(z_keyexpr_intersects(foostar, foobar) == 0);
+    assert(z_keyexpr_intersects(barstar, foobar) == 1);
     assert(z_keyexpr_intersects(nul, foobar) < 0);
     assert(z_keyexpr_intersects(foobar, nul) < 0);
 }
