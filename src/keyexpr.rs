@@ -467,7 +467,7 @@ pub extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 
             if *l == *r {
                 0
             } else {
-                1
+                -1
             }
         }
         _ => i8::MIN,
@@ -484,7 +484,7 @@ pub extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) ->
             if l.intersects(r) {
                 0
             } else {
-                1
+                -1
             }
         }
         _ => i8::MIN,
@@ -501,7 +501,7 @@ pub extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> i
             if l.includes(r) {
                 0
             } else {
-                1
+                -1
             }
         }
         _ => i8::MIN,
