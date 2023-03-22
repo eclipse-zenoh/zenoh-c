@@ -1115,18 +1115,19 @@ struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
  */
 void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
 /**
- * Returns ``1`` if `left` and `right` define equal sets, ``0`` otherwise.
+ * Returns ``0`` if both ``left`` and ``right`` are equal. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
  */
-int8_t z_keyexpr_equals(struct z_keyexpr_t left, struct z_keyexpr_t right);
+int8_t z_keyexpr_equals(struct z_keyexpr_t left,
+                        struct z_keyexpr_t right);
 /**
- * Returns ``1`` if the set defined by `left` contains every key belonging to the set defined by `right`, ``0`` if they don't.
- * Returns negative values in case of error (if one of the key expressions is in an invalid state).
+ * Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
+ * defined by ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
  */
 int8_t z_keyexpr_includes(struct z_keyexpr_t left,
                           struct z_keyexpr_t right);
 /**
- * Returns ``1`` if `left` and `right` define sets that have at least one key in common, ``0`` if they don't.
- * Returns negative values in case of error (if one of the key expressions is in an invalid state).
+ * Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
+ * sets defined by ``left`` and ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
  */
 int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
                             struct z_keyexpr_t right);
