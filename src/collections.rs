@@ -18,8 +18,8 @@ use zenoh::prelude::ZenohId;
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_bytes_t {
-    pub start: *const u8,
     pub len: size_t,
+    pub start: *const u8,
 }
 
 impl z_bytes_t {

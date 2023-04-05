@@ -126,8 +126,8 @@ typedef enum z_sample_kind_t {
  * An array of bytes.
  */
 typedef struct z_bytes_t {
-  const uint8_t *start;
   size_t len;
+  const uint8_t *start;
 } z_bytes_t;
 /**
  * Represents a Zenoh ID.
@@ -536,8 +536,8 @@ typedef struct z_get_options_t {
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
  */
 typedef struct z_str_array_t {
-  const char *const *val;
   size_t len;
+  const char *const *val;
 } z_str_array_t;
 /**
  * A reference-type hello message returned by a zenoh entity to a scout message sent with `z_scout`.
