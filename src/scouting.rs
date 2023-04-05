@@ -57,8 +57,8 @@ pub extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
 /// An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
 #[repr(C)]
 pub struct z_str_array_t {
-    pub val: *const *const c_char,
     pub len: size_t,
+    pub val: *const *const c_char,
 }
 
 /// Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
