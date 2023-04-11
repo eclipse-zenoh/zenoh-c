@@ -18,8 +18,17 @@
 
 int main(int argc, char **argv) {
     char *expr = "demo/example/**";
-    if (argc > 1) {
-        expr = argv[1];
+    char *value = NULL;
+    switch (argc) {
+        default:
+        case 3:
+            value = argv[2];
+        case 2:
+            expr = argv[1];
+            break;
+        case 1:
+            // Do nothing
+            break;
     }
     z_keyexpr_t keyexpr = z_keyexpr(expr);
     if (!z_check(keyexpr)) {
@@ -27,12 +36,12 @@ int main(int argc, char **argv) {
         exit(-1);
     }
     z_owned_config_t config = z_config_default();
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+    if (argc > 3) {
+        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
+                argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
     }
@@ -46,8 +55,12 @@ int main(int argc, char **argv) {
 
     printf("Sending Query '%s'...\n", expr);
     z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
+    z_get_options_t opts = z_get_options_default();
+    if (value != NULL) {
+        opts.with_value.payload = (z_bytes_t){.len = strlen(value), .start = (uint8_t *)value};
+    }
     z_get(z_loan(s), keyexpr, "", z_move(channel.send),
-          NULL);  // here, the send is moved and will be dropped by zenoh when adequate
+          &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply = z_reply_null();
     for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
         if (z_reply_is_ok(&reply)) {
