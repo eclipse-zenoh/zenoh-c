@@ -523,9 +523,6 @@ typedef struct z_value_t {
  *     z_query_target_t target: The Queryables that should be target of the query.
  *     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
  *     z_value_t with_value: An optional value to attach to the query.
- *
- *         **WARNING: This option has been marked as unstable:
- *         It works as advertised, but may change in a future release.**
  */
 typedef struct z_get_options_t {
   enum z_query_target_t target;
