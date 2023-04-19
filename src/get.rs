@@ -327,9 +327,10 @@ pub extern "C" fn z_query_target_default() -> z_query_target_t {
 ///     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
 ///       It optimizes bandwidth.
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum z_consolidation_mode_t {
     AUTO = -1,
+    #[default]
     NONE = 0,
     MONOTONIC = 1,
     LATEST = 2,
@@ -365,12 +366,6 @@ impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
             z_consolidation_mode_t::MONOTONIC => Mode::Manual(ConsolidationMode::Monotonic),
             z_consolidation_mode_t::LATEST => Mode::Manual(ConsolidationMode::Latest),
         }
-    }
-}
-
-impl Default for z_consolidation_mode_t {
-    fn default() -> Self {
-        z_consolidation_mode_t::NONE
     }
 }
 
