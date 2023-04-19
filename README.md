@@ -39,7 +39,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
 3. Build:
 
-  Good CMake practice is to perform build outside of source directory, leaving source tree untouched. The examples below demonstrates this mode of building. On the other hand VScode by default creates build directory named 'build' inside source tree. In this case build script sligthly changes it's behavior. See more about it in section 'VScode'.
+  Good CMake practice is to perform build outside of source directory, leaving source tree untouched. The examples below demonstrates this mode of building. On the other hand VScode by default creates build directory named 'build' inside source tree. In this case build script sligthly changes its behavior. See more about it in section 'VScode'.
 
   By default build configuration is set to `Release`, it's not necessary to add `-DCMAKE_BUILD_TYPE=Release` option on configuration step. But if your platform uses multi-config generator by default (this is the case on Windows), you may need to add option `--config Release` on build step. See more in CMake [build-configurations] documenation. Option`--config Release` is skipped in further examples for brewity. It's actually necessary for [Visual Studio generators] only. For [Ninja Multi-Config] the build script is able to select `Release` as the default configuration.
 
