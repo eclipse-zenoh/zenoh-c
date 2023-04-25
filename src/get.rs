@@ -223,7 +223,7 @@ pub unsafe extern "C" fn z_get(
         q = q
             .consolidation(options.consolidation)
             .target(options.target.into())
-            .value(&options.value);
+            .with_value(&options.value);
     }
     match q
         .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
