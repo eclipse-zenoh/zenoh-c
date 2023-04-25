@@ -163,19 +163,19 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
 /// Members:
 ///     z_query_target_t target: The Queryables that should be target of the query.
 ///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
-///     z_value_t with_value: An optional value to attach to the query.
+///     z_value_t value: An optional value to attach to the query.
 #[repr(C)]
 pub struct z_get_options_t {
     pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
-    pub with_value: z_value_t,
+    pub value: z_value_t,
 }
 #[no_mangle]
 pub extern "C" fn z_get_options_default() -> z_get_options_t {
     z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
-        with_value: {
+        value: {
             z_value_t {
                 payload: z_bytes_t::empty(),
                 encoding: z_encoding_default(),
@@ -223,7 +223,7 @@ pub unsafe extern "C" fn z_get(
         q = q
             .consolidation(options.consolidation)
             .target(options.target.into())
-            .with_value(&options.with_value);
+            .value(&options.value);
     }
     match q
         .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
