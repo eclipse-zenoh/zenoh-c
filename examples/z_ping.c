@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.number_of_pings; i++) {
         clock_t start = clock();
         z_publisher_put(z_loan(pub), data, args.size, NULL);
-        int err = pthread_cond_wait(&cond, &mutex);
+        pthread_cond_wait(&cond, &mutex);
         clock_t end = clock();
         results[i] = end - start;
     }
