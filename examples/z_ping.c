@@ -1,11 +1,8 @@
 #include <pthread.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <zenoh_macros.h>
 
 #include "zenoh.h"
 
