@@ -14,11 +14,18 @@ endif()
 declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples")
 
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+
 foreach(file ${files})
     get_filename_component(target ${file} NAME_WE)
+
+    if(NOT(UNIX) AND(${target} STREQUAL "z_ping" OR ${target} STREQUAL "z_pong"))
+        continue()
+    endif()
+
     add_executable(${target} EXCLUDE_FROM_ALL ${file})
     add_dependencies(examples ${target})
     add_platform_libraries(${target})
+
     if(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB)
         add_dependencies(${target} zenohc::static)
         target_link_libraries(${target} PRIVATE zenohc::static)
@@ -27,6 +34,6 @@ foreach(file ${files})
         target_link_libraries(${target} PRIVATE zenohc::lib)
         copy_dlls(${target})
     endif()
+
     set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 endforeach()
-
