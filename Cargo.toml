@@ -32,6 +32,7 @@ build = "build.rs"
 
 [features]
 logger-autoinit = []
+shared-memory = ["zenoh/shared-memory"]
 
 [badges]
 maintenance = { status = "actively-developed" }
@@ -46,7 +47,7 @@ libc = "0.2.139"
 log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.5"
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "unstable", "shared-memory" ] }
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "unstable" ] }
 zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
 zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
 

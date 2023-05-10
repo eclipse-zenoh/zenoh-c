@@ -646,6 +646,12 @@ typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
   uintptr_t _owner[4];
 } zc_owned_payload_t;
+typedef struct zc_owned_shmbuf_t {
+  uintptr_t _0[9];
+} zc_owned_shmbuf_t;
+typedef struct zc_owned_shm_manager_t {
+  UnsafeCell<SharedMemoryManager> *_0;
+} zc_owned_shm_manager_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
@@ -1604,3 +1610,7 @@ struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(uintptr_t bound);
  * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
  */
 struct zc_owned_payload_t zc_sample_rcinc(struct z_sample_t sample);
+struct zc_owned_shmbuf_t zc_shm_alloc(const struct zc_owned_shm_manager_t *shm, uintptr_t capacity);
+struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
+                                                 const char *id,
+                                                 uintptr_t size);

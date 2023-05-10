@@ -39,6 +39,8 @@ mod publisher;
 pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
+#[cfg(feature = "shared-memory")]
+mod shm;
 
 trait GuardedTransmute<D> {
     fn transmute(self) -> D;
