@@ -12,7 +12,7 @@ use crate::GuardedTransmute;
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::collections::*;
+
 use crate::commons::*;
 use crate::impl_guarded_transmute;
 use crate::keyexpr::*;
@@ -214,17 +214,11 @@ pub unsafe extern "C" fn z_declare_subscriber(
                 .declare_subscriber(keyexpr)
                 .callback(move |sample| {
                     let payload = sample.payload.contiguous();
-                    let bytes = z_bytes_t {
-                        start: payload.as_ptr(),
-                        len: payload.len(),
+                    let owner = match payload {
+                        std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
+                        _ => sample.payload.clone(),
                     };
-                    let sample = z_sample_t {
-                        keyexpr: (&sample.key_expr).into(),
-                        payload: bytes,
-                        encoding: (&sample.encoding).into(),
-                        kind: sample.kind.into(),
-                        timestamp: sample.timestamp.as_ref().into(),
-                    };
+                    let sample = z_sample_t::new(&sample, &owner);
                     z_closure_sample_call(&closure, &sample)
                 })
                 .reliability(reliability)

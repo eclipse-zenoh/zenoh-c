@@ -11,10 +11,15 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+
 use crate::collections::*;
 use crate::keyexpr::*;
+use libc::c_void;
 use libc::{c_char, c_ulong};
+use zenoh::buffers::ZBuf;
 use zenoh::prelude::SampleKind;
+use zenoh::prelude::SplitBuffer;
+use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
 
 /// A zenoh unsigned integer
@@ -81,6 +86,74 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
         }
     }
 }
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct zc_owned_payload_t {
+    pub payload: z_bytes_t,
+    pub _owner: [usize; 4],
+}
+impl Default for zc_owned_payload_t {
+    fn default() -> Self {
+        zc_payload_null()
+    }
+}
+impl TryFrom<ZBuf> for zc_owned_payload_t {
+    type Error = ();
+    fn try_from(buf: ZBuf) -> Result<Self, Self::Error> {
+        let std::borrow::Cow::Borrowed(payload) = buf.contiguous() else {return Err(())};
+        Ok(Self {
+            payload: payload.into(),
+            _owner: unsafe { std::mem::transmute(buf) },
+        })
+    }
+}
+impl zc_owned_payload_t {
+    fn owner(&self) -> Option<&ZBuf> {
+        if self._owner.iter().all(|&v| v == 0) {
+            return None;
+        }
+        unsafe { std::mem::transmute(&self._owner) }
+    }
+}
+impl Drop for zc_owned_payload_t {
+    fn drop(&mut self) {
+        if !self.payload.start.is_null() {
+            std::mem::drop(unsafe { std::mem::transmute::<_, ZBuf>(self._owner) });
+            self.payload.start = std::ptr::null();
+            self.payload.len = 0;
+        }
+    }
+}
+
+/// Clones the `payload` by incrementing its reference counter.
+#[no_mangle]
+pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
+    match payload.owner() {
+        None => Default::default(),
+        Some(payload) => payload.clone().try_into().unwrap_or_default(),
+    }
+}
+/// Returns `false` if `payload` is the gravestone value.
+#[no_mangle]
+pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
+    !payload.payload.start.is_null()
+}
+/// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+#[no_mangle]
+pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
+    unsafe { std::ptr::replace(payload, zc_payload_null()) };
+}
+/// Constructs `zc_owned_payload_t`'s gravestone value.
+#[no_mangle]
+pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
+    zc_owned_payload_t {
+        payload: z_bytes_t {
+            len: 0,
+            start: std::ptr::null(),
+        },
+        _owner: [0; 4],
+    }
+}
 
 /// A data sample.
 ///
@@ -93,12 +166,37 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 ///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
 ///   z_timestamp_t timestamp: The timestamp of this data sample.
 #[repr(C)]
-pub struct z_sample_t {
+pub struct z_sample_t<'a> {
     pub keyexpr: z_keyexpr_t,
     pub payload: z_bytes_t,
     pub encoding: z_encoding_t,
+    pub _zc_buf: &'a c_void,
     pub kind: z_sample_kind_t,
     pub timestamp: z_timestamp_t,
+}
+
+impl<'a> z_sample_t<'a> {
+    pub fn new(sample: &'a Sample, owner: &'a ZBuf) -> Self {
+        let std::borrow::Cow::Borrowed(payload) = owner.contiguous() else {panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")};
+        z_sample_t {
+            keyexpr: (&sample.key_expr).into(),
+            payload: z_bytes_t::from(payload),
+            encoding: (&sample.encoding).into(),
+            _zc_buf: unsafe { std::mem::transmute(owner) },
+            kind: sample.kind.into(),
+            timestamp: sample.timestamp.as_ref().into(),
+        }
+    }
+}
+
+/// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+#[no_mangle]
+pub extern "C" fn zc_sample_rcinc(sample: z_sample_t) -> zc_owned_payload_t {
+    let buf = unsafe { std::mem::transmute::<_, &ZBuf>(sample._zc_buf).clone() };
+    zc_owned_payload_t {
+        payload: sample.payload,
+        _owner: unsafe { std::mem::transmute(buf) },
+    }
 }
 
 /// A :c:type:`z_encoding_t` integer `prefix`.

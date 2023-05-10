@@ -311,6 +311,7 @@ typedef struct z_sample_t {
   struct z_keyexpr_t keyexpr;
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
+  const void *_zc_buf;
   enum z_sample_kind_t kind;
   struct z_timestamp_t timestamp;
 } z_sample_t;
@@ -641,6 +642,10 @@ typedef struct z_owned_scouting_config_t {
   unsigned long zc_timeout_ms;
   unsigned int zc_what;
 } z_owned_scouting_config_t;
+typedef struct zc_owned_payload_t {
+  struct z_bytes_t payload;
+  uintptr_t _owner[4];
+} zc_owned_payload_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
@@ -1556,6 +1561,22 @@ struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, uintptr_t len);
 struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
                                                    uintptr_t len);
 /**
+ * Returns `false` if `payload` is the gravestone value.
+ */
+bool zc_payload_check(const struct zc_owned_payload_t *payload);
+/**
+ * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+ */
+void zc_payload_drop(struct zc_owned_payload_t *payload);
+/**
+ * Constructs `zc_owned_payload_t`'s gravestone value.
+ */
+struct zc_owned_payload_t zc_payload_null(void);
+/**
+ * Clones the `payload` by incrementing its reference counter.
+ */
+struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payload);
+/**
  * Creates a new blocking fifo channel, returned as a pair of closures.
  *
  * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
@@ -1579,3 +1600,7 @@ struct z_owned_reply_channel_t zc_reply_fifo_new(uintptr_t bound);
  * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
  */
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(uintptr_t bound);
+/**
+ * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+ */
+struct zc_owned_payload_t zc_sample_rcinc(struct z_sample_t sample);
