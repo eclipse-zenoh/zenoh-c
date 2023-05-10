@@ -149,6 +149,12 @@ pub extern "C" fn zc_shmbuf_drop(buf: &mut zc_owned_shmbuf_t) {
     buf.get_mut().take();
 }
 
+/// Returns `false` if `buf` is in its gravestone state.
+#[no_mangle]
+pub extern "C" fn zc_shmbuf_check(buf: &zc_owned_shmbuf_t) -> bool {
+    unsafe { (*buf.get()).is_some() }
+}
+
 /// Constructs an owned payload from an owned SHM buffer.
 #[no_mangle]
 pub extern "C" fn zc_shmbuf_into_payload(buf: &mut zc_owned_shmbuf_t) -> zc_owned_payload_t {
@@ -160,10 +166,10 @@ pub extern "C" fn zc_shmbuf_into_payload(buf: &mut zc_owned_shmbuf_t) -> zc_owne
 
 /// Returns the start of the SHM buffer.
 #[no_mangle]
-pub unsafe extern "C" fn zc_shmbuf_ptr(buf: &zc_owned_shmbuf_t) -> *const u8 {
+pub unsafe extern "C" fn zc_shmbuf_ptr(buf: &zc_owned_shmbuf_t) -> *mut u8 {
     match &*buf.get() {
-        None => std::ptr::null(),
-        Some(buf) => buf.as_slice().as_ptr(),
+        None => std::ptr::null_mut(),
+        Some(buf) => buf.as_slice().as_ptr().cast_mut(),
     }
 }
 

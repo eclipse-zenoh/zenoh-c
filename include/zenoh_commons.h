@@ -1687,6 +1687,10 @@ struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
  */
 uintptr_t zc_shmbuf_capacity(const struct zc_owned_shmbuf_t *buf);
 /**
+ * Returns `false` if `buf` is in its gravestone state.
+ */
+bool zc_shmbuf_check(const struct zc_owned_shmbuf_t *buf);
+/**
  * Drops the SHM buffer, decrementing its backing reference counter.
  */
 void zc_shmbuf_drop(struct zc_owned_shmbuf_t *buf);
@@ -1703,7 +1707,7 @@ uintptr_t zc_shmbuf_length(const struct zc_owned_shmbuf_t *buf);
 /**
  * Returns the start of the SHM buffer.
  */
-const uint8_t *zc_shmbuf_ptr(const struct zc_owned_shmbuf_t *buf);
+uint8_t *zc_shmbuf_ptr(const struct zc_owned_shmbuf_t *buf);
 /**
  * Sets the length of the SHM buffer.
  *

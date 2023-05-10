@@ -74,7 +74,8 @@
                   z_owned_reply_t : z_reply_check,                     \
                   z_owned_hello_t : z_hello_check,                     \
                   z_owned_str_t : z_str_check,                         \
-                  zc_owned_payload_t : zc_payload_check                \
+                  zc_owned_payload_t : zc_payload_check,               \
+                  zc_owned_shmbuf_t : zc_shmbuf_check                  \
             )(&x)
 
 #define z_call(x, ...) \
