@@ -108,8 +108,16 @@ impl TryFrom<ZBuf> for zc_owned_payload_t {
     }
 }
 impl zc_owned_payload_t {
+    pub fn take(&mut self) -> Option<ZBuf> {
+        if !z_bytes_check(&self.payload) {
+            return None;
+        }
+        self.payload.start = std::ptr::null();
+        self.payload.len = 0;
+        unsafe { Some(std::mem::transmute(self._owner)) }
+    }
     fn owner(&self) -> Option<&ZBuf> {
-        if self._owner.iter().all(|&v| v == 0) {
+        if !z_bytes_check(&self.payload) {
             return None;
         }
         unsafe { std::mem::transmute(&self._owner) }
@@ -117,11 +125,7 @@ impl zc_owned_payload_t {
 }
 impl Drop for zc_owned_payload_t {
     fn drop(&mut self) {
-        if !self.payload.start.is_null() {
-            std::mem::drop(unsafe { std::mem::transmute::<_, ZBuf>(self._owner) });
-            self.payload.start = std::ptr::null();
-            self.payload.len = 0;
-        }
+        self.take();
     }
 }
 

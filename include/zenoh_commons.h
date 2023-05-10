@@ -650,7 +650,7 @@ typedef struct zc_owned_shmbuf_t {
   uintptr_t _0[9];
 } zc_owned_shmbuf_t;
 typedef struct zc_owned_shm_manager_t {
-  UnsafeCell<SharedMemoryManager> *_0;
+  uintptr_t _0;
 } zc_owned_shm_manager_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
@@ -1583,6 +1583,47 @@ struct zc_owned_payload_t zc_payload_null(void);
  */
 struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payload);
 /**
+ * Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
+ *
+ * This is avoids copies when transfering data that was either:
+ * - `zc_sample_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+ * - constructed from a `zc_owned_shmbuf_t`
+ *
+ * The payload's encoding can be sepcified through the options.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     payload: The value to put.
+ *     len: The length of the value to put.
+ *     options: The publisher put options.
+ * Returns:
+ *     ``0`` in case of success, negative values in case of failure.
+ */
+int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
+                              struct zc_owned_payload_t *payload,
+                              const struct z_publisher_put_options_t *options);
+/**
+ * Put data, transfering the buffer ownership.
+ *
+ * This is avoids copies when transfering data that was either:
+ * - `zc_sample_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+ * - constructed from a `zc_owned_shmbuf_t`
+ *
+ * The payload's encoding can be sepcified through the options.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression to put.
+ *     payload: The value to put.
+ *     options: The put options.
+ * Returns:
+ *     ``0`` in case of success, negative values in case of failure.
+ */
+int8_t zc_put_owned(struct z_session_t session,
+                    struct z_keyexpr_t keyexpr,
+                    struct zc_owned_payload_t *payload,
+                    const struct z_put_options_t *opts);
+/**
  * Creates a new blocking fifo channel, returned as a pair of closures.
  *
  * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
@@ -1610,7 +1651,63 @@ struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(uintptr_t bound);
  * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
  */
 struct zc_owned_payload_t zc_sample_rcinc(struct z_sample_t sample);
-struct zc_owned_shmbuf_t zc_shm_alloc(const struct zc_owned_shm_manager_t *shm, uintptr_t capacity);
+/**
+ * Allocates a buffer of size `capacity` in the manager's memory.
+ *
+ * # Safety
+ * Calling this function concurrently with other shm functions on the same manager is UB.
+ */
+struct zc_owned_shmbuf_t zc_shm_alloc(const struct zc_owned_shm_manager_t *manager,
+                                      uintptr_t capacity);
+/**
+ * Runs a defragmentation pass on the SHM manager.
+ *
+ * Note that this doesn't trigger a garbage collection pass, nor does it move currently allocated data.
+ *
+ * # Safety
+ * Calling this function concurrently with other shm functions on the same manager is UB.
+ */
+uintptr_t zc_shm_defrag(const struct zc_owned_shm_manager_t *manager);
+/**
+ * Runs a garbage collection pass on the SHM manager.
+ *
+ * Returns the number of bytes that have been freed by the pass.
+ *
+ * # Safety
+ * Calling this function concurrently with other shm functions on the same manager is UB.
+ */
+uintptr_t zc_shm_gc(const struct zc_owned_shm_manager_t *manager);
+bool zc_shm_manager_check(const struct zc_owned_shm_manager_t *manager);
+void zc_shm_manager_drop(struct zc_owned_shm_manager_t *manager);
 struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
                                                  const char *id,
                                                  uintptr_t size);
+/**
+ * Returns the capacity of the SHM buffer.
+ */
+uintptr_t zc_shmbuf_capacity(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Drops the SHM buffer, decrementing its backing reference counter.
+ */
+void zc_shmbuf_drop(struct zc_owned_shmbuf_t *buf);
+/**
+ * Constructs an owned payload from an owned SHM buffer.
+ */
+struct zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmbuf_t *buf);
+/**
+ * Returns the length of the SHM buffer.
+ *
+ * Note that when constructing an SHM buffer, length is defaulted to its capacity.
+ */
+uintptr_t zc_shmbuf_length(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Returns the start of the SHM buffer.
+ */
+const uint8_t *zc_shmbuf_ptr(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Sets the length of the SHM buffer.
+ *
+ * This lets Zenoh know how much of the data to write over the network when sending the value to non-SHM-compatible neighboors.
+ */
+void zc_shmbuf_set_length(const struct zc_owned_shmbuf_t *buf,
+                          uintptr_t len);
