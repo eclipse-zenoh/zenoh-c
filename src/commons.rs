@@ -195,7 +195,8 @@ impl<'a> z_sample_t<'a> {
 
 /// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
 #[no_mangle]
-pub extern "C" fn zc_sample_rcinc(sample: z_sample_t) -> zc_owned_payload_t {
+pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
+    let Some(sample) = sample else {return zc_payload_null()};
     let buf = unsafe { std::mem::transmute::<_, &ZBuf>(sample._zc_buf).clone() };
     zc_owned_payload_t {
         payload: sample.payload,

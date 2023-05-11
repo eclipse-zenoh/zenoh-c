@@ -1586,7 +1586,7 @@ struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payl
  * Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
  *
  * This is avoids copies when transfering data that was either:
- * - `zc_sample_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+ * - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
  * - constructed from a `zc_owned_shmbuf_t`
  *
  * The payload's encoding can be sepcified through the options.
@@ -1606,7 +1606,7 @@ int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
  * Put data, transfering the buffer ownership.
  *
  * This is avoids copies when transfering data that was either:
- * - `zc_sample_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+ * - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
  * - constructed from a `zc_owned_shmbuf_t`
  *
  * The payload's encoding can be sepcified through the options.
@@ -1650,7 +1650,7 @@ struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(uintptr_t bound);
 /**
  * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
  */
-struct zc_owned_payload_t zc_sample_rcinc(struct z_sample_t sample);
+struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
 /**
  * Allocates a buffer of size `capacity` in the manager's memory.
  *

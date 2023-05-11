@@ -177,7 +177,7 @@ pub unsafe extern "C" fn z_put(
 /// Put data, transfering the buffer ownership.
 ///
 /// This is avoids copies when transfering data that was either:
-/// - `zc_sample_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
 /// - constructed from a `zc_owned_shmbuf_t`
 ///
 /// The payload's encoding can be sepcified through the options.
