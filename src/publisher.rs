@@ -14,6 +14,7 @@
 
 use std::ops::{Deref, DerefMut};
 
+use zenoh::prelude::SessionDeclarations;
 use zenoh::{
     prelude::{Priority, Value},
     publication::Publisher,
@@ -128,7 +129,7 @@ pub extern "C" fn z_declare_publisher(
     keyexpr: z_keyexpr_t,
     options: Option<&z_publisher_options_t>,
 ) -> z_owned_publisher_t {
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => {
             let mut p = s.declare_publisher(keyexpr);
             if let Some(options) = options {

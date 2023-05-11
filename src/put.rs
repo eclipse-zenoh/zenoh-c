@@ -146,7 +146,7 @@ pub unsafe extern "C" fn z_put(
     len: size_t,
     mut opts: *const z_put_options_t,
 ) -> i8 {
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => {
             let default = z_put_options_default();
             if opts.is_null() {
@@ -211,7 +211,7 @@ pub unsafe extern "C" fn z_delete(
     if opts.is_null() {
         opts = &default;
     }
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => match s
             .delete(keyexpr)
             .congestion_control((*opts).congestion_control.into())

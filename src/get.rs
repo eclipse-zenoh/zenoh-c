@@ -214,11 +214,11 @@ pub unsafe extern "C" fn z_get(
     } else {
         CStr::from_ptr(parameters).to_str().unwrap()
     };
-    let mut q = session
-        .as_ref()
-        .as_ref()
-        .expect(LOG_INVALID_SESSION)
-        .get(KeyExpr::try_from(keyexpr).unwrap().with_parameters(p));
+    let Some(s) = session.upgrade() else {
+        log::error!("{LOG_INVALID_SESSION}");
+        return i8::MIN;
+    };
+    let mut q = s.get(KeyExpr::try_from(keyexpr).unwrap().with_parameters(p));
     if let Some(options) = options {
         q = q
             .consolidation(options.consolidation)

@@ -13,11 +13,12 @@
 //
 use crate::{
     impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_query_t, z_owned_session_t, z_session_t, z_value_t,
-    GuardedTransmute, LOG_INVALID_SESSION,
+    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, GuardedTransmute,
+    LOG_INVALID_SESSION,
 };
 use libc::c_void;
 use std::ops::Deref;
+use zenoh::prelude::SessionDeclarations;
 use zenoh::{
     prelude::{Sample, SplitBuffer},
     queryable::{Query, Queryable as CallbackQueryable},
@@ -142,8 +143,8 @@ pub extern "C" fn z_declare_queryable(
 ) -> z_owned_queryable_t {
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session: &'static z_owned_session_t = session.into();
-    let session = match session.as_ref() {
+
+    let session = match session.upgrade() {
         Some(s) => s,
         None => {
             log::error!("{}", LOG_INVALID_SESSION);
