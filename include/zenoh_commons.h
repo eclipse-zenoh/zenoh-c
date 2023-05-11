@@ -662,8 +662,8 @@ bool z_bytes_check(const struct z_bytes_t *b);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *
- * Returns 1 if the session reference count was decremented, but the session wasn't dropped
- * because other handles still exist.
+ * Returns a negative value if an error occured while closing the session.
+ * Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
  */
 int8_t z_close(struct z_owned_session_t *session);
 /**

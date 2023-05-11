@@ -132,13 +132,18 @@ pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 
 /// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
 ///
-/// Returns 1 if the session reference count was decremented, but the session wasn't dropped
-/// because other handles still exist.
+/// Returns a negative value if an error occured while closing the session.
+/// Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
     let Some(s) = session.as_mut().take() else {return 0};
-    let Ok(s) = Arc::try_unwrap(s) else {return 1};
+    let s = match Arc::try_unwrap(s) {
+        Ok(s) => s,
+        Err(s) => {
+            return (Arc::strong_count(&s) - 1).min(i8::MAX as usize) as i8;
+        }
+    };
     match s.close().res() {
         Err(e) => e.errno().get(),
         Ok(_) => 0,
