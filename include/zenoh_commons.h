@@ -1682,6 +1682,7 @@ void zc_shm_manager_drop(struct zc_owned_shm_manager_t *manager);
 struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
                                                  const char *id,
                                                  uintptr_t size);
+struct zc_owned_shm_manager_t zc_shm_manager_null(void);
 /**
  * Returns the capacity of the SHM buffer.
  */
@@ -1704,6 +1705,10 @@ struct zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmbuf_t *buf);
  * Note that when constructing an SHM buffer, length is defaulted to its capacity.
  */
 uintptr_t zc_shmbuf_length(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
+ */
+struct zc_owned_shmbuf_t zc_shmbuf_null(void);
 /**
  * Returns the start of the SHM buffer.
  */

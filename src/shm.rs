@@ -43,6 +43,11 @@ impl DerefMut for zc_owned_shm_manager_t {
         unsafe { std::mem::transmute(self) }
     }
 }
+impl zc_owned_shm_manager_t {
+    pub fn null() -> Self {
+        None::<_>.into()
+    }
+}
 
 #[no_mangle]
 pub extern "C" fn zc_shm_manager_new(
@@ -71,6 +76,11 @@ pub extern "C" fn zc_shm_manager_drop(manager: &mut zc_owned_shm_manager_t) {
 #[no_mangle]
 pub extern "C" fn zc_shm_manager_check(manager: &zc_owned_shm_manager_t) -> bool {
     manager.is_some()
+}
+
+#[no_mangle]
+pub extern "C" fn zc_shm_manager_null() -> zc_owned_shm_manager_t {
+    zc_owned_shm_manager_t::null()
 }
 
 /// Runs a garbage collection pass on the SHM manager.
@@ -123,6 +133,12 @@ impl DerefMut for zc_owned_shmbuf_t {
     }
 }
 
+impl zc_owned_shmbuf_t {
+    pub fn null() -> Self {
+        UnsafeCell::new(None).into()
+    }
+}
+
 /// Allocates a buffer of size `capacity` in the manager's memory.
 ///
 /// # Safety
@@ -153,6 +169,12 @@ pub extern "C" fn zc_shmbuf_drop(buf: &mut zc_owned_shmbuf_t) {
 #[no_mangle]
 pub extern "C" fn zc_shmbuf_check(buf: &zc_owned_shmbuf_t) -> bool {
     unsafe { (*buf.get()).is_some() }
+}
+
+/// Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
+#[no_mangle]
+pub extern "C" fn zc_shmbuf_null() -> zc_owned_shmbuf_t {
+    zc_owned_shmbuf_t::null()
 }
 
 /// Constructs an owned payload from an owned SHM buffer.

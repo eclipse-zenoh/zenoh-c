@@ -33,7 +33,9 @@
                   z_owned_closure_zid_t * : z_closure_zid_drop,                     \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop, \
                   z_owned_reply_channel_t * : z_reply_channel_drop,                 \
-                  zc_owned_payload_t * : zc_payload_drop                  \
+                  zc_owned_payload_t * : zc_payload_drop,                           \
+                  zc_owned_shmbuf_t * : zc_shmbuf_drop,                             \
+                  zc_owned_shm_manager_t * : zc_shm_manager_drop                    \
             )(x)
 
 #define z_null(x) (*x = \
@@ -56,7 +58,9 @@
                   z_owned_closure_zid_t * : z_closure_zid_null,                     \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_null, \
                   z_owned_reply_channel_t * : z_reply_channel_null,                 \
-                  zc_owned_payload_t * : zc_payload_null                            \
+                  zc_owned_payload_t * : zc_payload_null,                           \
+                  zc_owned_shmbuf_t * : zc_shmbuf_null,                             \
+                  zc_owned_shm_manager_t * : zc_shm_manager_null                    \
             )())
 
 #define z_check(x) \
@@ -75,7 +79,8 @@
                   z_owned_hello_t : z_hello_check,                     \
                   z_owned_str_t : z_str_check,                         \
                   zc_owned_payload_t : zc_payload_check,               \
-                  zc_owned_shmbuf_t : zc_shmbuf_check                  \
+                  zc_owned_shmbuf_t : zc_shmbuf_check,                 \
+                  zc_owned_shm_manager_t : zc_shm_manager_check        \
             )(&x)
 
 #define z_call(x, ...) \
@@ -133,6 +138,8 @@ template<> struct zenoh_drop_type<z_owned_reply_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_hello_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_str_t> { typedef void type; };
 template<> struct zenoh_drop_type<zc_owned_payload_t> { typedef void type; };
+template<> struct zenoh_drop_type<zc_owned_shmbuf_t> { typedef void type; };
+template<> struct zenoh_drop_type<zc_owned_shm_manager_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_sample_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_query_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_reply_t> { typedef void type; };
@@ -154,6 +161,8 @@ template<> inline void z_drop(z_owned_reply_t* v) { z_reply_drop(v); }
 template<> inline void z_drop(z_owned_hello_t* v) { z_hello_drop(v); }
 template<> inline void z_drop(z_owned_str_t* v) { z_str_drop(v); }
 template<> inline void z_drop(zc_owned_payload_t* v) { zc_payload_drop(v); }
+template<> inline void z_drop(zc_owned_shmbuf_t* v) { zc_shmbuf_drop(v); }
+template<> inline void z_drop(zc_owned_shm_manager_t* v) { zc_shm_manager_drop(v); }
 template<> inline void z_drop(z_owned_closure_sample_t* v) { z_closure_sample_drop(v); }
 template<> inline void z_drop(z_owned_closure_query_t* v) { z_closure_query_drop(v); }
 template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop(v); }
@@ -175,6 +184,8 @@ inline void z_null(z_owned_reply_t& v) { v = z_reply_null(); }
 inline void z_null(z_owned_hello_t& v) { v = z_hello_null(); }
 inline void z_null(z_owned_str_t& v) { v = z_str_null(); }
 inline void z_null(zc_owned_payload_t& v) { v = zc_payload_null(); }
+inline void z_null(zc_owned_shmbuf_t& v) { v = zc_shmbuf_null(); }
+inline void z_null(zc_owned_shm_manager_t& v) { v = zc_shm_manager_null(); }
 inline void z_null(z_owned_closure_sample_t& v) { v = z_closure_sample_null(); }
 inline void z_null(z_owned_closure_query_t& v) { v = z_closure_query_null(); }
 inline void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
@@ -191,6 +202,8 @@ inline bool z_check(const z_owned_config_t& v) { return z_config_check(&v); }
 inline bool z_check(const z_owned_scouting_config_t& v) { return z_scouting_config_check(&v); }
 inline bool z_check(const z_bytes_t& v) { return z_bytes_check(&v); }
 inline bool z_check(const zc_owned_payload_t& v) { return zc_payload_check(&v); }
+inline bool z_check(const zc_owned_shmbuf_t& v) { return zc_shmbuf_check(&v); }
+inline bool z_check(const zc_owned_shm_manager_t& v) { return zc_shm_manager_check(&v); }
 inline bool z_check(const z_owned_subscriber_t& v) { return z_subscriber_check(&v); }
 inline bool z_check(const z_owned_pull_subscriber_t& v) { return z_pull_subscriber_check(&v); }
 inline bool z_check(const z_owned_queryable_t& v) { return z_queryable_check(&v); }
