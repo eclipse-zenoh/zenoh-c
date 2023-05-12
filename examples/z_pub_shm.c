@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -64,16 +65,18 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    char buf[256];
     for (int idx = 0; idx < N; ++idx) {
         zc_owned_shmbuf_t shmbuf = zc_shm_alloc(&manager, 256);
         if (!z_check(shmbuf)) {
             printf("Failed to allocate a SHM buffer\n");
             exit(-1);
         }
-        uint8_t *buf = zc_shmbuf_ptr(&shmbuf);
+        char *buf = (char *)zc_shmbuf_ptr(&shmbuf);
+        buf[256] = 0;
+        snprintf(buf, 255, "[%4d] %s", idx, value);
+        size_t len = strlen(buf);
+        zc_shmbuf_set_length(&shmbuf, len);
         sleep(1);
-        sprintf((char *)buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
         z_publisher_put_options_t options = z_publisher_put_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);

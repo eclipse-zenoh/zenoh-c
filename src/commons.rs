@@ -17,6 +17,7 @@ use crate::keyexpr::*;
 use libc::c_void;
 use libc::{c_char, c_ulong};
 use zenoh::buffers::ZBuf;
+use zenoh::buffers::ZSlice;
 use zenoh::prelude::SampleKind;
 use zenoh::prelude::SplitBuffer;
 use zenoh::sample::Sample;
@@ -86,6 +87,17 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
         }
     }
 }
+
+/// An owned payload, backed by a reference counted owner.
+///
+/// The `payload` field may be modified, and Zenoh will take the new values into account,
+/// however, assuming `ostart` and `olen` are the respective values of `payload.start` and
+/// `payload.len` when constructing the `zc_owned_payload_t payload` value was created,
+/// then `payload.start` MUST remain within the `[ostart, ostart + olen[` interval, and
+/// `payload.len` must remain within `[0, olen -(payload.start - ostart)]`.
+///
+/// Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
+/// functions, then the operation will fail (but the passed value will still be consumed).
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct zc_owned_payload_t {
@@ -112,9 +124,24 @@ impl zc_owned_payload_t {
         if !z_bytes_check(&self.payload) {
             return None;
         }
-        self.payload.start = std::ptr::null();
-        self.payload.len = 0;
-        unsafe { Some(std::mem::transmute(self._owner)) }
+        let start = std::mem::replace(&mut self.payload.start, std::ptr::null());
+        let len = std::mem::replace(&mut self.payload.len, 0);
+        let mut buf: ZBuf = unsafe { std::mem::transmute(self._owner) };
+        {
+            let mut slices = buf.zslices_mut();
+            let slice = slices.next().unwrap();
+            assert!(
+                slices.next().is_none(),
+                "A multi-slice buffer reached zenoh-c, which is definitely a bug, please report it."
+            );
+            let start_offset = unsafe { start.offset_from(slice.buf.as_slice().as_ptr()) };
+            let Ok(start_offset) = start_offset.try_into()  else {return None};
+            *slice = match ZSlice::make(slice.buf.clone(), start_offset, start_offset + len) {
+                Ok(s) => s,
+                Err(_) => return None,
+            };
+        }
+        Some(buf)
     }
     fn owner(&self) -> Option<&ZBuf> {
         if !z_bytes_check(&self.payload) {

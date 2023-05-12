@@ -642,6 +642,18 @@ typedef struct z_owned_scouting_config_t {
   unsigned long zc_timeout_ms;
   unsigned int zc_what;
 } z_owned_scouting_config_t;
+/**
+ * An owned payload, backed by a reference counted owner.
+ *
+ * The `payload` field may be modified, and Zenoh will take the new values into account,
+ * however, assuming `ostart` and `olen` are the respective values of `payload.start` and
+ * `payload.len` when constructing the `zc_owned_payload_t payload` value was created,
+ * then `payload.start` MUST remain within the `[ostart, ostart + olen[` interval, and
+ * `payload.len` must remain within `[0, olen -(payload.start - ostart)]`.
+ *
+ * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
+ * functions, then the operation will fail (but the passed value will still be consumed).
+ */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
   uintptr_t _owner[4];
