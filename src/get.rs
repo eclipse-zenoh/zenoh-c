@@ -99,17 +99,11 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
-    if let Some(inner) = reply.as_ref().and_then(|s| s.sample.as_ref().ok()) {
-        z_sample_t {
-            keyexpr: inner.key_expr.borrowing_clone().into(),
-            payload: match &inner.payload.contiguous() {
-                Cow::Borrowed(payload) => crate::z_bytes_t { start: payload.as_ptr(), len: payload.len() },
-                Cow::Owned(_) => unreachable!("z_reply_ok found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions. This is definitely a bug with zenoh, please contact us."),
-            },
-            encoding: (&inner.encoding).into(),
-            kind: inner.kind.into(),
-            timestamp: inner.timestamp.as_ref().into()
+    if let Some(sample) = reply.as_ref().and_then(|s| s.sample.as_ref().ok()) {
+        if let Cow::Owned(_) = sample.payload.contiguous() {
+            unreachable!("z_reply_ok found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions. This is definitely a bug with zenoh, please contact us.")
         }
+        z_sample_t::new(sample, &sample.payload)
     } else {
         panic!("Assertion failed: tried to treat `z_owned_reply_t` as Ok despite that not being the case")
     }

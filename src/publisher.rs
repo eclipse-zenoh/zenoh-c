@@ -24,7 +24,7 @@ use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
     impl_guarded_transmute, z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_priority_t, z_session_t, GuardedTransmute, LOG_INVALID_SESSION,
+    z_priority_t, z_session_t, zc_owned_payload_t, GuardedTransmute, LOG_INVALID_SESSION,
 };
 
 /// Options passed to the :c:func:`z_declare_publisher` function.
@@ -236,6 +236,49 @@ pub unsafe extern "C" fn z_publisher_put(
 ) -> i8 {
     if let Some(p) = publisher.as_ref() {
         let value: Value = std::slice::from_raw_parts(payload, len).into();
+        let put = match options {
+            Some(options) => p.put(value.encoding(options.encoding.into())),
+            None => p.put(value),
+        };
+        if let Err(e) = put.res_sync() {
+            log::error!("{}", e);
+            e.errno().get()
+        } else {
+            0
+        }
+    } else {
+        i8::MIN
+    }
+}
+
+/// Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
+///
+/// This is avoids copies when transfering data that was either:
+/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+/// - constructed from a `zc_owned_shmbuf_t`
+///
+/// The payload's encoding can be sepcified through the options.
+///
+/// Parameters:
+///     session: The zenoh session.
+///     payload: The value to put.
+///     len: The length of the value to put.
+///     options: The publisher put options.
+/// Returns:
+///     ``0`` in case of success, negative values in case of failure.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_publisher_put_owned(
+    publisher: z_publisher_t,
+    payload: Option<&mut zc_owned_payload_t>,
+    options: Option<&z_publisher_put_options_t>,
+) -> i8 {
+    if let Some(p) = publisher.as_ref() {
+        let Some(payload) = payload.and_then(|p| p.take()) else {
+            log::debug!("Attempted to put without a payload");
+            return i8::MIN;
+        };
+        let value: Value = payload.into();
         let put = match options {
             Some(options) => p.put(value.encoding(options.encoding.into())),
             None => p.put(value),

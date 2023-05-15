@@ -3,7 +3,12 @@
 
 void callback(const z_sample_t* sample, void* context) {
     z_publisher_t pub = z_loan(*(z_owned_publisher_t*)context);
+#ifdef ZENOH_C  // The zc_owned_payload_t API is exclusive to zenoh-c, but allows avoiding some copies.
+    zc_owned_payload_t payload = zc_sample_payload_rcinc(sample);
+    zc_publisher_put_owned(pub, z_move(payload), NULL);
+#else
     z_publisher_put(pub, sample->payload.start, sample->payload.len, NULL);
+#endif
 }
 void drop(void* context) {
     z_owned_publisher_t* pub = (z_owned_publisher_t*)context;

@@ -311,6 +311,7 @@ typedef struct z_sample_t {
   struct z_keyexpr_t keyexpr;
   struct z_bytes_t payload;
   struct z_encoding_t encoding;
+  const void *_zc_buf;
   enum z_sample_kind_t kind;
   struct z_timestamp_t timestamp;
 } z_sample_t;
@@ -641,6 +642,28 @@ typedef struct z_owned_scouting_config_t {
   unsigned long zc_timeout_ms;
   unsigned int zc_what;
 } z_owned_scouting_config_t;
+/**
+ * An owned payload, backed by a reference counted owner.
+ *
+ * The `payload` field may be modified, and Zenoh will take the new values into account,
+ * however, assuming `ostart` and `olen` are the respective values of `payload.start` and
+ * `payload.len` when constructing the `zc_owned_payload_t payload` value was created,
+ * then `payload.start` MUST remain within the `[ostart, ostart + olen[` interval, and
+ * `payload.len` must remain within `[0, olen -(payload.start - ostart)]`.
+ *
+ * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
+ * functions, then the operation will fail (but the passed value will still be consumed).
+ */
+typedef struct zc_owned_payload_t {
+  struct z_bytes_t payload;
+  uintptr_t _owner[4];
+} zc_owned_payload_t;
+typedef struct zc_owned_shmbuf_t {
+  uintptr_t _0[9];
+} zc_owned_shmbuf_t;
+typedef struct zc_owned_shm_manager_t {
+  uintptr_t _0;
+} zc_owned_shm_manager_t;
 extern const unsigned int Z_ROUTER;
 extern const unsigned int Z_PEER;
 extern const unsigned int Z_CLIENT;
@@ -1565,6 +1588,63 @@ struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, uintptr_t len);
 struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
                                                    uintptr_t len);
 /**
+ * Returns `false` if `payload` is the gravestone value.
+ */
+bool zc_payload_check(const struct zc_owned_payload_t *payload);
+/**
+ * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+ */
+void zc_payload_drop(struct zc_owned_payload_t *payload);
+/**
+ * Constructs `zc_owned_payload_t`'s gravestone value.
+ */
+struct zc_owned_payload_t zc_payload_null(void);
+/**
+ * Clones the `payload` by incrementing its reference counter.
+ */
+struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payload);
+/**
+ * Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
+ *
+ * This is avoids copies when transfering data that was either:
+ * - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+ * - constructed from a `zc_owned_shmbuf_t`
+ *
+ * The payload's encoding can be sepcified through the options.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     payload: The value to put.
+ *     len: The length of the value to put.
+ *     options: The publisher put options.
+ * Returns:
+ *     ``0`` in case of success, negative values in case of failure.
+ */
+int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
+                              struct zc_owned_payload_t *payload,
+                              const struct z_publisher_put_options_t *options);
+/**
+ * Put data, transfering the buffer ownership.
+ *
+ * This is avoids copies when transfering data that was either:
+ * - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+ * - constructed from a `zc_owned_shmbuf_t`
+ *
+ * The payload's encoding can be sepcified through the options.
+ *
+ * Parameters:
+ *     session: The zenoh session.
+ *     keyexpr: The key expression to put.
+ *     payload: The value to put.
+ *     options: The put options.
+ * Returns:
+ *     ``0`` in case of success, negative values in case of failure.
+ */
+int8_t zc_put_owned(struct z_session_t session,
+                    struct z_keyexpr_t keyexpr,
+                    struct zc_owned_payload_t *payload,
+                    const struct z_put_options_t *opts);
+/**
  * Creates a new blocking fifo channel, returned as a pair of closures.
  *
  * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
@@ -1588,3 +1668,76 @@ struct z_owned_reply_channel_t zc_reply_fifo_new(uintptr_t bound);
  * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
  */
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(uintptr_t bound);
+/**
+ * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+ */
+struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
+/**
+ * Allocates a buffer of size `capacity` in the manager's memory.
+ *
+ * # Safety
+ * Calling this function concurrently with other shm functions on the same manager is UB.
+ */
+struct zc_owned_shmbuf_t zc_shm_alloc(const struct zc_owned_shm_manager_t *manager,
+                                      uintptr_t capacity);
+/**
+ * Runs a defragmentation pass on the SHM manager.
+ *
+ * Note that this doesn't trigger a garbage collection pass, nor does it move currently allocated data.
+ *
+ * # Safety
+ * Calling this function concurrently with other shm functions on the same manager is UB.
+ */
+uintptr_t zc_shm_defrag(const struct zc_owned_shm_manager_t *manager);
+/**
+ * Runs a garbage collection pass on the SHM manager.
+ *
+ * Returns the number of bytes that have been freed by the pass.
+ *
+ * # Safety
+ * Calling this function concurrently with other shm functions on the same manager is UB.
+ */
+uintptr_t zc_shm_gc(const struct zc_owned_shm_manager_t *manager);
+bool zc_shm_manager_check(const struct zc_owned_shm_manager_t *manager);
+void zc_shm_manager_drop(struct zc_owned_shm_manager_t *manager);
+struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
+                                                 const char *id,
+                                                 uintptr_t size);
+struct zc_owned_shm_manager_t zc_shm_manager_null(void);
+/**
+ * Returns the capacity of the SHM buffer.
+ */
+uintptr_t zc_shmbuf_capacity(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Returns `false` if `buf` is in its gravestone state.
+ */
+bool zc_shmbuf_check(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Drops the SHM buffer, decrementing its backing reference counter.
+ */
+void zc_shmbuf_drop(struct zc_owned_shmbuf_t *buf);
+/**
+ * Constructs an owned payload from an owned SHM buffer.
+ */
+struct zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmbuf_t *buf);
+/**
+ * Returns the length of the SHM buffer.
+ *
+ * Note that when constructing an SHM buffer, length is defaulted to its capacity.
+ */
+uintptr_t zc_shmbuf_length(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
+ */
+struct zc_owned_shmbuf_t zc_shmbuf_null(void);
+/**
+ * Returns the start of the SHM buffer.
+ */
+uint8_t *zc_shmbuf_ptr(const struct zc_owned_shmbuf_t *buf);
+/**
+ * Sets the length of the SHM buffer.
+ *
+ * This lets Zenoh know how much of the data to write over the network when sending the value to non-SHM-compatible neighboors.
+ */
+void zc_shmbuf_set_length(const struct zc_owned_shmbuf_t *buf,
+                          uintptr_t len);

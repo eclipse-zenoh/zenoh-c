@@ -39,6 +39,8 @@ mod publisher;
 pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
+#[cfg(feature = "shared-memory")]
+mod shm;
 
 trait GuardedTransmute<D> {
     fn transmute(self) -> D;
@@ -49,7 +51,7 @@ macro_rules! impl_guarded_transmute {
     ($src_type:ty, $dst_type:ty) => {
         const _: () =
             assert!(std::mem::align_of::<$src_type>() == std::mem::align_of::<$dst_type>());
-        impl GuardedTransmute<$dst_type> for $src_type {
+        impl $crate::GuardedTransmute<$dst_type> for $src_type {
             fn transmute(self) -> $dst_type {
                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
             }
