@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
         sprintf(idstr + 2 * i, "%02x", id.id[i]);
     }
     idstr[32] = 0;
-    zc_owned_shm_manager_t manager = zc_shm_manager_new(z_loan(s), idstr, N * 256);
+    zc_owned_shm_manager_t manager = zc_shm_manager_new(z_loan(s), "chips", N * 1000000);
     if (!z_check(s)) {
         printf("Unable to open session!\n");
         exit(-1);
@@ -65,11 +65,15 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    for (int idx = 0; idx < N; ++idx) {
+    for (int idx = 0; true; ++idx) {
         zc_owned_shmbuf_t shmbuf = zc_shm_alloc(&manager, 256);
         if (!z_check(shmbuf)) {
-            printf("Failed to allocate a SHM buffer\n");
-            exit(-1);
+            zc_shm_gc(&manager);
+            shmbuf = zc_shm_alloc(&manager, 256);
+            if (!z_check(shmbuf)) {
+                printf("Failed to allocate a SHM buffer, even after GCing\n");
+                exit(-1);
+            }
         }
         char *buf = (char *)zc_shmbuf_ptr(&shmbuf);
         buf[256] = 0;
