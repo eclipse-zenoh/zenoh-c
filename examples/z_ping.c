@@ -8,6 +8,7 @@
 
 pthread_cond_t cond;
 pthread_mutex_t mutex;
+struct timespec ping_timeout = {.tv_sec = 1, .tv_nsec = 0};
 
 void callback(const z_sample_t* sample, void* context) { pthread_cond_signal(&cond); }
 void drop(void* context) { pthread_cond_destroy(&cond); }
@@ -26,9 +27,9 @@ int main(int argc, char** argv) {
     if (args.help_requested) {
         printf(
             "\
-		-n (optional, int, default=4): the number of pings to be attempted\n\
+		-n (optional, int, default=100): the number of pings to be attempted\n\
 		-s (optional, int, default=8): the size of the payload embedded in the ping and repeated by the pong\n\
-		-w (optional, int, default=0): the warmup time in ms during which pings will be emitted but not measured\n\
+		-w (optional, int, default=1000): the warmup time in ms during which pings will be emitted but not measured\n\
 		-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
 		");
         return 1;
@@ -52,14 +53,14 @@ int main(int argc, char** argv) {
         clock_t warmup_end = clock() + CLOCKS_PER_SEC * args.warmup_ms / 1000;
         for (clock_t now = clock(); now < warmup_end; now = clock()) {
             z_publisher_put(z_loan(pub), data, args.size, NULL);
-            pthread_cond_wait(&cond, &mutex);
+            pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
         }
     }
     clock_t* results = malloc(sizeof(clock_t) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
         clock_t start = clock();
         z_publisher_put(z_loan(pub), data, args.size, NULL);
-        pthread_cond_wait(&cond, &mutex);
+        pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
         clock_t end = clock();
         results[i] = end - start;
     }
@@ -101,12 +102,12 @@ struct args_t parse_args(int argc, char** argv) {
         size = atoi(arg);
     }
     arg = getopt(argc, argv, 'n');
-    unsigned int number_of_pings = 4;
+    unsigned int number_of_pings = 100;
     if (arg) {
         number_of_pings = atoi(arg);
     }
     arg = getopt(argc, argv, 'w');
-    unsigned int warmup_ms = 0;
+    unsigned int warmup_ms = 1000;
     if (arg) {
         warmup_ms = atoi(arg);
     }

@@ -174,6 +174,62 @@ pub unsafe extern "C" fn z_put(
     }
 }
 
+/// Put data, transfering the buffer ownership.
+///
+/// This is avoids copies when transfering data that was either:
+/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+/// - constructed from a `zc_owned_shmbuf_t`
+///
+/// The payload's encoding can be sepcified through the options.
+///
+/// Parameters:
+///     session: The zenoh session.
+///     keyexpr: The key expression to put.
+///     payload: The value to put.
+///     options: The put options.
+/// Returns:
+///     ``0`` in case of success, negative values in case of failure.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_put_owned(
+    session: z_session_t,
+    keyexpr: z_keyexpr_t,
+    payload: Option<&mut zc_owned_payload_t>,
+    mut opts: *const z_put_options_t,
+) -> i8 {
+    match session.as_ref() {
+        Some(s) => {
+            let default = z_put_options_default();
+            if opts.is_null() {
+                opts = &default;
+            }
+            if let Some(payload) = payload.and_then(|p| p.take()) {
+                match s
+                    .put(keyexpr, payload)
+                    .encoding((*opts).encoding)
+                    .kind(SampleKind::Put)
+                    .congestion_control((*opts).congestion_control.into())
+                    .priority((*opts).priority.into())
+                    .res_sync()
+                {
+                    Err(e) => {
+                        log::error!("{}", e);
+                        e.errno().get()
+                    }
+                    Ok(()) => 0,
+                }
+            } else {
+                log::debug!("zc_payload_null was provided as payload for put");
+                i8::MIN
+            }
+        }
+        None => {
+            log::debug!("{}", LOG_INVALID_SESSION);
+            i8::MIN
+        }
+    }
+}
+
 /// Options passed to the :c:func:`z_delete` function.
 #[repr(C)]
 #[allow(non_camel_case_types)]

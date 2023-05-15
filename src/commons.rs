@@ -11,10 +11,16 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+
 use crate::collections::*;
 use crate::keyexpr::*;
+use libc::c_void;
 use libc::{c_char, c_ulong};
+use zenoh::buffers::ZBuf;
+use zenoh::buffers::ZSlice;
 use zenoh::prelude::SampleKind;
+use zenoh::prelude::SplitBuffer;
+use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
 
 /// A zenoh unsigned integer
@@ -82,6 +88,104 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
     }
 }
 
+/// An owned payload, backed by a reference counted owner.
+///
+/// The `payload` field may be modified, and Zenoh will take the new values into account,
+/// however, assuming `ostart` and `olen` are the respective values of `payload.start` and
+/// `payload.len` when constructing the `zc_owned_payload_t payload` value was created,
+/// then `payload.start` MUST remain within the `[ostart, ostart + olen[` interval, and
+/// `payload.len` must remain within `[0, olen -(payload.start - ostart)]`.
+///
+/// Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
+/// functions, then the operation will fail (but the passed value will still be consumed).
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct zc_owned_payload_t {
+    pub payload: z_bytes_t,
+    pub _owner: [usize; 4],
+}
+impl Default for zc_owned_payload_t {
+    fn default() -> Self {
+        zc_payload_null()
+    }
+}
+impl TryFrom<ZBuf> for zc_owned_payload_t {
+    type Error = ();
+    fn try_from(buf: ZBuf) -> Result<Self, Self::Error> {
+        let std::borrow::Cow::Borrowed(payload) = buf.contiguous() else {return Err(())};
+        Ok(Self {
+            payload: payload.into(),
+            _owner: unsafe { std::mem::transmute(buf) },
+        })
+    }
+}
+impl zc_owned_payload_t {
+    pub fn take(&mut self) -> Option<ZBuf> {
+        if !z_bytes_check(&self.payload) {
+            return None;
+        }
+        let start = std::mem::replace(&mut self.payload.start, std::ptr::null());
+        let len = std::mem::replace(&mut self.payload.len, 0);
+        let mut buf: ZBuf = unsafe { std::mem::transmute(self._owner) };
+        {
+            let mut slices = buf.zslices_mut();
+            let slice = slices.next().unwrap();
+            assert!(
+                slices.next().is_none(),
+                "A multi-slice buffer reached zenoh-c, which is definitely a bug, please report it."
+            );
+            let start_offset = unsafe { start.offset_from(slice.buf.as_slice().as_ptr()) };
+            let Ok(start_offset) = start_offset.try_into()  else {return None};
+            *slice = match ZSlice::make(slice.buf.clone(), start_offset, start_offset + len) {
+                Ok(s) => s,
+                Err(_) => return None,
+            };
+        }
+        Some(buf)
+    }
+    fn owner(&self) -> Option<&ZBuf> {
+        if !z_bytes_check(&self.payload) {
+            return None;
+        }
+        unsafe { std::mem::transmute(&self._owner) }
+    }
+}
+impl Drop for zc_owned_payload_t {
+    fn drop(&mut self) {
+        self.take();
+    }
+}
+
+/// Clones the `payload` by incrementing its reference counter.
+#[no_mangle]
+pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
+    match payload.owner() {
+        None => Default::default(),
+        Some(payload) => payload.clone().try_into().unwrap_or_default(),
+    }
+}
+/// Returns `false` if `payload` is the gravestone value.
+#[no_mangle]
+pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
+    !payload.payload.start.is_null()
+}
+/// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+#[no_mangle]
+pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
+    unsafe { std::ptr::replace(payload, zc_payload_null()) };
+}
+/// Constructs `zc_owned_payload_t`'s gravestone value.
+#[no_mangle]
+pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
+    zc_owned_payload_t {
+        payload: z_bytes_t {
+            len: 0,
+            start: std::ptr::null(),
+        },
+        _owner: [0; 4],
+    }
+}
+
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -93,12 +197,38 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 ///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
 ///   z_timestamp_t timestamp: The timestamp of this data sample.
 #[repr(C)]
-pub struct z_sample_t {
+pub struct z_sample_t<'a> {
     pub keyexpr: z_keyexpr_t,
     pub payload: z_bytes_t,
     pub encoding: z_encoding_t,
+    pub _zc_buf: &'a c_void,
     pub kind: z_sample_kind_t,
     pub timestamp: z_timestamp_t,
+}
+
+impl<'a> z_sample_t<'a> {
+    pub fn new(sample: &'a Sample, owner: &'a ZBuf) -> Self {
+        let std::borrow::Cow::Borrowed(payload) = owner.contiguous() else {panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")};
+        z_sample_t {
+            keyexpr: (&sample.key_expr).into(),
+            payload: z_bytes_t::from(payload),
+            encoding: (&sample.encoding).into(),
+            _zc_buf: unsafe { std::mem::transmute(owner) },
+            kind: sample.kind.into(),
+            timestamp: sample.timestamp.as_ref().into(),
+        }
+    }
+}
+
+/// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+#[no_mangle]
+pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
+    let Some(sample) = sample else {return zc_payload_null()};
+    let buf = unsafe { std::mem::transmute::<_, &ZBuf>(sample._zc_buf).clone() };
+    zc_owned_payload_t {
+        payload: sample.payload,
+        _owner: unsafe { std::mem::transmute(buf) },
+    }
 }
 
 /// A :c:type:`z_encoding_t` integer `prefix`.

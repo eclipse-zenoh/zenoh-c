@@ -43,6 +43,9 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_closure_t reply_channel_closure_null_1 = z_reply_channel_closure_null();
     z_owned_reply_channel_t reply_channel_null_1 = z_reply_channel_null();
     z_owned_str_t str_null_1 = z_str_null();
+    zc_owned_payload_t payload_null_1 = zc_payload_null();
+    zc_owned_shmbuf_t shmbuf_null_1 = zc_shmbuf_null();
+    zc_owned_shm_manager_t shm_manager_null_1 = zc_shm_manager_null();
 
     //
     // Test that they actually make invalid value (where applicable)
@@ -59,6 +62,9 @@ int main(int argc, char **argv) {
     assert(!z_check(reply_null_1));
     assert(!z_check(hello_null_1));
     assert(!z_check(str_null_1));
+    assert(!z_check(payload_null_1));
+    assert(!z_check(shmbuf_null_1));
+    assert(!z_check(shm_manager_null_1));
 
     //
     // Test that z_null macro defined for all types
@@ -82,6 +88,9 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_closure_t reply_channel_closure_null_2;
     z_owned_reply_channel_t reply_channel_null_2;
     z_owned_str_t str_null_2;
+    zc_owned_payload_t payload_null_2;
+    zc_owned_shmbuf_t shmbuf_null_2;
+    zc_owned_shm_manager_t shm_manager_null_2;
 
     z_null(&session_null_2);
     z_null(&publisher_null_2);
@@ -102,6 +111,9 @@ int main(int argc, char **argv) {
     z_null(&reply_channel_closure_null_2);
     z_null(&reply_channel_null_2);
     z_null(&str_null_2);
+    z_null(&payload_null_2);
+    z_null(&shmbuf_null_2);
+    z_null(&shm_manager_null_2);
 
     //
     // Test that null macro works the same as direct call
@@ -118,6 +130,9 @@ int main(int argc, char **argv) {
     assert(!z_check(reply_null_2));
     assert(!z_check(hello_null_2));
     assert(!z_check(str_null_2));
+    assert(!z_check(payload_null_2));
+    assert(!z_check(shmbuf_null_2));
+    assert(!z_check(shm_manager_null_2));
 
     //
     // Test drop null and double drop it
@@ -142,6 +157,9 @@ int main(int argc, char **argv) {
         z_drop(z_move(reply_channel_closure_null_1));
         z_drop(z_move(reply_channel_null_1));
         z_drop(z_move(str_null_1));
+        z_drop(z_move(payload_null_1));
+        z_drop(z_move(shmbuf_null_1));
+        z_drop(z_move(shm_manager_null_1));
 
         z_drop(z_move(session_null_2));
         z_drop(z_move(publisher_null_2));
@@ -162,6 +180,9 @@ int main(int argc, char **argv) {
         z_drop(z_move(reply_channel_closure_null_2));
         z_drop(z_move(reply_channel_null_2));
         z_drop(z_move(str_null_2));
+        z_drop(z_move(payload_null_2));
+        z_drop(z_move(shmbuf_null_2));
+        z_drop(z_move(shm_manager_null_2));
     }
 
     return 0;
