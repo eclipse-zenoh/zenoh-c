@@ -86,7 +86,7 @@ pub struct z_session_t(usize);
 
 /// Returns a :c:type:`z_session_t` loaned from `s`.
 ///
-/// This handle doesn't increase the refcount of the session, but does allow to do so with `z_session_rcinc`.
+/// This handle doesn't increase the refcount of the session, but does allow to do so with `zc_session_rcinc`.
 ///
 /// # Safety
 /// The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
@@ -166,6 +166,6 @@ pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
 /// Increments the session's reference count, returning a new owning handle.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_session_rcinc(session: z_session_t) -> z_owned_session_t {
+pub extern "C" fn zc_session_rcinc(session: z_session_t) -> z_owned_session_t {
     session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
 }

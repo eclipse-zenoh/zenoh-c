@@ -1451,7 +1451,7 @@ bool z_session_check(const struct z_owned_session_t *session);
 /**
  * Returns a :c:type:`z_session_t` loaned from `s`.
  *
- * This handle doesn't increase the refcount of the session, but does allow to do so with `z_session_rcinc`.
+ * This handle doesn't increase the refcount of the session, but does allow to do so with `zc_session_rcinc`.
  *
  * # Safety
  * The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
@@ -1463,10 +1463,6 @@ struct z_session_t z_session_loan(const struct z_owned_session_t *s);
  * Constructs a null safe-to-drop value of 'z_owned_session_t' type
  */
 struct z_owned_session_t z_session_null(void);
-/**
- * Increments the session's reference count, returning a new owning handle.
- */
-struct z_owned_session_t z_session_rcinc(struct z_session_t session);
 /**
  * Returns ``true`` if `strs` is valid.
  */
@@ -1677,6 +1673,10 @@ struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(uintptr_t bound);
  * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
  */
 struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
+/**
+ * Increments the session's reference count, returning a new owning handle.
+ */
+struct z_owned_session_t zc_session_rcinc(struct z_session_t session);
 /**
  * Allocates a buffer of size `capacity` in the manager's memory.
  *
