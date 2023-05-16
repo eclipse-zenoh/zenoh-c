@@ -1452,6 +1452,11 @@ bool z_session_check(const struct z_owned_session_t *session);
  * Returns a :c:type:`z_session_t` loaned from `s`.
  *
  * This handle doesn't increase the refcount of the session, but does allow to do so with `z_session_rcinc`.
+ *
+ * # Safety
+ * The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
+ * attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
+ * have been destroyed is UB (likely SEGFAULT)
  */
 struct z_session_t z_session_loan(const struct z_owned_session_t *s);
 /**

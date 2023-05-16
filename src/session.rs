@@ -87,9 +87,22 @@ pub struct z_session_t(usize);
 /// Returns a :c:type:`z_session_t` loaned from `s`.
 ///
 /// This handle doesn't increase the refcount of the session, but does allow to do so with `z_session_rcinc`.
+///
+/// # Safety
+/// The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
+/// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
+/// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
 pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
-    s.as_ref().as_ref().map(Arc::downgrade).into()
+    match s.as_ref() {
+        Some(s) => {
+            let mut weak = Arc::downgrade(s);
+            unsafe { std::ptr::drop_in_place(&mut weak) };
+            Some(weak)
+        }
+        None => None,
+    }
+    .into()
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_session_t' type
