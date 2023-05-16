@@ -684,6 +684,9 @@ extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 bool z_bytes_check(const struct z_bytes_t *b);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
+ *
+ * Returns a negative value if an error occured while closing the session.
+ * Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
  */
 int8_t z_close(struct z_owned_session_t *session);
 /**
@@ -1447,12 +1450,23 @@ struct z_owned_scouting_config_t z_scouting_config_null(void);
 bool z_session_check(const struct z_owned_session_t *session);
 /**
  * Returns a :c:type:`z_session_t` loaned from `s`.
+ *
+ * This handle doesn't increase the refcount of the session, but does allow to do so with `z_session_rcinc`.
+ *
+ * # Safety
+ * The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
+ * attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
+ * have been destroyed is UB (likely SEGFAULT)
  */
 struct z_session_t z_session_loan(const struct z_owned_session_t *s);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_session_t' type
  */
 struct z_owned_session_t z_session_null(void);
+/**
+ * Increments the session's reference count, returning a new owning handle.
+ */
+struct z_owned_session_t z_session_rcinc(struct z_session_t session);
 /**
  * Returns ``true`` if `strs` is valid.
  */

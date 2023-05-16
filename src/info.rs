@@ -32,7 +32,7 @@ pub struct z_id_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => std::mem::transmute::<ZenohId, z_id_t>(s.info().zid().res_sync()),
         None => z_id_t { id: [0; 16] },
     }
@@ -52,7 +52,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 ) -> i8 {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => {
             for id in s.info().peers_zid().res_sync() {
                 z_closure_zid_call(&closure, &std::mem::transmute(id));
@@ -77,7 +77,7 @@ pub unsafe extern "C" fn z_info_routers_zid(
 ) -> i8 {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => {
             for id in s.info().routers_zid().res_sync() {
                 z_closure_zid_call(&closure, &std::mem::transmute(id));

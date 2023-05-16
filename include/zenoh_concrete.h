@@ -28,16 +28,9 @@
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-#if !defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_session_t {
-  uint64_t _0[3];
+typedef struct z_owned_session_t {
+  uintptr_t _0;
 } z_owned_session_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_owned_session_t {
-  uint32_t _0[3];
-} z_owned_session_t;
-#endif
 /**
  * Structs received by a Queryable.
  */
@@ -48,7 +41,7 @@ typedef struct z_query_t {
  * A loaned zenoh session.
  */
 typedef struct z_session_t {
-  const struct z_owned_session_t *_0;
+  uintptr_t _0;
 } z_session_t;
 /**
  * An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.

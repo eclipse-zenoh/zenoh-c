@@ -1,4 +1,3 @@
-use crate::GuardedTransmute;
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -19,8 +18,10 @@ use crate::keyexpr::*;
 use crate::session::*;
 use crate::z_closure_sample_call;
 use crate::z_owned_closure_sample_t;
+use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
+use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
 use zenoh_protocol::core::SubInfo;
@@ -202,8 +203,7 @@ pub unsafe extern "C" fn z_declare_subscriber(
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
 
-    let session: &'static z_owned_session_t = session.into();
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => {
             if opts.is_null() {
                 let default = z_subscriber_options_default();

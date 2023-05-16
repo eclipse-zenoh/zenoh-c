@@ -418,7 +418,7 @@ pub extern "C" fn z_declare_keyexpr(
             return z_owned_keyexpr_t::null();
         }
     };
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => match s.declare_keyexpr(key_expr).res_sync() {
             Ok(id) => id.into_owned().into(),
             Err(e) => {
@@ -442,7 +442,7 @@ pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_
         return i8::MIN;
     };
 
-    match session.as_ref() {
+    match session.upgrade() {
         Some(s) => match s.undeclare(kexpr).res() {
             Ok(()) => 0,
             Err(e) => {

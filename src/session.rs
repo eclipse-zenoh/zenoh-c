@@ -11,7 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+
 use crate::{config::*, impl_guarded_transmute, zc_init_logger, GuardedTransmute};
+use std::sync::{Arc, Weak};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::Session;
 use zenoh_util::core::zresult::ErrNo;
@@ -26,52 +28,53 @@ use zenoh_util::core::zresult::ErrNo;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_session_t([u64; 3]);
+#[repr(C)]
+pub struct z_owned_session_t(usize);
 
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_owned_session_t([u32; 3]);
+impl_guarded_transmute!(Option<Arc<Session>>, z_owned_session_t);
 
-impl_guarded_transmute!(Option<Session>, z_owned_session_t);
-
-impl From<Option<Session>> for z_owned_session_t {
-    fn from(val: Option<Session>) -> Self {
+impl From<Option<Arc<Session>>> for z_owned_session_t {
+    fn from(val: Option<Arc<Session>>) -> Self {
         val.transmute()
     }
 }
 
-impl AsRef<Option<Session>> for z_owned_session_t {
-    fn as_ref(&self) -> &Option<Session> {
+impl AsRef<Option<Arc<Session>>> for z_owned_session_t {
+    fn as_ref(&self) -> &Option<Arc<Session>> {
         unsafe { std::mem::transmute(self) }
     }
 }
 
-impl AsMut<Option<Session>> for z_owned_session_t {
-    fn as_mut(&mut self) -> &mut Option<Session> {
+impl AsMut<Option<Arc<Session>>> for z_owned_session_t {
+    fn as_mut(&mut self) -> &mut Option<Arc<Session>> {
         unsafe { std::mem::transmute(self) }
     }
 }
 
-impl AsRef<Option<Session>> for z_session_t {
-    fn as_ref(&self) -> &Option<Session> {
-        unsafe { (*self.0).as_ref() }
+impl AsRef<Option<Weak<Session>>> for z_session_t {
+    fn as_ref(&self) -> &Option<Weak<Session>> {
+        unsafe { std::mem::transmute(self) }
     }
 }
 
-impl From<z_session_t> for &'static z_owned_session_t {
-    fn from(val: z_session_t) -> Self {
-        unsafe { &*val.0 }
+impl z_session_t {
+    pub fn upgrade(&self) -> Option<Arc<Session>> {
+        self.as_ref().as_ref().and_then(Weak::upgrade)
+    }
+}
+
+impl From<Option<Weak<Session>>> for z_session_t {
+    fn from(val: Option<Weak<Session>>) -> Self {
+        unsafe { std::mem::transmute(val) }
     }
 }
 
 impl z_owned_session_t {
-    pub fn new(session: Session) -> Self {
+    pub fn new(session: Arc<Session>) -> Self {
         Some(session).into()
     }
     pub fn null() -> Self {
-        None::<Session>.into()
+        None::<Arc<Session>>.into()
     }
 }
 
@@ -79,12 +82,27 @@ impl z_owned_session_t {
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct z_session_t(*const z_owned_session_t);
+pub struct z_session_t(usize);
 
 /// Returns a :c:type:`z_session_t` loaned from `s`.
+///
+/// This handle doesn't increase the refcount of the session, but does allow to do so with `z_session_rcinc`.
+///
+/// # Safety
+/// The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
+/// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
+/// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
 pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
-    z_session_t(s)
+    match s.as_ref() {
+        Some(s) => {
+            let mut weak = Arc::downgrade(s);
+            unsafe { std::ptr::drop_in_place(&mut weak) };
+            Some(weak)
+        }
+        None => None,
+    }
+    .into()
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_session_t' type
@@ -110,7 +128,7 @@ pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
         }
     };
     match zenoh::open(*config).res() {
-        Ok(s) => z_owned_session_t::new(s),
+        Ok(s) => z_owned_session_t::new(Arc::new(s)),
         Err(e) => {
             log::error!("Error opening session: {}", e);
             z_owned_session_t::null()
@@ -126,11 +144,28 @@ pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 }
 
 /// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
+///
+/// Returns a negative value if an error occured while closing the session.
+/// Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
-    if let Some(Err(e)) = session.as_mut().take().map(|s| s.close().res()) {
-        return e.errno().get();
+    let Some(s) = session.as_mut().take() else {return 0};
+    let s = match Arc::try_unwrap(s) {
+        Ok(s) => s,
+        Err(s) => {
+            return (Arc::strong_count(&s) - 1).min(i8::MAX as usize) as i8;
+        }
+    };
+    match s.close().res() {
+        Err(e) => e.errno().get(),
+        Ok(_) => 0,
     }
-    0
+}
+
+/// Increments the session's reference count, returning a new owning handle.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub extern "C" fn z_session_rcinc(session: z_session_t) -> z_owned_session_t {
+    session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
 }
