@@ -20,17 +20,15 @@
 #undef NDEBUG
 #include <assert.h>
 
-#define URL1 "foo/bar/1"
-#define URL2 "foo/bar/2"
-
 void test_publisher() {
     z_owned_config_t config = z_config_default();
     z_owned_session_t s = z_open(z_move(config));
     assert(z_check(s));
-    z_owned_publisher_t pub1 = z_declare_publisher(z_loan(s), z_keyexpr(URL1), NULL);
-    z_owned_publisher_t pub2 = z_declare_publisher(z_loan(s), z_keyexpr(URL2), NULL);
-    z_drop(z_move(pub1));
-    z_drop(z_move(pub2));
+    char keyexpr[256];
+    strncpy(keyexpr, "foo/bar", 256);
+    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), NULL);
+    strncpy(keyexpr, "baz/quax", 256);
+    z_drop(z_move(pub));
     z_drop(z_move(s));
 }
 
