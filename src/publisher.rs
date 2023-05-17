@@ -24,7 +24,8 @@ use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
     impl_guarded_transmute, z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_priority_t, z_session_t, zc_owned_payload_t, GuardedTransmute, LOG_INVALID_SESSION,
+    z_priority_t, z_session_t, zc_owned_payload_t, GuardedTransmute, UninitializedKeyExprError,
+    LOG_INVALID_SESSION,
 };
 
 /// Options passed to the :c:func:`z_declare_publisher` function.
@@ -131,18 +132,24 @@ pub extern "C" fn z_declare_publisher(
 ) -> z_owned_publisher_t {
     match session.upgrade() {
         Some(s) => {
-            let mut p = s.declare_publisher(keyexpr);
-            if let Some(options) = options {
-                p = p
-                    .congestion_control(options.congestion_control.into())
-                    .priority(options.priority.into());
-            }
-            match p.res_sync() {
-                Err(e) => {
-                    log::error!("{}", e);
-                    None
+            let keyexpr = keyexpr.deref().as_ref().map(|s| s.clone().into_owned());
+            if let Some(key_expr) = keyexpr {
+                let mut p = s.declare_publisher(key_expr);
+                if let Some(options) = options {
+                    p = p
+                        .congestion_control(options.congestion_control.into())
+                        .priority(options.priority.into());
                 }
-                Ok(publisher) => Some(publisher),
+                match p.res_sync() {
+                    Err(e) => {
+                        log::error!("{}", e);
+                        None
+                    }
+                    Ok(publisher) => Some(publisher),
+                }
+            } else {
+                log::error!("{}", UninitializedKeyExprError);
+                None
             }
         }
         None => {
