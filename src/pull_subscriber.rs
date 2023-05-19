@@ -69,6 +69,12 @@ impl AsRef<PullSubscriber> for z_owned_pull_subscriber_t {
     }
 }
 
+impl<'a> AsRef<PullSubscriber> for z_pull_subscriber_t<'a> {
+    fn as_ref(&self) -> &PullSubscriber {
+        self.0.as_ref()
+    }
+}
+
 impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
     fn as_mut(&mut self) -> &mut PullSubscriber {
         unsafe { std::mem::transmute(self) }
@@ -211,6 +217,17 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
             log::debug!("{}", LOG_INVALID_SESSION);
             z_owned_pull_subscriber_t::null()
         }
+    }
+}
+
+// Returns the key expression of the given :c:type:`z_pull_subscriber_t`.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub extern "C" fn z_pull_subscriber_keyexpr(subscriber: z_pull_subscriber_t) -> z_keyexpr_t {
+    if let Some(sub) = subscriber.as_ref() {
+        sub.key_expr().clone().into()
+    } else {
+        z_keyexpr_t::null()
     }
 }
 

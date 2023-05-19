@@ -333,6 +333,17 @@ pub extern "C" fn z_publisher_delete(
     }
 }
 
+/// Returns the key expression of the publisher
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_keyexpr_t {
+    if let Some(p) = publisher.as_ref() {
+        p.key_expr().clone().into()
+    } else {
+        z_keyexpr_t::null()
+    }
+}
+
 /// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

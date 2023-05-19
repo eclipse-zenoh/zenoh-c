@@ -8,11 +8,14 @@
                   z_owned_keyexpr_t : z_keyexpr_loan,                 \
                   z_owned_config_t : z_config_loan,                   \
                   z_owned_publisher_t : z_publisher_loan,             \
+                  z_owned_subscriber_t : z_subscriber_loan,           \
                   z_owned_pull_subscriber_t : z_pull_subscriber_loan, \
                   z_owned_encoding_t : z_encoding_loan,               \
                   z_owned_hello_t : z_hello_loan,                     \
                   z_owned_str_t : z_str_loan                          \
             )(&x)
+                //   z_owned_queryable_t : z_queryable_loan,             \
+// 
 #define z_drop(x) \
     _Generic((x), z_owned_session_t * : z_close,                                    \
                   z_owned_publisher_t * : z_undeclare_publisher,                    \
