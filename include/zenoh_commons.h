@@ -1268,7 +1268,6 @@ struct z_publisher_put_options_t z_publisher_put_options_default(void);
  * Returns ``true`` if `sub` is valid.
  */
 bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
-struct z_keyexpr_t z_pull_subscriber_keyexpr(struct z_pull_subscriber_t subscriber);
 /**
  * Returns ``true`` if `sub` is valid.
  */

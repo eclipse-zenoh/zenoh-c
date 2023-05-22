@@ -220,17 +220,6 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
     }
 }
 
-// Returns the key expression of the given :c:type:`z_pull_subscriber_t`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_pull_subscriber_keyexpr(subscriber: z_pull_subscriber_t) -> z_keyexpr_t {
-    if let Some(sub) = subscriber.as_ref() {
-        sub.key_expr().clone().into()
-    } else {
-        z_keyexpr_t::null()
-    }
-}
-
 /// Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

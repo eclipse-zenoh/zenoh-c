@@ -27,10 +27,10 @@ void test_publisher() {
     char keyexpr[256];
     strncpy(keyexpr, "foo/bar", 256);
     z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), NULL);
-    // strncpy(keyexpr, "baz/quax", 256);
+    strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the correct keyexpr
     z_keyexpr_t pub_keyexpr = z_publisher_keyexpr(z_loan(pub));
     z_owned_str_t pub_keyexpr_str = z_keyexpr_to_string(pub_keyexpr);
-    assert(strcmp(z_loan(pub_keyexpr_str), "foo/bar") == 0);
+    assert(strcmp(z_loan(pub_keyexpr_str), "foo/bar") == 0);  // Check that publisher keeps the correct keyexpr
     z_drop(z_move(pub_keyexpr_str));
     z_drop(z_move(pub));
     z_drop(z_move(s));
@@ -57,10 +57,10 @@ void test_subscriber() {
     char keyexpr[256];
     strncpy(keyexpr, "foo/bar", 256);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(keyexpr), z_move(callback), NULL);
-    strncpy(keyexpr, "baz/quax", 256);
+    strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the keyexpr is copied into the subscriber
     z_keyexpr_t sub_keyexpr = z_subscriber_keyexpr(z_loan(sub));
     z_owned_str_t sub_keyexpr_str = z_keyexpr_to_string(sub_keyexpr);
-    assert(strcmp(z_loan(sub_keyexpr_str), "foo/bar") == 0);
+    assert(strcmp(z_loan(sub_keyexpr_str), "foo/bar") == 0);  // Check that subscriber keeps the correct keyexpr
     z_drop(z_move(sub_keyexpr_str));
     z_drop(z_move(sub));
     z_drop(z_move(s));
@@ -82,8 +82,9 @@ void test_subscriber() {
 
 int main(int argc, char **argv) {
     test_publisher();
-    // test_pull_subscriber();
     test_subscriber();
+    // TODO: Make same tests for pull subscriber and queryable when their `keyexpr` getters are implemented
+    // test_pull_subscriber();
     // test_queryable();
 
     return 0;
