@@ -256,7 +256,6 @@ pub unsafe extern "C" fn z_declare_subscriber(
     }
 }
 
-
 /// Returns the key expression of the subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
