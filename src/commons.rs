@@ -14,6 +14,7 @@
 
 use crate::collections::*;
 use crate::keyexpr::*;
+use crate::z_id_t;
 use libc::c_void;
 use libc::{c_char, c_ulong};
 use zenoh::buffers::ZBuf;
@@ -56,33 +57,27 @@ impl From<z_sample_kind_t> for SampleKind {
 #[repr(C)]
 pub struct z_timestamp_t {
     time: u64,
-    id: z_bytes_t,
+    id: z_id_t,
 }
 
 /// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
 pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
-    let id = unsafe { std::slice::from_raw_parts(ts.id.start, ts.id.len) };
-    id.iter().any(|byte| *byte != 0)
+    ts.id.id.iter().any(|byte| *byte != 0)
 }
 impl From<Option<&Timestamp>> for z_timestamp_t {
     fn from(ts: Option<&Timestamp>) -> Self {
         if let Some(ts) = ts {
-            let id = ts.get_id().as_slice();
             z_timestamp_t {
                 time: ts.get_time().as_u64(),
-                id: z_bytes_t {
-                    start: id.as_ptr(),
-                    len: id.len(),
+                id: z_id_t {
+                    id: ts.get_id().to_le_bytes(),
                 },
             }
         } else {
             z_timestamp_t {
                 time: 0,
-                id: z_bytes_t {
-                    start: std::ptr::null(),
-                    len: 0,
-                },
+                id: z_id_t { id: [0u8; 16] },
             }
         }
     }
