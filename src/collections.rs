@@ -57,7 +57,7 @@ pub(crate) unsafe fn z_bytes_drop(b: &mut z_bytes_t) {
 impl From<ZenohId> for z_bytes_t {
     #[inline]
     fn from(pid: ZenohId) -> Self {
-        let pid = pid.as_slice().to_vec().into_boxed_slice();
+        let pid = pid.to_le_bytes().to_vec().into_boxed_slice();
         let res = z_bytes_t {
             start: pid.as_ptr(),
             len: pid.len() as size_t,
