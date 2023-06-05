@@ -2707,7 +2707,7 @@ dependencies = [
 
 [[package]]
 name = "zenoh-c"
-version = "0.7.2-dev"
+version = "0.7.2-rc.1"
 dependencies = [
  "async-std",
  "async-trait",
