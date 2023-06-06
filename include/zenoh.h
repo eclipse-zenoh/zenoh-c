@@ -10,10 +10,11 @@
 extern "C" {
 #endif
 
-#define ZENOH_C "0.7.2.1"
+#define ZENOH_C "0.7.2.0"
 #define ZENOH_C_MAJOR 0
 #define ZENOH_C_MINOR 7
 #define ZENOH_C_PATCH 2
+#define ZENOH_C_TWEAK 0
 
 #ifdef _MSC_VER
 #define ALIGN(n) __declspec(align(n))
