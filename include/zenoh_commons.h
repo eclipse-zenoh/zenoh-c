@@ -293,7 +293,7 @@ typedef struct z_encoding_t {
 } z_encoding_t;
 typedef struct z_timestamp_t {
   uint64_t time;
-  struct z_bytes_t id;
+  struct z_id_t id;
 } z_timestamp_t;
 /**
  * A data sample.
