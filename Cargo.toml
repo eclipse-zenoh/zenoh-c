@@ -13,7 +13,7 @@
 #
 [package]
 name = "zenoh-c"
-version = "0.7.2-dev"
+version = "0.7.2-rc"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
@@ -47,9 +47,9 @@ libc = "0.2.139"
 log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.5"
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "unstable" ] }
-zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
+zenoh = { version = "0.7.2-rc", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release-0.7.2-rc", features = [ "unstable" ] }
+zenoh-protocol = { version = "0.7.2-rc", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release-0.7.2-rc" }
+zenoh-util = { version = "0.7.2-rc", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release-0.7.2-rc" }
 
 [build-dependencies]
 cbindgen = "0.24.3"
