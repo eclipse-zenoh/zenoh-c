@@ -259,11 +259,11 @@ pub unsafe extern "C" fn z_declare_subscriber(
 /// Returns the key expression of the subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_keyexpr_t {
+pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_owned_keyexpr_t {
     if let Some(p) = subscriber.as_ref() {
         p.key_expr().clone().into()
     } else {
-        z_keyexpr_t::null()
+        z_keyexpr_t::null().into()
     }
 }
 

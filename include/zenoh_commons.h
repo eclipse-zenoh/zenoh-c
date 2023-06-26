@@ -1230,7 +1230,7 @@ struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
 /**
  * Returns the key expression of the publisher
  */
-struct z_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
+struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
 /**
  * Returns a :c:type:`z_publisher_t` loaned from `p`.
  */
@@ -1508,7 +1508,7 @@ bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 /**
  * Returns the key expression of the subscriber.
  */
-struct z_keyexpr_t z_subscriber_keyexpr(struct z_subscriber_t subscriber);
+struct z_owned_keyexpr_t z_subscriber_keyexpr(struct z_subscriber_t subscriber);
 /**
  * Returns a :c:type:`z_subscriber_t` loaned from `p`.
  */

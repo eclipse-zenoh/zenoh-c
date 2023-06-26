@@ -14,8 +14,7 @@
                   z_owned_hello_t : z_hello_loan,                     \
                   z_owned_str_t : z_str_loan                          \
             )(&x)
-                //   z_owned_queryable_t : z_queryable_loan,             \
-// 
+
 #define z_drop(x) \
     _Generic((x), z_owned_session_t * : z_close,                                    \
                   z_owned_publisher_t * : z_undeclare_publisher,                    \
