@@ -69,6 +69,12 @@ impl AsRef<PullSubscriber> for z_owned_pull_subscriber_t {
     }
 }
 
+impl<'a> AsRef<PullSubscriber> for z_pull_subscriber_t<'a> {
+    fn as_ref(&self) -> &PullSubscriber {
+        self.0.as_ref()
+    }
+}
+
 impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
     fn as_mut(&mut self) -> &mut PullSubscriber {
         unsafe { std::mem::transmute(self) }

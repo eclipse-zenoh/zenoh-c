@@ -643,6 +643,12 @@ typedef struct z_owned_scouting_config_t {
   unsigned int zc_what;
 } z_owned_scouting_config_t;
 /**
+ * A loaned zenoh subscriber.
+ */
+typedef struct z_subscriber_t {
+  const struct z_owned_subscriber_t *_0;
+} z_subscriber_t;
+/**
  * An owned payload, backed by a reference counted owner.
  *
  * The `payload` field may be modified, and Zenoh will take the new values into account,
@@ -1222,6 +1228,10 @@ int8_t z_publisher_delete(struct z_publisher_t publisher,
  */
 struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
 /**
+ * Returns the key expression of the publisher
+ */
+struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
+/**
  * Returns a :c:type:`z_publisher_t` loaned from `p`.
  */
 struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
@@ -1495,6 +1505,14 @@ struct z_owned_str_t z_str_null(void);
  * Returns ``true`` if `sub` is valid.
  */
 bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
+/**
+ * Returns the key expression of the subscriber.
+ */
+struct z_owned_keyexpr_t z_subscriber_keyexpr(struct z_subscriber_t subscriber);
+/**
+ * Returns a :c:type:`z_subscriber_t` loaned from `p`.
+ */
+struct z_subscriber_t z_subscriber_loan(const struct z_owned_subscriber_t *p);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
  */

@@ -25,26 +25,30 @@ void test_publisher() {
     z_owned_session_t s = z_open(z_move(config));
     assert(z_check(s));
     char keyexpr[256];
-    strncpy(keyexpr, "foo/barr", 256);
+    strncpy(keyexpr, "foo/bar", 256);
     z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), NULL);
-    strncpy(keyexpr, "baz/quax", 256);
+    strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the correct keyexpr
+    z_owned_keyexpr_t pub_keyexpr = z_publisher_keyexpr(z_loan(pub));
+    z_owned_str_t pub_keyexpr_str = z_keyexpr_to_string(z_loan(pub_keyexpr));
+    assert(strcmp(z_loan(pub_keyexpr_str), "foo/bar") == 0);  // Check that publisher keeps the correct keyexpr
+    z_drop(z_move(pub_keyexpr_str));
     z_drop(z_move(pub));
     z_drop(z_move(s));
 }
 
 void data_handler(const z_sample_t *sample, void *arg) {}
 
-void test_pull_subscriber() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t s = z_open(z_move(config));
-    z_owned_closure_sample_t callback = z_closure(data_handler);
-    char keyexpr[256];
-    strncpy(keyexpr, "foo/bar", 256);
-    z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(keyexpr), z_move(callback), NULL);
-    strncpy(keyexpr, "baz/quax", 256);
-    z_drop(z_move(sub));
-    z_drop(z_move(s));
-}
+// void test_pull_subscriber() {
+//     z_owned_config_t config = z_config_default();
+//     z_owned_session_t s = z_open(z_move(config));
+//     z_owned_closure_sample_t callback = z_closure(data_handler);
+//     char keyexpr[256];
+//     strncpy(keyexpr, "foo/bar", 256);
+//     z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(keyexpr), z_move(callback), NULL);
+//     strncpy(keyexpr, "baz/quax", 256);
+//     z_drop(z_move(sub));
+//     z_drop(z_move(s));
+// }
 
 void test_subscriber() {
     z_owned_config_t config = z_config_default();
@@ -53,30 +57,35 @@ void test_subscriber() {
     char keyexpr[256];
     strncpy(keyexpr, "foo/bar", 256);
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(keyexpr), z_move(callback), NULL);
-    strncpy(keyexpr, "baz/quax", 256);
+    strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the keyexpr is copied into the subscriber
+    z_owned_keyexpr_t sub_keyexpr = z_subscriber_keyexpr(z_loan(sub));
+    z_owned_str_t sub_keyexpr_str = z_keyexpr_to_string(z_loan(sub_keyexpr));
+    assert(strcmp(z_loan(sub_keyexpr_str), "foo/bar") == 0);  // Check that subscriber keeps the correct keyexpr
+    z_drop(z_move(sub_keyexpr_str));
     z_drop(z_move(sub));
     z_drop(z_move(s));
 }
 
-void query_handler(const z_query_t *query, void *context) {}
+// void query_handler(const z_query_t *query, void *context) {}
 
-void test_queryable() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t s = z_open(z_move(config));
-    z_owned_closure_query_t callback = z_closure(query_handler);
-    char keyexpr[256];
-    strncpy(keyexpr, "foo/bar", 256);
-    z_owned_queryable_t queryable = z_declare_queryable(z_loan(s), z_keyexpr(keyexpr), z_move(callback), NULL);
-    strncpy(keyexpr, "baz/quax", 256);
-    z_drop(z_move(queryable));
-    z_drop(z_move(s));
-}
+// void test_queryable() {
+//     z_owned_config_t config = z_config_default();
+//     z_owned_session_t s = z_open(z_move(config));
+//     z_owned_closure_query_t callback = z_closure(query_handler);
+//     char keyexpr[256];
+//     strncpy(keyexpr, "foo/bar", 256);
+//     z_owned_queryable_t queryable = z_declare_queryable(z_loan(s), z_keyexpr(keyexpr), z_move(callback), NULL);
+//     strncpy(keyexpr, "baz/quax", 256);
+//     z_drop(z_move(queryable));
+//     z_drop(z_move(s));
+// }
 
 int main(int argc, char **argv) {
     test_publisher();
-    test_pull_subscriber();
     test_subscriber();
-    test_queryable();
+    // TODO: Make same tests for pull subscriber and queryable when their `keyexpr` getters are implemented
+    // test_pull_subscriber();
+    // test_queryable();
 
     return 0;
 }

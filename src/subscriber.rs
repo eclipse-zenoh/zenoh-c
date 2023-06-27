@@ -117,6 +117,24 @@ pub extern "C" fn z_subscriber_null() -> z_owned_subscriber_t {
     z_owned_subscriber_t::null()
 }
 
+/// A loaned zenoh subscriber.
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct z_subscriber_t(*const z_owned_subscriber_t);
+
+impl<'a> AsRef<Subscriber> for z_subscriber_t {
+    fn as_ref(&self) -> &Subscriber {
+        unsafe { (*self.0).as_ref() }
+    }
+}
+
+/// Returns a :c:type:`z_subscriber_t` loaned from `p`.
+#[no_mangle]
+pub extern "C" fn z_subscriber_loan(p: &z_owned_subscriber_t) -> z_subscriber_t {
+    z_subscriber_t(p)
+}
+
 /// Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
 ///
 /// Members:
@@ -235,6 +253,17 @@ pub unsafe extern "C" fn z_declare_subscriber(
             log::debug!("{}", LOG_INVALID_SESSION);
             z_owned_subscriber_t::null()
         }
+    }
+}
+
+/// Returns the key expression of the subscriber.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_owned_keyexpr_t {
+    if let Some(p) = subscriber.as_ref() {
+        p.key_expr().clone().into()
+    } else {
+        z_keyexpr_t::null().into()
     }
 }
 

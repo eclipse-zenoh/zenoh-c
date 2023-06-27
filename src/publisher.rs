@@ -24,8 +24,8 @@ use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
     impl_guarded_transmute, z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_priority_t, z_session_t, zc_owned_payload_t, GuardedTransmute, UninitializedKeyExprError,
-    LOG_INVALID_SESSION,
+    z_owned_keyexpr_t, z_priority_t, z_session_t, zc_owned_payload_t, GuardedTransmute,
+    UninitializedKeyExprError, LOG_INVALID_SESSION,
 };
 
 /// Options passed to the :c:func:`z_declare_publisher` function.
@@ -337,6 +337,17 @@ pub extern "C" fn z_publisher_delete(
         }
     } else {
         i8::MIN
+    }
+}
+
+/// Returns the key expression of the publisher
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyexpr_t {
+    if let Some(p) = publisher.as_ref() {
+        p.key_expr().clone().into()
+    } else {
+        z_keyexpr_t::null().into()
     }
 }
 
