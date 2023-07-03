@@ -123,7 +123,7 @@ pub extern "C" fn z_subscriber_null() -> z_owned_subscriber_t {
 #[repr(C)]
 pub struct z_subscriber_t(*const z_owned_subscriber_t);
 
-impl<'a> AsRef<Subscriber> for z_subscriber_t {
+impl AsRef<Subscriber> for z_subscriber_t {
     fn as_ref(&self) -> &Subscriber {
         unsafe { (*self.0).as_ref() }
     }
