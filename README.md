@@ -166,11 +166,11 @@ $ ./target/release/examples/z_get
 
 ## Running the Throughput Examples
 ```bash
-$ ./target/release/examples/z_sub_thgr
+$ ./target/release/examples/z_sub_thr
 ```
 
 ```bash
-$ ./target/release/examples/z_pub_thgr
+$ ./target/release/examples/z_pub_thr
 ```
 
 ## API conventions
