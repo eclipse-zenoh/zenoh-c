@@ -88,3 +88,6 @@ lto = "fat"
 codegen-units = 1
 opt-level = 3
 panic = "abort"
+
+[patch.crates-io]
+ring = { git = "https://github.com/awakecoding/ring", branch = "0.16.20_alpha" }
