@@ -1,3 +1,29 @@
+# Zenoh - Forked by Ulrich Eck to build on Windows UWP Arm64 (Hololens)
+
+Small changes to the dependencies (ring) were necessary, and building from nightly is required.
+
+- make sure the right Toolchains / Windows SDK (arm64 v143) are installed
+- use the VS Developer Prompt to execute cargo
+
+How to build packages for Hololens:
+
+Release:
+--------
+```
+cargo +nightly build -Z build-std=panic_abort,std --target=aarch64-uwp-windows-msvc --release
+```
+
+Release:
+--------
+```
+cargo +nightly build -Z build-std=panic_abort,std --target=aarch64-uwp-windows-msvc
+```
+
+Problem solving:
+
+- https://stackoverflow.com/questions/59648046/unable-to-compile-rust-program-lnk1181-cannot-open-input-file-c-program-obj
+
+
 <img src="https://raw.githubusercontent.com/eclipse-zenoh/zenoh/master/zenoh-dragon.png" height="150">
 
 [![CI](https://github.com/eclipse-zenoh/zenoh-c/workflows/CI/badge.svg)](https://github.com/eclipse-zenoh/zenoh-c/actions?query=workflow%3A%22CI%22)
