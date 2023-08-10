@@ -28,8 +28,12 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
 1. Make sure that [Rust](https://www.rust-lang.org) is available on your platform.
     Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
+    If you already have the Rust toolchain installed, make sure it is up-to-date with:
+    ```bash
+    $ rustup update
+    ```
 
-2. Clone the [source] with `git`:
+3. Clone the [source] with `git`:
 
    ```bash
    git clone https://github.com/eclipse-zenoh/zenoh-c.git
