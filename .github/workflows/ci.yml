@@ -44,17 +44,17 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
           cmake --build . --target install --config Release
 
-      - name: make examples
+      - name: make examples with zenoh-c
         shell: bash
         run: |
           cd build
           cmake --build . --target examples
 
-      - name: make examples with zenoh-c as subbroject
+      - name: make examples with zenoh-c as subbroject and static library and in debug mode
         shell: bash
         run: |
           mkdir -p build_examples_subproj && cd build_examples_subproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Debug
+          cmake ../examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB=TRUE
           cmake --build . --config Debug
 
       - name: make examples with zenoh-c as installed package
