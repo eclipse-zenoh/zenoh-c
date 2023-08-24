@@ -92,16 +92,22 @@ endmacro()
 #
 # Add default set of libraries depending on platform
 #
-function(add_platform_libraries target)
+function(get_required_static_libs variable)
+    # actually required list of libraries can be obtained by executing
+    # cargo rustc -- --print native-static-libs
+    # This command is not intented to be used in autoamted build yet,
+    # so actaul libraries are hardcoded for now
 	if(APPLE)
 		find_library(FFoundation Foundation)
 		find_library(FSecurity Security)
-		target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
+        set(native_static_libs ${FFoundation} ${FSecurity})
 	elseif(UNIX)
-		target_link_libraries(${target} PUBLIC rt pthread m dl)
+        set(native_static_libs rt pthread m dl)
 	elseif(WIN32)
-		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
+        set(native_static_libs ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
 	endif()
+    set(${variable} ${native_static_libs} PARENT_SCOPE)
+    message(STATUS "${variable} = ${native_static_libs}")
 endfunction()
 
 #
