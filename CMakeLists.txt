@@ -132,7 +132,7 @@ add_library(zenohc::static ALIAS zenohc_static)
 add_library(zenohc::lib ALIAS zenohc)
 add_dependencies(zenohc_static cargo)
 add_dependencies(zenohc cargo)
-rustc_get_native_static_libs(NATIVE_STATIC_LIBS)
+get_required_static_libs(NATIVE_STATIC_LIBS)
 target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
 
 # Workaroud for https://github.com/rust-lang/cargo/issues/5045

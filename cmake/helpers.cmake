@@ -92,40 +92,20 @@ endmacro()
 #
 # Add default set of libraries depending on platform
 #
-function(add_platform_libraries target)
+function(get_required_static_libs variable)
+    # actually required list of libraries can be obtained by executing
+    # cargo rustc -- --print native-static-libs
+    # This command is not intented to be used in autoamted build yet,
+    # so actaul libraries are hardcoded for now
 	if(APPLE)
 		find_library(FFoundation Foundation)
 		find_library(FSecurity Security)
-		target_link_libraries(${target} PUBLIC ${FFoundation} ${FSecurity})
+        set(native_static_libs ${FFoundation} ${FSecurity})
 	elseif(UNIX)
-		target_link_libraries(${target} PUBLIC rt pthread m dl)
+        set(native_static_libs rt pthread m dl)
 	elseif(WIN32)
-		target_link_libraries(${target} PUBLIC ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
+        set(native_static_libs ws2_32 crypt32 secur32 bcrypt ncrypt userenv ntdll iphlpapi runtimeobject)
 	endif()
-endfunction()
-
-#
-# Query rust conpiler for required set of libraries 
-#
-function(rustc_get_native_static_libs variable)
-    message(STATUS "executing 'cargo rustc -- --print native-static-libs' to get list of libraries to link, this may take a while")
-    execute_process(
-        COMMAND cargo rustc -- --print native-static-libs
-        ERROR_VARIABLE stderr
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    string(REGEX MATCH "note: native-static-libs: ([^\r\n]*)"  _ ${stderr})
-    set(native_static_libs ${CMAKE_MATCH_1} )
-    # split string into list and remove diplication
-    # rustc says "The order and any duplication can be significant on some platforms", but on windows for example
-    # this duplication is so afwul (library name repeated hundreds times), that it's better to take the risk and normalize list of libraries
-    string(REPLACE " " ";" native_static_libs ${native_static_libs})
-    # list(REMOVE_DUPLICATES native_static_libs)
-    # if(WIN32)
-    #     list(TRANSFORM native_static_libs REPLACE "\\.lib$" "")
-    #     list(REMOVE_ITEM native_static_libs windows)
-    #     list(REMOVE_ITEM native_static_libs windows.0.48.0)
-    # endif()
     set(${variable} ${native_static_libs} PARENT_SCOPE)
     message(STATUS "${variable} = ${native_static_libs}")
 endfunction()
