@@ -105,6 +105,32 @@ function(add_platform_libraries target)
 endfunction()
 
 #
+# Query rust conpiler for required set of libraries 
+#
+function(rustc_get_native_static_libs variable)
+    message(STATUS "executing 'cargo rustc -- --print native-static-libs' to get list of libraries to link, this may take a while")
+    execute_process(
+        COMMAND cargo rustc -- --print native-static-libs
+        ERROR_VARIABLE stderr
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    string(REGEX MATCH "note: native-static-libs: ([^\r\n]*)"  _ ${stderr})
+    set(native_static_libs ${CMAKE_MATCH_1} )
+    # split string into list and remove diplication
+    # rustc says "The order and any duplication can be significant on some platforms", but on windows for example
+    # this duplication is so afwul (library name repeated hundreds times), that it's better to take the risk and normalize list of libraries
+    string(REPLACE " " ";" native_static_libs ${native_static_libs})
+    # list(REMOVE_DUPLICATES native_static_libs)
+    # if(WIN32)
+    #     list(TRANSFORM native_static_libs REPLACE "\\.lib$" "")
+    #     list(REMOVE_ITEM native_static_libs windows)
+    #     list(REMOVE_ITEM native_static_libs windows.0.48.0)
+    # endif()
+    set(${variable} ${native_static_libs} PARENT_SCOPE)
+    message(STATUS "${variable} = ${native_static_libs}")
+endfunction()
+
+#
 # Copy necessary dlls to target runtime directory
 #
 function(copy_dlls target)

@@ -24,7 +24,6 @@ foreach(file ${files})
 
     add_executable(${target} EXCLUDE_FROM_ALL ${file})
     add_dependencies(examples ${target})
-    add_platform_libraries(${target})
 
     if(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB)
         add_dependencies(${target} zenohc::static)
