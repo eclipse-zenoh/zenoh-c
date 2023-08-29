@@ -18,7 +18,6 @@ use crate::z_id_t;
 use libc::c_void;
 use libc::{c_char, c_ulong};
 use zenoh::buffers::ZBuf;
-use zenoh::buffers::ZSlice;
 use zenoh::prelude::SampleKind;
 use zenoh::prelude::SplitBuffer;
 use zenoh::sample::Sample;
@@ -97,7 +96,7 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 #[repr(C)]
 pub struct zc_owned_payload_t {
     pub payload: z_bytes_t,
-    pub _owner: [usize; 4],
+    pub _owner: [usize; 5],
 }
 impl Default for zc_owned_payload_t {
     fn default() -> Self {
@@ -129,11 +128,11 @@ impl zc_owned_payload_t {
                 slices.next().is_none(),
                 "A multi-slice buffer reached zenoh-c, which is definitely a bug, please report it."
             );
-            let start_offset = unsafe { start.offset_from(slice.buf.as_slice().as_ptr()) };
+            let start_offset = unsafe { start.offset_from(slice.as_slice().as_ptr()) };
             let Ok(start_offset) = start_offset.try_into()  else {return None};
-            *slice = match ZSlice::make(slice.buf.clone(), start_offset, start_offset + len) {
-                Ok(s) => s,
-                Err(_) => return None,
+            *slice = match slice.subslice(start_offset, start_offset + len) {
+                Some(s) => s,
+                None => return None,
             };
         }
         Some(buf)
@@ -177,7 +176,7 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
             len: 0,
             start: std::ptr::null(),
         },
-        _owner: [0; 4],
+        _owner: [0; 5],
     }
 }
 

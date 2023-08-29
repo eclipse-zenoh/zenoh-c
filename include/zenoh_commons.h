@@ -640,7 +640,7 @@ typedef struct z_owned_reply_channel_t {
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
   unsigned long zc_timeout_ms;
-  unsigned int zc_what;
+  uint8_t zc_what;
 } z_owned_scouting_config_t;
 /**
  * A loaned zenoh subscriber.
@@ -662,7 +662,7 @@ typedef struct z_subscriber_t {
  */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
-  uintptr_t _owner[4];
+  uintptr_t _owner[5];
 } zc_owned_payload_t;
 typedef struct zc_owned_shmbuf_t {
   uintptr_t _0[9];

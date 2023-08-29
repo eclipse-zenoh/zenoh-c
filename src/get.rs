@@ -19,10 +19,9 @@ use std::{
     ffi::CStr,
     ops::{Deref, DerefMut},
 };
-use zenoh_protocol::core::{ConsolidationMode, QueryTarget};
 
 use zenoh::{
-    prelude::{KeyExpr, SplitBuffer},
+    prelude::{ConsolidationMode, KeyExpr, QueryTarget, SplitBuffer},
     query::{Mode, QueryConsolidation, Reply},
     value::Value,
 };
