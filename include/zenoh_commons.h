@@ -222,7 +222,7 @@ typedef struct z_owned_closure_query_t {
  */
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[22];
+  uint64_t _0[23];
 } z_owned_reply_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
