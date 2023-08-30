@@ -96,9 +96,6 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 #[repr(C)]
 pub struct zc_owned_payload_t {
     pub payload: z_bytes_t,
-    #[cfg(not(feature = "shared-memory"))]
-    pub _owner: [usize; 4],
-    #[cfg(feature = "shared-memory")]
     pub _owner: [usize; 5],
 }
 impl Default for zc_owned_payload_t {
@@ -179,9 +176,6 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
             len: 0,
             start: std::ptr::null(),
         },
-        #[cfg(not(feature = "shared-memory"))]
-        _owner: [0; 4],
-        #[cfg(feature = "shared-memory")]
         _owner: [0; 5],
     }
 }

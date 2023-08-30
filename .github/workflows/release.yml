@@ -39,7 +39,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --features=logger-autoinit --features=shared-memory -- -D warnings
       - name: Environment setup
         id: env
         shell: bash
@@ -165,7 +165,7 @@ jobs:
         with:
           use-cross: ${{ matrix.job.use-cross }}
           command: build
-          args: --release --target=${{ matrix.job.target }}
+          args: --release --target=${{ matrix.job.target }} --features=logger-autoinit --features=shared-memory
 
       - name: Debian package - libzenohc
         if: contains(matrix.job.target, '-linux-gnu')
