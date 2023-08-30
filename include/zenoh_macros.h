@@ -119,6 +119,7 @@ template<> inline z_session_t z_loan(const z_owned_session_t& x) { return z_sess
 template<> inline z_keyexpr_t z_loan(const z_owned_keyexpr_t& x) { return z_keyexpr_loan(&x); }
 template<> inline z_config_t z_loan(const z_owned_config_t& x) { return z_config_loan(&x); }
 template<> inline z_publisher_t z_loan(const z_owned_publisher_t& x) { return z_publisher_loan(&x); }
+template<> inline z_subscriber_t z_loan(const z_owned_subscriber_t& x) { return z_subscriber_loan(&x); }
 template<> inline z_pull_subscriber_t z_loan(const z_owned_pull_subscriber_t& x) { return z_pull_subscriber_loan(&x); }
 template<> inline z_encoding_t z_loan(const z_owned_encoding_t& x) { return z_encoding_loan(&x); }
 template<> inline z_hello_t z_loan(const z_owned_hello_t& x) { return z_hello_loan(&x); }
