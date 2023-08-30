@@ -47,9 +47,9 @@ libc = "0.2.139"
 log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.5"
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "unstable" ] }
-zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "new-protocol", features = [ "unstable" ] }
+zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "new-protocol" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "new-protocol" }
 
 [build-dependencies]
 cbindgen = "0.24.3"
