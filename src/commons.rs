@@ -96,7 +96,7 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 #[repr(C)]
 pub struct zc_owned_payload_t {
     pub payload: z_bytes_t,
-    pub _owner: [usize; 4],
+    pub _owner: [usize; 5],
 }
 impl Default for zc_owned_payload_t {
     fn default() -> Self {
