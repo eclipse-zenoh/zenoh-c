@@ -222,7 +222,7 @@ typedef struct z_owned_closure_query_t {
  */
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[23];
+  uint64_t _0[22];
 } z_owned_reply_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
@@ -232,7 +232,7 @@ typedef struct ALIGN(16) z_owned_reply_t {
 #endif
 #if defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[17];
+  uint64_t _0[16];
 } z_owned_reply_t;
 #endif
 /**
@@ -274,8 +274,8 @@ typedef struct ALIGN(8) z_keyexpr_t {
 } z_keyexpr_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_keyexpr_t {
-  uint64_t _0[3];
+typedef struct ALIGN(4) z_keyexpr_t {
+  uint32_t _0[5];
 } z_keyexpr_t;
 #endif
 /**
@@ -410,8 +410,8 @@ typedef struct ALIGN(8) z_owned_keyexpr_t {
 } z_owned_keyexpr_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_keyexpr_t {
-  uint64_t _0[3];
+typedef struct ALIGN(4) z_owned_keyexpr_t {
+  uint32_t _0[5];
 } z_owned_keyexpr_t;
 #endif
 /**
@@ -432,8 +432,8 @@ typedef struct ALIGN(8) z_owned_publisher_t {
 } z_owned_publisher_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_publisher_t {
-  uint64_t _0[5];
+typedef struct ALIGN(4) z_owned_publisher_t {
+  uint32_t _0[8];
 } z_owned_publisher_t;
 #endif
 /**
@@ -662,7 +662,7 @@ typedef struct z_subscriber_t {
  */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
-  uintptr_t _owner[5];
+  uintptr_t _owner[4];
 } zc_owned_payload_t;
 typedef struct zc_owned_shmbuf_t {
   uintptr_t _0[9];
