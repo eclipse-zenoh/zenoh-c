@@ -53,6 +53,8 @@ cmake_path(APPEND cargo_target_dir ${ZENOHC_CUSTOM_TARGET})
 set(cargo_binary_dir_debug ${cargo_target_dir}/debug)
 set(cargo_binary_dir_release ${cargo_target_dir}/release)
 set(cargo_binary_dir ${cargo_target_dir}/$<IF:$<CONFIG:Debug>,debug,release>)
+set(cargo_lib_postfix $<$<CONFIG:Debug>:d>)
+set(cargo_lib_name zenohc${cargo_lib_postfix})
 
 #
 # Configure Cargo.toml
@@ -66,7 +68,27 @@ elseif(PROJECT_VERSION_TWEAK LESS 255)
 endif()
 
 status_print(CARGO_PROJECT_VERSION)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
+
+get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(GENERATOR_IS_MULTI_CONFIG)
+	# For multiconfig generators configure different Cargo.toml for debug and release builds
+	message(STATUS "Multi-config generator used:")
+
+	message(STATUS "  writing ${cargo_binary_dir_debug}/Cargo.toml for zenohc")
+	set(CARGO_LIB_NAME zenohc)
+	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_binary_dir_debug}/Cargo.toml" @ONLY)
+	
+	message(STATUS "  writing ${cargo_binary_dir_release}/Cargo.toml for zenohcd")
+	set(CARGO_LIB_NAME zenohcd)
+	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_binary_dir_release}/Cargo.toml" @ONLY)
+
+	set(cargo_toml_dir $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug},${cargo_binary_dir_release}>)
+else()
+	# For singleconfig generators always change Cargo.toml on it's place
+	set(CARGO_LIB_NAME ${cargo_lib_name})
+	message(STATUS "Single-config generator used: writing ${cargo_toml_dir}/Cargo.toml for ${CARGO_LIB_NAME}")
+	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
+endif()
 
 #
 # Configure result library names
@@ -82,15 +104,15 @@ endmacro()
 # dylibs - list of files required for use dynamic libraty
 # staticlibs - list of files required for use static libraty
 if(APPLE)
-	set_lib(dylibs dylib "libzenohc.dylib")
-	set_lib(staticlibs staticlib "libzenohc.a")
+	set_lib(dylibs dylib "lib${cargo_lib_name}.dylib")
+	set_lib(staticlibs staticlib "lib${cargo_lib_name}.a")
 elseif(UNIX)
-	set_lib(dylibs dylib "libzenohc.so")
-	set_lib(staticlibs staticlib "libzenohc.a")
+	set_lib(dylibs dylib "lib${cargo_lib_name}.so")
+	set_lib(staticlibs staticlib "lib${cargo_lib_name}.a")
 elseif(WIN32)
-	set_lib(dylibs implib "zenohc.dll.lib")
-	set_lib(dylibs dylib "zenohc.dll")
-	set_lib(staticlibs staticlib "zenohc.lib")
+	set_lib(dylibs implib "${cargo_lib_name}.dll.lib")
+	set_lib(dylibs dylib "${cargo_lib_name}.dll")
+	set_lib(staticlibs staticlib "${cargo_lib_name}.lib")
 endif()
 
 list(APPEND libs ${dylibs})
@@ -101,6 +123,7 @@ list(TRANSFORM libs PREPEND "${cargo_binary_dir}/")
 # Build rust sources
 #
 set(cargo_flags ${ZENOHC_CARGO_FLAGS} $<$<NOT:$<CONFIG:Debug>>:--release>)
+set(cargo_flags ${cargo_flags} --manifest-path=${cargo_toml_dir}/Cargo.toml)
 
 if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
