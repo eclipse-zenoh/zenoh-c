@@ -524,11 +524,13 @@ typedef struct z_value_t {
  *     z_query_target_t target: The Queryables that should be target of the query.
  *     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
  *     z_value_t value: An optional value to attach to the query.
+ *     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
  */
 typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
   struct z_value_t value;
+  uint64_t timeout_ms;
 } z_get_options_t;
 /**
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
