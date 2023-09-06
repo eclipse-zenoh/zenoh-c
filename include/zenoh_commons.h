@@ -530,7 +530,7 @@ typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
   struct z_value_t value;
-  uint64_t timeout;
+  uint64_t timeout_ms;
 } z_get_options_t;
 /**
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.

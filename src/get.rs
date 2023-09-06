@@ -164,14 +164,14 @@ pub struct z_get_options_t {
     pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
     pub value: z_value_t,
-    pub timeout: u64,
+    pub timeout_ms: u64,
 }
 #[no_mangle]
 pub extern "C" fn z_get_options_default() -> z_get_options_t {
     z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
-        timeout: 0,
+        timeout_ms: 0,
         value: {
             z_value_t {
                 payload: z_bytes_t::empty(),
@@ -221,8 +221,8 @@ pub unsafe extern "C" fn z_get(
             .consolidation(options.consolidation)
             .target(options.target.into())
             .with_value(&options.value);
-        if options.timeout != 0 {
-            q = q.timeout(std::time::Duration::from_millis(options.timeout));
+        if options.timeout_ms != 0 {
+            q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));
         }
     }
     match q
