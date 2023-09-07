@@ -19,7 +19,7 @@ function(install_zenohc_lib configurations property_postfix package_name libname
 
     # Install dynamic, import and static library
     install(FILES ${dylib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations})
-    if(DEFINED IMPLIB)
+    if(DEFINED implib_path)
         install(FILES ${implib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations})
     endif()
     if(ZENOHC_INSTALL_STATIC_LIBRARY)
