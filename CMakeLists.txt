@@ -29,66 +29,86 @@ declare_cache_var(ZENOHC_CARGO_CHANNEL "stable" STRING "Cargo channel selected: 
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 
 #
-# Prepare to build rust sources:
-# configure Cargo.toml, copy files necessary for cargo,
-# create variables with path to cargo target directory
+# There are 3 possible variants of placement generated Cargo.toml files:
+# 1. Build in source tree (in IDE usually), using single config generator (Ninja, Makefiles)
+#    
+#    In this case Cargo.toml is placed at the root of source tree to make it visible for rust-analyzer. When release or debug
+#    configuration is selected, Cargo.toml is updated accordingly 
+#
+# 2. Build in source tree (in IDE usually), using multi config generator (Visual Studio, Ninja Multi-Config)
+#
+#    Cargo.toml is placed at the root of source tree to make it visible for rust-analyzer. Also two additional Cargo.toml files
+#    are placed in ${CMAKE_CURRENT_BINARY_DIR}/debug and ${CMAKE_CURRENT_BINARY_DIR}/release directories configured for debug and
+#    release builds respectively
+#
+# 3. Build in build tree, no matter what generator is used
+#
+#    Cargo.toml is placed in ${CMAKE_CURRENT_BINARY_DIR}/debug and ${CMAKE_CURRENT_BINARY_DIR}/release directories. No care is taken
+#    about Cargo.toml at the root of source tree
 #
 if(ZENOHC_BUILD_IN_SOURCE_TREE AND(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR}))
-	set(cargo_toml_dir ${CMAKE_SOURCE_DIR})
-	set(CARGO_PROJECT_DIR "") # do not put absoulte path into Cargo.toml if Cargo.toml is it's normal place
+	set(cargo_toml_dir_ide ${CMAKE_SOURCE_DIR})
+	if (GENERATOR_IS_MULTI_CONFIG)
+		set(cargo_toml_dir_debug ${CMAKE_CURRENT_BINARY_DIR}/debug)
+		set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
+		file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
+		file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
+	else()
+		set(cargo_toml_dir_debug ${cargo_toml_dir_ide})
+		set(cargo_toml_dir_release ${cargo_toml_dir_ide})
+	endif()
 else()
-	set(cargo_toml_dir ${CMAKE_CURRENT_BINARY_DIR})
-	set(CARGO_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
-	file(COPY
-		${CARGO_PROJECT_DIR}/splitguide.yaml
-		${CARGO_PROJECT_DIR}/cbindgen.toml
-		${CARGO_PROJECT_DIR}/rust-toolchain
-		DESTINATION ${cargo_toml_dir})
-	set(cargo_generated_include_dir ${cargo_toml_dir}/include)
+	unset(cargo_toml_dir_ide)
+	set(cargo_toml_dir_debug ${CMAKE_CURRENT_BINARY_DIR}/debug)
+	set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
+	file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
+	file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
 endif()
 
+set(cargo_toml_dir $<IF:$<CONFIG:Debug>,${cargo_toml_dir_debug},${cargo_toml_dir_release}>)
 set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(cargo_generated_include_dir ${cargo_toml_dir}/include)
 set(cargo_target_dir ${cargo_toml_dir}/target)
 cmake_path(APPEND cargo_target_dir ${ZENOHC_CUSTOM_TARGET})
 set(cargo_binary_dir_debug ${cargo_target_dir}/debug)
 set(cargo_binary_dir_release ${cargo_target_dir}/release)
 set(cargo_binary_dir ${cargo_target_dir}/$<IF:$<CONFIG:Debug>,debug,release>)
-set(cargo_lib_postfix $<$<CONFIG:Debug>:d>)
-set(cargo_lib_name zenohc${cargo_lib_postfix})
+set(cargo_lib_name_debug zenohcd)
+set(cargo_lib_name_release zenohc)
+set(cargo_lib_name $<IF:$<CONFIG:Debug>,${cargo_lib_name_debug},${cargo_lib_name_release}>)
 
-#
-# Configure Cargo.toml
-#
-set(CARGO_PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-
-if(NOT PROJECT_VERSION_TWEAK)
-	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-dev")
-elseif(PROJECT_VERSION_TWEAK LESS 255)
-	set(CARGO_PROJECT_VERSION "${CARGO_PROJECT_VERSION}-rc.${PROJECT_VERSION_TWEAK}")
-endif()
-
-status_print(CARGO_PROJECT_VERSION)
-
-get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-if(GENERATOR_IS_MULTI_CONFIG)
-	# For multiconfig generators configure different Cargo.toml for debug and release builds
-	message(STATUS "Multi-config generator used:")
-
-	message(STATUS "  writing ${cargo_binary_dir_debug}/Cargo.toml for zenohc")
-	set(CARGO_LIB_NAME zenohc)
-	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_binary_dir_debug}/Cargo.toml" @ONLY)
-	
-	message(STATUS "  writing ${cargo_binary_dir_release}/Cargo.toml for zenohcd")
-	set(CARGO_LIB_NAME zenohcd)
-	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_binary_dir_release}/Cargo.toml" @ONLY)
-
-	set(cargo_toml_dir $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug},${cargo_binary_dir_release}>)
-else()
-	# For singleconfig generators always change Cargo.toml on it's place
-	set(CARGO_LIB_NAME ${cargo_lib_name})
-	message(STATUS "Single-config generator used: writing ${cargo_toml_dir}/Cargo.toml for ${CARGO_LIB_NAME}")
+function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAME)
+	message(STATUS "Configuring Cargo.toml in ${CARGO_PROJECT_DIR}")
+	if(NOT(cargo_toml_dir STREQUAL ${CMAKE_CURRENT_SOURCE_DIR}))
+		set(CARGO_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
+		file(COPY
+			${CMAKE_CURRENT_SOURCE_DIR}/splitguide.yaml
+			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
+			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain
+			DESTINATION ${cargo_toml_dir})
+	endif()	
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
+endfunction()
+
+#
+# Setup project version
+#
+set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+if(NOT PROJECT_VERSION_TWEAK)
+	set(project_version "${project_version}-dev")
+elseif(PROJECT_VERSION_TWEAK LESS 255)
+	set(project_version "${project_version}-rc.${PROJECT_VERSION_TWEAK}")
 endif()
+status_print(project_version)
+
+#
+# Configure Cargo.toml files
+#
+if (DEFINED cargo_toml_dir_ide)
+	configure_cargo_toml(${cargo_toml_dir_ide} ${project_version} ${cargo_lib_name_release})
+endif()
+configure_cargo_toml(${cargo_toml_dir_debug} ${project_version} ${cargo_lib_name_debug})
+configure_cargo_toml(${cargo_toml_dir_release} ${project_version} ${cargo_lib_name_release})
 
 #
 # Configure result library names
@@ -200,8 +220,7 @@ status_print(cargo_generated_include_dir)
 target_include_directories(zenohc_static INTERFACE ${source_include_dir})
 target_include_directories(zenohc INTERFACE ${source_include_dir})
 
-if(DEFINED cargo_generated_include_dir)
-	file(MAKE_DIRECTORY ${cargo_generated_include_dir})
+if(NOT(cargo_generated_include_dir STREQUAL ${source_include_dir}))
 	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
 	target_include_directories(zenohc INTERFACE ${cargo_generated_include_dir})
 endif()
