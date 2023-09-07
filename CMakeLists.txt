@@ -65,20 +65,22 @@ else()
 	file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
 endif()
 
+set(cargo_target_dir_debug ${cargo_toml_dir_debug}/target)
+set(cargo_target_dir_release ${cargo_toml_dir_release}/target)
+cmake_path(APPEND cargo_target_dir_debug ${ZENOHC_CUSTOM_TARGET})
+cmake_path(APPEND cargo_target_dir_release ${ZENOHC_CUSTOM_TARGET})
+set(cargo_binary_dir_debug ${cargo_target_dir_debug}/debug)
+set(cargo_binary_dir_release ${cargo_target_dir_release}/release)
+set(cargo_binary_dir $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug},${cargo_binary_dir_release}>)
 set(cargo_toml_dir $<IF:$<CONFIG:Debug>,${cargo_toml_dir_debug},${cargo_toml_dir_release}>)
 set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(cargo_generated_include_dir ${cargo_toml_dir}/include)
-set(cargo_target_dir ${cargo_toml_dir}/target)
-cmake_path(APPEND cargo_target_dir ${ZENOHC_CUSTOM_TARGET})
-set(cargo_binary_dir_debug ${cargo_target_dir}/debug)
-set(cargo_binary_dir_release ${cargo_target_dir}/release)
-set(cargo_binary_dir ${cargo_target_dir}/$<IF:$<CONFIG:Debug>,debug,release>)
 set(cargo_lib_name_debug zenohcd)
 set(cargo_lib_name_release zenohc)
 set(cargo_lib_name $<IF:$<CONFIG:Debug>,${cargo_lib_name_debug},${cargo_lib_name_release}>)
 
 function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAME)
-	message(STATUS "Configuring Cargo.toml in ${CARGO_PROJECT_DIR}")
+	message(STATUS "Configuring Cargo.toml in ${cargo_toml_dir}")
 	if(NOT(cargo_toml_dir STREQUAL ${CMAKE_CURRENT_SOURCE_DIR}))
 		set(CARGO_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 		file(COPY
@@ -118,26 +120,36 @@ macro(set_lib list var value)
 	list(APPEND ${list} ${value})
 endmacro()
 
-# dylib - dymamic library (.so, .dll, .dylib)
-# staticlib - static library (.a, .lib)
-# implib - import library for windows dynamic library (DLL) - .lib
-# dylibs - list of files required for use dynamic libraty
-# staticlibs - list of files required for use static libraty
+# dylib[d] - dymamic library (.so, .dll, .dylib)
+# staticlib[d] - static library (.a, .lib)
+# implib[d] - import library for windows dynamic library (DLL) - .lib
+# dylibs[d] - list of files required for use dynamic libraty
+# staticlibs[d] - list of files required for use static libraty
 if(APPLE)
-	set_lib(dylibs dylib "lib${cargo_lib_name}.dylib")
-	set_lib(staticlibs staticlib "lib${cargo_lib_name}.a")
+	set_lib(dylibsd dylibd "libzenohcd.dylib")
+	set_lib(staticlibsd staticlibd "libzenohcd.a")
+	set_lib(dylibs dylib "libzenohc.dylib")
+	set_lib(staticlibs staticlib "libzenohc.a")
 elseif(UNIX)
-	set_lib(dylibs dylib "lib${cargo_lib_name}.so")
-	set_lib(staticlibs staticlib "lib${cargo_lib_name}.a")
+	set_lib(dylibs dylib "libzenohc.so")
+	set_lib(staticlibs staticlib "libzenohc.a")
+	set_lib(dylibsd dylibd "libzenohcd.so")
+	set_lib(staticlibsd staticlibd "libzenohcd.a")
 elseif(WIN32)
-	set_lib(dylibs implib "${cargo_lib_name}.dll.lib")
-	set_lib(dylibs dylib "${cargo_lib_name}.dll")
-	set_lib(staticlibs staticlib "${cargo_lib_name}.lib")
+	set_lib(dylibs implib "zenohc.dll.lib")
+	set_lib(dylibs dylib "zenohc.dll")
+	set_lib(staticlibs staticlib "zenohc.lib")
+	set_lib(dylibsd implibd "zenohcd.dll.lib")
+	set_lib(dylibsd dylibd "zenohcd.dll")
+	set_lib(staticlibsd staticlibd "zenohcd.lib")
 endif()
 
 list(APPEND libs ${dylibs})
 list(APPEND libs ${staticlibs})
-list(TRANSFORM libs PREPEND "${cargo_binary_dir}/")
+list(APPEND libsd ${dylibsd})
+list(APPEND libsd ${staticlibsd})
+list(TRANSFORM libs PREPEND "${cargo_binary_dir_release}/")
+list(TRANSFORM libsd PREPEND "${cargo_binary_dir_debug}/")
 
 #
 # Build rust sources
@@ -159,12 +171,12 @@ endif()
 
 status_print(cargo_flags)
 add_custom_command(
-	OUTPUT ${libs}
+	OUTPUT "$<IF:$<CONFIG:Debug>,${libsd},${libs}>"
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 )
-add_custom_target(cargo ALL DEPENDS ${libs})
+add_custom_target(cargo ALL DEPENDS "$<IF:$<CONFIG:Debug>,${libsd},${libs}>")
 
 #
 # Define libraries built by cargo as targets
@@ -183,35 +195,35 @@ target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
 # If it's fixed, do not forget to correct PackageConfig.cmake.in also
 set_target_properties(zenohc PROPERTIES IMPORTED_NO_SONAME TRUE)
 
-function(set_target_imported_locations target libname)
+function(set_target_imported_locations target lib libd)
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_LOCATION ${cargo_binary_dir}/${libname}
-		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/${libname}
-		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${libname}
-		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${libname}
-		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/${libname}
+		# IMPORTED_LOCATION $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug}/${libd},${cargo_binary_dir_release}/${lib}>
+		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/${libd}
+		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${lib}
+		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${lib}
+		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/${lib}
 	)
 endfunction()
 
-function(set_target_imported_implib target libname)
+function(set_target_imported_implib target lib libd)
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_IMPLIB ${cargo_binary_dir}/${libname}
-		IMPORTED_IMPLIB_DEBUG ${cargo_binary_dir_debug}/${libname}
-		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${libname}
-		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${libname}
-		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_binary_dir_release}/${libname}
+		# IMPORTED_IMPLIB $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug}/${lib},${cargo_binary_dir_release}/${lib}>
+		IMPORTED_IMPLIB_DEBUG ${cargo_binary_dir_debug}/${libd}
+		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${lib}
+		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${lib}
+		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_binary_dir_release}/${lib}
 	)
 endfunction()
 
-set_target_imported_locations(zenohc_static ${staticlib})
-set_target_imported_locations(zenohc ${dylib})
+set_target_imported_locations(zenohc_static ${staticlib} ${staticlibd})
+set_target_imported_locations(zenohc ${dylib} ${dylibd})
 
 if(DEFINED implib)
-	set_target_imported_implib(zenohc ${implib})
+	set_target_imported_implib(zenohc ${implib} ${implibd})
 endif()
 
 # Define include directories for library targets
