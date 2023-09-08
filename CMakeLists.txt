@@ -199,7 +199,6 @@ function(set_target_imported_locations target lib libd)
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		# IMPORTED_LOCATION $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug}/${libd},${cargo_binary_dir_release}/${lib}>
 		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/${libd}
 		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${lib}
 		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${lib}
@@ -211,7 +210,6 @@ function(set_target_imported_implib target lib libd)
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		# IMPORTED_IMPLIB $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug}/${lib},${cargo_binary_dir_release}/${lib}>
 		IMPORTED_IMPLIB_DEBUG ${cargo_binary_dir_debug}/${libd}
 		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${lib}
 		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${lib}

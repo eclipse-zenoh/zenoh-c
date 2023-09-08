@@ -12,10 +12,14 @@ status_print(CMAKE_INSTALL_PREFIX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-function(install_zenohc_lib configurations property_postfix package_name libname_postfix)
+function(install_zenohc_lib configurations property_postfix package_name)
     get_target_property(dylib_path zenohc::lib IMPORTED_LOCATION_${property_postfix})
     get_target_property_if_set(implib_path zenohc::lib IMPORTED_IMPLIB_${property_postfix})
     get_target_property(staticlib_path zenohc::static IMPORTED_LOCATION_${property_postfix})
+
+    get_filename_component(DYLIB ${dylib_path} NAME)
+    get_filename_component(IMPLIB ${implib_path} NAME)
+    get_filename_component(STATICLIB ${staticlib_path} NAME)
 
     # Install dynamic, import and static library
     install(FILES ${dylib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations})
@@ -48,7 +52,7 @@ function(install_zenohc_lib configurations property_postfix package_name libname
         COMPONENT dev)
 
     if(APPLE OR UNIX)
-        set(LIBNAME_POSTFIX ${libname_postfix})
+        get_filename_component(LIBNAME ${DYLIB} NAME_WE)
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc @ONLY)
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc 
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" 
@@ -69,5 +73,5 @@ endforeach()
 #
 # Install lib files 
 #
-install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel" "RELEASE" zenohc "")
-install_zenohc_lib("Debug" "DEBUG" zenohc_debug "d")
+install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel" "RELEASE" zenohc)
+install_zenohc_lib("Debug" "DEBUG" zenohc_debug)
