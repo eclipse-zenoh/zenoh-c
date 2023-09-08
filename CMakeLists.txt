@@ -29,6 +29,17 @@ declare_cache_var(ZENOHC_CARGO_CHANNEL "stable" STRING "Cargo channel selected: 
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 
 #
+# Setup project version
+#
+set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+if(NOT PROJECT_VERSION_TWEAK)
+	set(project_version "${project_version}-dev")
+elseif(PROJECT_VERSION_TWEAK LESS 255)
+	set(project_version "${project_version}-rc.${PROJECT_VERSION_TWEAK}")
+endif()
+status_print(project_version)
+
+#
 # There are 3 possible variants of placement generated Cargo.toml files:
 # 1. Build in source tree (in IDE usually), using single config generator (Ninja, Makefiles)
 #    
@@ -49,21 +60,27 @@ declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 if(ZENOHC_BUILD_IN_SOURCE_TREE AND(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR}))
 	set(cargo_toml_dir_ide ${CMAKE_SOURCE_DIR})
 	if (GENERATOR_IS_MULTI_CONFIG)
+		message(STATUS "Mode: IDE, Multi-Config generator (${CMAKE_GENERATOR}))")
 		set(cargo_toml_dir_debug ${CMAKE_CURRENT_BINARY_DIR}/debug)
 		set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
 		file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
 		file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
 	else()
+		message(STATUS "Mode: IDE, Single-Config generator (${CMAKE_GENERATOR})")
 		set(cargo_toml_dir_debug ${cargo_toml_dir_ide})
 		set(cargo_toml_dir_release ${cargo_toml_dir_ide})
 	endif()
 else()
+	message(STATUS "Mode: Non-IDE")
 	unset(cargo_toml_dir_ide)
 	set(cargo_toml_dir_debug ${CMAKE_CURRENT_BINARY_DIR}/debug)
 	set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
 	file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
 	file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
 endif()
+
+set_genexpr_condition(cargo_toml_dir $<CONFIG:Debug> ${cargo_toml_dir_debug} ${cargo_toml_dir_release})
+set_genexpr_condition(cargo_generated_include_dir $<CONFIG:Debug> ${cargo_toml_dir_debug}/include ${cargo_toml_dir_release}/include)
 
 set(cargo_target_dir_debug ${cargo_toml_dir_debug}/target)
 set(cargo_target_dir_release ${cargo_toml_dir_release}/target)
@@ -72,15 +89,10 @@ cmake_path(APPEND cargo_target_dir_release ${ZENOHC_CUSTOM_TARGET})
 set(cargo_binary_dir_debug ${cargo_target_dir_debug}/debug)
 set(cargo_binary_dir_release ${cargo_target_dir_release}/release)
 set(cargo_binary_dir $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug},${cargo_binary_dir_release}>)
-set(cargo_toml_dir $<IF:$<CONFIG:Debug>,${cargo_toml_dir_debug},${cargo_toml_dir_release}>)
 set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(cargo_generated_include_dir ${cargo_toml_dir}/include)
-set(cargo_lib_name_debug zenohcd)
-set(cargo_lib_name_release zenohc)
-set(cargo_lib_name $<IF:$<CONFIG:Debug>,${cargo_lib_name_debug},${cargo_lib_name_release}>)
 
 function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAME)
-	message(STATUS "Configuring Cargo.toml in ${cargo_toml_dir}")
+	message(STATUS "Configuring Cargo.toml in ${cargo_toml_dir} for ${CARGO_LIB_NAME}")
 	if(NOT(cargo_toml_dir STREQUAL ${CMAKE_CURRENT_SOURCE_DIR}))
 		set(CARGO_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 		file(COPY
@@ -93,24 +105,25 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 endfunction()
 
 #
-# Setup project version
-#
-set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-if(NOT PROJECT_VERSION_TWEAK)
-	set(project_version "${project_version}-dev")
-elseif(PROJECT_VERSION_TWEAK LESS 255)
-	set(project_version "${project_version}-rc.${PROJECT_VERSION_TWEAK}")
-endif()
-status_print(project_version)
-
-#
 # Configure Cargo.toml files
 #
-if (DEFINED cargo_toml_dir_ide)
+set(cargo_lib_name_debug zenohcd)
+set(cargo_lib_name_release zenohc)
+if(cargo_toml_dir_debug STREQUAL cargo_toml_dir_release)
+	# same Cargo.toml is for ide, debug and release configurations
+	# This happens only for non-multiconfig generators, so testing for debug/release on configuration stage is allowed
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(cargo_lib_name ${cargo_lib_name_debug})
+	else()
+		set(cargo_lib_name ${cargo_lib_name_release})
+	endif()
+	configure_cargo_toml(${cargo_toml_dir_ide} ${project_version} ${cargo_lib_name})
+else()
+	set(cargo_lib_name $<IF:$<CONFIG:Debug>,${cargo_lib_name_debug},${cargo_lib_name_release}>)
 	configure_cargo_toml(${cargo_toml_dir_ide} ${project_version} ${cargo_lib_name_release})
+	configure_cargo_toml(${cargo_toml_dir_debug} ${project_version} ${cargo_lib_name_debug})
+	configure_cargo_toml(${cargo_toml_dir_release} ${project_version} ${cargo_lib_name_release})
 endif()
-configure_cargo_toml(${cargo_toml_dir_debug} ${project_version} ${cargo_lib_name_debug})
-configure_cargo_toml(${cargo_toml_dir_release} ${project_version} ${cargo_lib_name_release})
 
 #
 # Configure result library names
@@ -248,3 +261,4 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/examples)
 	add_subdirectory(examples)
 endif()
+
