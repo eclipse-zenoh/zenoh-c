@@ -18,7 +18,7 @@ function(install_zenohc_lib configurations property_postfix package_name)
     get_target_property(staticlib_path zenohc::static IMPORTED_LOCATION_${property_postfix})
 
     get_filename_component(DYLIB ${dylib_path} NAME)
-    get_filename_component(IMPLIB ${implib_path} NAME)
+    get_filename_component(IMPLIB "${implib_path}" NAME)
     get_filename_component(STATICLIB ${staticlib_path} NAME)
 
     # Install dynamic, import and static library
