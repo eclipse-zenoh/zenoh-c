@@ -60,6 +60,21 @@ function(debug_print var)
     )
 endfunction()
 
+
+#
+# initialize `dstvar` with `$<IF:condition,srcvar_true,srcvar_false>` generator expression
+# only if `srcvar_true` and `srcvar_false` are actually different.
+# Otherwise `dstvar` is initialized with `srcvar_true` value
+# This is convenient to remove visual garbage when genrator expressions actually does nothing
+#
+macro(set_genexpr_condition dstvar condition srcvar_true srcvsr_false)
+	if(NOT(${srcvar_true} STREQUAL ${srcvsr_false}))
+		set(${dstvar} $<IF:${condition},${srcvar_true},${srcvsr_false}>)
+	else()
+		set(${dstvar} ${srcvar_true})
+	endif()
+endmacro()
+
 #
 # Select default build config with support of multi config generators
 #
