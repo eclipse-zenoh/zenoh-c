@@ -111,10 +111,7 @@ impl From<Hello> for z_owned_hello_t {
     fn from(h: Hello) -> Self {
         z_owned_hello_t {
             _whatami: h.whatami as c_uint,
-            _pid: match h.zid {
-                Some(id) => unsafe { std::mem::transmute(id) },
-                None => z_id_t { id: [0; 16] },
-            },
+            _pid: unsafe { std::mem::transmute(h.zid) },
             _locators: if !h.locators.is_empty() {
                 let mut locators = h
                     .locators
@@ -183,10 +180,10 @@ pub extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
 pub struct z_owned_scouting_config_t {
     _config: z_owned_config_t,
     pub zc_timeout_ms: c_ulong,
-    pub zc_what: c_uint,
+    pub zc_what: u8,
 }
 
-pub const DEFAULT_SCOUTING_WHAT: c_uint = (WhatAmI::Router as u8 | WhatAmI::Peer as u8) as c_uint;
+pub const DEFAULT_SCOUTING_WHAT: u8 = WhatAmI::Router as u8 | WhatAmI::Peer as u8;
 pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 #[allow(clippy::missing_safety_doc)]

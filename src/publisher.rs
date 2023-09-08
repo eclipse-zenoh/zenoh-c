@@ -63,8 +63,8 @@ pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
 pub struct z_owned_publisher_t([u64; 7]);
 
 #[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_owned_publisher_t([u64; 5]);
+#[repr(C, align(4))]
+pub struct z_owned_publisher_t([u32; 8]);
 
 impl_guarded_transmute!(Option<Publisher<'_>>, z_owned_publisher_t);
 

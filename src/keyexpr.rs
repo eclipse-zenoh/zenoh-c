@@ -57,8 +57,8 @@ use zenoh_util::core::zresult::ErrNo;
 #[repr(C, align(8))]
 pub struct z_owned_keyexpr_t([u64; 4]);
 #[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_owned_keyexpr_t([u64; 3]);
+#[repr(C, align(4))]
+pub struct z_owned_keyexpr_t([u32; 5]);
 
 impl_guarded_transmute!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
 
@@ -153,8 +153,8 @@ pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
 #[repr(C, align(8))]
 pub struct z_keyexpr_t([u64; 4]);
 #[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_keyexpr_t([u64; 3]);
+#[repr(C, align(4))]
+pub struct z_keyexpr_t([u32; 5]);
 
 impl_guarded_transmute!(Option<KeyExpr<'_>>, z_keyexpr_t);
 impl_guarded_transmute!(z_keyexpr_t, z_owned_keyexpr_t);

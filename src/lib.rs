@@ -49,8 +49,22 @@ trait GuardedTransmute<D> {
 #[macro_export]
 macro_rules! impl_guarded_transmute {
     ($src_type:ty, $dst_type:ty) => {
-        const _: () =
-            assert!(std::mem::align_of::<$src_type>() == std::mem::align_of::<$dst_type>());
+        const _: () = {
+            let src = std::mem::align_of::<$src_type>();
+            let dst = std::mem::align_of::<$dst_type>();
+            if src != dst {
+                let mut msg: [u8; 20] = *b"src:     , dst:     ";
+                let mut i = 0;
+                while i < 4 {
+                    msg[i as usize + 5] = b'0' + ((src / 10u32.pow(3 - i) as usize) % 10) as u8;
+                    msg[i as usize + 16] = b'0' + ((dst / 10u32.pow(3 - i) as usize) % 10) as u8;
+                    i += 1;
+                }
+                panic!("{}", unsafe {
+                    std::str::from_utf8_unchecked(msg.as_slice())
+                });
+            }
+        };
         impl $crate::GuardedTransmute<$dst_type> for $src_type {
             fn transmute(self) -> $dst_type {
                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
