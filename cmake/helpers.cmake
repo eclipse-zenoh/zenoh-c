@@ -69,7 +69,7 @@ endfunction()
 #
 macro(set_genexpr_condition dstvar condition srcvar_true srcvsr_false)
 	if(NOT(${srcvar_true} STREQUAL ${srcvsr_false}))
-		set(${dstvar} $<IF:${genexpr_condition},${srcvar_true},${srcvsr_false}>)
+		set(${dstvar} $<IF:${condition},${srcvar_true},${srcvsr_false}>)
 	else()
 		set(${dstvar} ${srcvar_true})
 	endif()
