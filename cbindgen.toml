@@ -88,7 +88,7 @@ renaming_overrides_prefixing = false
 [fn]
 rename_args = "None"
 # must_use = "MUST_USE_FUNC"
-# prefix = "START_FUNC"
+prefix = "ZENOHC_API"
 # postfix = "END_FUNC"
 args = "auto"
 sort_by = "Name"

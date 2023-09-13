@@ -11,8 +11,9 @@ fn main() {
         .write_to_file(GENERATION_PATH);
 
     configure();
-    split_bindings().unwrap();
-    rename_enums();
+    let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
+    split_bindings(&split_guide).unwrap();
+    text_replace(split_guide.rules.iter().map(|(name, _)| name.as_str()));
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");
@@ -42,9 +43,8 @@ fn configure() {
     file.unlock().unwrap();
 }
 
-fn rename_enums() {
-    let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
-    for (name, _) in split_guide.rules.iter() {
+fn text_replace<'a>(files: impl Iterator<Item = &'a str>) {
+    for name in files {
         let path = format!("include/{}", name);
 
         // Read content
@@ -60,9 +60,13 @@ fn rename_enums() {
         file.unlock().unwrap();
 
         // Remove _T_ from enum variant name
-        let new = buf.replace("_T_", "_");
+        let buf = buf.replace("_T_", "_");
         // Replace _t_Tag from union variant name
-        let new = new.replace("_t_Tag", "_tag_t");
+        let buf = buf.replace("_t_Tag", "_tag_t");
+        // Insert `ZENOHC_API` macro before `extern const`.
+        // The cbindgen can prefix functions (see `[fn] prefix=...` in cbindgn.toml), but not extern variables.
+        // So have to do it here.
+        let buf = buf.replace("extern const", "ZENOHC_API extern const");
 
         // Overwrite content
         let mut file = std::fs::File::options()
@@ -73,13 +77,12 @@ fn rename_enums() {
             .open(&path)
             .unwrap();
         file.lock_exclusive().unwrap();
-        file.write_all(new.as_bytes()).unwrap();
+        file.write_all(buf.as_bytes()).unwrap();
         file.unlock().unwrap();
     }
 }
 
-fn split_bindings() -> Result<(), String> {
-    let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
+fn split_bindings(split_guide: &SplitGuide) -> Result<(), String> {
     let bindings = std::fs::read_to_string(GENERATION_PATH).unwrap();
     let mut files = split_guide
         .rules
@@ -97,7 +100,10 @@ fn split_bindings() -> Result<(), String> {
             (name.as_str(), BufWriter::new(file))
         })
         .collect::<HashMap<_, _>>();
-    let mut records = group_tokens(Tokenizer { inner: &bindings })?;
+    let mut records = group_tokens(Tokenizer {
+        filename: GENERATION_PATH,
+        inner: &bindings,
+    })?;
     for id in split_guide.requested_ids() {
         if !records.iter().any(|r| r.contains_id(id)) {
             return Err(format!(
@@ -303,6 +309,7 @@ impl<'a> Record<'a> {
             TokenType::PreprDefine => self.push_record_type_token(token, RecordType::PreprDefine),
             TokenType::PreprInclude => self.push_record_type_token(token, RecordType::PreprInclude),
             TokenType::PreprIf => self.push_prepr_if(token),
+            TokenType::PreprElse => self.push_token(token),
             TokenType::PreprEndif => self.push_prepr_endif(token)?,
             TokenType::Whitespace => self.push_token(token),
         }
@@ -339,6 +346,7 @@ enum TokenType {
     PreprDefine,
     PreprInclude,
     PreprIf,
+    PreprElse,
     PreprEndif,
     Whitespace,
 }
@@ -375,6 +383,7 @@ impl<'a> Token<'a> {
             .or_else(|| Self::prepr_include(s))
             .or_else(|| Self::prepr_define(s))
             .or_else(|| Self::prepr_if(s))
+            .or_else(|| Self::prepr_else(s))
             .or_else(|| Self::typedef(s))
             .or_else(|| Self::r#const(s))
             .or_else(|| Self::function(s))
@@ -517,11 +526,16 @@ impl<'a> Token<'a> {
             .then(|| Token::new(TokenType::PreprEndif, "", s.until("\n").unwrap_or(s)))
     }
 
-    fn prepr_include(s: &'a str) -> Option<Self> {
-        Self::_include(s, "#include \"", "\"").or_else(|| Self::_include(s, "#include <", ">"))
+    fn prepr_else(s: &'a str) -> Option<Self> {
+        s.starts_with("#else")
+            .then(|| Token::new(TokenType::PreprElse, "", s.until("\n").unwrap_or(s)))
     }
 
-    fn _include(s: &'a str, start: &str, end: &str) -> Option<Self> {
+    fn prepr_include(s: &'a str) -> Option<Self> {
+        Self::r#include(s, "#include \"", "\"").or_else(|| Self::r#include(s, "#include <", ">"))
+    }
+
+    fn r#include(s: &'a str, start: &str, end: &str) -> Option<Self> {
         if s.starts_with(start) {
             let span = s.until_incl(end).expect("detected unterminated #include");
             Some(Token::new(
@@ -547,6 +561,7 @@ impl Until for &str {
     }
 }
 struct Tokenizer<'a> {
+    filename: &'a str,
     inner: &'a str,
 }
 impl<'a> Iterator for Tokenizer<'a> {
@@ -561,7 +576,8 @@ impl<'a> Iterator for Tokenizer<'a> {
                 self.inner = &self.inner[result.span.len()..];
             } else {
                 panic!(
-                    "Couldn't parse C file, stopped at: {}",
+                    "Couldn't parse C file {}, stopped at: {}",
+                    self.filename,
                     self.inner.lines().next().unwrap()
                 )
             }

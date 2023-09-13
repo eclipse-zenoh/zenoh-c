@@ -22,6 +22,12 @@ extern "C" {
 #define ALIGN(n) __attribute__((aligned(n)))
 #endif
 
+#if defined(ZENOHC_DYN_LIB) && defined(_MSC_VER)
+#define ZENOHC_API __declspec(dllimport)
+#else
+#define ZENOHC_API
+#endif
+
 #include "zenoh_configure.h"
 
 // clang-format off
