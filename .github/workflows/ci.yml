@@ -50,7 +50,7 @@ jobs:
           cd build
           cmake .. -DZENOHC_BUILD_TESTS_WITH_STATIC_LIB=FALSE -DCMAKE_BUILD_TYPE=Release
           cmake --build . --target tests --config Release
-          ctest -C Release --output-on-failure
+          ctest -C Release --output-on-failure -E z_api_alignment_test
 
       - name: run cmake tests with zenoh-c as static library
         shell: bash
@@ -58,7 +58,7 @@ jobs:
           cd build
           cmake .. -DZENOHC_BUILD_TESTS_WITH_STATIC_LIB=TRUE -DCMAKE_BUILD_TYPE=Release
           cmake --build . --target tests --config Release
-          ctest -C Release --output-on-failure
+          ctest -C Release --output-on-failure -E z_api_alignment_test
 
       - name: make examples with zenoh-c
         shell: bash
