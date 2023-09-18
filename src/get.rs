@@ -299,7 +299,9 @@ impl From<&z_value_t> for Value {
 impl From<&Value> for z_value_t {
     #[inline]
     fn from(val: &Value) -> z_value_t {
-        let std::borrow::Cow::Borrowed(payload) = val.payload.contiguous() else{ panic!("Would have returned a reference to a temporary, make sure you the Value's payload is contiguous BEFORE calling this constructor.")};
+        let std::borrow::Cow::Borrowed(payload) = val.payload.contiguous() else {
+            panic!("Would have returned a reference to a temporary, make sure you the Value's payload is contiguous BEFORE calling this constructor.")
+        };
         z_value_t {
             encoding: (&val.encoding).into(),
             payload: payload.into(),

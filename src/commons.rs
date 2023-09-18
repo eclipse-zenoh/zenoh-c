@@ -106,7 +106,9 @@ impl Default for zc_owned_payload_t {
 impl TryFrom<ZBuf> for zc_owned_payload_t {
     type Error = ();
     fn try_from(buf: ZBuf) -> Result<Self, Self::Error> {
-        let std::borrow::Cow::Borrowed(payload) = buf.contiguous() else {return Err(())};
+        let std::borrow::Cow::Borrowed(payload) = buf.contiguous() else {
+            return Err(());
+        };
         Ok(Self {
             payload: payload.into(),
             _owner: unsafe { std::mem::transmute(buf) },
@@ -129,7 +131,9 @@ impl zc_owned_payload_t {
                 "A multi-slice buffer reached zenoh-c, which is definitely a bug, please report it."
             );
             let start_offset = unsafe { start.offset_from(slice.as_slice().as_ptr()) };
-            let Ok(start_offset) = start_offset.try_into()  else {return None};
+            let Ok(start_offset) = start_offset.try_into() else {
+                return None;
+            };
             *slice = match slice.subslice(start_offset, start_offset + len) {
                 Some(s) => s,
                 None => return None,
@@ -202,7 +206,9 @@ pub struct z_sample_t<'a> {
 
 impl<'a> z_sample_t<'a> {
     pub fn new(sample: &'a Sample, owner: &'a ZBuf) -> Self {
-        let std::borrow::Cow::Borrowed(payload) = owner.contiguous() else {panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")};
+        let std::borrow::Cow::Borrowed(payload) = owner.contiguous() else {
+            panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")
+        };
         z_sample_t {
             keyexpr: (&sample.key_expr).into(),
             payload: z_bytes_t::from(payload),
@@ -217,7 +223,9 @@ impl<'a> z_sample_t<'a> {
 /// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
 #[no_mangle]
 pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
-    let Some(sample) = sample else {return zc_payload_null()};
+    let Some(sample) = sample else {
+        return zc_payload_null();
+    };
     let buf = unsafe { std::mem::transmute::<_, &ZBuf>(sample._zc_buf).clone() };
     zc_owned_payload_t {
         payload: sample.payload,

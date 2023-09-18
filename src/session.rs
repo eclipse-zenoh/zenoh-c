@@ -150,7 +150,9 @@ pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
-    let Some(s) = session.as_mut().take() else {return 0};
+    let Some(s) = session.as_mut().take() else {
+        return 0;
+    };
     let s = match Arc::try_unwrap(s) {
         Ok(s) => s,
         Err(s) => {
