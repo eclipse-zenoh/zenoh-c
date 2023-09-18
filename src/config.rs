@@ -263,17 +263,15 @@ pub unsafe extern "C" fn z_config_client(
     } else if let Ok(locators) = std::slice::from_raw_parts(peers, n_peers)
         .iter()
         .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
-        .fold(
-            Ok(Vec::<zenoh::prelude::Locator>::new()),
-            |acc, it| match (acc, it) {
-                (Err(_), _) => Err(()),
-                (_, Err(e)) => {
+        .try_fold(Vec::<zenoh::prelude::Locator>::new(),
+            |mut acc, it| match it {
+                Err(e) => {
                     log::error!("Error parsing peer address: {}", e);
                     Err(())
                 }
-                (Ok(mut vec), Ok(loc)) => {
-                    vec.push(loc);
-                    Ok(vec)
+                Ok(loc) => {
+                    acc.push(loc);
+                    Ok(acc)
                 }
             },
         )
