@@ -13,10 +13,11 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 function(install_zenohc_lib configurations property_postfix package_name)
+    # Prepare parameters for PackageConfig.cmake.in
     get_target_property(dylib_path zenohc::lib IMPORTED_LOCATION_${property_postfix})
     get_target_property_if_set(implib_path zenohc::lib IMPORTED_IMPLIB_${property_postfix})
     get_target_property(staticlib_path zenohc::static IMPORTED_LOCATION_${property_postfix})
-
+    get_target_property(NATIVE_STATIC_LIBS zenohc::static INTERFACE_LINK_LIBRARIES)
     get_filename_component(DYLIB ${dylib_path} NAME)
     get_filename_component(IMPLIB "${implib_path}" NAME)
     get_filename_component(STATICLIB ${staticlib_path} NAME)

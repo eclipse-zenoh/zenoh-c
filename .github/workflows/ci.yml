@@ -44,6 +44,22 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
           cmake --build . --target install --config Release
 
+      - name: run cmake tests with zenoh-c as dynamic library
+        shell: bash
+        run: |
+          cd build
+          cmake .. -DZENOHC_BUILD_TESTS_WITH_STATIC_LIB=FALSE -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --target tests --config Release
+          ctest -C Release --output-on-failure -E z_api_alignment_test
+
+      - name: run cmake tests with zenoh-c as static library
+        shell: bash
+        run: |
+          cd build
+          cmake .. -DZENOHC_BUILD_TESTS_WITH_STATIC_LIB=TRUE -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --target tests --config Release
+          ctest -C Release --output-on-failure -E z_api_alignment_test
+
       - name: make examples with zenoh-c
         shell: bash
         run: |
@@ -64,7 +80,7 @@ jobs:
           cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE=PACKAGE
           cmake --build . --config Release
 
-      - name: Run tests
+      - name: Run rust tests
         uses: actions-rs/cargo@v1
         with:
           command: test

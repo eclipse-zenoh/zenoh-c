@@ -191,8 +191,15 @@ add_library(zenohc::static ALIAS zenohc_static)
 add_library(zenohc::lib ALIAS zenohc)
 add_dependencies(zenohc_static cargo)
 add_dependencies(zenohc cargo)
+
+#
+# Setup additional properties for library targets
+# *IMPORTANT* any options in this section should be repeated in install/PackageConfig.cmake.in
+# to achieve correct behavior of find_package(zenohc)
+#
 get_required_static_libs(NATIVE_STATIC_LIBS)
 target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
+target_compile_definitions(zenohc INTERFACE ZENOHC_DYN_LIB)
 
 # Workaroud for https://github.com/rust-lang/cargo/issues/5045
 # mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
