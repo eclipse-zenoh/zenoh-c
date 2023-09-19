@@ -188,7 +188,12 @@ endmacro()
 function(include_project)
     __include_project(${ARGN})
     # recover functions which may be replaced by included project
-    include(${CMAKE_CURRENT_FUNCTION_LIST_FILE})
+    if (DEFINED CMAKE_CURRRENT_FUNCTION_LIST_FILE)
+        include(${CMAKE_CURRENT_FUNCTION_LIST_FILE})
+    else()
+        # for CMake < 3.17
+        include(cmake/helpers.cmake)
+    endif()
 endfunction()
 
 function(__include_project project_name)

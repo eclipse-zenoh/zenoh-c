@@ -84,8 +84,10 @@ set_genexpr_condition(cargo_generated_include_dir $<CONFIG:Debug> ${cargo_toml_d
 
 set(cargo_target_dir_debug ${cargo_toml_dir_debug}/target)
 set(cargo_target_dir_release ${cargo_toml_dir_release}/target)
-cmake_path(APPEND cargo_target_dir_debug ${ZENOHC_CUSTOM_TARGET})
-cmake_path(APPEND cargo_target_dir_release ${ZENOHC_CUSTOM_TARGET})
+if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
+	set(cargo_target_dir_debug ${cargo_target_dir_debug}/${ZENOHC_CUSTOM_TARGET})
+	set(cargo_target_dir_release ${cargo_target_dir_release}/${ZENOHC_CUSTOM_TARGET})
+endif()
 set(cargo_binary_dir_debug ${cargo_target_dir_debug}/debug)
 set(cargo_binary_dir_release ${cargo_target_dir_release}/release)
 set(cargo_binary_dir $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug},${cargo_binary_dir_release}>)
