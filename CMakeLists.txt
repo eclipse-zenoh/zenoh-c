@@ -185,7 +185,7 @@ endif()
 status_print(cargo_flags)
 status_print(libs)
 add_custom_command(
-	OUTPUT ${libs}
+	OUTPUT "${libs}"
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
