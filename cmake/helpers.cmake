@@ -70,22 +70,24 @@ endfunction()
 # - remove visual garbage when generator expressions actually does nothing
 # - avoid using generator expression if single-config generator is used
 #
-macro(set_genexpr_condition dstvar var_condition genexpr_condition srcvar_true srcvar_false)
+function(set_genexpr_condition dstvar var_condition genexpr_condition srcvar_true srcvar_false)
     get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 	if(GENERATOR_IS_MULTI_CONFIG AND NOT("${srcvar_true}" STREQUAL "${srcvar_false}"))
-        set(${dstvar} $<IF:${genexpr_condition},${srcvar_true},${srcvar_false}>)
+        list(JOIN srcvar_true "$<SEMICOLON>" srcvar_true)
+        list(JOIN srcvar_false "$<SEMICOLON>" srcvar_false)
+        set(${dstvar} $<IF:${genexpr_condition},${srcvar_true},${srcvar_false}> PARENT_SCOPE)
     else()
         if(DEFINED ${var_condition})
             if (${${var_condition}})
-                set(${dstvar} "${srcvar_true}")
+                set(${dstvar} "${srcvar_true}" PARENT_SCOPE)
             else()
-                set(${dstvar} "${srcvar_false}")
+                set(${dstvar} "${srcvar_false}" PARENT_SCOPE)
             endif()
         else()
-            set(${dstvar} "${srcvar_false}")
+            set(${dstvar} "${srcvar_false}" PARENT_SCOPE)
         endif()
     endif()
-endmacro()
+endfunction()
 
 #
 # Select default build config with support of multi config generators

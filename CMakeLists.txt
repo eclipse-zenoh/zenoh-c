@@ -95,7 +95,7 @@ if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
 endif()
 set(cargo_binary_dir_debug ${cargo_target_dir_debug}/debug)
 set(cargo_binary_dir_release ${cargo_target_dir_release}/release)
-set_genexpr_condition(cargo_binary_dir DEBUG $<CONFIG:Debug> ${cargo_binary_dir_debug} ${cargo_binary_dir_release}>)
+set_genexpr_condition(cargo_binary_dir DEBUG $<CONFIG:Debug> ${cargo_binary_dir_debug} ${cargo_binary_dir_release})
 set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAME)
@@ -185,7 +185,7 @@ endif()
 status_print(cargo_flags)
 status_print(libs)
 add_custom_command(
-	OUTPUT "${libs}"
+	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
