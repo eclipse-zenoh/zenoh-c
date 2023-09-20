@@ -206,11 +206,13 @@ endmacro()
 function(include_project)
     __include_project(${ARGN})
     # recover functions which may be replaced by included project
-    if (DEFINED CMAKE_CURRRENT_FUNCTION_LIST_FILE)
-        include(${CMAKE_CURRENT_FUNCTION_LIST_FILE})
-    else()
-        # for CMake < 3.17
-        include(cmake/helpers.cmake)
+    # Using here the policy https://cmake.org/cmake/help/v3.16/policy/CMP0017.html#policy:CMP0017
+    include(helpers OPTIONAL RESULT_VARIABLE helpers_included)
+    if (NOT helpers_included)
+        message(FATAL_ERROR "Failed to reinclude helpers.cmake after processing external project\n"
+        "You have to include helpers.cmake as a module to make the `include` operation above work:\n"
+        "   set(CMAKE_MODULE_PATH \"path-to-this-helpers-cmake\" \${CMAKE_MODULE_PATH})\n"
+        "   include(helpers)\n")
     endif()
 endfunction()
 

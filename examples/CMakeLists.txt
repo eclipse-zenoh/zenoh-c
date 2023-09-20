@@ -2,6 +2,8 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     # Settings when 'examples' is the root projet
     cmake_minimum_required(VERSION 3.16)
     project(zenohc_examples LANGUAGES C)
+    set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" ${CMAKE_MODULE_PATH})
+    include(helpers)
     include(../cmake/helpers.cmake)
     set_default_build_type(Release)
     configure_include_project(ZENOHC zenohc zenohc::lib ".." zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")

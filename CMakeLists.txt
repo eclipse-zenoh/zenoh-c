@@ -7,7 +7,8 @@ project(
 	LANGUAGES C
 )
 
-include(cmake/helpers.cmake)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include(helpers)
 set_default_build_type(Release)
 enable_testing()
 
