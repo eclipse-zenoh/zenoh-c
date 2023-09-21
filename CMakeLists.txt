@@ -241,7 +241,7 @@ endfunction()
 set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
 set_target_imported_locations(zenohc ${dylibr} ${dylibd})
 
-if(DEFINED implib)
+if(DEFINED implibr)
 	set_target_imported_implib(zenohc ${implibr} ${implibd})
 endif()
 
