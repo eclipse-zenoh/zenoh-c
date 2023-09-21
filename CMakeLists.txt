@@ -7,7 +7,8 @@ project(
 	LANGUAGES C
 )
 
-include(cmake/helpers.cmake)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include(helpers)
 set_default_build_type(Release)
 enable_testing()
 
@@ -79,16 +80,22 @@ else()
 	file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
 endif()
 
-set_genexpr_condition(cargo_toml_dir $<CONFIG:Debug> ${cargo_toml_dir_debug} ${cargo_toml_dir_release})
-set_genexpr_condition(cargo_generated_include_dir $<CONFIG:Debug> ${cargo_toml_dir_debug}/include ${cargo_toml_dir_release}/include)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(DEBUG TRUE)
+endif()
+
+set_genexpr_condition(cargo_toml_dir DEBUG $<CONFIG:Debug> ${cargo_toml_dir_debug} ${cargo_toml_dir_release})
+set_genexpr_condition(cargo_generated_include_dir DEBUG $<CONFIG:Debug> ${cargo_toml_dir_debug}/include ${cargo_toml_dir_release}/include)
 
 set(cargo_target_dir_debug ${cargo_toml_dir_debug}/target)
 set(cargo_target_dir_release ${cargo_toml_dir_release}/target)
-cmake_path(APPEND cargo_target_dir_debug ${ZENOHC_CUSTOM_TARGET})
-cmake_path(APPEND cargo_target_dir_release ${ZENOHC_CUSTOM_TARGET})
+if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
+	set(cargo_target_dir_debug ${cargo_target_dir_debug}/${ZENOHC_CUSTOM_TARGET})
+	set(cargo_target_dir_release ${cargo_target_dir_release}/${ZENOHC_CUSTOM_TARGET})
+endif()
 set(cargo_binary_dir_debug ${cargo_target_dir_debug}/debug)
 set(cargo_binary_dir_release ${cargo_target_dir_release}/release)
-set(cargo_binary_dir $<IF:$<CONFIG:Debug>,${cargo_binary_dir_debug},${cargo_binary_dir_release}>)
+set_genexpr_condition(cargo_binary_dir DEBUG $<CONFIG:Debug> ${cargo_binary_dir_debug} ${cargo_binary_dir_release})
 set(source_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAME)
@@ -98,6 +105,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/splitguide.yaml
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
+			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain
 			DESTINATION ${cargo_toml_dir})
 	endif()	
@@ -119,7 +127,7 @@ if(cargo_toml_dir_debug STREQUAL cargo_toml_dir_release)
 	endif()
 	configure_cargo_toml(${cargo_toml_dir_ide} ${project_version} ${cargo_lib_name})
 else()
-	set(cargo_lib_name $<IF:$<CONFIG:Debug>,${cargo_lib_name_debug},${cargo_lib_name_release}>)
+	set_genexpr_condition(cargo_lib_name DEBUG $<CONFIG:Debug> ${cargo_lib_name_debug} ${cargo_lib_name_release})
 	if(DEFINED cargo_toml_dir_ide)
 		configure_cargo_toml(${cargo_toml_dir_ide} ${project_version} ${cargo_lib_name_release})
 	endif()
@@ -135,30 +143,32 @@ macro(set_lib list var value)
 	list(APPEND ${list} ${value})
 endmacro()
 
-# dylib[d] - dymamic library (.so, .dll, .dylib)
-# staticlib[d] - static library (.a, .lib)
-# implib[d] - import library for windows dynamic library (DLL) - .lib
-# dylibs[d] - list of files required for use dynamic libraty
-# staticlibs[d] - list of files required for use static libraty
-set_lib(dylibs dylib ${CMAKE_SHARED_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX})
+# dylib[r|d] - dymamic library (.so, .dll, .dylib)
+# staticlib[r|d] - static library (.a, .lib)
+# implib[r|d] - import library for windows dynamic library (DLL) - .lib
+# dylibs[r|d] - list of files required for use dynamic libraty
+# staticlibs[r|d] - list of files required for use static libraty
+set_lib(dylibsr dylibr ${CMAKE_SHARED_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX})
 set_lib(dylibsd dylibd ${CMAKE_SHARED_LIBRARY_PREFIX}zenohcd${CMAKE_SHARED_LIBRARY_SUFFIX})
-set_lib(staticlibs staticlib ${CMAKE_STATIC_LIBRARY_PREFIX}zenohc${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_lib(staticlibsr staticlibr ${CMAKE_STATIC_LIBRARY_PREFIX}zenohc${CMAKE_STATIC_LIBRARY_SUFFIX})
 set_lib(staticlibsd staticlibd ${CMAKE_STATIC_LIBRARY_PREFIX}zenohcd${CMAKE_STATIC_LIBRARY_SUFFIX})
 if(WIN32)
-	set_lib(dylibs implib ${CMAKE_IMPORT_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_IMPORT_LIBRARY_SUFFIX})
+	set_lib(dylibsr implibr ${CMAKE_IMPORT_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_IMPORT_LIBRARY_SUFFIX})
 	set_lib(dylibsd implibd ${CMAKE_IMPORT_LIBRARY_PREFIX}zenohcd${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_IMPORT_LIBRARY_SUFFIX})
 endif()
-list(APPEND libs ${dylibs})
-list(APPEND libs ${staticlibs})
+list(APPEND libsr ${dylibsr})
+list(APPEND libsr ${staticlibsr})
 list(APPEND libsd ${dylibsd})
 list(APPEND libsd ${staticlibsd})
-list(TRANSFORM libs PREPEND "${cargo_binary_dir_release}/")
+list(TRANSFORM libsr PREPEND "${cargo_binary_dir_release}/")
 list(TRANSFORM libsd PREPEND "${cargo_binary_dir_debug}/")
+set_genexpr_condition(libs DEBUG $<CONFIG:Debug> "${libsd}" "${libsr}")
 
 #
 # Build rust sources
 #
-set(cargo_flags ${ZENOHC_CARGO_FLAGS} $<$<NOT:$<CONFIG:Debug>>:--release>)
+set_genexpr_condition(cargo_release_flag DEBUG $<CONFIG:Debug> "" "--release")
+set(cargo_flags ${ZENOHC_CARGO_FLAGS} ${cargo_release_flag})
 set(cargo_flags ${cargo_flags} --manifest-path=${cargo_toml_dir}/Cargo.toml)
 
 if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
@@ -174,13 +184,14 @@ if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
 endif()
 
 status_print(cargo_flags)
+status_print(libs)
 add_custom_command(
-	OUTPUT "$<IF:$<CONFIG:Debug>,${libsd},${libs}>"
+	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 )
-add_custom_target(cargo ALL DEPENDS "$<IF:$<CONFIG:Debug>,${libsd},${libs}>")
+add_custom_target(cargo ALL DEPENDS "${libs}")
 
 #
 # Define libraries built by cargo as targets
@@ -206,33 +217,33 @@ target_compile_definitions(zenohc INTERFACE ZENOHC_DYN_LIB)
 # If it's fixed, do not forget to correct PackageConfig.cmake.in also
 set_target_properties(zenohc PROPERTIES IMPORTED_NO_SONAME TRUE)
 
-function(set_target_imported_locations target lib libd)
+function(set_target_imported_locations target libr libd)
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
 		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/${libd}
-		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${lib}
-		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${lib}
-		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/${lib}
+		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${libr}
+		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${libr}
+		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/${libr}
 	)
 endfunction()
 
-function(set_target_imported_implib target lib libd)
+function(set_target_imported_implib target libr libd)
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
 		IMPORTED_IMPLIB_DEBUG ${cargo_binary_dir_debug}/${libd}
-		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${lib}
-		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${lib}
-		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_binary_dir_release}/${lib}
+		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${libr}
+		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${libr}
+		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_binary_dir_release}/${libr}
 	)
 endfunction()
 
-set_target_imported_locations(zenohc_static ${staticlib} ${staticlibd})
-set_target_imported_locations(zenohc ${dylib} ${dylibd})
+set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
+set_target_imported_locations(zenohc ${dylibr} ${dylibd})
 
-if(DEFINED implib)
-	set_target_imported_implib(zenohc ${implib} ${implibd})
+if(DEFINED implibr)
+	set_target_imported_implib(zenohc ${implibr} ${implibd})
 endif()
 
 # Define include directories for library targets

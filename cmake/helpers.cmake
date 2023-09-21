@@ -62,18 +62,32 @@ endfunction()
 
 
 #
-# initialize `dstvar` with `$<IF:condition,srcvar_true,srcvar_false>` generator expression
-# only if `srcvar_true` and `srcvar_false` are actually different.
-# Otherwise `dstvar` is initialized with `srcvar_true` value
-# This is convenient to remove visual garbage when genrator expressions actually does nothing
+# initialize `dstvar` with `$<IF:genexpr_condition,srcvar_true,srcvar_false>` generator expression
+# only if `srcvar_true` and `srcvar_false` are actually different and if multi-config generator is used.
+# Otherwise `dstvar` is initialized with `srcvar_true` or `srcvar_false` value depending on `var_condition` variable.
 #
-macro(set_genexpr_condition dstvar condition srcvar_true srcvsr_false)
-	if(NOT(${srcvar_true} STREQUAL ${srcvsr_false}))
-		set(${dstvar} $<IF:${condition},${srcvar_true},${srcvsr_false}>)
-	else()
-		set(${dstvar} ${srcvar_true})
-	endif()
-endmacro()
+# This is convenient to 
+# - remove visual garbage when generator expressions actually does nothing
+# - avoid using generator expression if single-config generator is used
+#
+function(set_genexpr_condition dstvar var_condition genexpr_condition srcvar_true srcvar_false)
+    get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+	if(GENERATOR_IS_MULTI_CONFIG AND NOT("${srcvar_true}" STREQUAL "${srcvar_false}"))
+        list(JOIN srcvar_true "$<SEMICOLON>" srcvar_true)
+        list(JOIN srcvar_false "$<SEMICOLON>" srcvar_false)
+        set(${dstvar} $<IF:${genexpr_condition},${srcvar_true},${srcvar_false}> PARENT_SCOPE)
+    else()
+        if(DEFINED ${var_condition})
+            if (${${var_condition}})
+                set(${dstvar} "${srcvar_true}" PARENT_SCOPE)
+            else()
+                set(${dstvar} "${srcvar_false}" PARENT_SCOPE)
+            endif()
+        else()
+            set(${dstvar} "${srcvar_false}" PARENT_SCOPE)
+        endif()
+    endif()
+endfunction()
 
 #
 # Select default build config with support of multi config generators
@@ -81,10 +95,16 @@ endmacro()
 macro(set_default_build_type config_type)
     get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if(GENERATOR_IS_MULTI_CONFIG)
+        if(${CMAKE_VERSION} VERSION_LESS "3.20") 
+            message(FATAL_ERROR "\n"
+                "You are using multi config generator '${CMAKE_GENERATOR}' and cmake ${CMAKE_VERSION}\n"
+                "Unfortuinately multi config generators are not supported by this script for CMake < 3.20 due to insufficient support of generator expressions in old CMake versions\n"
+                "Please consider upgrading your cmake or switching to single-config generator with `-G` option, like `cmake -G Ninja` or `cmake -G \"Unix Makefiles\"\n")
+        endif()
         if(NOT DEFINED CMAKE_BUILD_TYPE) # if user passed argument '-DCMAKE_BUILD_TYPE=value', use it
             set(CMAKE_BUILD_TYPE ${config_type})
         endif()
-         list(FIND CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} n)
+        list(FIND CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} n)
         if(n LESS 0)
             message(FATAL_ERROR "Configuration ${CMAKE_BUILD_TYPE} is not in CMAKE_CONFIGURATION_TYPES")
         else()
@@ -100,7 +120,7 @@ macro(set_default_build_type config_type)
         if(CMAKE_BUILD_TYPE STREQUAL "")
             set(CMAKE_BUILD_TYPE ${config_type})
         endif()
-         status_print(CMAKE_BUILD_TYPE)
+        status_print(CMAKE_BUILD_TYPE)
     endif()
 endmacro()
 
@@ -188,7 +208,14 @@ endmacro()
 function(include_project)
     __include_project(${ARGN})
     # recover functions which may be replaced by included project
-    include(${CMAKE_CURRENT_FUNCTION_LIST_FILE})
+    # Using here the policy https://cmake.org/cmake/help/v3.16/policy/CMP0017.html#policy:CMP0017
+    include(helpers OPTIONAL RESULT_VARIABLE helpers_included)
+    if (NOT helpers_included)
+        message(FATAL_ERROR "Failed to reinclude helpers.cmake after processing external project\n"
+        "You have to include helpers.cmake as a module to make the `include` operation above work:\n"
+        "   set(CMAKE_MODULE_PATH \"path-to-this-helpers-cmake\" \${CMAKE_MODULE_PATH})\n"
+        "   include(helpers)\n")
+    endif()
 endfunction()
 
 function(__include_project project_name)
