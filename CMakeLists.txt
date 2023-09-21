@@ -105,6 +105,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/splitguide.yaml
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
+			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain
 			DESTINATION ${cargo_toml_dir})
 	endif()	
