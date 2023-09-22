@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(
 	zenohc
-	VERSION 0.10.0.0
+	VERSION 0.10.0.1
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
