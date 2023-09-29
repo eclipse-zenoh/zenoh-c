@@ -4,6 +4,24 @@ use std::{borrow::Cow, collections::HashMap, io::BufWriter, path::Path};
 
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
+const HEADER: &str = r"//
+// Copyright (c) 2022 ZettaScale Technology
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+//
+#ifdef DOCS
+#define ALIGN(n)
+#define ZENOHC_API
+#endif
+";
 
 fn main() {
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
@@ -100,6 +118,10 @@ fn split_bindings(split_guide: &SplitGuide) -> Result<(), String> {
             (name.as_str(), BufWriter::new(file))
         })
         .collect::<HashMap<_, _>>();
+    for file in files.values_mut() {
+        file.write_all(HEADER.as_bytes())
+            .map_err(|e| e.to_string())?;
+    }
     let mut records = group_tokens(Tokenizer {
         filename: GENERATION_PATH,
         inner: &bindings,

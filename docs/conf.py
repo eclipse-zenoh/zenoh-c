@@ -26,9 +26,10 @@ master_doc = 'index'
 extensions = ['sphinx_c_autodoc', 'sphinx_c_autodoc.napoleon']
 language = 'c'
 c_autodoc_roots = ['../include']
+c_autodoc_compilation_args = ["-DDOCS"]
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'
 
 # ----------------------------------------------------------------------------
-Config.set_library_file('/usr/lib/llvm-6.0/lib/libclang.so.1')
+Config.set_library_file('/usr/lib/llvm-14/lib/libclang.so.1')
