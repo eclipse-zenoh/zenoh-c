@@ -32,4 +32,4 @@ c_autodoc_compilation_args = ["-DDOCS"]
 html_theme = 'sphinx_rtd_theme'
 
 # ----------------------------------------------------------------------------
-Config.set_library_file('/usr/lib/llvm-6.0/lib/libclang.so.1')
+Config.set_library_file('/usr/lib/llvm-14/lib/libclang.so.1')
