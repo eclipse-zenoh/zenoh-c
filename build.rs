@@ -119,7 +119,8 @@ fn split_bindings(split_guide: &SplitGuide) -> Result<(), String> {
         })
         .collect::<HashMap<_, _>>();
     for file in files.values_mut() {
-        file.write_all(HEADER.as_bytes()).map_err(|e|e.to_string())?;
+        file.write_all(HEADER.as_bytes())
+            .map_err(|e| e.to_string())?;
     }
     let mut records = group_tokens(Tokenizer {
         filename: GENERATION_PATH,
