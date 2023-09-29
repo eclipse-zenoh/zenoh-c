@@ -11,6 +11,10 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+#ifdef DOCS
+#define ALIGN(n)
+#define ZENOHC_API
+#endif
 /**
  * The kind of congestion control.
  *
