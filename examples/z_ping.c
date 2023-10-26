@@ -50,23 +50,28 @@ int main(int argc, char** argv) {
     pthread_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
-        clock_t warmup_end = clock() + CLOCKS_PER_SEC * args.warmup_ms / 1000;
-        for (clock_t now = clock(); now < warmup_end; now = clock()) {
+        struct timespec wmup_start, wmup_stop;
+        clock_gettime(CLOCK_MONOTONIC, &wmup_start);
+        unsigned long elapsed_us = 0;
+        while (elapsed_us < args.warmup_ms * 1000) {
             z_publisher_put(z_loan(pub), data, args.size, NULL);
             pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
+            clock_gettime(CLOCK_MONOTONIC, &wmup_stop);
+            elapsed_us =
+                (1000000 * (wmup_stop.tv_sec - wmup_start.tv_sec) + (wmup_stop.tv_nsec - wmup_start.tv_nsec) / 1000);
         }
     }
-    clock_t* results = malloc(sizeof(clock_t) * args.number_of_pings);
+    struct timespec t_start, t_stop;
+    unsigned long* results = malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
-        clock_t start = clock();
+        clock_gettime(CLOCK_MONOTONIC, &t_start);
         z_publisher_put(z_loan(pub), data, args.size, NULL);
         pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
-        clock_t end = clock();
-        results[i] = end - start;
+        clock_gettime(CLOCK_MONOTONIC, &t_stop);
+        results[i] = (1000000 * (t_stop.tv_sec - t_start.tv_sec) + (t_stop.tv_nsec - t_start.tv_nsec) / 1000);
     }
     for (int i = 0; i < args.number_of_pings; i++) {
-        clock_t rtt = results[i] * 1000000 / CLOCKS_PER_SEC;
-        printf("%d bytes: seq=%d rtt=%ldµs lat=%ldµs\n", args.size, i, rtt, rtt / 2);
+        printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);
     }
     pthread_mutex_unlock(&mutex);
     free(results);
