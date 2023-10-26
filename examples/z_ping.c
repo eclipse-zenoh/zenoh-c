@@ -6,6 +6,10 @@
 
 #include "zenoh.h"
 
+#define DEFAULT_PKT_SIZE 8
+#define DEFAULT_PING_NB 100
+#define DEFAULT_WARMUP_MS 1000
+
 pthread_cond_t cond;
 pthread_mutex_t mutex;
 struct timespec ping_timeout = {.tv_sec = 1, .tv_nsec = 0};
@@ -27,11 +31,12 @@ int main(int argc, char** argv) {
     if (args.help_requested) {
         printf(
             "\
-		-n (optional, int, default=100): the number of pings to be attempted\n\
-		-s (optional, int, default=8): the size of the payload embedded in the ping and repeated by the pong\n\
-		-w (optional, int, default=1000): the warmup time in ms during which pings will be emitted but not measured\n\
+		-n (optional, int, default=%d): the number of pings to be attempted\n\
+		-s (optional, int, default=%d): the size of the payload embedded in the ping and repeated by the pong\n\
+		-w (optional, int, default=%d): the warmup time in ms during which pings will be emitted but not measured\n\
 		-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
-		");
+		",
+            DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
         return 1;
     }
     pthread_mutex_init(&mutex, NULL);
@@ -102,17 +107,17 @@ struct args_t parse_args(int argc, char** argv) {
         }
     }
     char* arg = getopt(argc, argv, 's');
-    unsigned int size = 8;
+    unsigned int size = DEFAULT_PKT_SIZE;
     if (arg) {
         size = atoi(arg);
     }
     arg = getopt(argc, argv, 'n');
-    unsigned int number_of_pings = 100;
+    unsigned int number_of_pings = DEFAULT_PING_NB;
     if (arg) {
         number_of_pings = atoi(arg);
     }
     arg = getopt(argc, argv, 'w');
-    unsigned int warmup_ms = 1000;
+    unsigned int warmup_ms = DEFAULT_WARMUP_MS;
     if (arg) {
         warmup_ms = atoi(arg);
     }
