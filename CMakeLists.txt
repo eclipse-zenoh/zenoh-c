@@ -42,7 +42,7 @@ else()
 	file(COPY
 		${CARGO_PROJECT_DIR}/splitguide.yaml
 		${CARGO_PROJECT_DIR}/cbindgen.toml
-		${CARGO_PROJECT_DIR}/rust-toolchain
+		${CARGO_PROJECT_DIR}/rust-toolchain.toml
 		DESTINATION ${cargo_toml_dir})
 	set(cargo_generated_include_dir ${cargo_toml_dir}/include)
 endif()
