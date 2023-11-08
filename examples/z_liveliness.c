@@ -21,13 +21,18 @@
 #endif
 #include "zenoh.h"
 
-const char *expr = "group1/zenoh-rs";
-z_keyexpr_t keyexpr;
-
 int main(int argc, char **argv) {
+    char *expr = "group1/zenoh-rs";
     if (argc > 1) {
         expr = argv[1];
     }
+
+    z_keyexpr_t keyexpr = z_keyexpr(expr);
+    if (!z_check(keyexpr)) {
+        printf("%s is not a valid key expression\n", expr);
+        exit(-1);
+    }
+
     z_owned_config_t config = z_config_default();
     if (argc > 2) {
         if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
@@ -45,16 +50,11 @@ int main(int argc, char **argv) {
         printf("Unable to open session!\n");
         exit(-1);
     }
-    keyexpr = z_keyexpr(expr);
-    if (!z_check(keyexpr)) {
-        printf("%s is not a valid key expression", expr);
-        exit(-1);
-    }
 
     printf("Declaring liveliness token '%s'...\n", expr);
     zc_owned_liveliness_token_t token = zc_liveliness_declare_token(z_loan(s), keyexpr, NULL);
     if (!zc_liveliness_token_check(&token)) {
-        printf("Unable to create liveliness token.\n");
+        printf("Unable to create liveliness token!\n");
         exit(-1);
     }
 

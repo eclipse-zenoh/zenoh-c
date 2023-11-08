@@ -39,6 +39,12 @@ int main(int argc, char **argv) {
         expr = argv[1];
     }
 
+    z_keyexpr_t keyexpr = z_keyexpr(expr);
+    if (!z_check(keyexpr)) {
+        printf("%s is not a valid key expression\n", expr);
+        exit(-1);
+    }
+
     z_owned_config_t config = z_config_default();
     if (argc > 2) {
         if (zc_config_insert_json(z_loan(config), Z_CONFIG_LISTEN_KEY, argv[2]) < 0) {
@@ -57,9 +63,9 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    z_owned_closure_sample_t callback = z_closure(data_handler);
     printf("Declaring liveliness subscriber on '%s'...\n", expr);
-    z_owned_subscriber_t sub = zc_liveliness_declare_subscriber(z_loan(s), z_keyexpr(expr), z_move(callback), NULL);
+    z_owned_closure_sample_t callback = z_closure(data_handler);
+    z_owned_subscriber_t sub = zc_liveliness_declare_subscriber(z_loan(s), keyexpr, z_move(callback), NULL);
     if (!z_check(sub)) {
         printf("Unable to declare liveliness subscriber.\n");
         exit(-1);
