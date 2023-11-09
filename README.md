@@ -24,7 +24,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 -------------------------------
 ## How to build it
 
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in mantaining compatibility between the various git repositories in the Zenoh project.
+> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in maintaining compatibility between the various git repositories in the Zenoh project.
 
 1. Make sure that [Rust](https://www.rust-lang.org) is available on your platform.
     Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
@@ -43,9 +43,9 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
 3. Build:
 
-  Good CMake practice is to perform build outside of source directory, leaving source tree untouched. The examples below demonstrates this mode of building. On the other hand VScode by default creates build directory named 'build' inside source tree. In this case build script sligthly changes its behavior. See more about it in section 'VScode'.
+  Good CMake practice is to perform build outside of source directory, leaving source tree untouched. The examples below demonstrates this mode of building. On the other hand VScode by default creates build directory named 'build' inside source tree. In this case build script slightly changes its behavior. See more about it in section 'VScode'.
 
-  By default build configuration is set to `Release`, it's not necessary to add `-DCMAKE_BUILD_TYPE=Release` option on configuration step. But if your platform uses multi-config generator by default (this is the case on Windows), you may need to add option `--config Release` on build step. See more in CMake [build-configurations] documenation. Option`--config Release` is skipped in further examples for brewity. It's actually necessary for [Visual Studio generators] only. For [Ninja Multi-Config] the build script is able to select `Release` as the default configuration.
+  By default build configuration is set to `Release`, it's not necessary to add `-DCMAKE_BUILD_TYPE=Release` option on configuration step. But if your platform uses multi-config generator by default (this is the case on Windows), you may need to add option `--config Release` on build step. See more in CMake [build-configurations] documentation. Option`--config Release` is skipped in further examples for brewity. It's actually necessary for [Visual Studio generators] only. For [Ninja Multi-Config] the build script is able to select `Release` as the default configuration.
 
   ```bash
   $ mkdir -p build && cd build 
@@ -195,11 +195,11 @@ Finally, we strongly advise that you refrain from using structure field that sta
 * We reserve the right to change the memory layout of any type which has `_`-prefixed fields, so trying to use them might cause your code to break on updates.
 
 ## Logging
-By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behaviour can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logger` function.
+By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behavior can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logger` function.
 
 ## Cross-Compilation
 * The following alternative options have been introduced to facilitate cross-compilation.
-> :warning: **WARNING** :warning: : Perhaps aditional efforts are neccesary, that will depend of your enviroment.
+> :warning: **WARNING** :warning: : Perhaps additional efforts are necessary, that will depend of your environment.
 
 - `-DZENOHC_CARGO_CHANNEL=nightly|beta|stable`: refers to a specific rust toolchain release [`rust-channels`] https://rust-lang.github.io/rustup/concepts/channels.html
 - `-DZENOHC_CARGO_FLAGS`: several optional flags can be used for compilation. [`cargo flags`] https://doc.rust-lang.org/cargo/commands/cargo-build.html
@@ -219,7 +219,7 @@ Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
   $ cmake ../zenoh-c  -DZENOHC_CARGO_CHANNEL=nightly -DZENOHC_CARGO_FLAGS="-Zbuild-std=std,panic_abort" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
   $ cmake --build . --target install
   ```
-Additionaly you can use `RUSTFLAGS` enviroment variable for lead the compilation.
+Additionally you can use `RUSTFLAGS` environment variable for lead the compilation.
 
 - 
 
