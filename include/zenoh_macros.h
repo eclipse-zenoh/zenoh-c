@@ -37,7 +37,8 @@
                   z_owned_reply_channel_t * : z_reply_channel_drop,                 \
                   zc_owned_payload_t * : zc_payload_drop,                           \
                   zc_owned_shmbuf_t * : zc_shmbuf_drop,                             \
-                  zc_owned_shm_manager_t * : zc_shm_manager_drop                    \
+                  zc_owned_shm_manager_t * : zc_shm_manager_drop,                   \
+                  zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token     \
             )(x)
 
 #define z_null(x) (*x = \

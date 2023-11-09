@@ -66,11 +66,11 @@ int main(int argc, char **argv) {
             sleep(1);
         } else if (c == 'd') {
             printf("Undeclaring liveliness token...\n");
-            zc_liveliness_undeclare_token(&token);
+            z_drop(z_move(token));
         }
     }
 
-    zc_liveliness_undeclare_token(z_move(token));
+    z_drop(z_move(token));
     z_close(z_move(s));
     return 0;
 }
