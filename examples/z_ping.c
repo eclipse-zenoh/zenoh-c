@@ -6,6 +6,10 @@
 
 #include "zenoh.h"
 
+#define DEFAULT_PKT_SIZE 8
+#define DEFAULT_PING_NB 100
+#define DEFAULT_WARMUP_MS 1000
+
 pthread_cond_t cond;
 pthread_mutex_t mutex;
 struct timespec ping_timeout = {.tv_sec = 1, .tv_nsec = 0};
@@ -27,11 +31,12 @@ int main(int argc, char** argv) {
     if (args.help_requested) {
         printf(
             "\
-		-n (optional, int, default=100): the number of pings to be attempted\n\
-		-s (optional, int, default=8): the size of the payload embedded in the ping and repeated by the pong\n\
-		-w (optional, int, default=1000): the warmup time in ms during which pings will be emitted but not measured\n\
+		-n (optional, int, default=%d): the number of pings to be attempted\n\
+		-s (optional, int, default=%d): the size of the payload embedded in the ping and repeated by the pong\n\
+		-w (optional, int, default=%d): the warmup time in ms during which pings will be emitted but not measured\n\
 		-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
-		");
+		",
+            DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
         return 1;
     }
     pthread_mutex_init(&mutex, NULL);
@@ -50,23 +55,28 @@ int main(int argc, char** argv) {
     pthread_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
-        clock_t warmup_end = clock() + CLOCKS_PER_SEC * args.warmup_ms / 1000;
-        for (clock_t now = clock(); now < warmup_end; now = clock()) {
+        struct timespec wmup_start, wmup_stop;
+        clock_gettime(CLOCK_MONOTONIC, &wmup_start);
+        unsigned long elapsed_us = 0;
+        while (elapsed_us < args.warmup_ms * 1000) {
             z_publisher_put(z_loan(pub), data, args.size, NULL);
             pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
+            clock_gettime(CLOCK_MONOTONIC, &wmup_stop);
+            elapsed_us =
+                (1000000 * (wmup_stop.tv_sec - wmup_start.tv_sec) + (wmup_stop.tv_nsec - wmup_start.tv_nsec) / 1000);
         }
     }
-    clock_t* results = malloc(sizeof(clock_t) * args.number_of_pings);
+    struct timespec t_start, t_stop;
+    unsigned long* results = malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
-        clock_t start = clock();
+        clock_gettime(CLOCK_MONOTONIC, &t_start);
         z_publisher_put(z_loan(pub), data, args.size, NULL);
         pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
-        clock_t end = clock();
-        results[i] = end - start;
+        clock_gettime(CLOCK_MONOTONIC, &t_stop);
+        results[i] = (1000000 * (t_stop.tv_sec - t_start.tv_sec) + (t_stop.tv_nsec - t_start.tv_nsec) / 1000);
     }
     for (int i = 0; i < args.number_of_pings; i++) {
-        clock_t rtt = results[i] * 1000000 / CLOCKS_PER_SEC;
-        printf("%d bytes: seq=%d rtt=%ldµs lat=%ldµs\n", args.size, i, rtt, rtt / 2);
+        printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);
     }
     pthread_mutex_unlock(&mutex);
     free(results);
@@ -97,17 +107,17 @@ struct args_t parse_args(int argc, char** argv) {
         }
     }
     char* arg = getopt(argc, argv, 's');
-    unsigned int size = 8;
+    unsigned int size = DEFAULT_PKT_SIZE;
     if (arg) {
         size = atoi(arg);
     }
     arg = getopt(argc, argv, 'n');
-    unsigned int number_of_pings = 100;
+    unsigned int number_of_pings = DEFAULT_PING_NB;
     if (arg) {
         number_of_pings = atoi(arg);
     }
     arg = getopt(argc, argv, 'w');
-    unsigned int warmup_ms = 1000;
+    unsigned int warmup_ms = DEFAULT_WARMUP_MS;
     if (arg) {
         warmup_ms = atoi(arg);
     }
