@@ -1,3 +1,5 @@
+use crate::attachements::z_attachement_null;
+use crate::attachements::z_attachement_t;
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -112,6 +114,7 @@ pub struct z_put_options_t {
     pub encoding: z_encoding_t,
     pub congestion_control: z_congestion_control_t,
     pub priority: z_priority_t,
+    pub attachements: z_attachement_t,
 }
 
 /// Constructs the default value for :c:type:`z_put_options_t`.
@@ -122,6 +125,7 @@ pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
         encoding: z_encoding_default(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
+        attachements: z_attachement_null(),
     }
 }
 

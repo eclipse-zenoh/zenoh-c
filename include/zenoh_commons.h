@@ -147,6 +147,59 @@ typedef struct z_bytes_t {
   const uint8_t *start;
 } z_bytes_t;
 /**
+ * The body of a loop over an attachment's key-value pairs.
+ *
+ * `key` and `value` are loaned to the body for the duration of a single call.
+ * `context` is passed transparently through the iteration driver.
+ *
+ * Returning `0` is treated as `continue`.
+ * Returning any other value is treated as `break`.
+ */
+typedef int8_t (*z_attachement_iter_body_t)(struct z_bytes_t key,
+                                            struct z_bytes_t value,
+                                            void *context);
+/**
+ * The driver of a loop over an attachement's key-value pairs.
+ *
+ * This function is expected to call `loop_body` once for each key-value pair
+ * within `iterator`, passing `context`, and returning any non-zero value immediately (breaking iteration).
+ */
+typedef int8_t (*z_attachement_iter_driver_t)(void *iterator,
+                                              z_attachement_iter_body_t loop_body,
+                                              void *context);
+/**
+ * The v-table for an attachement.
+ */
+typedef struct z_attachement_vtable_t {
+  /**
+   * See `z_attachement_iteration_driver_t`'s documentation.
+   */
+  z_attachement_iter_driver_t iteration_driver;
+  /**
+   * Returns the number of key-value pairs within the attachement.
+   */
+  uintptr_t (*len)(const void*);
+} z_attachement_vtable_t;
+/**
+ * A v-table based map of vector of bool to vector of bool.
+ *
+ * `vtable == NULL` marks the gravestone value, as this type is often optional.
+ * Users are encouraged to use `z_attachement_null` and `z_attachement_check` to interact.
+ */
+typedef struct z_attachement_t {
+  void *data;
+  const struct z_attachement_vtable_t *vtable;
+} z_attachement_t;
+/**
+ * A map of owned vector of bytes to owned vector of bytes.
+ *
+ * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
+ */
+typedef struct z_owned_bytes_map_t {
+  uint64_t _0[2];
+  uintptr_t _1[4];
+} z_owned_bytes_map_t;
+/**
  * Represents a Zenoh ID.
  *
  * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -331,6 +384,7 @@ typedef struct z_sample_t {
   const void *_zc_buf;
   enum z_sample_kind_t kind;
   struct z_timestamp_t timestamp;
+  struct z_attachement_t attachements;
 } z_sample_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -620,6 +674,7 @@ typedef struct z_put_options_t {
   struct z_encoding_t encoding;
   enum z_congestion_control_t congestion_control;
   enum z_priority_t priority;
+  struct z_attachement_t attachements;
 } z_put_options_t;
 /**
  * Represents the set of options that can be applied to a query reply,
@@ -732,9 +787,65 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 /**
+ * Returns the gravestone value for `z_attachement_t`.
+ */
+ZENOHC_API bool z_attachement_check(const struct z_attachement_t *this_);
+/**
+ * Iterate over `this`'s key-value pairs, breaking if `body` returns a non-zero
+ * value for a key-value pair, and returning the latest return value.
+ *
+ * `context` is passed to `body` to allow stateful closures.
+ *
+ * This function takes no ownership whatsoever.
+ */
+ZENOHC_API
+int8_t z_attachement_iterate(struct z_attachement_t this_,
+                             z_attachement_iter_body_t body,
+                             void *context);
+/**
+ * Returns the number of key-value pairs in `this`.
+ */
+ZENOHC_API uintptr_t z_attachement_len(struct z_attachement_t this_);
+/**
+ * Returns the gravestone value for `z_attachement_t`.
+ */
+ZENOHC_API struct z_attachement_t z_attachement_null(void);
+/**
  * Returns ``true`` if `b` is initialized.
  */
 ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
+/**
+ * Aliases `this` into a generic `z_attachement_t`, allowing it to be passed to corresponding APIs.
+ */
+ZENOHC_API
+struct z_attachement_t z_bytes_map_as_attachement(const struct z_owned_bytes_map_t *this_);
+/**
+ * Returns `true` if the map is not in its gravestone state
+ */
+ZENOHC_API bool z_bytes_map_check(const struct z_owned_bytes_map_t *this_);
+/**
+ * Destroys the map, resetting `this` to its gravestone value.
+ *
+ * This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+ */
+ZENOHC_API void z_bytes_map_drop(struct z_owned_bytes_map_t *this_);
+/**
+ * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
+ *
+ * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ */
+ZENOHC_API
+void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
+                                struct z_bytes_t key,
+                                struct z_bytes_t value);
+/**
+ * Constructs a new map.
+ */
+ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
+/**
+ * Constructs the gravestone value for `z_owned_bytes_map_t`
+ */
+ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *

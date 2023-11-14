@@ -23,6 +23,12 @@ pub struct z_bytes_t {
 }
 
 impl z_bytes_t {
+    pub fn as_slice(&self) -> Option<&[u8]> {
+        if self.start.is_null() {
+            return None;
+        }
+        Some(unsafe { core::slice::from_raw_parts(self.start, self.len) })
+    }
     pub fn empty() -> Self {
         z_bytes_t {
             start: std::ptr::null(),
