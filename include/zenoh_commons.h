@@ -668,6 +668,34 @@ typedef struct z_subscriber_t {
   const struct z_owned_subscriber_t *_0;
 } z_subscriber_t;
 /**
+ * The options for `zc_liveliness_declare_token`
+ */
+typedef struct zc_owned_liveliness_declaration_options_t {
+  uint8_t _inner;
+} zc_owned_liveliness_declaration_options_t;
+/**
+ * The options for `zc_liveliness_declare_subscriber`
+ */
+typedef struct zc_owned_liveliness_declare_subscriber_options_t {
+  uint8_t _inner;
+} zc_owned_liveliness_declare_subscriber_options_t;
+/**
+ * A liveliness token that can be used to provide the network with information about connectivity to its
+ * declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
+ * expressions.
+ *
+ * A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
+ */
+typedef struct zc_owned_liveliness_token_t {
+  uintptr_t _inner[4];
+} zc_owned_liveliness_token_t;
+/**
+ * The options for `zc_liveliness_declare_subscriber`
+ */
+typedef struct zc_owned_liveliness_get_options_t {
+  uint32_t timeout_ms;
+} zc_owned_liveliness_get_options_t;
+/**
  * An owned payload, backed by a reference counted owner.
  *
  * The `payload` field may be modified, and Zenoh will take the new values into account,
@@ -1679,6 +1707,99 @@ ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, uintptr_t 
 ZENOHC_API
 struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
                                                    uintptr_t len);
+/**
+ * Returns `true` if the options are valid.
+ */
+ZENOHC_API
+bool zc_liveliness_declaration_options_check(const struct zc_owned_liveliness_declaration_options_t *_opts);
+/**
+ * Destroys the options.
+ */
+ZENOHC_API
+void zc_liveliness_declaration_options_drop(struct zc_owned_liveliness_declaration_options_t *opts);
+/**
+ * The gravestone value for `zc_owned_liveliness_declaration_options_t`
+ */
+ZENOHC_API
+struct zc_owned_liveliness_declaration_options_t zc_liveliness_declaration_options_null(void);
+/**
+ * Declares a subscriber on liveliness tokens that intersect `key`.
+ *
+ * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+ */
+ZENOHC_API
+struct z_owned_subscriber_t zc_liveliness_declare_subscriber(struct z_session_t session,
+                                                             struct z_keyexpr_t key,
+                                                             struct z_owned_closure_sample_t *callback,
+                                                             const struct zc_owned_liveliness_declare_subscriber_options_t *_options);
+/**
+ * Constructs and declares a liveliness token on the network.
+ *
+ * Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
+ * is achieved, and a DELETE sample if it's lost.
+ *
+ * Passing `NULL` as options is valid and equivalent to a pointer to the default options.
+ */
+ZENOHC_API
+struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_t session,
+                                                               struct z_keyexpr_t key,
+                                                               const struct zc_owned_liveliness_declaration_options_t *_options);
+/**
+ * Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
+ *
+ * Note that the same "value stealing" tricks apply as with a normal `z_get`
+ *
+ * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+ */
+ZENOHC_API
+int8_t zc_liveliness_get(struct z_session_t session,
+                         struct z_keyexpr_t key,
+                         struct z_owned_closure_reply_t *callback,
+                         const struct zc_owned_liveliness_get_options_t *options);
+/**
+ * Returns `true` if the options are valid.
+ */
+ZENOHC_API
+bool zc_liveliness_get_options_check(const struct zc_owned_liveliness_get_options_t *_opts);
+/**
+ * The gravestone value for `zc_owned_liveliness_get_options_t`
+ */
+ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_default(void);
+/**
+ * Destroys the options.
+ */
+ZENOHC_API void zc_liveliness_get_options_drop(struct zc_owned_liveliness_get_options_t *opts);
+/**
+ * The gravestone value for `zc_owned_liveliness_get_options_t`
+ */
+ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_null(void);
+/**
+ * Returns `true` if the options are valid.
+ */
+ZENOHC_API
+bool zc_liveliness_subscriber_options_check(const struct zc_owned_liveliness_declare_subscriber_options_t *_opts);
+/**
+ * Destroys the options.
+ */
+ZENOHC_API
+void zc_liveliness_subscriber_options_drop(struct zc_owned_liveliness_declare_subscriber_options_t *opts);
+/**
+ * The gravestone value for `zc_owned_liveliness_declare_subscriber_options_t`
+ */
+ZENOHC_API
+struct zc_owned_liveliness_declare_subscriber_options_t zc_liveliness_subscriber_options_null(void);
+/**
+ * Returns `true` unless the token is at its gravestone value.
+ */
+ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token_t *token);
+/**
+ * The gravestone value for liveliness tokens.
+ */
+ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
+/**
+ * Destroys a liveliness token, notifying subscribers of its destruction.
+ */
+ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
  * Returns `false` if `payload` is the gravestone value.
  */
