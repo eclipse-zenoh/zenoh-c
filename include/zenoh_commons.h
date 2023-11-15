@@ -184,7 +184,7 @@ typedef struct z_attachement_vtable_t {
   uintptr_t (*len)(const void*);
 } z_attachement_vtable_t;
 /**
- * A v-table based map of vector of bool to vector of bool.
+ * A v-table based map of byte slice to byte slice.
  *
  * `vtable == NULL` marks the gravestone value, as this type is often optional.
  * Users are encouraged to use `z_attachement_null` and `z_attachement_check` to interact.
@@ -194,7 +194,7 @@ typedef struct z_attachement_t {
   const struct z_attachement_vtable_t *vtable;
 } z_attachement_t;
 /**
- * A map of owned vector of bytes to owned vector of bytes.
+ * A map of maybe-owned vector of bytes to owned vector of bytes.
  *
  * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
  */

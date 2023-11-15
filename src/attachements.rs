@@ -33,7 +33,7 @@ pub struct z_attachement_vtable_t {
     len: extern "C" fn(*const c_void) -> usize,
 }
 
-/// A v-table based map of vector of bool to vector of bool.
+/// A v-table based map of byte slice to byte slice.
 ///
 /// `vtable == NULL` marks the gravestone value, as this type is often optional.
 /// Users are encouraged to use `z_attachement_null` and `z_attachement_check` to interact.
@@ -79,7 +79,7 @@ pub extern "C" fn z_attachement_len(this: z_attachement_t) -> usize {
     (this.vtable.unwrap().len)(this.data)
 }
 
-/// A map of owned vector of bytes to owned vector of bytes.
+/// A map of maybe-owned vector of bytes to owned vector of bytes.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
 #[repr(C)]
@@ -118,7 +118,7 @@ pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
 pub extern "C" fn z_bytes_map_drop(this: &mut z_owned_bytes_map_t) {
     let this = core::mem::replace(this, z_bytes_map_null());
     if z_bytes_map_check(&this) {
-        core::mem::drop(unsafe { core::mem::transmute::<_, HashMap<Vec<u8>, Vec<u8>>>(this) })
+        core::mem::drop(unsafe { core::mem::transmute::<_, HashMap<Cow<[u8]>, Cow<[u8]>>>(this) })
     }
 }
 
