@@ -11,6 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+
+#![allow(non_camel_case_types)]
+
 mod collections;
 pub use crate::collections::*;
 mod config;
@@ -39,6 +42,8 @@ mod publisher;
 pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
+mod liveliness;
+pub use liveliness::*;
 #[cfg(feature = "shared-memory")]
 mod shm;
 
