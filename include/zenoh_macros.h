@@ -38,7 +38,8 @@
                   zc_owned_payload_t * : zc_payload_drop,                           \
                   zc_owned_shmbuf_t * : zc_shmbuf_drop,                             \
                   zc_owned_shm_manager_t * : zc_shm_manager_drop,                   \
-                  zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token     \
+                  zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token,    \
+                  z_owned_bytes_map_t * : z_bytes_map_drop                          \
             )(x)
 
 #define z_null(x) (*x = \
@@ -64,7 +65,9 @@
                   zc_owned_payload_t * : zc_payload_null,                           \
                   zc_owned_shmbuf_t * : zc_shmbuf_null,                             \
                   zc_owned_shm_manager_t * : zc_shm_manager_null,                   \
-                  zc_owned_liveliness_token_t * : zc_liveliness_token_null          \
+                  zc_owned_liveliness_token_t * : zc_liveliness_token_null,         \
+                  z_owned_bytes_map_t * : z_bytes_map_null,                         \
+                  z_attachement_t : z_attachement_null                              \
             )())
 
 #define z_check(x) \
@@ -85,7 +88,9 @@
                   zc_owned_payload_t : zc_payload_check,                  \
                   zc_owned_shmbuf_t : zc_shmbuf_check,                    \
                   zc_owned_shm_manager_t : zc_shm_manager_check,          \
-                  zc_owned_liveliness_token_t : zc_liveliness_token_check \
+                  zc_owned_liveliness_token_t : zc_liveliness_token_check,\
+                  z_owned_bytes_map_t : z_bytes_map_check,                \
+                  z_attachement_t : z_attachement_check                   \
             )(&x)
 
 #define z_call(x, ...) \

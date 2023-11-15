@@ -11,7 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+#include <stdint.h>
 #include <stdio.h>
+#include <zenoh_macros.h>
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <windows.h>
 #define sleep(x) Sleep(x * 1000)
@@ -22,10 +24,19 @@
 
 const char *kind_to_str(z_sample_kind_t kind);
 
+int8_t attachement_handler(z_bytes_t key, z_bytes_t value, void *ctx) {
+    (void)ctx;
+    printf(">> [Subscriber]   attached %.*s -> %.*s", (int)key.len, key.start, (int)value.len, value.start);
+    return 0;
+}
+
 void data_handler(const z_sample_t *sample, void *arg) {
     z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
     printf(">> [Subscriber] Received %s ('%s': '%.*s')\n", kind_to_str(sample->kind), z_loan(keystr),
            (int)sample->payload.len, sample->payload.start);
+    if (z_check(sample->attachements)) {
+        z_attachement_iterate(sample->attachements, attachement_handler, NULL);
+    }
     z_drop(z_move(keystr));
 }
 

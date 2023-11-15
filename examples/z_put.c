@@ -23,6 +23,9 @@ int main(int argc, char **argv) {
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
 
+    z_owned_bytes_map_t attachements = z_bytes_map_new();
+    z_bytes_map_insert_by_copy(&attachements, z_bytes_new("hello"), z_bytes_new("there"));
+
     z_owned_config_t config = z_config_default();
     if (argc > 3) {
         if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
@@ -44,11 +47,13 @@ int main(int argc, char **argv) {
     printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
     z_put_options_t options = z_put_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
+    options.attachements = z_bytes_map_as_attachement(&attachements);
     int res = z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)value, strlen(value), &options);
     if (res < 0) {
         printf("Put failed...\n");
     }
 
     z_close(z_move(s));
+    z_drop(z_move(attachements));
     return 0;
 }

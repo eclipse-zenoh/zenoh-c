@@ -140,7 +140,10 @@ typedef enum z_sample_kind_t {
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
 /**
- * An array of bytes.
+ * A contiguous view of bytes owned by some other entity.
+ *
+ * `start` being `null` is considered a gravestone value,
+ * and empty slices are represented using a possibly dangling pointer for `start`.
  */
 typedef struct z_bytes_t {
   size_t len;
@@ -846,6 +849,16 @@ ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
  * Constructs the gravestone value for `z_owned_bytes_map_t`
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
+/**
+ * Returns a view of `str` using `strlen`.
+ *
+ * `str == NULL` will cause this to return `z_bytes_null()`
+ */
+ZENOHC_API struct z_bytes_t z_bytes_new(const char *str);
+/**
+ * Returns the gravestone value for `z_bytes_t`
+ */
+ZENOHC_API struct z_bytes_t z_bytes_null(void);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *
