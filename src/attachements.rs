@@ -109,7 +109,7 @@ pub extern "C" fn z_bytes_map_null() -> z_owned_bytes_map_t {
 /// Returns `true` if the map is not in its gravestone state
 #[no_mangle]
 pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
-    this._0 != [0; 2] && this._1 != [0; 4]
+    this.is_some()
 }
 /// Destroys the map, resetting `this` to its gravestone value.
 ///
