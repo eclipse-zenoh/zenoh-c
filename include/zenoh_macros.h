@@ -16,29 +16,31 @@
             )(&x)
 
 #define z_drop(x) \
-    _Generic((x), z_owned_session_t * : z_close,                                    \
-                  z_owned_publisher_t * : z_undeclare_publisher,                    \
-                  z_owned_keyexpr_t * : z_keyexpr_drop,                             \
-                  z_owned_config_t * : z_config_drop,                               \
-                  z_owned_scouting_config_t * : z_scouting_config_drop,             \
-                  z_owned_pull_subscriber_t * : z_undeclare_pull_subscriber,        \
-                  z_owned_subscriber_t * : z_undeclare_subscriber,                  \
-                  z_owned_queryable_t * : z_undeclare_queryable,                    \
-                  z_owned_encoding_t * : z_encoding_drop,                           \
-                  z_owned_reply_t * : z_reply_drop,                                 \
-                  z_owned_hello_t * : z_hello_drop,                                 \
-                  z_owned_str_t * : z_str_drop,                                     \
-                  z_owned_closure_sample_t * : z_closure_sample_drop,               \
-                  z_owned_closure_query_t * : z_closure_query_drop,                 \
-                  z_owned_closure_reply_t * : z_closure_reply_drop,                 \
-                  z_owned_closure_hello_t * : z_closure_hello_drop,                 \
-                  z_owned_closure_zid_t * : z_closure_zid_drop,                     \
-                  z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop, \
-                  z_owned_reply_channel_t * : z_reply_channel_drop,                 \
-                  zc_owned_payload_t * : zc_payload_drop,                           \
-                  zc_owned_shmbuf_t * : zc_shmbuf_drop,                             \
-                  zc_owned_shm_manager_t * : zc_shm_manager_drop,                   \
-                  zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token     \
+    _Generic((x), z_owned_session_t * : z_close,                                     \
+                  z_owned_publisher_t * : z_undeclare_publisher,                     \
+                  z_owned_keyexpr_t * : z_keyexpr_drop,                              \
+                  z_owned_config_t * : z_config_drop,                                \
+                  z_owned_scouting_config_t * : z_scouting_config_drop,              \
+                  z_owned_pull_subscriber_t * : z_undeclare_pull_subscriber,         \
+                  z_owned_subscriber_t * : z_undeclare_subscriber,                   \
+                  z_owned_queryable_t * : z_undeclare_queryable,                     \
+                  z_owned_encoding_t * : z_encoding_drop,                            \
+                  z_owned_reply_t * : z_reply_drop,                                  \
+                  z_owned_hello_t * : z_hello_drop,                                  \
+                  z_owned_str_t * : z_str_drop,                                      \
+                  z_owned_closure_sample_t * : z_closure_sample_drop,                \
+                  z_owned_closure_query_t * : z_closure_query_drop,                  \
+                  z_owned_closure_reply_t * : z_closure_reply_drop,                  \
+                  z_owned_closure_hello_t * : z_closure_hello_drop,                  \
+                  z_owned_closure_zid_t * : z_closure_zid_drop,                      \
+                  z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop,  \
+                  z_owned_reply_channel_t * : z_reply_channel_drop,                  \
+                  zc_owned_payload_t * : zc_payload_drop,                            \
+                  zc_owned_shmbuf_t * : zc_shmbuf_drop,                              \
+                  zc_owned_shm_manager_t * : zc_shm_manager_drop,                    \
+                  zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token,     \
+                  ze_owned_publication_cache_t* : ze_close_publication_cache,        \
+                  ze_owned_querying_subscriber_t* : ze_undeclare_querying_subscriber \
             )(x)
 
 #define z_null(x) (*x = \
@@ -68,24 +70,25 @@
             )())
 
 #define z_check(x) \
-    _Generic((x), z_owned_session_t : z_session_check,                    \
-                  z_owned_publisher_t : z_publisher_check,                \
-                  z_owned_keyexpr_t : z_keyexpr_check,                    \
-                  z_keyexpr_t : z_keyexpr_is_initialized,                 \
-                  z_owned_config_t : z_config_check,                      \
-                  z_owned_scouting_config_t : z_scouting_config_check,    \
-                  z_bytes_t : z_bytes_check,                              \
-                  z_owned_subscriber_t : z_subscriber_check,              \
-                  z_owned_pull_subscriber_t : z_pull_subscriber_check,    \
-                  z_owned_queryable_t : z_queryable_check,                \
-                  z_owned_encoding_t : z_encoding_check,                  \
-                  z_owned_reply_t : z_reply_check,                        \
-                  z_owned_hello_t : z_hello_check,                        \
-                  z_owned_str_t : z_str_check,                            \
-                  zc_owned_payload_t : zc_payload_check,                  \
-                  zc_owned_shmbuf_t : zc_shmbuf_check,                    \
-                  zc_owned_shm_manager_t : zc_shm_manager_check,          \
-                  zc_owned_liveliness_token_t : zc_liveliness_token_check \
+    _Generic((x), z_owned_session_t : z_session_check,                         \
+                  z_owned_publisher_t : z_publisher_check,                     \
+                  z_owned_keyexpr_t : z_keyexpr_check,                         \
+                  z_keyexpr_t : z_keyexpr_is_initialized,                      \
+                  z_owned_config_t : z_config_check,                           \
+                  z_owned_scouting_config_t : z_scouting_config_check,         \
+                  z_bytes_t : z_bytes_check,                                   \
+                  z_owned_subscriber_t : z_subscriber_check,                   \
+                  z_owned_pull_subscriber_t : z_pull_subscriber_check,         \
+                  z_owned_queryable_t : z_queryable_check,                     \
+                  z_owned_encoding_t : z_encoding_check,                       \
+                  z_owned_reply_t : z_reply_check,                             \
+                  z_owned_hello_t : z_hello_check,                             \
+                  z_owned_str_t : z_str_check,                                 \
+                  zc_owned_payload_t : zc_payload_check,                       \
+                  zc_owned_shmbuf_t : zc_shmbuf_check,                         \
+                  zc_owned_shm_manager_t : zc_shm_manager_check,               \
+                  zc_owned_liveliness_token_t : zc_liveliness_token_check,     \
+                  ze_owned_querying_subscriber_t: ze_querying_subscriber_check \
             )(&x)
 
 #define z_call(x, ...) \
