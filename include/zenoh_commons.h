@@ -833,6 +833,38 @@ ZENOHC_API bool z_bytes_map_check(const struct z_owned_bytes_map_t *this_);
  */
 ZENOHC_API void z_bytes_map_drop(struct z_owned_bytes_map_t *this_);
 /**
+ * Constructs a map from the provided attachement, copying keys and values.
+ *
+ * If `this` is at gravestone value, the returned value will also be at gravestone value.
+ */
+ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_from_attachement(struct z_attachement_t this_);
+/**
+ * Constructs a map from the provided attachement, aliasing the attachement's keys and values.
+ *
+ * If `this` is at gravestone value, the returned value will also be at gravestone value.
+ */
+ZENOHC_API
+struct z_owned_bytes_map_t z_bytes_map_from_attachement_aliasing(struct z_attachement_t this_);
+/**
+ * Returns the value associated with `key`, returning a gravestone value if:
+ * - `this` or `key` is in gravestone state.
+ * - `this` has no value associated to `key`
+ */
+ZENOHC_API
+struct z_bytes_t z_bytes_map_get(const struct z_owned_bytes_map_t *this_,
+                                 struct z_bytes_t key);
+/**
+ * Associates `value` to `key` in the map, aliasing them.
+ *
+ * Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
+ *
+ * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ */
+ZENOHC_API
+void z_bytes_map_insert_by_alias(const struct z_owned_bytes_map_t *this_,
+                                 struct z_bytes_t key,
+                                 struct z_bytes_t value);
+/**
  * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
  *
  * Calling this with `NULL` or the gravestone value is undefined behaviour.
@@ -841,6 +873,22 @@ ZENOHC_API
 void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
                                 struct z_bytes_t key,
                                 struct z_bytes_t value);
+/**
+ * Iterates over the key-value pairs in the map.
+ *
+ * `body` will be called once per pair, with `ctx` as its last argument.
+ * If `body` returns a non-zero value, the iteration will stop immediately and the value will be returned.
+ * Otherwise, this will return 0 once all pairs have been visited.
+ * `body` is not given ownership of the key nor value, which alias the pairs in the map.
+ * It is safe to keep these aliases until existing keys are modified/removed, or the map is destroyed.
+ * Note that this map is unordered.
+ *
+ * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ */
+ZENOHC_API
+int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
+                        z_attachement_iter_body_t body,
+                        void *ctx);
 /**
  * Constructs a new map.
  */
