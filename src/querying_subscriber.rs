@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017, 2022 ZettaScale Technology.
+// Copyright (c) 2023 ZettaScale Technology.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -12,11 +12,6 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::commons::*;
-use crate::z_closure_sample_call;
-use crate::z_owned_closure_sample_t;
-use crate::z_reliability_t;
-use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::SplitBuffer;
@@ -25,14 +20,13 @@ use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
 
 use crate::{
-    impl_guarded_transmute, z_keyexpr_t, z_query_consolidation_default, z_query_consolidation_t,
-    z_query_target_default, z_query_target_t, z_session_t, zcu_locality_default, zcu_locality_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t, GuardedTransmute,
+    impl_guarded_transmute, z_closure_sample_call, z_keyexpr_t, z_owned_closure_sample_t,
+    z_query_consolidation_default, z_query_consolidation_t, z_query_target_default,
+    z_query_target_t, z_reliability_t, z_sample_t, z_session_t, zcu_locality_default,
+    zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t, GuardedTransmute,
+    LOG_INVALID_SESSION,
 };
 
-/**************************************/
-/*            DECLARATION             */
-/**************************************/
 type FetchingSubscriber = Option<Box<zenoh_ext::FetchingSubscriber<'static, ()>>>;
 
 /// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
@@ -99,6 +93,13 @@ pub extern "C" fn ze_querying_subscriber_null() -> ze_owned_querying_subscriber_
 ///
 /// Members:
 ///   z_reliability_t reliability: The subscription reliability.
+///   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
+///                                  receive by this subscriber.
+///   z_keyexpr_t query_selector: The selector to be used for queries.
+///   z_query_target_t query_target: The target to be used for queries.
+///   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
+///   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
+///   uint64_t query_timeout_ms: The timeout to be used for queries.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
@@ -125,16 +126,16 @@ pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscr
     }
 }
 
-/// Declares a querying subscriber for a given key expression.
+/// Declares a Querying Subscriber for a given key expression.
 ///
 /// Parameters:
-///     session: The zenoh session.
-///     keyexpr: The key expression to subscribe.
-///     callback: The callback function that will be called each time a data matching the subscribed expression is received.
-///     opts: additional options for the querying subscriber.
+///     z_session_t session: The zenoh session.
+///     z_keyexpr_t keyexpr: The key expression to subscribe.
+///     z_owned_closure_sample_t callback: The callback function that will be called each time a data matching the subscribed expression is received.
+///     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
 ///
 /// Returns:
-///    A :c:type:`ze_owned_subscriber_t`.
+///    :c:type:`ze_owned_subscriber_t`.
 ///
 ///    To check if the subscription succeeded and if the querying subscriber is still valid,
 ///    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.

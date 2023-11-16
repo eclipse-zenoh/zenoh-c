@@ -2791,6 +2791,7 @@ dependencies = [
  "serde_yaml",
  "spin 0.9.8",
  "zenoh",
+ "zenoh-ext",
  "zenoh-protocol",
  "zenoh-util",
 ]
@@ -2855,9 +2856,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "zenoh-ext"
+version = "0.11.0-dev"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=master#d2399cad7afda578df4d1f70b9026cd0e5354274"
+dependencies = [
+ "async-std",
+ "bincode",
+ "env_logger",
+ "flume",
+ "futures",
+ "log",
+ "serde",
+ "zenoh",
+ "zenoh-core",
+ "zenoh-macros",
+ "zenoh-result",
+ "zenoh-sync",
+ "zenoh-util",
+]
+
+[[package]]
 name = "zenoh-keyexpr"
 version = "0.11.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=master#b3ba1c421197443db33ff66d0f74973be35f4d48"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=master#d2399cad7afda578df4d1f70b9026cd0e5354274"
 dependencies = [
  "hashbrown 0.14.0",
  "keyed-set",

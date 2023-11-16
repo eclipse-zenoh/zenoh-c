@@ -26,11 +26,11 @@ use crate::{
 /// Options passed to the :c:func:`ze_declare_publication_cache` function.
 ///
 /// Members:
-///     queryable_prefix: the prefix used for queryable
-///     queryable_origin: the restriction for the matching queries that will be receive by this
+///     z_keyexpr_t queryable_prefix: The prefix used for queryable
+///     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
 ///                       publication cache
-///     history: the the history size
-///     resources_limit: the limit number of cached resources
+///     size_t history: The the history size
+///     size_t resources_limit: The limit number of cached resources
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     pub queryable_prefix: z_keyexpr_t,
@@ -94,15 +94,15 @@ impl ze_owned_publication_cache_t {
     }
 }
 
-/// Declares a publication cache.
+/// Declares a Publication Cache.
 ///
 /// Parameters:
-///     session: the zenoh session.
-///     keyexpr: the key expression to publish.
-///     options: additional options for the publication_cache.
+///     z_session_t session: The zenoh session.
+///     z_keyexpr_t keyexpr: The key expression to publish.
+///     ze_publication_cache_options_t options: Additional options for the publication_cache.
 ///
 /// Returns:
-///    A :c:type:`ze_owned_publication_cache_t`.
+///    :c:type:`ze_owned_publication_cache_t`.
 ///
 ///
 /// Example:

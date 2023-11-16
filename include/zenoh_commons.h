@@ -745,11 +745,11 @@ typedef struct ze_owned_publication_cache_t {
  * Options passed to the :c:func:`ze_declare_publication_cache` function.
  *
  * Members:
- *     queryable_prefix: the prefix used for queryable
- *     queryable_origin: the restriction for the matching queries that will be receive by this
+ *     z_keyexpr_t queryable_prefix: The prefix used for queryable
+ *     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
  *                       publication cache
- *     history: the the history size
- *     resources_limit: the limit number of cached resources
+ *     size_t history: The the history size
+ *     size_t resources_limit: The limit number of cached resources
  */
 typedef struct ze_publication_cache_options_t {
   struct z_keyexpr_t queryable_prefix;
@@ -778,6 +778,13 @@ typedef struct ze_owned_querying_subscriber_t {
  *
  * Members:
  *   z_reliability_t reliability: The subscription reliability.
+ *   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
+ *                                  receive by this subscriber.
+ *   z_keyexpr_t query_selector: The selector to be used for queries.
+ *   z_query_target_t query_target: The target to be used for queries.
+ *   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
+ *   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
+ *   uint64_t query_timeout_ms: The timeout to be used for queries.
  */
 typedef struct ze_querying_subscriber_options_t {
   enum z_reliability_t reliability;
@@ -2045,15 +2052,15 @@ ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 ZENOHC_API
 int8_t ze_close_publication_cache(struct ze_owned_publication_cache_t *pub_cache);
 /**
- * Declares a publication cache.
+ * Declares a Publication Cache.
  *
  * Parameters:
- *     session: the zenoh session.
- *     keyexpr: the key expression to publish.
- *     options: additional options for the publication_cache.
+ *     z_session_t session: The zenoh session.
+ *     z_keyexpr_t keyexpr: The key expression to publish.
+ *     ze_publication_cache_options_t options: Additional options for the publication_cache.
  *
  * Returns:
- *    A :c:type:`ze_owned_publication_cache_t`.
+ *    :c:type:`ze_owned_publication_cache_t`.
  *
  *
  * Example:
@@ -2075,16 +2082,16 @@ struct ze_owned_publication_cache_t ze_declare_publication_cache(struct z_sessio
                                                                  struct z_keyexpr_t keyexpr,
                                                                  const struct ze_publication_cache_options_t *options);
 /**
- * Declares a querying subscriber for a given key expression.
+ * Declares a Querying Subscriber for a given key expression.
  *
  * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to subscribe.
- *     callback: The callback function that will be called each time a data matching the subscribed expression is received.
- *     opts: additional options for the querying subscriber.
+ *     z_session_t session: The zenoh session.
+ *     z_keyexpr_t keyexpr: The key expression to subscribe.
+ *     z_owned_closure_sample_t callback: The callback function that will be called each time a data matching the subscribed expression is received.
+ *     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
  *
  * Returns:
- *    A :c:type:`ze_owned_subscriber_t`.
+ *    :c:type:`ze_owned_subscriber_t`.
  *
  *    To check if the subscription succeeded and if the querying subscriber is still valid,
  *    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
