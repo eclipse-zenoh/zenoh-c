@@ -26,8 +26,8 @@ use zenoh_util::core::zresult::ErrNo;
 
 use crate::{
     impl_guarded_transmute, z_keyexpr_t, z_query_consolidation_default, z_query_consolidation_t,
-    z_query_target_default, z_query_target_t, z_session_t, zc_locality_default, zc_locality_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t, GuardedTransmute,
+    z_query_target_default, z_query_target_t, z_session_t, zcu_locality_default, zcu_locality_t,
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t, GuardedTransmute,
 };
 
 /**************************************/
@@ -103,11 +103,11 @@ pub extern "C" fn ze_querying_subscriber_null() -> ze_owned_querying_subscriber_
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
     reliability: z_reliability_t,
-    allowed_origin: zc_locality_t,
+    allowed_origin: zcu_locality_t,
     query_selector: z_keyexpr_t,
     query_target: z_query_target_t,
     query_consolidation: z_query_consolidation_t,
-    query_accept_replies: zc_reply_keyexpr_t,
+    query_accept_replies: zcu_reply_keyexpr_t,
     query_timeout_ms: u64,
 }
 
@@ -116,11 +116,11 @@ pub struct ze_querying_subscriber_options_t {
 pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscriber_options_t {
     ze_querying_subscriber_options_t {
         reliability: SubInfo::default().reliability.into(),
-        allowed_origin: zc_locality_default(),
+        allowed_origin: zcu_locality_default(),
         query_selector: z_keyexpr_t::null(),
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_default(),
-        query_accept_replies: zc_reply_keyexpr_default(),
+        query_accept_replies: zcu_reply_keyexpr_default(),
         query_timeout_ms: 0,
     }
 }

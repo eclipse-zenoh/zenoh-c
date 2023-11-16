@@ -139,15 +139,15 @@ typedef enum z_sample_kind_t {
   Z_SAMPLE_KIND_PUT = 0,
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
-typedef enum zc_locality_t {
-  ZC_LOCALITY_ANY = 0,
-  ZC_LOCALITY_SESSION_LOCAL = 1,
-  ZC_LOCALITY_REMOTE = 2,
-} zc_locality_t;
-typedef enum zc_reply_keyexpr_t {
-  ZC_REPLY_KEYEXPR_ANY = 0,
-  ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
-} zc_reply_keyexpr_t;
+typedef enum zcu_locality_t {
+  ZCU_LOCALITY_ANY = 0,
+  ZCU_LOCALITY_SESSION_LOCAL = 1,
+  ZCU_LOCALITY_REMOTE = 2,
+} zcu_locality_t;
+typedef enum zcu_reply_keyexpr_t {
+  ZCU_REPLY_KEYEXPR_ANY = 0,
+  ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
+} zcu_reply_keyexpr_t;
 /**
  * An array of bytes.
  */
@@ -753,7 +753,7 @@ typedef struct ze_owned_publication_cache_t {
  */
 typedef struct ze_publication_cache_options_t {
   struct z_keyexpr_t queryable_prefix;
-  enum zc_locality_t queryable_origin;
+  enum zcu_locality_t queryable_origin;
   uintptr_t history;
   uintptr_t resources_limit;
 } ze_publication_cache_options_t;
@@ -781,11 +781,11 @@ typedef struct ze_owned_querying_subscriber_t {
  */
 typedef struct ze_querying_subscriber_options_t {
   enum z_reliability_t reliability;
-  enum zc_locality_t allowed_origin;
+  enum zcu_locality_t allowed_origin;
   struct z_keyexpr_t query_selector;
   enum z_query_target_t query_target;
   struct z_query_consolidation_t query_consolidation;
-  enum zc_reply_keyexpr_t query_accept_replies;
+  enum zcu_reply_keyexpr_t query_accept_replies;
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
@@ -1871,7 +1871,6 @@ ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
-ZENOHC_API enum zc_locality_t zc_locality_default(void);
 /**
  * Returns `false` if `payload` is the gravestone value.
  */
@@ -1944,7 +1943,6 @@ int8_t zc_put_owned(struct z_session_t session,
  */
 ZENOHC_API
 struct z_owned_reply_channel_t zc_reply_fifo_new(uintptr_t bound);
-ZENOHC_API enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
 /**
  * Creates a new non-blocking fifo channel, returned as a pair of closures.
  *
@@ -2039,6 +2037,8 @@ ZENOHC_API uint8_t *zc_shmbuf_ptr(const struct zc_owned_shmbuf_t *buf);
 ZENOHC_API
 void zc_shmbuf_set_length(const struct zc_owned_shmbuf_t *buf,
                           uintptr_t len);
+ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
+ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
  * Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
  */

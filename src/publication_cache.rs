@@ -19,7 +19,7 @@ use zenoh_util::core::zresult::ErrNo;
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    impl_guarded_transmute, z_keyexpr_t, z_session_t, zc_locality_default, zc_locality_t,
+    impl_guarded_transmute, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t,
     GuardedTransmute, UninitializedKeyExprError,
 };
 
@@ -34,7 +34,7 @@ use crate::{
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     pub queryable_prefix: z_keyexpr_t,
-    pub queryable_origin: zc_locality_t,
+    pub queryable_origin: zcu_locality_t,
     pub history: usize,
     pub resources_limit: usize,
 }
@@ -44,7 +44,7 @@ pub struct ze_publication_cache_options_t {
 pub extern "C" fn ze_publication_cache_options_default() -> ze_publication_cache_options_t {
     ze_publication_cache_options_t {
         queryable_prefix: z_keyexpr_t::null(),
-        queryable_origin: zc_locality_default(),
+        queryable_origin: zcu_locality_default(),
         history: 1,
         resources_limit: 0,
     }
