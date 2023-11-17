@@ -21,10 +21,9 @@ use zenoh_util::core::zresult::ErrNo;
 
 use crate::{
     impl_guarded_transmute, z_closure_sample_call, z_keyexpr_t, z_owned_closure_sample_t,
-    z_query_consolidation_default, z_query_consolidation_t, z_query_target_default,
-    z_query_target_t, z_reliability_t, z_sample_t, z_session_t, zcu_locality_default,
-    zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t, GuardedTransmute,
-    LOG_INVALID_SESSION,
+    z_query_consolidation_none, z_query_consolidation_t, z_query_target_default, z_query_target_t,
+    z_reliability_t, z_sample_t, z_session_t, zcu_locality_default, zcu_locality_t,
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t, GuardedTransmute, LOG_INVALID_SESSION,
 };
 
 type FetchingSubscriber = Option<Box<zenoh_ext::FetchingSubscriber<'static, ()>>>;
@@ -120,7 +119,7 @@ pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscr
         allowed_origin: zcu_locality_default(),
         query_selector: z_keyexpr_t::null(),
         query_target: z_query_target_default(),
-        query_consolidation: z_query_consolidation_default(),
+        query_consolidation: z_query_consolidation_none(),
         query_accept_replies: zcu_reply_keyexpr_default(),
         query_timeout_ms: 0,
     }

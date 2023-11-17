@@ -53,10 +53,11 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    ze_querying_subscriber_options_t sub_opts = ze_querying_subscriber_options_default();
     z_owned_closure_sample_t callback = z_closure(data_handler);
     printf("Declaring querying subscriber on '%s'...\n", expr);
     ze_owned_querying_subscriber_t sub =
-        ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), z_move(callback), NULL);
+        ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), z_move(callback), &sub_opts);
     if (!z_check(sub)) {
         printf("Unable to declare querying subscriber.\n");
         exit(-1);

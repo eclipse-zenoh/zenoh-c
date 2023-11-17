@@ -71,8 +71,8 @@ int main(int argc, char **argv) {
         z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)buf, strlen(buf), NULL);
     }
 
-    ze_close_publication_cache(z_move(pub_cache));
-
+    z_drop(z_move(pub_cache));
     z_close(z_move(s));
+
     return 0;
 }
