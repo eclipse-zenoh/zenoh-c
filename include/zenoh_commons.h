@@ -2047,11 +2047,6 @@ void zc_shmbuf_set_length(const struct zc_owned_shmbuf_t *buf,
 ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
- * Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
- */
-ZENOHC_API
-int8_t ze_close_publication_cache(struct ze_owned_publication_cache_t *pub_cache);
-/**
  * Declares a Publication Cache.
  *
  * Parameters:
@@ -2143,6 +2138,11 @@ ZENOHC_API struct ze_owned_querying_subscriber_t ze_querying_subscriber_null(voi
  * Constructs the default value for :c:type:`ze_querying_subscriber_options_t`.
  */
 ZENOHC_API struct ze_querying_subscriber_options_t ze_querying_subscriber_options_default(void);
+/**
+ * Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
+ */
+ZENOHC_API
+int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_cache);
 /**
  * Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
  */

@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     printf("Declaring publication cache on '%s'...\n", keyexpr);
     ze_owned_publication_cache_t pub_cache =
         ze_declare_publication_cache(z_loan(s), z_keyexpr(keyexpr), &pub_cache_opts);
-    if (!ze_publication_cache_check(&pub_cache)) {
+    if (!z_check(pub_cache)) {
         printf("Unable to declare publication cache for key expression!\n");
         exit(-1);
     }
