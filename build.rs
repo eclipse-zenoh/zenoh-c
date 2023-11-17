@@ -1,5 +1,6 @@
 use fs2::FileExt;
 use std::io::{Read, Write};
+use std::io::{Read, Write};
 use std::{borrow::Cow, collections::HashMap, io::BufWriter, path::Path};
 
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
