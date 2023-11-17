@@ -24,7 +24,6 @@ use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::SplitBuffer;
-use zenoh::subscriber::Reliability;
 use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
 
@@ -148,50 +147,20 @@ pub extern "C" fn z_pull_subscriber_options_default() -> z_pull_subscriber_optio
 ///
 ///       z_subscriber_options_t opts = z_subscriber_options_default();
 ///       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
-///
-///    Passing custom arguments to the **callback** can be done by defining a custom structure:
-///
-///    .. code-block:: C
-///
-///       typedef struct {
-///         z_keyexpr_t forward;
-///         z_session_t session;
-///       } myargs_t;
-///   
-///       void callback(const z_sample_t sample, const void *arg)
-///       {
-///         myargs_t *myargs = (myargs_t *)arg;
-///         z_put(myargs->session, myargs->forward, sample->value, NULL);
-///       }
-///
-///       int main() {
-///         myargs_t cargs = {
-///           forward = z_keyexpr("forward"),
-///           session = s,
-///         };
-///         z_pull_subscriber_options_t opts = z_pull_subscriber_options_default();
-///         opts.cargs = (void *)&cargs;
-///         z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
-///       }
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_declare_pull_subscriber(
+pub extern "C" fn z_declare_pull_subscriber(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
-    mut opts: *const z_pull_subscriber_options_t,
+    opts: Option<&z_pull_subscriber_options_t>,
 ) -> z_owned_pull_subscriber_t {
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
 
     match session.upgrade() {
         Some(s) => {
-            if opts.is_null() {
-                let default = z_pull_subscriber_options_default();
-                opts = &default;
-            }
-            let reliability: Reliability = (*opts).reliability.into();
-            let res = s
+            let mut res = s
                 .declare_subscriber(keyexpr)
                 .callback(move |sample| {
                     let payload = sample.payload.contiguous();
@@ -202,10 +171,11 @@ pub unsafe extern "C" fn z_declare_pull_subscriber(
                     let sample = z_sample_t::new(&sample, &owner);
                     z_closure_sample_call(&closure, &sample)
                 })
-                .reliability(reliability)
-                .pull_mode()
-                .res();
-            match res {
+                .pull_mode();
+            if let Some(opts) = opts {
+                res = res.reliability(opts.reliability.into())
+            }
+            match res.res() {
                 Ok(sub) => z_owned_pull_subscriber_t::new(sub),
                 Err(e) => {
                     log::debug!("{}", e);

@@ -935,31 +935,6 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
  *
  *       z_subscriber_options_t opts = z_subscriber_options_default();
  *       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
- *
- *    Passing custom arguments to the **callback** can be done by defining a custom structure:
- *
- *    .. code-block:: C
- *
- *       typedef struct {
- *         z_keyexpr_t forward;
- *         z_session_t session;
- *       } myargs_t;
- *
- *       void callback(const z_sample_t sample, const void *arg)
- *       {
- *         myargs_t *myargs = (myargs_t *)arg;
- *         z_put(myargs->session, myargs->forward, sample->value, NULL);
- *       }
- *
- *       int main() {
- *         myargs_t cargs = {
- *           forward = z_keyexpr("forward"),
- *           session = s,
- *         };
- *         z_pull_subscriber_options_t opts = z_pull_subscriber_options_default();
- *         opts.cargs = (void *)&cargs;
- *         z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
- *       }
  */
 ZENOHC_API
 struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t session,
@@ -1015,31 +990,6 @@ struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
  *
  *       z_subscriber_options_t opts = z_subscriber_options_default();
  *       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
- *
- *    Passing custom arguments to the **callback** can be done by defining a custom structure:
- *
- *    .. code-block:: C
- *
- *       typedef struct {
- *         z_keyexpr_t forward;
- *         z_session_t session;
- *       } myargs_t;
- *
- *       void callback(const z_sample_t sample, const void *arg)
- *       {
- *         myargs_t *myargs = (myargs_t *)arg;
- *         z_put(myargs->session, myargs->forward, sample->value, NULL);
- *       }
- *
- *       int main() {
- *         myargs_t cargs = {
- *           forward = z_keyexpr("forward"),
- *           session = s,
- *         };
- *         z_subscriber_options_t opts = z_subscriber_options_default();
- *         opts.cargs = (void *)&cargs;
- *         z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
- *       }
  */
 ZENOHC_API
 struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
