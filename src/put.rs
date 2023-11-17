@@ -117,7 +117,7 @@ pub struct z_put_options_t {
 /// Constructs the default value for :c:type:`z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_put_options_default() -> z_put_options_t {
+pub extern "C" fn z_put_options_default() -> z_put_options_t {
     z_put_options_t {
         encoding: z_encoding_default(),
         congestion_control: CongestionControl::default().into(),
@@ -144,22 +144,20 @@ pub unsafe extern "C" fn z_put(
     keyexpr: z_keyexpr_t,
     payload: *const u8,
     len: size_t,
-    mut opts: *const z_put_options_t,
+    opts: Option<&z_put_options_t>,
 ) -> i8 {
     match session.upgrade() {
         Some(s) => {
-            let default = z_put_options_default();
-            if opts.is_null() {
-                opts = &default;
-            }
-            match s
+            let mut res = s
                 .put(keyexpr, std::slice::from_raw_parts(payload, len))
-                .encoding((*opts).encoding)
-                .kind(SampleKind::Put)
-                .congestion_control((*opts).congestion_control.into())
-                .priority((*opts).priority.into())
-                .res_sync()
-            {
+                .kind(SampleKind::Put);
+            if let Some(opts) = opts {
+                res = res
+                    .encoding(opts.encoding)
+                    .congestion_control(opts.congestion_control.into())
+                    .priority(opts.priority.into());
+            }
+            match res.res_sync() {
                 Err(e) => {
                     log::error!("{}", e);
                     e.errno().get()
@@ -191,27 +189,23 @@ pub unsafe extern "C" fn z_put(
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_put_owned(
+pub extern "C" fn zc_put_owned(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     payload: Option<&mut zc_owned_payload_t>,
-    mut opts: *const z_put_options_t,
+    opts: Option<&z_put_options_t>,
 ) -> i8 {
     match session.upgrade() {
         Some(s) => {
-            let default = z_put_options_default();
-            if opts.is_null() {
-                opts = &default;
-            }
             if let Some(payload) = payload.and_then(|p| p.take()) {
-                match s
-                    .put(keyexpr, payload)
-                    .encoding((*opts).encoding)
-                    .kind(SampleKind::Put)
-                    .congestion_control((*opts).congestion_control.into())
-                    .priority((*opts).priority.into())
-                    .res_sync()
-                {
+                let mut res = s.put(keyexpr, payload).kind(SampleKind::Put);
+                if let Some(opts) = opts {
+                    res = res
+                        .encoding(opts.encoding)
+                        .congestion_control(opts.congestion_control.into())
+                        .priority(opts.priority.into());
+                }
+                match res.res_sync() {
                     Err(e) => {
                         log::error!("{}", e);
                         e.errno().get()
@@ -258,28 +252,27 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete(
+pub extern "C" fn z_delete(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
-    mut opts: *const z_delete_options_t,
+    opts: Option<&z_delete_options_t>,
 ) -> i8 {
-    let default = z_delete_options_default();
-    if opts.is_null() {
-        opts = &default;
-    }
     match session.upgrade() {
-        Some(s) => match s
-            .delete(keyexpr)
-            .congestion_control((*opts).congestion_control.into())
-            .priority((*opts).priority.into())
-            .res_sync()
-        {
-            Err(e) => {
-                log::error!("{}", e);
-                e.errno().get()
+        Some(s) => {
+            let mut res = s.delete(keyexpr);
+            if let Some(opts) = opts {
+                res = res
+                    .congestion_control(opts.congestion_control.into())
+                    .priority(opts.priority.into());
             }
-            Ok(()) => 0,
-        },
+            match res.res_sync() {
+                Err(e) => {
+                    log::error!("{}", e);
+                    e.errno().get()
+                }
+                Ok(()) => 0,
+            }
+        }
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
             i8::MIN
