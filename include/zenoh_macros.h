@@ -223,6 +223,9 @@ inline bool z_check(const z_owned_encoding_t& v) { return z_encoding_check(&v); 
 inline bool z_check(const z_owned_reply_t& v) { return z_reply_check(&v); }
 inline bool z_check(const z_owned_hello_t& v) { return z_hello_check(&v); }
 inline bool z_check(const z_owned_str_t& v) { return z_str_check(&v); }
+inline bool z_check(const zc_owned_liveliness_token_t& v) { return zc_liveliness_token_check(&v); }
+inline bool z_check(const ze_owned_publication_cache_t& v) { return ze_publication_cache_check(&v); }
+inline bool z_check(const ze_owned_querying_subscriber_t& v) { return ze_querying_subscriber_check(&v); }
 
 inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample) 
     { z_closure_sample_call(&closure, sample); }
