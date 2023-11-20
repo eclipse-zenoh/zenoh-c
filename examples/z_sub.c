@@ -45,6 +45,13 @@ int main(int argc, char **argv) {
             exit(-1);
         }
     }
+    // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
+    // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
+    // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
+    if (zc_config_insert_json(z_loan(config), "transport/shared_memory/enabled", "true") < 0) {
+        printf("Error enabling Shared Memory");
+        exit(-1);
+    }
 
     printf("Opening session...\n");
     z_owned_session_t s = z_open(z_move(config));
