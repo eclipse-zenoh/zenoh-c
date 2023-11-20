@@ -20,6 +20,8 @@ use libc::{c_char, c_ulong};
 use zenoh::buffers::ZBuf;
 use zenoh::prelude::SampleKind;
 use zenoh::prelude::SplitBuffer;
+use zenoh::query::ReplyKeyExpr;
+use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
 
@@ -553,4 +555,67 @@ pub extern "C" fn z_str_null() -> z_owned_str_t {
 #[no_mangle]
 pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
     s._cstr
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum zcu_locality_t {
+    ANY = 0,
+    SESSION_LOCAL = 1,
+    REMOTE = 2,
+}
+
+impl From<Locality> for zcu_locality_t {
+    fn from(k: Locality) -> Self {
+        match k {
+            Locality::Any => zcu_locality_t::ANY,
+            Locality::SessionLocal => zcu_locality_t::SESSION_LOCAL,
+            Locality::Remote => zcu_locality_t::REMOTE,
+        }
+    }
+}
+
+impl From<zcu_locality_t> for Locality {
+    fn from(k: zcu_locality_t) -> Self {
+        match k {
+            zcu_locality_t::ANY => Locality::Any,
+            zcu_locality_t::SESSION_LOCAL => Locality::SessionLocal,
+            zcu_locality_t::REMOTE => Locality::Remote,
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn zcu_locality_default() -> zcu_locality_t {
+    Locality::default().into()
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum zcu_reply_keyexpr_t {
+    ANY = 0,
+    MATCHING_QUERY = 1,
+}
+
+impl From<ReplyKeyExpr> for zcu_reply_keyexpr_t {
+    fn from(k: ReplyKeyExpr) -> Self {
+        match k {
+            ReplyKeyExpr::Any => zcu_reply_keyexpr_t::ANY,
+            ReplyKeyExpr::MatchingQuery => zcu_reply_keyexpr_t::MATCHING_QUERY,
+        }
+    }
+}
+
+impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
+    fn from(k: zcu_reply_keyexpr_t) -> Self {
+        match k {
+            zcu_reply_keyexpr_t::ANY => ReplyKeyExpr::Any,
+            zcu_reply_keyexpr_t::MATCHING_QUERY => ReplyKeyExpr::MatchingQuery,
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
+    ReplyKeyExpr::default().into()
 }

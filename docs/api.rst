@@ -1,5 +1,5 @@
 ..
-.. Copyright (c) 2022 ZettaScale Technology
+.. Copyright (c) 2023 ZettaScale Technology
 ..
 .. This program and the accompanying materials are made available under the
 .. terms of the Eclipse Public License 2.0 which is available at
@@ -262,4 +262,38 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_closure_query_call
 .. autocfunction:: zenoh_commons.h::z_closure_query_drop
 
+Publication Cache
+=================
 
+Types
+-----
+
+.. autocstruct:: zenoh_commons.h::ze_publication_cache_options_t
+.. autocstruct:: zenoh_commons.h::ze_owned_publication_cache_t
+
+Functions
+---------
+
+.. autocfunction:: zenoh_commons.h::ze_declare_publication_cache
+.. autocfunction:: zenoh_commons.h::ze_close_publication_cache
+.. autocfunction:: zenoh_commons.h::ze_publication_cache_check
+.. autocfunction:: zenoh_commons.h::ze_publication_cache_null
+.. autocfunction:: zenoh_commons.h::ze_publication_cache_options_default
+
+Querying Subscriber
+===================
+
+Types
+-----
+
+.. autocstruct:: zenoh_commons.h::ze_owned_querying_subscriber_t
+.. autocstruct:: zenoh_commons.h::ze_querying_subscriber_options_t
+
+Functions
+---------
+
+.. autocfunction:: zenoh_commons.h::ze_declare_querying_subscriber
+.. autocfunction:: zenoh_commons.h::ze_undeclare_querying_subscriber
+.. autocfunction:: zenoh_commons.h::ze_querying_subscriber_check
+.. autocfunction:: zenoh_commons.h::ze_querying_subscriber_null
+.. autocfunction:: zenoh_commons.h::ze_querying_subscriber_options_default

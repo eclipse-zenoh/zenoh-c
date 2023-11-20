@@ -49,5 +49,5 @@ int main(int argc, char **argv) {
     printf("Z_CONFIG_SCOUTING_DELAY_KEY: %s\n", Z_CONFIG_SCOUTING_DELAY_KEY);
     assert(strcmp(Z_CONFIG_SCOUTING_DELAY_KEY, "scouting/delay") == 0);
     printf("Z_CONFIG_ADD_TIMESTAMP_KEY: %s\n", Z_CONFIG_ADD_TIMESTAMP_KEY);
-    assert(strcmp(Z_CONFIG_ADD_TIMESTAMP_KEY, "add_timestamp") == 0);
+    assert(strcmp(Z_CONFIG_ADD_TIMESTAMP_KEY, "timestamping/enabled") == 0);
 }
