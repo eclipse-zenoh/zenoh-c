@@ -50,6 +50,7 @@ documentation_style = "auto"
 ############################# Codegen Options ##################################
 
 style = "both"
+usize_is_size_t = true
 
 
 [defines]
