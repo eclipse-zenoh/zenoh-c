@@ -262,6 +262,28 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_closure_query_call
 .. autocfunction:: zenoh_commons.h::z_closure_query_drop
 
+Liveliness
+==========
+
+Types
+-----
+
+.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_token_t
+.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declaration_options_t
+.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_get_options_t
+.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declare_subscriber_options_t
+
+Functions
+---------
+
+.. autocfunction:: zenoh_commons.h::zc_liveliness_declare_token
+.. autocfunction:: zenoh_commons.h::zc_liveliness_undeclare_token
+.. autocfunction:: zenoh_commons.h::zc_liveliness_token_null
+.. autocfunction:: zenoh_commons.h::zc_liveliness_token_check
+.. autocfunction:: zenoh_commons.h::zc_liveliness_declare_subscriber
+.. autocfunction:: zenoh_commons.h::zc_liveliness_get
+.. autocfunction:: zenoh_commons.h::zc_liveliness_get_options_default
+
 Publication Cache
 =================
 
@@ -275,7 +297,7 @@ Functions
 ---------
 
 .. autocfunction:: zenoh_commons.h::ze_declare_publication_cache
-.. autocfunction:: zenoh_commons.h::ze_close_publication_cache
+.. autocfunction:: zenoh_commons.h::ze_undeclare_publication_cache
 .. autocfunction:: zenoh_commons.h::ze_publication_cache_check
 .. autocfunction:: zenoh_commons.h::ze_publication_cache_null
 .. autocfunction:: zenoh_commons.h::ze_publication_cache_options_default
