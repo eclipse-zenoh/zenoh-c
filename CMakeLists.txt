@@ -174,8 +174,8 @@ set_genexpr_condition(libs DEBUG $<CONFIG:Debug> "${libsd}" "${libsr}")
 # This empty item ($<IF:$<CONFIG:Debug>;,--release>) can't be filtered out by `list(FILTER ...)` because it becomes empty only on 
 # build stage when generator expressions are evaluated.
 set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug> 
-	"--manifest-path=${cargo_toml_dir}/Cargo.toml"
-	"--release;--manifest-path=${cargo_toml_dir}/Cargo.toml")
+	"--manifest-path=${cargo_toml_dir}/Cargo.toml;${ZENOHC_CARGO_FLAGS}"
+	"--release;--manifest-path=${cargo_toml_dir}/Cargo.toml;${ZENOHC_CARGO_FLAGS}")
 
 if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
