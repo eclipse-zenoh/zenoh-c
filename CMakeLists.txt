@@ -174,8 +174,9 @@ set_genexpr_condition(libs DEBUG $<CONFIG:Debug> "${libsd}" "${libsr}")
 # This empty item ($<IF:$<CONFIG:Debug>;,--release>) can't be filtered out by `list(FILTER ...)` because it becomes empty only on 
 # build stage when generator expressions are evaluated.
 set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug> 
-	"--manifest-path=${cargo_toml_dir}/Cargo.toml;${ZENOHC_CARGO_FLAGS}"
-	"--release;--manifest-path=${cargo_toml_dir}/Cargo.toml;${ZENOHC_CARGO_FLAGS}")
+	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
+	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
+set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
 
 if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
@@ -197,6 +198,7 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
+	COMMAND_EXPAND_LISTS
 )
 add_custom_target(cargo ALL DEPENDS "${libs}")
 
