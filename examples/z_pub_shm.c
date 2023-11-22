@@ -34,6 +34,11 @@ int main(int argc, char **argv) {
     if (argc > 2) value = argv[2];
 
     z_owned_config_t config = z_config_default();
+    // Enable shared memory
+    if (zc_config_insert_json(z_loan(config), "transport/shared_memory/enabled", "true") < 0) {
+        printf("Error enabling Shared Memory");
+        exit(-1);
+    }
     if (argc > 3) {
         if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
