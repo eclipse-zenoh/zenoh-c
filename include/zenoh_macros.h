@@ -108,7 +108,7 @@
 #define z_closure(...) _z_closure_overloader(__VA_ARGS__, NULL, NULL)
 #define z_move(x) (&x)
 
-#else
+#else  // #ifndef __cplusplus
 
 // clang-format off
 template<class T> struct zenoh_loan_type { typedef T type; };
@@ -122,7 +122,7 @@ template<> struct zenoh_loan_type<z_owned_subscriber_t>{ typedef z_subscriber_t 
 template<> struct zenoh_loan_type<z_owned_pull_subscriber_t>{ typedef z_pull_subscriber_t type; };
 template<> struct zenoh_loan_type<z_owned_encoding_t>{ typedef z_encoding_t type; };
 template<> struct zenoh_loan_type<z_owned_hello_t>{ typedef z_hello_t type; };
-template<> struct zenoh_loan_type<z_owned_str_t>{  typedef const char* type; };
+template<> struct zenoh_loan_type<z_owned_str_t>{ typedef const char* type; };
 
 template<> inline z_session_t z_loan(const z_owned_session_t& x) { return z_session_loan(&x); }
 template<> inline z_keyexpr_t z_loan(const z_owned_keyexpr_t& x) { return z_keyexpr_loan(&x); }
@@ -159,6 +159,9 @@ template<> struct zenoh_drop_type<z_owned_closure_hello_t> { typedef void type; 
 template<> struct zenoh_drop_type<z_owned_closure_zid_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_closure_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<zc_owned_liveliness_token_t> { typedef void type; };
+template<> struct zenoh_drop_type<ze_owned_publication_cache_t> { typedef int8_t type; };
+template<> struct zenoh_drop_type<ze_owned_querying_subscriber_t> { typedef int8_t type; };
 
 template<> inline int8_t z_drop(z_owned_session_t* v) { return z_close(v); }
 template<> inline int8_t z_drop(z_owned_publisher_t* v) { return z_undeclare_publisher(v); }
@@ -182,6 +185,9 @@ template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop
 template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
+template<> inline void z_drop(zc_owned_liveliness_token_t* v) { zc_liveliness_undeclare_token(v); }
+template<> inline int8_t z_drop(ze_owned_publication_cache_t* v) { return ze_undeclare_publication_cache(v); }
+template<> inline int8_t z_drop(ze_owned_querying_subscriber_t* v) { return ze_undeclare_querying_subscriber(v); }
 
 inline void z_null(z_owned_session_t& v) { v = z_session_null(); }
 inline void z_null(z_owned_publisher_t& v) { v = z_publisher_null(); }
@@ -205,6 +211,9 @@ inline void z_null(z_owned_closure_hello_t& v) { v = z_closure_hello_null(); }
 inline void z_null(z_owned_closure_zid_t& v) { v = z_closure_zid_null(); }
 inline void z_null(z_owned_reply_channel_closure_t& v) { v = z_reply_channel_closure_null(); }
 inline void z_null(z_owned_reply_channel_t& v) { v = z_reply_channel_null(); }
+inline void z_null(zc_owned_liveliness_token_t& v) { v = zc_liveliness_token_null(); }
+inline void z_null(ze_owned_publication_cache_t& v) { v = ze_publication_cache_null(); }
+inline void z_null(ze_owned_querying_subscriber_t& v) { v = ze_querying_subscriber_null(); }
 
 inline bool z_check(const z_owned_session_t& v) { return z_session_check(&v); }
 inline bool z_check(const z_owned_publisher_t& v) { return z_publisher_check(&v); }
@@ -246,4 +255,4 @@ inline bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct
 #define z_closure(...) _z_closure_overloader(__VA_ARGS__, NULL, NULL)
 #define z_move(x) (&x)
 
-#endif
+#endif  // #ifndef __cplusplus
