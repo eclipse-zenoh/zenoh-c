@@ -121,7 +121,7 @@ pub extern "C" fn zc_liveliness_undeclare_token(token: &mut zc_owned_liveliness_
     }
 }
 
-/// The options for `zc_liveliness_declare_subscriber`
+/// The options for :c:func:`zc_liveliness_declare_subscriber`
 #[repr(C)]
 pub struct zc_owned_liveliness_declare_subscriber_options_t {
     _inner: u8,
@@ -149,7 +149,18 @@ pub extern "C" fn zc_liveliness_subscriber_options_drop(
 
 /// Declares a subscriber on liveliness tokens that intersect `key`.
 ///
-/// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+/// Parameters:
+///     z_session_t session: The zenoh session.
+///     z_keyexpr_t keyexpr: The key expression to subscribe.
+///     z_owned_closure_sample_t callback: The callback function that will be called each time a
+///                                        liveliness token status changed.
+///     zc_owned_liveliness_declare_subscriber_options_t _options: The options to be passed to describe the options to be passed to the liveliness subscriber declaration.
+///
+/// Returns:
+///    A :c:type:`z_owned_subscriber_t`.
+///
+///    To check if the subscription succeeded and if the subscriber is still valid,
+///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
     session: z_session_t,
@@ -184,7 +195,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     }
 }
 
-/// The options for `zc_liveliness_declare_subscriber`
+/// The options for :c:func:`zc_liveliness_declare_subscriber`
 #[repr(C)]
 pub struct zc_owned_liveliness_get_options_t {
     timeout_ms: u32,
@@ -214,7 +225,7 @@ pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_owned_liveliness_
 
 /// Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
 ///
-/// Note that the same "value stealing" tricks apply as with a normal `z_get`
+/// Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
 ///
 /// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
 #[no_mangle]
