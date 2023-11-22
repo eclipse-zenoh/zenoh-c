@@ -17,6 +17,7 @@
 #endif
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #define DEFAULT_SCOUTING_TIMEOUT 1000
@@ -33,7 +34,7 @@
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct z_owned_session_t {
-  uintptr_t _0;
+  size_t _0;
 } z_owned_session_t;
 /**
  * Structs received by a Queryable.
@@ -45,7 +46,7 @@ typedef struct z_query_t {
  * A loaned zenoh session.
  */
 typedef struct z_session_t {
-  uintptr_t _0;
+  size_t _0;
 } z_session_t;
 /**
  * An owned zenoh pull subscriber. Destroying the subscriber cancels the subscription.
