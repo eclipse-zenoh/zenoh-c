@@ -13,6 +13,7 @@
 //
 
 use zenoh::prelude::sync::SyncResolve;
+use zenoh::prelude::KeyExpr;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::SplitBuffer;
 use zenoh_ext::*;
@@ -20,13 +21,19 @@ use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
 
 use crate::{
-    impl_guarded_transmute, z_closure_sample_call, z_keyexpr_t, z_owned_closure_sample_t,
-    z_query_consolidation_none, z_query_consolidation_t, z_query_target_default, z_query_target_t,
-    z_reliability_t, z_sample_t, z_session_t, zcu_locality_default, zcu_locality_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t, GuardedTransmute, LOG_INVALID_SESSION,
+    impl_guarded_transmute, z_closure_sample_call, z_get_options_t, z_keyexpr_t,
+    z_owned_closure_sample_t, z_query_consolidation_none, z_query_consolidation_t,
+    z_query_target_default, z_query_target_t, z_reliability_t, z_sample_t, z_session_t,
+    zcu_locality_default, zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
+    GuardedTransmute, LOG_INVALID_SESSION,
 };
 
-type FetchingSubscriber = Option<Box<zenoh_ext::FetchingSubscriber<'static, ()>>>;
+struct FetchingSubscriberWrapper {
+    fetching_subscriber: zenoh_ext::FetchingSubscriber<'static, ()>,
+    session: z_session_t,
+}
+type FetchingSubscriber = Option<Box<FetchingSubscriberWrapper>>;
+//type FetchingSubscriber = Option<Box<zenoh_ext::FetchingSubscriber<'static, ()>>>;
 
 /// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
 ///
@@ -72,8 +79,12 @@ impl AsMut<FetchingSubscriber> for ze_owned_querying_subscriber_t {
 }
 
 impl ze_owned_querying_subscriber_t {
-    pub fn new(sub: zenoh_ext::FetchingSubscriber<'static, ()>) -> Self {
-        Some(Box::new(sub)).into()
+    pub fn new(sub: zenoh_ext::FetchingSubscriber<'static, ()>, session: z_session_t) -> Self {
+        Some(Box::new(FetchingSubscriberWrapper {
+            fetching_subscriber: sub,
+            session: session,
+        }))
+        .into()
     }
     pub fn null() -> Self {
         None.into()
@@ -203,7 +214,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
                 })
                 .res()
             {
-                Ok(sub) => ze_owned_querying_subscriber_t::new(sub),
+                Ok(sub) => ze_owned_querying_subscriber_t::new(sub, session),
                 Err(e) => {
                     log::debug!("{}", e);
                     ze_owned_querying_subscriber_t::null()
@@ -217,12 +228,54 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
 }
 
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn ze_querying_subscriber_get(
+    sub: ze_querying_subscriber_t,
+    selector: z_keyexpr_t,
+    options: Option<&z_get_options_t>,
+) -> i8 {
+    unsafe impl Sync for z_get_options_t {}
+
+    if let Some(sub) = sub.as_ref() {
+        match sub.session.upgrade() {
+            Some(s) => {
+                if let Err(e) = sub
+                    .fetching_subscriber
+                    .fetch({
+                        let selector = KeyExpr::try_from(selector).unwrap();
+                        move |cb| match options {
+                            Some(options) => s
+                                .get(selector)
+                                .target(options.target.into())
+                                .consolidation(options.consolidation)
+                                .timeout(std::time::Duration::from_millis(options.timeout_ms))
+                                .callback(cb)
+                                .res_sync(),
+                            None => s.get(selector).callback(cb).res_sync(),
+                        }
+                    })
+                    .res()
+                {
+                    log::debug!("{}", e);
+                    return -1;
+                }
+            }
+            None => {
+                log::debug!("{}", LOG_INVALID_SESSION);
+                return -1;
+            }
+        }
+    }
+    0
+}
+
 /// Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
-        if let Err(e) = s.close().res_sync() {
+        if let Err(e) = s.fetching_subscriber.close().res_sync() {
             log::warn!("{}", e);
             return e.errno().get();
         }
@@ -235,4 +288,12 @@ pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_s
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_check(sub: &ze_owned_querying_subscriber_t) -> bool {
     sub.as_ref().is_some()
+}
+
+/// Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
+#[no_mangle]
+pub extern "C" fn ze_querying_subscriber_loan(
+    p: &ze_owned_querying_subscriber_t,
+) -> ze_querying_subscriber_t {
+    ze_querying_subscriber_t(p)
 }

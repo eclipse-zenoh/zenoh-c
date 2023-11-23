@@ -795,6 +795,9 @@ typedef struct ze_querying_subscriber_options_t {
   enum zcu_reply_keyexpr_t query_accept_replies;
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
+typedef struct ze_querying_subscriber_t {
+  const struct ze_owned_querying_subscriber_t *_0;
+} ze_querying_subscriber_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
@@ -2091,6 +2094,15 @@ ZENOHC_API struct ze_publication_cache_options_t ze_publication_cache_options_de
  * Returns ``true`` if `sub` is valid.
  */
 ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *sub);
+ZENOHC_API
+int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
+                                  struct z_keyexpr_t selector,
+                                  const struct z_get_options_t *options);
+/**
+ * Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
+ */
+ZENOHC_API
+struct ze_querying_subscriber_t ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *p);
 /**
  * Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
  */
