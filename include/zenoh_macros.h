@@ -4,15 +4,16 @@
 
 // clang-format off
 #define z_loan(x) \
-    _Generic((x), z_owned_session_t : z_session_loan,                 \
-                  z_owned_keyexpr_t : z_keyexpr_loan,                 \
-                  z_owned_config_t : z_config_loan,                   \
-                  z_owned_publisher_t : z_publisher_loan,             \
-                  z_owned_subscriber_t : z_subscriber_loan,           \
-                  z_owned_pull_subscriber_t : z_pull_subscriber_loan, \
-                  z_owned_encoding_t : z_encoding_loan,               \
-                  z_owned_hello_t : z_hello_loan,                     \
-                  z_owned_str_t : z_str_loan                          \
+    _Generic((x), z_owned_session_t : z_session_loan,                          \
+                  z_owned_keyexpr_t : z_keyexpr_loan,                          \
+                  z_owned_config_t : z_config_loan,                            \
+                  z_owned_publisher_t : z_publisher_loan,                      \
+                  z_owned_subscriber_t : z_subscriber_loan,                    \
+                  z_owned_pull_subscriber_t : z_pull_subscriber_loan,          \
+                  z_owned_encoding_t : z_encoding_loan,                        \
+                  z_owned_hello_t : z_hello_loan,                              \
+                  z_owned_str_t : z_str_loan,                                  \
+                  ze_owned_querying_subscriber_t : ze_querying_subscriber_loan \
             )(&x)
 
 #define z_drop(x) \
@@ -123,6 +124,7 @@ template<> struct zenoh_loan_type<z_owned_pull_subscriber_t>{ typedef z_pull_sub
 template<> struct zenoh_loan_type<z_owned_encoding_t>{ typedef z_encoding_t type; };
 template<> struct zenoh_loan_type<z_owned_hello_t>{ typedef z_hello_t type; };
 template<> struct zenoh_loan_type<z_owned_str_t>{ typedef const char* type; };
+template<> struct zenoh_loan_type<ze_owned_querying_subscriber_t>{ typedef ze_querying_subscriber_t type; };
 
 template<> inline z_session_t z_loan(const z_owned_session_t& x) { return z_session_loan(&x); }
 template<> inline z_keyexpr_t z_loan(const z_owned_keyexpr_t& x) { return z_keyexpr_loan(&x); }
@@ -133,6 +135,7 @@ template<> inline z_pull_subscriber_t z_loan(const z_owned_pull_subscriber_t& x)
 template<> inline z_encoding_t z_loan(const z_owned_encoding_t& x) { return z_encoding_loan(&x); }
 template<> inline z_hello_t z_loan(const z_owned_hello_t& x) { return z_hello_loan(&x); }
 template<> inline const char* z_loan(const z_owned_str_t& x) { return z_str_loan(&x); }
+template<> inline ze_querying_subscriber_t z_loan(const ze_owned_querying_subscriber_t& x) { return ze_querying_subscriber_loan(&x); }
 
 template<class T> struct zenoh_drop_type { typedef T type; };
 template<class T> inline typename zenoh_drop_type<T>::type z_drop(T*);

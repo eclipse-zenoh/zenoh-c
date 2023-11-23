@@ -316,6 +316,7 @@ Functions
 
 .. autocfunction:: zenoh_commons.h::ze_declare_querying_subscriber
 .. autocfunction:: zenoh_commons.h::ze_undeclare_querying_subscriber
+.. autocfunction:: zenoh_commons.h::ze_querying_subscriber_get
 .. autocfunction:: zenoh_commons.h::ze_querying_subscriber_check
 .. autocfunction:: zenoh_commons.h::ze_querying_subscriber_null
 .. autocfunction:: zenoh_commons.h::ze_querying_subscriber_options_default
