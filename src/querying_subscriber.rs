@@ -228,6 +228,8 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
 }
 
+/// Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
+/// The queried samples will be merged with the received publications and made available in the subscriber callback.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn ze_querying_subscriber_get(

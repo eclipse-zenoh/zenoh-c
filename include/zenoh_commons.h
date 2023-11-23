@@ -2094,6 +2094,10 @@ ZENOHC_API struct ze_publication_cache_options_t ze_publication_cache_options_de
  * Returns ``true`` if `sub` is valid.
  */
 ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *sub);
+/**
+ * Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
+ * The queried samples will be merged with the received publications and made available in the subscriber callback.
+ */
 ZENOHC_API
 int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
                                   struct z_keyexpr_t selector,
