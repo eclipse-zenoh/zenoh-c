@@ -59,7 +59,7 @@ serde_yaml = "0.9.19"
 
 [lib]
 path="src/lib.rs"
-name = "zenohcd"
+name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 
