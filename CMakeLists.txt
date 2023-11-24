@@ -169,9 +169,14 @@ set_genexpr_condition(libs DEBUG $<CONFIG:Debug> "${libsd}" "${libsr}")
 #
 # Build rust sources
 #
-set_genexpr_condition(cargo_release_flag DEBUG $<CONFIG:Debug> "" "--release")
-set(cargo_flags ${ZENOHC_CARGO_FLAGS} ${cargo_release_flag})
-set(cargo_flags ${cargo_flags} --manifest-path=${cargo_toml_dir}/Cargo.toml)
+
+# Combine "--release" and "--manifest-path" options under DEBUG condition to avoid passing empty parameter to cargo command line in `add_custom_command`, causing build failure
+# This empty item ($<IF:$<CONFIG:Debug>;,--release>) can't be filtered out by `list(FILTER ...)` because it becomes empty only on 
+# build stage when generator expressions are evaluated.
+set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug> 
+	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
+	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
+set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
 
 if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
@@ -192,6 +197,8 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+	VERBATIM
+	COMMAND_EXPAND_LISTS
 )
 add_custom_target(cargo ALL DEPENDS "${libs}")
 
