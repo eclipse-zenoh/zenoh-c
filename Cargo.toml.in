@@ -47,10 +47,10 @@ libc = "0.2.139"
 log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.5"
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "shared-memory", "unstable" ] }
-zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "shared-memory" ] }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master" }
-zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "master", features = [ "unstable" ]}
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "feature_cleanup2", features = [ "shared-memory", "unstable" ] }
+zenoh-protocol = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "feature_cleanup2", features = [ "shared-memory" ] }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "feature_cleanup2" }
+zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "feature_cleanup2", features = [ "unstable" ]}
 
 [build-dependencies]
 cbindgen = "0.24.3"
