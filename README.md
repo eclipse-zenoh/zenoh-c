@@ -229,7 +229,7 @@ and release files will be located at
 
 ## Zenoh features support (enabling/disabling protocols, etc)
 
-It's necessary sometimes to build zenoh-c library with set of features different from default. For examlple: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake pecularities)"
+It's necessary sometimes to build zenoh-c library with set of features different from default. For examlple: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake peculiarities)"
 
 Available features can be found in zenoh sources: https://github.com/eclipse-zenoh/zenoh/blob/master/zenoh/Cargo.toml
 
