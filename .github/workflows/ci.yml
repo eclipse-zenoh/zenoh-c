@@ -41,13 +41,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: -p zenohd
 
       - name: Check for feature leaks
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: -p zenohd --no-default-features
+          args: --no-default-features
 
       - name: build and install
         shell: bash
