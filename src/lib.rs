@@ -117,12 +117,13 @@ fn test_default_features() {
     ));
 }
 
+// Test should be runned with `cargo test --no-default-features`
 #[test]
 #[cfg(not(feature = "default"))]
-fn test_no_default_features_with_tcp_and_udp_only() {
+fn test_no_default_features() {
     assert_eq!(zenoh::FEATURES, concat!(
-        " zenoh/auth_pubkey",
-        " zenoh/auth_usrpwd",
+        // " zenoh/auth_pubkey",
+        // " zenoh/auth_usrpwd",
         // " zenoh/complete_n",
         " zenoh/shared-memory",
         // " zenoh/stats",

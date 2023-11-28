@@ -37,6 +37,18 @@ jobs:
           command: fmt
           args: -- --check
 
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: -p zenohd
+
+      - name: Check for feature leaks
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: -p zenohd --no-default-features
+
       - name: build and install
         shell: bash
         run: |
