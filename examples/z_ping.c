@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,10 +10,13 @@
 #define DEFAULT_PKT_SIZE 8
 #define DEFAULT_PING_NB 100
 #define DEFAULT_WARMUP_MS 1000
+#define PING_TIMEOUT_SEC 1
+
+#define handle_error_en(en, msg) \
+    do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
 pthread_cond_t cond;
 pthread_mutex_t mutex;
-struct timespec ping_timeout = {.tv_sec = 1, .tv_nsec = 0};
 
 void callback(const z_sample_t* sample, void* context) { pthread_cond_signal(&cond); }
 void drop(void* context) { pthread_cond_destroy(&cond); }
@@ -55,23 +59,33 @@ int main(int argc, char** argv) {
     pthread_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
-        struct timespec wmup_start, wmup_stop;
+        struct timespec wmup_start, wmup_stop, wmup_timeout;
         clock_gettime(CLOCK_MONOTONIC, &wmup_start);
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
+            clock_gettime(CLOCK_REALTIME, &wmup_timeout);
+            wmup_timeout.tv_sec += PING_TIMEOUT_SEC;
             z_publisher_put(z_loan(pub), data, args.size, NULL);
-            pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
+            int s = pthread_cond_timedwait(&cond, &mutex, &wmup_timeout);
+            if (s != 0) {
+                handle_error_en(s, "pthread_cond_timedwait");
+            }
             clock_gettime(CLOCK_MONOTONIC, &wmup_stop);
             elapsed_us =
                 (1000000 * (wmup_stop.tv_sec - wmup_start.tv_sec) + (wmup_stop.tv_nsec - wmup_start.tv_nsec) / 1000);
         }
     }
-    struct timespec t_start, t_stop;
+    struct timespec t_start, t_stop, t_timeout;
     unsigned long* results = malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
+        clock_gettime(CLOCK_REALTIME, &t_timeout);
+        t_timeout.tv_sec += PING_TIMEOUT_SEC;
         clock_gettime(CLOCK_MONOTONIC, &t_start);
         z_publisher_put(z_loan(pub), data, args.size, NULL);
-        pthread_cond_timedwait(&cond, &mutex, &ping_timeout);
+        int s = pthread_cond_timedwait(&cond, &mutex, &t_timeout);
+        if (s != 0) {
+            handle_error_en(s, "pthread_cond_timedwait");
+        }
         clock_gettime(CLOCK_MONOTONIC, &t_stop);
         results[i] = (1000000 * (t_stop.tv_sec - t_start.tv_sec) + (t_stop.tv_nsec - t_start.tv_nsec) / 1000);
     }
