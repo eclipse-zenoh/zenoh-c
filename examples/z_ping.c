@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -10,6 +11,9 @@
 #define DEFAULT_PING_NB 100
 #define DEFAULT_WARMUP_MS 1000
 #define PING_TIMEOUT_SEC 1
+
+#define handle_error_en(en, msg) \
+    do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
 pthread_cond_t cond;
 pthread_mutex_t mutex;
@@ -62,7 +66,10 @@ int main(int argc, char** argv) {
             clock_gettime(CLOCK_REALTIME, &wmup_timeout);
             wmup_timeout.tv_sec += PING_TIMEOUT_SEC;
             z_publisher_put(z_loan(pub), data, args.size, NULL);
-            pthread_cond_timedwait(&cond, &mutex, &wmup_timeout);
+            int s = pthread_cond_timedwait(&cond, &mutex, &wmup_timeout);
+            if (s != 0) {
+                handle_error_en(s, "pthread_cond_timedwait");
+            }
             clock_gettime(CLOCK_MONOTONIC, &wmup_stop);
             elapsed_us =
                 (1000000 * (wmup_stop.tv_sec - wmup_start.tv_sec) + (wmup_stop.tv_nsec - wmup_start.tv_nsec) / 1000);
@@ -75,7 +82,10 @@ int main(int argc, char** argv) {
         t_timeout.tv_sec += PING_TIMEOUT_SEC;
         clock_gettime(CLOCK_MONOTONIC, &t_start);
         z_publisher_put(z_loan(pub), data, args.size, NULL);
-        pthread_cond_timedwait(&cond, &mutex, &t_timeout);
+        int s = pthread_cond_timedwait(&cond, &mutex, &t_timeout);
+        if (s != 0) {
+            handle_error_en(s, "pthread_cond_timedwait");
+        }
         clock_gettime(CLOCK_MONOTONIC, &t_stop);
         results[i] = (1000000 * (t_stop.tv_sec - t_start.tv_sec) + (t_stop.tv_nsec - t_start.tv_nsec) / 1000);
     }
