@@ -221,11 +221,18 @@ Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
   ```
 Additionally you can use `RUSTFLAGS` environment variable for lead the compilation.
 
-- 
-
-
 If all goes right the building files will be located at:
 `/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
 and release files will be located at
 `/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+
+## Zenoh features support (enabling/disabling protocols, etc)
+
+It's necessary sometimes to build zenoh-c library with set of features different from default. For example: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake peculiarities)
+
+Available features can be found in zenoh sources: https://github.com/eclipse-zenoh/zenoh/blob/master/zenoh/Cargo.toml
+
+```
+cmake ../zenoh-c -DZENOHC_CARGO_FLAGS="--no-default-features;--features=zenoh/transport_tcp,zenoh/transport_udp"
+```
 
