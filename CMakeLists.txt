@@ -192,6 +192,7 @@ endif()
 
 status_print(cargo_flags)
 status_print(libs)
+file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide.yaml")
 add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
@@ -199,6 +200,7 @@ add_custom_command(
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS
+	DEPENDS "${rust_sources}"
 )
 add_custom_target(cargo ALL DEPENDS "${libs}")
 
