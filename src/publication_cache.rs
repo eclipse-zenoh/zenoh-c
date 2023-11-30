@@ -131,7 +131,7 @@ pub extern "C" fn ze_declare_publication_cache(
             if let Some(key_expr) = keyexpr {
                 let mut p = s.declare_publication_cache(key_expr);
                 if let Some(options) = options {
-                    p = p.history(options.history.into());
+                    p = p.history(options.history);
                     p = p.queryable_allowed_origin(options.queryable_origin.into());
                     if options.resources_limit != 0 {
                         p = p.resources_limit(options.resources_limit)

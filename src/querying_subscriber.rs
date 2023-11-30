@@ -82,7 +82,7 @@ impl ze_owned_querying_subscriber_t {
     pub fn new(sub: zenoh_ext::FetchingSubscriber<'static, ()>, session: z_session_t) -> Self {
         Some(Box::new(FetchingSubscriberWrapper {
             fetching_subscriber: sub,
-            session: session,
+            session,
         }))
         .into()
     }
