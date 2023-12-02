@@ -11,12 +11,14 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <string.h>
 
 #include "z_int_helpers.h"
-#include "zenoh.h"
 
 #ifdef VALID_PLATFORM
+
+#include <string.h>
+
+#include "zenoh.h"
 
 const char *const SEM_NAME_PUB = "/z_int_test_sync_sem_pub";
 sem_t *sem_pub;
@@ -80,7 +82,6 @@ int run_publisher() {
 }
 
 void data_handler(const z_sample_t *sample, void *arg) {
-    printf("data_handler\n");
     static int val_num = 0;
     z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
     if (strcmp(keyexpr, z_loan(keystr))) {
@@ -89,7 +90,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(keystr));
 
-    if (strncmp(values[val_num], sample->payload.start, (int)sample->payload.len)) {
+    if (strncmp(values[val_num], (const char *)sample->payload.start, (int)sample->payload.len)) {
         perror("Unexpected value received");
         exit(-1);
     }
@@ -128,7 +129,7 @@ int run_subscriber() {
     return -1;
 }
 
-void main() {
+int main() {
     SEM_INIT(sem_pub, SEM_NAME_PUB);
     SEM_INIT(sem_sub, SEM_NAME_SUB);
 
@@ -137,6 +138,8 @@ void main() {
 
     SEM_DROP(sem_pub, SEM_NAME_PUB);
     SEM_DROP(sem_sub, SEM_NAME_SUB);
+
+    return 0;
 }
 
 #endif  // VALID_PLATFORM

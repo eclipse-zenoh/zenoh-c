@@ -1,5 +1,5 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#define VALID_PLATFORM 0
+#undef VALID_PLATFORM
 #else  // def windows
 #define VALID_PLATFORM 1
 

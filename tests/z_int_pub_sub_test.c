@@ -11,14 +11,13 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <fcntl.h>
-#include <semaphore.h>
-#include <string.h>
-
 #include "z_int_helpers.h"
-#include "zenoh.h"
 
 #ifdef VALID_PLATFORM
+
+#include <string.h>
+
+#include "zenoh.h"
 
 const char *const SEM_NAME = "/z_int_test_sync_sem";
 sem_t *sem;
@@ -63,7 +62,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(keystr));
 
-    if (strncmp(values[val_num], sample->payload.start, (int)sample->payload.len)) {
+    if (strncmp(values[val_num], (const char *)sample->payload.start, (int)sample->payload.len)) {
         perror("Unexpected value received");
         exit(-1);
     }
@@ -98,13 +97,15 @@ int run_subscriber() {
     return -1;
 }
 
-void main() {
+int main() {
     SEM_INIT(sem, SEM_NAME);
 
     func_ptr_t funcs[] = {run_publisher, run_subscriber};
     assert(run_timeouted_test(funcs, 2, 10) == 0);
 
     SEM_DROP(sem, SEM_NAME);
+
+    return 0;
 }
 
 #endif  // VALID_PLATFORM
