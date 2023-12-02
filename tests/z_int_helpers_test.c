@@ -43,13 +43,17 @@ void one_hanged() {
     assert(run_timeouted_test(funcs, 3, 1) == -1);
 }
 
-void main() {
+int main() {
     all_success();
     all_failed();
     first_failed();
     last_failed();
     all_hanged();
     one_hanged();
+
+    return 0;
 }
 
+#else
+int main() { return 0; }
 #endif  // VALID_PLATFORM
