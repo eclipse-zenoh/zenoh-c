@@ -291,7 +291,14 @@ impl From<&z_value_t> for Value {
         unsafe {
             let value: Value =
                 std::slice::from_raw_parts(val.payload.start, val.payload.len).into();
-            value
+            let encoding = std::str::from_utf8(std::slice::from_raw_parts(
+                val.encoding.suffix.start,
+                val.encoding.suffix.len,
+            ))
+            .expect("encodings must be UTF8");
+            value.encoding(
+                zenoh::prelude::Encoding::new(val.encoding.prefix as u8, encoding).unwrap(),
+            )
         }
     }
 }
