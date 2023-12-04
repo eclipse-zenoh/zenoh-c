@@ -37,7 +37,10 @@ typedef struct z_owned_session_t {
   size_t _0;
 } z_owned_session_t;
 /**
- * Structs received by a Queryable.
+ * Loaned variant of a Query received by a Queryable.
+ *
+ * Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
+ * `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
  */
 typedef struct z_query_t {
   void *_0;
