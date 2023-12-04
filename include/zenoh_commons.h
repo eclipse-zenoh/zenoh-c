@@ -631,6 +631,19 @@ typedef struct z_put_options_t {
   enum z_priority_t priority;
 } z_put_options_t;
 /**
+ * Owned variant of a Query received by a Queryable.
+ *
+ * You may construct it by `z_query_clone`-ing a loaned query.
+ * When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
+ * the query will receive its termination signal.
+ *
+ * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
+ * to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
+ */
+typedef struct z_owned_query_t {
+  void *_0;
+} z_owned_query_t;
+/**
  * Represents the set of options that can be applied to a query reply,
  * sent via :c:func:`z_query_reply`.
  *
@@ -1415,6 +1428,20 @@ int8_t z_put(struct z_session_t session,
  */
 ZENOHC_API struct z_put_options_t z_put_options_default(void);
 /**
+ * Returns `false` if `this` is in a gravestone state, `true` otherwise.
+ *
+ * This function may not be called with the null pointer, but can be called with the gravestone value.
+ */
+ZENOHC_API
+bool z_query_check(const struct z_owned_query_t *this_);
+/**
+ * Clones the query, allowing to keep it in an "open" state past the callback's return.
+ *
+ * This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
+ */
+ZENOHC_API
+struct z_owned_query_t z_query_clone(const struct z_query_t *query);
+/**
  * Automatic query consolidation strategy selection.
  *
  * A query consolidation strategy will automatically be selected depending the query selector.
@@ -1442,9 +1469,27 @@ ZENOHC_API struct z_query_consolidation_t z_query_consolidation_monotonic(void);
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
 /**
+ * Destroys the query, setting `this` to its gravestone value to prevent double-frees.
+ *
+ * This function may not be called with the null pointer, but can be called with the gravestone value.
+ */
+ZENOHC_API
+void z_query_drop(struct z_owned_query_t *this_);
+/**
  * Get a query's key by aliasing it.
  */
 ZENOHC_API struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
+/**
+ * Aliases the query.
+ *
+ * This function may not be called with the null pointer, but can be called with the gravestone value.
+ */
+ZENOHC_API
+struct z_query_t z_query_loan(const struct z_owned_query_t *this_);
+/**
+ * The gravestone value of `z_owned_query_t`.
+ */
+ZENOHC_API struct z_owned_query_t z_query_null(void);
 /**
  * Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
  */

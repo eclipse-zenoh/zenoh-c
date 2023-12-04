@@ -17,7 +17,7 @@ use crate::{
     LOG_INVALID_SESSION,
 };
 use libc::c_void;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use zenoh::prelude::SessionDeclarations;
 use zenoh::{
     prelude::{Sample, SplitBuffer},
@@ -76,14 +76,75 @@ pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
     z_owned_queryable_t::null()
 }
 
-/// Structs received by a Queryable.
+/// Loaned variant of a Query received by a Queryable.
+///
+/// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
+/// `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_t(*mut c_void);
+/// Owned variant of a Query received by a Queryable.
+///
+/// You may construct it by `z_query_clone`-ing a loaned query.
+/// When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
+/// the query will receive its termination signal.
+///
+/// Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
+/// to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct z_owned_query_t(*mut c_void);
 impl Deref for z_query_t {
-    type Target = Query;
+    type Target = Option<Query>;
     fn deref(&self) -> &Self::Target {
         unsafe { &*(self.0 as *const _) }
+    }
+}
+impl Deref for z_owned_query_t {
+    type Target = Option<Query>;
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*(self.0 as *const _) }
+    }
+}
+impl DerefMut for z_owned_query_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *(self.0 as *mut _) }
+    }
+}
+/// The gravestone value of `z_owned_query_t`.
+#[no_mangle]
+pub extern "C" fn z_query_null() -> z_owned_query_t {
+    unsafe { core::mem::transmute(None::<Query>) }
+}
+/// Returns `false` if `this` is in a gravestone state, `true` otherwise.
+///
+/// This function may not be called with the null pointer, but can be called with the gravestone value.
+#[no_mangle]
+pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
+    this.is_some()
+}
+/// Aliases the query.
+///
+/// This function may not be called with the null pointer, but can be called with the gravestone value.
+#[no_mangle]
+pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
+    unsafe { core::mem::transmute_copy(this) }
+}
+/// Destroys the query, setting `this` to its gravestone value to prevent double-frees.
+///
+/// This function may not be called with the null pointer, but can be called with the gravestone value.
+#[no_mangle]
+pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
+    let _: Option<Query> = this.take();
+}
+/// Clones the query, allowing to keep it in an "open" state past the callback's return.
+///
+/// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
+#[no_mangle]
+pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
+    match query {
+        Some(query) => unsafe { core::mem::transmute(query.as_ref().map(|q| q.clone())) },
+        None => z_query_null(),
     }
 }
 
@@ -210,6 +271,10 @@ pub unsafe extern "C" fn z_query_reply(
     len: usize,
     options: Option<&z_query_reply_options_t>,
 ) -> i8 {
+    let Some(query) = query.as_ref() else {
+        log::error!("Called `z_query_reply` with invalidated `query`");
+        return i8::MIN;
+    };
     if let Some(key) = &*key {
         let mut s = Sample::new(
             key.clone().into_owned(),
@@ -232,6 +297,9 @@ pub unsafe extern "C" fn z_query_reply(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
+    let Some(query) = query.as_ref() else {
+        return z_keyexpr_t::null();
+    };
     query.key_expr().borrowing_clone().into()
 }
 
@@ -239,6 +307,9 @@ pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
+    let Some(query) = query.as_ref() else {
+        return z_bytes_t::empty();
+    };
     let complement = query.parameters();
     z_bytes_t {
         start: complement.as_ptr(),
@@ -252,7 +323,7 @@ pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
-    match query.value() {
+    match query.as_ref().and_then(|q| q.value()) {
         Some(value) => {
             #[allow(mutable_transmutes)]
             if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
