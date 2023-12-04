@@ -12,6 +12,15 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+//
+// This file contains hepler macros and functions for integration testing, this
+// file also contains the implementations, since it is assumed that the integration test
+// consists of one file and is not expected to include this file in
+// several other *.c files of one binary.
+//
+
+#pragma once
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #undef VALID_PLATFORM
 #else  // def windows
