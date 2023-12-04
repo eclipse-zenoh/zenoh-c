@@ -638,7 +638,7 @@ typedef struct z_put_options_t {
  * the query will receive its termination signal.
  *
  * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
- * to be sent to the querier, and responding to the query will no longer work.
+ * to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
  */
 typedef struct z_owned_query_t {
   void *_0;
