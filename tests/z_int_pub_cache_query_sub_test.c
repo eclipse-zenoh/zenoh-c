@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2023 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -65,6 +65,7 @@ int run_publisher() {
     }
 
     SEM_POST(sem_pub);
+    printf("wait: sem_sub\n");
     SEM_WAIT(sem_sub);
 
     // values for subscribe
@@ -72,6 +73,7 @@ int run_publisher() {
         z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)values[i], strlen(values[i]), NULL);
     }
 
+    printf("wait: sem_sub\n");
     SEM_WAIT(sem_sub);
 
     z_drop(z_move(pub_cache));
@@ -95,6 +97,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
         exit(-1);
     }
 
+    printf("data_handler: %i\n", val_num);
     if (++val_num == values_count) {
         SEM_POST(sem_sub);
         exit(0);
@@ -102,6 +105,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
 }
 
 int run_subscriber() {
+    printf("wait: sem_pub\n");
     SEM_WAIT(sem_pub);
 
     z_owned_config_t config = z_config_default();
