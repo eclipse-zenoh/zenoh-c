@@ -637,7 +637,7 @@ typedef struct z_put_options_t {
  * When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
  * the query will receive its termination signal.
  *
- * Holding onto an `z_owned_query_t` for too long (10s by default) will trigger a timeout error
+ * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
  * to be sent to the querier, and responding to the query will no longer work.
  */
 typedef struct z_owned_query_t {
@@ -1434,7 +1434,13 @@ ZENOHC_API struct z_put_options_t z_put_options_default(void);
  */
 ZENOHC_API
 bool z_query_check(const struct z_owned_query_t *this_);
-ZENOHC_API struct z_owned_query_t z_query_clone(const struct z_query_t *query);
+/**
+ * Clones the query, allowing to keep it in an "open" state past the callback's return.
+ *
+ * This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
+ */
+ZENOHC_API
+struct z_owned_query_t z_query_clone(const struct z_query_t *query);
 /**
  * Automatic query consolidation strategy selection.
  *

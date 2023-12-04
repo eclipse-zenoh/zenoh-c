@@ -89,7 +89,7 @@ pub struct z_query_t(*mut c_void);
 /// When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
 /// the query will receive its termination signal.
 ///
-/// Holding onto an `z_owned_query_t` for too long (10s by default) will trigger a timeout error
+/// Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
 /// to be sent to the querier, and responding to the query will no longer work.
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -137,6 +137,9 @@ pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
 pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
     let _: Option<Query> = this.take();
 }
+/// Clones the query, allowing to keep it in an "open" state past the callback's return.
+///
+/// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
 pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
     match query {
