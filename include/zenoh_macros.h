@@ -124,6 +124,7 @@ template<> struct zenoh_loan_type<z_owned_keyexpr_t>{ typedef z_keyexpr_t type; 
 template<> struct zenoh_loan_type<z_owned_config_t>{ typedef z_config_t type; };
 template<> struct zenoh_loan_type<z_owned_publisher_t>{ typedef z_publisher_t type; };
 template<> struct zenoh_loan_type<z_owned_subscriber_t>{ typedef z_subscriber_t type; };
+template<> struct zenoh_loan_type<z_owned_query_t>{ typedef z_query_t type; };
 template<> struct zenoh_loan_type<z_owned_pull_subscriber_t>{ typedef z_pull_subscriber_t type; };
 template<> struct zenoh_loan_type<z_owned_encoding_t>{ typedef z_encoding_t type; };
 template<> struct zenoh_loan_type<z_owned_hello_t>{ typedef z_hello_t type; };
