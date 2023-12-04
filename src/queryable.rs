@@ -17,7 +17,7 @@ use crate::{
     LOG_INVALID_SESSION,
 };
 use libc::c_void;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use zenoh::prelude::SessionDeclarations;
 use zenoh::{
     prelude::{Sample, SplitBuffer},
@@ -106,6 +106,11 @@ impl Deref for z_owned_query_t {
         unsafe { &*(self.0 as *const _) }
     }
 }
+impl DerefMut for z_owned_query_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *(self.0 as *mut _) }
+    }
+}
 /// The gravestone value of `z_owned_query_t`.
 #[no_mangle]
 pub extern "C" fn z_query_null() -> z_owned_query_t {
@@ -130,7 +135,7 @@ pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
-    let _: Query = this.take();
+    let _: Option<Query> = this.take();
 }
 #[no_mangle]
 pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
@@ -263,7 +268,7 @@ pub unsafe extern "C" fn z_query_reply(
     len: usize,
     options: Option<&z_query_reply_options_t>,
 ) -> i8 {
-    let Some(query) = query else {
+    let Some(query) = query.as_ref() else {
         log::error!("Called `z_query_reply` with invalidated `query`");
         return i8::MIN;
     };
@@ -289,6 +294,9 @@ pub unsafe extern "C" fn z_query_reply(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
+    let Some(query) = query.as_ref() else {
+        return z_keyexpr_t::null();
+    };
     query.key_expr().borrowing_clone().into()
 }
 
@@ -296,6 +304,9 @@ pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
+    let Some(query) = query.as_ref() else {
+        return z_bytes_t::empty();
+    };
     let complement = query.parameters();
     z_bytes_t {
         start: complement.as_ptr(),
@@ -309,7 +320,7 @@ pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
-    match query.value() {
+    match query.as_ref().and_then(|q| q.value()) {
         Some(value) => {
             #[allow(mutable_transmutes)]
             if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
