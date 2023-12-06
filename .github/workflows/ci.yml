@@ -54,17 +54,17 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. -DZENOHC_BUILD_TESTS_WITH_STATIC_LIB=FALSE -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_LIB_STATIC=FALSE -DCMAKE_BUILD_TYPE=Release
           cmake --build . --target tests --config Release
-          ctest -C Release --output-on-failure -E z_api_alignment_test
+          ctest -C Release --output-on-failure -E z_api_alignment_test -E z_build_static
 
       - name: run cmake tests with zenoh-c as static library
         shell: bash
         run: |
           cd build
-          cmake .. -DZENOHC_BUILD_TESTS_WITH_STATIC_LIB=TRUE -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Release
           cmake --build . --target tests --config Release
-          ctest -C Release --output-on-failure -E z_api_alignment_test
+          ctest -C Release --output-on-failure -E z_build_shared
 
       - name: make examples with zenoh-c
         shell: bash
@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build_examples_subproj && cd build_examples_subproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB=TRUE
+          cmake ../examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_LIB_STATIC=TRUE
           cmake --build . --config Debug
 
       - name: make examples with zenoh-c as installed package
