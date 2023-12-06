@@ -60,8 +60,8 @@ fs2 = "0.4.3"
 serde_yaml = "0.9.19"
 
 [lib]
-path="src/lib.rs"
-name = "zenohcd"
+path= "src/lib.rs"
+name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 
