@@ -19,38 +19,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          components: rustfmt, clippy
 
-      - name: Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all --examples --features=logger-autoinit --features=shared-memory -- -D warnings
+      - name: Install Rust toolchain
+        run: rustup component add rustfmt clippy
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- --deny warnings
 
       - name: Run rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check
+        run: cargo fmt --check
 
       - name: Check for feature leaks
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features
+        run: cargo test --no-default-features
 
-      - name: build and install
+      - name: Build and install
         shell: bash
         run: |
           mkdir -p build && cd build 
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
           cmake --build . --target install --config Release
 
-      - name: run cmake tests with zenoh-c as dynamic library
+      - name: Run cmake tests with zenoh-c as dynamic library
         shell: bash
         run: |
           cd build
@@ -58,7 +47,7 @@ jobs:
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E z_api_alignment_test
 
-      - name: run cmake tests with zenoh-c as static library
+      - name: Run cmake tests with zenoh-c as static library
         shell: bash
         run: |
           cd build
@@ -66,20 +55,20 @@ jobs:
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E z_api_alignment_test
 
-      - name: make examples with zenoh-c
+      - name: Build examples with zenoh-c
         shell: bash
         run: |
           cd build
           cmake --build . --target examples
 
-      - name: make examples with zenoh-c as subbroject and static library and in debug mode
+      - name: Build examples with zenoh-c as subbroject and static library and in debug mode
         shell: bash
         run: |
           mkdir -p build_examples_subproj && cd build_examples_subproj
           cmake ../examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB=TRUE
           cmake --build . --config Debug
 
-      - name: make examples with zenoh-c as installed package
+      - name: Build examples with zenoh-c as installed package
         shell: bash
         run: |
           mkdir -p build_examples_findproj && cd build_examples_findproj
@@ -87,10 +76,7 @@ jobs:
           cmake --build . --config Release
 
       - name: Run rust tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --verbose --release --features=logger-autoinit --features=shared-memory
+        run: cargo test --verbose --release --features=logger-autoinit --features=shared-memory
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
