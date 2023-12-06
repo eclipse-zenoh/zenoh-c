@@ -108,7 +108,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/splitguide.yaml
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
-			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain
+			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			DESTINATION ${cargo_toml_dir})
 	endif()	
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
