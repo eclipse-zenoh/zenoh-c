@@ -25,7 +25,7 @@ jobs:
     name: Code checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         run: rustup component add rustfmt clippy
@@ -110,7 +110,7 @@ jobs:
       CMAKE_CROSSCOMPILING: ON
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 500 # NOTE: get long history for git-version crate to correctly compute a version
       - name: Fetch Git tags # NOTE: workaround for https://github.com/actions/checkout/issues/290

@@ -18,7 +18,7 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         run: rustup component add rustfmt clippy
@@ -79,7 +79,7 @@ jobs:
         run: cargo test --verbose --release --features=logger-autoinit --features=shared-memory
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           # Artifact name
           name: zenoh-c-${{ matrix.os }}
