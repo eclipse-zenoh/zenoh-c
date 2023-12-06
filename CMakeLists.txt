@@ -261,7 +261,7 @@ set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
 set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
 
 if(DEFINED implibr)
-	set_target_imported_implib(zenohc ${implibr} ${implibd})
+	set_target_imported_implib(zenohc_shared ${implibr} ${implibd})
 endif()
 
 # Define include directories for library targets
