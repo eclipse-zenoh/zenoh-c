@@ -143,7 +143,7 @@ pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
 #[no_mangle]
 pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
     match query {
-        Some(query) => unsafe { core::mem::transmute(query.as_ref().map(|q| q.clone())) },
+        Some(query) => unsafe { core::mem::transmute(query.as_ref().cloned()) },
         None => z_query_null(),
     }
 }

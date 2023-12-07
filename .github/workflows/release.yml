@@ -25,21 +25,17 @@ jobs:
     name: Code checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          components: rustfmt, clippy
+        run: rustup component add rustfmt clippy
+
       - name: Code format check
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check
+        run: cargo fmt --check
+
       - name: Clippy check
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features=logger-autoinit --features=shared-memory -- -D warnings
+        run: cargo clippy --all-targets --all-features -- --deny warnings
+
       - name: Environment setup
         id: env
         shell: bash
@@ -56,18 +52,18 @@ jobs:
           echo "GITHUB_SHA=${GITHUB_SHA:0:8}"
           GIT_BRANCH=`[[ $GITHUB_REF =~ ^refs/heads/.* ]] && echo ${GITHUB_REF/refs\/heads\//} || true`
           echo "GIT_BRANCH=${GIT_BRANCH}"
-          echo ::set-output name=GIT_BRANCH::"${GIT_BRANCH}"
+          echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_OUTPUT
           GIT_TAG=`[[ $GITHUB_REF =~ ^refs/tags/.* ]] && echo ${GITHUB_REF/refs\/tags\//} || true`
           echo "GIT_TAG=${GIT_TAG}"
-          echo ::set-output name=GIT_TAG::"${GIT_TAG}"
+          echo "GIT_TAG=${GIT_TAG}" >> $GITHUB_OUTPUT
 
           ZENOH_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
           echo "ZENOH_VERSION=${ZENOH_VERSION}"
-          echo ::set-output name=ZENOH_VERSION::"${ZENOH_VERSION}"
+          echo "ZENOH_VERSION=${ZENOH_VERSION}" >> $GITHUB_OUTPUT
           if [ -n "${GIT_TAG}" ]; then
             IS_RELEASE="true"
             echo "IS_RELEASE=${IS_RELEASE}"
-            echo ::set-output name=IS_RELEASE::"${IS_RELEASE}"
+            echo "IS_RELEASE=${IS_RELEASE}" >> $GITHUB_OUTPUT
             PKG_VERSION=${ZENOH_VERSION}
           elif [ -n "${GIT_BRANCH}" ]; then
             PKG_VERSION=${GIT_BRANCH}-${GITHUB_SHA:0:8}
@@ -75,7 +71,7 @@ jobs:
             PKG_VERSION=${ZENOH_VERSION}-${GITHUB_SHA:0:8}
           fi
           echo "PKG_VERSION=${PKG_VERSION}"
-          echo ::set-output name=PKG_VERSION::"${PKG_VERSION}"
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_OUTPUT
     outputs:
       GIT_BRANCH: ${{ steps.env.outputs.GIT_BRANCH }}
       GIT_TAG: ${{ steps.env.outputs.GIT_TAG }}
@@ -91,40 +87,30 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: x86_64-unknown-linux-gnu, arch: amd64, os: ubuntu-20.04 }
-          - {
-              target: arm-unknown-linux-gnueabi,
-              arch: armel,
-              os: ubuntu-20.04,
-              use-cross: true,
-            }
+          - { target: x86_64-unknown-linux-gnu, arch: amd64, os: ubuntu-20.04, build-cmd: "cargo" }
+          - { target: arm-unknown-linux-gnueabi, arch: armel, os: ubuntu-20.04, build-cmd: "cross" }
           - {
               target: arm-unknown-linux-gnueabihf,
               arch: armhf,
               os: ubuntu-20.04,
-              use-cross: true,
+              build-cmd: "cross",
             }
           - {
               target: armv7-unknown-linux-gnueabihf,
               arch: armhf,
               os: ubuntu-20.04,
-              use-cross: true,
+              build-cmd: "cross",
             }
-          - {
-              target: aarch64-unknown-linux-gnu,
-              arch: arm64,
-              os: ubuntu-20.04,
-              use-cross: true,
-            }
-          - { target: x86_64-apple-darwin, arch: darwin, os: macos-latest }
-          - { target: aarch64-apple-darwin, arch: darwin, os: macos-latest }
-          - { target: x86_64-pc-windows-msvc, arch: win64, os: windows-2019 }
-          - { target: x86_64-pc-windows-gnu, arch: win64, os: windows-2019 }
+          - { target: aarch64-unknown-linux-gnu, arch: arm64, os: ubuntu-20.04, build-cmd: "cross" }
+          - { target: x86_64-apple-darwin, arch: darwin, os: macos-latest, build-cmd: "cargo" }
+          - { target: aarch64-apple-darwin, arch: darwin, os: macos-latest, build-cmd: "cargo" }
+          - { target: x86_64-pc-windows-msvc, arch: win64, os: windows-2019, build-cmd: "cargo" }
+          - { target: x86_64-pc-windows-gnu, arch: win64, os: windows-2019, build-cmd: "cargo" }
     env:
       CMAKE_CROSSCOMPILING: ON
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 500 # NOTE: get long history for git-version crate to correctly compute a version
       - name: Fetch Git tags # NOTE: workaround for https://github.com/actions/checkout/issues/290
@@ -152,34 +138,23 @@ jobs:
               ;;
           esac
 
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.job.target }}
-          override: true
-          profile: minimal
+          cargo install cross --git https://github.com/cross-rs/cross
 
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: ${{ matrix.job.use-cross }}
-          command: build
-          args: --release --target=${{ matrix.job.target }} --features=logger-autoinit --features=shared-memory
+      - name: Install Rust toolchain
+        run: |
+          rustup set profile minimal
+          rustup target add ${{ matrix.job.target }}
+
+      - name: Build for ${{ matrix.job.target }} target
+        run: ${{ matrix.job.build-cmd }} build --release --target=${{ matrix.job.target }} --features=logger-autoinit --features=shared-memory
 
       - name: Debian package - libzenohc
         if: contains(matrix.job.target, '-linux-gnu')
-        uses: actions-rs/cargo@v1
-        with:
-          command: deb
-          args: --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc
+        run: cargo deb --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc
 
       - name: Debian package - libzenohc-dev
         if: contains(matrix.job.target, '-linux-gnu')
-        uses: actions-rs/cargo@v1
-        with:
-          command: deb
-          args: --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc-dev
+        run: cargo deb --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc-dev
 
       - name: Packaging
         id: package
@@ -197,7 +172,7 @@ jobs:
               zip -r ${LIB_PKG_NAME} lib
               cd -
               zip -r ${LIB_PKG_NAME} include
-              echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
+              echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
 
               # check if debian packages has been created and packages them in a single tgz
               if [[ -d target/${TARGET}/debian ]]; then
@@ -205,7 +180,7 @@ jobs:
                 echo "Packaging ${DEBS_PKG_NAME}:"
                 zip ${DEBS_PKG_NAME} *.deb
                 cd -
-                echo ::set-output name=DEBS_PKG_NAME::"${DEBS_PKG_NAME}"
+                echo "DEBS_PKG_NAME=${DEBS_PKG_NAME}" >> $GITHUB_OUTPUT
               fi
               ;;
             *apple*)
@@ -215,7 +190,7 @@ jobs:
               zip -r ${LIB_PKG_NAME} lib
               cd -
               zip -r ${LIB_PKG_NAME} include
-              echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
+              echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
               ;;
             *windows*)
               cd "target/${TARGET}/release/"
@@ -224,7 +199,7 @@ jobs:
               7z -y -r a "${LIB_PKG_NAME}" lib
               cd -
               7z -y -r a "${LIB_PKG_NAME}" include
-              echo ::set-output name=LIB_PKG_NAME::"${LIB_PKG_NAME}"
+              echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
               ;;
           esac
 
