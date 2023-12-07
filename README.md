@@ -80,7 +80,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
   $ cmake --build . --target install
   ``` 
 
-  By default only dynamic library is installed. Set `ZENOHC_INSTALL_STATIC_LIBRARY` variable to install static library also:
+  By default only dynamic library is installed. Set `ZENOHC_INSTALL_STATIC_LIBRARY` variable to true to install static library also:
 
   ```bash
   $ cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local -DZENOHC_INSTALL_STATIC_LIBRARY=TRUE
@@ -88,7 +88,10 @@ This repository provides a C binding based on the main [Zenoh implementation wri
   ``` 
 
   The result of installation is the header files in `include` directory, the library files in `lib` directory and cmake package configuration files for package `zenohc` in `lib/cmake` directory. The library later can be loaded with CMake command `find_package(zenohc)`.
-  Link to targets `zenohc::lib` for dynamic library and `zenohc::static` for static one in your CMakeLists.txt configuration file.
+  Add dependency in CMakeLists.txt on target 
+  - `zenohc::shared` for linking dynamic library 
+  - `zenohc::static` for linking static library
+  - `zenohc::lib` for linking static or dynamic library depending on boolean variable `ZENOHC_LIB_STATIC`
 
   For `Debug` configuration the library package `zenohc_debug` is installed side-by-side with release `zenohc` library. Suffix `d` is added to names of library files (libzenohc**d**.so).
 

@@ -12,8 +12,6 @@ else()
     add_custom_target(examples)
 endif()
 
-declare_cache_var(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB FALSE BOOL "Use static zenohc lib for examples")
-
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 
 foreach(file ${files})
@@ -26,14 +24,9 @@ foreach(file ${files})
     add_executable(${target} EXCLUDE_FROM_ALL ${file})
     add_dependencies(examples ${target})
 
-    if(ZENOHC_BUILD_EXAMPLES_WITH_STATIC_LIB)
-        add_dependencies(${target} zenohc::static)
-        target_link_libraries(${target} PRIVATE zenohc::static)
-    else()
-        add_dependencies(${target} zenohc::lib)
-        target_link_libraries(${target} PRIVATE zenohc::lib)
-        copy_dlls(${target})
-    endif()
+    add_dependencies(${target} zenohc::lib)
+    target_link_libraries(${target} PRIVATE zenohc::lib)
+    copy_dlls(${target})
 
     set_property(TARGET ${target} PROPERTY C_STANDARD 11)
 endforeach()
