@@ -92,10 +92,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(keystr));
 
-    if (strncmp(values[val_num], (const char *)sample->payload.start, (int)sample->payload.len)) {
-        perror("Unexpected value received");
-        exit(-1);
-    }
+    ASSERT_STR_BYTES_EQUAL(values[val_num], sample->payload);
 
     printf("data_handler: %i\n", val_num);
     if (++val_num == values_count) {
