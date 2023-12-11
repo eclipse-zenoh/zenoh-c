@@ -32,6 +32,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -104,6 +105,14 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
 
     return result;
 };
+
+#define ASSERT_STR_BYTES_EQUAL(str, bytes)                                                         \
+    do {                                                                                           \
+        if (strlen(str) != bytes.len || strncmp(str, (const char *)bytes.start, (int)bytes.len)) { \
+            fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)bytes.len, bytes.start);   \
+            exit(-1);                                                                              \
+        }                                                                                          \
+    } while (0)
 
 #define SEM_INIT(sem, name)                              \
     do {                                                 \
