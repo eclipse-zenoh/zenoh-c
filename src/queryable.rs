@@ -186,7 +186,8 @@ pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
 pub struct z_queryable_options_t {
     pub complete: bool,
 }
-/// Constructs the default value for :c:type:`z_query_reply_options_t`.
+
+/// Constructs the default value for :c:type:`z_queryable_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
@@ -214,6 +215,21 @@ pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
         encoding: z_encoding_default(),
         attachment: z_attachment_null(),
     }
+}
+
+/// Represents the set of options that can be applied to a query reply error,
+/// sent via :c:func:`z_query_reply_error`.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct z_query_reply_error_options_t {
+    __dummy: u8,
+}
+
+/// Constructs the default value for :c:type:`z_query_reply_error_options_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_query_reply_error_options_default() -> z_query_reply_error_options_t {
+    z_query_reply_error_options_t { __dummy: 0 }
 }
 
 /// Creates a Queryable for the given key expression.
@@ -330,6 +346,34 @@ pub unsafe extern "C" fn z_query_reply(
     } else {
         i8::MIN
     }
+}
+
+/// Send a reply to a query with an error.
+///
+/// This function must be called inside of a Queryable callback passing the
+/// query received as parameters of the callback function.
+/// Sending error responses does not exclude sending other responses.
+/// The reply will be considered complete when the Queryable callback returns.
+///
+/// Parameters:
+///     query: The query to reply to.
+///     options: The options of this reply.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_query_reply_error(
+    query: &z_query_t,
+    value: &z_value_t,
+    _options: Option<&z_query_reply_error_options_t>,
+) -> i8 {
+    let Some(query) = query.as_ref() else {
+        log::error!("Called `z_query_reply` with invalidated `query`");
+        return i8::MIN;
+    };
+    if let Err(e) = query.reply(Err(value.into())).res_sync() {
+        log::error!("{}", e);
+        return e.errno().get();
+    }
+    0
 }
 
 /// Get a query's key by aliasing it.

@@ -753,6 +753,13 @@ typedef struct z_query_reply_options_t {
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
 /**
+ * Represents the set of options that can be applied to a query reply error,
+ * sent via :c:func:`z_query_reply_error`.
+ */
+typedef struct z_query_reply_error_options_t {
+  uint8_t __dummy;
+} z_query_reply_error_options_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
  * - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -1826,6 +1833,26 @@ int8_t z_query_reply(const struct z_query_t *query,
                      size_t len,
                      const struct z_query_reply_options_t *options);
 /**
+ * Send a reply to a query with an error.
+ *
+ * This function must be called inside of a Queryable callback passing the
+ * query received as parameters of the callback function.
+ * Sending error responses does not exclude sending other responses.
+ * The reply will be considered complete when the Queryable callback returns.
+ *
+ * Parameters:
+ *     query: The query to reply to.
+ *     options: The options of this reply.
+ */
+ZENOHC_API
+int8_t z_query_reply_error(const struct z_query_t *query,
+                           const struct z_value_t *value,
+                           const struct z_query_reply_error_options_t *_options);
+/**
+ * Constructs the default value for :c:type:`z_query_reply_error_options_t`.
+ */
+ZENOHC_API struct z_query_reply_error_options_t z_query_reply_error_options_default(void);
+/**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
 ZENOHC_API struct z_query_reply_options_t z_query_reply_options_default(void);
@@ -1849,7 +1876,7 @@ ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *qable);
  */
 ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
 /**
- * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ * Constructs the default value for :c:type:`z_queryable_options_t`.
  */
 ZENOHC_API struct z_queryable_options_t z_queryable_options_default(void);
 /**
