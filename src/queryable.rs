@@ -366,7 +366,7 @@ pub unsafe extern "C" fn z_query_reply_error(
     _options: Option<&z_query_reply_error_options_t>,
 ) -> i8 {
     let Some(query) = query.as_ref() else {
-        log::error!("Called `z_query_reply` with invalidated `query`");
+        log::error!("Called `z_query_reply_error` with invalidated `query`");
         return i8::MIN;
     };
     if let Err(e) = query.reply(Err(value.into())).res_sync() {
