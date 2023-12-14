@@ -11,10 +11,13 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use libc::size_t;
+use libc::{c_char, size_t};
 use zenoh::prelude::ZenohId;
 
-/// An array of bytes.  
+/// A contiguous view of bytes owned by some other entity.
+///
+/// `start` being `null` is considered a gravestone value,
+/// and empty slices are represented using a possibly dangling pointer for `start`.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_bytes_t {
@@ -23,6 +26,12 @@ pub struct z_bytes_t {
 }
 
 impl z_bytes_t {
+    pub fn as_slice(&self) -> Option<&[u8]> {
+        if self.start.is_null() {
+            return None;
+        }
+        Some(unsafe { core::slice::from_raw_parts(self.start, self.len) })
+    }
     pub fn empty() -> Self {
         z_bytes_t {
             start: std::ptr::null(),
@@ -41,6 +50,32 @@ impl Default for z_bytes_t {
 #[no_mangle]
 pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
     !b.start.is_null()
+}
+
+/// Returns the gravestone value for `z_bytes_t`
+#[no_mangle]
+pub extern "C" fn z_bytes_null() -> z_bytes_t {
+    z_bytes_t {
+        len: 0,
+        start: core::ptr::null(),
+    }
+}
+
+/// Returns a view of `str` using `strlen`.
+///
+/// `str == NULL` will cause this to return `z_bytes_null()`
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
+    if str.is_null() {
+        z_bytes_null()
+    } else {
+        let len = unsafe { libc::strlen(str) };
+        z_bytes_t {
+            len,
+            start: str.cast(),
+        }
+    }
 }
 
 /// Frees `b` and invalidates it for double-drop safety.

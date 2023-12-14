@@ -25,6 +25,8 @@ use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
 
+use crate::attachment::{attachment_iteration_driver, z_attachment_null, z_attachment_t};
+
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
 pub type z_zint_t = c_ulong;
@@ -196,6 +198,7 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
 ///   z_encoding_t encoding: The encoding of the value of this data sample.
 ///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
 ///   z_timestamp_t timestamp: The timestamp of this data sample.
+///   z_attachment_t attachment: The attachment of this data sample.
 #[repr(C)]
 pub struct z_sample_t<'a> {
     pub keyexpr: z_keyexpr_t,
@@ -204,6 +207,7 @@ pub struct z_sample_t<'a> {
     pub _zc_buf: &'a c_void,
     pub kind: z_sample_kind_t,
     pub timestamp: z_timestamp_t,
+    pub attachment: z_attachment_t,
 }
 
 impl<'a> z_sample_t<'a> {
@@ -218,6 +222,13 @@ impl<'a> z_sample_t<'a> {
             _zc_buf: unsafe { std::mem::transmute(owner) },
             kind: sample.kind.into(),
             timestamp: sample.timestamp.as_ref().into(),
+            attachment: match &sample.attachment {
+                Some(attachment) => z_attachment_t {
+                    data: attachment as *const _ as *mut c_void,
+                    iteration_driver: Some(attachment_iteration_driver),
+                },
+                None => z_attachment_null(),
+            },
         }
     }
 }
