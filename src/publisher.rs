@@ -18,9 +18,16 @@ use zenoh::prelude::SessionDeclarations;
 use zenoh::{
     prelude::{Priority, Value},
     publication::Publisher,
+    sample::AttachmentBuilder,
 };
 use zenoh_protocol::core::CongestionControl;
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
+
+use crate::attachment::{
+    insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
+    z_attachment_t,
+};
+use libc::c_void;
 
 use crate::{
     impl_guarded_transmute, z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t,
@@ -208,9 +215,11 @@ pub extern "C" fn z_publisher_loan(p: &z_owned_publisher_t) -> z_publisher_t {
 ///
 /// Members:
 ///     z_encoding_t encoding: The encoding of the payload.
+///     z_attachment_t attachment: The attachment to attach to the publication.
 #[repr(C)]
 pub struct z_publisher_put_options_t {
     pub encoding: z_encoding_t,
+    pub attachment: z_attachment_t,
 }
 
 /// Constructs the default value for :c:type:`z_publisher_put_options_t`.
@@ -219,6 +228,7 @@ pub struct z_publisher_put_options_t {
 pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t {
     z_publisher_put_options_t {
         encoding: z_encoding_default(),
+        attachment: z_attachment_null(),
     }
 }
 
@@ -244,7 +254,19 @@ pub unsafe extern "C" fn z_publisher_put(
     if let Some(p) = publisher.as_ref() {
         let value: Value = std::slice::from_raw_parts(payload, len).into();
         let put = match options {
-            Some(options) => p.put(value.encoding(options.encoding.into())),
+            Some(options) => {
+                let mut put = p.put(value.encoding(options.encoding.into()));
+                if z_attachment_check(&options.attachment) {
+                    let mut attachment_builder = AttachmentBuilder::new();
+                    z_attachment_iterate(
+                        options.attachment,
+                        insert_in_attachment_builder,
+                        &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
+                    );
+                    put = put.with_attachment(attachment_builder.build());
+                };
+                put
+            }
             None => p.put(value),
         };
         if let Err(e) = put.res_sync() {
