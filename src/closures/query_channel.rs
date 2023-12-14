@@ -1,4 +1,4 @@
-use crate::{z_closure_query_drop, z_owned_closure_query_t, z_owned_query_t};
+use crate::{z_closure_owned_query_drop, z_owned_closure_owned_query_t, z_owned_query_t};
 use libc::c_void;
 use std::sync::mpsc::TryRecvError;
 
@@ -23,19 +23,19 @@ pub struct z_owned_query_channel_closure_t {
 /// A pair of closures
 #[repr(C)]
 pub struct z_owned_query_channel_t {
-    pub send: z_owned_closure_query_t,
+    pub send: z_owned_closure_owned_query_t,
     pub recv: z_owned_query_channel_closure_t,
 }
 #[no_mangle]
 pub extern "C" fn z_query_channel_drop(channel: &mut z_owned_query_channel_t) {
-    z_closure_query_drop(&mut channel.send);
+    z_closure_owned_query_drop(&mut channel.send);
     z_query_channel_closure_drop(&mut channel.recv);
 }
 /// Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
 #[no_mangle]
 pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
     z_owned_query_channel_t {
-        send: z_owned_closure_query_t::empty(),
+        send: z_owned_closure_owned_query_t::empty(),
         recv: z_owned_query_channel_closure_t::empty(),
     }
 }

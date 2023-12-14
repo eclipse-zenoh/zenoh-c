@@ -217,6 +217,40 @@ typedef struct z_owned_closure_hello_t {
   void (*drop)(void*);
 } z_owned_closure_hello_t;
 /**
+ * Owned variant of a Query received by a Queryable.
+ *
+ * You may construct it by `z_query_clone`-ing a loaned query.
+ * When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
+ * the query will receive its termination signal.
+ *
+ * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
+ * to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
+ */
+typedef struct z_owned_query_t {
+  void *_0;
+} z_owned_query_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Members:
+ *   void *context: a pointer to an arbitrary state.
+ *   void *call(const struct z_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+ *   void *drop(void*): allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_owned_query_t {
+  void *context;
+  void (*call)(struct z_owned_query_t*, void *context);
+  void (*drop)(void*);
+} z_owned_closure_owned_query_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
@@ -631,19 +665,6 @@ typedef struct z_put_options_t {
   enum z_priority_t priority;
 } z_put_options_t;
 /**
- * Owned variant of a Query received by a Queryable.
- *
- * You may construct it by `z_query_clone`-ing a loaned query.
- * When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
- * the query will receive its termination signal.
- *
- * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
- * to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
- */
-typedef struct z_owned_query_t {
-  void *_0;
-} z_owned_query_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
  * - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -665,7 +686,7 @@ typedef struct z_owned_query_channel_closure_t {
  * A pair of closures
  */
 typedef struct z_owned_query_channel_t {
-  struct z_owned_closure_query_t send;
+  struct z_owned_closure_owned_query_t send;
   struct z_owned_query_channel_closure_t recv;
 } z_owned_query_channel_t;
 /**
@@ -875,6 +896,20 @@ ZENOHC_API void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
  * Constructs a null safe-to-drop value of 'z_owned_closure_hello_t' type
  */
 ZENOHC_API struct z_owned_closure_hello_t z_closure_hello_null(void);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+ZENOHC_API
+void z_closure_owned_query_call(const struct z_owned_closure_owned_query_t *closure,
+                                struct z_owned_query_t *query);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+ZENOHC_API void z_closure_owned_query_drop(struct z_owned_closure_owned_query_t *closure);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
+ */
+ZENOHC_API struct z_owned_closure_owned_query_t z_closure_owned_query_null(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */

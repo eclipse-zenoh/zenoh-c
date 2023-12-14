@@ -100,6 +100,16 @@ impl Deref for z_query_t {
         unsafe { &*(self.0 as *const _) }
     }
 }
+impl From<Option<Query>> for z_owned_query_t {
+    fn from(value: Option<Query>) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+impl From<Query> for z_owned_query_t {
+    fn from(value: Query) -> Self {
+        Some(value).into()
+    }
+}
 impl Deref for z_owned_query_t {
     type Target = Option<Query>;
     fn deref(&self) -> &Self::Target {
@@ -109,6 +119,11 @@ impl Deref for z_owned_query_t {
 impl DerefMut for z_owned_query_t {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { &mut *(self.0 as *mut _) }
+    }
+}
+impl Drop for z_owned_query_t {
+    fn drop(&mut self) {
+        let _: Option<Query> = self.take();
     }
 }
 /// The gravestone value of `z_owned_query_t`.
