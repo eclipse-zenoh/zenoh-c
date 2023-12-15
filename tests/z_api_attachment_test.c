@@ -100,8 +100,20 @@ void writting_no_map_read_by_get() {
     assert(a_non.len == 0);
 }
 
+void invalid_attachment_safety() {
+    z_attachment_t attachment = z_attachment_null();
+
+    z_bytes_t a_non = z_attachment_get(attachment, z_bytes_new("k_non"));
+    assert(a_non.start == NULL);
+    assert(a_non.len == 0);
+
+    int res = z_attachment_iterate(attachment, _attachment_reader, NULL);
+    assert(res != 0);
+}
+
 int main(int argc, char** argv) {
     writting_through_map_by_alias_read_by_get();
     writting_through_map_by_copy_read_by_iter();
     writting_no_map_read_by_get();
+    invalid_attachment_safety();
 }
