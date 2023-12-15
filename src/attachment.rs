@@ -66,7 +66,11 @@ pub extern "C" fn z_attachment_iterate(
     body: z_attachment_iter_body_t,
     context: *mut c_void,
 ) -> i8 {
-    (this.iteration_driver.unwrap())(this.data, body, context)
+    if let Some(driver) = this.iteration_driver {
+        return driver(this.data, body, context);
+    }
+    log::error!("Invalid iteration_driver");
+    i8::MIN
 }
 
 /// Returns the value associated with the key.
