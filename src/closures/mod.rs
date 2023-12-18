@@ -26,5 +26,8 @@ mod zenohid_closure;
 pub use response_channel::*;
 mod response_channel;
 
+pub use query_channel::*;
+mod query_channel;
+
 pub use hello_closure::*;
 mod hello_closure;

@@ -88,6 +88,23 @@ pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_t(*mut c_void);
+impl From<&Query> for z_query_t {
+    fn from(value: &Query) -> Self {
+        z_query_t(value as *const _ as *mut _)
+    }
+}
+impl From<Option<&Query>> for z_query_t {
+    fn from(value: Option<&Query>) -> Self {
+        value.map_or(Self(core::ptr::null_mut()), Into::into)
+    }
+}
+impl Deref for z_query_t {
+    type Target = Option<&'static Query>;
+    fn deref(&self) -> &Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+
 /// Owned variant of a Query received by a Queryable.
 ///
 /// You may construct it by `z_query_clone`-ing a loaned query.
@@ -99,21 +116,31 @@ pub struct z_query_t(*mut c_void);
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_owned_query_t(*mut c_void);
-impl Deref for z_query_t {
-    type Target = Option<Query>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { &*(self.0 as *const _) }
+
+impl From<Option<Query>> for z_owned_query_t {
+    fn from(value: Option<Query>) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+impl From<Query> for z_owned_query_t {
+    fn from(value: Query) -> Self {
+        Some(value).into()
     }
 }
 impl Deref for z_owned_query_t {
     type Target = Option<Query>;
     fn deref(&self) -> &Self::Target {
-        unsafe { &*(self.0 as *const _) }
+        unsafe { core::mem::transmute(self) }
     }
 }
 impl DerefMut for z_owned_query_t {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut *(self.0 as *mut _) }
+        unsafe { core::mem::transmute(self) }
+    }
+}
+impl Drop for z_owned_query_t {
+    fn drop(&mut self) {
+        let _: Option<Query> = self.take();
     }
 }
 /// The gravestone value of `z_owned_query_t`.
@@ -133,7 +160,7 @@ pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
-    unsafe { core::mem::transmute_copy(this) }
+    this.as_ref().into()
 }
 /// Destroys the query, setting `this` to its gravestone value to prevent double-frees.
 ///
@@ -147,10 +174,7 @@ pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
 pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
-    match query {
-        Some(query) => unsafe { core::mem::transmute(query.as_ref().cloned()) },
-        None => z_query_null(),
-    }
+    query.and_then(|q| q.cloned()).into()
 }
 
 /// Options passed to the :c:func:`z_declare_queryable` function.
@@ -225,9 +249,7 @@ pub extern "C" fn z_declare_queryable(
         builder = builder.complete(options.complete);
     }
     builder
-        .callback(move |query| {
-            z_closure_query_call(&closure, &z_query_t(&query as *const _ as *mut c_void))
-        })
+        .callback(move |query| z_closure_query_call(&closure, &z_query_t::from(&query)))
         .res_sync()
         .map_err(|e| log::error!("{}", e))
         .ok()
