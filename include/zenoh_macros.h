@@ -37,7 +37,9 @@
                   z_owned_closure_hello_t * : z_closure_hello_drop,                   \
                   z_owned_closure_zid_t * : z_closure_zid_drop,                       \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop,   \
+                  z_owned_query_channel_closure_t * : z_query_channel_closure_drop,   \
                   z_owned_reply_channel_t * : z_reply_channel_drop,                   \
+                  z_owned_query_channel_t * : z_query_channel_drop,                   \
                   z_owned_bytes_map_t * : z_bytes_map_drop,                           \
                   zc_owned_payload_t * : zc_payload_drop,                             \
                   zc_owned_shmbuf_t * : zc_shmbuf_drop,                               \
@@ -106,10 +108,12 @@
 #define z_call(x, ...) \
     _Generic((x), z_owned_closure_sample_t : z_closure_sample_call,              \
                   z_owned_closure_query_t : z_closure_query_call,                \
+                  z_owned_closure_owned_query_t : z_closure_owned_query_call,    \
                   z_owned_closure_reply_t : z_closure_reply_call,                \
                   z_owned_closure_hello_t : z_closure_hello_call,                \
                   z_owned_closure_zid_t : z_closure_zid_call,                    \
-                  z_owned_reply_channel_closure_t : z_reply_channel_closure_call \
+                  z_owned_reply_channel_closure_t : z_reply_channel_closure_call,\
+                  z_owned_query_channel_closure_t : z_query_channel_closure_call \
             ) (&x, __VA_ARGS__)
 // clang-format on
 
