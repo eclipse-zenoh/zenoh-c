@@ -25,10 +25,10 @@ const char *const keyexpr = "test/key";
 const char *const ERROR = "error message";
 
 void query_handler(const z_query_t *query, void *context) {
+    printf("query_handler\n");
     z_value_t value;
 
     value.payload = z_bytes_new(ERROR);
-    value.payload = z_bytes_new("tt");
 
     z_query_reply_error(query, &value, NULL);
 
@@ -58,6 +58,17 @@ int run_queryable() {
     return 0;
 }
 
+void reply_handler(z_owned_reply_t *reply, void *arg) {
+    printf("reply_handler\n");
+
+    assert(!z_reply_is_ok(reply));
+
+    z_value_t value = z_reply_err(reply);
+    ASSERT_STR_BYTES_EQUAL(ERROR, value.payload);
+
+    exit(0);
+}
+
 int run_get() {
     SEM_WAIT(sem);
 
@@ -68,20 +79,13 @@ int run_get() {
         return -1;
     }
 
-    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
     z_get_options_t opts = z_get_options_default();
-    z_get(z_loan(s), z_keyexpr(keyexpr), "", z_move(channel.send), &opts);
+    z_owned_closure_reply_t closure_reply = z_closure(reply_handler, NULL, &s);
+    z_get(z_loan(s), z_keyexpr(keyexpr), "", z_move(closure_reply), &opts);
+    printf("z_get\n");
 
-    z_owned_reply_t reply = z_reply_null();
-    z_call(channel.recv, &reply);
+    sleep(10);
 
-    assert(!z_reply_is_ok(&reply));
-
-    z_value_t value = z_reply_err(&reply);
-    ASSERT_STR_BYTES_EQUAL(ERROR, value.payload);
-
-    z_drop(z_move(reply));
-    z_drop(z_move(channel));
     z_close(z_move(s));
 
     return 0;
