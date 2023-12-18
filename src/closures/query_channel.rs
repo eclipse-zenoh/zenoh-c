@@ -51,42 +51,40 @@ pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
 pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
-    if bound == 0 {
+    let (send, rx) = if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
-        z_owned_query_channel_t {
-            send: From::from(move |query: &mut z_owned_query_t| {
+        (
+            From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
                         log::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
-            recv: From::from(move |receptacle: &mut z_owned_query_t| {
-                *receptacle = match rx.recv() {
-                    Ok(val) => val.into(),
-                    Err(_) => None.into(),
-                };
-                true
-            }),
-        }
+            rx,
+        )
     } else {
         let (tx, rx) = std::sync::mpsc::sync_channel(bound);
-        z_owned_query_channel_t {
-            send: From::from(move |query: &mut z_owned_query_t| {
+        (
+            From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
                         log::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
-            recv: From::from(move |receptacle: &mut z_owned_query_t| {
-                *receptacle = match rx.recv() {
-                    Ok(val) => val.into(),
-                    Err(_) => None.into(),
-                };
-                true
-            }),
-        }
+            rx,
+        )
+    };
+    z_owned_query_channel_t {
+        send,
+        recv: From::from(move |receptacle: &mut z_owned_query_t| {
+            *receptacle = match rx.recv() {
+                Ok(val) => val.into(),
+                Err(_) => None.into(),
+            };
+            true
+        }),
     }
 }
 
@@ -101,62 +99,50 @@ pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
 pub extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_channel_t {
-    if bound == 0 {
+    let (send, rx) = if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
-        z_owned_query_channel_t {
-            send: From::from(move |query: &mut z_owned_query_t| {
+        (
+            From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
                         log::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
-            recv: From::from(
-                move |receptacle: &mut z_owned_query_t| match rx.try_recv() {
-                    Ok(val) => {
-                        let mut tmp = z_owned_query_t::from(val);
-                        std::mem::swap(&mut tmp, receptacle);
-                        true
-                    }
-                    Err(TryRecvError::Disconnected) => {
-                        receptacle.take();
-                        true
-                    }
-                    Err(TryRecvError::Empty) => {
-                        receptacle.take();
-                        false
-                    }
-                },
-            ),
-        }
+            rx,
+        )
     } else {
         let (tx, rx) = std::sync::mpsc::sync_channel(bound);
-        z_owned_query_channel_t {
-            send: From::from(move |query: &mut z_owned_query_t| {
+        (
+            From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
                         log::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
-            recv: From::from(
-                move |receptacle: &mut z_owned_query_t| match rx.try_recv() {
-                    Ok(val) => {
-                        let mut tmp = z_owned_query_t::from(val);
-                        std::mem::swap(&mut tmp, receptacle);
-                        true
-                    }
-                    Err(TryRecvError::Disconnected) => {
-                        receptacle.take();
-                        true
-                    }
-                    Err(TryRecvError::Empty) => {
-                        receptacle.take();
-                        false
-                    }
-                },
-            ),
-        }
+            rx,
+        )
+    };
+    z_owned_query_channel_t {
+        send,
+        recv: From::from(
+            move |receptacle: &mut z_owned_query_t| match rx.try_recv() {
+                Ok(val) => {
+                    let mut tmp = z_owned_query_t::from(val);
+                    std::mem::swap(&mut tmp, receptacle);
+                    true
+                }
+                Err(TryRecvError::Disconnected) => {
+                    receptacle.take();
+                    true
+                }
+                Err(TryRecvError::Empty) => {
+                    receptacle.take();
+                    false
+                }
+            },
+        ),
     }
 }
 
