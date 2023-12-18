@@ -13,6 +13,7 @@
 //
 
 use libc::c_char;
+use libc::c_void;
 use std::{
     borrow::Cow,
     convert::TryFrom,
@@ -23,10 +24,15 @@ use std::{
 use zenoh::{
     prelude::{ConsolidationMode, KeyExpr, QueryTarget, SplitBuffer},
     query::{Mode, QueryConsolidation, Reply},
+    sample::AttachmentBuilder,
     value::Value,
 };
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
+use crate::attachment::{
+    insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
+    z_attachment_t,
+};
 use crate::{
     impl_guarded_transmute, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t,
     z_keyexpr_t, z_owned_closure_reply_t, z_sample_t, z_session_t, GuardedTransmute,
@@ -44,15 +50,15 @@ type ReplyInner = Option<Reply>;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 23]);
+pub struct z_owned_reply_t([u64; 28]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
-pub struct z_owned_reply_t([u64; 24]);
+pub struct z_owned_reply_t([u64; 30]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 17]);
+pub struct z_owned_reply_t([u64; 19]);
 
 impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
 
@@ -157,12 +163,14 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
 ///     z_query_target_t target: The Queryables that should be target of the query.
 ///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
 ///     z_value_t value: An optional value to attach to the query.
+///     z_attachment_t attachment: The attachment to attach to the query.
 ///     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
 #[repr(C)]
 pub struct z_get_options_t {
     pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
     pub value: z_value_t,
+    pub attachment: z_attachment_t,
     pub timeout_ms: u64,
 }
 #[no_mangle]
@@ -177,6 +185,7 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
                 encoding: z_encoding_default(),
             }
         },
+        attachment: z_attachment_null(),
     }
 }
 
@@ -223,6 +232,15 @@ pub unsafe extern "C" fn z_get(
         if options.timeout_ms != 0 {
             q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));
         }
+        if z_attachment_check(&options.attachment) {
+            let mut attachment_builder = AttachmentBuilder::new();
+            z_attachment_iterate(
+                options.attachment,
+                insert_in_attachment_builder,
+                &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
+            );
+            q = q.with_attachment(attachment_builder.build());
+        };
     }
     match q
         .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))

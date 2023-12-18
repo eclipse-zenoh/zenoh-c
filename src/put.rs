@@ -15,10 +15,17 @@ use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
 use crate::LOG_INVALID_SESSION;
+use libc::c_void;
 use libc::size_t;
 use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};
 use zenoh::publication::CongestionControl;
+use zenoh::sample::AttachmentBuilder;
 use zenoh_util::core::zresult::ErrNo;
+
+use crate::attachment::{
+    insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
+    z_attachment_t,
+};
 
 /// The priority of zenoh messages.
 ///
@@ -106,12 +113,14 @@ impl From<z_congestion_control_t> for CongestionControl {
 ///     z_encoding_t encoding: The encoding of the payload.
 ///     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
 ///     z_priority_t priority: The priority of this message.
+///     z_attachment_t attachment: The attachment to this message.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
     pub encoding: z_encoding_t,
     pub congestion_control: z_congestion_control_t,
     pub priority: z_priority_t,
+    pub attachment: z_attachment_t,
 }
 
 /// Constructs the default value for :c:type:`z_put_options_t`.
@@ -122,6 +131,7 @@ pub extern "C" fn z_put_options_default() -> z_put_options_t {
         encoding: z_encoding_default(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
+        attachment: z_attachment_null(),
     }
 }
 
@@ -156,6 +166,15 @@ pub unsafe extern "C" fn z_put(
                     .encoding(opts.encoding)
                     .congestion_control(opts.congestion_control.into())
                     .priority(opts.priority.into());
+                if z_attachment_check(&opts.attachment) {
+                    let mut attachment_builder = AttachmentBuilder::new();
+                    z_attachment_iterate(
+                        opts.attachment,
+                        insert_in_attachment_builder,
+                        &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
+                    );
+                    res = res.with_attachment(attachment_builder.build());
+                };
             }
             match res.res_sync() {
                 Err(e) => {

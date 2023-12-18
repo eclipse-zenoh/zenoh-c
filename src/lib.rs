@@ -48,6 +48,7 @@ mod publication_cache;
 pub use publication_cache::*;
 mod querying_subscriber;
 pub use querying_subscriber::*;
+pub mod attachment;
 #[cfg(feature = "shared-memory")]
 mod shm;
 

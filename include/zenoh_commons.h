@@ -149,12 +149,55 @@ typedef enum zcu_reply_keyexpr_t {
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
 /**
- * An array of bytes.
+ * A contiguous view of bytes owned by some other entity.
+ *
+ * `start` being `null` is considered a gravestone value,
+ * and empty slices are represented using a possibly dangling pointer for `start`.
  */
 typedef struct z_bytes_t {
   size_t len;
   const uint8_t *start;
 } z_bytes_t;
+/**
+ * The body of a loop over an attachment's key-value pairs.
+ *
+ * `key` and `value` are loaned to the body for the duration of a single call.
+ * `context` is passed transparently through the iteration driver.
+ *
+ * Returning `0` is treated as `continue`.
+ * Returning any other value is treated as `break`.
+ */
+typedef int8_t (*z_attachment_iter_body_t)(struct z_bytes_t key,
+                                           struct z_bytes_t value,
+                                           void *context);
+/**
+ * The driver of a loop over an attachment's key-value pairs.
+ *
+ * This function is expected to call `loop_body` once for each key-value pair
+ * within `iterator`, passing `context`, and returning any non-zero value immediately (breaking iteration).
+ */
+typedef int8_t (*z_attachment_iter_driver_t)(const void *iterator,
+                                             z_attachment_iter_body_t loop_body,
+                                             void *context);
+/**
+ * A iteration based map of byte slice to byte slice.
+ *
+ * `iteration_driver == NULL` marks the gravestone value, as this type is often optional.
+ * Users are encouraged to use `z_attachment_null` and `z_attachment_check` to interact.
+ */
+typedef struct z_attachment_t {
+  const void *data;
+  z_attachment_iter_driver_t iteration_driver;
+} z_attachment_t;
+/**
+ * A map of maybe-owned vector of bytes to owned vector of bytes.
+ *
+ * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
+ */
+typedef struct z_owned_bytes_map_t {
+  uint64_t _0[2];
+  size_t _1[4];
+} z_owned_bytes_map_t;
 /**
  * Represents a Zenoh ID.
  *
@@ -282,17 +325,17 @@ typedef struct z_owned_closure_query_t {
  */
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[23];
+  uint64_t _0[28];
 } z_owned_reply_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
 typedef struct ALIGN(16) z_owned_reply_t {
-  uint64_t _0[24];
+  uint64_t _0[30];
 } z_owned_reply_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[17];
+  uint64_t _0[19];
 } z_owned_reply_t;
 #endif
 /**
@@ -366,6 +409,7 @@ typedef struct z_timestamp_t {
  *   z_encoding_t encoding: The encoding of the value of this data sample.
  *   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
  *   z_timestamp_t timestamp: The timestamp of this data sample.
+ *   z_attachment_t attachment: The attachment of this data sample.
  */
 typedef struct z_sample_t {
   struct z_keyexpr_t keyexpr;
@@ -374,6 +418,7 @@ typedef struct z_sample_t {
   const void *_zc_buf;
   enum z_sample_kind_t kind;
   struct z_timestamp_t timestamp;
+  struct z_attachment_t attachment;
 } z_sample_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -584,12 +629,14 @@ typedef struct z_value_t {
  *     z_query_target_t target: The Queryables that should be target of the query.
  *     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
  *     z_value_t value: An optional value to attach to the query.
+ *     z_attachment_t attachment: The attachment to attach to the query.
  *     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
  */
 typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
   struct z_value_t value;
+  struct z_attachment_t attachment;
   uint64_t timeout_ms;
 } z_get_options_t;
 /**
@@ -644,9 +691,11 @@ typedef struct z_publisher_delete_options_t {
  *
  * Members:
  *     z_encoding_t encoding: The encoding of the payload.
+ *     z_attachment_t attachment: The attachment to attach to the publication.
  */
 typedef struct z_publisher_put_options_t {
   struct z_encoding_t encoding;
+  struct z_attachment_t attachment;
 } z_publisher_put_options_t;
 typedef struct z_pull_subscriber_t {
   const struct z_owned_pull_subscriber_t *_0;
@@ -658,11 +707,13 @@ typedef struct z_pull_subscriber_t {
  *     z_encoding_t encoding: The encoding of the payload.
  *     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
  *     z_priority_t priority: The priority of this message.
+ *     z_attachment_t attachment: The attachment to this message.
  */
 typedef struct z_put_options_t {
   struct z_encoding_t encoding;
   enum z_congestion_control_t congestion_control;
   enum z_priority_t priority;
+  struct z_attachment_t attachment;
 } z_put_options_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -695,9 +746,11 @@ typedef struct z_owned_query_channel_t {
  *
  * Members:
  *   z_encoding_t encoding: The encoding of the payload.
+ *   z_attachment_t attachment: The attachment to this reply.
  */
 typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
+  struct z_attachment_t attachment;
 } z_query_reply_options_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -872,9 +925,122 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 /**
+ * Returns the gravestone value for `z_attachment_t`.
+ */
+ZENOHC_API bool z_attachment_check(const struct z_attachment_t *this_);
+/**
+ * Returns the value associated with the key.
+ */
+ZENOHC_API struct z_bytes_t z_attachment_get(struct z_attachment_t this_, struct z_bytes_t key);
+/**
+ * Iterate over `this`'s key-value pairs, breaking if `body` returns a non-zero
+ * value for a key-value pair, and returning the latest return value.
+ *
+ * `context` is passed to `body` to allow stateful closures.
+ *
+ * This function takes no ownership whatsoever.
+ */
+ZENOHC_API
+int8_t z_attachment_iterate(struct z_attachment_t this_,
+                            z_attachment_iter_body_t body,
+                            void *context);
+/**
+ * Returns the gravestone value for `z_attachment_t`.
+ */
+ZENOHC_API struct z_attachment_t z_attachment_null(void);
+/**
  * Returns ``true`` if `b` is initialized.
  */
 ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
+/**
+ * Aliases `this` into a generic `z_attachment_t`, allowing it to be passed to corresponding APIs.
+ */
+ZENOHC_API struct z_attachment_t z_bytes_map_as_attachment(const struct z_owned_bytes_map_t *this_);
+/**
+ * Returns `true` if the map is not in its gravestone state
+ */
+ZENOHC_API bool z_bytes_map_check(const struct z_owned_bytes_map_t *this_);
+/**
+ * Destroys the map, resetting `this` to its gravestone value.
+ *
+ * This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+ */
+ZENOHC_API void z_bytes_map_drop(struct z_owned_bytes_map_t *this_);
+/**
+ * Constructs a map from the provided attachment, copying keys and values.
+ *
+ * If `this` is at gravestone value, the returned value will also be at gravestone value.
+ */
+ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_from_attachment(struct z_attachment_t this_);
+/**
+ * Constructs a map from the provided attachment, aliasing the attachment's keys and values.
+ *
+ * If `this` is at gravestone value, the returned value will also be at gravestone value.
+ */
+ZENOHC_API
+struct z_owned_bytes_map_t z_bytes_map_from_attachment_aliasing(struct z_attachment_t this_);
+/**
+ * Returns the value associated with `key`, returning a gravestone value if:
+ * - `this` or `key` is in gravestone state.
+ * - `this` has no value associated to `key`
+ */
+ZENOHC_API
+struct z_bytes_t z_bytes_map_get(const struct z_owned_bytes_map_t *this_,
+                                 struct z_bytes_t key);
+/**
+ * Associates `value` to `key` in the map, aliasing them.
+ *
+ * Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
+ *
+ * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ */
+ZENOHC_API
+void z_bytes_map_insert_by_alias(const struct z_owned_bytes_map_t *this_,
+                                 struct z_bytes_t key,
+                                 struct z_bytes_t value);
+/**
+ * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
+ *
+ * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ */
+ZENOHC_API
+void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
+                                struct z_bytes_t key,
+                                struct z_bytes_t value);
+/**
+ * Iterates over the key-value pairs in the map.
+ *
+ * `body` will be called once per pair, with `ctx` as its last argument.
+ * If `body` returns a non-zero value, the iteration will stop immediately and the value will be returned.
+ * Otherwise, this will return 0 once all pairs have been visited.
+ * `body` is not given ownership of the key nor value, which alias the pairs in the map.
+ * It is safe to keep these aliases until existing keys are modified/removed, or the map is destroyed.
+ * Note that this map is unordered.
+ *
+ * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ */
+ZENOHC_API
+int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
+                        z_attachment_iter_body_t body,
+                        void *ctx);
+/**
+ * Constructs a new map.
+ */
+ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
+/**
+ * Constructs the gravestone value for `z_owned_bytes_map_t`
+ */
+ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
+/**
+ * Returns a view of `str` using `strlen`.
+ *
+ * `str == NULL` will cause this to return `z_bytes_null()`
+ */
+ZENOHC_API struct z_bytes_t z_bytes_new(const char *str);
+/**
+ * Returns the gravestone value for `z_bytes_t`
+ */
+ZENOHC_API struct z_bytes_t z_bytes_null(void);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *
@@ -1487,6 +1653,12 @@ int8_t z_put(struct z_session_t session,
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
 ZENOHC_API struct z_put_options_t z_put_options_default(void);
+/**
+ * Returns the attachment to the query by aliasing.
+ *
+ * `z_check(return_value) == false` if there was no attachment to the query.
+ */
+ZENOHC_API struct z_attachment_t z_query_attachment(const struct z_query_t *query);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */

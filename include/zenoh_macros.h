@@ -38,6 +38,7 @@
                   z_owned_closure_zid_t * : z_closure_zid_drop,                       \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop,   \
                   z_owned_reply_channel_t * : z_reply_channel_drop,                   \
+                  z_owned_bytes_map_t * : z_bytes_map_drop,                           \
                   zc_owned_payload_t * : zc_payload_drop,                             \
                   zc_owned_shmbuf_t * : zc_shmbuf_drop,                               \
                   zc_owned_shm_manager_t * : zc_shm_manager_drop,                     \
@@ -67,6 +68,8 @@
                   z_owned_closure_zid_t * : z_closure_zid_null,                     \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_null, \
                   z_owned_reply_channel_t * : z_reply_channel_null,                 \
+                  z_owned_bytes_map_t * : z_bytes_map_null,                         \
+                  z_attachment_t * : z_attachment_null,                             \
                   zc_owned_payload_t * : zc_payload_null,                           \
                   zc_owned_shmbuf_t * : zc_shmbuf_null,                             \
                   zc_owned_shm_manager_t * : zc_shm_manager_null,                   \
@@ -90,6 +93,8 @@
                   z_owned_hello_t : z_hello_check,                              \
                   z_owned_query_t : z_query_check,                              \
                   z_owned_str_t : z_str_check,                                  \
+                  z_owned_bytes_map_t : z_bytes_map_check,                      \
+                  z_attachment_t : z_attachment_check,                          \
                   zc_owned_payload_t : zc_payload_check,                        \
                   zc_owned_shmbuf_t : zc_shmbuf_check,                          \
                   zc_owned_shm_manager_t : zc_shm_manager_check,                \
@@ -169,6 +174,7 @@ template<> struct zenoh_drop_type<z_owned_closure_hello_t> { typedef void type; 
 template<> struct zenoh_drop_type<z_owned_closure_zid_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_closure_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_bytes_map_t> { typedef void type; };
 template<> struct zenoh_drop_type<zc_owned_liveliness_token_t> { typedef void type; };
 template<> struct zenoh_drop_type<ze_owned_publication_cache_t> { typedef int8_t type; };
 template<> struct zenoh_drop_type<ze_owned_querying_subscriber_t> { typedef int8_t type; };
@@ -196,6 +202,7 @@ template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop
 template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
+template<> inline void z_drop(z_owned_bytes_map_t* v) { z_bytes_map_drop(v); }
 template<> inline void z_drop(zc_owned_liveliness_token_t* v) { zc_liveliness_undeclare_token(v); }
 template<> inline int8_t z_drop(ze_owned_publication_cache_t* v) { return ze_undeclare_publication_cache(v); }
 template<> inline int8_t z_drop(ze_owned_querying_subscriber_t* v) { return ze_undeclare_querying_subscriber(v); }
@@ -223,6 +230,7 @@ inline void z_null(z_owned_closure_hello_t& v) { v = z_closure_hello_null(); }
 inline void z_null(z_owned_closure_zid_t& v) { v = z_closure_zid_null(); }
 inline void z_null(z_owned_reply_channel_closure_t& v) { v = z_reply_channel_closure_null(); }
 inline void z_null(z_owned_reply_channel_t& v) { v = z_reply_channel_null(); }
+inline void z_null(z_owned_bytes_map_t& v) { v = z_bytes_map_null(); }
 inline void z_null(zc_owned_liveliness_token_t& v) { v = zc_liveliness_token_null(); }
 inline void z_null(ze_owned_publication_cache_t& v) { v = ze_publication_cache_null(); }
 inline void z_null(ze_owned_querying_subscriber_t& v) { v = ze_querying_subscriber_null(); }
@@ -245,6 +253,8 @@ inline bool z_check(const z_owned_reply_t& v) { return z_reply_check(&v); }
 inline bool z_check(const z_owned_hello_t& v) { return z_hello_check(&v); }
 inline bool z_check(const z_owned_query_t& v) { return z_query_check(&v); }
 inline bool z_check(const z_owned_str_t& v) { return z_str_check(&v); }
+inline bool z_check(const z_owned_bytes_map_t& v) { return z_bytes_map_check(&v); }
+inline bool z_check(const z_attachment_t& v) { return z_attachment_check(&v); }
 inline bool z_check(const zc_owned_liveliness_token_t& v) { return zc_liveliness_token_check(&v); }
 inline bool z_check(const ze_owned_publication_cache_t& v) { return ze_publication_cache_check(&v); }
 inline bool z_check(const ze_owned_querying_subscriber_t& v) { return ze_querying_subscriber_check(&v); }

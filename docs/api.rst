@@ -24,7 +24,25 @@ Bytes
 
 .. autocstruct:: zenoh_commons.h::z_bytes_t
 
+.. autocfunction:: zenoh_commons.h::z_bytes_new
 .. autocfunction:: zenoh_commons.h::z_bytes_check
+.. autocfunction:: zenoh_commons.h::z_bytes_null
+
+Bytes map
+---------
+
+.. autocstruct:: zenoh_commons.h::z_owned_bytes_map_t
+
+.. autocfunction:: zenoh_commons.h::z_bytes_map_new
+.. autocfunction:: zenoh_commons.h::z_bytes_map_check
+.. autocfunction:: zenoh_commons.h::z_bytes_map_null
+.. autocfunction:: zenoh_commons.h::z_bytes_map_drop
+.. autocfunction:: zenoh_commons.h::z_bytes_map_get
+.. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_alias
+.. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_copy
+.. autocfunction:: zenoh_commons.h::z_bytes_map_iter
+.. autocfunction:: zenoh_commons.h::z_bytes_map_from_attachment
+.. autocfunction:: zenoh_commons.h::z_bytes_map_from_attachment_aliasing
 
 .. Scouting
 .. ========
@@ -131,6 +149,16 @@ Sample
 ======
 
 .. autocstruct:: zenoh_commons.h::z_sample_t
+
+Attachment
+==========
+
+.. autocstruct:: zenoh_commons.h::z_attachment_t
+
+.. autocfunction:: zenoh_commons.h::z_attachment_null
+.. autocfunction:: zenoh_commons.h::z_attachment_get
+.. autocfunction:: zenoh_commons.h::z_attachment_check
+.. autocfunction:: zenoh_commons.h::z_attachment_iterate
 
 Publication
 ===========
@@ -250,6 +278,7 @@ Types
 .. autocfunction:: zenoh_commons.h::z_query_keyexpr
 .. autocfunction:: zenoh_commons.h::z_query_parameters
 .. autocfunction:: zenoh_commons.h::z_query_value
+.. autocfunction:: zenoh_commons.h::z_query_attachment
 
 Functions
 ---------
