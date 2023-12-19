@@ -18,7 +18,7 @@
 
 #include "zenoh.h"
 
-const char *const SEM_NAME = "/z_int_test_queryable_error_sync_sem";
+const char *const SEM_NAME = "/z_int_test_qerror_sync_sem";
 sem_t *sem;
 
 const char *const keyexpr = "test/key";
