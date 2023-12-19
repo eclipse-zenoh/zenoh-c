@@ -19,7 +19,7 @@ from clang.cindex import Config
 project = 'zenoh-c'
 copyright = '2017, 2022 ZettaScale Technology'
 author = 'ZettaScale Zenoh team'
-release = '0.11.0.0'
+release = '0.10.1.1'
 
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
