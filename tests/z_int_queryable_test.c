@@ -34,7 +34,8 @@ void query_handler(const z_query_t *query, void *context) {
 
     z_query_reply_options_t options = z_query_reply_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    z_query_reply(query, z_keyexpr((const char *)context), values[value_num], strlen(values[value_num]), &options);
+    z_query_reply(query, z_keyexpr((const char *)context), (const uint8_t *)values[value_num],
+                  strlen(values[value_num]), &options);
     z_drop(z_move(keystr));
 
     if (++value_num == values_count) {

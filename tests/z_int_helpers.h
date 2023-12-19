@@ -106,14 +106,6 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
     return result;
 };
 
-#define ASSERT_STR_BYTES_EQUAL(str, bytes)                                                         \
-    do {                                                                                           \
-        if (strlen(str) != bytes.len || strncmp(str, (const char *)bytes.start, (int)bytes.len)) { \
-            fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)bytes.len, bytes.start);   \
-            exit(-1);                                                                              \
-        }                                                                                          \
-    } while (0)
-
 #define SEM_INIT(sem, name)                              \
     do {                                                 \
         sem_unlink(name);                                \
@@ -162,3 +154,11 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
     } while (0)
 
 #endif  // def windows
+
+#define ASSERT_STR_BYTES_EQUAL(str, bytes)                                                         \
+    do {                                                                                           \
+        if (strlen(str) != bytes.len || strncmp(str, (const char *)bytes.start, (int)bytes.len)) { \
+            fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)bytes.len, bytes.start);   \
+            exit(-1);                                                                              \
+        }                                                                                          \
+    } while (0)

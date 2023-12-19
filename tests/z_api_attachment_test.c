@@ -11,11 +11,11 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "z_int_helpers.h"
 #include "zenoh.h"
 
 #undef NDEBUG
@@ -30,14 +30,10 @@ void writting_through_map_by_alias_read_by_get() {
 
     // Elements check
     z_bytes_t a1 = z_attachment_get(attachment, z_bytes_new("k1"));
-    assert(a1.start != NULL);
-    assert(a1.len == 2);
-    assert(!strncmp(a1.start, "v1", a1.len));
+    ASSERT_STR_BYTES_EQUAL("v1", a1);
 
     z_bytes_t a2 = z_attachment_get(attachment, z_bytes_new("k2"));
-    assert(a2.start != NULL);
-    assert(a2.len == 2);
-    assert(!strncmp(a2.start, "v2", a2.len));
+    ASSERT_STR_BYTES_EQUAL("v2", a2);
 
     z_bytes_t a_non = z_attachment_get(attachment, z_bytes_new("k_non"));
     assert(a_non.start == NULL);
@@ -86,14 +82,10 @@ void writting_no_map_read_by_get() {
 
     // Elements check
     z_bytes_t a1 = z_attachment_get(attachment, z_bytes_new("k1"));
-    assert(a1.start != NULL);
-    assert(a1.len == 2);
-    assert(!strncmp(a1.start, "v1", a1.len));
+    ASSERT_STR_BYTES_EQUAL("v1", a1);
 
     z_bytes_t a2 = z_attachment_get(attachment, z_bytes_new("k2"));
-    assert(a2.start != NULL);
-    assert(a2.len == 2);
-    assert(!strncmp(a2.start, "v2", a2.len));
+    ASSERT_STR_BYTES_EQUAL("v2", a2);
 
     z_bytes_t a_non = z_attachment_get(attachment, z_bytes_new("k_non"));
     assert(a_non.start == NULL);
