@@ -33,8 +33,8 @@ z_stats_t *z_stats_make() {
     return stats;
 }
 
-static inline unsigned long elapsed_us(const struct timespec *start, const struct timespec *end) {
-    return (unsigned long)(1000000 * (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec) / 1000);
+static inline double elapsed_us(const struct timespec *start, const struct timespec *end) {
+    return (double)(1000000.0 * (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec) / 1000.0);
 }
 
 void on_sample(const z_sample_t *sample, void *context) {
@@ -51,7 +51,7 @@ void on_sample(const z_sample_t *sample, void *context) {
         struct timespec end;
         clock_gettime(CLOCK_MONOTONIC, &end);
         stats->finished_rounds++;
-        printf("%f msg/s\n", (double)N * 1000000.0 / (double)elapsed_us(&stats->start, &end));
+        printf("%f msg/s\n", (double)N * 1000000.0 / elapsed_us(&stats->start, &end));
         stats->count = 0;
     }
 }
@@ -60,7 +60,7 @@ void drop_stats(void *context) {
     const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
     struct timespec end;
     clock_gettime(CLOCK_MONOTONIC, &end);
-    double elapsed_s = (double)elapsed_us(&stats->first_start, &end) / 1000000.0;
+    double elapsed_s = elapsed_us(&stats->first_start, &end) / 1000000.0;
     printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
            elapsed_s, (double)sent_messages / elapsed_s);
     free(context);
