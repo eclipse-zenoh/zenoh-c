@@ -17,7 +17,8 @@ file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 foreach(file ${files})
     get_filename_component(target ${file} NAME_WE)
 
-    if(NOT(UNIX) AND(${target} STREQUAL "z_ping" OR ${target} STREQUAL "z_pong"))
+    # FIXME: remove once zenoh time primitives are available and examples updated
+    if(NOT(UNIX) AND(${target} STREQUAL "z_ping" OR ${target} STREQUAL "z_pong" OR ${target} STREQUAL "z_sub_thr"))
         continue()
     endif()
 

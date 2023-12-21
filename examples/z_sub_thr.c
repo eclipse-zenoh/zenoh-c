@@ -21,43 +21,48 @@
 typedef struct {
     volatile unsigned long count;
     volatile unsigned long finished_rounds;
-    volatile clock_t start;
-    volatile clock_t stop;
-    volatile clock_t first_start;
+    struct timespec start;
+    struct timespec first_start;
 } z_stats_t;
 
 z_stats_t *z_stats_make() {
     z_stats_t *stats = malloc(sizeof(z_stats_t));
     stats->count = 0;
     stats->finished_rounds = 0;
-    stats->first_start = 0;
+    stats->first_start.tv_nsec = 0;
     return stats;
+}
+
+static inline double get_elapsed_s(const struct timespec *start, const struct timespec *end) {
+    return (double)(end->tv_sec - start->tv_sec) + (double)(end->tv_nsec - start->tv_nsec) / 1.0E9;
 }
 
 void on_sample(const z_sample_t *sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
-        stats->start = clock();
-        if (!stats->first_start) {
+        clock_gettime(CLOCK_MONOTONIC, &stats->start);
+        if (stats->first_start.tv_nsec == 0) {
             stats->first_start = stats->start;
         }
         stats->count++;
     } else if (stats->count < N) {
         stats->count++;
     } else {
-        stats->stop = clock();
+        struct timespec end;
+        clock_gettime(CLOCK_MONOTONIC, &end);
         stats->finished_rounds++;
-        printf("%f msg/s\n", N * (double)CLOCKS_PER_SEC / (double)(stats->stop - stats->start));
+        printf("%f msg/s\n", (double)N / get_elapsed_s(&stats->start, &end));
         stats->count = 0;
     }
 }
 void drop_stats(void *context) {
-    const clock_t end = clock();
     const z_stats_t *stats = (z_stats_t *)context;
-    const double elapsed = (double)(end - stats->first_start) / (double)CLOCKS_PER_SEC;
     const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double elapsed_s = get_elapsed_s(&stats->first_start, &end);
     printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
-           elapsed, (double)sent_messages / elapsed);
+           elapsed_s, (double)sent_messages / elapsed_s);
     free(context);
 }
 
