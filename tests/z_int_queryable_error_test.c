@@ -12,6 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+#include <unistd.h>
+
 #include "z_int_helpers.h"
 
 #ifdef VALID_PLATFORM
@@ -51,7 +53,7 @@ int run_queryable() {
     }
 
     SEM_POST(sem);
-    sleep(10);
+    sleep(5);
 
     z_drop(z_move(qable));
     z_close(z_move(s));
@@ -78,6 +80,7 @@ int run_get() {
         perror("Unable to open session!");
         return -1;
     }
+    sleep(1);
 
     z_get_options_t opts = z_get_options_default();
     z_owned_closure_reply_t closure_reply = z_closure(reply_handler, NULL, &s);

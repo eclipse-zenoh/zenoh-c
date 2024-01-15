@@ -59,7 +59,7 @@ int run_queryable() {
     }
 
     SEM_POST(sem);
-    sleep(10);
+    sleep(5);
 
     z_drop(z_move(qable));
     z_close(z_move(s));
@@ -75,6 +75,7 @@ int run_get() {
         perror("Unable to open session!");
         return -1;
     }
+    sleep(1);
 
     for (int val_num = 0; val_num < values_count; ++val_num) {
         z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
