@@ -24,18 +24,18 @@
 void writting_through_map_by_alias_read_by_get() {
     // Writing
     z_owned_bytes_map_t map = z_bytes_map_new();
-    z_bytes_map_insert_by_alias(&map, z_bytes_new("k1"), z_bytes_new("v1"));
-    z_bytes_map_insert_by_alias(&map, z_bytes_new("k2"), z_bytes_new("v2"));
+    z_bytes_map_insert_by_alias(&map, z_bytes_from_str("k1"), z_bytes_from_str("v1"));
+    z_bytes_map_insert_by_alias(&map, z_bytes_from_str("k2"), z_bytes_from_str("v2"));
     z_attachment_t attachment = z_bytes_map_as_attachment(&map);
 
     // Elements check
-    z_bytes_t a1 = z_attachment_get(attachment, z_bytes_new("k1"));
+    z_bytes_t a1 = z_attachment_get(attachment, z_bytes_from_str("k1"));
     ASSERT_STR_BYTES_EQUAL("v1", a1);
 
-    z_bytes_t a2 = z_attachment_get(attachment, z_bytes_new("k2"));
+    z_bytes_t a2 = z_attachment_get(attachment, z_bytes_from_str("k2"));
     ASSERT_STR_BYTES_EQUAL("v2", a2);
 
-    z_bytes_t a_non = z_attachment_get(attachment, z_bytes_new("k_non"));
+    z_bytes_t a_non = z_attachment_get(attachment, z_bytes_from_str("k_non"));
     assert(a_non.start == NULL);
     assert(a_non.len == 0);
 
@@ -56,8 +56,8 @@ int8_t _attachment_reader(z_bytes_t key, z_bytes_t value, void* ctx) {
 void writting_through_map_by_copy_read_by_iter() {
     // Writing
     z_owned_bytes_map_t map = z_bytes_map_new();
-    z_bytes_map_insert_by_copy(&map, z_bytes_new("k1"), z_bytes_new("v1"));
-    z_bytes_map_insert_by_copy(&map, z_bytes_new("k2"), z_bytes_new("v2"));
+    z_bytes_map_insert_by_copy(&map, z_bytes_from_str("k1"), z_bytes_from_str("v1"));
+    z_bytes_map_insert_by_copy(&map, z_bytes_from_str("k2"), z_bytes_from_str("v2"));
     z_attachment_t attachment = z_bytes_map_as_attachment(&map);
 
     // Elements check
@@ -69,11 +69,11 @@ void writting_through_map_by_copy_read_by_iter() {
 
 int8_t _iteration_driver(const void* data, z_attachment_iter_body_t body, void* ctx) {
     int8_t ret = 0;
-    ret = body(z_bytes_new("k1"), z_bytes_new("v1"), ctx);
+    ret = body(z_bytes_from_str("k1"), z_bytes_from_str("v1"), ctx);
     if (ret) {
         return ret;
     }
-    ret = body(z_bytes_new("k2"), z_bytes_new("v2"), ctx);
+    ret = body(z_bytes_from_str("k2"), z_bytes_from_str("v2"), ctx);
     return ret;
 }
 
@@ -81,13 +81,13 @@ void writting_no_map_read_by_get() {
     z_attachment_t attachment = {.data = NULL, .iteration_driver = &_iteration_driver};
 
     // Elements check
-    z_bytes_t a1 = z_attachment_get(attachment, z_bytes_new("k1"));
+    z_bytes_t a1 = z_attachment_get(attachment, z_bytes_from_str("k1"));
     ASSERT_STR_BYTES_EQUAL("v1", a1);
 
-    z_bytes_t a2 = z_attachment_get(attachment, z_bytes_new("k2"));
+    z_bytes_t a2 = z_attachment_get(attachment, z_bytes_from_str("k2"));
     ASSERT_STR_BYTES_EQUAL("v2", a2);
 
-    z_bytes_t a_non = z_attachment_get(attachment, z_bytes_new("k_non"));
+    z_bytes_t a_non = z_attachment_get(attachment, z_bytes_from_str("k_non"));
     assert(a_non.start == NULL);
     assert(a_non.len == 0);
 }
@@ -95,7 +95,7 @@ void writting_no_map_read_by_get() {
 void invalid_attachment_safety() {
     z_attachment_t attachment = z_attachment_null();
 
-    z_bytes_t a_non = z_attachment_get(attachment, z_bytes_new("k_non"));
+    z_bytes_t a_non = z_attachment_get(attachment, z_bytes_from_str("k_non"));
     assert(a_non.start == NULL);
     assert(a_non.len == 0);
 

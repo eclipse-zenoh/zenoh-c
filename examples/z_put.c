@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     if (argc > 2) value = argv[2];
 
     z_owned_bytes_map_t attachment = z_bytes_map_new();
-    z_bytes_map_insert_by_alias(&attachment, z_bytes_new("hello"), z_bytes_new("there"));
+    z_bytes_map_insert_by_alias(&attachment, z_bytes_from_str("hello"), z_bytes_from_str("there"));
 
     z_owned_config_t config = z_config_default();
     if (argc > 3) {

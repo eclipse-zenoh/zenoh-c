@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
     z_get_options_t opts = z_get_options_default();
     if (value != NULL) {
-        opts.value.payload = (z_bytes_t){.len = strlen(value), .start = (uint8_t *)value};
+        opts.value.payload = z_bytes_from_str(value);
     }
     z_get(z_loan(s), keyexpr, "", z_move(channel.send),
           &opts);  // here, the send is moved and will be dropped by zenoh when adequate

@@ -61,12 +61,12 @@ pub extern "C" fn z_bytes_null() -> z_bytes_t {
     }
 }
 
-/// Returns a view of `str` using `strlen`.
+/// Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
 /// `str == NULL` will cause this to return `z_bytes_null()`
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
+pub unsafe extern "C" fn z_bytes_from_str(str: *const c_char) -> z_bytes_t {
     if str.is_null() {
         z_bytes_null()
     } else {
@@ -75,6 +75,27 @@ pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
             len,
             start: str.cast(),
         }
+    }
+}
+
+#[deprecated = "Renamed to z_bytes_from_str"]
+/// Deprecated in favor of `z_bytes_from_str`: Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+///
+/// `str == NULL` will cause this to return `z_bytes_null()`
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
+    z_bytes_from_str(str)
+}
+
+/// Constructs a `len` bytes long view starting at `start`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_wrap(start: *const u8, len: usize) -> z_bytes_t {
+    if start.is_null() {
+        z_bytes_null()
+    } else {
+        z_bytes_t { len, start }
     }
 }
 

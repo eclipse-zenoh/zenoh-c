@@ -953,6 +953,12 @@ ZENOHC_API struct z_attachment_t z_attachment_null(void);
  */
 ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
 /**
+ * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+ *
+ * `str == NULL` will cause this to return `z_bytes_null()`
+ */
+ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
+/**
  * Aliases `this` into a generic `z_attachment_t`, allowing it to be passed to corresponding APIs.
  */
 ZENOHC_API struct z_attachment_t z_bytes_map_as_attachment(const struct z_owned_bytes_map_t *this_);
@@ -1032,15 +1038,20 @@ ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
 /**
- * Returns a view of `str` using `strlen`.
+ * Deprecated in favor of `z_bytes_from_str`: Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
  * `str == NULL` will cause this to return `z_bytes_null()`
  */
-ZENOHC_API struct z_bytes_t z_bytes_new(const char *str);
+ZENOHC_API
+struct z_bytes_t z_bytes_new(const char *str);
 /**
  * Returns the gravestone value for `z_bytes_t`
  */
 ZENOHC_API struct z_bytes_t z_bytes_null(void);
+/**
+ * Constructs a `len` bytes long view starting at `start`.
+ */
+ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *
