@@ -39,7 +39,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
         z_attachment_iterate(sample->attachment, attachment_reader, NULL);
 
         // reads particular attachment item
-        z_bytes_t index = z_attachment_get(sample->attachment, z_bytes_new("index"));
+        z_bytes_t index = z_attachment_get(sample->attachment, z_bytes_from_str("index"));
         if (z_check(index)) {
             printf("   message number: %.*s\n", (int)index.len, index.start);
         }

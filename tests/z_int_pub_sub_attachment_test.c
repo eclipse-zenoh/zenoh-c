@@ -48,13 +48,13 @@ int run_publisher() {
     }
 
     z_owned_bytes_map_t map = z_bytes_map_new();
-    z_bytes_map_insert_by_copy(&map, z_bytes_new(K_CONST), z_bytes_new(V_CONST));
+    z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_CONST), z_bytes_from_str(V_CONST));
 
     z_publisher_put_options_t options = z_publisher_put_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
     options.attachment = z_bytes_map_as_attachment(&map);
     for (int i = 0; i < values_count; ++i) {
-        z_bytes_map_insert_by_copy(&map, z_bytes_new(K_VAR), z_bytes_new(values[i]));
+        z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_VAR), z_bytes_from_str(values[i]));
         z_publisher_put(z_loan(pub), (const uint8_t *)values[i], strlen(values[i]), &options);
     }
 
@@ -78,10 +78,10 @@ void data_handler(const z_sample_t *sample, void *arg) {
         exit(-1);
     }
 
-    z_bytes_t v_const = z_attachment_get(sample->attachment, z_bytes_new(K_CONST));
+    z_bytes_t v_const = z_attachment_get(sample->attachment, z_bytes_from_str(K_CONST));
     ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
-    z_bytes_t v_var = z_attachment_get(sample->attachment, z_bytes_new(K_VAR));
+    z_bytes_t v_var = z_attachment_get(sample->attachment, z_bytes_from_str(K_VAR));
     ASSERT_STR_BYTES_EQUAL(values[val_num], v_var);
 
     if (++val_num == values_count) {
