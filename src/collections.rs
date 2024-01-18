@@ -61,7 +61,7 @@ pub extern "C" fn z_bytes_null() -> z_bytes_t {
     }
 }
 
-/// Returns a view of `str` using `strlen`.
+/// Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
 /// `str == NULL` will cause this to return `z_bytes_null()`
 #[no_mangle]

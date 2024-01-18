@@ -953,7 +953,7 @@ ZENOHC_API struct z_attachment_t z_attachment_null(void);
  */
 ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
 /**
- * Returns a view of `str` using `strlen`.
+ * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
  * `str == NULL` will cause this to return `z_bytes_null()`
  */
