@@ -1038,6 +1038,13 @@ ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
 /**
+ * Deprecated in favor of `z_bytes_from_str`: Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+ *
+ * `str == NULL` will cause this to return `z_bytes_null()`
+ */
+ZENOHC_API
+struct z_bytes_t z_bytes_new(const char *str);
+/**
  * Returns the gravestone value for `z_bytes_t`
  */
 ZENOHC_API struct z_bytes_t z_bytes_null(void);

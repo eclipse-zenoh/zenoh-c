@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     options.attachment = z_bytes_map_as_attachment(&map);
 
     // add some value
-    z_bytes_map_insert_by_alias(&map, z_bytes_new("source"), z_bytes_new("C"));
+    z_bytes_map_insert_by_alias(&map, z_bytes_from_str("source"), z_bytes_from_str("C"));
 
     char buf[256];
     char buf_ind[16];
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
-        z_bytes_map_insert_by_alias(&map, z_bytes_new("index"), z_bytes_new(buf_ind));
+        z_bytes_map_insert_by_alias(&map, z_bytes_from_str("index"), z_bytes_from_str(buf_ind));
 
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
