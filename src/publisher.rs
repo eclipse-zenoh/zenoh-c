@@ -12,11 +12,13 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use crate::zcu_closure_matching_status_call;
+use crate::zcu_owned_closure_matching_status_t;
 use std::ops::{Deref, DerefMut};
-
 use zenoh::prelude::SessionDeclarations;
 use zenoh::{
     prelude::{Priority, Value},
+    publication::MatchingListener,
     publication::Publisher,
     sample::AttachmentBuilder,
 };
@@ -113,8 +115,8 @@ impl z_owned_publisher_t {
 ///    To check if the publisher decalration succeeded and if the publisher is still valid,
 ///    you may use `z_publisher_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 ///
-///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
 ///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// Example:
@@ -125,7 +127,7 @@ impl z_owned_publisher_t {
 ///       z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(expr), NULL);
 ///
 ///    is equivalent to initializing and passing the default publisher options:
-///    
+///
 ///    .. code-block:: C
 ///
 ///       z_publisher_options_t opts = z_publisher_options_default();
@@ -339,7 +341,6 @@ pub struct z_publisher_delete_options_t {
 pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_options_t {
     z_publisher_delete_options_t { __dummy: 0 }
 }
-
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
 /// Returns:
@@ -371,6 +372,75 @@ pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyex
     } else {
         z_keyexpr_t::null().into()
     }
+}
+
+/// An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+#[repr(C, align(8))]
+pub struct zcu_owned_matching_listener_t([u64; 4]);
+
+impl_guarded_transmute!(
+    Option<MatchingListener<'_, ()>>,
+    zcu_owned_matching_listener_t
+);
+
+impl From<Option<MatchingListener<'_, ()>>> for zcu_owned_matching_listener_t {
+    fn from(val: Option<MatchingListener<'_, ()>>) -> Self {
+        val.transmute()
+    }
+}
+
+impl zcu_owned_matching_listener_t {
+    pub fn null() -> Self {
+        None.into()
+    }
+}
+
+/// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
+///
+/// Members:
+///   bool matching: true if there exist Subscribers matching the Publisher's key expression.
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct zcu_matching_status_t {
+    pub matching: bool,
+}
+
+/// Register callback for notifying subscribers matching.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zcu_publisher_matching_listener_callback(
+    publisher: z_publisher_t,
+    callback: &mut zcu_owned_closure_matching_status_t,
+) -> zcu_owned_matching_listener_t {
+    let mut closure = zcu_owned_closure_matching_status_t::empty();
+    std::mem::swap(callback, &mut closure);
+    {
+        if let Some(p) = publisher.as_ref() {
+            let listener = p
+                .matching_listener()
+                .callback_mut(move |matching_status| {
+                    let status = zcu_matching_status_t {
+                        matching: matching_status.matching_subscribers(),
+                    };
+                    zcu_closure_matching_status_call(&closure, &status);
+                })
+                .res()
+                .unwrap();
+            Some(listener)
+        } else {
+            None
+        }
+    }
+    .into()
 }
 
 /// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
