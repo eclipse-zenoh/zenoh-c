@@ -22,15 +22,25 @@
 #include <unistd.h>
 #endif
 
+void matching_status_handler(const z_matching_status_t *matching_status, void *arg) {
+    if (matching_status->matching) {
+        printf("Subscriber matched\n");
+    } else {
+        printf("No Subscribers matched\n");
+    }
+}
+
 int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
     char *value = "Pub from C!";
+    bool add_matching_listener = false;
 
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
+    if (argc > 3) add_matching_listener = atoi(argv[3]);
 
     z_owned_config_t config = z_config_default();
-    if (argc > 3) {
+    if (argc > 4) {
         if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
@@ -52,6 +62,12 @@ int main(int argc, char **argv) {
     if (!z_check(pub)) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
+    }
+
+    z_owned_matching_listener_t listener;
+    if (add_matching_listener) {
+        z_owned_closure_matching_status_t callback = z_closure(matching_status_handler);
+        listener =  z_publisher_matching_listener_callback(z_loan(pub), z_move(callback));
     }
 
     char buf[256];

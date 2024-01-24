@@ -260,6 +260,36 @@ typedef struct z_owned_closure_hello_t {
   void (*drop)(void*);
 } z_owned_closure_hello_t;
 /**
+ * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
+ *
+ * Members:
+ *   bool matching: true if there exist Subscribers matching the Publisher's key expression.
+ */
+typedef struct z_matching_status_t {
+  bool matching;
+} z_matching_status_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Members:
+ *   void *context: a pointer to an arbitrary state.
+ *   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+ *   void *drop(void*): allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_matching_status_t {
+  void *context;
+  void (*call)(const struct z_matching_status_t*, void*);
+  void (*drop)(void*);
+} z_owned_closure_matching_status_t;
+/**
  * Owned variant of a Query received by a Queryable.
  *
  * You may construct it by `z_query_clone`-ing a loaned query.
@@ -687,6 +717,21 @@ typedef struct z_publisher_delete_options_t {
   uint8_t __dummy;
 } z_publisher_delete_options_t;
 /**
+ * An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
+ *
+ * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+ * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ *
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+ *
+ * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ */
+typedef struct ALIGN(8) z_owned_matching_listener_t {
+  uint64_t _0[4];
+} z_owned_matching_listener_t;
+/**
  * Options passed to the :c:func:`z_publisher_put` function.
  *
  * Members:
@@ -1073,6 +1118,20 @@ ZENOHC_API void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
  * Constructs a null safe-to-drop value of 'z_owned_closure_hello_t' type
  */
 ZENOHC_API struct z_owned_closure_hello_t z_closure_hello_null(void);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+ZENOHC_API
+void z_closure_matching_status_call(const struct z_owned_closure_matching_status_t *closure,
+                                    const struct z_matching_status_t *sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+ZENOHC_API void z_closure_matching_status_drop(struct z_owned_closure_matching_status_t *closure);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_matching_status_t' type
+ */
+ZENOHC_API struct z_owned_closure_matching_status_t z_closure_matching_status_null(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -1593,6 +1652,12 @@ ZENOHC_API struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t pub
  * Returns a :c:type:`z_publisher_t` loaned from `p`.
  */
 ZENOHC_API struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
+/**
+ * Register callback for notifying subscribers matching.
+ */
+ZENOHC_API
+struct z_owned_matching_listener_t z_publisher_matching_listener_callback(struct z_publisher_t publisher,
+                                                                          struct z_owned_closure_matching_status_t *callback);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
  */
