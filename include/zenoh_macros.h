@@ -18,65 +18,67 @@
             )(&x)
 
 #define z_drop(x) \
-    _Generic((x), z_owned_session_t * : z_close,                                      \
-                  z_owned_publisher_t * : z_undeclare_publisher,                      \
-                  z_owned_keyexpr_t * : z_keyexpr_drop,                               \
-                  z_owned_config_t * : z_config_drop,                                 \
-                  z_owned_scouting_config_t * : z_scouting_config_drop,               \
-                  z_owned_pull_subscriber_t * : z_undeclare_pull_subscriber,          \
-                  z_owned_subscriber_t * : z_undeclare_subscriber,                    \
-                  z_owned_queryable_t * : z_undeclare_queryable,                      \
-                  z_owned_encoding_t * : z_encoding_drop,                             \
-                  z_owned_reply_t * : z_reply_drop,                                   \
-                  z_owned_hello_t * : z_hello_drop,                                   \
-                  z_owned_str_t * : z_str_drop,                                       \
-                  z_owned_query_t * : z_query_drop,                                   \
-                  z_owned_closure_sample_t * : z_closure_sample_drop,                 \
-                  z_owned_closure_query_t * : z_closure_query_drop,                   \
-                  z_owned_closure_reply_t * : z_closure_reply_drop,                   \
-                  z_owned_closure_hello_t * : z_closure_hello_drop,                   \
-                  z_owned_closure_zid_t * : z_closure_zid_drop,                       \
-                  z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop,   \
-                  z_owned_query_channel_closure_t * : z_query_channel_closure_drop,   \
-                  z_owned_reply_channel_t * : z_reply_channel_drop,                   \
-                  z_owned_query_channel_t * : z_query_channel_drop,                   \
-                  z_owned_bytes_map_t * : z_bytes_map_drop,                           \
-                  zc_owned_payload_t * : zc_payload_drop,                             \
-                  zc_owned_shmbuf_t * : zc_shmbuf_drop,                               \
-                  zc_owned_shm_manager_t * : zc_shm_manager_drop,                     \
-                  zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token,      \
-                  ze_owned_publication_cache_t * : ze_undeclare_publication_cache,    \
-                  ze_owned_querying_subscriber_t * : ze_undeclare_querying_subscriber \
+    _Generic((x), z_owned_session_t * : z_close,                                        \
+                  z_owned_publisher_t * : z_undeclare_publisher,                        \
+                  z_owned_keyexpr_t * : z_keyexpr_drop,                                 \
+                  z_owned_config_t * : z_config_drop,                                   \
+                  z_owned_scouting_config_t * : z_scouting_config_drop,                 \
+                  z_owned_pull_subscriber_t * : z_undeclare_pull_subscriber,            \
+                  z_owned_subscriber_t * : z_undeclare_subscriber,                      \
+                  z_owned_queryable_t * : z_undeclare_queryable,                        \
+                  z_owned_encoding_t * : z_encoding_drop,                               \
+                  z_owned_reply_t * : z_reply_drop,                                     \
+                  z_owned_hello_t * : z_hello_drop,                                     \
+                  z_owned_str_t * : z_str_drop,                                         \
+                  z_owned_query_t * : z_query_drop,                                     \
+                  z_owned_closure_sample_t * : z_closure_sample_drop,                   \
+                  z_owned_closure_query_t * : z_closure_query_drop,                     \
+                  z_owned_closure_reply_t * : z_closure_reply_drop,                     \
+                  z_owned_closure_hello_t * : z_closure_hello_drop,                     \
+                  z_owned_closure_zid_t * : z_closure_zid_drop,                         \
+                  zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_drop, \
+                  z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop,     \
+                  z_owned_query_channel_closure_t * : z_query_channel_closure_drop,     \
+                  z_owned_reply_channel_t * : z_reply_channel_drop,                     \
+                  z_owned_query_channel_t * : z_query_channel_drop,                     \
+                  z_owned_bytes_map_t * : z_bytes_map_drop,                             \
+                  zc_owned_payload_t * : zc_payload_drop,                               \
+                  zc_owned_shmbuf_t * : zc_shmbuf_drop,                                 \
+                  zc_owned_shm_manager_t * : zc_shm_manager_drop,                       \
+                  zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token,        \
+                  ze_owned_publication_cache_t * : ze_undeclare_publication_cache,      \
+                  ze_owned_querying_subscriber_t * : ze_undeclare_querying_subscriber   \
             )(x)
 
 #define z_null(x) (*x = \
-    _Generic((x), z_owned_session_t * : z_session_null,                             \
-                  z_owned_publisher_t * : z_publisher_null,                         \
-                  z_owned_keyexpr_t * : z_keyexpr_null,                             \
-                  z_owned_config_t * : z_config_null,                               \
-                  z_owned_scouting_config_t * : z_scouting_config_null,             \
-                  z_owned_pull_subscriber_t * : z_pull_subscriber_null,             \
-                  z_owned_subscriber_t * : z_subscriber_null,                       \
-                  z_owned_queryable_t * : z_queryable_null,                         \
-                  z_owned_encoding_t * : z_encoding_null,                           \
-                  z_owned_reply_t * : z_reply_null,                                 \
-                  z_owned_hello_t * : z_hello_null,                                 \
-                  z_owned_str_t * : z_str_null,                                     \
-                  z_owned_query_t * : z_query_null,                                 \
-                  z_owned_closure_sample_t * : z_closure_sample_null,               \
-                  z_owned_closure_query_t * : z_closure_query_null,                 \
-                  z_owned_closure_reply_t * : z_closure_reply_null,                 \
-                  z_owned_closure_hello_t * : z_closure_hello_null,                 \
-                  z_owned_closure_zid_t * : z_closure_zid_null,                     \
-                  z_owned_reply_channel_closure_t * : z_reply_channel_closure_null, \
-                  z_owned_reply_channel_t * : z_reply_channel_null,                 \
-                  z_owned_bytes_map_t * : z_bytes_map_null,                         \
-                  z_attachment_t * : z_attachment_null,                             \
-                  zc_owned_payload_t * : zc_payload_null,                           \
-                  zc_owned_shmbuf_t * : zc_shmbuf_null,                             \
-                  zc_owned_shm_manager_t * : zc_shm_manager_null,                   \
-                  ze_owned_publication_cache_t * : ze_publication_cache_null,       \
-                  zc_owned_liveliness_token_t * : zc_liveliness_token_null          \
+    _Generic((x), z_owned_session_t * : z_session_null,                                 \
+                  z_owned_publisher_t * : z_publisher_null,                             \
+                  z_owned_keyexpr_t * : z_keyexpr_null,                                 \
+                  z_owned_config_t * : z_config_null,                                   \
+                  z_owned_scouting_config_t * : z_scouting_config_null,                 \
+                  z_owned_pull_subscriber_t * : z_pull_subscriber_null,                 \
+                  z_owned_subscriber_t * : z_subscriber_null,                           \
+                  z_owned_queryable_t * : z_queryable_null,                             \
+                  z_owned_encoding_t * : z_encoding_null,                               \
+                  z_owned_reply_t * : z_reply_null,                                     \
+                  z_owned_hello_t * : z_hello_null,                                     \
+                  z_owned_str_t * : z_str_null,                                         \
+                  z_owned_query_t * : z_query_null,                                     \
+                  z_owned_closure_sample_t * : z_closure_sample_null,                   \
+                  z_owned_closure_query_t * : z_closure_query_null,                     \
+                  z_owned_closure_reply_t * : z_closure_reply_null,                     \
+                  z_owned_closure_hello_t * : z_closure_hello_null,                     \
+                  z_owned_closure_zid_t * : z_closure_zid_null,                         \
+                  zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_null, \
+                  z_owned_reply_channel_closure_t * : z_reply_channel_closure_null,     \
+                  z_owned_reply_channel_t * : z_reply_channel_null,                     \
+                  z_owned_bytes_map_t * : z_bytes_map_null,                             \
+                  z_attachment_t * : z_attachment_null,                                 \
+                  zc_owned_payload_t * : zc_payload_null,                               \
+                  zc_owned_shmbuf_t * : zc_shmbuf_null,                                 \
+                  zc_owned_shm_manager_t * : zc_shm_manager_null,                       \
+                  ze_owned_publication_cache_t * : ze_publication_cache_null,           \
+                  zc_owned_liveliness_token_t * : zc_liveliness_token_null              \
             )())
 
 #define z_check(x) \
@@ -106,14 +108,15 @@
             )(&x)
 
 #define z_call(x, ...) \
-    _Generic((x), z_owned_closure_sample_t : z_closure_sample_call,              \
-                  z_owned_closure_query_t : z_closure_query_call,                \
-                  z_owned_closure_owned_query_t : z_closure_owned_query_call,    \
-                  z_owned_closure_reply_t : z_closure_reply_call,                \
-                  z_owned_closure_hello_t : z_closure_hello_call,                \
-                  z_owned_closure_zid_t : z_closure_zid_call,                    \
-                  z_owned_reply_channel_closure_t : z_reply_channel_closure_call,\
-                  z_owned_query_channel_closure_t : z_query_channel_closure_call \
+    _Generic((x), z_owned_closure_sample_t : z_closure_sample_call,                     \
+                  z_owned_closure_query_t : z_closure_query_call,                       \
+                  z_owned_closure_owned_query_t : z_closure_owned_query_call,           \
+                  z_owned_closure_reply_t : z_closure_reply_call,                       \
+                  z_owned_closure_hello_t : z_closure_hello_call,                       \
+                  z_owned_closure_zid_t : z_closure_zid_call,                           \
+                  zcu_owned_closure_matching_status_t : zcu_closure_matching_status_call, \
+                  z_owned_reply_channel_closure_t : z_reply_channel_closure_call,       \
+                  z_owned_query_channel_closure_t : z_query_channel_closure_call        \
             ) (&x, __VA_ARGS__)
 // clang-format on
 
@@ -176,6 +179,7 @@ template<> struct zenoh_drop_type<z_owned_closure_query_t> { typedef void type; 
 template<> struct zenoh_drop_type<z_owned_closure_reply_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_hello_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_zid_t> { typedef void type; };
+template<> struct zenoh_drop_type<zcu_owned_closure_matching_status_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_closure_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_bytes_map_t> { typedef void type; };
@@ -204,6 +208,7 @@ template<> inline void z_drop(z_owned_closure_query_t* v) { z_closure_query_drop
 template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop(v); }
 template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop(v); }
 template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v); }
+template<> inline void z_drop(zcu_owned_closure_matching_status_t* v) { z_closure_matching_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
 template<> inline void z_drop(z_owned_bytes_map_t* v) { z_bytes_map_drop(v); }
@@ -232,6 +237,7 @@ inline void z_null(z_owned_closure_query_t& v) { v = z_closure_query_null(); }
 inline void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
 inline void z_null(z_owned_closure_hello_t& v) { v = z_closure_hello_null(); }
 inline void z_null(z_owned_closure_zid_t& v) { v = z_closure_zid_null(); }
+inline void z_null(zcu_owned_closure_matching_status_t& v) { v = zcu_closure_matching_status_null(); }
 inline void z_null(z_owned_reply_channel_closure_t& v) { v = z_reply_channel_closure_null(); }
 inline void z_null(z_owned_reply_channel_t& v) { v = z_reply_channel_null(); }
 inline void z_null(z_owned_bytes_map_t& v) { v = z_bytes_map_null(); }
@@ -263,7 +269,7 @@ inline bool z_check(const zc_owned_liveliness_token_t& v) { return zc_liveliness
 inline bool z_check(const ze_owned_publication_cache_t& v) { return ze_publication_cache_check(&v); }
 inline bool z_check(const ze_owned_querying_subscriber_t& v) { return ze_querying_subscriber_check(&v); }
 
-inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample) 
+inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample)
     { z_closure_sample_call(&closure, sample); }
 inline void z_call(const struct z_owned_closure_query_t &closure, const struct z_query_t *query)
     { z_closure_query_call(&closure, query); }
@@ -273,6 +279,8 @@ inline void z_call(const struct z_owned_closure_hello_t &closure, struct z_owned
     { z_closure_hello_call(&closure, hello); }
 inline void z_call(const struct z_owned_closure_zid_t &closure, const struct z_id_t *zid)
     { z_closure_zid_call(&closure, zid); }
+inline void z_call(const struct zcu_owned_closure_matching_status_t &closure, const struct zcu_matching_status_t *matching_status)
+    { zcu_closure_matching_status_call(&closure, matching_status); }
 inline bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owned_reply_t *sample)
     { return z_reply_channel_closure_call(&closure, sample); }
 // clang-format on
