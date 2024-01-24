@@ -36,7 +36,7 @@
                   z_owned_closure_reply_t * : z_closure_reply_drop,                     \
                   z_owned_closure_hello_t * : z_closure_hello_drop,                     \
                   z_owned_closure_zid_t * : z_closure_zid_drop,                         \
-                  z_owned_closure_matching_status_t * : z_closure_matching_status_drop, \
+                  zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_drop, \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_drop,     \
                   z_owned_query_channel_closure_t * : z_query_channel_closure_drop,     \
                   z_owned_reply_channel_t * : z_reply_channel_drop,                     \
@@ -69,7 +69,7 @@
                   z_owned_closure_reply_t * : z_closure_reply_null,                     \
                   z_owned_closure_hello_t * : z_closure_hello_null,                     \
                   z_owned_closure_zid_t * : z_closure_zid_null,                         \
-                  z_owned_closure_matching_status_t * : z_closure_matching_status_null, \
+                  zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_null, \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_null,     \
                   z_owned_reply_channel_t * : z_reply_channel_null,                     \
                   z_owned_bytes_map_t * : z_bytes_map_null,                             \
@@ -114,7 +114,7 @@
                   z_owned_closure_reply_t : z_closure_reply_call,                       \
                   z_owned_closure_hello_t : z_closure_hello_call,                       \
                   z_owned_closure_zid_t : z_closure_zid_call,                           \
-                  z_owned_closure_matching_status_t : z_closure_matching_status_call, \
+                  zcu_owned_closure_matching_status_t : zcu_closure_matching_status_call, \
                   z_owned_reply_channel_closure_t : z_reply_channel_closure_call,       \
                   z_owned_query_channel_closure_t : z_query_channel_closure_call        \
             ) (&x, __VA_ARGS__)
@@ -179,7 +179,7 @@ template<> struct zenoh_drop_type<z_owned_closure_query_t> { typedef void type; 
 template<> struct zenoh_drop_type<z_owned_closure_reply_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_hello_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_zid_t> { typedef void type; };
-template<> struct zenoh_drop_type<z_owned_closure_matching_status_t> { typedef void type; };
+template<> struct zenoh_drop_type<zcu_owned_closure_matching_status_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_closure_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_bytes_map_t> { typedef void type; };
@@ -208,7 +208,7 @@ template<> inline void z_drop(z_owned_closure_query_t* v) { z_closure_query_drop
 template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop(v); }
 template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop(v); }
 template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v); }
-template<> inline void z_drop(z_owned_closure_matching_status_t* v) { z_closure_matching_drop(v); }
+template<> inline void z_drop(zcu_owned_closure_matching_status_t* v) { z_closure_matching_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
 template<> inline void z_drop(z_owned_bytes_map_t* v) { z_bytes_map_drop(v); }
@@ -237,7 +237,7 @@ inline void z_null(z_owned_closure_query_t& v) { v = z_closure_query_null(); }
 inline void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
 inline void z_null(z_owned_closure_hello_t& v) { v = z_closure_hello_null(); }
 inline void z_null(z_owned_closure_zid_t& v) { v = z_closure_zid_null(); }
-inline void z_null(z_owned_closure_matching_status_t& v) { v = z_closure_matching_status_null(); }
+inline void z_null(zcu_owned_closure_matching_status_t& v) { v = zcu_closure_matching_status_null(); }
 inline void z_null(z_owned_reply_channel_closure_t& v) { v = z_reply_channel_closure_null(); }
 inline void z_null(z_owned_reply_channel_t& v) { v = z_reply_channel_null(); }
 inline void z_null(z_owned_bytes_map_t& v) { v = z_bytes_map_null(); }
@@ -279,8 +279,8 @@ inline void z_call(const struct z_owned_closure_hello_t &closure, struct z_owned
     { z_closure_hello_call(&closure, hello); }
 inline void z_call(const struct z_owned_closure_zid_t &closure, const struct z_id_t *zid)
     { z_closure_zid_call(&closure, zid); }
-inline void z_call(const struct z_owned_closure_matching_status_t &closure, const struct z_matching_status_t *matching_status)
-    { z_closure_matching_status_call(&closure, matching_status); }
+inline void z_call(const struct zcu_owned_closure_matching_status_t &closure, const struct zcu_matching_status_t *matching_status)
+    { zcu_closure_matching_status_call(&closure, matching_status); }
 inline bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owned_reply_t *sample)
     { return z_reply_channel_closure_call(&closure, sample); }
 // clang-format on

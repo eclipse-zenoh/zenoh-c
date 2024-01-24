@@ -22,7 +22,7 @@
 #include <unistd.h>
 #endif
 
-void matching_status_handler(const z_matching_status_t *matching_status, void *arg) {
+void matching_status_handler(const zcu_matching_status_t *matching_status, void *arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");
     } else {
@@ -64,10 +64,10 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    z_owned_matching_listener_t listener;
+    zcu_owned_matching_listener_t listener;
     if (add_matching_listener) {
-        z_owned_closure_matching_status_t callback = z_closure(matching_status_handler);
-        listener =  z_publisher_matching_listener_callback(z_loan(pub), z_move(callback));
+        zcu_owned_closure_matching_status_t callback = z_closure(matching_status_handler);
+        listener =  zcu_publisher_matching_listener_callback(z_loan(pub), z_move(callback));
     }
 
     char buf[256];

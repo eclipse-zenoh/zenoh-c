@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::z_closure_matching_status_call;
-use crate::z_owned_closure_matching_status_t;
+use crate::zcu_closure_matching_status_call;
+use crate::zcu_owned_closure_matching_status_t;
 use std::ops::{Deref, DerefMut};
 use zenoh::prelude::SessionDeclarations;
 use zenoh::{
@@ -385,20 +385,20 @@ pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyex
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C, align(8))]
-pub struct z_owned_matching_listener_t([u64; 4]);
+pub struct zcu_owned_matching_listener_t([u64; 4]);
 
 impl_guarded_transmute!(
     Option<MatchingListener<'_, ()>>,
-    z_owned_matching_listener_t
+    zcu_owned_matching_listener_t
 );
 
-impl From<Option<MatchingListener<'_, ()>>> for z_owned_matching_listener_t {
+impl From<Option<MatchingListener<'_, ()>>> for zcu_owned_matching_listener_t {
     fn from(val: Option<MatchingListener<'_, ()>>) -> Self {
         val.transmute()
     }
 }
 
-impl z_owned_matching_listener_t {
+impl zcu_owned_matching_listener_t {
     pub fn null() -> Self {
         None.into()
     }
@@ -410,28 +410,28 @@ impl z_owned_matching_listener_t {
 ///   bool matching: true if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct z_matching_status_t {
+pub struct zcu_matching_status_t {
     pub matching: bool,
 }
 
 /// Register callback for notifying subscribers matching.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_matching_listener_callback(
+pub extern "C" fn zcu_publisher_matching_listener_callback(
     publisher: z_publisher_t,
-    callback: &mut z_owned_closure_matching_status_t,
-) -> z_owned_matching_listener_t {
-    let mut closure = z_owned_closure_matching_status_t::empty();
+    callback: &mut zcu_owned_closure_matching_status_t,
+) -> zcu_owned_matching_listener_t {
+    let mut closure = zcu_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
     {
         if let Some(p) = publisher.as_ref() {
             let listener = p
                 .matching_listener()
                 .callback_mut(move |matching_status| {
-                    let status = z_matching_status_t {
+                    let status = zcu_matching_status_t {
                         matching: matching_status.matching_subscribers(),
                     };
-                    z_closure_matching_status_call(&closure, &status);
+                    zcu_closure_matching_status_call(&closure, &status);
                 })
                 .res()
                 .unwrap();
