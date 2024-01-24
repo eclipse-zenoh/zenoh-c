@@ -208,7 +208,7 @@ template<> inline void z_drop(z_owned_closure_query_t* v) { z_closure_query_drop
 template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop(v); }
 template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop(v); }
 template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v); }
-template<> inline void z_drop(zcu_owned_closure_matching_status_t* v) { z_closure_matching_drop(v); }
+template<> inline void z_drop(zcu_owned_closure_matching_status_t* v) { zcu_closure_matching_status_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
 template<> inline void z_drop(z_owned_bytes_map_t* v) { z_bytes_map_drop(v); }
