@@ -30,7 +30,6 @@ set_target_properties(__zenohc_static PROPERTIES
     IMPORTED_LOCATION "${_IMPORT_PREFIX}/@CMAKE_INSTALL_LIBDIR@/@STATICLIB@"
     INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@"
 )
-# target_include_directories(__zenohc_static INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
 
 add_library(__zenohc_shared SHARED IMPORTED GLOBAL)
 add_library(zenohc::shared ALIAS __zenohc_shared)
@@ -41,13 +40,9 @@ set_target_properties(__zenohc_shared PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@"
 )
 
-# set_target_properties(__zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
-# set_property(TARGET __zenohc_shared PROPERTY IMPORTED_LOCATION "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@DYLIB@")
 if(NOT ("@IMPLIB@" STREQUAL ""))
     set_property(TARGET __zenohc_shared PROPERTY IMPORTED_IMPLIB "${_IMPORT_PREFIX}/@CMAKE_INSTALL_LIBDIR@/@IMPLIB@")
 endif()
-# target_include_directories(__zenohc_shared INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
-# target_compile_definitions(__zenohc_shared INTERFACE ZENOHC_DYN_LIB)
 
 if(ZENOHC_LIB_STATIC)
     add_library(zenohc::lib ALIAS __zenohc_static)
