@@ -14,6 +14,15 @@
 
 @PACKAGE_INIT@
 
+# Compute the installation prefix relative to this file.
+get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+if(_IMPORT_PREFIX STREQUAL "/")
+  set(_IMPORT_PREFIX "")
+endif()
+
 add_library(__zenohc_static STATIC IMPORTED GLOBAL)
 add_library(zenohc::static ALIAS __zenohc_static)
 target_link_libraries(__zenohc_static INTERFACE @NATIVE_STATIC_LIBS@)
@@ -35,7 +44,7 @@ set_target_properties(__zenohc_shared PROPERTIES
 # set_target_properties(__zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
 # set_property(TARGET __zenohc_shared PROPERTY IMPORTED_LOCATION "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@DYLIB@")
 if(NOT ("@IMPLIB@" STREQUAL ""))
-    set_property(TARGET __zenohc_shared PROPERTY IMPORTED_IMPLIB "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@IMPLIB@")
+    set_property(TARGET __zenohc_shared PROPERTY IMPORTED_IMPLIB "${_IMPORT_PREFIX}/@CMAKE_INSTALL_LIBDIR@/@IMPLIB@")
 endif()
 # target_include_directories(__zenohc_shared INTERFACE "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
 # target_compile_definitions(__zenohc_shared INTERFACE ZENOHC_DYN_LIB)
