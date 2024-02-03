@@ -29,6 +29,8 @@ pub struct z_id_t {
 /// Unless the `session` is invalid, that ID is guaranteed to be non-zero.
 /// In other words, this function returning an array of 16 zeros means you failed
 /// to pass it a valid session.
+///
+/// tags{session.zid}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
