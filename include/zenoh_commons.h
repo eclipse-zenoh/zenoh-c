@@ -1481,6 +1481,8 @@ int8_t z_info_routers_zid(struct z_session_t session,
  * Unless the `session` is invalid, that ID is guaranteed to be non-zero.
  * In other words, this function returning an array of 16 zeros means you failed
  * to pass it a valid session.
+ *
+ * tags{session.zid}
  */
 ZENOHC_API struct z_id_t z_info_zid(struct z_session_t session);
 /**
