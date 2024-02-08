@@ -32,6 +32,7 @@ pub type z_attachment_iter_driver_t = Option<
 ///
 /// `iteration_driver == NULL` marks the gravestone value, as this type is often optional.
 /// Users are encouraged to use `z_attachment_null` and `z_attachment_check` to interact.
+// tags{attachment}
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_attachment_t {
@@ -40,12 +41,14 @@ pub struct z_attachment_t {
 }
 
 /// Returns the gravestone value for `z_attachment_t`.
+// tags{attachment.check}
 #[no_mangle]
 pub extern "C" fn z_attachment_check(this: &z_attachment_t) -> bool {
     this.iteration_driver.is_some()
 }
 
 /// Returns the gravestone value for `z_attachment_t`.
+// tags{attachment.null}
 #[no_mangle]
 pub extern "C" fn z_attachment_null() -> z_attachment_t {
     z_attachment_t {
@@ -60,6 +63,7 @@ pub extern "C" fn z_attachment_null() -> z_attachment_t {
 /// `context` is passed to `body` to allow stateful closures.
 ///
 /// This function takes no ownership whatsoever.
+// tags{attachment.iter}
 #[no_mangle]
 pub extern "C" fn z_attachment_iterate(
     this: z_attachment_t,
@@ -74,6 +78,7 @@ pub extern "C" fn z_attachment_iterate(
 }
 
 /// Returns the value associated with the key.
+// tags{attachment.get}
 #[no_mangle]
 pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_bytes_t {
     struct attachment_get_iterator_context {
@@ -118,6 +123,7 @@ pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_by
 /// A map of maybe-owned vector of bytes to owned vector of bytes.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
+// tags{bytes_map}
 #[repr(C)]
 pub struct z_owned_bytes_map_t {
     _0: [u64; 2],
@@ -137,18 +143,21 @@ impl core::ops::Deref for z_owned_bytes_map_t {
 }
 
 /// Constructs a new map.
+// tags{bytes_map.create}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_new() -> z_owned_bytes_map_t {
     unsafe { core::mem::transmute(Some(HashMap::<Cow<[u8]>, Cow<[u8]>>::new())) }
 }
 
 /// Constructs the gravestone value for `z_owned_bytes_map_t`
+// tags{bytes_map.null}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_null() -> z_owned_bytes_map_t {
     unsafe { core::mem::transmute(None::<HashMap<Cow<[u8]>, Cow<[u8]>>>) }
 }
 
 /// Returns `true` if the map is not in its gravestone state
+// tags{bytes_map.check}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
     unsafe { &*this.get() }.is_some()
@@ -156,6 +165,7 @@ pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
 /// Destroys the map, resetting `this` to its gravestone value.
 ///
 /// This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+// tags{bytes_map.drop}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_drop(this: &mut z_owned_bytes_map_t) {
     let this = unsafe { &mut *this.get() };
@@ -165,6 +175,7 @@ pub extern "C" fn z_bytes_map_drop(this: &mut z_owned_bytes_map_t) {
 /// Returns the value associated with `key`, returning a gravestone value if:
 /// - `this` or `key` is in gravestone state.
 /// - `this` has no value associated to `key`
+// tags{bytes_map.get}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_get(this: &z_owned_bytes_map_t, key: z_bytes_t) -> z_bytes_t {
     let this = unsafe { &*this.get() };
@@ -181,6 +192,7 @@ pub extern "C" fn z_bytes_map_get(this: &z_owned_bytes_map_t, key: z_bytes_t) ->
 /// Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
 ///
 /// Calling this with `NULL` or the gravestone value is undefined behaviour.
+// tags{}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_insert_by_copy(
     this: &z_owned_bytes_map_t,
@@ -199,6 +211,7 @@ pub extern "C" fn z_bytes_map_insert_by_copy(
 /// Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
 ///
 /// Calling this with `NULL` or the gravestone value is undefined behaviour.
+// tags{}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_insert_by_alias(
     this: &z_owned_bytes_map_t,
@@ -227,6 +240,7 @@ pub extern "C" fn z_bytes_map_insert_by_alias(
 /// Note that this map is unordered.
 ///
 /// Calling this with `NULL` or the gravestone value is undefined behaviour.
+// tags{bytes_map.iter}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_iter(
     this: &z_owned_bytes_map_t,
@@ -275,6 +289,7 @@ pub(crate) extern "C" fn attachment_iteration_driver(
 }
 
 /// Aliases `this` into a generic `z_attachment_t`, allowing it to be passed to corresponding APIs.
+// tags{attachment.create.from_map}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_as_attachment(this: &z_owned_bytes_map_t) -> z_attachment_t {
     if z_bytes_map_check(this) {
@@ -312,6 +327,7 @@ extern "C" fn bytes_map_from_attachment_iterator_by_alias(
 /// Constructs a map from the provided attachment, copying keys and values.
 ///
 /// If `this` is at gravestone value, the returned value will also be at gravestone value.
+// tags{bytes_map.create.from_attachment}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_from_attachment(this: z_attachment_t) -> z_owned_bytes_map_t {
     if z_attachment_check(&this) {
@@ -330,6 +346,7 @@ pub extern "C" fn z_bytes_map_from_attachment(this: z_attachment_t) -> z_owned_b
 /// Constructs a map from the provided attachment, aliasing the attachment's keys and values.
 ///
 /// If `this` is at gravestone value, the returned value will also be at gravestone value.
+// tags{bytes_map.create.from_attachment}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_from_attachment_aliasing(
     this: z_attachment_t,

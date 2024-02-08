@@ -14,6 +14,7 @@
 
 #![allow(non_camel_case_types)]
 
+// ignore_tagging
 mod collections;
 pub use crate::collections::*;
 mod config;
@@ -40,6 +41,7 @@ mod pull_subscriber;
 pub use crate::pull_subscriber::*;
 mod publisher;
 pub use crate::publisher::*;
+// ignore_tagging
 mod closures;
 pub use closures::*;
 mod liveliness;

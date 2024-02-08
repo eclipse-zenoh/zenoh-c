@@ -53,6 +53,7 @@ use zenoh_util::core::zresult::ErrNo;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+// tags{keyexpr}
 #[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_owned_keyexpr_t([u64; 4]);
@@ -92,6 +93,7 @@ impl z_owned_keyexpr_t {
 /// Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{}
 pub extern "C" fn z_keyexpr_null() -> z_owned_keyexpr_t {
     z_owned_keyexpr_t::null()
 }
@@ -99,6 +101,7 @@ pub extern "C" fn z_keyexpr_null() -> z_owned_keyexpr_t {
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+// tags{keyexpr.create}
 pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t {
     if name.is_null() {
         return z_owned_keyexpr_t::null();
@@ -121,6 +124,7 @@ pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t
 
 /// Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
 #[no_mangle]
+// tags{}
 pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
     keyexpr.as_ref().map(|k| k.borrowing_clone()).into()
 }
