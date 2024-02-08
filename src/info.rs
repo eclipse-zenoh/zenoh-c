@@ -18,6 +18,7 @@ use zenoh_protocol::core::ZenohId;
 /// Represents a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
+/// tags{zid}
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct z_id_t {
@@ -30,7 +31,7 @@ pub struct z_id_t {
 /// In other words, this function returning an array of 16 zeros means you failed
 /// to pass it a valid session.
 ///
-/// tags{session.zid}
+/// tags{session.zid.get}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
@@ -46,6 +47,7 @@ pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
 /// and is guaranteed to be dropped before this function exits.
 ///
 /// Retuns 0 on success, negative values on failure
+/// tags{session.zid_peers.get}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_peers_zid(
@@ -71,6 +73,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 /// and is guaranteed to be dropped before this function exits.
 ///
 /// Retuns 0 on success, negative values on failure.
+/// tags{session.zid_routers.get}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_routers_zid(

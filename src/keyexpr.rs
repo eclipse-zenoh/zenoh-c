@@ -53,7 +53,7 @@ use zenoh_util::core::zresult::ErrNo;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-// tags{keyexpr}
+/// tags{keyexpr}
 #[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_owned_keyexpr_t([u64; 4]);
@@ -93,7 +93,7 @@ impl z_owned_keyexpr_t {
 /// Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-// tags{}
+/// tags{keyexpr.null}
 pub extern "C" fn z_keyexpr_null() -> z_owned_keyexpr_t {
     z_owned_keyexpr_t::null()
 }
@@ -132,6 +132,7 @@ pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
 /// Frees `keyexpr` and invalidates it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{}
 pub extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
     std::mem::drop(keyexpr.take())
 }
@@ -139,6 +140,7 @@ pub extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
 /// Returns ``true`` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{keyexpr.check}
 pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
     keyexpr.deref().is_some()
 }
@@ -153,6 +155,7 @@ pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
 ///
 /// Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
 /// both for local processing and network-wise.
+/// tags{keyexpr}
 #[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_keyexpr_t([u64; 4]);
@@ -217,6 +220,7 @@ impl<'a> TryFrom<z_keyexpr_t> for KeyExpr<'a> {
 }
 
 /// Returns ``true`` if `keyexpr` is initialized.
+/// tags{keyexpr.check}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_keyexpr_is_initialized(keyexpr: &z_keyexpr_t) -> bool {
@@ -225,6 +229,7 @@ pub extern "C" fn z_keyexpr_is_initialized(keyexpr: &z_keyexpr_t) -> bool {
 
 /// Returns ``0`` if the passed string is a valid (and canon) key expression.
 /// Otherwise returns error value
+/// tags{keyexpr.is_canon}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) -> i8 {
@@ -246,11 +251,12 @@ pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) ->
 
 /// Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
 ///
-/// Returns ``0`` upon success, negative values upon failure.  
+/// Returns ``0`` upon success, negative values upon failure.
 /// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
 /// key expression for reasons other than a non-canon form.
 ///
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+/// tags{keyexpr.canonize}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) -> i8 {
@@ -265,11 +271,12 @@ pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) 
 }
 /// Canonizes the passed string in place, possibly shortening it by modifying `len`.
 ///
-/// Returns ``0`` upon success, negative values upon failure.  
+/// Returns ``0`` upon success, negative values upon failure.
 /// Returns a negative value if canonization failed, which indicates that the passed string was an invalid
 /// key expression for reasons other than a non-canon form.
 ///
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+/// tags{keyexpr.canonize}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize) -> i8 {
@@ -294,6 +301,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string.
 /// It is a loaned key expression that aliases `name`.
+/// tags{keyexpr.create}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_keyexpr_from_slice(name: *const c_char, len: usize) -> z_keyexpr_t {
@@ -315,6 +323,7 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice(name: *const c_char, len: usize) 
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string.
 /// It is a loaned key expression that aliases `name`.
+/// tags{keyexpr.create}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
@@ -333,6 +342,7 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
 ///   - the key expression must have canon form.
 ///
 /// It is a loaned key expression that aliases `name`.
+/// tags{keyexpr.create.unchecked}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_keyexpr_from_slice_unchecked(
@@ -355,6 +365,7 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_unchecked(
 ///   - the key expression must have canon form.
 ///
 /// It is a loaned key expression that aliases `name`.
+/// tags{keyexpr.create.unchecked}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_unchecked(name: *const c_char) -> z_keyexpr_t {
@@ -363,6 +374,7 @@ pub unsafe extern "C" fn z_keyexpr_unchecked(name: *const c_char) -> z_keyexpr_t
 
 /// Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
 /// The user is responsible of droping the returned string using `z_drop`
+/// tags{keyexpr.as_str}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> z_owned_str_t {
@@ -375,6 +387,7 @@ pub unsafe extern "C" fn z_keyexpr_to_string(keyexpr: z_keyexpr_t) -> z_owned_st
 /// Returns the key expression's internal string by aliasing it.
 ///
 /// Currently exclusive to zenoh-c
+/// tags{keyexpr.as_str}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_keyexpr_as_bytes(keyexpr: z_keyexpr_t) -> z_bytes_t {
@@ -411,6 +424,7 @@ impl<'a> From<&'a KeyExpr<'a>> for z_keyexpr_t {
 /// ease the retrieval of the concerned resource in the routing tables.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{session.declare_keyexpr}
 pub extern "C" fn z_declare_keyexpr(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -438,6 +452,7 @@ pub extern "C" fn z_declare_keyexpr(
 }
 
 /// Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
+/// tags{session.undeclare_keyexpr}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_keyexpr_t) -> i8 {
@@ -464,6 +479,7 @@ pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 /// Returns ``0`` if both ``left`` and ``right`` are equal. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+/// tags{keyexpr.equals}
 pub extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
         (Some(l), Some(r)) => {
@@ -481,6 +497,7 @@ pub extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 
 #[no_mangle]
 /// Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
 /// sets defined by ``left`` and ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+/// tags{keyexpr.intersects}
 pub extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
         (Some(l), Some(r)) => {
@@ -498,6 +515,7 @@ pub extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) ->
 #[no_mangle]
 /// Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
 /// defined by ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+/// tags{keyexpr.includes}
 pub extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> i8 {
     match (&*left, &*right) {
         (Some(l), Some(r)) => {
@@ -520,6 +538,7 @@ pub extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> i
 ///
 /// To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
 /// as this would extremely likely cause bugs.
+/// tags{keyexpr.concat}
 pub unsafe extern "C" fn z_keyexpr_concat(
     left: z_keyexpr_t,
     right_start: *const c_char,
@@ -555,6 +574,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
 #[no_mangle]
 /// Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
 /// In case of error, the return value will be set to its invalidated state.
+/// tags{keyexpr.join}
 pub extern "C" fn z_keyexpr_join(left: z_keyexpr_t, right: z_keyexpr_t) -> z_owned_keyexpr_t {
     let left = match left.as_ref() {
         Some(l) => l,

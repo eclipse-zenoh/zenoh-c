@@ -202,6 +202,7 @@ typedef struct z_owned_bytes_map_t {
  * Represents a Zenoh ID.
  *
  * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
+ * tags{zid}
  */
 typedef struct z_id_t {
   uint8_t id[16];
@@ -370,6 +371,7 @@ typedef struct z_owned_closure_reply_t {
  *
  * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
  * both for local processing and network-wise.
+ * tags{keyexpr}
  */
 #if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_keyexpr_t {
@@ -508,6 +510,7 @@ typedef struct z_config_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{keyexpr}
  */
 #if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_keyexpr_t {
@@ -1236,6 +1239,7 @@ ZENOHC_API struct z_owned_config_t z_config_peer(void);
  *
  * This numerical id will be used on the network to save bandwidth and
  * ease the retrieval of the concerned resource in the routing tables.
+ * tags{session.declare_keyexpr}
  */
 ZENOHC_API
 struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session,
@@ -1460,6 +1464,7 @@ ZENOHC_API struct z_owned_hello_t z_hello_null(void);
  * and is guaranteed to be dropped before this function exits.
  *
  * Retuns 0 on success, negative values on failure
+ * tags{session.zid_peers.get}
  */
 ZENOHC_API
 int8_t z_info_peers_zid(struct z_session_t session,
@@ -1471,6 +1476,7 @@ int8_t z_info_peers_zid(struct z_session_t session,
  * and is guaranteed to be dropped before this function exits.
  *
  * Retuns 0 on success, negative values on failure.
+ * tags{session.zid_routers.get}
  */
 ZENOHC_API
 int8_t z_info_routers_zid(struct z_session_t session,
@@ -1482,18 +1488,20 @@ int8_t z_info_routers_zid(struct z_session_t session,
  * In other words, this function returning an array of 16 zeros means you failed
  * to pass it a valid session.
  *
- * tags{session.zid}
+ * tags{session.zid.get}
  */
 ZENOHC_API struct z_id_t z_info_zid(struct z_session_t session);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
+ * tags{keyexpr.create}
  */
 ZENOHC_API struct z_keyexpr_t z_keyexpr(const char *name);
 /**
  * Returns the key expression's internal string by aliasing it.
  *
  * Currently exclusive to zenoh-c
+ * tags{keyexpr.as_str}
  */
 ZENOHC_API struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
 /**
@@ -1504,6 +1512,7 @@ ZENOHC_API struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
  * key expression for reasons other than a non-canon form.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * tags{keyexpr.canonize}
  */
 ZENOHC_API
 int8_t z_keyexpr_canonize(char *start,
@@ -1516,11 +1525,13 @@ int8_t z_keyexpr_canonize(char *start,
  * key expression for reasons other than a non-canon form.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * tags{keyexpr.canonize}
  */
 ZENOHC_API
 int8_t z_keyexpr_canonize_null_terminated(char *start);
 /**
  * Returns ``true`` if `keyexpr` is valid.
+ * tags{keyexpr.check}
  */
 ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
 /**
@@ -1531,6 +1542,7 @@ ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
  *
  * To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
  * as this would extremely likely cause bugs.
+ * tags{keyexpr.concat}
  */
 ZENOHC_API
 struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
@@ -1542,6 +1554,7 @@ struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
 ZENOHC_API void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
 /**
  * Returns ``0`` if both ``left`` and ``right`` are equal. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+ * tags{keyexpr.equals}
  */
 ZENOHC_API
 int8_t z_keyexpr_equals(struct z_keyexpr_t left,
@@ -1549,6 +1562,7 @@ int8_t z_keyexpr_equals(struct z_keyexpr_t left,
 /**
  * Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
  * defined by ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+ * tags{keyexpr.includes}
  */
 ZENOHC_API
 int8_t z_keyexpr_includes(struct z_keyexpr_t left,
@@ -1556,6 +1570,7 @@ int8_t z_keyexpr_includes(struct z_keyexpr_t left,
 /**
  * Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
  * sets defined by ``left`` and ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+ * tags{keyexpr.intersects}
  */
 ZENOHC_API
 int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
@@ -1563,15 +1578,18 @@ int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
 /**
  * Returns ``0`` if the passed string is a valid (and canon) key expression.
  * Otherwise returns error value
+ * tags{keyexpr.is_canon}
  */
 ZENOHC_API int8_t z_keyexpr_is_canon(const char *start, size_t len);
 /**
  * Returns ``true`` if `keyexpr` is initialized.
+ * tags{keyexpr.check}
  */
 ZENOHC_API bool z_keyexpr_is_initialized(const struct z_keyexpr_t *keyexpr);
 /**
  * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
  * In case of error, the return value will be set to its invalidated state.
+ * tags{keyexpr.join}
  */
 ZENOHC_API
 struct z_owned_keyexpr_t z_keyexpr_join(struct z_keyexpr_t left,
@@ -1586,11 +1604,13 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *key
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
+ * tags{keyexpr.null}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_null(void);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
  * The user is responsible of droping the returned string using `z_drop`
+ * tags{keyexpr.as_str}
  */
 ZENOHC_API struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**
@@ -1604,6 +1624,7 @@ ZENOHC_API struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  *   - the key expression must have canon form.
  *
  * It is a loaned key expression that aliases `name`.
+ * tags{keyexpr.create.unchecked}
  */
 ZENOHC_API
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
@@ -2010,6 +2031,7 @@ ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 /**
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
+ * tags{session.undeclare_keyexpr}
  */
 ZENOHC_API int8_t z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *kexpr);
 /**
@@ -2077,6 +2099,7 @@ ZENOHC_API void zc_init_logger(void);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
+ * tags{keyexpr.create}
  */
 ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, size_t len);
 /**
@@ -2088,6 +2111,7 @@ ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, size_t len
  *   - the key expression must have canon form.
  *
  * It is a loaned key expression that aliases `name`.
+ * tags{keyexpr.create.unchecked}
  */
 ZENOHC_API
 struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
