@@ -2170,6 +2170,7 @@ struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_
  * Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
  *
  * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+ * tags{session.liveliness}
  */
 ZENOHC_API
 int8_t zc_liveliness_get(struct z_session_t session,

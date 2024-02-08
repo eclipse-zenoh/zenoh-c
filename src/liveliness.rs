@@ -228,6 +228,7 @@ pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_owned_liveliness_
 /// Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
 ///
 /// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+/// tags{session.liveliness}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get(
     session: z_session_t,
