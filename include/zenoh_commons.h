@@ -905,7 +905,7 @@ typedef struct ze_owned_publication_cache_t {
  *     z_keyexpr_t queryable_prefix: The prefix used for queryable
  *     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
  *                       publication cache
- *     bool complete: the `complete` option for the queryable
+ *     bool queryable_complete: the `complete` option for the queryable
  *     size_t history: The the history size
  *     size_t resources_limit: The limit number of cached resources
  */
