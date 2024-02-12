@@ -6,6 +6,7 @@ target
 
 # vscode
 .vscode 
+out
 
 # IntelliJ / CLion 
 .idea 

@@ -29,12 +29,14 @@ use crate::{
 ///     z_keyexpr_t queryable_prefix: The prefix used for queryable
 ///     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
 ///                       publication cache
+///     bool complete: the `complete` option for the queryable
 ///     size_t history: The the history size
 ///     size_t resources_limit: The limit number of cached resources
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     pub queryable_prefix: z_keyexpr_t,
     pub queryable_origin: zcu_locality_t,
+    pub queryable_complete: bool,
     pub history: usize,
     pub resources_limit: usize,
 }
@@ -45,6 +47,7 @@ pub extern "C" fn ze_publication_cache_options_default() -> ze_publication_cache
     ze_publication_cache_options_t {
         queryable_prefix: z_keyexpr_t::null(),
         queryable_origin: zcu_locality_default(),
+        queryable_complete: false,
         history: 1,
         resources_limit: 0,
     }
@@ -133,6 +136,7 @@ pub extern "C" fn ze_declare_publication_cache(
                 if let Some(options) = options {
                     p = p.history(options.history);
                     p = p.queryable_allowed_origin(options.queryable_origin.into());
+                    p = p.queryable_complete(options.queryable_complete);
                     if options.resources_limit != 0 {
                         p = p.resources_limit(options.resources_limit)
                     }
