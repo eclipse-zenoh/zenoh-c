@@ -34,9 +34,10 @@ pub type z_zint_t = c_ulong;
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
+/// tags{options.sample.kind}
 pub enum z_sample_kind_t {
-    PUT = 0,
-    DELETE = 1,
+    PUT = 0, // tags{options.sample.kind.put}
+    DELETE = 1,// tags{options.sample.kind.delete}
 }
 
 impl From<SampleKind> for z_sample_kind_t {
@@ -58,12 +59,14 @@ impl From<z_sample_kind_t> for SampleKind {
 }
 
 #[repr(C)]
+/// tags{options.timestamp}
 pub struct z_timestamp_t {
     time: u64,
     id: z_id_t,
 }
 
 /// Returns ``true`` if `ts` is a valid timestamp
+/// tags{timestamp.check} 
 #[no_mangle]
 pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
     ts.id.id.iter().any(|byte| *byte != 0)
@@ -96,6 +99,7 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 ///
 /// Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
 /// functions, then the operation will fail (but the passed value will still be consumed).
+/// tags{zbuf}
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct zc_owned_payload_t {
@@ -120,6 +124,7 @@ impl TryFrom<ZBuf> for zc_owned_payload_t {
     }
 }
 impl zc_owned_payload_t {
+    /// tags{}
     pub fn take(&mut self) -> Option<ZBuf> {
         if !z_bytes_check(&self.payload) {
             return None;
@@ -167,16 +172,19 @@ pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_pay
     }
 }
 /// Returns `false` if `payload` is the gravestone value.
+/// tags{zbuf.check}
 #[no_mangle]
 pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
     !payload.payload.start.is_null()
 }
 /// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+/// tags{zbuf.drop}
 #[no_mangle]
 pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
     unsafe { std::ptr::replace(payload, zc_payload_null()) };
 }
 /// Constructs `zc_owned_payload_t`'s gravestone value.
+/// tags{zbuf.null}
 #[no_mangle]
 pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
     zc_owned_payload_t {
