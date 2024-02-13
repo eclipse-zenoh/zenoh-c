@@ -135,9 +135,6 @@ typedef enum z_reliability_t {
   Z_RELIABILITY_BEST_EFFORT,
   Z_RELIABILITY_RELIABLE,
 } z_reliability_t;
-/**
- * tags{options.sample.kind}
- */
 typedef enum z_sample_kind_t {
   Z_SAMPLE_KIND_PUT = 0,
   Z_SAMPLE_KIND_DELETE = 1,
@@ -397,9 +394,6 @@ typedef struct z_encoding_t {
   enum z_encoding_prefix_t prefix;
   struct z_bytes_t suffix;
 } z_encoding_t;
-/**
- * tags{options.timestamp}
- */
 typedef struct z_timestamp_t {
   uint64_t time;
   struct z_id_t id;
@@ -833,7 +827,6 @@ typedef struct zc_owned_liveliness_get_options_t {
  *
  * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
  * functions, then the operation will fail (but the passed value will still be consumed).
- * tags{zbuf}
  */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
@@ -2013,7 +2006,6 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
- * tags{timestamp.check}
  */
 ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 /**
@@ -2206,17 +2198,14 @@ ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
  * Returns `false` if `payload` is the gravestone value.
- * tags{zbuf.check}
  */
 ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
 /**
  * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
- * tags{zbuf.drop}
  */
 ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
 /**
  * Constructs `zc_owned_payload_t`'s gravestone value.
- * tags{zbuf.null}
  */
 ZENOHC_API struct zc_owned_payload_t zc_payload_null(void);
 /**
