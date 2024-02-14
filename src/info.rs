@@ -14,7 +14,7 @@
 use crate::{session::*, z_closure_zid_call, z_owned_closure_zid_t};
 use zenoh::SessionDeclarations;
 use zenoh_protocol::core::ZenohId;
-use zenoh_util::core::SyncResolve;
+use zenoh::prelude::sync::SyncResolve;
 
 /// Represents a Zenoh ID.
 ///
