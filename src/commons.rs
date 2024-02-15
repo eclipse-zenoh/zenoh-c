@@ -14,7 +14,9 @@
 
 use crate::collections::*;
 use crate::keyexpr::*;
+use crate::z_congestion_control_t;
 use crate::z_id_t;
+use crate::z_priority_t;
 use libc::c_void;
 use libc::{c_char, c_ulong};
 use zenoh::buffers::ZBuf;
@@ -22,6 +24,7 @@ use zenoh::prelude::SampleKind;
 use zenoh::prelude::SplitBuffer;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
+use zenoh::sample::QoS;
 use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
 
@@ -188,6 +191,29 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
     }
 }
 
+/// QoS settings of zenoh message.
+/// 
+/// Members:
+///   z_priority_t priority: Priority of the message.
+///   z_congestion_control_t congestion_control: Congestion control of the message.
+///   bool express: If true, the message is not batched during transmission, in order to reduce latency
+#[repr(C)]
+pub struct z_qos_t {
+    pub priority: z_priority_t,
+    pub congestion_control: z_congestion_control_t,
+    pub express: bool,
+}
+
+impl From<QoS> for z_qos_t {
+    fn from(qos: QoS) -> Self {
+        z_qos_t {
+            priority: qos.priority.into(),
+            congestion_control: qos.congestion_control.into(),
+            express: qos.express.into()
+        }
+    }
+}
+
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -207,6 +233,7 @@ pub struct z_sample_t<'a> {
     pub _zc_buf: &'a c_void,
     pub kind: z_sample_kind_t,
     pub timestamp: z_timestamp_t,
+    pub qos: z_qos_t,
     pub attachment: z_attachment_t,
 }
 
@@ -222,6 +249,7 @@ impl<'a> z_sample_t<'a> {
             _zc_buf: unsafe { std::mem::transmute(owner) },
             kind: sample.kind.into(),
             timestamp: sample.timestamp.as_ref().into(),
+            qos: sample.qos.into(),
             attachment: match &sample.attachment {
                 Some(attachment) => z_attachment_t {
                     data: attachment as *const _ as *mut c_void,

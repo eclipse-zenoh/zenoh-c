@@ -37,7 +37,10 @@ int run_publisher() {
         return -1;
     }
 
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), NULL);
+    z_publisher_options_t publisher_options = z_publisher_options_default();
+    publisher_options.priority = Z_PRIORITY_DATA;
+    publisher_options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), &publisher_options);
     if (!z_check(pub)) {
         perror("Unable to declare Publisher for key expression!");
         return -1;
@@ -65,6 +68,13 @@ void data_handler(const z_sample_t *sample, void *arg) {
 
     if (strncmp(values[val_num], (const char *)sample->payload.start, (int)sample->payload.len)) {
         perror("Unexpected value received");
+        exit(-1);
+    }
+
+    if (sample->qos.congestion_control != Z_CONGESTION_CONTROL_BLOCK
+        || sample->qos.priority != Z_PRIORITY_DATA
+    ) {
+        perror("Unexpected QoS values");
         exit(-1);
     }
 
