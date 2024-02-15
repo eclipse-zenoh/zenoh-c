@@ -399,6 +399,19 @@ typedef struct z_timestamp_t {
   struct z_id_t id;
 } z_timestamp_t;
 /**
+ * QoS settings of zenoh message.
+ *
+ * Members:
+ *   z_priority_t priority: Priority of the message.
+ *   z_congestion_control_t congestion_control: Congestion control of the message.
+ *   bool express: If true, the message is not batched during transmission, in order to reduce latency
+ */
+typedef struct z_qos_t {
+  enum z_priority_t priority;
+  enum z_congestion_control_t congestion_control;
+  bool express;
+} z_qos_t;
+/**
  * A data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
@@ -418,6 +431,7 @@ typedef struct z_sample_t {
   const void *_zc_buf;
   enum z_sample_kind_t kind;
   struct z_timestamp_t timestamp;
+  struct z_qos_t qos;
   struct z_attachment_t attachment;
 } z_sample_t;
 /**
