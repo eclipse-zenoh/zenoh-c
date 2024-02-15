@@ -12,35 +12,29 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+#include <unistd.h>
+
 #include "z_int_helpers.h"
 
 #ifdef VALID_PLATFORM
 
 #include "zenoh.h"
 
-const char *const SEM_NAME = "/z_int_test_queryable_sync_sem";
+const char *const SEM_NAME = "/z_int_test_qerror_sync_sem";
 sem_t *sem;
 
 const char *const keyexpr = "test/key";
-const char *const values[] = {"test_value_1", "test_value_2", "test_value_3"};
-const size_t values_count = sizeof(values) / sizeof(values[0]);
+const char *const ERROR = "error message";
 
 void query_handler(const z_query_t *query, void *context) {
-    static int value_num = 0;
+    printf("query_handler\n");
+    z_value_t value;
 
-    z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(query));
-    z_bytes_t pred = z_query_parameters(query);
-    z_value_t payload_value = z_query_value(query);
+    value.payload = z_bytes_new(ERROR);
 
-    z_query_reply_options_t options = z_query_reply_options_default();
-    options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    z_query_reply(query, z_keyexpr((const char *)context), (const uint8_t *)values[value_num],
-                  strlen(values[value_num]), &options);
-    z_drop(z_move(keystr));
+    z_query_reply_error(query, &value, NULL);
 
-    if (++value_num == values_count) {
-        exit(0);
-    }
+    exit(0);
 }
 
 int run_queryable() {
@@ -66,6 +60,17 @@ int run_queryable() {
     return 0;
 }
 
+void reply_handler(z_owned_reply_t *reply, void *arg) {
+    printf("reply_handler\n");
+
+    assert(!z_reply_is_ok(reply));
+
+    z_value_t value = z_reply_err(reply);
+    ASSERT_STR_BYTES_EQUAL(ERROR, value.payload);
+
+    exit(0);
+}
+
 int run_get() {
     SEM_WAIT(sem);
 
@@ -77,24 +82,13 @@ int run_get() {
     }
     sleep(1);
 
-    for (int val_num = 0; val_num < values_count; ++val_num) {
-        z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
-        z_get_options_t opts = z_get_options_default();
-        z_get(z_loan(s), z_keyexpr(keyexpr), "", z_move(channel.send), &opts);
-        z_owned_reply_t reply = z_reply_null();
-        for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
-            assert(z_reply_is_ok(&reply));
+    z_get_options_t opts = z_get_options_default();
+    z_owned_closure_reply_t closure_reply = z_closure(reply_handler, NULL, &s);
+    z_get(z_loan(s), z_keyexpr(keyexpr), "", z_move(closure_reply), &opts);
+    printf("z_get\n");
 
-            z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
+    sleep(10);
 
-            ASSERT_STR_BYTES_EQUAL(values[val_num], sample.payload);
-
-            z_drop(z_move(keystr));
-        }
-        z_drop(z_move(reply));
-        z_drop(z_move(channel));
-    }
     z_close(z_move(s));
 
     return 0;
