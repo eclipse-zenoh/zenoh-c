@@ -196,7 +196,7 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
 /// Members:
 ///   z_priority_t priority: Priority of the message.
 ///   z_congestion_control_t congestion_control: Congestion control of the message.
-///   bool express: If true, the message is not batched during transmission, in order to reduce latency
+///   bool express: If true, the message is not batched during transmission, in order to reduce latency.
 #[repr(C)]
 pub struct z_qos_t {
     pub priority: z_priority_t,
