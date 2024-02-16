@@ -69,6 +69,7 @@ typedef enum z_consolidation_mode_t {
  *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
  *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
  *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
+ * tags{options.encoding.prefix}
  */
 typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_EMPTY = 0,
@@ -135,17 +136,41 @@ typedef enum z_reliability_t {
   Z_RELIABILITY_BEST_EFFORT,
   Z_RELIABILITY_RELIABLE,
 } z_reliability_t;
+/**
+ * tags{options.sample.kind}
+ */
 typedef enum z_sample_kind_t {
   Z_SAMPLE_KIND_PUT = 0,
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
+/**
+ * tags{options.locality}
+ */
 typedef enum zcu_locality_t {
+  /**
+   * tags{options.locality.any}
+   */
   ZCU_LOCALITY_ANY = 0,
+  /**
+   * tags{options.locality.session_local}
+   */
   ZCU_LOCALITY_SESSION_LOCAL = 1,
+  /**
+   * tags{options.locality.remote}
+   */
   ZCU_LOCALITY_REMOTE = 2,
 } zcu_locality_t;
+/**
+ * tags{options.reply_keyexpr}
+ */
 typedef enum zcu_reply_keyexpr_t {
+  /**
+   * tags{options.reply_keyexpr.any}
+   */
   ZCU_REPLY_KEYEXPR_ANY = 0,
+  /**
+   * tags{options.reply_keyexpr.matching_query}
+   */
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
 /**
@@ -153,9 +178,16 @@ typedef enum zcu_reply_keyexpr_t {
  *
  * `start` being `null` is considered a gravestone value,
  * and empty slices are represented using a possibly dangling pointer for `start`.
+ * tags{bytes_view, buffer}
  */
 typedef struct z_bytes_t {
+  /**
+   * tags{bytes_view.len, buffer.len}
+   */
   size_t len;
+  /**
+   * tags{bytes_view.start, buffer.read}
+   */
   const uint8_t *start;
 } z_bytes_t;
 /**
@@ -391,11 +423,21 @@ typedef struct ALIGN(4) z_keyexpr_t {
  * Members:
  *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
  *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
+ * tags{encoding}
  */
 typedef struct z_encoding_t {
+  /**
+   * tags{encoding.preifx}
+   */
   enum z_encoding_prefix_t prefix;
+  /**
+   * tags{encoding.suffix}
+   */
   struct z_bytes_t suffix;
 } z_encoding_t;
+/**
+ * tags{timestamp}
+ */
 typedef struct z_timestamp_t {
   uint64_t time;
   struct z_id_t id;
@@ -412,14 +454,33 @@ typedef struct z_timestamp_t {
  *   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
  *   z_timestamp_t timestamp: The timestamp of this data sample.
  *   z_attachment_t attachment: The attachment of this data sample.
+ * tags{sample}
  */
 typedef struct z_sample_t {
+  /**
+   * tags{sample.keyexpr}
+   */
   struct z_keyexpr_t keyexpr;
+  /**
+   * tags{sample.payload}
+   */
   struct z_bytes_t payload;
+  /**
+   * tags{sample.encoding}
+   */
   struct z_encoding_t encoding;
   const void *_zc_buf;
+  /**
+   * tags{sample.kind}
+   */
   enum z_sample_kind_t kind;
+  /**
+   * tags{sample.timestamp}
+   */
   struct z_timestamp_t timestamp;
+  /**
+   * tags{sample.attachment}
+   */
   struct z_attachment_t attachment;
 } z_sample_t;
 /**
@@ -602,9 +663,16 @@ typedef struct z_delete_options_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ * tags{encoding}
  */
 typedef struct z_owned_encoding_t {
+  /**
+   * tags{encoding.preifx}
+   */
   enum z_encoding_prefix_t prefix;
+  /**
+   * tags{encoding.suffix}
+   */
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
@@ -830,6 +898,7 @@ typedef struct zc_owned_liveliness_get_options_t {
  *
  * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
  * functions, then the operation will fail (but the passed value will still be consumed).
+ * tags{payload, buffer}
  */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
@@ -998,12 +1067,14 @@ int8_t z_attachment_iterate(struct z_attachment_t this_,
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
 /**
  * Returns ``true`` if `b` is initialized.
+ * tags{bytes_view.check}
  */
 ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
 /**
  * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
  * `str == NULL` will cause this to return `z_bytes_null()`
+ * tags{bytes_view.create.from_str}
  */
 ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
 /**
@@ -1094,10 +1165,12 @@ ZENOHC_API
 struct z_bytes_t z_bytes_new(const char *str);
 /**
  * Returns the gravestone value for `z_bytes_t`
+ * tags{bytes_view.null}
  */
 ZENOHC_API struct z_bytes_t z_bytes_null(void);
 /**
  * Constructs a `len` bytes long view starting at `start`.
+ * tags{bytes_view.create}
  */
 ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
 /**
@@ -1396,18 +1469,22 @@ int8_t z_delete(struct z_session_t session,
 ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
 /**
  * Constructs a specific :c:type:`z_encoding_t`.
+ * tags{encoding.create}
  */
 ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
 /**
  * Returns ``true`` if `encoding` is valid.
+ * tags{encoding.check}
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
  * Constructs a default :c:type:`z_encoding_t`.
+ * tags{encoding.create.default}
  */
 ZENOHC_API struct z_encoding_t z_encoding_default(void);
 /**
  * Frees `encoding`, invalidating it for double-drop safety.
+ * tags{}
  */
 ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
@@ -1416,6 +1493,7 @@ ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 ZENOHC_API struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
+ * tags{encoding.null}
  */
 ZENOHC_API struct z_owned_encoding_t z_encoding_null(void);
 /**
@@ -2027,6 +2105,7 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
+ * tags{timestamp.check}
  */
 ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 /**
@@ -2223,18 +2302,22 @@ ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
  * Returns `false` if `payload` is the gravestone value.
+ * tags{payload.check}
  */
 ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
 /**
  * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+ * tags{payload.drop}
  */
 ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
 /**
  * Constructs `zc_owned_payload_t`'s gravestone value.
+ * tags{payload.null, buffer.create}
  */
 ZENOHC_API struct zc_owned_payload_t zc_payload_null(void);
 /**
  * Clones the `payload` by incrementing its reference counter.
+ * tags{payload.rcinc, buffer.rcinc}
  */
 ZENOHC_API struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payload);
 /**
@@ -2334,6 +2417,7 @@ ZENOHC_API
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
 /**
  * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+ * tags{sample.payload.rcinc}
  */
 ZENOHC_API struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
 /**
@@ -2428,6 +2512,9 @@ void zcu_closure_matching_status_drop(struct zcu_owned_closure_matching_status_t
  * Constructs a null safe-to-drop value of 'zcu_owned_closure_matching_status_t' type
  */
 ZENOHC_API struct zcu_owned_closure_matching_status_t zcu_closure_matching_status_null(void);
+/**
+ * tags{options.locality.default}
+ */
 ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
 /**
  * Register callback for notifying subscribers matching.
@@ -2435,6 +2522,9 @@ ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
 ZENOHC_API
 struct zcu_owned_matching_listener_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
                                                                               struct zcu_owned_closure_matching_status_t *callback);
+/**
+ * tags{options.reply_keyexpr.default}
+ */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
  * Declares a Publication Cache.

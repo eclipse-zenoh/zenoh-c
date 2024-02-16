@@ -34,8 +34,11 @@ pub type z_zint_t = c_ulong;
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
+/// tags{options.sample.kind}
 pub enum z_sample_kind_t {
+    // tags{options.sample.kind.put}
     PUT = 0,
+    // tags{options.sample.kind.delete}
     DELETE = 1,
 }
 
@@ -58,6 +61,7 @@ impl From<z_sample_kind_t> for SampleKind {
 }
 
 #[repr(C)]
+/// tags{timestamp}
 pub struct z_timestamp_t {
     time: u64,
     id: z_id_t,
@@ -65,6 +69,7 @@ pub struct z_timestamp_t {
 
 /// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
+/// tags{timestamp.check}
 pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
     ts.id.id.iter().any(|byte| *byte != 0)
 }
@@ -98,11 +103,13 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 /// functions, then the operation will fail (but the passed value will still be consumed).
 #[allow(non_camel_case_types)]
 #[repr(C)]
+/// tags{payload, buffer}
 pub struct zc_owned_payload_t {
     pub payload: z_bytes_t,
     pub _owner: [usize; 5],
 }
 impl Default for zc_owned_payload_t {
+    // tags{}
     fn default() -> Self {
         zc_payload_null()
     }
@@ -120,6 +127,7 @@ impl TryFrom<ZBuf> for zc_owned_payload_t {
     }
 }
 impl zc_owned_payload_t {
+    // tags{}
     pub fn take(&mut self) -> Option<ZBuf> {
         if !z_bytes_check(&self.payload) {
             return None;
@@ -159,6 +167,7 @@ impl Drop for zc_owned_payload_t {
 }
 
 /// Clones the `payload` by incrementing its reference counter.
+/// tags{payload.rcinc, buffer.rcinc}
 #[no_mangle]
 pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
     match payload.owner() {
@@ -167,16 +176,19 @@ pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_pay
     }
 }
 /// Returns `false` if `payload` is the gravestone value.
+/// tags{payload.check}
 #[no_mangle]
 pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
     !payload.payload.start.is_null()
 }
 /// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+/// tags{payload.drop}
 #[no_mangle]
 pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
     unsafe { std::ptr::replace(payload, zc_payload_null()) };
 }
 /// Constructs `zc_owned_payload_t`'s gravestone value.
+/// tags{payload.null, buffer.create}
 #[no_mangle]
 pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
     zc_owned_payload_t {
@@ -199,14 +211,21 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
 ///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
 ///   z_timestamp_t timestamp: The timestamp of this data sample.
 ///   z_attachment_t attachment: The attachment of this data sample.
+/// tags{sample}
 #[repr(C)]
 pub struct z_sample_t<'a> {
+    /// tags{sample.keyexpr}
     pub keyexpr: z_keyexpr_t,
+    /// tags{sample.payload}
     pub payload: z_bytes_t,
+    /// tags{sample.encoding}
     pub encoding: z_encoding_t,
     pub _zc_buf: &'a c_void,
+    /// tags{sample.kind}
     pub kind: z_sample_kind_t,
+    /// tags{sample.timestamp}
     pub timestamp: z_timestamp_t,
+    /// tags{sample.attachment}
     pub attachment: z_attachment_t,
 }
 
@@ -234,6 +253,7 @@ impl<'a> z_sample_t<'a> {
 }
 
 /// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+/// tags{sample.payload.rcinc}
 #[no_mangle]
 pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
     let Some(sample) = sample else {
@@ -271,6 +291,7 @@ pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_own
 ///     - **Z_ENCODING_PREFIX_IMAGE_GIF**
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
+/// tags{options.encoding.prefix}
 pub enum z_encoding_prefix_t {
     Empty = 0,
     AppOctetStream = 1,
@@ -388,8 +409,11 @@ impl From<zenoh_protocol::core::KnownEncoding> for z_encoding_prefix_t {
 ///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
+/// tags{encoding}
 pub struct z_encoding_t {
+    /// tags{encoding.preifx}
     pub prefix: z_encoding_prefix_t,
+    /// tags{encoding.suffix}
     pub suffix: z_bytes_t,
 }
 
@@ -433,8 +457,11 @@ impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
+/// tags{encoding}
 pub struct z_owned_encoding_t {
+    /// tags{encoding.preifx}
     pub prefix: z_encoding_prefix_t,
+    /// tags{encoding.suffix}
     pub suffix: z_bytes_t,
     pub _dropped: bool,
 }
@@ -451,6 +478,7 @@ impl z_owned_encoding_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
+/// tags{encoding.null}
 pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
     z_owned_encoding_t::null()
 }
@@ -458,6 +486,7 @@ pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
 /// Constructs a specific :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{encoding.create}
 pub unsafe extern "C" fn z_encoding(
     prefix: z_encoding_prefix_t,
     suffix: *const c_char,
@@ -476,6 +505,7 @@ pub unsafe extern "C" fn z_encoding(
 /// Constructs a default :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{encoding.create.default}
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
     (&zenoh_protocol::core::Encoding::default()).into()
 }
@@ -483,6 +513,7 @@ pub extern "C" fn z_encoding_default() -> z_encoding_t {
 /// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{}
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
     z_bytes_drop(&mut encoding.suffix);
     encoding._dropped = true
@@ -491,6 +522,7 @@ pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{encoding.check}
 pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
     !encoding._dropped
 }
@@ -498,6 +530,7 @@ pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{}
 pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
     z_encoding_t {
         prefix: encoding.prefix,
@@ -519,11 +552,13 @@ impl From<z_encoding_t> for z_owned_encoding_t {
 /// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
 /// `z_check` and `z_str_check` correspondently
 #[repr(C)]
+// tags{}
 pub struct z_owned_str_t {
     pub _cstr: *mut libc::c_char,
 }
 
 impl From<&[u8]> for z_owned_str_t {
+    // tags{}
     fn from(value: &[u8]) -> Self {
         unsafe {
             let cstr = libc::malloc(value.len() + 1) as *mut libc::c_char;
@@ -543,6 +578,7 @@ impl Drop for z_owned_str_t {
 /// Frees `z_owned_str_t`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{}
 pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
     libc::free(std::mem::transmute(s._cstr));
     s._cstr = std::ptr::null_mut();
@@ -550,12 +586,14 @@ pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
 
 /// Returns ``true`` if `s` is a valid string
 #[no_mangle]
+// tags{}
 pub extern "C" fn z_str_check(s: &z_owned_str_t) -> bool {
     !s._cstr.is_null()
 }
 
 /// Returns undefined `z_owned_str_t`
 #[no_mangle]
+// tags{}
 pub extern "C" fn z_str_null() -> z_owned_str_t {
     z_owned_str_t {
         _cstr: std::ptr::null_mut(),
@@ -564,15 +602,20 @@ pub extern "C" fn z_str_null() -> z_owned_str_t {
 
 /// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
 #[no_mangle]
+// tags{}
 pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
     s._cstr
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
+/// tags{options.locality}
 pub enum zcu_locality_t {
+    /// tags{options.locality.any}
     ANY = 0,
+    /// tags{options.locality.session_local}
     SESSION_LOCAL = 1,
+    /// tags{options.locality.remote}
     REMOTE = 2,
 }
 
@@ -597,14 +640,18 @@ impl From<zcu_locality_t> for Locality {
 }
 
 #[no_mangle]
+/// tags{options.locality.default}
 pub extern "C" fn zcu_locality_default() -> zcu_locality_t {
     Locality::default().into()
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
+/// tags{options.reply_keyexpr}
 pub enum zcu_reply_keyexpr_t {
+    /// tags{options.reply_keyexpr.any}
     ANY = 0,
+    /// tags{options.reply_keyexpr.matching_query}
     MATCHING_QUERY = 1,
 }
 
@@ -627,6 +674,7 @@ impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
 }
 
 #[no_mangle]
+/// tags{options.reply_keyexpr.default}
 pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }

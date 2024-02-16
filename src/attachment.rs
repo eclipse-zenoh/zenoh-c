@@ -143,7 +143,7 @@ impl core::ops::Deref for z_owned_bytes_map_t {
 }
 
 /// Constructs a new map.
-// tags{bytes_map.create}
+// tags{bytes_map.create, attachment.create}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_new() -> z_owned_bytes_map_t {
     unsafe { core::mem::transmute(Some(HashMap::<Cow<[u8]>, Cow<[u8]>>::new())) }
@@ -175,7 +175,7 @@ pub extern "C" fn z_bytes_map_drop(this: &mut z_owned_bytes_map_t) {
 /// Returns the value associated with `key`, returning a gravestone value if:
 /// - `this` or `key` is in gravestone state.
 /// - `this` has no value associated to `key`
-// tags{bytes_map.get}
+// tags{bytes_map.get, attachment.get}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_get(this: &z_owned_bytes_map_t, key: z_bytes_t) -> z_bytes_t {
     let this = unsafe { &*this.get() };
@@ -192,7 +192,7 @@ pub extern "C" fn z_bytes_map_get(this: &z_owned_bytes_map_t, key: z_bytes_t) ->
 /// Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
 ///
 /// Calling this with `NULL` or the gravestone value is undefined behaviour.
-// tags{}
+// tags{bytes_map.insert, attachment.insert}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_insert_by_copy(
     this: &z_owned_bytes_map_t,
@@ -211,7 +211,7 @@ pub extern "C" fn z_bytes_map_insert_by_copy(
 /// Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
 ///
 /// Calling this with `NULL` or the gravestone value is undefined behaviour.
-// tags{}
+// tags{bytes_map.insert, attachment.insert}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_insert_by_alias(
     this: &z_owned_bytes_map_t,
@@ -240,7 +240,7 @@ pub extern "C" fn z_bytes_map_insert_by_alias(
 /// Note that this map is unordered.
 ///
 /// Calling this with `NULL` or the gravestone value is undefined behaviour.
-// tags{bytes_map.iter}
+// tags{bytes_map.iter, attachment.iter}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_iter(
     this: &z_owned_bytes_map_t,

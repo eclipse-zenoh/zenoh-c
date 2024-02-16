@@ -14,7 +14,6 @@
 
 #![allow(non_camel_case_types)]
 
-// ignore_tagging
 mod collections;
 pub use crate::collections::*;
 mod config;
