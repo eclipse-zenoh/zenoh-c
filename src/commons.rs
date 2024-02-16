@@ -209,7 +209,7 @@ impl From<QoS> for z_qos_t {
         z_qos_t {
             priority: qos.priority.into(),
             congestion_control: qos.congestion_control.into(),
-            express: qos.express.into()
+            express: qos.express,
         }
     }
 }
