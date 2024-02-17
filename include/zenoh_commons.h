@@ -69,7 +69,7 @@ typedef enum z_consolidation_mode_t {
  *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
  *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
  *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
- * tags{options.encoding.prefix}
+ * tags{c.z_encoding_prefix_t, api.encoding_prefix}
  */
 typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_EMPTY = 0,
@@ -137,10 +137,16 @@ typedef enum z_reliability_t {
   Z_RELIABILITY_RELIABLE,
 } z_reliability_t;
 /**
- * tags{options.sample.kind}
+ * tags{c.z_sample_kind_t, api.options.sample.kind}
  */
 typedef enum z_sample_kind_t {
+  /**
+   * tags{c.z_sample_kind_t.put, api.options.sample.kind.put}
+   */
   Z_SAMPLE_KIND_PUT = 0,
+  /**
+   * tags{c.z_sample_kind_t.delete, api.options.sample.kind.delete}
+   */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
 /**
@@ -178,15 +184,15 @@ typedef enum zcu_reply_keyexpr_t {
  *
  * `start` being `null` is considered a gravestone value,
  * and empty slices are represented using a possibly dangling pointer for `start`.
- * tags{bytes_view, buffer}
+ * tags{c.z_bytes_t, api.buffer}
  */
 typedef struct z_bytes_t {
   /**
-   * tags{bytes_view.len, buffer.len}
+   * tags{c.z_bytes_t.len, api.buffer.len}
    */
   size_t len;
   /**
-   * tags{bytes_view.start, buffer.read}
+   * tags{c.z_bytes_t.start, api.buffer.read}
    */
   const uint8_t *start;
 } z_bytes_t;
@@ -436,7 +442,7 @@ typedef struct z_encoding_t {
   struct z_bytes_t suffix;
 } z_encoding_t;
 /**
- * tags{timestamp}
+ * tags{c.z_timestamp_t, api.timestamp}
  */
 typedef struct z_timestamp_t {
   uint64_t time;
@@ -454,32 +460,32 @@ typedef struct z_timestamp_t {
  *   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
  *   z_timestamp_t timestamp: The timestamp of this data sample.
  *   z_attachment_t attachment: The attachment of this data sample.
- * tags{sample}
+ * tags{c.z_sample_t, api.sample}
  */
 typedef struct z_sample_t {
   /**
-   * tags{sample.keyexpr}
+   * tags{c.z_sample_t.keyexpr, api.sample.keyexpr}
    */
   struct z_keyexpr_t keyexpr;
   /**
-   * tags{sample.payload}
+   * tags{c.z_sample_t.payload, api.sample.payload}
    */
   struct z_bytes_t payload;
   /**
-   * tags{sample.encoding}
+   * tags{c.z_sample_t.encoding, api.sample.encoding}
    */
   struct z_encoding_t encoding;
   const void *_zc_buf;
   /**
-   * tags{sample.kind}
+   * tags{c.z_sample_t.kind, api.sample.kind}
    */
   enum z_sample_kind_t kind;
   /**
-   * tags{sample.timestamp}
+   * tags{c.z_sample_t.timestamp, api.sample.timestamp}
    */
   struct z_timestamp_t timestamp;
   /**
-   * tags{sample.attachment}
+   * tags{c.z_sample_t.attachment, api.sample.attachment}
    */
   struct z_attachment_t attachment;
 } z_sample_t;
@@ -898,7 +904,7 @@ typedef struct zc_owned_liveliness_get_options_t {
  *
  * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
  * functions, then the operation will fail (but the passed value will still be consumed).
- * tags{payload, buffer}
+ * tags{c.zc_owned_payload_t, api.buffer.owned}
  */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
@@ -1067,14 +1073,14 @@ int8_t z_attachment_iterate(struct z_attachment_t this_,
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
 /**
  * Returns ``true`` if `b` is initialized.
- * tags{bytes_view.check}
+ * tags{c.z_bytes_check}
  */
 ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
 /**
  * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
  * `str == NULL` will cause this to return `z_bytes_null()`
- * tags{bytes_view.create.from_str}
+ * tags{c.z_bytes_from_str, api.buffer.create.from_str}
  */
 ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
 /**
@@ -1165,12 +1171,12 @@ ZENOHC_API
 struct z_bytes_t z_bytes_new(const char *str);
 /**
  * Returns the gravestone value for `z_bytes_t`
- * tags{bytes_view.null}
+ * tags{c.z_bytes_null}
  */
 ZENOHC_API struct z_bytes_t z_bytes_null(void);
 /**
  * Constructs a `len` bytes long view starting at `start`.
- * tags{bytes_view.create}
+ * tags{c.z_bytes_wrap, api.buffer.create}
  */
 ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
 /**
@@ -2105,7 +2111,7 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
- * tags{timestamp.check}
+ * tags{c.z_timestamp_check, api.timestamp.check}
  */
 ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 /**
@@ -2302,22 +2308,22 @@ ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
  * Returns `false` if `payload` is the gravestone value.
- * tags{payload.check}
+ * tags{c.zc_payload_check, api.buffer.check}
  */
 ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
 /**
  * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
- * tags{payload.drop}
+ * tags{c.zc_payload_drop, api.buffer.drop}
  */
 ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
 /**
  * Constructs `zc_owned_payload_t`'s gravestone value.
- * tags{payload.null, buffer.create}
+ * tags{c.zc_payload_null, api.buffer.create.empty}
  */
 ZENOHC_API struct zc_owned_payload_t zc_payload_null(void);
 /**
  * Clones the `payload` by incrementing its reference counter.
- * tags{payload.rcinc, buffer.rcinc}
+ * tags{c.zc_payload_rcinc, api.buffer.rcinc}
  */
 ZENOHC_API struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payload);
 /**
@@ -2417,7 +2423,7 @@ ZENOHC_API
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
 /**
  * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
- * tags{sample.payload.rcinc}
+ * tags{c.zc_sample_payload_rcinc, api.sample.payload.rcinc}
  */
 ZENOHC_API struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
 /**

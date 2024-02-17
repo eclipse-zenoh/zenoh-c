@@ -34,11 +34,11 @@ pub type z_zint_t = c_ulong;
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-/// tags{options.sample.kind}
+/// tags{c.z_sample_kind_t, api.options.sample.kind}
 pub enum z_sample_kind_t {
-    // tags{options.sample.kind.put}
+    /// tags{c.z_sample_kind_t.put, api.options.sample.kind.put}
     PUT = 0,
-    // tags{options.sample.kind.delete}
+    /// tags{c.z_sample_kind_t.delete, api.options.sample.kind.delete}
     DELETE = 1,
 }
 
@@ -61,7 +61,7 @@ impl From<z_sample_kind_t> for SampleKind {
 }
 
 #[repr(C)]
-/// tags{timestamp}
+/// tags{c.z_timestamp_t, api.timestamp}
 pub struct z_timestamp_t {
     time: u64,
     id: z_id_t,
@@ -69,7 +69,7 @@ pub struct z_timestamp_t {
 
 /// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
-/// tags{timestamp.check}
+/// tags{c.z_timestamp_check, api.timestamp.check}
 pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
     ts.id.id.iter().any(|byte| *byte != 0)
 }
@@ -103,7 +103,7 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 /// functions, then the operation will fail (but the passed value will still be consumed).
 #[allow(non_camel_case_types)]
 #[repr(C)]
-/// tags{payload, buffer}
+/// tags{c.zc_owned_payload_t, api.buffer.owned}
 pub struct zc_owned_payload_t {
     pub payload: z_bytes_t,
     pub _owner: [usize; 5],
@@ -167,7 +167,7 @@ impl Drop for zc_owned_payload_t {
 }
 
 /// Clones the `payload` by incrementing its reference counter.
-/// tags{payload.rcinc, buffer.rcinc}
+/// tags{c.zc_payload_rcinc, api.buffer.rcinc}
 #[no_mangle]
 pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
     match payload.owner() {
@@ -176,19 +176,19 @@ pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_pay
     }
 }
 /// Returns `false` if `payload` is the gravestone value.
-/// tags{payload.check}
+/// tags{c.zc_payload_check, api.buffer.check}
 #[no_mangle]
 pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
     !payload.payload.start.is_null()
 }
 /// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
-/// tags{payload.drop}
+/// tags{c.zc_payload_drop, api.buffer.drop}
 #[no_mangle]
 pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
     unsafe { std::ptr::replace(payload, zc_payload_null()) };
 }
 /// Constructs `zc_owned_payload_t`'s gravestone value.
-/// tags{payload.null, buffer.create}
+/// tags{c.zc_payload_null, api.buffer.create.empty}
 #[no_mangle]
 pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
     zc_owned_payload_t {
@@ -211,21 +211,21 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
 ///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
 ///   z_timestamp_t timestamp: The timestamp of this data sample.
 ///   z_attachment_t attachment: The attachment of this data sample.
-/// tags{sample}
+/// tags{c.z_sample_t, api.sample}
 #[repr(C)]
 pub struct z_sample_t<'a> {
-    /// tags{sample.keyexpr}
+    /// tags{c.z_sample_t.keyexpr, api.sample.keyexpr}
     pub keyexpr: z_keyexpr_t,
-    /// tags{sample.payload}
+    /// tags{c.z_sample_t.payload, api.sample.payload}
     pub payload: z_bytes_t,
-    /// tags{sample.encoding}
+    /// tags{c.z_sample_t.encoding, api.sample.encoding}
     pub encoding: z_encoding_t,
     pub _zc_buf: &'a c_void,
-    /// tags{sample.kind}
+    /// tags{c.z_sample_t.kind, api.sample.kind}
     pub kind: z_sample_kind_t,
-    /// tags{sample.timestamp}
+    /// tags{c.z_sample_t.timestamp, api.sample.timestamp}
     pub timestamp: z_timestamp_t,
-    /// tags{sample.attachment}
+    /// tags{c.z_sample_t.attachment, api.sample.attachment}
     pub attachment: z_attachment_t,
 }
 
@@ -253,7 +253,7 @@ impl<'a> z_sample_t<'a> {
 }
 
 /// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
-/// tags{sample.payload.rcinc}
+/// tags{c.zc_sample_payload_rcinc, api.sample.payload.rcinc}
 #[no_mangle]
 pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
     let Some(sample) = sample else {
@@ -291,7 +291,7 @@ pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_own
 ///     - **Z_ENCODING_PREFIX_IMAGE_GIF**
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
-/// tags{options.encoding.prefix}
+/// tags{c.z_encoding_prefix_t, api.encoding_prefix}
 pub enum z_encoding_prefix_t {
     Empty = 0,
     AppOctetStream = 1,

@@ -20,11 +20,11 @@ use zenoh::prelude::ZenohId;
 /// and empty slices are represented using a possibly dangling pointer for `start`.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-/// tags{bytes_view, buffer}
+/// tags{c.z_bytes_t, api.buffer}
 pub struct z_bytes_t {
-    /// tags{bytes_view.len, buffer.len}
+    /// tags{c.z_bytes_t.len, api.buffer.len}
     pub len: size_t,
-    /// tags{bytes_view.start, buffer.read}
+    /// tags{c.z_bytes_t.start, api.buffer.read}
     pub start: *const u8,
 }
 
@@ -53,14 +53,14 @@ impl Default for z_bytes_t {
 
 /// Returns ``true`` if `b` is initialized.
 #[no_mangle]
-/// tags{bytes_view.check}
+/// tags{c.z_bytes_check}
 pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
     !b.start.is_null()
 }
 
 /// Returns the gravestone value for `z_bytes_t`
 #[no_mangle]
-/// tags{bytes_view.null}
+/// tags{c.z_bytes_null}
 pub extern "C" fn z_bytes_null() -> z_bytes_t {
     z_bytes_t {
         len: 0,
@@ -73,7 +73,7 @@ pub extern "C" fn z_bytes_null() -> z_bytes_t {
 /// `str == NULL` will cause this to return `z_bytes_null()`
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{bytes_view.create.from_str}
+/// tags{c.z_bytes_from_str, api.buffer.create.from_str}
 pub unsafe extern "C" fn z_bytes_from_str(str: *const c_char) -> z_bytes_t {
     if str.is_null() {
         z_bytes_null()
@@ -92,7 +92,7 @@ pub unsafe extern "C" fn z_bytes_from_str(str: *const c_char) -> z_bytes_t {
 /// `str == NULL` will cause this to return `z_bytes_null()`
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-// tags{}
+// tag{}
 pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
     z_bytes_from_str(str)
 }
@@ -100,7 +100,7 @@ pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
 /// Constructs a `len` bytes long view starting at `start`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{bytes_view.create}
+/// tags{c.z_bytes_wrap, api.buffer.create}
 pub unsafe extern "C" fn z_bytes_wrap(start: *const u8, len: usize) -> z_bytes_t {
     if start.is_null() {
         z_bytes_null()
