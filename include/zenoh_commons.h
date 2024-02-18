@@ -150,32 +150,32 @@ typedef enum z_sample_kind_t {
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
 /**
- * tags{options.locality}
+ * tags{c.zcu_locality_t, api.options.locality}
  */
 typedef enum zcu_locality_t {
   /**
-   * tags{options.locality.any}
+   * tags{c.zcu_locality_t.any, api.options.locality.any}
    */
   ZCU_LOCALITY_ANY = 0,
   /**
-   * tags{options.locality.session_local}
+   * tags{c.zcu_locality_t.session_local, api.options.locality.local}
    */
   ZCU_LOCALITY_SESSION_LOCAL = 1,
   /**
-   * tags{options.locality.remote}
+   * tags{c.zcu_locality_t.remote, api.options.locality.remote}
    */
   ZCU_LOCALITY_REMOTE = 2,
 } zcu_locality_t;
 /**
- * tags{options.reply_keyexpr}
+ * tags{c.zcu_reply_keyexpr_t, api.options.reply_keyexpr}
  */
 typedef enum zcu_reply_keyexpr_t {
   /**
-   * tags{options.reply_keyexpr.any}
+   * tags{c.zcu_reply_keyexpr_t.any, api.options.reply_keyexpr.any}
    */
   ZCU_REPLY_KEYEXPR_ANY = 0,
   /**
-   * tags{options.reply_keyexpr.matching_query}
+   * tags{c.zcu_reply_keyexpr_t.matching_query, api.options.reply_keyexpr.matching_query}
    */
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
@@ -240,7 +240,7 @@ typedef struct z_owned_bytes_map_t {
  * Represents a Zenoh ID.
  *
  * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
- * tags{zid}
+ * tags{c.z_id_t, api.zid}
  */
 typedef struct z_id_t {
   uint8_t id[16];
@@ -409,7 +409,7 @@ typedef struct z_owned_closure_reply_t {
  *
  * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
  * both for local processing and network-wise.
- * tags{keyexpr}
+ * tags{c.z_keyexpr_t, api.keyexpr}
  */
 #if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_keyexpr_t {
@@ -429,15 +429,15 @@ typedef struct ALIGN(4) z_keyexpr_t {
  * Members:
  *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
  *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
- * tags{encoding}
+ * tags{c.z_encoding_t, api.encoding}
  */
 typedef struct z_encoding_t {
   /**
-   * tags{encoding.preifx}
+   * tags{c.z_encoding_t.prefix, api.encoding.prefix.get}
    */
   enum z_encoding_prefix_t prefix;
   /**
-   * tags{encoding.suffix}
+   * tags{c.z_encoding_t.suffix, api.encoding.suffix.get}
    */
   struct z_bytes_t suffix;
 } z_encoding_t;
@@ -577,7 +577,7 @@ typedef struct z_config_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- * tags{keyexpr}
+ * tags{c.z_owned_keyexpr_t, api.keyexpr}
  */
 #if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_keyexpr_t {
@@ -669,15 +669,15 @@ typedef struct z_delete_options_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- * tags{encoding}
+ * tags{c.z_owned_encoding_t, api.encoding}
  */
 typedef struct z_owned_encoding_t {
   /**
-   * tags{encoding.preifx}
+   * tags{c.z_owned_encoding_t.prefix, api.encoding.prefix}
    */
   enum z_encoding_prefix_t prefix;
   /**
-   * tags{encoding.suffix}
+   * tags{c.z_owned_encoding_t.suffix, api.encoding.suffix}
    */
   struct z_bytes_t suffix;
   bool _dropped;
@@ -867,12 +867,14 @@ typedef struct z_subscriber_t {
 } z_subscriber_t;
 /**
  * The options for `zc_liveliness_declare_token`
+ * tags{c.zc_owned_liveliness_declaration_options_t}
  */
 typedef struct zc_owned_liveliness_declaration_options_t {
   uint8_t _inner;
 } zc_owned_liveliness_declaration_options_t;
 /**
  * The options for :c:func:`zc_liveliness_declare_subscriber`
+ * tags{c.zc_owned_liveliness_declare_subscriber_options_t}
  */
 typedef struct zc_owned_liveliness_declare_subscriber_options_t {
   uint8_t _inner;
@@ -883,12 +885,14 @@ typedef struct zc_owned_liveliness_declare_subscriber_options_t {
  * expressions.
  *
  * A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
+ * tags{c.zc_owned_liveliness_token_t, api.liveliness_token}
  */
 typedef struct zc_owned_liveliness_token_t {
   size_t _inner[4];
 } zc_owned_liveliness_token_t;
 /**
  * The options for :c:func:`zc_liveliness_declare_subscriber`
+ * tags{c.zc_owned_liveliness_get_options_t}
  */
 typedef struct zc_owned_liveliness_get_options_t {
   uint32_t timeout_ms;
@@ -1318,7 +1322,7 @@ ZENOHC_API struct z_owned_config_t z_config_peer(void);
  *
  * This numerical id will be used on the network to save bandwidth and
  * ease the retrieval of the concerned resource in the routing tables.
- * tags{session.declare_keyexpr}
+ * tags{c.z_declare_keyexpr, api.session.declare_keyexpr}
  */
 ZENOHC_API
 struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session,
@@ -1475,22 +1479,22 @@ int8_t z_delete(struct z_session_t session,
 ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
 /**
  * Constructs a specific :c:type:`z_encoding_t`.
- * tags{encoding.create}
+ * tags{c.z_encoding, api.encoding.create}
  */
 ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
 /**
  * Returns ``true`` if `encoding` is valid.
- * tags{encoding.check}
+ * tags{c.z_encoding_check, api.encoding.check}
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
  * Constructs a default :c:type:`z_encoding_t`.
- * tags{encoding.create.default}
+ * tags{c.z_encoding_default, api.encoding.create}
  */
 ZENOHC_API struct z_encoding_t z_encoding_default(void);
 /**
  * Frees `encoding`, invalidating it for double-drop safety.
- * tags{}
+ * tags{c.z_encoding_drop, api.encoding.drop}
  */
 ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
@@ -1499,7 +1503,7 @@ ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 ZENOHC_API struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
- * tags{encoding.null}
+ * tags{c.z_encoding_null}
  */
 ZENOHC_API struct z_owned_encoding_t z_encoding_null(void);
 /**
@@ -1548,7 +1552,7 @@ ZENOHC_API struct z_owned_hello_t z_hello_null(void);
  * and is guaranteed to be dropped before this function exits.
  *
  * Retuns 0 on success, negative values on failure
- * tags{session.zid_peers.get}
+ * tags{c.z_info_peers_zid.get, api.session.peers_zid.get}
  */
 ZENOHC_API
 int8_t z_info_peers_zid(struct z_session_t session,
@@ -1560,7 +1564,7 @@ int8_t z_info_peers_zid(struct z_session_t session,
  * and is guaranteed to be dropped before this function exits.
  *
  * Retuns 0 on success, negative values on failure.
- * tags{session.zid_routers.get}
+ * tags{c.z_info_routers_zid, api.session.routers_zid.get}
  */
 ZENOHC_API
 int8_t z_info_routers_zid(struct z_session_t session,
@@ -1572,20 +1576,20 @@ int8_t z_info_routers_zid(struct z_session_t session,
  * In other words, this function returning an array of 16 zeros means you failed
  * to pass it a valid session.
  *
- * tags{session.zid.get}
+ * tags{c.z_info_zid, api.session.zid.get}
  */
 ZENOHC_API struct z_id_t z_info_zid(struct z_session_t session);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
- * tags{keyexpr.create}
+ * tags{c.z_keyexpr, api.keyexpr.create.checked}
  */
 ZENOHC_API struct z_keyexpr_t z_keyexpr(const char *name);
 /**
  * Returns the key expression's internal string by aliasing it.
  *
  * Currently exclusive to zenoh-c
- * tags{keyexpr.as_str}
+ * tags{c.z_keyexpr_as_bytes, api.keyexpr.to_buffer}
  */
 ZENOHC_API struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
 /**
@@ -1596,7 +1600,7 @@ ZENOHC_API struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
  * key expression for reasons other than a non-canon form.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
- * tags{keyexpr.canonize}
+ * tags{c.z_keyexpr_canonize, api.keyexpr.canonize}
  */
 ZENOHC_API
 int8_t z_keyexpr_canonize(char *start,
@@ -1609,13 +1613,13 @@ int8_t z_keyexpr_canonize(char *start,
  * key expression for reasons other than a non-canon form.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
- * tags{keyexpr.canonize}
+ * tags{c.z_keyexpr_canonize_null_terminated, api.keyexpr.canonize}
  */
 ZENOHC_API
 int8_t z_keyexpr_canonize_null_terminated(char *start);
 /**
  * Returns ``true`` if `keyexpr` is valid.
- * tags{keyexpr.check}
+ * tags{c.z_keyexpr_check, api.keyexpr.check}
  */
 ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
 /**
@@ -1626,7 +1630,7 @@ ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
  *
  * To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
  * as this would extremely likely cause bugs.
- * tags{keyexpr.concat}
+ * tags{c.z_keyexpr_concat, api.keyexpr.concat}
  */
 ZENOHC_API
 struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
@@ -1638,7 +1642,7 @@ struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
 ZENOHC_API void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
 /**
  * Returns ``0`` if both ``left`` and ``right`` are equal. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
- * tags{keyexpr.equals}
+ * tags{c.z_keyexpr_equals, api.keyexpr.equals}
  */
 ZENOHC_API
 int8_t z_keyexpr_equals(struct z_keyexpr_t left,
@@ -1646,7 +1650,7 @@ int8_t z_keyexpr_equals(struct z_keyexpr_t left,
 /**
  * Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
  * defined by ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
- * tags{keyexpr.includes}
+ * tags{c.z_keyexpr_includes, api.keyexpr.includes}
  */
 ZENOHC_API
 int8_t z_keyexpr_includes(struct z_keyexpr_t left,
@@ -1654,7 +1658,7 @@ int8_t z_keyexpr_includes(struct z_keyexpr_t left,
 /**
  * Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
  * sets defined by ``left`` and ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
- * tags{keyexpr.intersects}
+ * tags{c.z_keyexpr_intersects, api.keyexpr.intersects}
  */
 ZENOHC_API
 int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
@@ -1662,18 +1666,18 @@ int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
 /**
  * Returns ``0`` if the passed string is a valid (and canon) key expression.
  * Otherwise returns error value
- * tags{keyexpr.is_canon}
+ * tags{c.z_keyexpr_is_canon, api.keyexpr.is_canon}
  */
 ZENOHC_API int8_t z_keyexpr_is_canon(const char *start, size_t len);
 /**
  * Returns ``true`` if `keyexpr` is initialized.
- * tags{keyexpr.check}
+ * tags{c.z_keyexpr_is_initialized, api.keyexpr.check}
  */
 ZENOHC_API bool z_keyexpr_is_initialized(const struct z_keyexpr_t *keyexpr);
 /**
  * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
  * In case of error, the return value will be set to its invalidated state.
- * tags{keyexpr.join}
+ * tags{c.z_keyexpr_join, api.keyexpr.join}
  */
 ZENOHC_API
 struct z_owned_keyexpr_t z_keyexpr_join(struct z_keyexpr_t left,
@@ -1688,13 +1692,13 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *key
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
- * tags{keyexpr.null}
+ * tags{c.z_keyexpr_null}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_null(void);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
  * The user is responsible of droping the returned string using `z_drop`
- * tags{keyexpr.as_str}
+ * tags{c.z_keyexpr_to_string, api.keyexpr.to_string}
  */
 ZENOHC_API struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
 /**
@@ -1708,7 +1712,7 @@ ZENOHC_API struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  *   - the key expression must have canon form.
  *
  * It is a loaned key expression that aliases `name`.
- * tags{keyexpr.create.unchecked}
+ * tags{c.z_keyexpr_unchecked, api.keyexpr.create.unchecked}
  */
 ZENOHC_API
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
@@ -2116,7 +2120,7 @@ ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 /**
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
- * tags{session.undeclare_keyexpr}
+ * tags{c.z_undeclare_keyepr, api.session.undeclare_keyexpr}
  */
 ZENOHC_API int8_t z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *kexpr);
 /**
@@ -2184,7 +2188,7 @@ ZENOHC_API void zc_init_logger(void);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
- * tags{keyexpr.create}
+ * tags{c.zc_keyexpr_from_slice, api.keyexpr.create.checked}
  */
 ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, size_t len);
 /**
@@ -2196,23 +2200,26 @@ ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, size_t len
  *   - the key expression must have canon form.
  *
  * It is a loaned key expression that aliases `name`.
- * tags{keyexpr.create.unchecked}
+ * tags{c.zc_keyexpr_from_slice_unchecked, api.keyexpr.create.unchecked}
  */
 ZENOHC_API
 struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
                                                    size_t len);
 /**
  * Returns `true` if the options are valid.
+ * tags{c.zc_liveliness_declaration_options_check}
  */
 ZENOHC_API
 bool zc_liveliness_declaration_options_check(const struct zc_owned_liveliness_declaration_options_t *_opts);
 /**
  * Destroys the options.
+ * tags{c.zc_liveliness_declaration_options_drop}
  */
 ZENOHC_API
 void zc_liveliness_declaration_options_drop(struct zc_owned_liveliness_declaration_options_t *opts);
 /**
  * The gravestone value for `zc_owned_liveliness_declaration_options_t`
+ * tags{c.zc_liveliness_declaration_options_null}
  */
 ZENOHC_API
 struct zc_owned_liveliness_declaration_options_t zc_liveliness_declaration_options_null(void);
@@ -2231,6 +2238,7 @@ struct zc_owned_liveliness_declaration_options_t zc_liveliness_declaration_optio
  *
  *    To check if the subscription succeeded and if the subscriber is still valid,
  *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.zc_liveliness_declare_subscriber, api.liveliness.declare_subscriber}
  */
 ZENOHC_API
 struct z_owned_subscriber_t zc_liveliness_declare_subscriber(struct z_session_t session,
@@ -2244,6 +2252,7 @@ struct z_owned_subscriber_t zc_liveliness_declare_subscriber(struct z_session_t 
  * is achieved, and a DELETE sample if it's lost.
  *
  * Passing `NULL` as options is valid and equivalent to a pointer to the default options.
+ * tags{c.zc_liveliness_declare_token, api.liveliness.declare_token}
  */
 ZENOHC_API
 struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_t session,
@@ -2255,7 +2264,7 @@ struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_
  * Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
  *
  * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
- * tags{session.liveliness}
+ * tags{c.zc_liveliness_get, api.liveliness.get}
  */
 ZENOHC_API
 int8_t zc_liveliness_get(struct z_session_t session,
@@ -2264,46 +2273,56 @@ int8_t zc_liveliness_get(struct z_session_t session,
                          const struct zc_owned_liveliness_get_options_t *options);
 /**
  * Returns `true` if the options are valid.
+ * tags{c.zc_liveliness_get_options_check}
  */
 ZENOHC_API
 bool zc_liveliness_get_options_check(const struct zc_owned_liveliness_get_options_t *_opts);
 /**
  * The gravestone value for `zc_owned_liveliness_get_options_t`
+ * tags{c.zc_liveliness_get_options_default}
  */
 ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_default(void);
 /**
  * Destroys the options.
+ * tags{c.zc_liveliness_get_options_drop}
  */
 ZENOHC_API void zc_liveliness_get_options_drop(struct zc_owned_liveliness_get_options_t *opts);
 /**
  * The gravestone value for `zc_owned_liveliness_get_options_t`
+ * tags{c.zc_liveliness_get_options_null}
  */
 ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_null(void);
 /**
  * Returns `true` if the options are valid.
+ * tags{c.zc_liveliness_subscriber_options_check}
  */
 ZENOHC_API
 bool zc_liveliness_subscriber_options_check(const struct zc_owned_liveliness_declare_subscriber_options_t *_opts);
 /**
  * Destroys the options.
+ * tags{c.zc_liveliness_subscriber_options_drop}
  */
 ZENOHC_API
 void zc_liveliness_subscriber_options_drop(struct zc_owned_liveliness_declare_subscriber_options_t *opts);
 /**
  * The gravestone value for `zc_owned_liveliness_declare_subscriber_options_t`
+ * tags{c.zc_liveliness_subscriber_options_null}
  */
 ZENOHC_API
 struct zc_owned_liveliness_declare_subscriber_options_t zc_liveliness_subscriber_options_null(void);
 /**
  * Returns `true` unless the token is at its gravestone value.
+ * tags{c.zc_liveliness_token_check, api.liveliness_token.check}
  */
 ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token_t *token);
 /**
  * The gravestone value for liveliness tokens.
+ * tags{c.zc_liveliness_token_null}
  */
 ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 /**
  * Destroys a liveliness token, notifying subscribers of its destruction.
+ * tags{c.zc_liveliness_undeclare_token, api.liveliness_token.undeclare}
  */
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
@@ -2519,7 +2538,7 @@ void zcu_closure_matching_status_drop(struct zcu_owned_closure_matching_status_t
  */
 ZENOHC_API struct zcu_owned_closure_matching_status_t zcu_closure_matching_status_null(void);
 /**
- * tags{options.locality.default}
+ * tags{c.zcu_locality_default, api.options.locality.default}
  */
 ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
 /**
@@ -2529,7 +2548,7 @@ ZENOHC_API
 struct zcu_owned_matching_listener_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
                                                                               struct zcu_owned_closure_matching_status_t *callback);
 /**
- * tags{options.reply_keyexpr.default}
+ * tags{c.zcu_reply_keyexpr_default, api.options.reply_keyexpr.default}
  */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**

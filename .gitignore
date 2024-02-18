@@ -1,5 +1,6 @@
 # Build
 target
+out
 
 # Cargo
 #Cargo.lock

@@ -28,34 +28,40 @@ use crate::{
 /// expressions.
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
+/// tags{c.zc_owned_liveliness_token_t, api.liveliness_token}
 #[repr(C)]
 pub struct zc_owned_liveliness_token_t {
     _inner: [usize; 4],
 }
 
 /// The gravestone value for liveliness tokens.
+/// tags{c.zc_liveliness_token_null}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_null() -> zc_owned_liveliness_token_t {
     zc_owned_liveliness_token_t { _inner: [0; 4] }
 }
 
 /// Returns `true` unless the token is at its gravestone value.
+/// tags{c.zc_liveliness_token_check, api.liveliness_token.check}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_check(token: &zc_owned_liveliness_token_t) -> bool {
     token._inner.iter().any(|v| *v != 0)
 }
 /// The options for `zc_liveliness_declare_token`
+/// tags{c.zc_owned_liveliness_declaration_options_t}
 #[repr(C)]
 pub struct zc_owned_liveliness_declaration_options_t {
     _inner: u8,
 }
 /// The gravestone value for `zc_owned_liveliness_declaration_options_t`
+/// tags{c.zc_liveliness_declaration_options_null}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declaration_options_null(
 ) -> zc_owned_liveliness_declaration_options_t {
     zc_owned_liveliness_declaration_options_t { _inner: 0 }
 }
 /// Returns `true` if the options are valid.
+/// tags{c.zc_liveliness_declaration_options_check}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declaration_options_check(
     _opts: &zc_owned_liveliness_declaration_options_t,
@@ -63,6 +69,7 @@ pub extern "C" fn zc_liveliness_declaration_options_check(
     true
 }
 /// Destroys the options.
+/// tags{c.zc_liveliness_declaration_options_drop}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declaration_options_drop(
     opts: &mut zc_owned_liveliness_declaration_options_t,
@@ -89,6 +96,7 @@ impl From<zc_owned_liveliness_token_t> for Option<LivelinessToken<'static>> {
 /// is achieved, and a DELETE sample if it's lost.
 ///
 /// Passing `NULL` as options is valid and equivalent to a pointer to the default options.
+/// tags{c.zc_liveliness_declare_token, api.liveliness.declare_token}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
     session: z_session_t,
@@ -109,6 +117,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 }
 
 /// Destroys a liveliness token, notifying subscribers of its destruction.
+/// tags{c.zc_liveliness_undeclare_token, api.liveliness_token.undeclare}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(token: &mut zc_owned_liveliness_token_t) {
     let Some(token): Option<LivelinessToken> =
@@ -122,17 +131,20 @@ pub extern "C" fn zc_liveliness_undeclare_token(token: &mut zc_owned_liveliness_
 }
 
 /// The options for :c:func:`zc_liveliness_declare_subscriber`
+/// tags{c.zc_owned_liveliness_declare_subscriber_options_t}
 #[repr(C)]
 pub struct zc_owned_liveliness_declare_subscriber_options_t {
     _inner: u8,
 }
 /// The gravestone value for `zc_owned_liveliness_declare_subscriber_options_t`
+/// tags{c.zc_liveliness_subscriber_options_null}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_null(
 ) -> zc_owned_liveliness_declare_subscriber_options_t {
     zc_owned_liveliness_declare_subscriber_options_t { _inner: 0 }
 }
 /// Returns `true` if the options are valid.
+/// tags{c.zc_liveliness_subscriber_options_check}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_check(
     _opts: &zc_owned_liveliness_declare_subscriber_options_t,
@@ -140,6 +152,7 @@ pub extern "C" fn zc_liveliness_subscriber_options_check(
     true
 }
 /// Destroys the options.
+/// tags{c.zc_liveliness_subscriber_options_drop}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_drop(
     opts: &mut zc_owned_liveliness_declare_subscriber_options_t,
@@ -161,6 +174,7 @@ pub extern "C" fn zc_liveliness_subscriber_options_drop(
 ///
 ///    To check if the subscription succeeded and if the subscriber is still valid,
 ///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// tags{c.zc_liveliness_declare_subscriber, api.liveliness.declare_subscriber}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
     session: z_session_t,
@@ -196,21 +210,25 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
 }
 
 /// The options for :c:func:`zc_liveliness_declare_subscriber`
+/// tags{c.zc_owned_liveliness_get_options_t}
 #[repr(C)]
 pub struct zc_owned_liveliness_get_options_t {
     timeout_ms: u32,
 }
 /// The gravestone value for `zc_owned_liveliness_get_options_t`
+/// tags{c.zc_liveliness_get_options_null}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get_options_null() -> zc_owned_liveliness_get_options_t {
     zc_owned_liveliness_get_options_t { timeout_ms: 0 }
 }
 /// The gravestone value for `zc_owned_liveliness_get_options_t`
+/// tags{c.zc_liveliness_get_options_default}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get_options_default() -> zc_owned_liveliness_get_options_t {
     zc_owned_liveliness_get_options_t { timeout_ms: 10000 }
 }
 /// Returns `true` if the options are valid.
+/// tags{c.zc_liveliness_get_options_check}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get_options_check(
     _opts: &zc_owned_liveliness_get_options_t,
@@ -218,6 +236,7 @@ pub extern "C" fn zc_liveliness_get_options_check(
     true
 }
 /// Destroys the options.
+/// tags{c.zc_liveliness_get_options_drop}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_owned_liveliness_get_options_t) {
     *opts = zc_liveliness_get_options_null()
@@ -228,7 +247,7 @@ pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_owned_liveliness_
 /// Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
 ///
 /// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
-/// tags{session.liveliness}
+/// tags{c.zc_liveliness_get, api.liveliness.get}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get(
     session: z_session_t,
