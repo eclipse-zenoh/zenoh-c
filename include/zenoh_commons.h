@@ -542,12 +542,14 @@ typedef struct z_owned_closure_zid_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.z_owned_config_t, api.config}
  */
 typedef struct z_owned_config_t {
   void *_0;
 } z_owned_config_t;
 /**
  * A loaned zenoh configuration.
+ * tags{c.z_config_t, api.config}
  */
 typedef struct z_config_t {
   const struct z_owned_config_t *_0;
@@ -1281,18 +1283,22 @@ ZENOHC_API bool z_config_check(const struct z_owned_config_t *config);
 /**
  * Constructs a default, zenoh-allocated, client mode configuration.
  * If `peer` is not null, it is added to the configuration as remote peer.
+ * tags{c.z_config_client, api.config.create.client}
  */
 ZENOHC_API struct z_owned_config_t z_config_client(const char *const *peers, size_t n_peers);
 /**
  * Creates a default, zenoh-allocated, configuration.
+ * tags{c.z_config_default, api.config.create.default}
  */
 ZENOHC_API struct z_owned_config_t z_config_default(void);
 /**
  * Frees `config`, invalidating it for double-drop safety.
+ * tags{c.z_config_drop}
  */
 ZENOHC_API void z_config_drop(struct z_owned_config_t *config);
 /**
  * Returns a :c:type:`z_config_t` loaned from `s`.
+ * tags{c.z_config_loan}
  */
 ZENOHC_API struct z_config_t z_config_loan(const struct z_owned_config_t *s);
 /**
@@ -1306,6 +1312,7 @@ ZENOHC_API struct z_config_t z_config_loan(const struct z_owned_config_t *s);
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.z_config_new, api.config.create.empty}
  */
 ZENOHC_API
 struct z_owned_config_t z_config_new(void);
@@ -1315,6 +1322,7 @@ struct z_owned_config_t z_config_new(void);
 ZENOHC_API struct z_owned_config_t z_config_null(void);
 /**
  * Constructs a default, zenoh-allocated, peer mode configuration.
+ * tags{c.z_config_peer, api.config.create.peer}
  */
 ZENOHC_API struct z_owned_config_t z_config_peer(void);
 /**
@@ -2147,6 +2155,7 @@ ZENOHC_API
 int8_t z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+ * tags{c.z_config_from_file, api.config.create.from_file}
  */
 ZENOHC_API
 struct z_owned_config_t zc_config_from_file(const char *path);
@@ -2154,12 +2163,14 @@ struct z_owned_config_t zc_config_from_file(const char *path);
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
  * Passing a null-ptr will result in a gravestone value (`z_check(x) == false`).
+ * tags{c.z_config_from_str, api.config.create.from_str}
  */
 ZENOHC_API
 struct z_owned_config_t zc_config_from_str(const char *s);
 /**
  * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
  * Use `z_drop` to safely deallocate this string
+ * tags{c.z_config_get}
  */
 ZENOHC_API
 struct z_owned_str_t zc_config_get(struct z_config_t config,
@@ -2168,6 +2179,7 @@ struct z_owned_str_t zc_config_get(struct z_config_t config,
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
  * Returns 0 if successful, a negative value otherwise.
+ * tags{c.z_config_insert_json}
  */
 ZENOHC_API
 int8_t zc_config_insert_json(struct z_config_t config,
@@ -2175,6 +2187,7 @@ int8_t zc_config_insert_json(struct z_config_t config,
                              const char *value);
 /**
  * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+ * tags{c.z_config_to_string, api.config.to_string}
  */
 ZENOHC_API
 struct z_owned_str_t zc_config_to_string(struct z_config_t config);

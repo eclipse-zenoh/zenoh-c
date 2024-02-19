@@ -230,6 +230,7 @@ pub struct z_sample_t<'a> {
 }
 
 impl<'a> z_sample_t<'a> {
+    // tags{}
     pub fn new(sample: &'a Sample, owner: &'a ZBuf) -> Self {
         let std::borrow::Cow::Borrowed(payload) = owner.contiguous() else {
             panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")
@@ -467,6 +468,7 @@ pub struct z_owned_encoding_t {
 }
 
 impl z_owned_encoding_t {
+    // tags{}
     pub fn null() -> Self {
         z_owned_encoding_t {
             prefix: z_encoding_prefix_t::Empty,
