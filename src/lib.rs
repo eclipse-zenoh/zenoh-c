@@ -91,6 +91,7 @@ pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";
 /// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
 /// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
+// tags{c.zc_init_logger, api.logger.init}
 pub extern "C" fn zc_init_logger() {
     let _ = env_logger::try_init();
 }

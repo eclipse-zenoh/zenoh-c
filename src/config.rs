@@ -125,6 +125,7 @@ impl AsMut<Option<Box<Config>>> for z_owned_config_t {
     }
 }
 impl z_owned_config_t {
+    // tags{}
     pub fn null() -> Self {
         None.into()
     }
@@ -199,11 +200,12 @@ pub unsafe extern "C" fn zc_config_insert_json(
 /// Frees `config`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_config_drop}
+/// tags{c.z_config_drop, api.config.drop}
 pub extern "C" fn z_config_drop(config: &mut z_owned_config_t) {
     std::mem::drop(config.as_mut().take())
 }
 /// Returns ``true`` if `config` is valid.
+/// tags{c.z_config_check, api.config.check}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {

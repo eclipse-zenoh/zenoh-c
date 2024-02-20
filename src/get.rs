@@ -48,16 +48,19 @@ type ReplyInner = Option<Reply>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+/// tags{c.z_owned_reply_t, api.reply}
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
 pub struct z_owned_reply_t([u64; 28]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
+// tags{}
 pub struct z_owned_reply_t([u64; 30]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
+// tags{}
 pub struct z_owned_reply_t([u64; 19]);
 
 impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
@@ -94,6 +97,7 @@ impl DerefMut for z_owned_reply_t {
 /// If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_reply_is_ok, api.reply.is_ok}
 pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
     reply.as_ref().map(|r| r.sample.is_ok()).unwrap_or(false)
 }
@@ -103,6 +107,7 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
 /// You should always make sure that :c:func:`z_reply_is_ok` returns ``true`` before calling this function.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_reply_ok, api.reply.get_sample}
 pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
     if let Some(sample) = reply.as_ref().and_then(|s| s.sample.as_ref().ok()) {
         if let Cow::Owned(_) = sample.payload.contiguous() {
@@ -120,6 +125,7 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
 ///   z_bytes_t payload: The payload of this zenoh value.
 ///   z_encoding_t encoding: The encoding of this zenoh value `payload`.
 #[repr(C)]
+/// tags{c.z_value_t, api.value}
 pub struct z_value_t {
     pub payload: z_bytes_t,
     pub encoding: z_encoding_t,
@@ -130,6 +136,7 @@ pub struct z_value_t {
 /// You should always make sure that :c:func:`z_reply_is_ok` returns ``false`` before calling this function.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_reply_err, api.reply.get_error}
 pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
     if let Some(inner) = reply.as_ref().and_then(|s| s.sample.as_ref().err()) {
         z_value_t {
@@ -153,6 +160,7 @@ pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
 ///     - you are now responsible for dropping your copy of the reply.
 #[no_mangle]
 #[allow(improper_ctypes_definitions)]
+/// tags{c.z_reply_null}
 pub extern "C" fn z_reply_null() -> z_owned_reply_t {
     None.into()
 }
@@ -166,14 +174,21 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
 ///     z_attachment_t attachment: The attachment to attach to the query.
 ///     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
 #[repr(C)]
+/// tags{c.z_get_options_t}
 pub struct z_get_options_t {
+    /// tags{c.z_get_options_t.target, api.get.target.set}
     pub target: z_query_target_t,
+    /// tags{c.z_get_options_t.consolidation, api.get.consolidation.set}
     pub consolidation: z_query_consolidation_t,
+    /// tags{c.z_get_options_t.value, api.get.value.set}
     pub value: z_value_t,
+    /// tags{c.z_get_options_t.attachment, api.get.attachment.set}
     pub attachment: z_attachment_t,
+    /// tags{c.z_get_options_t.timeout_ms, api.get.timeout.set}
     pub timeout_ms: u64,
 }
 #[no_mangle]
+/// tags{c.z_get_options_default}
 pub extern "C" fn z_get_options_default() -> z_get_options_t {
     z_get_options_t {
         target: QueryTarget::default().into(),
@@ -205,6 +220,7 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
 ///     options: additional options for the get.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_get, api.session.get}
 pub unsafe extern "C" fn z_get(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -257,12 +273,14 @@ pub unsafe extern "C" fn z_get(
 /// Frees `reply_data`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_reply_drop, api.reply.drop}
 pub unsafe extern "C" fn z_reply_drop(reply_data: &mut z_owned_reply_t) {
     std::mem::drop(reply_data.take());
 }
 /// Returns ``true`` if `reply_data` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_reply_check, api.reply.check}
 pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
     reply_data.is_some()
 }
@@ -275,9 +293,13 @@ pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
+/// tags{c.z_query_target_t. api.options.query_target}
 pub enum z_query_target_t {
+    /// tags{c.z_query_target_t.best_matching, api.options.query_target.best_matching}
     BEST_MATCHING,
+    /// tags{c.z_query_target_t.all, api.options.query_target.all}
     ALL,
+    /// tags{c.z_query_target_t.all_complete, api.options.query_target.all_complete}
     ALL_COMPLETE,
 }
 
@@ -336,6 +358,7 @@ impl From<&Value> for z_value_t {
 
 /// Create a default :c:type:`z_query_target_t`.
 #[no_mangle]
+/// tags{c.z_query_target_default}
 pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()
 }
@@ -354,11 +377,16 @@ pub extern "C" fn z_query_target_default() -> z_query_target_t {
 ///       It optimizes bandwidth.
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
+/// tags{c.z_consolidation_mode_t, api.options.consolidation_mode}
 pub enum z_consolidation_mode_t {
+    /// tags{c.z_consolidation_mode_t.auto, api.options.consolidation_mode.auto}
     AUTO = -1,
     #[default]
+    /// tags{c.z_consolidation_mode_t.none, api.options.consolidation_mode.none}
     NONE = 0,
+    /// tags{c.z_consolidation_mode_t.monotonic, api.options.consolidation_mode.monotonic}
     MONOTONIC = 1,
+    /// tags{c.z_consolidation_mode_t.latest, api.options.consolidation_mode.latest}
     LATEST = 2,
 }
 
@@ -398,7 +426,9 @@ impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
 /// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
 #[repr(C)]
 #[derive(Clone, Copy)]
+/// tags{c.z_query_consolidation_t, api.options.query_consolidation}
 pub struct z_query_consolidation_t {
+    /// tags{c.z_query_consolidation_t.mode, api.options.query_consolidation.mode}
     pub mode: z_consolidation_mode_t,
 }
 
@@ -424,6 +454,7 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
 
 /// Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
 #[no_mangle]
+/// tags{c.z_query_consolidation_default}
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
 }
@@ -437,24 +468,28 @@ pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
 /// Returns:
 ///   Returns the constructed :c:type:`z_query_consolidation_t`.
 #[no_mangle]
+/// tags{c.z_query_consolidation_auto, api.options.query_consolidation.auto}
 pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
     QueryConsolidation::AUTO.into()
 }
 
 /// Latest value consolidation.
 #[no_mangle]
+/// tags{c.z_query_consolidation_latest, api.options.query_consolidation.latest}
 pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Latest).into()
 }
 
 /// Monotonic consolidation.
 #[no_mangle]
+/// tags{c.z_query_consolidation_monotonic, api.options.query_consolidation.monotonic}
 pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Monotonic).into()
 }
 
 /// Disable consolidation.
 #[no_mangle]
+/// tags{c.z_query_consolidation_none, api.options.query_consolidation.none}
 pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::None).into()
 }

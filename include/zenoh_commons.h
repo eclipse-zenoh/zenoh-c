@@ -20,9 +20,16 @@
  *
  *     - **BLOCK**
  *     - **DROP**
+ * tags{c.z_congestion_control_t, api.options.congestion_control}
  */
 typedef enum z_congestion_control_t {
+  /**
+   * tags{c.z_congestion_control_t.block, api.options.congestion_control.block}
+   */
   Z_CONGESTION_CONTROL_BLOCK,
+  /**
+   * tags{c.z_congestion_control_t.drop, api.options.congestion_control.drop}
+   */
   Z_CONGESTION_CONTROL_DROP,
 } z_congestion_control_t;
 /**
@@ -38,11 +45,24 @@ typedef enum z_congestion_control_t {
  *       ts2 > ts1. It optimizes latency.
  *     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
  *       It optimizes bandwidth.
+ * tags{c.z_consolidation_mode_t, api.options.consolidation_mode}
  */
 typedef enum z_consolidation_mode_t {
+  /**
+   * tags{c.z_consolidation_mode_t.auto, api.options.consolidation_mode.auto}
+   */
   Z_CONSOLIDATION_MODE_AUTO = -1,
+  /**
+   * tags{c.z_consolidation_mode_t.none, api.options.consolidation_mode.none}
+   */
   Z_CONSOLIDATION_MODE_NONE = 0,
+  /**
+   * tags{c.z_consolidation_mode_t.monotonic, api.options.consolidation_mode.monotonic}
+   */
   Z_CONSOLIDATION_MODE_MONOTONIC = 1,
+  /**
+   * tags{c.z_consolidation_mode_t.latest, api.options.consolidation_mode.latest}
+   */
   Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
 /**
@@ -104,14 +124,36 @@ typedef enum z_encoding_prefix_t {
  *     - **DATA**
  *     - **DATA_LOW**
  *     - **BACKGROUND**
+ * tags{c.z_priority_t, api.options.priority}
  */
 typedef enum z_priority_t {
+  /**
+   * tags{c.z_priority_t.real_time, api.options.priority.real_time}
+   */
   Z_PRIORITY_REAL_TIME = 1,
+  /**
+   * tags{c.z_priority_t.interactive_high, api.options.priority.interactive_high}
+   */
   Z_PRIORITY_INTERACTIVE_HIGH = 2,
+  /**
+   * tags{c.z_priority_t.interactive_low, api.options.priority.interactive_low}
+   */
   Z_PRIORITY_INTERACTIVE_LOW = 3,
+  /**
+   * tags{c.z_priority_t.data_high, api.options.priority.data_high}
+   */
   Z_PRIORITY_DATA_HIGH = 4,
+  /**
+   * tags{c.z_priority_t.data, api.options.priority.data}
+   */
   Z_PRIORITY_DATA = 5,
+  /**
+   * tags{c.z_priority_t.data_low, api.options.priority.data_low}
+   */
   Z_PRIORITY_DATA_LOW = 6,
+  /**
+   * tags{c.z_priority_t.background, api.options.priority.background}
+   */
   Z_PRIORITY_BACKGROUND = 7,
 } z_priority_t;
 /**
@@ -120,10 +162,20 @@ typedef enum z_priority_t {
  *     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
  *     - **ALL_COMPLETE**: All complete queryables.
  *     - **ALL**: All matching queryables.
+ * tags{c.z_query_target_t. api.options.query_target}
  */
 typedef enum z_query_target_t {
+  /**
+   * tags{c.z_query_target_t.best_matching, api.options.query_target.best_matching}
+   */
   Z_QUERY_TARGET_BEST_MATCHING,
+  /**
+   * tags{c.z_query_target_t.all, api.options.query_target.all}
+   */
   Z_QUERY_TARGET_ALL,
+  /**
+   * tags{c.z_query_target_t.all_complete, api.options.query_target.all_complete}
+   */
   Z_QUERY_TARGET_ALL_COMPLETE,
 } z_query_target_t;
 /**
@@ -307,6 +359,7 @@ typedef struct z_owned_closure_hello_t {
  *
  * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
  * to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
+ * tags{c.z_owned_query_t, api.query}
  */
 typedef struct z_owned_query_t {
   void *_0;
@@ -361,6 +414,7 @@ typedef struct z_owned_closure_query_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ * tags{c.z_owned_reply_t, api.reply}
  */
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_owned_reply_t {
@@ -602,6 +656,7 @@ typedef struct ALIGN(4) z_owned_keyexpr_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.z_owned_publisher_t, api.publisher}
  */
 #if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_publisher_t {
@@ -619,9 +674,16 @@ typedef struct ALIGN(4) z_owned_publisher_t {
  * Members:
  *     z_congestion_control_t congestion_control: The congestion control to apply when routing messages from this publisher.
  *     z_priority_t priority: The priority of messages from this publisher.
+ * tags{c.z_publisher_options_t}
  */
 typedef struct z_publisher_options_t {
+  /**
+   * tags{c.z_publisher_options_t.congestion_control, api.publisher.congestion_control.set}
+   */
   enum z_congestion_control_t congestion_control;
+  /**
+   * tags{c.z_publisher_options_t.priority, api.publisher.priority.set}
+   */
   enum z_priority_t priority;
 } z_publisher_options_t;
 /**
@@ -630,8 +692,12 @@ typedef struct z_publisher_options_t {
  *
  * Members:
  *   z_reliability_t reliability: The subscription reliability.
+ * tags{c.z_pull_subscriber_options_t}
  */
 typedef struct z_pull_subscriber_options_t {
+  /**
+   * tags{c.z_pull_subscriber_options_t.reliability, api.pull_subscriber.reliability.set}
+   */
   enum z_reliability_t reliability;
 } z_pull_subscriber_options_t;
 /**
@@ -654,9 +720,16 @@ typedef struct z_subscriber_options_t {
 } z_subscriber_options_t;
 /**
  * Options passed to the :c:func:`z_delete` function.
+ * tags{c.z_delete_options_t}
  */
 typedef struct z_delete_options_t {
+  /**
+   * tags{c.z_delete_options_t.congestion_control, api.delete.congestion_control.set}
+   */
   enum z_congestion_control_t congestion_control;
+  /**
+   * tags{c.z_delete_options_t.priority, api.delete.priority.set}
+   */
   enum z_priority_t priority;
 } z_delete_options_t;
 /**
@@ -686,8 +759,12 @@ typedef struct z_owned_encoding_t {
 } z_owned_encoding_t;
 /**
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+ * tags{c.z_query_consolidation_t, api.options.query_consolidation}
  */
 typedef struct z_query_consolidation_t {
+  /**
+   * tags{c.z_query_consolidation_t.mode, api.options.query_consolidation.mode}
+   */
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 /**
@@ -696,6 +773,7 @@ typedef struct z_query_consolidation_t {
  * Members:
  *   z_bytes_t payload: The payload of this zenoh value.
  *   z_encoding_t encoding: The encoding of this zenoh value `payload`.
+ * tags{c.z_value_t, api.value}
  */
 typedef struct z_value_t {
   struct z_bytes_t payload;
@@ -710,12 +788,28 @@ typedef struct z_value_t {
  *     z_value_t value: An optional value to attach to the query.
  *     z_attachment_t attachment: The attachment to attach to the query.
  *     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
+ * tags{c.z_get_options_t}
  */
 typedef struct z_get_options_t {
+  /**
+   * tags{c.z_get_options_t.target, api.get.target.set}
+   */
   enum z_query_target_t target;
+  /**
+   * tags{c.z_get_options_t.consolidation, api.get.consolidation.set}
+   */
   struct z_query_consolidation_t consolidation;
+  /**
+   * tags{c.z_get_options_t.value, api.get.value.set}
+   */
   struct z_value_t value;
+  /**
+   * tags{c.z_get_options_t.attachment, api.get.attachment.set}
+   */
   struct z_attachment_t attachment;
+  /**
+   * tags{c.z_get_options_t.timeout_ms, api.get.timeout.set}
+   */
   uint64_t timeout_ms;
 } z_get_options_t;
 /**
@@ -754,6 +848,7 @@ typedef struct z_owned_str_t {
 } z_owned_str_t;
 /**
  * A loaned zenoh publisher.
+ * tags{c.z_publisher_t, api.publisher}
  */
 typedef struct z_publisher_t {
   const struct z_owned_publisher_t *_0;
@@ -761,6 +856,7 @@ typedef struct z_publisher_t {
 /**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
  * whenever issued via :c:func:`z_publisher_delete`.
+ * tags{c.z_publisher_delete_options_t}
  */
 typedef struct z_publisher_delete_options_t {
   uint8_t __dummy;
@@ -771,11 +867,21 @@ typedef struct z_publisher_delete_options_t {
  * Members:
  *     z_encoding_t encoding: The encoding of the payload.
  *     z_attachment_t attachment: The attachment to attach to the publication.
+ * tags{c.z_publisher_put_options_t}
  */
 typedef struct z_publisher_put_options_t {
+  /**
+   * tags{c.z_publisher_put_options_t.encoding, api.put.encoding.set}
+   */
   struct z_encoding_t encoding;
+  /**
+   * tags{c.z_publisher_put_options_t.attachment, api.put.attachment.set}
+   */
   struct z_attachment_t attachment;
 } z_publisher_put_options_t;
+/**
+ * tags{c.z_pull_subscriber_t, api.pull_subscriber}
+ */
 typedef struct z_pull_subscriber_t {
   const struct z_owned_pull_subscriber_t *_0;
 } z_pull_subscriber_t;
@@ -787,11 +893,24 @@ typedef struct z_pull_subscriber_t {
  *     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
  *     z_priority_t priority: The priority of this message.
  *     z_attachment_t attachment: The attachment to this message.
+ * tags{c.z_put_options_t}
  */
 typedef struct z_put_options_t {
+  /**
+   * tags{c.z_put_options_t.encoding, api.put.encoding.set}
+   */
   struct z_encoding_t encoding;
+  /**
+   * tags{c.z_put_options_t.congestion_control, api.put.congestion_control.set}
+   */
   enum z_congestion_control_t congestion_control;
+  /**
+   * tags{c.z_put_options_t.priority, api.put.priority.set}
+   */
   enum z_priority_t priority;
+  /**
+   * tags{c.z_put_options_t.attachment, api.put.attachment.set}
+   */
   struct z_attachment_t attachment;
 } z_put_options_t;
 /**
@@ -927,6 +1046,7 @@ typedef struct zc_owned_shm_manager_t {
  *
  * Members:
  *   bool matching: true if there exist Subscribers matching the Publisher's key expression.
+ * tags{c.zcu_matching_status_t, api.matching_status}
  */
 typedef struct zcu_matching_status_t {
   bool matching;
@@ -963,6 +1083,7 @@ typedef struct zcu_owned_closure_matching_status_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.z_owned_matching_listener_t, api.matching_listener}
  */
 typedef struct ALIGN(8) zcu_owned_matching_listener_t {
   uint64_t _0[4];
@@ -978,6 +1099,7 @@ typedef struct ALIGN(8) zcu_owned_matching_listener_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.ze_owned_publication_cache_t}
  */
 typedef struct ze_owned_publication_cache_t {
   size_t _0[1];
@@ -991,6 +1113,7 @@ typedef struct ze_owned_publication_cache_t {
  *                       publication cache
  *     size_t history: The the history size
  *     size_t resources_limit: The limit number of cached resources
+ * tags{c.ze_publication_cache_options_t}
  */
 typedef struct ze_publication_cache_options_t {
   struct z_keyexpr_t queryable_prefix;
@@ -1278,6 +1401,7 @@ ZENOHC_API void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
 ZENOHC_API struct z_owned_closure_zid_t z_closure_zid_null(void);
 /**
  * Returns ``true`` if `config` is valid.
+ * tags{c.z_config_check, api.config.check}
  */
 ZENOHC_API bool z_config_check(const struct z_owned_config_t *config);
 /**
@@ -1293,7 +1417,7 @@ ZENOHC_API struct z_owned_config_t z_config_client(const char *const *peers, siz
 ZENOHC_API struct z_owned_config_t z_config_default(void);
 /**
  * Frees `config`, invalidating it for double-drop safety.
- * tags{c.z_config_drop}
+ * tags{c.z_config_drop, api.config.drop}
  */
 ZENOHC_API void z_config_drop(struct z_owned_config_t *config);
 /**
@@ -1369,6 +1493,7 @@ struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session,
  *
  *       z_publisher_options_t opts = z_publisher_options_default();
  *       z_owned_publisher_t sub = z_declare_publisher(z_loan(s), z_keyexpr(expr), &opts);
+ * tags{c.z_declare_publisher, api.session.declare_publisher}
  */
 ZENOHC_API
 struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
@@ -1406,6 +1531,7 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
  *
  *       z_subscriber_options_t opts = z_subscriber_options_default();
  *       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ * tags{c.z_declare_pull_subscriber, api.session.declare_pull_subscriber}
  */
 ZENOHC_API
 struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t session,
@@ -1476,6 +1602,7 @@ struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
  *     options: The put options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
+ * tags{c.z_delete, api.session.delete}
  */
 ZENOHC_API
 int8_t z_delete(struct z_session_t session,
@@ -1483,6 +1610,7 @@ int8_t z_delete(struct z_session_t session,
                 const struct z_delete_options_t *opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
+ * tags{c.z_delete_options_default}
  */
 ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
 /**
@@ -1529,6 +1657,7 @@ ZENOHC_API struct z_owned_encoding_t z_encoding_null(void);
  *               but **will** be dropped once your callback exits to help you avoid memory leaks.
  *               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
  *     options: additional options for the get.
+ * tags{c.z_get, api.session.get}
  */
 ZENOHC_API
 int8_t z_get(struct z_session_t session,
@@ -1536,6 +1665,9 @@ int8_t z_get(struct z_session_t session,
              const char *parameters,
              struct z_owned_closure_reply_t *callback,
              const struct z_get_options_t *options);
+/**
+ * tags{c.z_get_options_default}
+ */
 ZENOHC_API struct z_get_options_t z_get_options_default(void);
 /**
  * Returns ``true`` if `hello` is valid.
@@ -1731,6 +1863,7 @@ ZENOHC_API
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
  * Returns ``true`` if `pub` is valid.
+ * tags{c.z_publisher_check}
  */
 ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *pbl);
 /**
@@ -1738,6 +1871,7 @@ ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *pbl);
  *
  * Returns:
  *     ``0`` in case of success, ``1`` in case of failure.
+ * tags{c.z_publisher_delete, api.publisher.delete}
  */
 ZENOHC_API
 int8_t z_publisher_delete(struct z_publisher_t publisher,
@@ -1747,22 +1881,27 @@ int8_t z_publisher_delete(struct z_publisher_t publisher,
  *
  * Returns:
  *   Returns the constructed :c:type:`z_publisher_delete_options_t`.
+ * tags{c.z_publisher_delete_options_default}
  */
 ZENOHC_API struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
 /**
  * Returns the key expression of the publisher
+ * tags{c.z_publisher_keyexpr, api.publisher.keyexpr.get}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
 /**
  * Returns a :c:type:`z_publisher_t` loaned from `p`.
+ * tags{c.z_publisher_loan}
  */
 ZENOHC_API struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
+ * tags{c.z_publisher_null}
  */
 ZENOHC_API struct z_owned_publisher_t z_publisher_null(void);
 /**
  * Constructs the default value for :c:type:`z_publisher_options_t`.
+ * tags{c.z_publisher_options_default}
  */
 ZENOHC_API struct z_publisher_options_t z_publisher_options_default(void);
 /**
@@ -1777,6 +1916,7 @@ ZENOHC_API struct z_publisher_options_t z_publisher_options_default(void);
  *     options: The publisher put options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
+ * tags{c.z_publisher_put, api.publisher.put}
  */
 ZENOHC_API
 int8_t z_publisher_put(struct z_publisher_t publisher,
@@ -1785,23 +1925,28 @@ int8_t z_publisher_put(struct z_publisher_t publisher,
                        const struct z_publisher_put_options_t *options);
 /**
  * Constructs the default value for :c:type:`z_publisher_put_options_t`.
+ * tags{c.z_publisher_put_options_default}
  */
 ZENOHC_API struct z_publisher_put_options_t z_publisher_put_options_default(void);
 /**
  * Returns ``true`` if `sub` is valid.
+ * tags{c.z_pull_subscriber_check}
  */
 ZENOHC_API bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
 /**
  * Returns ``true`` if `sub` is valid.
+ * tags{c.z_pull_subscriber_loan}
  */
 ZENOHC_API
 struct z_pull_subscriber_t z_pull_subscriber_loan(const struct z_owned_pull_subscriber_t *sub);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
+ * tags{c.z_pull_subscriber_null}
  */
 ZENOHC_API struct z_owned_pull_subscriber_t z_pull_subscriber_null(void);
 /**
  * Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
+ * tags{c.z_pull_subscriber_options_default}
  */
 ZENOHC_API struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
 /**
@@ -1817,6 +1962,7 @@ ZENOHC_API struct z_pull_subscriber_options_t z_pull_subscriber_options_default(
  *     options: The put options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
+ * tags{c.z_put, api.put}
  */
 ZENOHC_API
 int8_t z_put(struct z_session_t session,
@@ -1826,6 +1972,7 @@ int8_t z_put(struct z_session_t session,
              const struct z_put_options_t *opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
+ * tags{c.z_put_options_default, api.put.options.default}
  */
 ZENOHC_API struct z_put_options_t z_put_options_default(void);
 /**
@@ -1857,6 +2004,7 @@ ZENOHC_API struct z_owned_query_channel_t z_query_channel_null(void);
  * Returns `false` if `this` is in a gravestone state, `true` otherwise.
  *
  * This function may not be called with the null pointer, but can be called with the gravestone value.
+ * tags{c.z_query_check}
  */
 ZENOHC_API
 bool z_query_check(const struct z_owned_query_t *this_);
@@ -1864,6 +2012,7 @@ bool z_query_check(const struct z_owned_query_t *this_);
  * Clones the query, allowing to keep it in an "open" state past the callback's return.
  *
  * This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
+ * tags{c.z_query_clone}
  */
 ZENOHC_API
 struct z_owned_query_t z_query_clone(const struct z_query_t *query);
@@ -1876,28 +2025,34 @@ struct z_owned_query_t z_query_clone(const struct z_query_t *query);
  *
  * Returns:
  *   Returns the constructed :c:type:`z_query_consolidation_t`.
+ * tags{c.z_query_consolidation_auto, api.options.query_consolidation.auto}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_auto(void);
 /**
  * Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
+ * tags{c.z_query_consolidation_default}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
  * Latest value consolidation.
+ * tags{c.z_query_consolidation_latest, api.options.query_consolidation.latest}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_latest(void);
 /**
  * Monotonic consolidation.
+ * tags{c.z_query_consolidation_monotonic, api.options.query_consolidation.monotonic}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_monotonic(void);
 /**
  * Disable consolidation.
+ * tags{c.z_query_consolidation_none, api.options.query_consolidation.none}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
 /**
  * Destroys the query, setting `this` to its gravestone value to prevent double-frees.
  *
  * This function may not be called with the null pointer, but can be called with the gravestone value.
+ * tags{c.z_query_drop}
  */
 ZENOHC_API
 void z_query_drop(struct z_owned_query_t *this_);
@@ -1909,11 +2064,13 @@ ZENOHC_API struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
  * Aliases the query.
  *
  * This function may not be called with the null pointer, but can be called with the gravestone value.
+ * tags{c.z_query_loan}
  */
 ZENOHC_API
 struct z_query_t z_query_loan(const struct z_owned_query_t *this_);
 /**
  * The gravestone value of `z_owned_query_t`.
+ * tags{c.z_query_null}
  */
 ZENOHC_API struct z_owned_query_t z_query_null(void);
 /**
@@ -1948,6 +2105,7 @@ int8_t z_query_reply(const struct z_query_t *query,
 ZENOHC_API struct z_query_reply_options_t z_query_reply_options_default(void);
 /**
  * Create a default :c:type:`z_query_target_t`.
+ * tags{c.z_query_target_default}
  */
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
 /**
@@ -1963,6 +2121,7 @@ struct z_value_t z_query_value(const struct z_query_t *query);
 ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *qable);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
+ * tags{c.z_queryable_null}
  */
 ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
 /**
@@ -1990,16 +2149,19 @@ ZENOHC_API void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
 ZENOHC_API struct z_owned_reply_channel_t z_reply_channel_null(void);
 /**
  * Returns ``true`` if `reply_data` is valid.
+ * tags{c.z_reply_check, api.reply.check}
  */
 ZENOHC_API bool z_reply_check(const struct z_owned_reply_t *reply_data);
 /**
  * Frees `reply_data`, invalidating it for double-drop safety.
+ * tags{c.z_reply_drop, api.reply.drop}
  */
 ZENOHC_API void z_reply_drop(struct z_owned_reply_t *reply_data);
 /**
  * Yields the contents of the reply by asserting it indicates a failure.
  *
  * You should always make sure that :c:func:`z_reply_is_ok` returns ``false`` before calling this function.
+ * tags{c.z_reply_err, api.reply.get_error}
  */
 ZENOHC_API
 struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
@@ -2007,6 +2169,7 @@ struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
  * Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
  *
  * If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
+ * tags{c.z_reply_is_ok, api.reply.is_ok}
  */
 ZENOHC_API
 bool z_reply_is_ok(const struct z_owned_reply_t *reply);
@@ -2018,12 +2181,14 @@ bool z_reply_is_ok(const struct z_owned_reply_t *reply);
  *     - copy the value of the callback's argument's pointee,
  *     - overwrite the pointee with this function's return value,
  *     - you are now responsible for dropping your copy of the reply.
+ * tags{c.z_reply_null}
  */
 ZENOHC_API struct z_owned_reply_t z_reply_null(void);
 /**
  * Yields the contents of the reply by asserting it indicates a success.
  *
  * You should always make sure that :c:func:`z_reply_is_ok` returns ``true`` before calling this function.
+ * tags{c.z_reply_ok, api.reply.get_sample}
  */
 ZENOHC_API
 struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
@@ -2119,6 +2284,7 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
  *
  * Parameters:
  *     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
+ * tags{c.z_subscriber_pull, api.pull_subscriber.pull}
  */
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 /**
@@ -2133,11 +2299,13 @@ ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 ZENOHC_API int8_t z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *kexpr);
 /**
  * Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
+ * tags{c.z_undeclare_publisher, api.publisher.undeclare}
  */
 ZENOHC_API
 int8_t z_undeclare_publisher(struct z_owned_publisher_t *publisher);
 /**
  * Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
+ * tags{c.z_undeclare_pull_subscriber, api.pull_subscriber.undeclare}
  */
 ZENOHC_API
 int8_t z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
@@ -2374,6 +2542,7 @@ ZENOHC_API struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payl
  *     options: The publisher put options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
+ * tags{c.z_publisher_put_owned, api.publisher.put}
  */
 ZENOHC_API
 int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
@@ -2395,6 +2564,7 @@ int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
  *     options: The put options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
+ * tags{c.zc_put_owned, api.put}
  */
 ZENOHC_API
 int8_t zc_put_owned(struct z_session_t session,
@@ -2556,6 +2726,7 @@ ZENOHC_API struct zcu_owned_closure_matching_status_t zcu_closure_matching_statu
 ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
 /**
  * Register callback for notifying subscribers matching.
+ * tags{c.zcu_publisher_matching_listener_callback, api.matching_listener.callback}
  */
 ZENOHC_API
 struct zcu_owned_matching_listener_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
@@ -2589,6 +2760,7 @@ ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
  *
  *       ze_publication_cache_options_t opts = ze_publication_cache_options_default();
  *       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), &opts);
+ * tags{c.ze_declare_publication_cache}
  */
 ZENOHC_API
 struct ze_owned_publication_cache_t ze_declare_publication_cache(struct z_session_t session,
@@ -2634,14 +2806,17 @@ struct ze_owned_querying_subscriber_t ze_declare_querying_subscriber(struct z_se
                                                                      const struct ze_querying_subscriber_options_t *options);
 /**
  * Returns ``true`` if `pub_cache` is valid.
+ * tags{c.ze_publication_cache_check}
  */
 ZENOHC_API bool ze_publication_cache_check(const struct ze_owned_publication_cache_t *pub_cache);
 /**
  * Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
+ * tags{c.ze_publication_cache_null}
  */
 ZENOHC_API struct ze_owned_publication_cache_t ze_publication_cache_null(void);
 /**
  * Constructs the default value for :c:type:`ze_publication_cache_options_t`.
+ * tags{c.ze_publication_cache_options_default}
  */
 ZENOHC_API struct ze_publication_cache_options_t ze_publication_cache_options_default(void);
 /**
@@ -2671,6 +2846,7 @@ ZENOHC_API struct ze_owned_querying_subscriber_t ze_querying_subscriber_null(voi
 ZENOHC_API struct ze_querying_subscriber_options_t ze_querying_subscriber_options_default(void);
 /**
  * Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
+ * tags{c.ze_undeclare_publication_cache}
  */
 ZENOHC_API
 int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_cache);

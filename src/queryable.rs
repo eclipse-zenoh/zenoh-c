@@ -42,12 +42,14 @@ type Queryable = Option<CallbackQueryable<'static, ()>>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// tags{c.z_owned_queryable_t, api.queryable}
 #[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_owned_queryable_t([u64; 4]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(4))]
+// tags{}
 pub struct z_owned_queryable_t([u32; 4]);
 
 impl_guarded_transmute!(Queryable, z_owned_queryable_t);
@@ -77,6 +79,7 @@ impl z_owned_queryable_t {
 /// Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_queryable_null}
 pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
     z_owned_queryable_t::null()
 }
@@ -85,6 +88,7 @@ pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
 ///
 /// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
 /// `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
+/// tags{c.z_query_t, api.query}
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_t(*mut c_void);
@@ -113,6 +117,7 @@ impl Deref for z_query_t {
 ///
 /// Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
 /// to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
+/// tags{c.z_owned_query_t, api.query}
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_owned_query_t(*mut c_void);
@@ -145,6 +150,7 @@ impl Drop for z_owned_query_t {
 }
 /// The gravestone value of `z_owned_query_t`.
 #[no_mangle]
+/// tags{c.z_query_null}
 pub extern "C" fn z_query_null() -> z_owned_query_t {
     unsafe { core::mem::transmute(None::<Query>) }
 }
@@ -152,6 +158,7 @@ pub extern "C" fn z_query_null() -> z_owned_query_t {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
+/// tags{c.z_query_check}
 pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
     this.is_some()
 }
@@ -159,6 +166,7 @@ pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
+/// tags{c.z_query_loan}
 pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
     this.as_ref().into()
 }
@@ -166,6 +174,7 @@ pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
+/// tags{c.z_query_drop}
 pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
     let _: Option<Query> = this.take();
 }
@@ -173,6 +182,7 @@ pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
+/// tags{c.z_query_clone}
 pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
     query.and_then(|q| q.cloned()).into()
 }

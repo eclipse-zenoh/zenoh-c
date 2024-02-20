@@ -39,13 +39,21 @@ use crate::attachment::{
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
+/// tags{c.z_priority_t, api.options.priority}
 pub enum z_priority_t {
+    /// tags{c.z_priority_t.real_time, api.options.priority.real_time}
     REAL_TIME = 1,
+    /// tags{c.z_priority_t.interactive_high, api.options.priority.interactive_high}
     INTERACTIVE_HIGH = 2,
+    /// tags{c.z_priority_t.interactive_low, api.options.priority.interactive_low}
     INTERACTIVE_LOW = 3,
+    /// tags{c.z_priority_t.data_high, api.options.priority.data_high}
     DATA_HIGH = 4,
+    /// tags{c.z_priority_t.data, api.options.priority.data}
     DATA = 5,
+    /// tags{c.z_priority_t.data_low, api.options.priority.data_low}
     DATA_LOW = 6,
+    /// tags{c.z_priority_t.background, api.options.priority.background}
     BACKGROUND = 7,
 }
 
@@ -84,8 +92,11 @@ impl From<z_priority_t> for Priority {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
+/// tags{c.z_congestion_control_t, api.options.congestion_control}
 pub enum z_congestion_control_t {
+    /// tags{c.z_congestion_control_t.block, api.options.congestion_control.block}
     BLOCK,
+    /// tags{c.z_congestion_control_t.drop, api.options.congestion_control.drop}
     DROP,
 }
 
@@ -116,16 +127,22 @@ impl From<z_congestion_control_t> for CongestionControl {
 ///     z_attachment_t attachment: The attachment to this message.
 #[repr(C)]
 #[allow(non_camel_case_types)]
+/// tags{c.z_put_options_t}
 pub struct z_put_options_t {
+    /// tags{c.z_put_options_t.encoding, api.put.encoding.set}
     pub encoding: z_encoding_t,
+    /// tags{c.z_put_options_t.congestion_control, api.put.congestion_control.set}
     pub congestion_control: z_congestion_control_t,
+    /// tags{c.z_put_options_t.priority, api.put.priority.set}
     pub priority: z_priority_t,
+    /// tags{c.z_put_options_t.attachment, api.put.attachment.set}
     pub attachment: z_attachment_t,
 }
 
 /// Constructs the default value for :c:type:`z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_put_options_default, api.put.options.default}
 pub extern "C" fn z_put_options_default() -> z_put_options_t {
     z_put_options_t {
         encoding: z_encoding_default(),
@@ -149,6 +166,7 @@ pub extern "C" fn z_put_options_default() -> z_put_options_t {
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_put, api.put}
 pub unsafe extern "C" fn z_put(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -208,6 +226,7 @@ pub unsafe extern "C" fn z_put(
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.zc_put_owned, api.put}
 pub extern "C" fn zc_put_owned(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -246,14 +265,18 @@ pub extern "C" fn zc_put_owned(
 /// Options passed to the :c:func:`z_delete` function.
 #[repr(C)]
 #[allow(non_camel_case_types)]
+/// tags{c.z_delete_options_t}
 pub struct z_delete_options_t {
+    /// tags{c.z_delete_options_t.congestion_control, api.delete.congestion_control.set}
     pub congestion_control: z_congestion_control_t,
+    /// tags{c.z_delete_options_t.priority, api.delete.priority.set}
     pub priority: z_priority_t,
 }
 
 /// Constructs the default value for :c:type:`z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_delete_options_default}
 pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
     z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
@@ -271,6 +294,7 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_delete, api.session.delete}
 pub extern "C" fn z_delete(
     session: z_session_t,
     keyexpr: z_keyexpr_t,

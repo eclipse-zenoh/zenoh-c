@@ -59,6 +59,7 @@ use zenoh_util::core::zresult::ErrNo;
 pub struct z_owned_keyexpr_t([u64; 4]);
 #[cfg(target_arch = "arm")]
 #[repr(C, align(4))]
+// tags{}
 pub struct z_owned_keyexpr_t([u32; 5]);
 
 impl_guarded_transmute!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
@@ -85,6 +86,7 @@ impl DerefMut for z_owned_keyexpr_t {
     }
 }
 impl z_owned_keyexpr_t {
+    // tags{}
     pub fn null() -> Self {
         None::<KeyExpr>.into()
     }
@@ -161,6 +163,7 @@ pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
 pub struct z_keyexpr_t([u64; 4]);
 #[cfg(target_arch = "arm")]
 #[repr(C, align(4))]
+// tags{}
 pub struct z_keyexpr_t([u32; 5]);
 
 impl_guarded_transmute!(Option<KeyExpr<'_>>, z_keyexpr_t);
@@ -195,11 +198,13 @@ impl DerefMut for z_keyexpr_t {
     }
 }
 impl z_keyexpr_t {
+    // tags{}
     pub fn null() -> Self {
         None.into()
     }
 }
 #[derive(Debug, Clone, Copy)]
+// tags{}
 pub struct UninitializedKeyExprError;
 impl std::fmt::Display for UninitializedKeyExprError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

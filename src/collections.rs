@@ -92,7 +92,7 @@ pub unsafe extern "C" fn z_bytes_from_str(str: *const c_char) -> z_bytes_t {
 /// `str == NULL` will cause this to return `z_bytes_null()`
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-// tag{}
+// tags{}
 pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
     z_bytes_from_str(str)
 }

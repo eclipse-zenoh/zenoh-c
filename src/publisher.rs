@@ -43,13 +43,17 @@ use crate::{
 ///     z_congestion_control_t congestion_control: The congestion control to apply when routing messages from this publisher.
 ///     z_priority_t priority: The priority of messages from this publisher.
 #[repr(C)]
+/// tags{c.z_publisher_options_t}
 pub struct z_publisher_options_t {
+    /// tags{c.z_publisher_options_t.congestion_control, api.publisher.congestion_control.set}
     pub congestion_control: z_congestion_control_t,
+    /// tags{c.z_publisher_options_t.priority, api.publisher.priority.set}
     pub priority: z_priority_t,
 }
 
 /// Constructs the default value for :c:type:`z_publisher_options_t`.
 #[no_mangle]
+/// tags{c.z_publisher_options_default}
 pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
     z_publisher_options_t {
         congestion_control: CongestionControl::default().into(),
@@ -67,12 +71,14 @@ pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// tags{c.z_owned_publisher_t, api.publisher}
 #[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_owned_publisher_t([u64; 7]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(4))]
+// tags{}
 pub struct z_owned_publisher_t([u32; 8]);
 
 impl_guarded_transmute!(Option<Publisher<'_>>, z_owned_publisher_t);
@@ -94,6 +100,7 @@ impl DerefMut for z_owned_publisher_t {
     }
 }
 impl z_owned_publisher_t {
+    // tags{}
     pub fn null() -> Self {
         None.into()
     }
@@ -134,6 +141,7 @@ impl z_owned_publisher_t {
 ///       z_owned_publisher_t sub = z_declare_publisher(z_loan(s), z_keyexpr(expr), &opts);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_declare_publisher, api.session.declare_publisher}
 pub extern "C" fn z_declare_publisher(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -172,6 +180,7 @@ pub extern "C" fn z_declare_publisher(
 /// Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_publisher_null}
 pub extern "C" fn z_publisher_null() -> z_owned_publisher_t {
     z_owned_publisher_t::null()
 }
@@ -179,11 +188,13 @@ pub extern "C" fn z_publisher_null() -> z_owned_publisher_t {
 /// Returns ``true`` if `pub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_publisher_check}
 pub extern "C" fn z_publisher_check(pbl: &z_owned_publisher_t) -> bool {
     pbl.as_ref().is_some()
 }
 
 /// A loaned zenoh publisher.
+/// tags{c.z_publisher_t, api.publisher}
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -209,6 +220,7 @@ impl<'a> AsRef<Option<Publisher<'a>>> for z_publisher_t {
 
 /// Returns a :c:type:`z_publisher_t` loaned from `p`.
 #[no_mangle]
+/// tags{c.z_publisher_loan}
 pub extern "C" fn z_publisher_loan(p: &z_owned_publisher_t) -> z_publisher_t {
     z_publisher_t(p)
 }
@@ -219,14 +231,18 @@ pub extern "C" fn z_publisher_loan(p: &z_owned_publisher_t) -> z_publisher_t {
 ///     z_encoding_t encoding: The encoding of the payload.
 ///     z_attachment_t attachment: The attachment to attach to the publication.
 #[repr(C)]
+/// tags{c.z_publisher_put_options_t}
 pub struct z_publisher_put_options_t {
+    /// tags{c.z_publisher_put_options_t.encoding, api.put.encoding.set}
     pub encoding: z_encoding_t,
+    /// tags{c.z_publisher_put_options_t.attachment, api.put.attachment.set}
     pub attachment: z_attachment_t,
 }
 
 /// Constructs the default value for :c:type:`z_publisher_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_publisher_put_options_default}
 pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t {
     z_publisher_put_options_t {
         encoding: z_encoding_default(),
@@ -247,6 +263,7 @@ pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_publisher_put, api.publisher.put}
 pub unsafe extern "C" fn z_publisher_put(
     publisher: z_publisher_t,
     payload: *const u8,
@@ -299,6 +316,7 @@ pub unsafe extern "C" fn z_publisher_put(
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_publisher_put_owned, api.publisher.put}
 pub unsafe extern "C" fn zc_publisher_put_owned(
     publisher: z_publisher_t,
     payload: Option<&mut zc_owned_payload_t>,
@@ -328,6 +346,7 @@ pub unsafe extern "C" fn zc_publisher_put_owned(
 /// Represents the set of options that can be applied to the delete operation by a previously declared publisher,
 /// whenever issued via :c:func:`z_publisher_delete`.
 #[repr(C)]
+/// tags{c.z_publisher_delete_options_t}
 pub struct z_publisher_delete_options_t {
     __dummy: u8,
 }
@@ -338,6 +357,7 @@ pub struct z_publisher_delete_options_t {
 ///   Returns the constructed :c:type:`z_publisher_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_publisher_delete_options_default}
 pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_options_t {
     z_publisher_delete_options_t { __dummy: 0 }
 }
@@ -347,6 +367,7 @@ pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_opt
 ///     ``0`` in case of success, ``1`` in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_publisher_delete, api.publisher.delete}
 pub extern "C" fn z_publisher_delete(
     publisher: z_publisher_t,
     _options: *const z_publisher_delete_options_t,
@@ -366,6 +387,7 @@ pub extern "C" fn z_publisher_delete(
 /// Returns the key expression of the publisher
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_publisher_keyexpr, api.publisher.keyexpr.get}
 pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyexpr_t {
     if let Some(p) = publisher.as_ref() {
         p.key_expr().clone().into()
@@ -385,6 +407,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyex
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C, align(8))]
+/// tags{c.z_owned_matching_listener_t, api.matching_listener}
 pub struct zcu_owned_matching_listener_t([u64; 4]);
 
 impl_guarded_transmute!(
@@ -399,6 +422,7 @@ impl From<Option<MatchingListener<'_, ()>>> for zcu_owned_matching_listener_t {
 }
 
 impl zcu_owned_matching_listener_t {
+    // tags{}
     pub fn null() -> Self {
         None.into()
     }
@@ -410,6 +434,7 @@ impl zcu_owned_matching_listener_t {
 ///   bool matching: true if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
+/// tags{c.zcu_matching_status_t, api.matching_status}
 pub struct zcu_matching_status_t {
     pub matching: bool,
 }
@@ -417,6 +442,7 @@ pub struct zcu_matching_status_t {
 /// Register callback for notifying subscribers matching.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.zcu_publisher_matching_listener_callback, api.matching_listener.callback}
 pub extern "C" fn zcu_publisher_matching_listener_callback(
     publisher: z_publisher_t,
     callback: &mut zcu_owned_closure_matching_status_t,
@@ -446,6 +472,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 /// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_undeclare_publisher, api.publisher.undeclare}
 pub extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> i8 {
     if let Some(p) = publisher.take() {
         if let Err(e) = p.undeclare().res_sync() {

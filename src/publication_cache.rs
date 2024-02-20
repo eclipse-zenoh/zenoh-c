@@ -32,6 +32,7 @@ use crate::{
 ///     size_t history: The the history size
 ///     size_t resources_limit: The limit number of cached resources
 #[repr(C)]
+/// tags{c.ze_publication_cache_options_t}
 pub struct ze_publication_cache_options_t {
     pub queryable_prefix: z_keyexpr_t,
     pub queryable_origin: zcu_locality_t,
@@ -41,6 +42,7 @@ pub struct ze_publication_cache_options_t {
 
 /// Constructs the default value for :c:type:`ze_publication_cache_options_t`.
 #[no_mangle]
+/// tags{c.ze_publication_cache_options_default}
 pub extern "C" fn ze_publication_cache_options_default() -> ze_publication_cache_options_t {
     ze_publication_cache_options_t {
         queryable_prefix: z_keyexpr_t::null(),
@@ -63,6 +65,7 @@ type PublicationCache = Option<Box<zenoh_ext::PublicationCache<'static>>>;
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+/// tags{c.ze_owned_publication_cache_t}
 pub struct ze_owned_publication_cache_t([usize; 1]);
 
 impl_guarded_transmute!(PublicationCache, ze_owned_publication_cache_t);
@@ -86,9 +89,11 @@ impl AsMut<PublicationCache> for ze_owned_publication_cache_t {
 }
 
 impl ze_owned_publication_cache_t {
+    // tags{}
     pub fn new(pub_cache: zenoh_ext::PublicationCache<'static>) -> Self {
         Some(Box::new(pub_cache)).into()
     }
+    // tags{}
     pub fn null() -> Self {
         None.into()
     }
@@ -120,6 +125,7 @@ impl ze_owned_publication_cache_t {
 ///       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), &opts);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.ze_declare_publication_cache}
 pub extern "C" fn ze_declare_publication_cache(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -166,6 +172,7 @@ pub extern "C" fn ze_declare_publication_cache(
 /// Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.ze_publication_cache_null}
 pub extern "C" fn ze_publication_cache_null() -> ze_owned_publication_cache_t {
     ze_owned_publication_cache_t::null()
 }
@@ -173,6 +180,7 @@ pub extern "C" fn ze_publication_cache_null() -> ze_owned_publication_cache_t {
 /// Returns ``true`` if `pub_cache` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.ze_publication_cache_check}
 pub extern "C" fn ze_publication_cache_check(pub_cache: &ze_owned_publication_cache_t) -> bool {
     pub_cache.as_ref().is_some()
 }
@@ -180,6 +188,7 @@ pub extern "C" fn ze_publication_cache_check(pub_cache: &ze_owned_publication_ca
 /// Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.ze_undeclare_publication_cache}
 pub extern "C" fn ze_undeclare_publication_cache(
     pub_cache: &mut ze_owned_publication_cache_t,
 ) -> i8 {

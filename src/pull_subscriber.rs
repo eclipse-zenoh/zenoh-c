@@ -42,18 +42,21 @@ type PullSubscriber = Option<Box<zenoh::subscriber::PullSubscriber<'static, ()>>
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// tags{c.z_owned_pull_subscriber_t, api.pull_subscriber}
 #[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_owned_pull_subscriber_t([u64; 1]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(4))]
+/// tags{}
 pub struct z_owned_pull_subscriber_t([u32; 1]);
 
 impl_guarded_transmute!(PullSubscriber, z_owned_pull_subscriber_t);
 
 #[repr(C)]
 #[allow(non_camel_case_types)]
+/// tags{c.z_pull_subscriber_t, api.pull_subscriber}
 pub struct z_pull_subscriber_t<'a>(&'a z_owned_pull_subscriber_t);
 
 impl From<PullSubscriber> for z_owned_pull_subscriber_t {
@@ -81,9 +84,11 @@ impl AsMut<PullSubscriber> for z_owned_pull_subscriber_t {
 }
 
 impl z_owned_pull_subscriber_t {
+    // tags{}
     pub fn new(sub: zenoh::subscriber::PullSubscriber<'static, ()>) -> Self {
         Some(Box::new(sub)).into()
     }
+    // tags{}
     pub fn null() -> Self {
         None.into()
     }
@@ -92,6 +97,7 @@ impl z_owned_pull_subscriber_t {
 /// Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_pull_subscriber_null}
 pub extern "C" fn z_pull_subscriber_null() -> z_owned_pull_subscriber_t {
     z_owned_pull_subscriber_t::null()
 }
@@ -103,12 +109,15 @@ pub extern "C" fn z_pull_subscriber_null() -> z_owned_pull_subscriber_t {
 ///   z_reliability_t reliability: The subscription reliability.
 #[repr(C)]
 #[allow(non_camel_case_types)]
+/// tags{c.z_pull_subscriber_options_t}
 pub struct z_pull_subscriber_options_t {
+    /// tags{c.z_pull_subscriber_options_t.reliability, api.pull_subscriber.reliability.set}
     reliability: z_reliability_t,
 }
 
 /// Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
 #[no_mangle]
+/// tags{c.z_pull_subscriber_options_default}
 pub extern "C" fn z_pull_subscriber_options_default() -> z_pull_subscriber_options_t {
     let info = SubInfo::default();
     z_pull_subscriber_options_t {
@@ -147,6 +156,7 @@ pub extern "C" fn z_pull_subscriber_options_default() -> z_pull_subscriber_optio
 ///
 ///       z_subscriber_options_t opts = z_subscriber_options_default();
 ///       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+/// tags{c.z_declare_pull_subscriber, api.session.declare_pull_subscriber}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_pull_subscriber(
@@ -193,6 +203,7 @@ pub extern "C" fn z_declare_pull_subscriber(
 /// Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_undeclare_pull_subscriber, api.pull_subscriber.undeclare}
 pub extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
@@ -206,6 +217,7 @@ pub extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_pull_subscriber_check}
 pub extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bool {
     sub.as_ref().is_some()
 }
@@ -213,6 +225,7 @@ pub extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bo
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_pull_subscriber_loan}
 pub extern "C" fn z_pull_subscriber_loan(sub: &z_owned_pull_subscriber_t) -> z_pull_subscriber_t {
     z_pull_subscriber_t(sub)
 }
@@ -224,6 +237,7 @@ pub extern "C" fn z_pull_subscriber_loan(sub: &z_owned_pull_subscriber_t) -> z_p
 ///     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_subscriber_pull, api.pull_subscriber.pull}
 pub extern "C" fn z_subscriber_pull(sub: z_pull_subscriber_t) -> i8 {
     match sub.0.as_ref() {
         Some(tx) => {
