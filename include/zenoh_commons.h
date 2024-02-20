@@ -401,15 +401,9 @@ typedef struct z_timestamp_t {
 /**
  * QoS settings of zenoh message.
  *
- * Members:
- *   z_priority_t priority: Priority of the message.
- *   z_congestion_control_t congestion_control: Congestion control of the message.
- *   bool express: If true, the message is not batched during transmission, in order to reduce latency.
  */
 typedef struct z_qos_t {
-  enum z_priority_t priority;
-  enum z_congestion_control_t congestion_control;
-  bool express;
+  uint8_t _0;
 } z_qos_t;
 /**
  * A data sample.
@@ -1725,6 +1719,22 @@ int8_t z_put(struct z_session_t session,
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
 ZENOHC_API struct z_put_options_t z_put_options_default(void);
+/**
+ * Returns default qos settings.
+ */
+ZENOHC_API struct z_qos_t z_qos_default(void);
+/**
+ * Returns message congestion control.
+ */
+ZENOHC_API enum z_congestion_control_t z_qos_get_congestion_control(struct z_qos_t qos);
+/**
+ * Returns message express flag. If set to true, the message is not batched to reduce the latency.
+ */
+ZENOHC_API bool z_qos_get_express(struct z_qos_t qos);
+/**
+ * Returns message priority.
+ */
+ZENOHC_API enum z_priority_t z_qos_get_priority(struct z_qos_t qos);
 /**
  * Returns the attachment to the query by aliasing.
  *

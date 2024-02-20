@@ -71,8 +71,8 @@ void data_handler(const z_sample_t *sample, void *arg) {
         exit(-1);
     }
 
-    if (sample->qos.congestion_control != Z_CONGESTION_CONTROL_BLOCK
-        || sample->qos.priority != Z_PRIORITY_DATA
+    if (z_qos_get_congestion_control(sample->qos) != Z_CONGESTION_CONTROL_BLOCK
+        || z_qos_get_priority(sample->qos) != Z_PRIORITY_DATA
     ) {
         perror("Unexpected QoS values");
         exit(-1);

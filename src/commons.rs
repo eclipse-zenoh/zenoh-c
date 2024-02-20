@@ -17,6 +17,7 @@ use crate::keyexpr::*;
 use crate::z_congestion_control_t;
 use crate::z_id_t;
 use crate::z_priority_t;
+use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
 use zenoh::buffers::ZBuf;
@@ -192,26 +193,44 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
 }
 
 /// QoS settings of zenoh message.
-/// 
-/// Members:
-///   z_priority_t priority: Priority of the message.
-///   z_congestion_control_t congestion_control: Congestion control of the message.
-///   bool express: If true, the message is not batched during transmission, in order to reduce latency.
+///
 #[repr(C)]
-pub struct z_qos_t {
-    pub priority: z_priority_t,
-    pub congestion_control: z_congestion_control_t,
-    pub express: bool,
-}
+pub struct z_qos_t(u8);
+
+impl_guarded_transmute!(QoS, z_qos_t);
+impl_guarded_transmute!(z_qos_t, QoS);
 
 impl From<QoS> for z_qos_t {
     fn from(qos: QoS) -> Self {
-        z_qos_t {
-            priority: qos.priority.into(),
-            congestion_control: qos.congestion_control.into(),
-            express: qos.express,
-        }
+        qos.transmute()
     }
+}
+
+impl From<z_qos_t> for QoS {
+    fn from(qos: z_qos_t) -> QoS {
+        qos.transmute()
+    }
+}
+
+/// Returns message priority.
+#[no_mangle]
+pub extern "C" fn z_qos_get_priority(qos: z_qos_t) -> z_priority_t {
+    qos.transmute().priority().into()
+}
+/// Returns message congestion control.
+#[no_mangle]
+pub extern "C" fn z_qos_get_congestion_control(qos: z_qos_t) -> z_congestion_control_t {
+    qos.transmute().congestion_control().into()
+}
+/// Returns message express flag. If set to true, the message is not batched to reduce the latency.
+#[no_mangle]
+pub extern "C" fn z_qos_get_express(qos: z_qos_t) -> bool {
+    qos.transmute().express()
+}
+/// Returns default qos settings.
+#[no_mangle]
+pub extern "C" fn z_qos_default() -> z_qos_t {
+    QoS::default().transmute()
 }
 
 /// A data sample.
