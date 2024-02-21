@@ -94,6 +94,53 @@ pub extern "C" fn zc_init_logger() {
     let _ = env_logger::try_init();
 }
 
+/// Options passed to the :c:func:`zc_init_logger_opts` function.
+///
+/// Members:
+///     bool pid: Whether to print the ProcessID in log messages or not.
+///     bool tid: Whether to print the ThreadID in log messages or not.
+#[repr(C)]
+#[allow(non_camel_case_types)]
+pub struct zc_init_logger_options_t {
+    pub pid: bool,
+    pub tid: bool,
+}
+
+/// Constructs the default value for :c:type:`zc_init_logger_options_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zc_init_logger_options_default() -> zc_init_logger_options_t {
+    zc_init_logger_options_t {
+        pid: false,
+        tid: false,
+    }
+}
+
+/// Initialises the zenoh runtime logger with options.
+#[no_mangle]
+pub extern "C" fn zc_init_logger_opts(opts: Option<&zc_init_logger_options_t>) {
+    use std::io::Write;
+    let pid = opts.is_some_and(|opts| opts.pid);
+    let tid = opts.is_some_and(|opts| opts.tid);
+
+    let _ = env_logger::Builder::from_env(env_logger::Env::default())
+        .format(move |buf, record| {
+            write!(buf, "[{} {:<5}", buf.timestamp(), record.level(),)?;
+            if pid {
+                write!(buf, " {:>6}", std::process::id(),)?;
+            }
+            if tid {
+                write!(
+                    buf,
+                    " {:>6}",
+                    &format!("{:?}", std::thread::current().id())[8..],
+                )?;
+            }
+            writeln!(buf, " {}] {}", record.target(), record.args(),)
+        })
+        .try_init();
+}
+
 // Test should be runned with `cargo test --no-default-features`
 #[test]
 #[cfg(not(feature = "default"))]

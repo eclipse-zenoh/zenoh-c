@@ -789,6 +789,17 @@ typedef struct z_subscriber_t {
   const struct z_owned_subscriber_t *_0;
 } z_subscriber_t;
 /**
+ * Options passed to the :c:func:`zc_init_logger_opts` function.
+ *
+ * Members:
+ *     bool pid: Whether to print the ProcessID in log messages or not.
+ *     bool tid: Whether to print the ThreadID in log messages or not.
+ */
+typedef struct zc_init_logger_options_t {
+  bool pid;
+  bool tid;
+} zc_init_logger_options_t;
+/**
  * The options for `zc_liveliness_declare_token`
  */
 typedef struct zc_owned_liveliness_declaration_options_t {
@@ -2074,6 +2085,14 @@ struct z_owned_str_t zc_config_to_string(struct z_config_t config);
  * this will be performed automatically by `z_open` and `z_scout`.
  */
 ZENOHC_API void zc_init_logger(void);
+/**
+ * Constructs the default value for :c:type:`zc_init_logger_options_t`.
+ */
+ZENOHC_API struct zc_init_logger_options_t zc_init_logger_options_default(void);
+/**
+ * Initialises the zenoh runtime logger with options.
+ */
+ZENOHC_API void zc_init_logger_opts(const struct zc_init_logger_options_t *opts);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
