@@ -127,14 +127,31 @@ pub extern "C" fn zc_init_logger_opts(opts: Option<&zc_init_logger_options_t>) {
         .format(move |buf, record| {
             write!(buf, "[{} {:<5}", buf.timestamp(), record.level(),)?;
             if pid {
-                write!(buf, " {:>6}", std::process::id(),)?;
+                write!(buf, " {:>7}", std::process::id(),)?;
             }
             if tid {
-                write!(
-                    buf,
-                    " {:>6}",
-                    &format!("{:?}", std::thread::current().id())[8..],
-                )?;
+                #[cfg(any(
+                    target_os = "linux",
+                    target_os = "l4re",
+                    target_os = "android",
+                    target_os = "emscripten"
+                ))]
+                {
+                    write!(buf, " {:>7}", unsafe { libc::syscall(libc::SYS_gettid) },)?;
+                }
+                #[cfg(not(any(
+                    target_os = "linux",
+                    target_os = "l4re",
+                    target_os = "android",
+                    target_os = "emscripten"
+                )))]
+                {
+                    write!(
+                        buf,
+                        " {:>7}",
+                        &format!("{:?}", std::thread::current().id())[8..],
+                    )?;
+                }
             }
             writeln!(buf, " {}] {}", record.target(), record.args(),)
         })
