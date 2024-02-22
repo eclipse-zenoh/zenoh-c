@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    printf("Press CTRL-C to quit...\n");
     for (int idx = 0; true; ++idx) {
         zc_owned_shmbuf_t shmbuf = zc_shm_alloc(&manager, 256);
         if (!z_check(shmbuf)) {

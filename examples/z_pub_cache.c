@@ -58,6 +58,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    printf("Press CTRL-C to quit...\n");
     char buf[256];
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);

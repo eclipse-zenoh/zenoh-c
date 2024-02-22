@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    printf("Press CTRL-C to quit...\n");
     while (1) {
         z_publisher_put(z_loan(pub), (const uint8_t *)value, len, NULL);
     }

@@ -55,15 +55,11 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Press <enter> to pull data...\n");
-    char c = 0;
-    while (c != 'q') {
-        c = getchar();
-        if (c == -1) {
-            z_sleep_s(1);
-        } else {
-            z_subscriber_pull(z_loan(sub));
-        }
+    printf("Press CTRL-C to quit...\n");
+    for (int idx=0; 1; ++idx) {
+        z_sleep_s(1);
+        printf("[%4d] Pulling...\n", idx);
+        z_subscriber_pull(z_loan(sub));
     }
 
     z_undeclare_pull_subscriber(z_move(sub));

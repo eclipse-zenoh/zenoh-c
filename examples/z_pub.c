@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
         listener =  zcu_publisher_matching_listener_callback(z_loan(pub), z_move(callback));
     }
 
+    printf("Press CTRL-C to quit...\n");
     char buf[256];
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);

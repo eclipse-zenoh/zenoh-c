@@ -60,6 +60,7 @@ int main(int argc, char **argv) {
     // add some value
     z_bytes_map_insert_by_alias(&map, z_bytes_from_str("source"), z_bytes_from_str("C"));
 
+    printf("Press CTRL-C to quit...\n");
     char buf[256];
     char buf_ind[16];
     for (int idx = 0; 1; ++idx) {

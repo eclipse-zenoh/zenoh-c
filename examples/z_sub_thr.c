@@ -87,9 +87,9 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    char c = 0;
-    while (c != 'q') {
-        c = fgetc(stdin);
+    printf("Press CTRL-C to quit...\n");
+    while (1) {
+        z_sleep_s(1);
     }
 
     z_undeclare_subscriber(z_move(sub));

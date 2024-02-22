@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("^C to quit...\n");
+    printf("Press CTRL-C to quit...\n");
     z_owned_query_t oquery = z_query_null();
     for (z_call(channel.recv, &oquery); z_check(oquery); z_call(channel.recv, &oquery)) {
         z_query_t query = z_loan(oquery);

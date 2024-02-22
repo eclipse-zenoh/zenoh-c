@@ -52,19 +52,16 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Enter 'd' to undeclare liveliness token, 'q' to quit...\n");
-    char c = 0;
-    while (c != 'q') {
-        c = getchar();
-        if (c == -1) {
-            z_sleep_s(1);
-        } else if (c == 'd') {
-            printf("Undeclaring liveliness token...\n");
-            z_drop(z_move(token));
-        }
+    printf("Press CTRL-C to undeclare liveliness token and quit...\n");
+    while (1) {
+        z_sleep_s(1);
     }
 
+    // LivelinessTokens are automatically closed when dropped
+    // Use the code below to manually undeclare it if needed
+    printf("Undeclaring liveliness token...\n");
     z_drop(z_move(token));
+    
     z_close(z_move(s));
     return 0;
 }
