@@ -957,6 +957,20 @@ typedef struct ze_querying_subscriber_options_t {
 typedef struct ze_querying_subscriber_t {
   const struct ze_owned_querying_subscriber_t *_0;
 } ze_querying_subscriber_t;
+/**
+ * CondVar
+ *
+ */
+typedef struct zp_condvar_t {
+  size_t _0;
+} zp_condvar_t;
+/**
+ * Mutex
+ *
+ */
+typedef struct zp_mutex_t {
+  size_t _0;
+} zp_mutex_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
@@ -2526,3 +2540,12 @@ int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_c
  */
 ZENOHC_API
 int8_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *sub);
+ZENOHC_API int8_t zp_condvar_free(struct zp_condvar_t *c);
+ZENOHC_API int8_t zp_condvar_init(struct zp_condvar_t *c);
+ZENOHC_API int8_t zp_condvar_signal(struct zp_condvar_t *c);
+ZENOHC_API int8_t zp_condvar_wait(struct zp_condvar_t *c, struct zp_mutex_t *m);
+ZENOHC_API int8_t zp_mutex_free(struct zp_mutex_t *m);
+ZENOHC_API int8_t zp_mutex_init(struct zp_mutex_t *m);
+ZENOHC_API int8_t zp_mutex_lock(struct zp_mutex_t *m);
+ZENOHC_API int8_t zp_mutex_try_lock(struct zp_mutex_t *m);
+ZENOHC_API int8_t zp_mutex_unlock(struct zp_mutex_t *m);
