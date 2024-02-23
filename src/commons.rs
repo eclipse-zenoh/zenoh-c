@@ -14,7 +14,10 @@
 
 use crate::collections::*;
 use crate::keyexpr::*;
+use crate::z_congestion_control_t;
 use crate::z_id_t;
+use crate::z_priority_t;
+use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
 use zenoh::buffers::ZBuf;
@@ -22,6 +25,7 @@ use zenoh::prelude::SampleKind;
 use zenoh::prelude::SplitBuffer;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
+use zenoh::sample::QoS;
 use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
 
@@ -188,6 +192,47 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
     }
 }
 
+/// QoS settings of zenoh message.
+///
+#[repr(C)]
+pub struct z_qos_t(u8);
+
+impl_guarded_transmute!(QoS, z_qos_t);
+impl_guarded_transmute!(z_qos_t, QoS);
+
+impl From<QoS> for z_qos_t {
+    fn from(qos: QoS) -> Self {
+        qos.transmute()
+    }
+}
+
+impl From<z_qos_t> for QoS {
+    fn from(qos: z_qos_t) -> QoS {
+        qos.transmute()
+    }
+}
+
+/// Returns message priority.
+#[no_mangle]
+pub extern "C" fn z_qos_get_priority(qos: z_qos_t) -> z_priority_t {
+    qos.transmute().priority().into()
+}
+/// Returns message congestion control.
+#[no_mangle]
+pub extern "C" fn z_qos_get_congestion_control(qos: z_qos_t) -> z_congestion_control_t {
+    qos.transmute().congestion_control().into()
+}
+/// Returns message express flag. If set to true, the message is not batched to reduce the latency.
+#[no_mangle]
+pub extern "C" fn z_qos_get_express(qos: z_qos_t) -> bool {
+    qos.transmute().express()
+}
+/// Returns default qos settings.
+#[no_mangle]
+pub extern "C" fn z_qos_default() -> z_qos_t {
+    QoS::default().transmute()
+}
+
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -207,6 +252,7 @@ pub struct z_sample_t<'a> {
     pub _zc_buf: &'a c_void,
     pub kind: z_sample_kind_t,
     pub timestamp: z_timestamp_t,
+    pub qos: z_qos_t,
     pub attachment: z_attachment_t,
 }
 
@@ -222,6 +268,7 @@ impl<'a> z_sample_t<'a> {
             _zc_buf: unsafe { std::mem::transmute(owner) },
             kind: sample.kind.into(),
             timestamp: sample.timestamp.as_ref().into(),
+            qos: sample.qos.into(),
             attachment: match &sample.attachment {
                 Some(attachment) => z_attachment_t {
                     data: attachment as *const _ as *mut c_void,
