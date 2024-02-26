@@ -273,14 +273,14 @@ pub unsafe extern "C" fn z_get(
 /// Frees `reply_data`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_reply_drop, api.reply.drop}
+/// tags{c.z_reply_drop}
 pub unsafe extern "C" fn z_reply_drop(reply_data: &mut z_owned_reply_t) {
     std::mem::drop(reply_data.take());
 }
 /// Returns ``true`` if `reply_data` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_reply_check, api.reply.check}
+/// tags{c.z_reply_check}
 pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
     reply_data.is_some()
 }

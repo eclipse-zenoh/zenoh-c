@@ -71,6 +71,7 @@ impl AsMut<Queryable> for z_owned_queryable_t {
 }
 
 impl z_owned_queryable_t {
+    // tags{}
     pub fn null() -> Self {
         None.into()
     }
@@ -193,12 +194,15 @@ pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
 ///     bool complete: The completeness of the Queryable.
 #[allow(non_camel_case_types)]
 #[repr(C)]
+/// tags{c.z_queryable_options_t}
 pub struct z_queryable_options_t {
+    /// tags{c.z_queryable_options_t, api.queryable.complete.set}
     pub complete: bool,
 }
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_queryable_options_default}
 pub extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
     z_queryable_options_t { complete: false }
 }
@@ -211,14 +215,18 @@ pub extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
 ///   z_attachment_t attachment: The attachment to this reply.
 #[allow(non_camel_case_types)]
 #[repr(C)]
+/// tags{c.z_query_reply_options_t}
 pub struct z_query_reply_options_t {
+    /// tags{c.z_query_reply_options_t.encoding, api.reply.encoding.set}
     pub encoding: z_encoding_t,
+    /// tags{c.z_query_reply_options_t.attachment, api.reply.attachment.set}
     pub attachment: z_attachment_t,
 }
 
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_query_reply_options_default}
 pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
     z_query_reply_options_t {
         encoding: z_encoding_default(),
@@ -238,6 +246,7 @@ pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
 ///    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_declare_queryable, api.session.declare_queryable}
 pub extern "C" fn z_declare_queryable(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -272,6 +281,7 @@ pub extern "C" fn z_declare_queryable(
 ///     qable: The :c:type:`z_owned_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_undeclare_queryable, api.queryable.undeclare}
 pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
     if let Some(qable) = qable.as_mut().take() {
         if let Err(e) = qable.undeclare().res_sync() {
@@ -285,6 +295,7 @@ pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
 /// Returns ``true`` if `qable` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_queryable_check}
 pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
     qable.as_ref().is_some()
 }
@@ -304,6 +315,7 @@ pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
 ///     options: The options of this reply.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_query_reply, api.query.reply}
 pub unsafe extern "C" fn z_query_reply(
     query: &z_query_t,
     key: z_keyexpr_t,
@@ -345,6 +357,7 @@ pub unsafe extern "C" fn z_query_reply(
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_query_keyexpr, api.query.key_expr.get}
 pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
     let Some(query) = query.as_ref() else {
         return z_keyexpr_t::null();
@@ -355,6 +368,7 @@ pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
 /// Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_query_parameters, api.query.parameters.get}
 pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
     let Some(query) = query.as_ref() else {
         return z_bytes_t::empty();
@@ -371,6 +385,7 @@ pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
 /// **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_query_value, api.query.value.get}
 pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
     match query.as_ref().and_then(|q| q.value()) {
         Some(value) => {
@@ -389,6 +404,7 @@ pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
 /// `z_check(return_value) == false` if there was no attachment to the query.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_query_attachment, api.query.attachment.get}
 pub unsafe extern "C" fn z_query_attachment(query: &z_query_t) -> z_attachment_t {
     match query.as_ref().and_then(|q| q.attachment()) {
         Some(attachment) => z_attachment_t {

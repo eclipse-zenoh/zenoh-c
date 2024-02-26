@@ -28,7 +28,7 @@ typedef enum z_congestion_control_t {
    */
   Z_CONGESTION_CONTROL_BLOCK,
   /**
-   * tags{c.z_congestion_control_t.drop, api.options.congestion_control.drop}
+   * tags{c.z_congestion_control_t.drop}
    */
   Z_CONGESTION_CONTROL_DROP,
 } z_congestion_control_t;
@@ -305,6 +305,7 @@ typedef struct z_id_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.z_owned_str_array_t}
  */
 typedef struct z_owned_str_array_t {
   char **val;
@@ -323,6 +324,7 @@ typedef struct z_owned_str_array_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ * tags{c.z_owned_hello_t, api.hello}
  */
 typedef struct z_owned_hello_t {
   unsigned int _whatami;
@@ -705,8 +707,12 @@ typedef struct z_pull_subscriber_options_t {
  *
  * Members:
  *     bool complete: The completeness of the Queryable.
+ * tags{c.z_queryable_options_t}
  */
 typedef struct z_queryable_options_t {
+  /**
+   * tags{c.z_queryable_options_t, api.queryable.complete.set}
+   */
   bool complete;
 } z_queryable_options_t;
 /**
@@ -814,6 +820,7 @@ typedef struct z_get_options_t {
 } z_get_options_t;
 /**
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
+ * tags{c.z_str_array_t}
  */
 typedef struct z_str_array_t {
   size_t len;
@@ -945,9 +952,16 @@ typedef struct z_owned_query_channel_t {
  * Members:
  *   z_encoding_t encoding: The encoding of the payload.
  *   z_attachment_t attachment: The attachment to this reply.
+ * tags{c.z_query_reply_options_t}
  */
 typedef struct z_query_reply_options_t {
+  /**
+   * tags{c.z_query_reply_options_t.encoding, api.reply.encoding.set}
+   */
   struct z_encoding_t encoding;
+  /**
+   * tags{c.z_query_reply_options_t.attachment, api.reply.attachment.set}
+   */
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
 /**
@@ -1132,6 +1146,7 @@ typedef struct ze_publication_cache_options_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.ze_owned_querying_subscriber_t, api.querying_subscriber}
  */
 typedef struct ze_owned_querying_subscriber_t {
   size_t _0[1];
@@ -1149,16 +1164,41 @@ typedef struct ze_owned_querying_subscriber_t {
  *   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
  *   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
  *   uint64_t query_timeout_ms: The timeout to be used for queries.
+ * tags{c.ze_querying_subscriber_options_t}
  */
 typedef struct ze_querying_subscriber_options_t {
+  /**
+   * tags{c.ze_querying_subscriber_options_t.reliability, api.querying_subscriber.reliability.set}
+   */
   enum z_reliability_t reliability;
+  /**
+   * tags{c.ze_querying_subscriber_options_t.allowed_origin, api.querying_subscriber.allowed_origin.set}
+   */
   enum zcu_locality_t allowed_origin;
+  /**
+   * tags{c.ze_querying_subscriber_options_t.query_selector, api.querying_subscriber.query_selector.set}
+   */
   struct z_keyexpr_t query_selector;
+  /**
+   * tags{c.ze_querying_subscriber_options_t.query_target, api.querying_subscriber.query_target.set}
+   */
   enum z_query_target_t query_target;
+  /**
+   * tags{c.ze_querying_subscriber_options_t.query_consolidation, api.querying_subscriber.query_consolidation.set}
+   */
   struct z_query_consolidation_t query_consolidation;
+  /**
+   * tags{c.ze_querying_subscriber_options_t.query_accept_replies, api.querying_subscriber.query_accept_replies.set}
+   */
   enum zcu_reply_keyexpr_t query_accept_replies;
+  /**
+   * tags{c.ze_querying_subscriber_options_t.query_timeout_ms, api.querying_subscriber.query_timeout.set}
+   */
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
+/**
+ * tags{c.ze_querying_subscriber_t, api.querying_subscriber}
+ */
 typedef struct ze_querying_subscriber_t {
   const struct ze_owned_querying_subscriber_t *_0;
 } ze_querying_subscriber_t;
@@ -1401,7 +1441,7 @@ ZENOHC_API void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
 ZENOHC_API struct z_owned_closure_zid_t z_closure_zid_null(void);
 /**
  * Returns ``true`` if `config` is valid.
- * tags{c.z_config_check, api.config.check}
+ * tags{c.z_config_check}
  */
 ZENOHC_API bool z_config_check(const struct z_owned_config_t *config);
 /**
@@ -1417,7 +1457,7 @@ ZENOHC_API struct z_owned_config_t z_config_client(const char *const *peers, siz
 ZENOHC_API struct z_owned_config_t z_config_default(void);
 /**
  * Frees `config`, invalidating it for double-drop safety.
- * tags{c.z_config_drop, api.config.drop}
+ * tags{c.z_config_drop}
  */
 ZENOHC_API void z_config_drop(struct z_owned_config_t *config);
 /**
@@ -1549,6 +1589,7 @@ struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t se
  *
  * Returns:
  *    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
+ * tags{c.z_declare_queryable, api.session.declare_queryable}
  */
 ZENOHC_API
 struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
@@ -1620,7 +1661,7 @@ ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
 ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
 /**
  * Returns ``true`` if `encoding` is valid.
- * tags{c.z_encoding_check, api.encoding.check}
+ * tags{c.z_encoding_check}
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
@@ -1630,7 +1671,7 @@ ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 ZENOHC_API struct z_encoding_t z_encoding_default(void);
 /**
  * Frees `encoding`, invalidating it for double-drop safety.
- * tags{c.z_encoding_drop, api.encoding.drop}
+ * tags{c.z_encoding_drop}
  */
 ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
@@ -1759,7 +1800,7 @@ ZENOHC_API
 int8_t z_keyexpr_canonize_null_terminated(char *start);
 /**
  * Returns ``true`` if `keyexpr` is valid.
- * tags{c.z_keyexpr_check, api.keyexpr.check}
+ * tags{c.z_keyexpr_check}
  */
 ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
 /**
@@ -1811,7 +1852,7 @@ int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
 ZENOHC_API int8_t z_keyexpr_is_canon(const char *start, size_t len);
 /**
  * Returns ``true`` if `keyexpr` is initialized.
- * tags{c.z_keyexpr_is_initialized, api.keyexpr.check}
+ * tags{c.z_keyexpr_is_initialized}
  */
 ZENOHC_API bool z_keyexpr_is_initialized(const struct z_keyexpr_t *keyexpr);
 /**
@@ -1972,13 +2013,14 @@ int8_t z_put(struct z_session_t session,
              const struct z_put_options_t *opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
- * tags{c.z_put_options_default, api.put.options.default}
+ * tags{c.z_put_options_default}
  */
 ZENOHC_API struct z_put_options_t z_put_options_default(void);
 /**
  * Returns the attachment to the query by aliasing.
  *
  * `z_check(return_value) == false` if there was no attachment to the query.
+ * tags{c.z_query_attachment, api.query.attachment.get}
  */
 ZENOHC_API struct z_attachment_t z_query_attachment(const struct z_query_t *query);
 /**
@@ -2058,6 +2100,7 @@ ZENOHC_API
 void z_query_drop(struct z_owned_query_t *this_);
 /**
  * Get a query's key by aliasing it.
+ * tags{c.z_query_keyexpr, api.query.key_expr.get}
  */
 ZENOHC_API struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
 /**
@@ -2075,6 +2118,7 @@ struct z_query_t z_query_loan(const struct z_owned_query_t *this_);
 ZENOHC_API struct z_owned_query_t z_query_null(void);
 /**
  * Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
+ * tags{c.z_query_parameters, api.query.parameters.get}
  */
 ZENOHC_API
 struct z_bytes_t z_query_parameters(const struct z_query_t *query);
@@ -2092,6 +2136,7 @@ struct z_bytes_t z_query_parameters(const struct z_query_t *query);
  *     payload: The value of this reply.
  *     len: The length of the value of this reply.
  *     options: The options of this reply.
+ * tags{c.z_query_reply, api.query.reply}
  */
 ZENOHC_API
 int8_t z_query_reply(const struct z_query_t *query,
@@ -2101,6 +2146,7 @@ int8_t z_query_reply(const struct z_query_t *query,
                      const struct z_query_reply_options_t *options);
 /**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ * tags{c.z_query_reply_options_default}
  */
 ZENOHC_API struct z_query_reply_options_t z_query_reply_options_default(void);
 /**
@@ -2112,11 +2158,13 @@ ZENOHC_API enum z_query_target_t z_query_target_default(void);
  * Get a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
  *
  * **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
+ * tags{c.z_query_value, api.query.value.get}
  */
 ZENOHC_API
 struct z_value_t z_query_value(const struct z_query_t *query);
 /**
  * Returns ``true`` if `qable` is valid.
+ * tags{c.z_queryable_check}
  */
 ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *qable);
 /**
@@ -2126,6 +2174,7 @@ ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *qable);
 ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
 /**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ * tags{c.z_queryable_options_default}
  */
 ZENOHC_API struct z_queryable_options_t z_queryable_options_default(void);
 /**
@@ -2149,12 +2198,12 @@ ZENOHC_API void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
 ZENOHC_API struct z_owned_reply_channel_t z_reply_channel_null(void);
 /**
  * Returns ``true`` if `reply_data` is valid.
- * tags{c.z_reply_check, api.reply.check}
+ * tags{c.z_reply_check}
  */
 ZENOHC_API bool z_reply_check(const struct z_owned_reply_t *reply_data);
 /**
  * Frees `reply_data`, invalidating it for double-drop safety.
- * tags{c.z_reply_drop, api.reply.drop}
+ * tags{c.z_reply_drop}
  */
 ZENOHC_API void z_reply_drop(struct z_owned_reply_t *reply_data);
 /**
@@ -2232,14 +2281,17 @@ struct z_session_t z_session_loan(const struct z_owned_session_t *s);
 ZENOHC_API struct z_owned_session_t z_session_null(void);
 /**
  * Returns ``true`` if `strs` is valid.
+ * tags{c.z_str_array_check}
  */
 ZENOHC_API bool z_str_array_check(const struct z_owned_str_array_t *strs);
 /**
  * Frees `strs` and invalidates it for double-drop safety.
+ * tags{c.z_str_array_drop}
  */
 ZENOHC_API void z_str_array_drop(struct z_owned_str_array_t *strs);
 /**
  * Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
+ * tags{c.z_str_array_loan}
  */
 ZENOHC_API struct z_str_array_t z_str_array_loan(const struct z_owned_str_array_t *strs);
 /**
@@ -2289,7 +2341,7 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
- * tags{c.z_timestamp_check, api.timestamp.check}
+ * tags{c.z_timestamp_check}
  */
 ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 /**
@@ -2314,6 +2366,7 @@ int8_t z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
  *
  * Parameters:
  *     qable: The :c:type:`z_owned_queryable_t` to undeclare.
+ * tags{c.z_undeclare_queryable, api.queryable.undeclare}
  */
 ZENOHC_API int8_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
 /**
@@ -2493,7 +2546,7 @@ ZENOHC_API
 struct zc_owned_liveliness_declare_subscriber_options_t zc_liveliness_subscriber_options_null(void);
 /**
  * Returns `true` unless the token is at its gravestone value.
- * tags{c.zc_liveliness_token_check, api.liveliness_token.check}
+ * tags{c.zc_liveliness_token_check}
  */
 ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token_t *token);
 /**
@@ -2508,12 +2561,12 @@ ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
  * Returns `false` if `payload` is the gravestone value.
- * tags{c.zc_payload_check, api.buffer.check}
+ * tags{c.zc_payload_check}
  */
 ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
 /**
  * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
- * tags{c.zc_payload_drop, api.buffer.drop}
+ * tags{c.zc_payload_drop}
  */
 ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
 /**
@@ -2798,6 +2851,7 @@ struct ze_owned_publication_cache_t ze_declare_publication_cache(struct z_sessio
  *
  *       z_subscriber_options_t opts = z_subscriber_options_default();
  *       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ * tags{c.ze_declare_querying_subscriber, api.session.declare_querying_subscriber}
  */
 ZENOHC_API
 struct ze_owned_querying_subscriber_t ze_declare_querying_subscriber(struct z_session_t session,
@@ -2821,11 +2875,13 @@ ZENOHC_API struct ze_owned_publication_cache_t ze_publication_cache_null(void);
 ZENOHC_API struct ze_publication_cache_options_t ze_publication_cache_options_default(void);
 /**
  * Returns ``true`` if `sub` is valid.
+ * tags{c.ze_querying_subscriber_check}
  */
 ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *sub);
 /**
  * Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
  * The queried samples will be merged with the received publications and made available in the subscriber callback.
+ * tags{c.ze_querying_subscriber_get, api.querying_subscriber.get}
  */
 ZENOHC_API
 int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
@@ -2833,15 +2889,18 @@ int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
                                   const struct z_get_options_t *options);
 /**
  * Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
+ * tags{c.ze_querying_subscriber_loan}
  */
 ZENOHC_API
 struct ze_querying_subscriber_t ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *p);
 /**
  * Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
+ * tags{c.ze_querying_subscriber_null}
  */
 ZENOHC_API struct ze_owned_querying_subscriber_t ze_querying_subscriber_null(void);
 /**
  * Constructs the default value for :c:type:`ze_querying_subscriber_options_t`.
+ * tags{c.ze_publication_cache_options_default}
  */
 ZENOHC_API struct ze_querying_subscriber_options_t ze_querying_subscriber_options_default(void);
 /**
@@ -2852,6 +2911,7 @@ ZENOHC_API
 int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_cache);
 /**
  * Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
+ * tags{c.ze_undeclare_querying_subscriber, api.querying_subscriber.undeclare}
  */
 ZENOHC_API
 int8_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *sub);

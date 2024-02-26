@@ -42,7 +42,7 @@ pub extern "C" fn zc_liveliness_token_null() -> zc_owned_liveliness_token_t {
 }
 
 /// Returns `true` unless the token is at its gravestone value.
-/// tags{c.zc_liveliness_token_check, api.liveliness_token.check}
+/// tags{c.zc_liveliness_token_check}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_check(token: &zc_owned_liveliness_token_t) -> bool {
     token._inner.iter().any(|v| *v != 0)

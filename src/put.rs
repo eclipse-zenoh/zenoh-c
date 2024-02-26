@@ -96,7 +96,7 @@ impl From<z_priority_t> for Priority {
 pub enum z_congestion_control_t {
     /// tags{c.z_congestion_control_t.block, api.options.congestion_control.block}
     BLOCK,
-    /// tags{c.z_congestion_control_t.drop, api.options.congestion_control.drop}
+    /// tags{c.z_congestion_control_t.drop}
     DROP,
 }
 
@@ -142,7 +142,7 @@ pub struct z_put_options_t {
 /// Constructs the default value for :c:type:`z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_put_options_default, api.put.options.default}
+/// tags{c.z_put_options_default}
 pub extern "C" fn z_put_options_default() -> z_put_options_t {
     z_put_options_t {
         encoding: z_encoding_default(),

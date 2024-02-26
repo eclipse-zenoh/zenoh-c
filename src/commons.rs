@@ -69,7 +69,7 @@ pub struct z_timestamp_t {
 
 /// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
-/// tags{c.z_timestamp_check, api.timestamp.check}
+/// tags{c.z_timestamp_check}
 pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
     ts.id.id.iter().any(|byte| *byte != 0)
 }
@@ -176,13 +176,13 @@ pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_pay
     }
 }
 /// Returns `false` if `payload` is the gravestone value.
-/// tags{c.zc_payload_check, api.buffer.check}
+/// tags{c.zc_payload_check}
 #[no_mangle]
 pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
     !payload.payload.start.is_null()
 }
 /// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
-/// tags{c.zc_payload_drop, api.buffer.drop}
+/// tags{c.zc_payload_drop}
 #[no_mangle]
 pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
     unsafe { std::ptr::replace(payload, zc_payload_null()) };
@@ -515,7 +515,7 @@ pub extern "C" fn z_encoding_default() -> z_encoding_t {
 /// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_encoding_drop, api.encoding.drop}
+/// tags{c.z_encoding_drop}
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
     z_bytes_drop(&mut encoding.suffix);
     encoding._dropped = true
@@ -524,7 +524,7 @@ pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_encoding_check, api.encoding.check}
+/// tags{c.z_encoding_check}
 pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
     !encoding._dropped
 }

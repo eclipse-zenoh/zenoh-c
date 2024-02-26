@@ -41,14 +41,14 @@ pub struct z_attachment_t {
 }
 
 /// Returns the gravestone value for `z_attachment_t`.
-// tags{c.z_attachment_check, api.attachment.check}
+// tags{c.z_attachment_check}
 #[no_mangle]
 pub extern "C" fn z_attachment_check(this: &z_attachment_t) -> bool {
     this.iteration_driver.is_some()
 }
 
 /// Returns the gravestone value for `z_attachment_t`.
-// tags{c.z_attachment_null, api.attachment.check}
+// tags{c.z_attachment_null}
 #[no_mangle]
 pub extern "C" fn z_attachment_null() -> z_attachment_t {
     z_attachment_t {

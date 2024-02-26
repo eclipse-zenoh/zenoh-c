@@ -30,6 +30,7 @@ use zenoh_util::core::AsyncResolve;
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+/// tags{c.z_owned_str_array_t}
 pub struct z_owned_str_array_t {
     pub val: *mut *mut c_char,
     pub len: size_t,
@@ -38,6 +39,7 @@ pub struct z_owned_str_array_t {
 /// Frees `strs` and invalidates it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_str_array_drop}
 pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
     let locators = Vec::from_raw_parts(strs.val as *mut *const c_char, strs.len, strs.len);
     for locator in locators {
@@ -50,12 +52,14 @@ pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
 /// Returns ``true`` if `strs` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_str_array_check}
 pub extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
     !strs.val.is_null()
 }
 
 /// An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
 #[repr(C)]
+/// tags{c.z_str_array_t}
 pub struct z_str_array_t {
     pub len: size_t,
     pub val: *const *const c_char,
@@ -64,6 +68,7 @@ pub struct z_str_array_t {
 /// Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_str_array_loan}
 pub extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
     z_str_array_t {
         val: strs.val as *const _,
@@ -83,6 +88,7 @@ pub extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t 
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
+/// tags{c.z_owned_hello_t, api.hello}
 pub struct z_owned_hello_t {
     pub _whatami: c_uint,
     pub _pid: z_id_t,

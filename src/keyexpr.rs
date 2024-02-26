@@ -134,7 +134,7 @@ pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
 /// Frees `keyexpr` and invalidates it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-// tags{c.z_keyexpr_drop, api.keyexpr.drop}
+// tags{c.z_keyexpr_drop}
 pub extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
     std::mem::drop(keyexpr.take())
 }
@@ -142,7 +142,7 @@ pub extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
 /// Returns ``true`` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_keyexpr_check, api.keyexpr.check}
+/// tags{c.z_keyexpr_check}
 pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
     keyexpr.deref().is_some()
 }
@@ -225,7 +225,7 @@ impl<'a> TryFrom<z_keyexpr_t> for KeyExpr<'a> {
 }
 
 /// Returns ``true`` if `keyexpr` is initialized.
-/// tags{c.z_keyexpr_is_initialized, api.keyexpr.check}
+/// tags{c.z_keyexpr_is_initialized}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_keyexpr_is_initialized(keyexpr: &z_keyexpr_t) -> bool {
