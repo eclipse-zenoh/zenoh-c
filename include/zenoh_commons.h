@@ -183,9 +183,16 @@ typedef enum z_query_target_t {
  *
  *     - **Z_RELIABILITY_BEST_EFFORT**
  *     - **Z_RELIABILITY_RELIABLE**
+ * tags{c.z_reliability_t, api.options.reliability}
  */
 typedef enum z_reliability_t {
+  /**
+   * tags{c.z_reliability_t.best_effort, api.options.reliability.best_effort}
+   */
   Z_RELIABILITY_BEST_EFFORT,
+  /**
+   * tags{c.z_reliability_t.reliable, api.options.reliability.reliable}
+   */
   Z_RELIABILITY_RELIABLE,
 } z_reliability_t;
 /**
@@ -720,8 +727,12 @@ typedef struct z_queryable_options_t {
  *
  * Members:
  *     z_reliability_t reliability: The subscription reliability.
+ * tags{c.z_subscriber_options_t}
  */
 typedef struct z_subscriber_options_t {
+  /**
+   * tags{c.z_subscriber_options_t.reliability, api.subscriber.reliability.set}
+   */
   enum z_reliability_t reliability;
 } z_subscriber_options_t;
 /**
@@ -997,6 +1008,7 @@ typedef struct z_owned_scouting_config_t {
 } z_owned_scouting_config_t;
 /**
  * A loaned zenoh subscriber.
+ * tags{c.z_subscriber_t, api.subscriber}
  */
 typedef struct z_subscriber_t {
   const struct z_owned_subscriber_t *_0;
@@ -1636,6 +1648,7 @@ struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
  *
  *       z_subscriber_options_t opts = z_subscriber_options_default();
  *       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ * tags{c.z_declare_subscriber, api.session.declare_subscriber}
  */
 ZENOHC_API
 struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
@@ -2324,22 +2337,27 @@ ZENOHC_API const char *z_str_loan(const struct z_owned_str_t *s);
 ZENOHC_API struct z_owned_str_t z_str_null(void);
 /**
  * Returns ``true`` if `sub` is valid.
+ * tags{c.z_subscriber_check}
  */
 ZENOHC_API bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 /**
  * Returns the key expression of the subscriber.
+ * tags{c.z_subscriber_keyexpr, api.subscriber.keyexpr.get}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_subscriber_keyexpr(struct z_subscriber_t subscriber);
 /**
  * Returns a :c:type:`z_subscriber_t` loaned from `p`.
+ * tags{c.z_subscriber_loan}
  */
 ZENOHC_API struct z_subscriber_t z_subscriber_loan(const struct z_owned_subscriber_t *p);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
+ * tags{c.z_subscriber_null}
  */
 ZENOHC_API struct z_owned_subscriber_t z_subscriber_null(void);
 /**
  * Constructs the default value for :c:type:`z_subscriber_options_t`.
+ * tags{c.z_subscriber_options_default}
  */
 ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
 /**
@@ -2383,6 +2401,7 @@ int8_t z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
 ZENOHC_API int8_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
 /**
  * Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
+ * tags{c.z_undeclare_subscriber, api.subscriber.undeclare}
  */
 ZENOHC_API
 int8_t z_undeclare_subscriber(struct z_owned_subscriber_t *sub);

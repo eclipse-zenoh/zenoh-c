@@ -113,6 +113,7 @@ typedef struct ALIGN(4) z_owned_queryable_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.z_owned_subscriber_t, api.subscriber}
  */
 #if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_subscriber_t {
