@@ -1050,9 +1050,15 @@ typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
   size_t _owner[5];
 } zc_owned_payload_t;
+/**
+ * tags{c.zc_owned_shmbuf_t, api.shm.buffer}
+ */
 typedef struct zc_owned_shmbuf_t {
   size_t _0[9];
 } zc_owned_shmbuf_t;
+/**
+ * tags{c.zc_owned_shm_manager_t, api.shm.manager}
+ */
 typedef struct zc_owned_shm_manager_t {
   size_t _0;
 } zc_owned_shm_manager_t;
@@ -2697,6 +2703,7 @@ ZENOHC_API struct z_owned_session_t zc_session_rcinc(struct z_session_t session)
  *
  * # Safety
  * Calling this function concurrently with other shm functions on the same manager is UB.
+ * tags{c.zc_shm_alloc, api.shm.manager.alloc}
  */
 ZENOHC_API
 struct zc_owned_shmbuf_t zc_shm_alloc(const struct zc_owned_shm_manager_t *manager,
@@ -2708,6 +2715,7 @@ struct zc_owned_shmbuf_t zc_shm_alloc(const struct zc_owned_shm_manager_t *manag
  *
  * # Safety
  * Calling this function concurrently with other shm functions on the same manager is UB.
+ * tags{c.zc_shm_defrag, api.shm.manager.defrag}
  */
 ZENOHC_API
 size_t zc_shm_defrag(const struct zc_owned_shm_manager_t *manager);
@@ -2718,49 +2726,70 @@ size_t zc_shm_defrag(const struct zc_owned_shm_manager_t *manager);
  *
  * # Safety
  * Calling this function concurrently with other shm functions on the same manager is UB.
+ * tags{c.zc_shm_gc, api.shm.manager.gc}
  */
 ZENOHC_API size_t zc_shm_gc(const struct zc_owned_shm_manager_t *manager);
+/**
+ * tags{c.zc_shm_manager_check}
+ */
 ZENOHC_API bool zc_shm_manager_check(const struct zc_owned_shm_manager_t *manager);
+/**
+ * tags{c.zc_shm_manager_drop}
+ */
 ZENOHC_API void zc_shm_manager_drop(struct zc_owned_shm_manager_t *manager);
+/**
+ * tags{c.zc_shm_manager_new, api.shm.manager.create}
+ */
 ZENOHC_API
 struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
                                                  const char *id,
                                                  size_t size);
+/**
+ * tags{c.zc_shm_manager_null}
+ */
 ZENOHC_API struct zc_owned_shm_manager_t zc_shm_manager_null(void);
 /**
  * Returns the capacity of the SHM buffer.
+ * tags{c.zc_shmbuf_capacity}
  */
 ZENOHC_API size_t zc_shmbuf_capacity(const struct zc_owned_shmbuf_t *buf);
 /**
  * Returns `false` if `buf` is in its gravestone state.
+ * tags{c.zc_shmbuf_check}
  */
 ZENOHC_API bool zc_shmbuf_check(const struct zc_owned_shmbuf_t *buf);
 /**
  * Drops the SHM buffer, decrementing its backing reference counter.
+ * tags{c.zc_shmbuf_drop}
  */
 ZENOHC_API void zc_shmbuf_drop(struct zc_owned_shmbuf_t *buf);
 /**
  * Constructs an owned payload from an owned SHM buffer.
+ * tags{c.zc_shmbuf_into_payload}
  */
 ZENOHC_API struct zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmbuf_t *buf);
 /**
  * Returns the length of the SHM buffer.
  *
  * Note that when constructing an SHM buffer, length is defaulted to its capacity.
+ * tags{c.zc_shmbuf_length}
  */
 ZENOHC_API size_t zc_shmbuf_length(const struct zc_owned_shmbuf_t *buf);
 /**
  * Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
+ * tags{c.zc_shmbuf_null}
  */
 ZENOHC_API struct zc_owned_shmbuf_t zc_shmbuf_null(void);
 /**
  * Returns the start of the SHM buffer.
+ * tags{c.zc_shmbuf_ptr}
  */
 ZENOHC_API uint8_t *zc_shmbuf_ptr(const struct zc_owned_shmbuf_t *buf);
 /**
  * Sets the length of the SHM buffer.
  *
  * This lets Zenoh know how much of the data to write over the network when sending the value to non-SHM-compatible neighboors.
+ * tags{c.zc_shmbuf_set_length}
  */
 ZENOHC_API
 void zc_shmbuf_set_length(const struct zc_owned_shmbuf_t *buf,

@@ -26,6 +26,7 @@ use zenoh::{
 use crate::{z_session_t, zc_owned_payload_t, zc_payload_null};
 
 #[repr(C)]
+/// tags{c.zc_owned_shm_manager_t, api.shm.manager}
 pub struct zc_owned_shm_manager_t(usize);
 impl From<Option<Box<UnsafeCell<zenoh::shm::SharedMemoryManager>>>> for zc_owned_shm_manager_t {
     fn from(value: Option<Box<UnsafeCell<zenoh::shm::SharedMemoryManager>>>) -> Self {
@@ -44,12 +45,13 @@ impl DerefMut for zc_owned_shm_manager_t {
     }
 }
 impl zc_owned_shm_manager_t {
-    pub fn null() -> Self {
+    pub(crate) fn null() -> Self {
         None::<_>.into()
     }
 }
 
 #[no_mangle]
+/// tags{c.zc_shm_manager_new, api.shm.manager.create}
 pub extern "C" fn zc_shm_manager_new(
     session: z_session_t,
     id: *const c_char,
@@ -69,16 +71,19 @@ pub extern "C" fn zc_shm_manager_new(
 }
 
 #[no_mangle]
+/// tags{c.zc_shm_manager_drop}
 pub extern "C" fn zc_shm_manager_drop(manager: &mut zc_owned_shm_manager_t) {
     manager.take();
 }
 
 #[no_mangle]
+/// tags{c.zc_shm_manager_check}
 pub extern "C" fn zc_shm_manager_check(manager: &zc_owned_shm_manager_t) -> bool {
     manager.is_some()
 }
 
 #[no_mangle]
+/// tags{c.zc_shm_manager_null}
 pub extern "C" fn zc_shm_manager_null() -> zc_owned_shm_manager_t {
     zc_owned_shm_manager_t::null()
 }
@@ -90,6 +95,7 @@ pub extern "C" fn zc_shm_manager_null() -> zc_owned_shm_manager_t {
 /// # Safety
 /// Calling this function concurrently with other shm functions on the same manager is UB.
 #[no_mangle]
+/// tags{c.zc_shm_gc, api.shm.manager.gc}
 pub unsafe extern "C" fn zc_shm_gc(manager: &zc_owned_shm_manager_t) -> usize {
     if let Some(shm) = manager.as_ref() {
         unsafe { (*shm.get()).garbage_collect() }
@@ -105,6 +111,7 @@ pub unsafe extern "C" fn zc_shm_gc(manager: &zc_owned_shm_manager_t) -> usize {
 /// # Safety
 /// Calling this function concurrently with other shm functions on the same manager is UB.
 #[no_mangle]
+/// tags{c.zc_shm_defrag, api.shm.manager.defrag}
 pub unsafe extern "C" fn zc_shm_defrag(manager: &zc_owned_shm_manager_t) -> usize {
     if let Some(shm) = manager.as_ref() {
         unsafe { (*shm.get()).defragment() }
@@ -115,6 +122,7 @@ pub unsafe extern "C" fn zc_shm_defrag(manager: &zc_owned_shm_manager_t) -> usiz
 
 #[repr(C)]
 #[derive(Default)]
+/// tags{c.zc_owned_shmbuf_t, api.shm.buffer}
 pub struct zc_owned_shmbuf_t([usize; 9]);
 impl From<UnsafeCell<Option<SharedMemoryBuf>>> for zc_owned_shmbuf_t {
     fn from(value: UnsafeCell<Option<SharedMemoryBuf>>) -> Self {
@@ -134,7 +142,7 @@ impl DerefMut for zc_owned_shmbuf_t {
 }
 
 impl zc_owned_shmbuf_t {
-    pub fn null() -> Self {
+    pub(crate) fn null() -> Self {
         UnsafeCell::new(None).into()
     }
 }
@@ -144,6 +152,7 @@ impl zc_owned_shmbuf_t {
 /// # Safety
 /// Calling this function concurrently with other shm functions on the same manager is UB.
 #[no_mangle]
+/// tags{c.zc_shm_alloc, api.shm.manager.alloc}
 pub unsafe extern "C" fn zc_shm_alloc(
     manager: &zc_owned_shm_manager_t,
     capacity: usize,
@@ -161,24 +170,28 @@ pub unsafe extern "C" fn zc_shm_alloc(
 
 /// Drops the SHM buffer, decrementing its backing reference counter.
 #[no_mangle]
+/// tags{c.zc_shmbuf_drop}
 pub extern "C" fn zc_shmbuf_drop(buf: &mut zc_owned_shmbuf_t) {
     buf.get_mut().take();
 }
 
 /// Returns `false` if `buf` is in its gravestone state.
 #[no_mangle]
+/// tags{c.zc_shmbuf_check}
 pub extern "C" fn zc_shmbuf_check(buf: &zc_owned_shmbuf_t) -> bool {
     unsafe { (*buf.get()).is_some() }
 }
 
 /// Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
 #[no_mangle]
+/// tags{c.zc_shmbuf_null}
 pub extern "C" fn zc_shmbuf_null() -> zc_owned_shmbuf_t {
     zc_owned_shmbuf_t::null()
 }
 
 /// Constructs an owned payload from an owned SHM buffer.
 #[no_mangle]
+/// tags{c.zc_shmbuf_into_payload}
 pub extern "C" fn zc_shmbuf_into_payload(buf: &mut zc_owned_shmbuf_t) -> zc_owned_payload_t {
     match buf.get_mut().take() {
         Some(buf) => ZBuf::from(buf).try_into().unwrap_or_default(),
@@ -188,6 +201,7 @@ pub extern "C" fn zc_shmbuf_into_payload(buf: &mut zc_owned_shmbuf_t) -> zc_owne
 
 /// Returns the start of the SHM buffer.
 #[no_mangle]
+/// tags{c.zc_shmbuf_ptr}
 pub unsafe extern "C" fn zc_shmbuf_ptr(buf: &zc_owned_shmbuf_t) -> *mut u8 {
     match &*buf.get() {
         None => std::ptr::null_mut(),
@@ -197,6 +211,7 @@ pub unsafe extern "C" fn zc_shmbuf_ptr(buf: &zc_owned_shmbuf_t) -> *mut u8 {
 
 /// Returns the capacity of the SHM buffer.
 #[no_mangle]
+/// tags{c.zc_shmbuf_capacity}
 pub unsafe extern "C" fn zc_shmbuf_capacity(buf: &zc_owned_shmbuf_t) -> usize {
     match &*buf.get() {
         None => 0,
@@ -208,6 +223,7 @@ pub unsafe extern "C" fn zc_shmbuf_capacity(buf: &zc_owned_shmbuf_t) -> usize {
 ///
 /// Note that when constructing an SHM buffer, length is defaulted to its capacity.
 #[no_mangle]
+/// tags{c.zc_shmbuf_length}
 pub unsafe extern "C" fn zc_shmbuf_length(buf: &zc_owned_shmbuf_t) -> usize {
     match &*buf.get() {
         None => 0,
@@ -219,6 +235,7 @@ pub unsafe extern "C" fn zc_shmbuf_length(buf: &zc_owned_shmbuf_t) -> usize {
 ///
 /// This lets Zenoh know how much of the data to write over the network when sending the value to non-SHM-compatible neighboors.
 #[no_mangle]
+/// tags{c.zc_shmbuf_set_length}
 pub unsafe extern "C" fn zc_shmbuf_set_length(buf: &zc_owned_shmbuf_t, len: usize) {
     if let Some(buf) = &mut *buf.get() {
         buf.len = len
