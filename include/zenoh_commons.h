@@ -982,7 +982,7 @@ typedef struct zp_task_attr_t {
   size_t _0;
 } zp_task_attr_t;
 typedef struct zp_time_t {
-  size_t _0[2];
+  uint64_t _0[2];
 } zp_time_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;

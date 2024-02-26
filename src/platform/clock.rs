@@ -8,10 +8,10 @@ use std::{
 
 use crate::{impl_guarded_transmute, GuardedTransmute};
 
-// TODO: properly define alignment for every architecture
+// TODO: properly define size/alignment for every architecture
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_time_t([usize; 2]);
+pub struct zp_time_t([u64; 2]);
 
 impl_guarded_transmute!(zp_time_t, Instant);
 impl_guarded_transmute!(Instant, zp_time_t);
