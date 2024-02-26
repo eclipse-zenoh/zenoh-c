@@ -104,7 +104,7 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 #[repr(C)]
 pub struct zc_owned_payload_t {
     pub payload: z_bytes_t,
-    pub _owner: [usize; 5],
+    pub _owner: z_owned_buffer_t,
 }
 impl Default for zc_owned_payload_t {
     fn default() -> Self {
@@ -130,7 +130,9 @@ impl zc_owned_payload_t {
         }
         let start = std::mem::replace(&mut self.payload.start, std::ptr::null());
         let len = std::mem::replace(&mut self.payload.len, 0);
-        let mut buf: ZBuf = unsafe { std::mem::transmute(self._owner) };
+        let Some(mut buf) = self._owner.take() else {
+            return None;
+        };
         {
             let mut slices = buf.zslices_mut();
             let slice = slices.next().unwrap();
@@ -153,7 +155,7 @@ impl zc_owned_payload_t {
         if !z_bytes_check(&self.payload) {
             return None;
         }
-        unsafe { std::mem::transmute(&self._owner) }
+        self._owner.as_ref()
     }
 }
 impl Drop for zc_owned_payload_t {
@@ -198,19 +200,6 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
 pub struct z_qos_t(u8);
 
 impl_guarded_transmute!(QoS, z_qos_t);
-impl_guarded_transmute!(z_qos_t, QoS);
-
-impl From<QoS> for z_qos_t {
-    fn from(qos: QoS) -> Self {
-        qos.transmute()
-    }
-}
-
-impl From<z_qos_t> for QoS {
-    fn from(qos: z_qos_t) -> QoS {
-        qos.transmute()
-    }
-}
 
 /// Returns message priority.
 #[no_mangle]

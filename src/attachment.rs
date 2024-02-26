@@ -13,6 +13,7 @@ use zenoh::sample::{Attachment, AttachmentBuilder};
 ///
 /// Returning `0` is treated as `continue`.
 /// Returning any other value is treated as `break`.
+#[allow(non_camel_case_types)]
 pub type z_attachment_iter_body_t =
     extern "C" fn(key: z_bytes_t, value: z_bytes_t, context: *mut c_void) -> i8;
 
@@ -20,6 +21,7 @@ pub type z_attachment_iter_body_t =
 ///
 /// This function is expected to call `loop_body` once for each key-value pair
 /// within `iterator`, passing `context`, and returning any non-zero value immediately (breaking iteration).
+#[allow(non_camel_case_types)]
 pub type z_attachment_iter_driver_t = Option<
     extern "C" fn(
         iterator: *const c_void,
@@ -124,7 +126,7 @@ pub struct z_owned_bytes_map_t {
     _1: [usize; 4],
 }
 
-impl_guarded_transmute!(
+impl_guarded_transmute!(noderefs
     Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>,
     z_owned_bytes_map_t
 );

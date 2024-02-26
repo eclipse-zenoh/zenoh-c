@@ -155,8 +155,8 @@ typedef enum zcu_reply_keyexpr_t {
  * and empty slices are represented using a possibly dangling pointer for `start`.
  */
 typedef struct z_bytes_t {
-  size_t len;
   const uint8_t *start;
+  size_t len;
 } z_bytes_t;
 /**
  * The body of a loop over an attachment's key-value pairs.
@@ -189,6 +189,15 @@ typedef struct z_attachment_t {
   const void *data;
   z_attachment_iter_driver_t iteration_driver;
 } z_attachment_t;
+/**
+ * A buffer owned by Zenoh.
+ */
+typedef struct z_owned_buffer_t {
+  size_t _inner[5];
+} z_owned_buffer_t;
+typedef struct z_buffer_t {
+  size_t _inner;
+} z_buffer_t;
 /**
  * A map of maybe-owned vector of bytes to owned vector of bytes.
  *
@@ -862,7 +871,7 @@ typedef struct zc_owned_liveliness_get_options_t {
  */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
-  size_t _owner[5];
+  struct z_owned_buffer_t _owner;
 } zc_owned_payload_t;
 typedef struct zc_owned_shmbuf_t {
   size_t _0[9];
@@ -1027,6 +1036,12 @@ int8_t z_attachment_iterate(struct z_attachment_t this_,
  * Returns the gravestone value for `z_attachment_t`.
  */
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
+ZENOHC_API bool z_buffer_check(const struct z_owned_buffer_t *buffer);
+ZENOHC_API struct z_owned_buffer_t z_buffer_clone(struct z_buffer_t buffer);
+ZENOHC_API void z_buffer_drop(struct z_owned_buffer_t *buffer);
+ZENOHC_API struct z_buffer_t z_buffer_loan(const struct z_owned_buffer_t *buffer);
+ZENOHC_API struct z_owned_buffer_t z_buffer_null(void);
+ZENOHC_API struct z_bytes_t z_buffer_payload(struct z_buffer_t buffer);
 /**
  * Returns ``true`` if `b` is initialized.
  */

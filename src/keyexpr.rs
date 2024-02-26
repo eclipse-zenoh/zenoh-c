@@ -62,25 +62,9 @@ pub struct z_owned_keyexpr_t([u32; 5]);
 
 impl_guarded_transmute!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
 
-impl From<Option<KeyExpr<'static>>> for z_owned_keyexpr_t {
-    fn from(val: Option<KeyExpr<'static>>) -> Self {
-        val.transmute()
-    }
-}
 impl From<KeyExpr<'static>> for z_owned_keyexpr_t {
     fn from(val: KeyExpr<'static>) -> Self {
         Some(val).into()
-    }
-}
-impl Deref for z_owned_keyexpr_t {
-    type Target = Option<KeyExpr<'static>>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl DerefMut for z_owned_keyexpr_t {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { std::mem::transmute(self) }
     }
 }
 impl z_owned_keyexpr_t {
@@ -156,8 +140,8 @@ pub struct z_keyexpr_t([u64; 4]);
 #[repr(C, align(4))]
 pub struct z_keyexpr_t([u32; 5]);
 
-impl_guarded_transmute!(Option<KeyExpr<'_>>, z_keyexpr_t);
-impl_guarded_transmute!(z_keyexpr_t, z_owned_keyexpr_t);
+impl_guarded_transmute!(noderefs Option<KeyExpr<'_>>, z_keyexpr_t);
+impl_guarded_transmute!(noderefs z_keyexpr_t, z_owned_keyexpr_t);
 
 impl<'a> From<KeyExpr<'a>> for z_keyexpr_t {
     fn from(val: KeyExpr<'a>) -> Self {

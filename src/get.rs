@@ -60,7 +60,7 @@ pub struct z_owned_reply_t([u64; 30]);
 #[repr(C, align(8))]
 pub struct z_owned_reply_t([u64; 19]);
 
-impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
+impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
 
 impl From<ReplyInner> for z_owned_reply_t {
     fn from(mut val: ReplyInner) -> Self {

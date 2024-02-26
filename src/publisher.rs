@@ -75,7 +75,7 @@ pub struct z_owned_publisher_t([u64; 7]);
 #[repr(C, align(4))]
 pub struct z_owned_publisher_t([u32; 8]);
 
-impl_guarded_transmute!(Option<Publisher<'_>>, z_owned_publisher_t);
+impl_guarded_transmute!(noderefs Option<Publisher<'_>>, z_owned_publisher_t);
 
 impl<'a> From<Option<Publisher<'a>>> for z_owned_publisher_t {
     fn from(val: Option<Publisher>) -> Self {
@@ -387,7 +387,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyex
 #[repr(C, align(8))]
 pub struct zcu_owned_matching_listener_t([u64; 4]);
 
-impl_guarded_transmute!(
+impl_guarded_transmute!(noderefs
     Option<MatchingListener<'_, ()>>,
     zcu_owned_matching_listener_t
 );

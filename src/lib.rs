@@ -61,6 +61,26 @@ trait GuardedTransmute<D> {
 #[macro_export]
 macro_rules! impl_guarded_transmute {
     ($src_type:ty, $dst_type:ty) => {
+        impl_guarded_transmute!(noderefs $src_type, $dst_type);
+        impl From<$src_type> for $dst_type {
+            fn from(value: $src_type) -> $dst_type {
+                unsafe { core::mem::transmute(value) }
+            }
+        }
+        impl core::ops::Deref for $dst_type {
+            type Target = $src_type;
+            fn deref(&self) -> &$src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+        impl core::ops::DerefMut for $dst_type {
+            fn deref_mut(&mut self) -> &mut $src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+
+    };
+    (noderefs $src_type:ty, $dst_type:ty) => {
         const _: () = {
             let src = std::mem::align_of::<$src_type>();
             let dst = std::mem::align_of::<$dst_type>();
@@ -77,7 +97,7 @@ macro_rules! impl_guarded_transmute {
                 });
             }
         };
-        impl $crate::GuardedTransmute<$dst_type> for $src_type {
+        impl  $crate::GuardedTransmute<$dst_type> for $src_type {
             fn transmute(self) -> $dst_type {
                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
             }

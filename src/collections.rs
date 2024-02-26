@@ -11,8 +11,14 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+
 use libc::{c_char, size_t};
-use zenoh::prelude::ZenohId;
+use zenoh::{
+    buffers::{buffer::SplitBuffer, ZBuf},
+    prelude::ZenohId,
+};
+
+use crate::impl_guarded_transmute;
 
 /// A contiguous view of bytes owned by some other entity.
 ///
@@ -21,8 +27,8 @@ use zenoh::prelude::ZenohId;
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_bytes_t {
-    pub len: size_t,
     pub start: *const u8,
+    pub len: size_t,
 }
 
 impl z_bytes_t {
@@ -152,6 +158,66 @@ impl From<&[u8]> for z_bytes_t {
         z_bytes_t {
             start: s.as_ptr(),
             len: s.len(),
+        }
+    }
+}
+
+/// A buffer owned by Zenoh.
+#[repr(C)]
+pub struct z_owned_buffer_t {
+    _inner: [usize; 5],
+}
+impl_guarded_transmute!(Option<ZBuf>, z_owned_buffer_t);
+
+#[no_mangle]
+pub extern "C" fn z_buffer_null() -> z_owned_buffer_t {
+    None.into()
+}
+#[no_mangle]
+pub extern "C" fn z_buffer_drop(buffer: &mut z_owned_buffer_t) {
+    core::mem::drop(buffer.take())
+}
+
+#[no_mangle]
+pub extern "C" fn z_buffer_check(buffer: &z_owned_buffer_t) -> bool {
+    buffer.is_some()
+}
+#[no_mangle]
+pub extern "C" fn z_buffer_loan(buffer: &z_owned_buffer_t) -> z_buffer_t {
+    buffer.as_ref().into()
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct z_buffer_t {
+    _inner: usize,
+}
+impl_guarded_transmute!(noderefs Option<&ZBuf>, z_buffer_t);
+impl From<z_buffer_t> for Option<&'static ZBuf> {
+    fn from(value: z_buffer_t) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+impl From<Option<&ZBuf>> for z_buffer_t {
+    fn from(value: Option<&ZBuf>) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+#[no_mangle]
+pub extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
+    unsafe { Some(core::mem::transmute::<_, &ZBuf>(buffer).clone()).into() }
+}
+
+#[no_mangle]
+pub extern "C" fn z_buffer_payload(buffer: z_buffer_t) -> z_bytes_t {
+    let Some(buffer): Option<&ZBuf> = buffer.into() else {
+        return z_bytes_null();
+    };
+    match buffer.contiguous() {
+        std::borrow::Cow::Borrowed(buffer) => buffer.into(),
+        std::borrow::Cow::Owned(_) => {
+            log::error!("A non-contiguous buffer reached user code, this is definitely a bug, please inform us at https://github.com/eclipse-zenoh/zenoh-c/issues/new");
+            z_bytes_null()
         }
     }
 }
