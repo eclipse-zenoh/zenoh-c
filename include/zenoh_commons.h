@@ -981,6 +981,9 @@ typedef struct zp_task_t {
 typedef struct zp_task_attr_t {
   size_t _0;
 } zp_task_attr_t;
+typedef struct zp_time_t {
+  size_t _0[2];
+} zp_time_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
@@ -2568,3 +2571,8 @@ int8_t zp_task_init(struct zp_task_t *task,
                     void (*fun)(void *arg),
                     void *arg);
 ZENOHC_API int8_t zp_task_join(struct zp_task_t *task);
+ZENOHC_API size_t zp_time_elapsed_ms(const struct zp_time_t *time);
+ZENOHC_API size_t zp_time_elapsed_s(const struct zp_time_t *time);
+ZENOHC_API size_t zp_time_elapsed_us(const struct zp_time_t *time);
+ZENOHC_API struct zp_time_t zp_time_now(void);
+ZENOHC_API const char *zp_time_now_as_str(const char *buf, size_t len);

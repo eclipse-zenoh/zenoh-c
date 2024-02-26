@@ -12,7 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-pub use synchronization::*;
-mod synchronization;
+pub use clock::*;
+mod clock;
 pub use sleep::*;
 mod sleep;
+pub use synchronization::*;
+mod synchronization;
