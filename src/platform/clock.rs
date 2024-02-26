@@ -1,6 +1,10 @@
-use std::{cmp::min, slice, time::{Duration, Instant, SystemTime}};
+use chrono::{DateTime, Local};
 use libc::c_char;
-use chrono::{Local, DateTime};
+use std::{
+    cmp::min,
+    slice,
+    time::{Duration, Instant, SystemTime},
+};
 
 use crate::{impl_guarded_transmute, GuardedTransmute};
 
@@ -12,7 +16,6 @@ pub struct zp_time_t([usize; 2]);
 impl_guarded_transmute!(zp_time_t, Instant);
 impl_guarded_transmute!(Instant, zp_time_t);
 
-
 #[no_mangle]
 pub extern "C" fn zp_time_now() -> zp_time_t {
     let t = Instant::now();
@@ -20,11 +23,12 @@ pub extern "C" fn zp_time_now() -> zp_time_t {
 }
 
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zp_time_now_as_str(buf: *const c_char, len: usize) -> *const c_char {
     if len == 0 {
         return buf;
     }
-    let datetime:DateTime<Local>  = SystemTime::now().into();
+    let datetime: DateTime<Local> = SystemTime::now().into();
     let s = datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string();
     let sb = s.as_bytes();
     let max_len = min(len - 1, s.len());
@@ -34,8 +38,7 @@ pub unsafe extern "C" fn zp_time_now_as_str(buf: *const c_char, len: usize) -> *
     buf
 }
 
-
-
+#[allow(clippy::missing_safety_doc)]
 unsafe fn get_elapsed(time: *const zp_time_t) -> Duration {
     if time.is_null() {
         return Duration::new(0, 0);
@@ -48,17 +51,19 @@ unsafe fn get_elapsed(time: *const zp_time_t) -> Duration {
 }
 
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zp_time_elapsed_s(time: *const zp_time_t) -> usize {
-    return get_elapsed(time).as_secs() as usize;
+    get_elapsed(time).as_secs() as usize
 }
 
-
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zp_time_elapsed_ms(time: *const zp_time_t) -> usize {
-    return get_elapsed(time).as_millis() as usize;
+    get_elapsed(time).as_millis() as usize
 }
 
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zp_time_elapsed_us(time: *const zp_time_t) -> usize {
-    return get_elapsed(time).as_micros() as usize;
+    get_elapsed(time).as_micros() as usize
 }
