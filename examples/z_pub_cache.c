@@ -15,12 +15,6 @@
 #include <string.h>
 
 #include "zenoh.h"
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
 
 int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
@@ -66,7 +60,7 @@ int main(int argc, char **argv) {
 
     char buf[256];
     for (int idx = 0; 1; ++idx) {
-        sleep(1);
+        zp_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
         z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)buf, strlen(buf), NULL);

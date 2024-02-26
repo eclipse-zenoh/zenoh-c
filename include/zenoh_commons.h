@@ -2559,6 +2559,9 @@ ZENOHC_API int8_t zp_mutex_init(struct zp_mutex_t *m);
 ZENOHC_API int8_t zp_mutex_lock(struct zp_mutex_t *m);
 ZENOHC_API int8_t zp_mutex_try_lock(struct zp_mutex_t *m);
 ZENOHC_API int8_t zp_mutex_unlock(struct zp_mutex_t *m);
+ZENOHC_API int8_t zp_sleep_ms(size_t time);
+ZENOHC_API int8_t zp_sleep_s(size_t time);
+ZENOHC_API int8_t zp_sleep_us(size_t time);
 ZENOHC_API
 int8_t zp_task_init(struct zp_task_t *task,
                     const struct zp_task_attr_t *_attr,

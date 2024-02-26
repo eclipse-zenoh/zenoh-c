@@ -12,12 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
 #include "zenoh.h"
 
 void data_handler(const z_sample_t *sample, void *arg) {
@@ -76,7 +70,7 @@ int main(int argc, char **argv) {
     while (c != 'q') {
         c = getchar();
         if (c == -1) {
-            sleep(1);
+            zp_sleep_s(1);
         }
     }
 

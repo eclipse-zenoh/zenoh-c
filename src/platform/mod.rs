@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017, 2023 ZettaScale Technology.
+// Copyright (c) 2017, 2024 ZettaScale Technology.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -14,3 +14,5 @@
 
 pub use synchronization::*;
 mod synchronization;
+pub use sleep::*;
+mod sleep;

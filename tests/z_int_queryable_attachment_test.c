@@ -76,7 +76,7 @@ int run_queryable() {
     }
 
     SEM_POST(sem);
-    sleep(10);
+    zp_sleep_s(10);
 
     z_drop(z_move(qable));
     z_close(z_move(s));
