@@ -196,7 +196,7 @@ typedef struct z_owned_buffer_t {
   size_t _inner[5];
 } z_owned_buffer_t;
 typedef struct z_buffer_t {
-  size_t _inner;
+  const void *_inner;
 } z_buffer_t;
 /**
  * A map of maybe-owned vector of bytes to owned vector of bytes.
@@ -369,52 +369,6 @@ typedef struct z_owned_closure_reply_t {
   void (*drop)(void*);
 } z_owned_closure_reply_t;
 /**
- * A loaned key expression.
- *
- * Key expressions can identify a single key or a set of keys.
- *
- * Examples :
- *    - ``"key/expression"``.
- *    - ``"key/ex*"``.
- *
- * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
- * both for local processing and network-wise.
- */
-#if !defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_keyexpr_t {
-  uint64_t _0[4];
-} z_keyexpr_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_keyexpr_t {
-  uint32_t _0[5];
-} z_keyexpr_t;
-#endif
-/**
- * The encoding of a payload, in a MIME-like format.
- *
- * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
- *
- * Members:
- *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
- *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
- */
-typedef struct z_encoding_t {
-  enum z_encoding_prefix_t prefix;
-  struct z_bytes_t suffix;
-} z_encoding_t;
-typedef struct z_timestamp_t {
-  uint64_t time;
-  struct z_id_t id;
-} z_timestamp_t;
-/**
- * QoS settings of zenoh message.
- *
- */
-typedef struct z_qos_t {
-  uint8_t _0;
-} z_qos_t;
-/**
  * A data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
@@ -428,14 +382,7 @@ typedef struct z_qos_t {
  *   z_attachment_t attachment: The attachment of this data sample.
  */
 typedef struct z_sample_t {
-  struct z_keyexpr_t keyexpr;
-  struct z_bytes_t payload;
-  struct z_encoding_t encoding;
-  const void *_zc_buf;
-  enum z_sample_kind_t kind;
-  struct z_timestamp_t timestamp;
-  struct z_qos_t qos;
-  struct z_attachment_t attachment;
+  const void *_inner;
 } z_sample_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -551,6 +498,28 @@ typedef struct ALIGN(4) z_owned_keyexpr_t {
 } z_owned_keyexpr_t;
 #endif
 /**
+ * A loaned key expression.
+ *
+ * Key expressions can identify a single key or a set of keys.
+ *
+ * Examples :
+ *    - ``"key/expression"``.
+ *    - ``"key/ex*"``.
+ *
+ * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
+ * both for local processing and network-wise.
+ */
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_keyexpr_t {
+  uint64_t _0[4];
+} z_keyexpr_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_keyexpr_t {
+  uint32_t _0[5];
+} z_keyexpr_t;
+#endif
+/**
  * An owned zenoh publisher.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
@@ -619,6 +588,19 @@ typedef struct z_delete_options_t {
   enum z_priority_t priority;
 } z_delete_options_t;
 /**
+ * The encoding of a payload, in a MIME-like format.
+ *
+ * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
+ *
+ * Members:
+ *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
+ *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
+ */
+typedef struct z_encoding_t {
+  uint64_t prefix;
+  struct z_bytes_t suffix;
+} z_encoding_t;
+/**
  * An owned payload encoding.
  *
  * Members:
@@ -632,7 +614,7 @@ typedef struct z_delete_options_t {
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
 typedef struct z_owned_encoding_t {
-  enum z_encoding_prefix_t prefix;
+  uint64_t prefix;
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
@@ -747,6 +729,13 @@ typedef struct z_put_options_t {
   struct z_attachment_t attachment;
 } z_put_options_t;
 /**
+ * QoS settings of zenoh message.
+ *
+ */
+typedef struct z_qos_t {
+  uint8_t _0;
+} z_qos_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
  * - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -808,6 +797,10 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
+typedef struct z_timestamp_t {
+  uint64_t time;
+  struct z_id_t id;
+} z_timestamp_t;
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
   unsigned long zc_timeout_ms;
@@ -869,10 +862,7 @@ typedef struct zc_owned_liveliness_get_options_t {
  * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
  * functions, then the operation will fail (but the passed value will still be consumed).
  */
-typedef struct zc_owned_payload_t {
-  struct z_bytes_t payload;
-  struct z_owned_buffer_t _owner;
-} zc_owned_payload_t;
+typedef struct z_owned_buffer_t zc_owned_payload_t;
 typedef struct zc_owned_shmbuf_t {
   size_t _0[9];
 } zc_owned_shmbuf_t;
@@ -1983,6 +1973,41 @@ ZENOHC_API struct z_owned_reply_t z_reply_null(void);
 ZENOHC_API
 struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
 /**
+ * The sample's attachment.
+ *
+ * `sample` is aliased by the return value.
+ */
+ZENOHC_API struct z_attachment_t z_sample_attachment(const struct z_sample_t *sample);
+/**
+ * The encoding of the payload.
+ */
+ZENOHC_API struct z_encoding_t z_sample_encoding(const struct z_sample_t *sample);
+/**
+ * The Key Expression of the sample.
+ *
+ * `sample` is aliased by its return value.
+ */
+ZENOHC_API struct z_keyexpr_t z_sample_keyexpr(const struct z_sample_t *sample);
+/**
+ * The sample's kind (put or delete).
+ */
+ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_sample_t *sample);
+/**
+ * Returns the sample's payload after incrementing its internal reference count.
+ *
+ * Note that other samples may have received the same buffer, meaning that mutating this buffer may
+ * affect the samples received by other subscribers.
+ */
+ZENOHC_API struct z_owned_buffer_t z_sample_owned_payload(const struct z_sample_t *sample);
+/**
+ * The sample's data, the return value aliases the sample.
+ *
+ * If you need ownership of the buffer, you may use `z_sample_owned_payload`.
+ */
+ZENOHC_API struct z_bytes_t z_sample_payload(const struct z_sample_t *sample);
+ZENOHC_API struct z_qos_t z_sample_qos(const struct z_sample_t *sample);
+ZENOHC_API struct z_timestamp_t z_sample_timestamp(const struct z_sample_t *sample);
+/**
  * Scout for routers and/or peers.
  *
  * Parameters:
@@ -2277,19 +2302,19 @@ ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t
 /**
  * Returns `false` if `payload` is the gravestone value.
  */
-ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
+ZENOHC_API bool zc_payload_check(const zc_owned_payload_t *payload);
 /**
  * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
  */
-ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
+ZENOHC_API void zc_payload_drop(zc_owned_payload_t *payload);
 /**
  * Constructs `zc_owned_payload_t`'s gravestone value.
  */
-ZENOHC_API struct zc_owned_payload_t zc_payload_null(void);
+ZENOHC_API zc_owned_payload_t zc_payload_null(void);
 /**
  * Clones the `payload` by incrementing its reference counter.
  */
-ZENOHC_API struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payload);
+ZENOHC_API zc_owned_payload_t zc_payload_rcinc(const zc_owned_payload_t *payload);
 /**
  * Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
  *
@@ -2309,7 +2334,7 @@ ZENOHC_API struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payl
  */
 ZENOHC_API
 int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
-                              struct zc_owned_payload_t *payload,
+                              zc_owned_payload_t *payload,
                               const struct z_publisher_put_options_t *options);
 /**
  * Put data, transfering the buffer ownership.
@@ -2331,7 +2356,7 @@ int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
 ZENOHC_API
 int8_t zc_put_owned(struct z_session_t session,
                     struct z_keyexpr_t keyexpr,
-                    struct zc_owned_payload_t *payload,
+                    zc_owned_payload_t *payload,
                     const struct z_put_options_t *opts);
 /**
  * Creates a new blocking fifo channel, returned as a pair of closures.
@@ -2386,10 +2411,6 @@ struct z_owned_reply_channel_t zc_reply_fifo_new(size_t bound);
 ZENOHC_API
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
 /**
- * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
- */
-ZENOHC_API struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
-/**
  * Increments the session's reference count, returning a new owning handle.
  */
 ZENOHC_API struct z_owned_session_t zc_session_rcinc(struct z_session_t session);
@@ -2443,7 +2464,7 @@ ZENOHC_API void zc_shmbuf_drop(struct zc_owned_shmbuf_t *buf);
 /**
  * Constructs an owned payload from an owned SHM buffer.
  */
-ZENOHC_API struct zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmbuf_t *buf);
+ZENOHC_API zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmbuf_t *buf);
 /**
  * Returns the length of the SHM buffer.
  *

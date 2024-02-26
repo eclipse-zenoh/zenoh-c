@@ -108,7 +108,7 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
         if let Cow::Owned(_) = sample.payload.contiguous() {
             unreachable!("z_reply_ok found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions. This is definitely a bug with zenoh, please contact us.")
         }
-        z_sample_t::new(sample, &sample.payload)
+        z_sample_t::new(sample)
     } else {
         panic!("Assertion failed: tried to treat `z_owned_reply_t` as Ok despite that not being the case")
     }

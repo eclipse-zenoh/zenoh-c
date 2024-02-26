@@ -60,7 +60,7 @@ pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
 
 /// Returns the gravestone value for `z_bytes_t`
 #[no_mangle]
-pub extern "C" fn z_bytes_null() -> z_bytes_t {
+pub const extern "C" fn z_bytes_null() -> z_bytes_t {
     z_bytes_t {
         len: 0,
         start: core::ptr::null(),
@@ -167,11 +167,45 @@ impl From<&[u8]> for z_bytes_t {
 pub struct z_owned_buffer_t {
     _inner: [usize; 5],
 }
-impl_guarded_transmute!(Option<ZBuf>, z_owned_buffer_t);
+impl_guarded_transmute!(noderefs Option<ZBuf>, z_owned_buffer_t);
+impl Default for z_owned_buffer_t {
+    fn default() -> Self {
+        z_buffer_null()
+    }
+}
+impl From<ZBuf> for z_owned_buffer_t {
+    fn from(value: ZBuf) -> Self {
+        let value = match value.contiguous() {
+            std::borrow::Cow::Borrowed(_) => value,
+            std::borrow::Cow::Owned(value) => value.into(),
+        };
+        unsafe { core::mem::transmute(Some(value)) }
+    }
+}
+impl From<Option<ZBuf>> for z_owned_buffer_t {
+    fn from(value: Option<ZBuf>) -> Self {
+        match value {
+            Some(value) => value.into(),
+            None => z_buffer_null(),
+        }
+    }
+}
+impl core::ops::Deref for z_owned_buffer_t {
+    type Target = Option<ZBuf>;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+impl core::ops::DerefMut for z_owned_buffer_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
 
 #[no_mangle]
 pub extern "C" fn z_buffer_null() -> z_owned_buffer_t {
-    None.into()
+    unsafe { core::mem::transmute(None::<ZBuf>) }
 }
 #[no_mangle]
 pub extern "C" fn z_buffer_drop(buffer: &mut z_owned_buffer_t) {
@@ -189,20 +223,16 @@ pub extern "C" fn z_buffer_loan(buffer: &z_owned_buffer_t) -> z_buffer_t {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct z_buffer_t {
-    _inner: usize,
+pub struct z_buffer_t<'a> {
+    _inner: &'a (),
 }
-impl_guarded_transmute!(noderefs Option<&ZBuf>, z_buffer_t);
-impl From<z_buffer_t> for Option<&'static ZBuf> {
+impl_guarded_transmute!(Option<&'a ZBuf>, z_buffer_t<'a>, 'a);
+impl<'a> From<z_buffer_t<'a>> for Option<&'a ZBuf> {
     fn from(value: z_buffer_t) -> Self {
         unsafe { core::mem::transmute(value) }
     }
 }
-impl From<Option<&ZBuf>> for z_buffer_t {
-    fn from(value: Option<&ZBuf>) -> Self {
-        unsafe { core::mem::transmute(value) }
-    }
-}
+
 #[no_mangle]
 pub extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
     unsafe { Some(core::mem::transmute::<_, &ZBuf>(buffer).clone()).into() }

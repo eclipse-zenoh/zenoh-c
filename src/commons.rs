@@ -20,7 +20,6 @@ use crate::z_priority_t;
 use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
-use zenoh::buffers::ZBuf;
 use zenoh::prelude::SampleKind;
 use zenoh::prelude::SplitBuffer;
 use zenoh::query::ReplyKeyExpr;
@@ -101,97 +100,27 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 /// Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
 /// functions, then the operation will fail (but the passed value will still be consumed).
 #[allow(non_camel_case_types)]
-#[repr(C)]
-pub struct zc_owned_payload_t {
-    pub payload: z_bytes_t,
-    pub _owner: z_owned_buffer_t,
-}
-impl Default for zc_owned_payload_t {
-    fn default() -> Self {
-        zc_payload_null()
-    }
-}
-impl TryFrom<ZBuf> for zc_owned_payload_t {
-    type Error = ();
-    fn try_from(buf: ZBuf) -> Result<Self, Self::Error> {
-        let std::borrow::Cow::Borrowed(payload) = buf.contiguous() else {
-            return Err(());
-        };
-        Ok(Self {
-            payload: payload.into(),
-            _owner: unsafe { std::mem::transmute(buf) },
-        })
-    }
-}
-impl zc_owned_payload_t {
-    pub fn take(&mut self) -> Option<ZBuf> {
-        if !z_bytes_check(&self.payload) {
-            return None;
-        }
-        let start = std::mem::replace(&mut self.payload.start, std::ptr::null());
-        let len = std::mem::replace(&mut self.payload.len, 0);
-        let Some(mut buf) = self._owner.take() else {
-            return None;
-        };
-        {
-            let mut slices = buf.zslices_mut();
-            let slice = slices.next().unwrap();
-            assert!(
-                slices.next().is_none(),
-                "A multi-slice buffer reached zenoh-c, which is definitely a bug, please report it."
-            );
-            let start_offset = unsafe { start.offset_from(slice.as_slice().as_ptr()) };
-            let Ok(start_offset) = start_offset.try_into() else {
-                return None;
-            };
-            *slice = match slice.subslice(start_offset, start_offset + len) {
-                Some(s) => s,
-                None => return None,
-            };
-        }
-        Some(buf)
-    }
-    fn owner(&self) -> Option<&ZBuf> {
-        if !z_bytes_check(&self.payload) {
-            return None;
-        }
-        self._owner.as_ref()
-    }
-}
-impl Drop for zc_owned_payload_t {
-    fn drop(&mut self) {
-        self.take();
-    }
-}
+pub type zc_owned_payload_t = z_owned_buffer_t;
 
 /// Clones the `payload` by incrementing its reference counter.
 #[no_mangle]
 pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
-    match payload.owner() {
-        None => Default::default(),
-        Some(payload) => payload.clone().try_into().unwrap_or_default(),
-    }
+    z_buffer_clone(z_buffer_loan(payload))
 }
 /// Returns `false` if `payload` is the gravestone value.
 #[no_mangle]
 pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
-    !payload.payload.start.is_null()
+    z_buffer_check(payload)
 }
 /// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
 #[no_mangle]
 pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
-    unsafe { std::ptr::replace(payload, zc_payload_null()) };
+    z_buffer_drop(payload)
 }
 /// Constructs `zc_owned_payload_t`'s gravestone value.
 #[no_mangle]
 pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
-    zc_owned_payload_t {
-        payload: z_bytes_t {
-            len: 0,
-            start: std::ptr::null(),
-        },
-        _owner: unsafe { core::mem::MaybeUninit::zeroed().assume_init() },
-    }
+    z_buffer_null()
 }
 
 /// QoS settings of zenoh message.
@@ -235,50 +164,77 @@ pub extern "C" fn z_qos_default() -> z_qos_t {
 ///   z_attachment_t attachment: The attachment of this data sample.
 #[repr(C)]
 pub struct z_sample_t<'a> {
-    pub keyexpr: z_keyexpr_t,
-    pub payload: z_bytes_t,
-    pub encoding: z_encoding_t,
-    pub _zc_buf: &'a c_void,
-    pub kind: z_sample_kind_t,
-    pub timestamp: z_timestamp_t,
-    pub qos: z_qos_t,
-    pub attachment: z_attachment_t,
+    _inner: &'a (),
+}
+impl<'a> core::ops::Deref for z_sample_t<'a> {
+    type Target = Sample;
+    fn deref(&self) -> &Self::Target {
+        unsafe { core::mem::transmute::<&(), &Sample>(self._inner) }
+    }
 }
 
 impl<'a> z_sample_t<'a> {
-    pub fn new(sample: &'a Sample, owner: &'a ZBuf) -> Self {
-        let std::borrow::Cow::Borrowed(payload) = owner.contiguous() else {
+    pub fn new(sample: &'a Sample) -> Self {
+        if !sample.value.payload.zslices().count() <= 1 {
             panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")
         };
         z_sample_t {
-            keyexpr: (&sample.key_expr).into(),
-            payload: z_bytes_t::from(payload),
-            encoding: (&sample.encoding).into(),
-            _zc_buf: unsafe { std::mem::transmute(owner) },
-            kind: sample.kind.into(),
-            timestamp: sample.timestamp.as_ref().into(),
-            qos: sample.qos.into(),
-            attachment: match &sample.attachment {
-                Some(attachment) => z_attachment_t {
-                    data: attachment as *const _ as *mut c_void,
-                    iteration_driver: Some(attachment_iteration_driver),
-                },
-                None => z_attachment_null(),
-            },
+            _inner: unsafe { core::mem::transmute(sample) },
         }
     }
 }
 
-/// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+/// The Key Expression of the sample.
+///
+/// `sample` is aliased by its return value.
 #[no_mangle]
-pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
-    let Some(sample) = sample else {
-        return zc_payload_null();
-    };
-    let buf = unsafe { std::mem::transmute::<_, &ZBuf>(sample._zc_buf).clone() };
-    zc_owned_payload_t {
-        payload: sample.payload,
-        _owner: unsafe { std::mem::transmute(buf) },
+pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
+    (&sample.key_expr).into()
+}
+/// The encoding of the payload.
+#[no_mangle]
+pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> z_encoding_t {
+    (&sample.encoding).into()
+}
+/// The sample's data, the return value aliases the sample.
+///
+/// If you need ownership of the buffer, you may use `z_sample_owned_payload`.
+#[no_mangle]
+pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_bytes_t {
+    sample.payload.slices().next().unwrap_or(b"").into()
+}
+/// Returns the sample's payload after incrementing its internal reference count.
+///
+/// Note that other samples may have received the same buffer, meaning that mutating this buffer may
+/// affect the samples received by other subscribers.
+#[no_mangle]
+pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> z_owned_buffer_t {
+    sample.payload.clone().into()
+}
+/// The sample's kind (put or delete).
+#[no_mangle]
+pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
+    sample.kind.into()
+}
+#[no_mangle]
+pub extern "C" fn z_sample_timestamp(sample: &z_sample_t) -> z_timestamp_t {
+    sample.timestamp.as_ref().into()
+}
+#[no_mangle]
+pub extern "C" fn z_sample_qos(sample: &z_sample_t) -> z_qos_t {
+    sample.qos.into()
+}
+/// The sample's attachment.
+///
+/// `sample` is aliased by the return value.
+#[no_mangle]
+pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
+    match &sample.attachment {
+        Some(attachment) => z_attachment_t {
+            data: attachment as *const _ as *mut c_void,
+            iteration_driver: Some(attachment_iteration_driver),
+        },
+        None => z_attachment_null(),
     }
 }
 
@@ -425,21 +381,24 @@ impl From<zenoh_protocol::core::KnownEncoding> for z_encoding_prefix_t {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_encoding_t {
-    pub prefix: z_encoding_prefix_t,
+    pub prefix: u64,
     pub suffix: z_bytes_t,
 }
 
 impl From<z_encoding_t> for zenoh_protocol::core::Encoding {
     fn from(enc: z_encoding_t) -> Self {
         if enc.suffix.len == 0 {
-            zenoh_protocol::core::Encoding::Exact(enc.prefix.into())
+            zenoh_protocol::core::Encoding::Exact((enc.prefix as u8).try_into().unwrap())
         } else {
             let suffix = unsafe {
                 let slice: &'static [u8] =
                     std::slice::from_raw_parts(enc.suffix.start, enc.suffix.len);
                 std::str::from_utf8_unchecked(slice)
             };
-            zenoh_protocol::core::Encoding::WithSuffix(enc.prefix.into(), suffix.into())
+            zenoh_protocol::core::Encoding::WithSuffix(
+                (enc.prefix as u8).try_into().unwrap(),
+                suffix.into(),
+            )
         }
     }
 }
@@ -448,7 +407,7 @@ impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
     fn from(val: &zenoh_protocol::core::Encoding) -> Self {
         let suffix = val.suffix();
         z_encoding_t {
-            prefix: (*val.prefix()).into(),
+            prefix: u8::from(*val.prefix()) as u64,
             suffix: z_bytes_t {
                 start: suffix.as_ptr(),
                 len: suffix.len(),
@@ -470,7 +429,7 @@ impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_encoding_t {
-    pub prefix: z_encoding_prefix_t,
+    pub prefix: u64,
     pub suffix: z_bytes_t,
     pub _dropped: bool,
 }
@@ -478,7 +437,7 @@ pub struct z_owned_encoding_t {
 impl z_owned_encoding_t {
     pub fn null() -> Self {
         z_owned_encoding_t {
-            prefix: z_encoding_prefix_t::Empty,
+            prefix: 0,
             suffix: z_bytes_t::default(),
             _dropped: true,
         }
@@ -506,7 +465,10 @@ pub unsafe extern "C" fn z_encoding(
             len: libc::strlen(suffix),
         }
     };
-    z_encoding_t { prefix, suffix }
+    z_encoding_t {
+        prefix: prefix as u64,
+        suffix,
+    }
 }
 
 /// Constructs a default :c:type:`z_encoding_t`.

@@ -44,7 +44,6 @@
                   z_owned_query_channel_t * : z_query_channel_drop,                     \
                   z_owned_bytes_map_t * : z_bytes_map_drop,                             \
                   z_owned_buffer_t * : z_buffer_drop,                             \
-                  zc_owned_payload_t * : zc_payload_drop,                               \
                   zc_owned_shmbuf_t * : zc_shmbuf_drop,                                 \
                   zc_owned_shm_manager_t * : zc_shm_manager_drop,                       \
                   zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token,        \
@@ -77,7 +76,6 @@
                   z_owned_bytes_map_t * : z_bytes_map_null,                             \
                   z_owned_buffer_t * : z_buffer_null,                             \
                   z_attachment_t * : z_attachment_null,                                 \
-                  zc_owned_payload_t * : zc_payload_null,                               \
                   zc_owned_shmbuf_t * : zc_shmbuf_null,                                 \
                   zc_owned_shm_manager_t * : zc_shm_manager_null,                       \
                   ze_owned_publication_cache_t * : ze_publication_cache_null,           \
@@ -103,7 +101,6 @@
                   z_owned_bytes_map_t : z_bytes_map_check,                      \
                   z_owned_buffer_t : z_buffer_check,                      \
                   z_attachment_t : z_attachment_check,                          \
-                  zc_owned_payload_t : zc_payload_check,                        \
                   zc_owned_shmbuf_t : zc_shmbuf_check,                          \
                   zc_owned_shm_manager_t : zc_shm_manager_check,                \
                   zc_owned_liveliness_token_t : zc_liveliness_token_check,      \

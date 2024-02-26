@@ -76,7 +76,7 @@ void reply_handler(z_owned_reply_t *reply, void *arg) {
     if (z_reply_is_ok(reply)) {
         z_sample_t sample = z_reply_ok(reply);
 
-        z_owned_str_t k_str = z_keyexpr_to_string(sample.keyexpr);
+        z_owned_str_t k_str = z_keyexpr_to_string(z_sample_keyexpr(&sample));
 #ifdef ZENOH_PICO
         if (k_str == NULL) {
             k_str = zp_keyexpr_resolve(*(z_session_t *)arg, sample.keyexpr);
@@ -95,7 +95,7 @@ volatile unsigned int datas = 0;
 void data_handler(const z_sample_t *sample, void *arg) {
     datas++;
 
-    z_owned_str_t k_str = z_keyexpr_to_string(sample->keyexpr);
+    z_owned_str_t k_str = z_keyexpr_to_string(z_sample_keyexpr(sample));
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
         k_str = zp_keyexpr_resolve(*(z_session_t *)arg, sample->keyexpr);

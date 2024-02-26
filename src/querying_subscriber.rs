@@ -185,13 +185,11 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
                 }
             }
             match sub
-                .callback(move |sample| {
-                    let payload = sample.payload.contiguous();
-                    let owner = match payload {
-                        std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
-                        _ => sample.payload.clone(),
-                    };
-                    let sample = z_sample_t::new(&sample, &owner);
+                .callback(move |mut sample| {
+                    if let std::borrow::Cow::Owned(v) = sample.payload.contiguous() {
+                        sample.payload = v.into();
+                    }
+                    let sample = z_sample_t::new(&sample);
                     z_closure_sample_call(&closure, &sample)
                 })
                 .res()

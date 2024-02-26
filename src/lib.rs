@@ -103,6 +103,30 @@ macro_rules! impl_guarded_transmute {
             }
         }
     };
+    ($src_type:ty, $dst_type:ty, $($gen: tt)*) => {
+        impl<$($gen)*>  $crate::GuardedTransmute<$dst_type> for $src_type {
+            fn transmute(self) -> $dst_type {
+                unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
+            }
+        }
+        impl<$($gen)*> From<$src_type> for $dst_type {
+            fn from(value: $src_type) -> $dst_type {
+                unsafe { core::mem::transmute(value) }
+            }
+        }
+        impl<$($gen)*> core::ops::Deref for $dst_type {
+            type Target = $src_type;
+            fn deref(&self) -> &$src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+        impl<$($gen)*> core::ops::DerefMut for $dst_type {
+            fn deref_mut(&mut self) -> &mut $src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+
+    };
 }
 
 pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";

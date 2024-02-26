@@ -85,14 +85,14 @@ int run_publisher() {
 
 void data_handler(const z_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
+    z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(sample));
     if (strcmp(keyexpr, z_loan(keystr))) {
         perror("Unexpected key received");
         exit(-1);
     }
     z_drop(z_move(keystr));
 
-    ASSERT_STR_BYTES_EQUAL(values[val_num], sample->payload);
+    ASSERT_STR_BYTES_EQUAL(values[val_num], z_sample_payload(sample));
 
     printf("data_handler: %i\n", val_num);
     if (++val_num == values_count) {

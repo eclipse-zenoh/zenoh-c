@@ -65,8 +65,9 @@ int main(int argc, char **argv) {
     for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
         if (z_reply_is_ok(&reply)) {
             z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
-            printf(">> Received ('%s': '%.*s')\n", z_loan(keystr), (int)sample.payload.len, sample.payload.start);
+            z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_bytes_t payload = z_sample_payload(&sample);
+            printf(">> Received ('%s': '%.*s')\n", z_loan(keystr), (int)payload.len, payload.start);
             z_drop(z_move(keystr));
         } else {
             printf("Received an error\n");

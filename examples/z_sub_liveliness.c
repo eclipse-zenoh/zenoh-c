@@ -21,8 +21,8 @@
 #include "zenoh.h"
 
 void data_handler(const z_sample_t *sample, void *arg) {
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
-    switch (sample->kind) {
+    z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(sample));
+    switch (z_sample_kind(sample)) {
         case Z_SAMPLE_KIND_PUT:
             printf(">> [LivelinessSubscriber] New alive token ('%s')\n", z_loan(keystr));
             break;
