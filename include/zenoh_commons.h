@@ -839,6 +839,7 @@ typedef struct z_str_array_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ * tags{z.z_hello_t, api.hello}
  */
 typedef struct z_hello_t {
   unsigned int whatami;
@@ -1353,6 +1354,7 @@ ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
  *
  * Returns a negative value if an error occured while closing the session.
  * Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
+ * tags{c.z_close, api.session.close}
  */
 ZENOHC_API int8_t z_close(struct z_owned_session_t *session);
 /**
@@ -1899,6 +1901,7 @@ ZENOHC_API
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
+ * tags{c.z_open, api.session.create}
  */
 ZENOHC_API
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
@@ -2261,6 +2264,7 @@ ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_from(struct z_conf
 ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_null(void);
 /**
  * Returns ``true`` if `session` is valid.
+ * tags{c.z_session_check}
  */
 ZENOHC_API bool z_session_check(const struct z_owned_session_t *session);
 /**
@@ -2272,11 +2276,13 @@ ZENOHC_API bool z_session_check(const struct z_owned_session_t *session);
  * The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
  * attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
  * have been destroyed is UB (likely SEGFAULT)
+ * tags{c.z_session_loan}
  */
 ZENOHC_API
 struct z_session_t z_session_loan(const struct z_owned_session_t *s);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_session_t' type
+ * tags{c.z_session_null}
  */
 ZENOHC_API struct z_owned_session_t z_session_null(void);
 /**
@@ -2683,6 +2689,7 @@ struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
 ZENOHC_API struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
 /**
  * Increments the session's reference count, returning a new owning handle.
+ * tags{c.zc_session.rcinc, api.session.rcinc}
  */
 ZENOHC_API struct z_owned_session_t zc_session_rcinc(struct z_session_t session);
 /**

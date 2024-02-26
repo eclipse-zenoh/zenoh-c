@@ -29,6 +29,7 @@ use zenoh_util::core::zresult::ErrNo;
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
+/// tags{c.z_owned_session_t, api.session}
 pub struct z_owned_session_t(usize);
 
 impl_guarded_transmute!(Option<Arc<Session>>, z_owned_session_t);
@@ -58,7 +59,7 @@ impl AsRef<Option<Weak<Session>>> for z_session_t {
 }
 
 impl z_session_t {
-    pub fn upgrade(&self) -> Option<Arc<Session>> {
+    pub(crate) fn upgrade(&self) -> Option<Arc<Session>> {
         self.as_ref().as_ref().and_then(Weak::upgrade)
     }
 }
@@ -70,10 +71,10 @@ impl From<Option<Weak<Session>>> for z_session_t {
 }
 
 impl z_owned_session_t {
-    pub fn new(session: Arc<Session>) -> Self {
+    pub(crate) fn new(session: Arc<Session>) -> Self {
         Some(session).into()
     }
-    pub fn null() -> Self {
+    pub(crate) fn null() -> Self {
         None::<Arc<Session>>.into()
     }
 }
@@ -82,6 +83,7 @@ impl z_owned_session_t {
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 #[repr(C)]
+/// tags{c.z_session_t, api.session}
 pub struct z_session_t(usize);
 
 /// Returns a :c:type:`z_session_t` loaned from `s`.
@@ -93,6 +95,7 @@ pub struct z_session_t(usize);
 /// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
+/// tags{c.z_session_loan}
 pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
     match s.as_ref() {
         Some(s) => {
@@ -108,6 +111,7 @@ pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
 /// Constructs a null safe-to-drop value of 'z_owned_session_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// tags{c.z_session_null}
 pub extern "C" fn z_session_null() -> z_owned_session_t {
     z_owned_session_t::null()
 }
@@ -115,6 +119,7 @@ pub extern "C" fn z_session_null() -> z_owned_session_t {
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_open, api.session.create}
 pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
@@ -139,6 +144,7 @@ pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
 /// Returns ``true`` if `session` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_session_check}
 pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
     session.as_ref().is_some()
 }
@@ -149,6 +155,7 @@ pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 /// Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.z_close, api.session.close}
 pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
     let Some(s) = session.as_mut().take() else {
         return 0;
@@ -168,6 +175,7 @@ pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
 /// Increments the session's reference count, returning a new owning handle.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+/// tags{c.zc_session.rcinc, api.session.rcinc}
 pub extern "C" fn zc_session_rcinc(session: z_session_t) -> z_owned_session_t {
     session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
 }

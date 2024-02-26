@@ -20,7 +20,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#define DEFAULT_SCOUTING_TIMEOUT 1000
 /**
  * An owned zenoh session.
  *
@@ -32,6 +31,7 @@
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * tags{c.z_owned_session_t, api.session}
  */
 typedef struct z_owned_session_t {
   size_t _0;
@@ -48,6 +48,7 @@ typedef struct z_query_t {
 } z_query_t;
 /**
  * A loaned zenoh session.
+ * tags{c.z_session_t, api.session}
  */
 typedef struct z_session_t {
   size_t _0;

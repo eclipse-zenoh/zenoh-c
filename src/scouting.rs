@@ -107,6 +107,7 @@ pub struct z_owned_hello_t {
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
+/// tags{z.z_hello_t, api.hello}
 pub struct z_hello_t {
     pub whatami: c_uint,
     pub pid: z_id_t,
@@ -141,6 +142,7 @@ impl From<Hello> for z_owned_hello_t {
 /// Frees `hello`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_hello_drop}
 pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
     z_str_array_drop(&mut hello._locators);
     hello._whatami = 0;
@@ -149,6 +151,7 @@ pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
 /// Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_hello_loan}
 pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
     z_hello_t {
         whatami: hello._whatami,
@@ -160,6 +163,7 @@ pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
 /// Constructs a gravestone value for hello, useful to steal one from a callback
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_hello_null}
 pub extern "C" fn z_hello_null() -> z_owned_hello_t {
     z_owned_hello_t {
         _whatami: 0,
@@ -178,22 +182,25 @@ impl Drop for z_owned_hello_t {
 /// Returns ``true`` if `hello` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_hello_check}
 pub extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
     hello._whatami != 0 && z_str_array_check(&hello._locators)
 }
 
 #[repr(C)]
+// tags{c.z_owned_scouting_config, api.scouting_config}
 pub struct z_owned_scouting_config_t {
     _config: z_owned_config_t,
     pub zc_timeout_ms: c_ulong,
     pub zc_what: u8,
 }
 
-pub const DEFAULT_SCOUTING_WHAT: u8 = WhatAmI::Router as u8 | WhatAmI::Peer as u8;
-pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
+const DEFAULT_SCOUTING_WHAT: u8 = WhatAmI::Router as u8 | WhatAmI::Peer as u8;
+const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+// tags{c.z_scouting_config_null}
 pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: z_config_null(),
@@ -204,6 +211,7 @@ pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_scouting_config_default, api.scouting_config.create.default}
 pub extern "C" fn z_scouting_config_default() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: z_config_default(),
@@ -214,6 +222,7 @@ pub extern "C" fn z_scouting_config_default() -> z_owned_scouting_config_t {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_scouting_config_from, api.scouting_config.create.from_config}
 pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: config.as_ref().clone().into(),
@@ -224,12 +233,14 @@ pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_scouting_config_check}
 pub extern "C" fn z_scouting_config_check(config: &z_owned_scouting_config_t) -> bool {
     z_config_check(&config._config)
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+// tags{c.z_scouting_config_drop}
 pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t) {
     std::mem::drop(std::mem::replace(config, z_scouting_config_null()));
 }
@@ -244,6 +255,7 @@ pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t)
 /// Returns 0 if successful, negative values upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
+// tags{c.z_scout, api.scout}
 pub extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
