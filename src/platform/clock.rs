@@ -16,13 +16,13 @@ lazy_static! {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct zp_time_t {
-    t: f64
+    t: f64,
 }
 
 #[no_mangle]
 pub extern "C" fn zp_time_now() -> zp_time_t {
     zp_time_t {
-        t: INSTANT_BASE.elapsed().as_secs_f64()
+        t: INSTANT_BASE.elapsed().as_secs_f64(),
     }
 }
 
@@ -47,7 +47,7 @@ unsafe fn get_elapsed_seconds(time: *const zp_time_t) -> f64 {
     if time.is_null() {
         return 0.0;
     }
-    zp_time_now().t -  (*time).t
+    zp_time_now().t - (*time).t
 }
 
 #[no_mangle]
