@@ -9,6 +9,12 @@ use std::{
 use crate::{impl_guarded_transmute, GuardedTransmute};
 
 // TODO: properly define size/alignment for every architecture
+#[cfg(all(target_arch = "x86_64", target_vendor = "apple"))]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct zp_time_t([u64; 1]);
+
+#[cfg(not(all(target_arch = "x86_64", target_vendor = "apple")))]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct zp_time_t([u64; 2]);

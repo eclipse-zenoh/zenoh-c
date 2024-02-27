@@ -57,6 +57,7 @@ usize_is_size_t = true
 "target_arch = aarch64" = "TARGET_ARCH_AARCH64"
 "target_arch = x86_64" = "TARGET_ARCH_X86_64"
 "target_arch = arm" = "TARGET_ARCH_ARM"
+"target_vendor = apple" = "TARGET_VENDOR_APPLE"
 
 [export]
 include = []

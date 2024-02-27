@@ -981,9 +981,16 @@ typedef struct zp_task_t {
 typedef struct zp_task_attr_t {
   size_t _0;
 } zp_task_attr_t;
+#if (defined(TARGET_ARCH_X86_64) && defined(TARGET_VENDOR_APPLE))
+typedef struct zp_time_t {
+  uint64_t _0[1];
+} zp_time_t;
+#endif
+#if !(defined(TARGET_ARCH_X86_64) && defined(TARGET_VENDOR_APPLE))
 typedef struct zp_time_t {
   uint64_t _0[2];
 } zp_time_t;
+#endif
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
