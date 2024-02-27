@@ -20,8 +20,8 @@
 typedef struct {
     volatile unsigned long count;
     volatile unsigned long finished_rounds;
-    zp_time_t start;
-    zp_time_t first_start;
+    zp_clock_t start;
+    zp_clock_t first_start;
     bool started;
 } z_stats_t;
 
@@ -36,7 +36,7 @@ z_stats_t *z_stats_make() {
 void on_sample(const z_sample_t *sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
-        stats->start = zp_time_now();
+        stats->start = zp_clock_now();
         if (!stats->started) {
             stats->first_start = stats->start;
             stats->started = true;
@@ -46,14 +46,14 @@ void on_sample(const z_sample_t *sample, void *context) {
         stats->count++;
     } else {
         stats->finished_rounds++;
-        printf("%f msg/s\n", 1000.0 * N / zp_time_elapsed_ms(&stats->start));
+        printf("%f msg/s\n", 1000.0 * N / zp_clock_elapsed_ms(&stats->start));
         stats->count = 0;
     }
 }
 void drop_stats(void *context) {
     const z_stats_t *stats = (z_stats_t *)context;
     const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
-    double elapsed_s = zp_time_elapsed_s(&stats->first_start);
+    double elapsed_s = zp_clock_elapsed_s(&stats->first_start);
     printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
            elapsed_s, (double)sent_messages / elapsed_s);
     free(context);

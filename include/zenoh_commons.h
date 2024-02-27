@@ -958,6 +958,13 @@ typedef struct ze_querying_subscriber_t {
   const struct ze_owned_querying_subscriber_t *_0;
 } ze_querying_subscriber_t;
 /**
+ * Clock
+ * Uses monothonic clock
+ */
+typedef struct zp_clock_t {
+  double t;
+} zp_clock_t;
+/**
  * Condvar
  *
  */
@@ -981,6 +988,10 @@ typedef struct zp_task_t {
 typedef struct zp_task_attr_t {
   size_t _0;
 } zp_task_attr_t;
+/**
+ * Time
+ * Uses system clock
+ */
 typedef struct zp_time_t {
   double t;
 } zp_time_t;
@@ -2553,6 +2564,10 @@ int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_c
  */
 ZENOHC_API
 int8_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *sub);
+ZENOHC_API uint64_t zp_clock_elapsed_ms(const struct zp_clock_t *time);
+ZENOHC_API uint64_t zp_clock_elapsed_s(const struct zp_clock_t *time);
+ZENOHC_API uint64_t zp_clock_elapsed_us(const struct zp_clock_t *time);
+ZENOHC_API struct zp_clock_t zp_clock_now(void);
 ZENOHC_API int8_t zp_condvar_free(struct zp_condvar_t *cv);
 ZENOHC_API int8_t zp_condvar_init(struct zp_condvar_t *cv);
 ZENOHC_API int8_t zp_condvar_signal(struct zp_condvar_t *cv);
