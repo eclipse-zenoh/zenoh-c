@@ -3,29 +3,27 @@ use libc::c_char;
 use std::{
     cmp::min,
     slice,
-    time::{Duration, Instant, SystemTime},
+    time::{Instant, SystemTime},
 };
 
-use crate::{impl_guarded_transmute, GuardedTransmute};
+use lazy_static::lazy_static;
 
-// TODO: properly define size/alignment for every architecture
-#[cfg(all(target_arch = "x86_64", target_vendor = "apple"))]
+lazy_static! {
+    /// This is an example for using doc comment attributes
+    static ref INSTANT_BASE: Instant = Instant::now();
+}
+
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_time_t([u64; 1]);
-
-#[cfg(not(all(target_arch = "x86_64", target_vendor = "apple")))]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct zp_time_t([u64; 2]);
-
-impl_guarded_transmute!(zp_time_t, Instant);
-impl_guarded_transmute!(Instant, zp_time_t);
+pub struct zp_time_t {
+    t: f64
+}
 
 #[no_mangle]
 pub extern "C" fn zp_time_now() -> zp_time_t {
-    let t = Instant::now();
-    t.transmute()
+    zp_time_t {
+        t: INSTANT_BASE.elapsed().as_secs_f64()
+    }
 }
 
 #[no_mangle]
@@ -45,31 +43,27 @@ pub unsafe extern "C" fn zp_time_now_as_str(buf: *const c_char, len: usize) -> *
 }
 
 #[allow(clippy::missing_safety_doc)]
-unsafe fn get_elapsed(time: *const zp_time_t) -> Duration {
+unsafe fn get_elapsed_seconds(time: *const zp_time_t) -> f64 {
     if time.is_null() {
-        return Duration::new(0, 0);
+        return 0.0;
     }
-    let ttime = (*time).transmute();
-    let ret = ttime.elapsed();
-    #[allow(forgetting_copy_types)]
-    std::mem::forget(ttime);
-    ret
+    zp_time_now().t -  (*time).t
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_time_elapsed_s(time: *const zp_time_t) -> usize {
-    get_elapsed(time).as_secs() as usize
+pub unsafe extern "C" fn zp_time_elapsed_s(time: *const zp_time_t) -> u64 {
+    get_elapsed_seconds(time) as u64
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_time_elapsed_ms(time: *const zp_time_t) -> usize {
-    get_elapsed(time).as_millis() as usize
+pub unsafe extern "C" fn zp_time_elapsed_ms(time: *const zp_time_t) -> u64 {
+    (get_elapsed_seconds(time) * 1000.0) as u64
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_time_elapsed_us(time: *const zp_time_t) -> usize {
-    get_elapsed(time).as_micros() as usize
+pub unsafe extern "C" fn zp_time_elapsed_us(time: *const zp_time_t) -> u64 {
+    (get_elapsed_seconds(time) * 1000000.0) as u64
 }

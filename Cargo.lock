@@ -3099,6 +3099,7 @@ dependencies = [
  "fs2",
  "futures",
  "json5",
+ "lazy_static",
  "libc",
  "log",
  "rand",
