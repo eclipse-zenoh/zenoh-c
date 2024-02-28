@@ -471,6 +471,20 @@ typedef struct z_owned_closure_zid_t {
   void (*drop)(void*);
 } z_owned_closure_zid_t;
 /**
+ * Condvar
+ *
+ */
+typedef struct z_condvar_t {
+  size_t _0;
+} z_condvar_t;
+/**
+ * Mutex
+ *
+ */
+typedef struct z_mutex_t {
+  size_t _0;
+} z_mutex_t;
+/**
  * An owned zenoh configuration.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
@@ -796,6 +810,16 @@ typedef struct z_owned_scouting_config_t {
 typedef struct z_subscriber_t {
   const struct z_owned_subscriber_t *_0;
 } z_subscriber_t;
+/**
+ * Task
+ *
+ */
+typedef struct z_task_t {
+  size_t _0;
+} z_task_t;
+typedef struct z_task_attr_t {
+  size_t _0;
+} z_task_attr_t;
 /**
  * The options for `zc_liveliness_declare_token`
  */
@@ -1198,6 +1222,10 @@ ZENOHC_API void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
  * Constructs a null safe-to-drop value of 'z_owned_closure_zid_t' type
  */
 ZENOHC_API struct z_owned_closure_zid_t z_closure_zid_null(void);
+ZENOHC_API int8_t z_condvar_free(struct z_condvar_t *cv);
+ZENOHC_API int8_t z_condvar_init(struct z_condvar_t *cv);
+ZENOHC_API int8_t z_condvar_signal(struct z_condvar_t *cv);
+ZENOHC_API int8_t z_condvar_wait(struct z_condvar_t *cv, struct z_mutex_t *m);
 /**
  * Returns ``true`` if `config` is valid.
  */
@@ -1615,6 +1643,11 @@ ZENOHC_API struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  */
 ZENOHC_API
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
+ZENOHC_API int8_t z_mutex_free(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_init(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_lock(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_try_lock(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_unlock(struct z_mutex_t *m);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
  */
@@ -2028,6 +2061,12 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
  *     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
  */
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
+ZENOHC_API
+int8_t z_task_init(struct z_task_t *task,
+                   const struct z_task_attr_t *_attr,
+                   void (*fun)(void *arg),
+                   void *arg);
+ZENOHC_API int8_t z_task_join(struct z_task_t *task);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
  */
