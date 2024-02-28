@@ -83,14 +83,14 @@ void callback(z_owned_hello_t *hello, void *context) {
 void drop(void *context) {
     printf("Dropping scout\n");
     int count = *(int *)context;
-    free(context);
+    z_free(context);
     if (!count) {
         printf("Did not find any zenoh process.\n");
     }
 }
 
 int main(int argc, char **argv) {
-    int *context = malloc(sizeof(int));
+    int *context = z_malloc(sizeof(int));
     *context = 0;
     z_owned_scouting_config_t config = z_scouting_config_default();
     z_owned_closure_hello_t closure = z_closure(callback, drop, context);
