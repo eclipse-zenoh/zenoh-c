@@ -203,7 +203,7 @@ typedef struct z_owned_bytes_map_t {
  * Uses monotonic clock
  */
 typedef struct z_clock_t {
-  double t;
+  uint64_t t;
 } z_clock_t;
 /**
  * Represents a Zenoh ID.
@@ -832,7 +832,7 @@ typedef struct z_task_attr_t {
  * Uses system clock
  */
 typedef struct z_time_t {
-  double t;
+  uint64_t t;
 } z_time_t;
 /**
  * The options for `zc_liveliness_declare_token`

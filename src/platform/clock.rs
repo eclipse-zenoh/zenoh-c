@@ -8,8 +8,11 @@ use std::{
 
 use lazy_static::lazy_static;
 
+// Use initial time stored in static variable as a reference time,
+// to be able to return number of ns passed since.
+// This is to avoid wrapping Instant into a c type and not
+// have to account for its platform-dependent size and alignment.
 lazy_static! {
-    /// This is an example for using doc comment attributes
     static ref CLOCK_BASE: Instant = Instant::now();
 }
 
@@ -18,39 +21,44 @@ lazy_static! {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_clock_t {
-    t: f64,
+    t: u64,
 }
 
 #[no_mangle]
 pub extern "C" fn z_clock_now() -> z_clock_t {
     z_clock_t {
-        t: CLOCK_BASE.elapsed().as_secs_f64(),
+        t: CLOCK_BASE.elapsed().as_nanos() as u64,
     }
 }
 #[allow(clippy::missing_safety_doc)]
-unsafe fn get_elapsed_seconds(time: *const z_clock_t) -> f64 {
+unsafe fn get_elapsed_nanos(time: *const z_clock_t) -> u64 {
     if time.is_null() {
-        return 0.0;
+        return 0;
     }
-    z_clock_now().t - (*time).t
+    let now_t = z_clock_now().t;
+    if now_t > (*time).t {
+        return now_t - (*time).t;
+    } else {
+        return 0;
+    }
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_clock_elapsed_s(time: *const z_clock_t) -> u64 {
-    get_elapsed_seconds(time) as u64
+    get_elapsed_nanos(time) / 1_000_000_000
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_clock_elapsed_ms(time: *const z_clock_t) -> u64 {
-    (get_elapsed_seconds(time) * 1000.0) as u64
+    get_elapsed_nanos(time) / 1_000_000
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_clock_elapsed_us(time: *const z_clock_t) -> u64 {
-    (get_elapsed_seconds(time) * 1000000.0) as u64
+    get_elapsed_nanos(time) / 1_000
 }
 
 /// Time
@@ -58,7 +66,7 @@ pub unsafe extern "C" fn z_clock_elapsed_us(time: *const z_clock_t) -> u64 {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_time_t {
-    t: f64,
+    t: u64,
 }
 
 #[no_mangle]
@@ -83,31 +91,36 @@ pub extern "C" fn z_time_now() -> z_time_t {
         t: SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or(Duration::new(0, 0))
-            .as_secs_f64(),
+            .as_nanos() as u64,
     }
 }
 #[allow(clippy::missing_safety_doc)]
-unsafe fn get_elapsed_seconds_system_clock(time: *const z_time_t) -> f64 {
+unsafe fn get_elapsed_nanos_system_clock(time: *const z_time_t) -> u64 {
     if time.is_null() {
-        return 0.0;
+        return 0;
     }
-    0.0f64.max(z_time_now().t - (*time).t)
+    let now_t = z_time_now().t;
+    if now_t > (*time).t {
+        return now_t - (*time).t;
+    } else {
+        return 0;
+    }
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_time_elapsed_s(time: *const z_time_t) -> u64 {
-    get_elapsed_seconds_system_clock(time) as u64
+    get_elapsed_nanos_system_clock(time) / 1_000_000_000
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_time_elapsed_ms(time: *const z_time_t) -> u64 {
-    (get_elapsed_seconds_system_clock(time) * 1000.0) as u64
+    get_elapsed_nanos_system_clock(time) / 1_000_000
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_time_elapsed_us(time: *const z_time_t) -> u64 {
-    (get_elapsed_seconds_system_clock(time) * 1000000.0) as u64
+    get_elapsed_nanos_system_clock(time) / 1_000
 }
