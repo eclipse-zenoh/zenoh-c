@@ -281,6 +281,7 @@ typedef int8_t (*z_attachment_iter_driver_t)(const void *iterator,
  *
  * `iteration_driver == NULL` marks the gravestone value, as this type is often optional.
  * Users are encouraged to use `z_attachment_null` and `z_attachment_check` to interact.
+ * tags{c.z_attachment_t, api.attachment}
  */
 typedef struct z_attachment_t {
   const void *data;
@@ -290,6 +291,7 @@ typedef struct z_attachment_t {
  * A map of maybe-owned vector of bytes to owned vector of bytes.
  *
  * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
+ * tags{c.z_owned_bytes_map_t}
  */
 typedef struct z_owned_bytes_map_t {
   uint64_t _0[2];
@@ -861,6 +863,7 @@ typedef struct z_hello_t {
  * The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
  * should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
  * `z_check` and `z_str_check` correspondently
+ * tags{c.z_owned_str_t}
  */
 typedef struct z_owned_str_t {
   char *_cstr;
@@ -1001,6 +1004,9 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
+/**
+ * tags{c.z_owned_scouting_config, api.scouting_config}
+ */
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
   unsigned long zc_timeout_ms;
@@ -1237,10 +1243,12 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 /**
  * Returns the gravestone value for `z_attachment_t`.
+ * tags{c.z_attachment_check}
  */
 ZENOHC_API bool z_attachment_check(const struct z_attachment_t *this_);
 /**
  * Returns the value associated with the key.
+ * tags{c.z_attachment_get, api.attachment.get}
  */
 ZENOHC_API struct z_bytes_t z_attachment_get(struct z_attachment_t this_, struct z_bytes_t key);
 /**
@@ -1250,6 +1258,7 @@ ZENOHC_API struct z_bytes_t z_attachment_get(struct z_attachment_t this_, struct
  * `context` is passed to `body` to allow stateful closures.
  *
  * This function takes no ownership whatsoever.
+ * tags{c.z_attachment_iterate, api.attachment.iter}
  */
 ZENOHC_API
 int8_t z_attachment_iterate(struct z_attachment_t this_,
@@ -1257,6 +1266,7 @@ int8_t z_attachment_iterate(struct z_attachment_t this_,
                             void *context);
 /**
  * Returns the gravestone value for `z_attachment_t`.
+ * tags{c.z_attachment_null}
  */
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
 /**
@@ -1273,28 +1283,33 @@ ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
 ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
 /**
  * Aliases `this` into a generic `z_attachment_t`, allowing it to be passed to corresponding APIs.
+ * tags{c.z_bytes_map_as_attachment, api.attachment.create.from_map}
  */
 ZENOHC_API struct z_attachment_t z_bytes_map_as_attachment(const struct z_owned_bytes_map_t *this_);
 /**
  * Returns `true` if the map is not in its gravestone state
+ * tags{c.z_bytes_map_check}
  */
 ZENOHC_API bool z_bytes_map_check(const struct z_owned_bytes_map_t *this_);
 /**
  * Destroys the map, resetting `this` to its gravestone value.
  *
  * This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+ * tags{c.z_bytes_map_drop}
  */
 ZENOHC_API void z_bytes_map_drop(struct z_owned_bytes_map_t *this_);
 /**
  * Constructs a map from the provided attachment, copying keys and values.
  *
  * If `this` is at gravestone value, the returned value will also be at gravestone value.
+ * tags{c.z_bytes_map_from_attachment}
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_from_attachment(struct z_attachment_t this_);
 /**
  * Constructs a map from the provided attachment, aliasing the attachment's keys and values.
  *
  * If `this` is at gravestone value, the returned value will also be at gravestone value.
+ * tags{c.z_bytes_map_from_attachment_aliasing}
  */
 ZENOHC_API
 struct z_owned_bytes_map_t z_bytes_map_from_attachment_aliasing(struct z_attachment_t this_);
@@ -1302,6 +1317,7 @@ struct z_owned_bytes_map_t z_bytes_map_from_attachment_aliasing(struct z_attachm
  * Returns the value associated with `key`, returning a gravestone value if:
  * - `this` or `key` is in gravestone state.
  * - `this` has no value associated to `key`
+ * tags{c.z_bytes_map_get}
  */
 ZENOHC_API
 struct z_bytes_t z_bytes_map_get(const struct z_owned_bytes_map_t *this_,
@@ -1312,6 +1328,7 @@ struct z_bytes_t z_bytes_map_get(const struct z_owned_bytes_map_t *this_,
  * Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
  *
  * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ * tags{c.z_bytes_map_insert_by_alias}
  */
 ZENOHC_API
 void z_bytes_map_insert_by_alias(const struct z_owned_bytes_map_t *this_,
@@ -1321,6 +1338,7 @@ void z_bytes_map_insert_by_alias(const struct z_owned_bytes_map_t *this_,
  * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
  *
  * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ * tags{c.z_bytes_map_insert_by_copy}
  */
 ZENOHC_API
 void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
@@ -1337,6 +1355,7 @@ void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
  * Note that this map is unordered.
  *
  * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ * tags{c.z_bytes_map_iter}
  */
 ZENOHC_API
 int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
@@ -1344,10 +1363,12 @@ int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
                         void *ctx);
 /**
  * Constructs a new map.
+ * tags{c.z_bytes_map_new}
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
 /**
  * Constructs the gravestone value for `z_owned_bytes_map_t`
+ * tags{c.z_bytes_map_null}
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
 /**
@@ -1502,6 +1523,7 @@ ZENOHC_API
 struct z_owned_config_t z_config_new(void);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_config_t' type
+ * tags{c.z_config_null}
  */
 ZENOHC_API struct z_owned_config_t z_config_null(void);
 /**
@@ -1697,6 +1719,7 @@ ZENOHC_API struct z_encoding_t z_encoding_default(void);
 ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
  * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
+ * tags{c.z_encoding_loan}
  */
 ZENOHC_API struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
@@ -1733,18 +1756,22 @@ int8_t z_get(struct z_session_t session,
 ZENOHC_API struct z_get_options_t z_get_options_default(void);
 /**
  * Returns ``true`` if `hello` is valid.
+ * tags{c.z_hello_check}
  */
 ZENOHC_API bool z_hello_check(const struct z_owned_hello_t *hello);
 /**
  * Frees `hello`, invalidating it for double-drop safety.
+ * tags{c.z_hello_drop}
  */
 ZENOHC_API void z_hello_drop(struct z_owned_hello_t *hello);
 /**
  * Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
+ * tags{c.z_hello_loan}
  */
 ZENOHC_API struct z_hello_t z_hello_loan(const struct z_owned_hello_t *hello);
 /**
  * Constructs a gravestone value for hello, useful to steal one from a callback
+ * tags{c.z_hello_null}
  */
 ZENOHC_API struct z_owned_hello_t z_hello_null(void);
 /**
@@ -1840,6 +1867,7 @@ struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
                                           size_t right_len);
 /**
  * Frees `keyexpr` and invalidates it for double-drop safety.
+ * tags{c.z_keyexpr_drop}
  */
 ZENOHC_API void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
 /**
@@ -1886,10 +1914,12 @@ struct z_owned_keyexpr_t z_keyexpr_join(struct z_keyexpr_t left,
                                         struct z_keyexpr_t right);
 /**
  * Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
+ * tags{c.z_keyexpr_loan}
  */
 ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
+ * tags{c.z_keyexpr_new, api.keyexpr.create.checked}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 /**
@@ -2272,14 +2302,30 @@ struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
  *     timeout: The time (in milliseconds) that should be spent scouting.
  *
  * Returns 0 if successful, negative values upon failure.
+ * tags{c.z_scout, api.scout}
  */
 ZENOHC_API
 int8_t z_scout(struct z_owned_scouting_config_t *config,
                struct z_owned_closure_hello_t *callback);
+/**
+ * tags{c.z_scouting_config_check}
+ */
 ZENOHC_API bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
+/**
+ * tags{c.z_scouting_config_default, api.scouting_config.create.default}
+ */
 ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_default(void);
+/**
+ * tags{c.z_scouting_config_drop}
+ */
 ZENOHC_API void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
+/**
+ * tags{c.z_scouting_config_from, api.scouting_config.create.from_config}
+ */
 ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_from(struct z_config_t config);
+/**
+ * tags{c.z_scouting_config_null}
+ */
 ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_null(void);
 /**
  * Returns ``true`` if `session` is valid.
@@ -2321,18 +2367,22 @@ ZENOHC_API void z_str_array_drop(struct z_owned_str_array_t *strs);
 ZENOHC_API struct z_str_array_t z_str_array_loan(const struct z_owned_str_array_t *strs);
 /**
  * Returns ``true`` if `s` is a valid string
+ * tags{c.z_str_check}
  */
 ZENOHC_API bool z_str_check(const struct z_owned_str_t *s);
 /**
  * Frees `z_owned_str_t`, invalidating it for double-drop safety.
+ * tags{c.z_str_drop}
  */
 ZENOHC_API void z_str_drop(struct z_owned_str_t *s);
 /**
  * Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
+ * tags{c.z_str_loan}
  */
 ZENOHC_API const char *z_str_loan(const struct z_owned_str_t *s);
 /**
  * Returns undefined `z_owned_str_t`
+ * tags{c.z_str_null}
  */
 ZENOHC_API struct z_owned_str_t z_str_null(void);
 /**
@@ -2448,6 +2498,7 @@ struct z_owned_str_t zc_config_to_string(struct z_config_t config);
  *
  * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
  * this will be performed automatically by `z_open` and `z_scout`.
+ * tags{c.zc_init_logger, api.logger.init}
  */
 ZENOHC_API void zc_init_logger(void);
 /**

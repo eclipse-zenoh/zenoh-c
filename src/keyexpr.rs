@@ -103,7 +103,7 @@ pub extern "C" fn z_keyexpr_null() -> z_owned_keyexpr_t {
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-// tags{c.z_keyexpr_new, api.keyexpr.create.checked}
+/// tags{c.z_keyexpr_new, api.keyexpr.create.checked}
 pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t {
     if name.is_null() {
         return z_owned_keyexpr_t::null();
@@ -126,7 +126,7 @@ pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t
 
 /// Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
 #[no_mangle]
-// tags{c.z_keyexpr_loan}
+/// tags{c.z_keyexpr_loan}
 pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
     keyexpr.as_ref().map(|k| k.borrowing_clone()).into()
 }
@@ -134,7 +134,7 @@ pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
 /// Frees `keyexpr` and invalidates it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-// tags{c.z_keyexpr_drop}
+/// tags{c.z_keyexpr_drop}
 pub extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
     std::mem::drop(keyexpr.take())
 }
