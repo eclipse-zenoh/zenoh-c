@@ -14,7 +14,7 @@ lazy_static! {
 }
 
 /// Clock
-/// Uses monothonic clock
+/// Uses monotonic clock
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct zp_clock_t {

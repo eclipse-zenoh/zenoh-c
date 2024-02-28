@@ -959,7 +959,7 @@ typedef struct ze_querying_subscriber_t {
 } ze_querying_subscriber_t;
 /**
  * Clock
- * Uses monothonic clock
+ * Uses monotonic clock
  */
 typedef struct zp_clock_t {
   double t;
