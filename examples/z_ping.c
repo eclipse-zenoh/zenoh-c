@@ -13,11 +13,11 @@
 #define handle_error_en(en, msg) \
     do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
-zp_condvar_t cond;
-zp_mutex_t mutex;
+z_condvar_t cond;
+z_mutex_t mutex;
 
-void callback(const z_sample_t* sample, void* context) { zp_condvar_signal(&cond); }
-void drop(void* context) { zp_condvar_free(&cond); }
+void callback(const z_sample_t* sample, void* context) { z_condvar_signal(&cond); }
+void drop(void* context) { z_condvar_free(&cond); }
 
 struct args_t {
     unsigned int size;             // -s
@@ -41,8 +41,8 @@ int main(int argc, char** argv) {
             DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
         return 1;
     }
-    zp_mutex_init(&mutex);
-    zp_condvar_init(&cond);
+    z_mutex_init(&mutex);
+    z_condvar_init(&cond);
     z_owned_config_t config = args.config_path ? zc_config_from_file(args.config_path) : z_config_default();
     z_owned_session_t session = z_open(z_move(config));
     z_keyexpr_t ping = z_keyexpr_unchecked("test/ping");
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
-    zp_mutex_lock(&mutex);
+    z_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
         zp_clock_t warmup_start = zp_clock_now();
@@ -62,9 +62,9 @@ int main(int argc, char** argv) {
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
             z_publisher_put(z_loan(pub), data, args.size, NULL);
-            int s = zp_condvar_wait(&cond, &mutex);
+            int s = z_condvar_wait(&cond, &mutex);
             if (s != 0) {
-                handle_error_en(s, "zp_condvar_wait");
+                handle_error_en(s, "z_condvar_wait");
             }
             elapsed_us = zp_clock_elapsed_us(&warmup_start);
         }
@@ -73,16 +73,16 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.number_of_pings; i++) {
         zp_clock_t measure_start = zp_clock_now();
         z_publisher_put(z_loan(pub), data, args.size, NULL);
-        int s = zp_condvar_wait(&cond, &mutex);
+        int s = z_condvar_wait(&cond, &mutex);
         if (s != 0) {
-            handle_error_en(s, "zp_condvar_wait");
+            handle_error_en(s, "z_condvar_wait");
         }
         results[i] = zp_clock_elapsed_us(&measure_start);
     }
     for (int i = 0; i < args.number_of_pings; i++) {
         printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);
     }
-    zp_mutex_unlock(&mutex);
+    z_mutex_unlock(&mutex);
     free(results);
     free(data);
     z_drop(z_move(sub));

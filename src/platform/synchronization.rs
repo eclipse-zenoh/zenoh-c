@@ -7,23 +7,23 @@ use libc::c_void;
 
 use crate::{impl_guarded_transmute, GuardedTransmute};
 
-pub struct ZPMutex<'a> {
+pub struct ZMutex<'a> {
     mutex: Mutex<()>,
     lock: Option<MutexGuard<'a, ()>>,
 }
 
-pub struct ZPMutexPtr {
-    data: Option<Box<ZPMutex<'static>>>,
+pub struct ZMutexPtr {
+    data: Option<Box<ZMutex<'static>>>,
 }
 
 /// Mutex
 ///
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_mutex_t(usize);
+pub struct z_mutex_t(usize);
 
-impl_guarded_transmute!(zp_mutex_t, ZPMutexPtr);
-impl_guarded_transmute!(ZPMutexPtr, zp_mutex_t);
+impl_guarded_transmute!(z_mutex_t, ZMutexPtr);
+impl_guarded_transmute!(ZMutexPtr, z_mutex_t);
 
 const EBUSY: i8 = -1;
 const EINVAL: i8 = -2;
@@ -32,12 +32,12 @@ const EPOISON: i8 = -10;
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_mutex_init(m: *mut zp_mutex_t) -> i8 {
+pub unsafe extern "C" fn z_mutex_init(m: *mut z_mutex_t) -> i8 {
     if m.is_null() {
         return EINVAL;
     }
-    let t = ZPMutexPtr {
-        data: Some(Box::new(ZPMutex {
+    let t = ZMutexPtr {
+        data: Some(Box::new(ZMutex {
             mutex: Mutex::new(()),
             lock: None,
         })),
@@ -48,7 +48,7 @@ pub unsafe extern "C" fn zp_mutex_init(m: *mut zp_mutex_t) -> i8 {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_mutex_free(m: *mut zp_mutex_t) -> i8 {
+pub unsafe extern "C" fn z_mutex_free(m: *mut z_mutex_t) -> i8 {
     if m.is_null() {
         return EINVAL;
     }
@@ -61,7 +61,7 @@ pub unsafe extern "C" fn zp_mutex_free(m: *mut zp_mutex_t) -> i8 {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_mutex_lock(m: *mut zp_mutex_t) -> i8 {
+pub unsafe extern "C" fn z_mutex_lock(m: *mut z_mutex_t) -> i8 {
     if m.is_null() {
         return EINVAL;
     }
@@ -86,7 +86,7 @@ pub unsafe extern "C" fn zp_mutex_lock(m: *mut zp_mutex_t) -> i8 {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_mutex_unlock(m: *mut zp_mutex_t) -> i8 {
+pub unsafe extern "C" fn z_mutex_unlock(m: *mut z_mutex_t) -> i8 {
     if m.is_null() {
         return EINVAL;
     }
@@ -106,7 +106,7 @@ pub unsafe extern "C" fn zp_mutex_unlock(m: *mut zp_mutex_t) -> i8 {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_mutex_try_lock(m: *mut zp_mutex_t) -> i8 {
+pub unsafe extern "C" fn z_mutex_try_lock(m: *mut z_mutex_t) -> i8 {
     if m.is_null() {
         return EINVAL;
     }
@@ -129,7 +129,7 @@ pub unsafe extern "C" fn zp_mutex_try_lock(m: *mut zp_mutex_t) -> i8 {
     ret
 }
 
-struct ZPCondvarPtr {
+struct ZCondvarPtr {
     data: Option<Box<Condvar>>,
 }
 
@@ -137,18 +137,18 @@ struct ZPCondvarPtr {
 ///
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_condvar_t(usize);
+pub struct z_condvar_t(usize);
 
-impl_guarded_transmute!(zp_condvar_t, ZPCondvarPtr);
-impl_guarded_transmute!(ZPCondvarPtr, zp_condvar_t);
+impl_guarded_transmute!(z_condvar_t, ZCondvarPtr);
+impl_guarded_transmute!(ZCondvarPtr, z_condvar_t);
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_condvar_init(cv: *mut zp_condvar_t) -> i8 {
+pub unsafe extern "C" fn z_condvar_init(cv: *mut z_condvar_t) -> i8 {
     if cv.is_null() {
         return EINVAL;
     }
-    let t: ZPCondvarPtr = ZPCondvarPtr {
+    let t: ZCondvarPtr = ZCondvarPtr {
         data: Some(Box::new(Condvar::new())),
     };
     *cv = t.transmute();
@@ -157,7 +157,7 @@ pub unsafe extern "C" fn zp_condvar_init(cv: *mut zp_condvar_t) -> i8 {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_condvar_free(cv: *mut zp_condvar_t) -> i8 {
+pub unsafe extern "C" fn z_condvar_free(cv: *mut z_condvar_t) -> i8 {
     if cv.is_null() {
         return EINVAL;
     }
@@ -172,7 +172,7 @@ pub unsafe extern "C" fn zp_condvar_free(cv: *mut zp_condvar_t) -> i8 {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_condvar_signal(cv: *mut zp_condvar_t) -> i8 {
+pub unsafe extern "C" fn z_condvar_signal(cv: *mut z_condvar_t) -> i8 {
     if cv.is_null() {
         return EINVAL;
     }
@@ -187,7 +187,7 @@ pub unsafe extern "C" fn zp_condvar_signal(cv: *mut zp_condvar_t) -> i8 {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_condvar_wait(cv: *mut zp_condvar_t, m: *mut zp_mutex_t) -> i8 {
+pub unsafe extern "C" fn z_condvar_wait(cv: *mut z_condvar_t, m: *mut z_mutex_t) -> i8 {
     if cv.is_null() {
         return EINVAL;
     }
@@ -213,26 +213,26 @@ pub unsafe extern "C" fn zp_condvar_wait(cv: *mut zp_condvar_t, m: *mut zp_mutex
     0
 }
 
-struct ZPTask {
+struct ZTask {
     join_handle: JoinHandle<()>,
 }
 
-struct ZPTaskPtr {
-    data: Option<Box<ZPTask>>,
+struct ZTaskPtr {
+    data: Option<Box<ZTask>>,
 }
 
 /// Task
 ///
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_task_t(usize);
+pub struct z_task_t(usize);
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_task_attr_t(usize);
+pub struct z_task_attr_t(usize);
 
-impl_guarded_transmute!(zp_task_t, ZPTaskPtr);
-impl_guarded_transmute!(ZPTaskPtr, zp_task_t);
+impl_guarded_transmute!(z_task_t, ZTaskPtr);
+impl_guarded_transmute!(ZTaskPtr, z_task_t);
 
 struct FunArgPair {
     fun: unsafe extern "C" fn(arg: *mut c_void),
@@ -249,9 +249,9 @@ unsafe impl Send for FunArgPair {}
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_task_init(
-    task: *mut zp_task_t,
-    _attr: *const zp_task_attr_t,
+pub unsafe extern "C" fn z_task_init(
+    task: *mut z_task_t,
+    _attr: *const z_task_attr_t,
     fun: unsafe extern "C" fn(arg: *mut c_void),
     arg: *mut c_void,
 ) -> i8 {
@@ -259,12 +259,12 @@ pub unsafe extern "C" fn zp_task_init(
         return EINVAL;
     }
 
-    let mut ttask = ZPTaskPtr { data: None };
+    let mut ttask = ZTaskPtr { data: None };
     let fun_arg_pair = FunArgPair { fun, arg };
 
     let mut ret = 0;
     match thread::Builder::new().spawn(move || fun_arg_pair.call()) {
-        Ok(join_handle) => ttask.data = Some(Box::new(ZPTask { join_handle })),
+        Ok(join_handle) => ttask.data = Some(Box::new(ZTask { join_handle })),
         Err(_) => ret = EAGAIN,
     }
     *task = ttask.transmute();
@@ -273,7 +273,7 @@ pub unsafe extern "C" fn zp_task_init(
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_task_join(task: *mut zp_task_t) -> i8 {
+pub unsafe extern "C" fn z_task_join(task: *mut z_task_t) -> i8 {
     if task.is_null() {
         return EINVAL;
     }
