@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
         snprintf(buf, 255, "[%4d] %s", idx, value);
         size_t len = strlen(buf);
         zc_shmbuf_set_length(&shmbuf, len);
-        zp_sleep_s(1);
+        z_sleep_s(1);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
         z_publisher_put_options_t options = z_publisher_put_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);

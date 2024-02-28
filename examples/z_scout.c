@@ -88,6 +88,6 @@ int main(int argc, char **argv) {
     z_owned_closure_hello_t closure = z_closure(callback, drop, context);
     printf("Scouting...\n");
     z_scout(z_move(config), z_move(closure));
-    zp_sleep_s(1);
+    z_sleep_s(1);
     return 0;
 }

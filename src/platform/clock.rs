@@ -17,39 +17,39 @@ lazy_static! {
 /// Uses monotonic clock
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_clock_t {
+pub struct z_clock_t {
     t: f64,
 }
 
 #[no_mangle]
-pub extern "C" fn zp_clock_now() -> zp_clock_t {
-    zp_clock_t {
+pub extern "C" fn z_clock_now() -> z_clock_t {
+    z_clock_t {
         t: CLOCK_BASE.elapsed().as_secs_f64(),
     }
 }
 #[allow(clippy::missing_safety_doc)]
-unsafe fn get_elapsed_seconds(time: *const zp_clock_t) -> f64 {
+unsafe fn get_elapsed_seconds(time: *const z_clock_t) -> f64 {
     if time.is_null() {
         return 0.0;
     }
-    zp_clock_now().t - (*time).t
+    z_clock_now().t - (*time).t
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_clock_elapsed_s(time: *const zp_clock_t) -> u64 {
+pub unsafe extern "C" fn z_clock_elapsed_s(time: *const z_clock_t) -> u64 {
     get_elapsed_seconds(time) as u64
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_clock_elapsed_ms(time: *const zp_clock_t) -> u64 {
+pub unsafe extern "C" fn z_clock_elapsed_ms(time: *const z_clock_t) -> u64 {
     (get_elapsed_seconds(time) * 1000.0) as u64
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_clock_elapsed_us(time: *const zp_clock_t) -> u64 {
+pub unsafe extern "C" fn z_clock_elapsed_us(time: *const z_clock_t) -> u64 {
     (get_elapsed_seconds(time) * 1000000.0) as u64
 }
 
@@ -57,13 +57,13 @@ pub unsafe extern "C" fn zp_clock_elapsed_us(time: *const zp_clock_t) -> u64 {
 /// Uses system clock
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct zp_time_t {
+pub struct z_time_t {
     t: f64,
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_time_now_as_str(buf: *const c_char, len: usize) -> *const c_char {
+pub unsafe extern "C" fn z_time_now_as_str(buf: *const c_char, len: usize) -> *const c_char {
     if len == 0 {
         return buf;
     }
@@ -78,8 +78,8 @@ pub unsafe extern "C" fn zp_time_now_as_str(buf: *const c_char, len: usize) -> *
 }
 
 #[no_mangle]
-pub extern "C" fn zp_time_now() -> zp_time_t {
-    zp_time_t {
+pub extern "C" fn z_time_now() -> z_time_t {
+    z_time_t {
         t: SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or(Duration::new(0, 0))
@@ -87,27 +87,27 @@ pub extern "C" fn zp_time_now() -> zp_time_t {
     }
 }
 #[allow(clippy::missing_safety_doc)]
-unsafe fn get_elapsed_seconds_system_clock(time: *const zp_time_t) -> f64 {
+unsafe fn get_elapsed_seconds_system_clock(time: *const z_time_t) -> f64 {
     if time.is_null() {
         return 0.0;
     }
-    0.0f64.max(zp_time_now().t - (*time).t)
+    0.0f64.max(z_time_now().t - (*time).t)
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_time_elapsed_s(time: *const zp_time_t) -> u64 {
+pub unsafe extern "C" fn z_time_elapsed_s(time: *const z_time_t) -> u64 {
     get_elapsed_seconds_system_clock(time) as u64
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_time_elapsed_ms(time: *const zp_time_t) -> u64 {
+pub unsafe extern "C" fn z_time_elapsed_ms(time: *const z_time_t) -> u64 {
     (get_elapsed_seconds_system_clock(time) * 1000.0) as u64
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zp_time_elapsed_us(time: *const zp_time_t) -> u64 {
+pub unsafe extern "C" fn z_time_elapsed_us(time: *const z_time_t) -> u64 {
     (get_elapsed_seconds_system_clock(time) * 1000000.0) as u64
 }

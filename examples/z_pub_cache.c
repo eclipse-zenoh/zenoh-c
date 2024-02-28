@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
 
     char buf[256];
     for (int idx = 0; 1; ++idx) {
-        zp_sleep_s(1);
+        z_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
         z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)buf, strlen(buf), NULL);

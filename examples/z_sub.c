@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     while (c != 'q') {
         c = getchar();
         if (c == -1) {
-            zp_sleep_s(1);
+            z_sleep_s(1);
         }
     }
 

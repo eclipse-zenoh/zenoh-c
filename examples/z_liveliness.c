@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     while (c != 'q') {
         c = getchar();
         if (c == -1) {
-            zp_sleep_s(1);
+            z_sleep_s(1);
         } else if (c == 'd') {
             printf("Undeclaring liveliness token...\n");
             z_drop(z_move(token));

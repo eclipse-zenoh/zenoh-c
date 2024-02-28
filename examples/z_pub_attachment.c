@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     char buf[256];
     char buf_ind[16];
     for (int idx = 0; 1; ++idx) {
-        zp_sleep_s(1);
+        z_sleep_s(1);
 
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);

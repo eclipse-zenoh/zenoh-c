@@ -199,6 +199,13 @@ typedef struct z_owned_bytes_map_t {
   size_t _1[4];
 } z_owned_bytes_map_t;
 /**
+ * Clock
+ * Uses monotonic clock
+ */
+typedef struct z_clock_t {
+  double t;
+} z_clock_t;
+/**
  * Represents a Zenoh ID.
  *
  * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -813,6 +820,13 @@ typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
 /**
+ * Time
+ * Uses system clock
+ */
+typedef struct z_time_t {
+  double t;
+} z_time_t;
+/**
  * The options for `zc_liveliness_declare_token`
  */
 typedef struct zc_owned_liveliness_declaration_options_t {
@@ -981,30 +995,6 @@ typedef struct ze_querying_subscriber_options_t {
 typedef struct ze_querying_subscriber_t {
   const struct ze_owned_querying_subscriber_t *_0;
 } ze_querying_subscriber_t;
-/**
- * Condvar
- *
- */
-typedef struct z_condvar_t {
-  size_t _0;
-} z_condvar_t;
-/**
- * Mutex
- *
- */
-typedef struct z_mutex_t {
-  size_t _0;
-} z_mutex_t;
-/**
- * Task
- *
- */
-typedef struct z_task_t {
-  size_t _0;
-} z_task_t;
-typedef struct z_task_attr_t {
-  size_t _0;
-} z_task_attr_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
@@ -1147,6 +1137,10 @@ ZENOHC_API struct z_bytes_t z_bytes_null(void);
  * Constructs a `len` bytes long view starting at `start`.
  */
 ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
+ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);
+ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
+ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
+ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *
@@ -2005,6 +1999,9 @@ struct z_session_t z_session_loan(const struct z_owned_session_t *s);
  * Constructs a null safe-to-drop value of 'z_owned_session_t' type
  */
 ZENOHC_API struct z_owned_session_t z_session_null(void);
+ZENOHC_API int8_t z_sleep_ms(size_t time);
+ZENOHC_API int8_t z_sleep_s(size_t time);
+ZENOHC_API int8_t z_sleep_us(size_t time);
 /**
  * Returns ``true`` if `strs` is valid.
  */
@@ -2067,6 +2064,11 @@ int8_t z_task_init(struct z_task_t *task,
                    void (*fun)(void *arg),
                    void *arg);
 ZENOHC_API int8_t z_task_join(struct z_task_t *task);
+ZENOHC_API uint64_t z_time_elapsed_ms(const struct z_time_t *time);
+ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
+ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
+ZENOHC_API struct z_time_t z_time_now(void);
+ZENOHC_API const char *z_time_now_as_str(const char *buf, size_t len);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
  */
@@ -2589,18 +2591,3 @@ int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_c
  */
 ZENOHC_API
 int8_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *sub);
-ZENOHC_API int8_t z_condvar_free(struct z_condvar_t *cv);
-ZENOHC_API int8_t z_condvar_init(struct z_condvar_t *cv);
-ZENOHC_API int8_t z_condvar_signal(struct z_condvar_t *cv);
-ZENOHC_API int8_t z_condvar_wait(struct z_condvar_t *cv, struct zp_mutex_t *m);
-ZENOHC_API int8_t z_mutex_free(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_init(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_lock(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_try_lock(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_unlock(struct z_mutex_t *m);
-ZENOHC_API
-int8_t z_task_init(struct z_task_t *task,
-                    const struct z_task_attr_t *_attr,
-                    void (*fun)(void *arg),
-                    void *arg);
-ZENOHC_API int8_t zp_task_join(struct z_task_t *task);
