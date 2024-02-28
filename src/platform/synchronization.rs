@@ -25,10 +25,11 @@ pub struct z_mutex_t(usize);
 impl_guarded_transmute!(z_mutex_t, ZMutexPtr);
 impl_guarded_transmute!(ZMutexPtr, z_mutex_t);
 
-const EBUSY: i8 = -1;
-const EINVAL: i8 = -2;
-const EAGAIN: i8 = -3;
-const EPOISON: i8 = -10;
+// try to use the same error codes as in GNU pthreads
+const EBUSY: i8 = 16;
+const EINVAL: i8 = 22;
+const EAGAIN: i8 = 11;
+const EPOISON: i8 = 22; // same as EINVAL
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
