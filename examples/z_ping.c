@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     z_owned_publisher_t pub = z_declare_publisher(z_loan(session), ping, NULL);
     z_owned_closure_sample_t respond = z_closure(callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(session), pong, z_move(respond), NULL);
-    uint8_t* data = malloc(args.size);
+    uint8_t* data = z_malloc(args.size);
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
             elapsed_us = z_clock_elapsed_us(&warmup_start);
         }
     }
-    unsigned long* results = malloc(sizeof(unsigned long) * args.number_of_pings);
+    unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
         z_clock_t measure_start = z_clock_now();
         z_publisher_put(z_loan(pub), data, args.size, NULL);
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.number_of_pings; i++) {
         printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);
     }
-    z_mutex_unlock(&mutex);
+    zp_mutex_unlock(&mutex);
     free(results);
     free(data);
     z_drop(z_move(sub));

@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
     char *keyexpr = "test/thr";
     size_t len = atoi(argv[1]);
-    uint8_t *value = (uint8_t *)malloc(len);
+    uint8_t *value = (uint8_t *)z_malloc(len);
     memset(value, 1, len);
 
     z_owned_config_t config = z_config_default();
