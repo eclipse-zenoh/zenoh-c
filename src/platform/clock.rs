@@ -37,9 +37,9 @@ unsafe fn get_elapsed_nanos(time: *const z_clock_t) -> u64 {
     }
     let now_t = z_clock_now().t;
     if now_t > (*time).t {
-        return now_t - (*time).t;
+        now_t - (*time).t
     } else {
-        return 0;
+        0
     }
 }
 
@@ -101,9 +101,9 @@ unsafe fn get_elapsed_nanos_system_clock(time: *const z_time_t) -> u64 {
     }
     let now_t = z_time_now().t;
     if now_t > (*time).t {
-        return now_t - (*time).t;
+        now_t - (*time).t
     } else {
-        return 0;
+        0
     }
 }
 
