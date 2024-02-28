@@ -40,4 +40,5 @@ extern "C" {
 }
 #endif
 #include "zenoh_macros.h"
+#include "zenoh_memory.h"
 #endif
