@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
     sleep(SLEEP);
 
     size_t keyexpr_len = strlen(URI);
-    char *keyexpr_str = (char *)malloc(keyexpr_len + 1);
+    char *keyexpr_str = (char *)z_malloc(keyexpr_len + 1);
     memcpy(keyexpr_str, URI, keyexpr_len);
     keyexpr_str[keyexpr_len] = '\0';
     int8_t _ret_int8 = z_keyexpr_is_canon(keyexpr_str, keyexpr_len);
@@ -374,7 +374,7 @@ int main(int argc, char **argv) {
 
     sleep(SLEEP * 5);
 
-    free(keyexpr_str);
+    z_free(keyexpr_str);
 
     return 0;
 }

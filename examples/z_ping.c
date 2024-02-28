@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     z_owned_publisher_t pub = z_declare_publisher(z_loan(session), ping, NULL);
     z_owned_closure_sample_t respond = z_closure(callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(session), pong, z_move(respond), NULL);
-    uint8_t* data = malloc(args.size);
+    uint8_t* data = z_malloc(args.size);
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
         }
     }
     struct timespec t_start, t_stop, t_timeout;
-    unsigned long* results = malloc(sizeof(unsigned long) * args.number_of_pings);
+    unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
         clock_gettime(CLOCK_REALTIME, &t_timeout);
         t_timeout.tv_sec += PING_TIMEOUT_SEC;
@@ -92,8 +92,8 @@ int main(int argc, char** argv) {
         printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);
     }
     z_mutex_unlock(&mutex);
-    free(results);
-    free(data);
+    z_free(results);
+    z_free(data);
     z_drop(z_move(sub));
     z_drop(z_move(pub));
     z_close(z_move(session));
