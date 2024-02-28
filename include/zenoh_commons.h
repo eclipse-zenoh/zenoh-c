@@ -492,20 +492,6 @@ typedef struct z_mutex_t {
   size_t _0;
 } z_mutex_t;
 /**
- * Condvar
- *
- */
-typedef struct z_condvar_t {
-  size_t _0;
-} z_condvar_t;
-/**
- * Mutex
- *
- */
-typedef struct z_mutex_t {
-  size_t _0;
-} z_mutex_t;
-/**
  * An owned zenoh configuration.
  *
  * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.

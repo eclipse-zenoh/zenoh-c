@@ -82,9 +82,9 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.number_of_pings; i++) {
         printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);
     }
-    zp_mutex_unlock(&mutex);
-    free(results);
-    free(data);
+    z_mutex_unlock(&mutex);
+    z_free(results);
+    z_free(data);
     z_drop(z_move(sub));
     z_drop(z_move(pub));
     z_close(z_move(session));
