@@ -204,6 +204,7 @@ typedef struct z_owned_bytes_map_t {
  */
 typedef struct z_clock_t {
   uint64_t t;
+  const void *t_base;
 } z_clock_t;
 /**
  * Represents a Zenoh ID.

@@ -2,6 +2,7 @@ use chrono::{DateTime, Local};
 use libc::c_char;
 use std::{
     cmp::min,
+    os::raw::c_void,
     slice,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -22,12 +23,14 @@ lazy_static! {
 #[derive(Clone, Copy)]
 pub struct z_clock_t {
     t: u64,
+    t_base: *const c_void,
 }
 
 #[no_mangle]
 pub extern "C" fn z_clock_now() -> z_clock_t {
     z_clock_t {
         t: CLOCK_BASE.elapsed().as_nanos() as u64,
+        t_base: &CLOCK_BASE as *const CLOCK_BASE as *const c_void,
     }
 }
 #[allow(clippy::missing_safety_doc)]
@@ -35,7 +38,9 @@ unsafe fn get_elapsed_nanos(time: *const z_clock_t) -> u64 {
     if time.is_null() {
         return 0;
     }
-    let now_t = z_clock_now().t;
+    let now_t = (*((*time).t_base as *const CLOCK_BASE))
+        .elapsed()
+        .as_nanos() as u64;
     if now_t > (*time).t {
         now_t - (*time).t
     } else {
