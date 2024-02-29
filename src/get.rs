@@ -160,7 +160,7 @@ pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
 ///     - you are now responsible for dropping your copy of the reply.
 #[no_mangle]
 #[allow(improper_ctypes_definitions)]
-/// tags{c.z_reply_null}
+/// tags{}
 pub extern "C" fn z_reply_null() -> z_owned_reply_t {
     None.into()
 }
@@ -273,14 +273,14 @@ pub unsafe extern "C" fn z_get(
 /// Frees `reply_data`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_reply_drop}
+/// tags{}
 pub unsafe extern "C" fn z_reply_drop(reply_data: &mut z_owned_reply_t) {
     std::mem::drop(reply_data.take());
 }
 /// Returns ``true`` if `reply_data` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_reply_check}
+/// tags{}
 pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
     reply_data.is_some()
 }

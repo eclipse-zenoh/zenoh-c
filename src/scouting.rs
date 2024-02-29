@@ -39,7 +39,7 @@ pub struct z_owned_str_array_t {
 /// Frees `strs` and invalidates it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_str_array_drop}
+/// tags{}
 pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
     let locators = Vec::from_raw_parts(strs.val as *mut *const c_char, strs.len, strs.len);
     for locator in locators {
@@ -52,7 +52,7 @@ pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
 /// Returns ``true`` if `strs` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_str_array_check}
+/// tags{}
 pub extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
     !strs.val.is_null()
 }
@@ -68,7 +68,7 @@ pub struct z_str_array_t {
 /// Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_str_array_loan}
+/// tags{}
 pub extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
     z_str_array_t {
         val: strs.val as *const _,
@@ -142,7 +142,7 @@ impl From<Hello> for z_owned_hello_t {
 /// Frees `hello`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_hello_drop}
+/// tags{}
 pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
     z_str_array_drop(&mut hello._locators);
     hello._whatami = 0;
@@ -151,7 +151,7 @@ pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
 /// Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_hello_loan}
+/// tags{}
 pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
     z_hello_t {
         whatami: hello._whatami,
@@ -163,7 +163,7 @@ pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
 /// Constructs a gravestone value for hello, useful to steal one from a callback
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_hello_null}
+/// tags{}
 pub extern "C" fn z_hello_null() -> z_owned_hello_t {
     z_owned_hello_t {
         _whatami: 0,
@@ -182,7 +182,7 @@ impl Drop for z_owned_hello_t {
 /// Returns ``true`` if `hello` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_hello_check}
+/// tags{}
 pub extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
     hello._whatami != 0 && z_str_array_check(&hello._locators)
 }
@@ -200,7 +200,7 @@ const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_scouting_config_null}
+/// tags{}
 pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: z_config_null(),
@@ -233,14 +233,14 @@ pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_scouting_config_check}
+/// tags{}
 pub extern "C" fn z_scouting_config_check(config: &z_owned_scouting_config_t) -> bool {
     z_config_check(&config._config)
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_scouting_config_drop}
+/// tags{}
 pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t) {
     std::mem::drop(std::mem::replace(config, z_scouting_config_null()));
 }

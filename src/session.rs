@@ -95,7 +95,7 @@ pub struct z_session_t(usize);
 /// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
-/// tags{c.z_session_loan}
+/// tags{}
 pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
     match s.as_ref() {
         Some(s) => {
@@ -111,7 +111,7 @@ pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
 /// Constructs a null safe-to-drop value of 'z_owned_session_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_session_null}
+/// tags{}
 pub extern "C" fn z_session_null() -> z_owned_session_t {
     z_owned_session_t::null()
 }
@@ -144,7 +144,7 @@ pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
 /// Returns ``true`` if `session` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_session_check}
+/// tags{}
 pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
     session.as_ref().is_some()
 }

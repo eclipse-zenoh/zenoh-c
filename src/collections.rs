@@ -53,14 +53,14 @@ impl Default for z_bytes_t {
 
 /// Returns ``true`` if `b` is initialized.
 #[no_mangle]
-/// tags{c.z_bytes_check}
+/// tags{}
 pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
     !b.start.is_null()
 }
 
 /// Returns the gravestone value for `z_bytes_t`
 #[no_mangle]
-/// tags{c.z_bytes_null}
+/// tags{}
 pub extern "C" fn z_bytes_null() -> z_bytes_t {
     z_bytes_t {
         len: 0,

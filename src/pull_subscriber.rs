@@ -97,7 +97,7 @@ impl z_owned_pull_subscriber_t {
 /// Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_pull_subscriber_null}
+/// tags{}
 pub extern "C" fn z_pull_subscriber_null() -> z_owned_pull_subscriber_t {
     z_owned_pull_subscriber_t::null()
 }
@@ -217,7 +217,7 @@ pub extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_pull_subscriber_check}
+/// tags{}
 pub extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bool {
     sub.as_ref().is_some()
 }
@@ -225,7 +225,7 @@ pub extern "C" fn z_pull_subscriber_check(sub: &z_owned_pull_subscriber_t) -> bo
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_pull_subscriber_loan}
+/// tags{}
 pub extern "C" fn z_pull_subscriber_loan(sub: &z_owned_pull_subscriber_t) -> z_pull_subscriber_t {
     z_pull_subscriber_t(sub)
 }

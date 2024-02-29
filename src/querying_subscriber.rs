@@ -98,7 +98,7 @@ impl ze_owned_querying_subscriber_t {
 /// Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.ze_querying_subscriber_null}
+/// tags{}
 pub extern "C" fn ze_querying_subscriber_null() -> ze_owned_querying_subscriber_t {
     ze_owned_querying_subscriber_t::null()
 }
@@ -305,14 +305,14 @@ pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_s
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.ze_querying_subscriber_check}
+/// tags{}
 pub extern "C" fn ze_querying_subscriber_check(sub: &ze_owned_querying_subscriber_t) -> bool {
     sub.as_ref().is_some()
 }
 
 /// Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
 #[no_mangle]
-/// tags{c.ze_querying_subscriber_loan}
+/// tags{}
 pub extern "C" fn ze_querying_subscriber_loan(
     p: &ze_owned_querying_subscriber_t,
 ) -> ze_querying_subscriber_t {

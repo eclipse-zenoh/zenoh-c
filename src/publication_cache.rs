@@ -172,7 +172,7 @@ pub extern "C" fn ze_declare_publication_cache(
 /// Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.ze_publication_cache_null}
+/// tags{}
 pub extern "C" fn ze_publication_cache_null() -> ze_owned_publication_cache_t {
     ze_owned_publication_cache_t::null()
 }
@@ -180,7 +180,7 @@ pub extern "C" fn ze_publication_cache_null() -> ze_owned_publication_cache_t {
 /// Returns ``true`` if `pub_cache` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.ze_publication_cache_check}
+/// tags{}
 pub extern "C" fn ze_publication_cache_check(pub_cache: &ze_owned_publication_cache_t) -> bool {
     pub_cache.as_ref().is_some()
 }

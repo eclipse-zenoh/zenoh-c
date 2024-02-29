@@ -41,14 +41,14 @@ pub struct z_attachment_t {
 }
 
 /// Returns the gravestone value for `z_attachment_t`.
-/// tags{c.z_attachment_check}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn z_attachment_check(this: &z_attachment_t) -> bool {
     this.iteration_driver.is_some()
 }
 
 /// Returns the gravestone value for `z_attachment_t`.
-/// tags{c.z_attachment_null}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn z_attachment_null() -> z_attachment_t {
     z_attachment_t {
@@ -150,14 +150,14 @@ pub extern "C" fn z_bytes_map_new() -> z_owned_bytes_map_t {
 }
 
 /// Constructs the gravestone value for `z_owned_bytes_map_t`
-/// tags{c.z_bytes_map_null}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_null() -> z_owned_bytes_map_t {
     unsafe { core::mem::transmute(None::<HashMap<Cow<[u8]>, Cow<[u8]>>>) }
 }
 
 /// Returns `true` if the map is not in its gravestone state
-/// tags{c.z_bytes_map_check}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
     unsafe { &*this.get() }.is_some()
@@ -165,7 +165,7 @@ pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
 /// Destroys the map, resetting `this` to its gravestone value.
 ///
 /// This function is double-free safe, passing a pointer to the gravestone value will have no effect.
-/// tags{c.z_bytes_map_drop}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn z_bytes_map_drop(this: &mut z_owned_bytes_map_t) {
     let this = unsafe { &mut *this.get() };

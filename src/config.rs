@@ -99,7 +99,7 @@ impl From<Option<Box<Config>>> for z_owned_config_t {
     }
 }
 /// Returns a :c:type:`z_config_t` loaned from `s`.
-/// tags{c.z_config_loan} 
+/// tags{} 
 #[no_mangle]
 pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
     z_config_t(s)
@@ -149,7 +149,7 @@ pub extern "C" fn z_config_new() -> z_owned_config_t {
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_config_t' type
-/// tags{c.z_config_null}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn z_config_null() -> z_owned_config_t {
     z_owned_config_t::null()
@@ -200,12 +200,12 @@ pub unsafe extern "C" fn zc_config_insert_json(
 /// Frees `config`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_config_drop}
+/// tags{}
 pub extern "C" fn z_config_drop(config: &mut z_owned_config_t) {
     std::mem::drop(config.as_mut().take())
 }
 /// Returns ``true`` if `config` is valid.
-/// tags{c.z_config_check}
+/// tags{}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {

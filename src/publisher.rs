@@ -180,7 +180,7 @@ pub extern "C" fn z_declare_publisher(
 /// Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_publisher_null}
+/// tags{}
 pub extern "C" fn z_publisher_null() -> z_owned_publisher_t {
     z_owned_publisher_t::null()
 }
@@ -188,7 +188,7 @@ pub extern "C" fn z_publisher_null() -> z_owned_publisher_t {
 /// Returns ``true`` if `pub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_publisher_check}
+/// tags{}
 pub extern "C" fn z_publisher_check(pbl: &z_owned_publisher_t) -> bool {
     pbl.as_ref().is_some()
 }
@@ -220,7 +220,7 @@ impl<'a> AsRef<Option<Publisher<'a>>> for z_publisher_t {
 
 /// Returns a :c:type:`z_publisher_t` loaned from `p`.
 #[no_mangle]
-/// tags{c.z_publisher_loan}
+/// tags{}
 pub extern "C" fn z_publisher_loan(p: &z_owned_publisher_t) -> z_publisher_t {
     z_publisher_t(p)
 }

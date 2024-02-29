@@ -80,7 +80,7 @@ impl z_owned_queryable_t {
 /// Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_queryable_null}
+/// tags{}
 pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
     z_owned_queryable_t::null()
 }
@@ -151,7 +151,7 @@ impl Drop for z_owned_query_t {
 }
 /// The gravestone value of `z_owned_query_t`.
 #[no_mangle]
-/// tags{c.z_query_null}
+/// tags{}
 pub extern "C" fn z_query_null() -> z_owned_query_t {
     unsafe { core::mem::transmute(None::<Query>) }
 }
@@ -159,7 +159,7 @@ pub extern "C" fn z_query_null() -> z_owned_query_t {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-/// tags{c.z_query_check}
+/// tags{}
 pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
     this.is_some()
 }
@@ -167,7 +167,7 @@ pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-/// tags{c.z_query_loan}
+/// tags{}
 pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
     this.as_ref().into()
 }
@@ -175,7 +175,7 @@ pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-/// tags{c.z_query_drop}
+/// tags{}
 pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
     let _: Option<Query> = this.take();
 }
@@ -295,7 +295,7 @@ pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
 /// Returns ``true`` if `qable` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_queryable_check}
+/// tags{}
 pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
     qable.as_ref().is_some()
 }

@@ -71,19 +71,19 @@ pub extern "C" fn zc_shm_manager_new(
 }
 
 #[no_mangle]
-/// tags{c.zc_shm_manager_drop}
+/// tags{}
 pub extern "C" fn zc_shm_manager_drop(manager: &mut zc_owned_shm_manager_t) {
     manager.take();
 }
 
 #[no_mangle]
-/// tags{c.zc_shm_manager_check}
+/// tags{}
 pub extern "C" fn zc_shm_manager_check(manager: &zc_owned_shm_manager_t) -> bool {
     manager.is_some()
 }
 
 #[no_mangle]
-/// tags{c.zc_shm_manager_null}
+/// tags{}
 pub extern "C" fn zc_shm_manager_null() -> zc_owned_shm_manager_t {
     zc_owned_shm_manager_t::null()
 }
@@ -170,21 +170,21 @@ pub unsafe extern "C" fn zc_shm_alloc(
 
 /// Drops the SHM buffer, decrementing its backing reference counter.
 #[no_mangle]
-/// tags{c.zc_shmbuf_drop}
+/// tags{}
 pub extern "C" fn zc_shmbuf_drop(buf: &mut zc_owned_shmbuf_t) {
     buf.get_mut().take();
 }
 
 /// Returns `false` if `buf` is in its gravestone state.
 #[no_mangle]
-/// tags{c.zc_shmbuf_check}
+/// tags{}
 pub extern "C" fn zc_shmbuf_check(buf: &zc_owned_shmbuf_t) -> bool {
     unsafe { (*buf.get()).is_some() }
 }
 
 /// Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
 #[no_mangle]
-/// tags{c.zc_shmbuf_null}
+/// tags{}
 pub extern "C" fn zc_shmbuf_null() -> zc_owned_shmbuf_t {
     zc_owned_shmbuf_t::null()
 }

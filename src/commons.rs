@@ -69,7 +69,7 @@ pub struct z_timestamp_t {
 
 /// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
-/// tags{c.z_timestamp_check}
+/// tags{}
 pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
     ts.id.id.iter().any(|byte| *byte != 0)
 }
@@ -176,13 +176,13 @@ pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_pay
     }
 }
 /// Returns `false` if `payload` is the gravestone value.
-/// tags{c.zc_payload_check}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
     !payload.payload.start.is_null()
 }
 /// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
-/// tags{c.zc_payload_drop}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
     unsafe { std::ptr::replace(payload, zc_payload_null()) };
@@ -480,7 +480,7 @@ impl z_owned_encoding_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
-/// tags{c.z_encoding_null}
+/// tags{}
 pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
     z_owned_encoding_t::null()
 }
@@ -515,7 +515,7 @@ pub extern "C" fn z_encoding_default() -> z_encoding_t {
 /// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_encoding_drop}
+/// tags{}
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
     z_bytes_drop(&mut encoding.suffix);
     encoding._dropped = true
@@ -524,7 +524,7 @@ pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_encoding_check}
+/// tags{}
 pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
     !encoding._dropped
 }
@@ -532,7 +532,7 @@ pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_encoding_loan}
+/// tags{}
 pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
     z_encoding_t {
         prefix: encoding.prefix,
@@ -580,7 +580,7 @@ impl Drop for z_owned_str_t {
 /// Frees `z_owned_str_t`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_str_drop}
+/// tags{}
 pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
     libc::free(std::mem::transmute(s._cstr));
     s._cstr = std::ptr::null_mut();
@@ -588,14 +588,14 @@ pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
 
 /// Returns ``true`` if `s` is a valid string
 #[no_mangle]
-/// tags{c.z_str_check}
+/// tags{}
 pub extern "C" fn z_str_check(s: &z_owned_str_t) -> bool {
     !s._cstr.is_null()
 }
 
 /// Returns undefined `z_owned_str_t`
 #[no_mangle]
-/// tags{c.z_str_null}
+/// tags{}
 pub extern "C" fn z_str_null() -> z_owned_str_t {
     z_owned_str_t {
         _cstr: std::ptr::null_mut(),
@@ -604,7 +604,7 @@ pub extern "C" fn z_str_null() -> z_owned_str_t {
 
 /// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
 #[no_mangle]
-/// tags{c.z_str_loan}
+/// tags{}
 pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
     s._cstr
 }

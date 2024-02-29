@@ -118,7 +118,7 @@ impl z_owned_subscriber_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
 #[no_mangle]
-/// tags{c.z_subscriber_null}
+/// tags{}
 pub extern "C" fn z_subscriber_null() -> z_owned_subscriber_t {
     z_owned_subscriber_t::null()
 }
@@ -138,7 +138,7 @@ impl AsRef<Subscriber> for z_subscriber_t {
 
 /// Returns a :c:type:`z_subscriber_t` loaned from `p`.
 #[no_mangle]
-/// tags{c.z_subscriber_loan}
+/// tags{}
 pub extern "C" fn z_subscriber_loan(p: &z_owned_subscriber_t) -> z_subscriber_t {
     z_subscriber_t(p)
 }
@@ -266,7 +266,7 @@ pub extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) -> i8 {
 /// Returns ``true`` if `sub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_subscriber_check}
+/// tags{}
 pub extern "C" fn z_subscriber_check(sub: &z_owned_subscriber_t) -> bool {
     sub.as_ref().is_some()
 }

@@ -1243,7 +1243,7 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 /**
  * Returns the gravestone value for `z_attachment_t`.
- * tags{c.z_attachment_check}
+ * tags{}
  */
 ZENOHC_API bool z_attachment_check(const struct z_attachment_t *this_);
 /**
@@ -1266,12 +1266,12 @@ int8_t z_attachment_iterate(struct z_attachment_t this_,
                             void *context);
 /**
  * Returns the gravestone value for `z_attachment_t`.
- * tags{c.z_attachment_null}
+ * tags{}
  */
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
 /**
  * Returns ``true`` if `b` is initialized.
- * tags{c.z_bytes_check}
+ * tags{}
  */
 ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
 /**
@@ -1288,14 +1288,14 @@ ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
 ZENOHC_API struct z_attachment_t z_bytes_map_as_attachment(const struct z_owned_bytes_map_t *this_);
 /**
  * Returns `true` if the map is not in its gravestone state
- * tags{c.z_bytes_map_check}
+ * tags{}
  */
 ZENOHC_API bool z_bytes_map_check(const struct z_owned_bytes_map_t *this_);
 /**
  * Destroys the map, resetting `this` to its gravestone value.
  *
  * This function is double-free safe, passing a pointer to the gravestone value will have no effect.
- * tags{c.z_bytes_map_drop}
+ * tags{}
  */
 ZENOHC_API void z_bytes_map_drop(struct z_owned_bytes_map_t *this_);
 /**
@@ -1368,7 +1368,7 @@ int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
 /**
  * Constructs the gravestone value for `z_owned_bytes_map_t`
- * tags{c.z_bytes_map_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
 /**
@@ -1380,7 +1380,7 @@ ZENOHC_API
 struct z_bytes_t z_bytes_new(const char *str);
 /**
  * Returns the gravestone value for `z_bytes_t`
- * tags{c.z_bytes_null}
+ * tags{}
  */
 ZENOHC_API struct z_bytes_t z_bytes_null(void);
 /**
@@ -1482,7 +1482,7 @@ ZENOHC_API void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
 ZENOHC_API struct z_owned_closure_zid_t z_closure_zid_null(void);
 /**
  * Returns ``true`` if `config` is valid.
- * tags{c.z_config_check}
+ * tags{}
  */
 ZENOHC_API bool z_config_check(const struct z_owned_config_t *config);
 /**
@@ -1498,12 +1498,12 @@ ZENOHC_API struct z_owned_config_t z_config_client(const char *const *peers, siz
 ZENOHC_API struct z_owned_config_t z_config_default(void);
 /**
  * Frees `config`, invalidating it for double-drop safety.
- * tags{c.z_config_drop}
+ * tags{}
  */
 ZENOHC_API void z_config_drop(struct z_owned_config_t *config);
 /**
  * Returns a :c:type:`z_config_t` loaned from `s`.
- * tags{c.z_config_loan}
+ * tags{}
  */
 ZENOHC_API struct z_config_t z_config_loan(const struct z_owned_config_t *s);
 /**
@@ -1523,7 +1523,7 @@ ZENOHC_API
 struct z_owned_config_t z_config_new(void);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_config_t' type
- * tags{c.z_config_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_config_t z_config_null(void);
 /**
@@ -1704,7 +1704,7 @@ ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
 ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
 /**
  * Returns ``true`` if `encoding` is valid.
- * tags{c.z_encoding_check}
+ * tags{}
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
@@ -1714,17 +1714,17 @@ ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 ZENOHC_API struct z_encoding_t z_encoding_default(void);
 /**
  * Frees `encoding`, invalidating it for double-drop safety.
- * tags{c.z_encoding_drop}
+ * tags{}
  */
 ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
  * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
- * tags{c.z_encoding_loan}
+ * tags{}
  */
 ZENOHC_API struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
- * tags{c.z_encoding_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_encoding_t z_encoding_null(void);
 /**
@@ -1756,22 +1756,22 @@ int8_t z_get(struct z_session_t session,
 ZENOHC_API struct z_get_options_t z_get_options_default(void);
 /**
  * Returns ``true`` if `hello` is valid.
- * tags{c.z_hello_check}
+ * tags{}
  */
 ZENOHC_API bool z_hello_check(const struct z_owned_hello_t *hello);
 /**
  * Frees `hello`, invalidating it for double-drop safety.
- * tags{c.z_hello_drop}
+ * tags{}
  */
 ZENOHC_API void z_hello_drop(struct z_owned_hello_t *hello);
 /**
  * Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
- * tags{c.z_hello_loan}
+ * tags{}
  */
 ZENOHC_API struct z_hello_t z_hello_loan(const struct z_owned_hello_t *hello);
 /**
  * Constructs a gravestone value for hello, useful to steal one from a callback
- * tags{c.z_hello_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_hello_t z_hello_null(void);
 /**
@@ -1848,7 +1848,7 @@ ZENOHC_API
 int8_t z_keyexpr_canonize_null_terminated(char *start);
 /**
  * Returns ``true`` if `keyexpr` is valid.
- * tags{c.z_keyexpr_check}
+ * tags{}
  */
 ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
 /**
@@ -1867,7 +1867,7 @@ struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
                                           size_t right_len);
 /**
  * Frees `keyexpr` and invalidates it for double-drop safety.
- * tags{c.z_keyexpr_drop}
+ * tags{}
  */
 ZENOHC_API void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
 /**
@@ -1914,7 +1914,7 @@ struct z_owned_keyexpr_t z_keyexpr_join(struct z_keyexpr_t left,
                                         struct z_keyexpr_t right);
 /**
  * Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
- * tags{c.z_keyexpr_loan}
+ * tags{}
  */
 ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
 /**
@@ -1924,7 +1924,7 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *key
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
- * tags{c.z_keyexpr_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_null(void);
 /**
@@ -1956,7 +1956,7 @@ ZENOHC_API
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
 /**
  * Returns ``true`` if `pub` is valid.
- * tags{c.z_publisher_check}
+ * tags{}
  */
 ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *pbl);
 /**
@@ -1984,12 +1984,12 @@ ZENOHC_API struct z_publisher_delete_options_t z_publisher_delete_options_defaul
 ZENOHC_API struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
 /**
  * Returns a :c:type:`z_publisher_t` loaned from `p`.
- * tags{c.z_publisher_loan}
+ * tags{}
  */
 ZENOHC_API struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
- * tags{c.z_publisher_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_publisher_t z_publisher_null(void);
 /**
@@ -2023,18 +2023,18 @@ int8_t z_publisher_put(struct z_publisher_t publisher,
 ZENOHC_API struct z_publisher_put_options_t z_publisher_put_options_default(void);
 /**
  * Returns ``true`` if `sub` is valid.
- * tags{c.z_pull_subscriber_check}
+ * tags{}
  */
 ZENOHC_API bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
 /**
  * Returns ``true`` if `sub` is valid.
- * tags{c.z_pull_subscriber_loan}
+ * tags{}
  */
 ZENOHC_API
 struct z_pull_subscriber_t z_pull_subscriber_loan(const struct z_owned_pull_subscriber_t *sub);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
- * tags{c.z_pull_subscriber_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_pull_subscriber_t z_pull_subscriber_null(void);
 /**
@@ -2098,7 +2098,7 @@ ZENOHC_API struct z_owned_query_channel_t z_query_channel_null(void);
  * Returns `false` if `this` is in a gravestone state, `true` otherwise.
  *
  * This function may not be called with the null pointer, but can be called with the gravestone value.
- * tags{c.z_query_check}
+ * tags{}
  */
 ZENOHC_API
 bool z_query_check(const struct z_owned_query_t *this_);
@@ -2146,7 +2146,7 @@ ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
  * Destroys the query, setting `this` to its gravestone value to prevent double-frees.
  *
  * This function may not be called with the null pointer, but can be called with the gravestone value.
- * tags{c.z_query_drop}
+ * tags{}
  */
 ZENOHC_API
 void z_query_drop(struct z_owned_query_t *this_);
@@ -2159,13 +2159,13 @@ ZENOHC_API struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
  * Aliases the query.
  *
  * This function may not be called with the null pointer, but can be called with the gravestone value.
- * tags{c.z_query_loan}
+ * tags{}
  */
 ZENOHC_API
 struct z_query_t z_query_loan(const struct z_owned_query_t *this_);
 /**
  * The gravestone value of `z_owned_query_t`.
- * tags{c.z_query_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_query_t z_query_null(void);
 /**
@@ -2216,12 +2216,12 @@ ZENOHC_API
 struct z_value_t z_query_value(const struct z_query_t *query);
 /**
  * Returns ``true`` if `qable` is valid.
- * tags{c.z_queryable_check}
+ * tags{}
  */
 ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *qable);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
- * tags{c.z_queryable_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
 /**
@@ -2250,12 +2250,12 @@ ZENOHC_API void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
 ZENOHC_API struct z_owned_reply_channel_t z_reply_channel_null(void);
 /**
  * Returns ``true`` if `reply_data` is valid.
- * tags{c.z_reply_check}
+ * tags{}
  */
 ZENOHC_API bool z_reply_check(const struct z_owned_reply_t *reply_data);
 /**
  * Frees `reply_data`, invalidating it for double-drop safety.
- * tags{c.z_reply_drop}
+ * tags{}
  */
 ZENOHC_API void z_reply_drop(struct z_owned_reply_t *reply_data);
 /**
@@ -2282,7 +2282,7 @@ bool z_reply_is_ok(const struct z_owned_reply_t *reply);
  *     - copy the value of the callback's argument's pointee,
  *     - overwrite the pointee with this function's return value,
  *     - you are now responsible for dropping your copy of the reply.
- * tags{c.z_reply_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_reply_t z_reply_null(void);
 /**
@@ -2308,7 +2308,7 @@ ZENOHC_API
 int8_t z_scout(struct z_owned_scouting_config_t *config,
                struct z_owned_closure_hello_t *callback);
 /**
- * tags{c.z_scouting_config_check}
+ * tags{}
  */
 ZENOHC_API bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
 /**
@@ -2316,7 +2316,7 @@ ZENOHC_API bool z_scouting_config_check(const struct z_owned_scouting_config_t *
  */
 ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_default(void);
 /**
- * tags{c.z_scouting_config_drop}
+ * tags{}
  */
 ZENOHC_API void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
 /**
@@ -2324,12 +2324,12 @@ ZENOHC_API void z_scouting_config_drop(struct z_owned_scouting_config_t *config)
  */
 ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_from(struct z_config_t config);
 /**
- * tags{c.z_scouting_config_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_null(void);
 /**
  * Returns ``true`` if `session` is valid.
- * tags{c.z_session_check}
+ * tags{}
  */
 ZENOHC_API bool z_session_check(const struct z_owned_session_t *session);
 /**
@@ -2341,53 +2341,53 @@ ZENOHC_API bool z_session_check(const struct z_owned_session_t *session);
  * The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
  * attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
  * have been destroyed is UB (likely SEGFAULT)
- * tags{c.z_session_loan}
+ * tags{}
  */
 ZENOHC_API
 struct z_session_t z_session_loan(const struct z_owned_session_t *s);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_session_t' type
- * tags{c.z_session_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_session_t z_session_null(void);
 /**
  * Returns ``true`` if `strs` is valid.
- * tags{c.z_str_array_check}
+ * tags{}
  */
 ZENOHC_API bool z_str_array_check(const struct z_owned_str_array_t *strs);
 /**
  * Frees `strs` and invalidates it for double-drop safety.
- * tags{c.z_str_array_drop}
+ * tags{}
  */
 ZENOHC_API void z_str_array_drop(struct z_owned_str_array_t *strs);
 /**
  * Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
- * tags{c.z_str_array_loan}
+ * tags{}
  */
 ZENOHC_API struct z_str_array_t z_str_array_loan(const struct z_owned_str_array_t *strs);
 /**
  * Returns ``true`` if `s` is a valid string
- * tags{c.z_str_check}
+ * tags{}
  */
 ZENOHC_API bool z_str_check(const struct z_owned_str_t *s);
 /**
  * Frees `z_owned_str_t`, invalidating it for double-drop safety.
- * tags{c.z_str_drop}
+ * tags{}
  */
 ZENOHC_API void z_str_drop(struct z_owned_str_t *s);
 /**
  * Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
- * tags{c.z_str_loan}
+ * tags{}
  */
 ZENOHC_API const char *z_str_loan(const struct z_owned_str_t *s);
 /**
  * Returns undefined `z_owned_str_t`
- * tags{c.z_str_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_str_t z_str_null(void);
 /**
  * Returns ``true`` if `sub` is valid.
- * tags{c.z_subscriber_check}
+ * tags{}
  */
 ZENOHC_API bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 /**
@@ -2397,12 +2397,12 @@ ZENOHC_API bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 ZENOHC_API struct z_owned_keyexpr_t z_subscriber_keyexpr(struct z_subscriber_t subscriber);
 /**
  * Returns a :c:type:`z_subscriber_t` loaned from `p`.
- * tags{c.z_subscriber_loan}
+ * tags{}
  */
 ZENOHC_API struct z_subscriber_t z_subscriber_loan(const struct z_owned_subscriber_t *p);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
- * tags{c.z_subscriber_null}
+ * tags{}
  */
 ZENOHC_API struct z_owned_subscriber_t z_subscriber_null(void);
 /**
@@ -2421,7 +2421,7 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
- * tags{c.z_timestamp_check}
+ * tags{}
  */
 ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
 /**
@@ -2523,19 +2523,19 @@ struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
                                                    size_t len);
 /**
  * Returns `true` if the options are valid.
- * tags{c.zc_liveliness_declaration_options_check}
+ * tags{}
  */
 ZENOHC_API
 bool zc_liveliness_declaration_options_check(const struct zc_owned_liveliness_declaration_options_t *_opts);
 /**
  * Destroys the options.
- * tags{c.zc_liveliness_declaration_options_drop}
+ * tags{}
  */
 ZENOHC_API
 void zc_liveliness_declaration_options_drop(struct zc_owned_liveliness_declaration_options_t *opts);
 /**
  * The gravestone value for `zc_owned_liveliness_declaration_options_t`
- * tags{c.zc_liveliness_declaration_options_null}
+ * tags{}
  */
 ZENOHC_API
 struct zc_owned_liveliness_declaration_options_t zc_liveliness_declaration_options_null(void);
@@ -2589,7 +2589,7 @@ int8_t zc_liveliness_get(struct z_session_t session,
                          const struct zc_owned_liveliness_get_options_t *options);
 /**
  * Returns `true` if the options are valid.
- * tags{c.zc_liveliness_get_options_check}
+ * tags{}
  */
 ZENOHC_API
 bool zc_liveliness_get_options_check(const struct zc_owned_liveliness_get_options_t *_opts);
@@ -2600,40 +2600,40 @@ bool zc_liveliness_get_options_check(const struct zc_owned_liveliness_get_option
 ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_default(void);
 /**
  * Destroys the options.
- * tags{c.zc_liveliness_get_options_drop}
+ * tags{}
  */
 ZENOHC_API void zc_liveliness_get_options_drop(struct zc_owned_liveliness_get_options_t *opts);
 /**
  * The gravestone value for `zc_owned_liveliness_get_options_t`
- * tags{c.zc_liveliness_get_options_null}
+ * tags{}
  */
 ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_null(void);
 /**
  * Returns `true` if the options are valid.
- * tags{c.zc_liveliness_subscriber_options_check}
+ * tags{}
  */
 ZENOHC_API
 bool zc_liveliness_subscriber_options_check(const struct zc_owned_liveliness_declare_subscriber_options_t *_opts);
 /**
  * Destroys the options.
- * tags{c.zc_liveliness_subscriber_options_drop}
+ * tags{}
  */
 ZENOHC_API
 void zc_liveliness_subscriber_options_drop(struct zc_owned_liveliness_declare_subscriber_options_t *opts);
 /**
  * The gravestone value for `zc_owned_liveliness_declare_subscriber_options_t`
- * tags{c.zc_liveliness_subscriber_options_null}
+ * tags{}
  */
 ZENOHC_API
 struct zc_owned_liveliness_declare_subscriber_options_t zc_liveliness_subscriber_options_null(void);
 /**
  * Returns `true` unless the token is at its gravestone value.
- * tags{c.zc_liveliness_token_check}
+ * tags{}
  */
 ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token_t *token);
 /**
  * The gravestone value for liveliness tokens.
- * tags{c.zc_liveliness_token_null}
+ * tags{}
  */
 ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 /**
@@ -2643,12 +2643,12 @@ ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
  * Returns `false` if `payload` is the gravestone value.
- * tags{c.zc_payload_check}
+ * tags{}
  */
 ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
 /**
  * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
- * tags{c.zc_payload_drop}
+ * tags{}
  */
 ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
 /**
@@ -2800,11 +2800,11 @@ size_t zc_shm_defrag(const struct zc_owned_shm_manager_t *manager);
  */
 ZENOHC_API size_t zc_shm_gc(const struct zc_owned_shm_manager_t *manager);
 /**
- * tags{c.zc_shm_manager_check}
+ * tags{}
  */
 ZENOHC_API bool zc_shm_manager_check(const struct zc_owned_shm_manager_t *manager);
 /**
- * tags{c.zc_shm_manager_drop}
+ * tags{}
  */
 ZENOHC_API void zc_shm_manager_drop(struct zc_owned_shm_manager_t *manager);
 /**
@@ -2815,7 +2815,7 @@ struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
                                                  const char *id,
                                                  size_t size);
 /**
- * tags{c.zc_shm_manager_null}
+ * tags{}
  */
 ZENOHC_API struct zc_owned_shm_manager_t zc_shm_manager_null(void);
 /**
@@ -2825,12 +2825,12 @@ ZENOHC_API struct zc_owned_shm_manager_t zc_shm_manager_null(void);
 ZENOHC_API size_t zc_shmbuf_capacity(const struct zc_owned_shmbuf_t *buf);
 /**
  * Returns `false` if `buf` is in its gravestone state.
- * tags{c.zc_shmbuf_check}
+ * tags{}
  */
 ZENOHC_API bool zc_shmbuf_check(const struct zc_owned_shmbuf_t *buf);
 /**
  * Drops the SHM buffer, decrementing its backing reference counter.
- * tags{c.zc_shmbuf_drop}
+ * tags{}
  */
 ZENOHC_API void zc_shmbuf_drop(struct zc_owned_shmbuf_t *buf);
 /**
@@ -2847,7 +2847,7 @@ ZENOHC_API struct zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmb
 ZENOHC_API size_t zc_shmbuf_length(const struct zc_owned_shmbuf_t *buf);
 /**
  * Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
- * tags{c.zc_shmbuf_null}
+ * tags{}
  */
 ZENOHC_API struct zc_owned_shmbuf_t zc_shmbuf_null(void);
 /**
@@ -2966,12 +2966,12 @@ struct ze_owned_querying_subscriber_t ze_declare_querying_subscriber(struct z_se
                                                                      const struct ze_querying_subscriber_options_t *options);
 /**
  * Returns ``true`` if `pub_cache` is valid.
- * tags{c.ze_publication_cache_check}
+ * tags{}
  */
 ZENOHC_API bool ze_publication_cache_check(const struct ze_owned_publication_cache_t *pub_cache);
 /**
  * Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
- * tags{c.ze_publication_cache_null}
+ * tags{}
  */
 ZENOHC_API struct ze_owned_publication_cache_t ze_publication_cache_null(void);
 /**
@@ -2981,7 +2981,7 @@ ZENOHC_API struct ze_owned_publication_cache_t ze_publication_cache_null(void);
 ZENOHC_API struct ze_publication_cache_options_t ze_publication_cache_options_default(void);
 /**
  * Returns ``true`` if `sub` is valid.
- * tags{c.ze_querying_subscriber_check}
+ * tags{}
  */
 ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *sub);
 /**
@@ -2995,13 +2995,13 @@ int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
                                   const struct z_get_options_t *options);
 /**
  * Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
- * tags{c.ze_querying_subscriber_loan}
+ * tags{}
  */
 ZENOHC_API
 struct ze_querying_subscriber_t ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *p);
 /**
  * Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
- * tags{c.ze_querying_subscriber_null}
+ * tags{}
  */
 ZENOHC_API struct ze_owned_querying_subscriber_t ze_querying_subscriber_null(void);
 /**
