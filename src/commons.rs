@@ -188,7 +188,7 @@ pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
     unsafe { std::ptr::replace(payload, zc_payload_null()) };
 }
 /// Constructs `zc_owned_payload_t`'s gravestone value.
-/// tags{c.zc_payload_null, api.buffer.create.empty}
+/// tags{}
 #[no_mangle]
 pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
     zc_owned_payload_t {

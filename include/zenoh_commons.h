@@ -2653,7 +2653,7 @@ ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
 ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
 /**
  * Constructs `zc_owned_payload_t`'s gravestone value.
- * tags{c.zc_payload_null, api.buffer.create.empty}
+ * tags{}
  */
 ZENOHC_API struct zc_owned_payload_t zc_payload_null(void);
 /**
