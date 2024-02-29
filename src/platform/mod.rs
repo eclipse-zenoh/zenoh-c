@@ -14,3 +14,6 @@
 
 pub use synchronization::*;
 mod synchronization;
+
+pub use random::*;
+mod random;
