@@ -863,6 +863,12 @@ typedef struct zc_owned_liveliness_get_options_t {
  * functions, then the operation will fail (but the passed value will still be consumed).
  */
 typedef struct z_owned_buffer_t zc_owned_payload_t;
+typedef struct zc_owned_sample_t {
+  struct z_owned_keyexpr_t _0;
+  struct z_owned_buffer_t _1;
+  struct z_owned_buffer_t _2;
+  size_t _3[12];
+} zc_owned_sample_t;
 typedef struct zc_owned_shmbuf_t {
   size_t _0[9];
 } zc_owned_shmbuf_t;
@@ -2005,7 +2011,13 @@ ZENOHC_API struct z_owned_buffer_t z_sample_owned_payload(const struct z_sample_
  * If you need ownership of the buffer, you may use `z_sample_owned_payload`.
  */
 ZENOHC_API struct z_bytes_t z_sample_payload(const struct z_sample_t *sample);
+/**
+ * The qos with which the sample was received.
+ */
 ZENOHC_API struct z_qos_t z_sample_qos(const struct z_sample_t *sample);
+/**
+ * The samples timestamp
+ */
 ZENOHC_API struct z_timestamp_t z_sample_timestamp(const struct z_sample_t *sample);
 /**
  * Scout for routers and/or peers.
@@ -2410,6 +2422,28 @@ struct z_owned_reply_channel_t zc_reply_fifo_new(size_t bound);
  */
 ZENOHC_API
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
+/**
+ * Returns `true` if `sample` is valid.
+ *
+ * Note that there exist no fallinle constructors for `zc_owned_sample_t`, so validity is always guaranteed
+ * unless the value has been dropped already.
+ */
+ZENOHC_API
+bool zc_sample_check(const struct zc_owned_sample_t *sample);
+/**
+ * Clone a sample in the cheapest way available.
+ */
+ZENOHC_API struct zc_owned_sample_t zc_sample_clone(const struct z_sample_t *sample);
+/**
+ * Destroy the sample.
+ */
+ZENOHC_API void zc_sample_drop(struct zc_owned_sample_t *sample);
+/**
+ * Borrow the sample, allowing calling its accessor methods.
+ *
+ * Calling this function using a dropped sample is undefined behaviour.
+ */
+ZENOHC_API struct z_sample_t zc_sample_loan(const struct zc_owned_sample_t *sample);
 /**
  * Increments the session's reference count, returning a new owning handle.
  */

@@ -12,6 +12,8 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use std::ops::Deref;
+
 use crate::collections::*;
 use crate::keyexpr::*;
 use crate::z_congestion_control_t;
@@ -216,10 +218,12 @@ pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> z_owned_buffer_
 pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
     sample.kind.into()
 }
+/// The samples timestamp
 #[no_mangle]
 pub extern "C" fn z_sample_timestamp(sample: &z_sample_t) -> z_timestamp_t {
     sample.timestamp.as_ref().into()
 }
+/// The qos with which the sample was received.
 #[no_mangle]
 pub extern "C" fn z_sample_qos(sample: &z_sample_t) -> z_qos_t {
     sample.qos.into()
@@ -236,6 +240,45 @@ pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
         },
         None => z_attachment_null(),
     }
+}
+
+#[repr(C)]
+pub struct zc_owned_sample_t {
+    _0: z_owned_keyexpr_t,
+    _1: z_owned_buffer_t,
+    _2: z_owned_buffer_t,
+    _3: [usize; 12],
+}
+
+impl_guarded_transmute!(Option<Sample>, zc_owned_sample_t);
+
+/// Clone a sample in the cheapest way available.
+#[no_mangle]
+pub extern "C" fn zc_sample_clone(sample: &z_sample_t) -> zc_owned_sample_t {
+    Some(sample.deref().clone()).into()
+}
+
+/// Returns `true` if `sample` is valid.
+///
+/// Note that there exist no fallinle constructors for `zc_owned_sample_t`, so validity is always guaranteed
+/// unless the value has been dropped already.
+#[no_mangle]
+pub extern "C" fn zc_sample_check(sample: &zc_owned_sample_t) -> bool {
+    sample.is_some()
+}
+
+/// Borrow the sample, allowing calling its accessor methods.
+///
+/// Calling this function using a dropped sample is undefined behaviour.
+#[no_mangle]
+pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> z_sample_t {
+    z_sample_t::new(unsafe { sample.as_ref().unwrap_unchecked() })
+}
+
+/// Destroy the sample.
+#[no_mangle]
+pub extern "C" fn zc_sample_drop(sample: &mut zc_owned_sample_t) {
+    core::mem::drop(sample.take());
 }
 
 /// A :c:type:`z_encoding_t` integer `prefix`.
