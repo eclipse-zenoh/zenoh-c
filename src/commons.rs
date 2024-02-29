@@ -242,6 +242,10 @@ pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
     }
 }
 
+/// An owned sample.
+///
+/// This is a read only type that can only be constructed by cloning a `z_sample_t`.
+/// Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
 #[repr(C)]
 pub struct zc_owned_sample_t {
     _0: z_owned_keyexpr_t,

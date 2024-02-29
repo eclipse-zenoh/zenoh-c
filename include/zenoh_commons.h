@@ -863,6 +863,12 @@ typedef struct zc_owned_liveliness_get_options_t {
  * functions, then the operation will fail (but the passed value will still be consumed).
  */
 typedef struct z_owned_buffer_t zc_owned_payload_t;
+/**
+ * An owned sample.
+ *
+ * This is a read only type that can only be constructed by cloning a `z_sample_t`.
+ * Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
+ */
 typedef struct zc_owned_sample_t {
   struct z_owned_keyexpr_t _0;
   struct z_owned_buffer_t _1;
