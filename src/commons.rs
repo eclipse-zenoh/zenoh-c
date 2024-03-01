@@ -103,7 +103,7 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 /// functions, then the operation will fail (but the passed value will still be consumed).
 #[allow(non_camel_case_types)]
 #[repr(C)]
-/// tags{c.zc_owned_payload_t, api.buffer.owned}
+/// tags{c.zc_owned_payload_t}
 pub struct zc_owned_payload_t {
     pub payload: z_bytes_t,
     pub _owner: [usize; 5],

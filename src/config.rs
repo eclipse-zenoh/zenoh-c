@@ -32,7 +32,7 @@ pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 /// tags{c.z_config_mode_key, api.config.mode}
 pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_connect_key, api.config.connect}
+/// tags{c.z_config_connect_key, api.config.connect.endpoints}
 pub static Z_CONFIG_CONNECT_KEY: &c_char =
     unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]

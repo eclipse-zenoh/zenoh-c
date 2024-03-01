@@ -1062,7 +1062,7 @@ typedef struct zc_owned_liveliness_get_options_t {
  *
  * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
  * functions, then the operation will fail (but the passed value will still be consumed).
- * tags{c.zc_owned_payload_t, api.buffer.owned}
+ * tags{c.zc_owned_payload_t}
  */
 typedef struct zc_owned_payload_t {
   struct z_bytes_t payload;
