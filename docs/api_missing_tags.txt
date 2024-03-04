@@ -3,3 +3,11 @@ See https://github.com/ZettaScaleLabs/zenoh-tests/tree/tagging/api_matrix for de
 
 tags{api.attachment.is_empty(TODO)}
 tags{api.attachment.len(TODO)}
+
+tags{api.delete.encoding.set(N/A)}
+tags{api.delete.attachment.set(N/A)}
+Purposedly not added: in Rust they exinsts only because DeelteBuilder is an alias for PutBuilder, but actually they are not used for delete operations.
+
+tags{api.downsampling_item_conf(TODO)}
+tags{api.downsampling_rule_conf(TODO)}
+
