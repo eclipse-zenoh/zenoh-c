@@ -457,6 +457,7 @@ typedef struct ALIGN(8) z_owned_reply_t {
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * tags{c.zc_reply_closure_t, api.get.callback}
  */
 typedef struct z_owned_closure_reply_t {
   void *context;

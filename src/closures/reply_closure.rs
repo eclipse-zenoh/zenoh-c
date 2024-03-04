@@ -15,6 +15,7 @@ use libc::c_void;
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 #[repr(C)]
+/// tags{c.zc_reply_closure_t, api.get.callback}
 pub struct z_owned_closure_reply_t {
     context: *mut c_void,
     call: Option<extern "C" fn(&mut z_owned_reply_t, *mut c_void)>,
