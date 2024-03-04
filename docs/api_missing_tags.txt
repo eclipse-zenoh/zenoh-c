@@ -11,5 +11,5 @@ Purposedly not added: in Rust they exinsts only because DeelteBuilder is an alia
 tags{api.downsampling_item_conf(TODO)}
 tags{api.downsampling_rule_conf(TODO)}
 
-tags{api.get.access_replies.set(TODO)}
+tags{api.get.accept_replies.set(TODO)}
 tags{api.get.allowed_destination.set(TODO)}
