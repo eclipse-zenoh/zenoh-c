@@ -1317,7 +1317,7 @@ struct z_owned_bytes_map_t z_bytes_map_from_attachment_aliasing(struct z_attachm
  * Returns the value associated with `key`, returning a gravestone value if:
  * - `this` or `key` is in gravestone state.
  * - `this` has no value associated to `key`
- * tags{c.z_bytes_map_get}
+ * tags{c.z_bytes_map_get, api.attachment.get}
  */
 ZENOHC_API
 struct z_bytes_t z_bytes_map_get(const struct z_owned_bytes_map_t *this_,
@@ -1328,7 +1328,7 @@ struct z_bytes_t z_bytes_map_get(const struct z_owned_bytes_map_t *this_,
  * Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
  *
  * Calling this with `NULL` or the gravestone value is undefined behaviour.
- * tags{c.z_bytes_map_insert_by_alias}
+ * tags{c.z_bytes_map_insert_by_alias, api.attachment.insert}
  */
 ZENOHC_API
 void z_bytes_map_insert_by_alias(const struct z_owned_bytes_map_t *this_,
@@ -1338,7 +1338,7 @@ void z_bytes_map_insert_by_alias(const struct z_owned_bytes_map_t *this_,
  * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
  *
  * Calling this with `NULL` or the gravestone value is undefined behaviour.
- * tags{c.z_bytes_map_insert_by_copy}
+ * tags{c.z_bytes_map_insert_by_copy, api.attachment.insert}
  */
 ZENOHC_API
 void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
@@ -1355,7 +1355,7 @@ void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
  * Note that this map is unordered.
  *
  * Calling this with `NULL` or the gravestone value is undefined behaviour.
- * tags{c.z_bytes_map_iter}
+ * tags{c.z_bytes_map_iter, api.attachment.iter}
  */
 ZENOHC_API
 int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
@@ -1363,7 +1363,7 @@ int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
                         void *ctx);
 /**
  * Constructs a new map.
- * tags{c.z_bytes_map_new}
+ * tags{c.z_bytes_map_new, api.attachment.create}
  */
 ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
 /**
