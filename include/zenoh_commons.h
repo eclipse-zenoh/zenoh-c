@@ -2716,6 +2716,7 @@ int8_t zc_put_owned(struct z_session_t session,
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
  * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+ * tags{c.zc_query_fifo_new, api.get.channel}
  */
 ZENOHC_API
 struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
@@ -2729,6 +2730,7 @@ struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
  * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+ * tags{c.zc_query_non_blocking_fifo_new , api.get.channel}
  */
 ZENOHC_API
 struct z_owned_query_channel_t zc_query_non_blocking_fifo_new(size_t bound);
