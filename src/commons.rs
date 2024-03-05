@@ -615,7 +615,7 @@ pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
 pub enum zcu_locality_t {
     /// tags{c.zcu_locality_t.any, api.options.locality.any}
     ANY = 0,
-    /// tags{c.zcu_locality_t.session_local, api.options.locality.local}
+    /// tags{c.zcu_locality_t.session_local, api.options.locality.session_local}
     SESSION_LOCAL = 1,
     /// tags{c.zcu_locality_t.remote, api.options.locality.remote}
     REMOTE = 2,
@@ -649,11 +649,11 @@ pub extern "C" fn zcu_locality_default() -> zcu_locality_t {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-/// tags{c.zcu_reply_keyexpr_t, api.options.reply_keyexpr}
+/// tags{c.zcu_reply_keyexpr_t, api.options.reply_key_expr}
 pub enum zcu_reply_keyexpr_t {
-    /// tags{c.zcu_reply_keyexpr_t.any, api.options.reply_keyexpr.any}
+    /// tags{c.zcu_reply_keyexpr_t.any, api.options.reply_key_expr.any}
     ANY = 0,
-    /// tags{c.zcu_reply_keyexpr_t.matching_query, api.options.reply_keyexpr.matching_query}
+    /// tags{c.zcu_reply_keyexpr_t.matching_query, api.options.reply_key_expr.matching_query}
     MATCHING_QUERY = 1,
 }
 
@@ -676,7 +676,7 @@ impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
 }
 
 #[no_mangle]
-/// tags{c.zcu_reply_keyexpr_default, api.options.reply_keyexpr.default}
+/// tags{c.zcu_reply_keyexpr_default, api.options.reply_key_expr.default}
 pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }

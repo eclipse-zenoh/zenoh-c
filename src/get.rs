@@ -377,16 +377,16 @@ pub extern "C" fn z_query_target_default() -> z_query_target_t {
 ///       It optimizes bandwidth.
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
-/// tags{c.z_consolidation_mode_t, api.options.consolidation_mode}
+/// tags{c.z_consolidation_mode_t, api.options.consolidation_mode.manual}
 pub enum z_consolidation_mode_t {
     /// tags{c.z_consolidation_mode_t.auto, api.options.consolidation_mode.auto}
     AUTO = -1,
     #[default]
-    /// tags{c.z_consolidation_mode_t.none, api.options.consolidation_mode.none}
+    /// tags{c.z_consolidation_mode_t.none, api.options.consolidation_mode.manual.none}
     NONE = 0,
-    /// tags{c.z_consolidation_mode_t.monotonic, api.options.consolidation_mode.monotonic}
+    /// tags{c.z_consolidation_mode_t.monotonic, api.options.consolidation_mode.manual.monotonic}
     MONOTONIC = 1,
-    /// tags{c.z_consolidation_mode_t.latest, api.options.consolidation_mode.latest}
+    /// tags{c.z_consolidation_mode_t.latest, api.options.consolidation_mode.manual.latest}
     LATEST = 2,
 }
 
@@ -428,7 +428,6 @@ impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
 #[derive(Clone, Copy)]
 /// tags{c.z_query_consolidation_t, api.options.query_consolidation}
 pub struct z_query_consolidation_t {
-    /// tags{c.z_query_consolidation_t.mode, api.options.query_consolidation.mode}
     pub mode: z_consolidation_mode_t,
 }
 
@@ -468,28 +467,28 @@ pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
 /// Returns:
 ///   Returns the constructed :c:type:`z_query_consolidation_t`.
 #[no_mangle]
-/// tags{c.z_query_consolidation_auto, api.options.query_consolidation.auto}
+/// tags{c.z_query_consolidation_auto}
 pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
     QueryConsolidation::AUTO.into()
 }
 
 /// Latest value consolidation.
 #[no_mangle]
-/// tags{c.z_query_consolidation_latest, api.options.query_consolidation.latest}
+/// tags{c.z_query_consolidation_latest}
 pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Latest).into()
 }
 
 /// Monotonic consolidation.
 #[no_mangle]
-/// tags{c.z_query_consolidation_monotonic, api.options.query_consolidation.monotonic}
+/// tags{c.z_query_consolidation_monotonic}
 pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Monotonic).into()
 }
 
 /// Disable consolidation.
 #[no_mangle]
-/// tags{c.z_query_consolidation_none, api.options.query_consolidation.none}
+/// tags{c.z_query_consolidation_none}
 pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::None).into()
 }

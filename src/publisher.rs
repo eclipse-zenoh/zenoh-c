@@ -387,7 +387,7 @@ pub extern "C" fn z_publisher_delete(
 /// Returns the key expression of the publisher
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_publisher_keyexpr, api.publisher.keyexpr.get}
+/// tags{c.z_publisher_keyexpr, api.publisher.key_expr.get}
 pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyexpr_t {
     if let Some(p) = publisher.as_ref() {
         p.key_expr().clone().into()

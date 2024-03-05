@@ -166,7 +166,7 @@ pub extern "C" fn z_put_options_default() -> z_put_options_t {
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_put, api.put}
+/// tags{c.z_put, api.session.put}
 pub unsafe extern "C" fn z_put(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -226,7 +226,7 @@ pub unsafe extern "C" fn z_put(
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.zc_put_owned, api.put}
+/// tags{c.zc_put_owned, api.session.put}
 pub extern "C" fn zc_put_owned(
     session: z_session_t,
     keyexpr: z_keyexpr_t,

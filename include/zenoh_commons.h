@@ -45,7 +45,7 @@ typedef enum z_congestion_control_t {
  *       ts2 > ts1. It optimizes latency.
  *     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
  *       It optimizes bandwidth.
- * tags{c.z_consolidation_mode_t, api.options.consolidation_mode}
+ * tags{c.z_consolidation_mode_t, api.options.consolidation_mode.manual}
  */
 typedef enum z_consolidation_mode_t {
   /**
@@ -53,15 +53,15 @@ typedef enum z_consolidation_mode_t {
    */
   Z_CONSOLIDATION_MODE_AUTO = -1,
   /**
-   * tags{c.z_consolidation_mode_t.none, api.options.consolidation_mode.none}
+   * tags{c.z_consolidation_mode_t.none, api.options.consolidation_mode.manual.none}
    */
   Z_CONSOLIDATION_MODE_NONE = 0,
   /**
-   * tags{c.z_consolidation_mode_t.monotonic, api.options.consolidation_mode.monotonic}
+   * tags{c.z_consolidation_mode_t.monotonic, api.options.consolidation_mode.manual.monotonic}
    */
   Z_CONSOLIDATION_MODE_MONOTONIC = 1,
   /**
-   * tags{c.z_consolidation_mode_t.latest, api.options.consolidation_mode.latest}
+   * tags{c.z_consolidation_mode_t.latest, api.options.consolidation_mode.manual.latest}
    */
   Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
@@ -217,7 +217,7 @@ typedef enum zcu_locality_t {
    */
   ZCU_LOCALITY_ANY = 0,
   /**
-   * tags{c.zcu_locality_t.session_local, api.options.locality.local}
+   * tags{c.zcu_locality_t.session_local, api.options.locality.session_local}
    */
   ZCU_LOCALITY_SESSION_LOCAL = 1,
   /**
@@ -226,15 +226,15 @@ typedef enum zcu_locality_t {
   ZCU_LOCALITY_REMOTE = 2,
 } zcu_locality_t;
 /**
- * tags{c.zcu_reply_keyexpr_t, api.options.reply_keyexpr}
+ * tags{c.zcu_reply_keyexpr_t, api.options.reply_key_expr}
  */
 typedef enum zcu_reply_keyexpr_t {
   /**
-   * tags{c.zcu_reply_keyexpr_t.any, api.options.reply_keyexpr.any}
+   * tags{c.zcu_reply_keyexpr_t.any, api.options.reply_key_expr.any}
    */
   ZCU_REPLY_KEYEXPR_ANY = 0,
   /**
-   * tags{c.zcu_reply_keyexpr_t.matching_query, api.options.reply_keyexpr.matching_query}
+   * tags{c.zcu_reply_keyexpr_t.matching_query, api.options.reply_key_expr.matching_query}
    */
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
@@ -782,9 +782,6 @@ typedef struct z_owned_encoding_t {
  * tags{c.z_query_consolidation_t, api.options.query_consolidation}
  */
 typedef struct z_query_consolidation_t {
-  /**
-   * tags{c.z_query_consolidation_t.mode, api.options.query_consolidation.mode}
-   */
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 /**
@@ -972,11 +969,11 @@ typedef struct z_owned_query_channel_t {
  */
 typedef struct z_query_reply_options_t {
   /**
-   * tags{c.z_query_reply_options_t.encoding, api.reply.encoding.set}
+   * tags{c.z_query_reply_options_t.encoding, api.query.reply.encoding.set}
    */
   struct z_encoding_t encoding;
   /**
-   * tags{c.z_query_reply_options_t.attachment, api.reply.attachment.set}
+   * tags{c.z_query_reply_options_t.attachment, api.query.reply.attachment.set}
    */
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
@@ -1980,7 +1977,7 @@ int8_t z_publisher_delete(struct z_publisher_t publisher,
 ZENOHC_API struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
 /**
  * Returns the key expression of the publisher
- * tags{c.z_publisher_keyexpr, api.publisher.keyexpr.get}
+ * tags{c.z_publisher_keyexpr, api.publisher.key_expr.get}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
 /**
@@ -2056,7 +2053,7 @@ ZENOHC_API struct z_pull_subscriber_options_t z_pull_subscriber_options_default(
  *     options: The put options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
- * tags{c.z_put, api.put}
+ * tags{c.z_put, api.session.put}
  */
 ZENOHC_API
 int8_t z_put(struct z_session_t session,
@@ -2120,7 +2117,7 @@ struct z_owned_query_t z_query_clone(const struct z_query_t *query);
  *
  * Returns:
  *   Returns the constructed :c:type:`z_query_consolidation_t`.
- * tags{c.z_query_consolidation_auto, api.options.query_consolidation.auto}
+ * tags{c.z_query_consolidation_auto}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_auto(void);
 /**
@@ -2130,17 +2127,17 @@ ZENOHC_API struct z_query_consolidation_t z_query_consolidation_auto(void);
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
  * Latest value consolidation.
- * tags{c.z_query_consolidation_latest, api.options.query_consolidation.latest}
+ * tags{c.z_query_consolidation_latest}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_latest(void);
 /**
  * Monotonic consolidation.
- * tags{c.z_query_consolidation_monotonic, api.options.query_consolidation.monotonic}
+ * tags{c.z_query_consolidation_monotonic}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_monotonic(void);
 /**
  * Disable consolidation.
- * tags{c.z_query_consolidation_none, api.options.query_consolidation.none}
+ * tags{c.z_query_consolidation_none}
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
 /**
@@ -2700,7 +2697,7 @@ int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
  *     options: The put options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
- * tags{c.zc_put_owned, api.put}
+ * tags{c.zc_put_owned, api.session.put}
  */
 ZENOHC_API
 int8_t zc_put_owned(struct z_session_t session,
@@ -2894,7 +2891,7 @@ ZENOHC_API
 struct zcu_owned_matching_listener_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
                                                                               struct zcu_owned_closure_matching_status_t *callback);
 /**
- * tags{c.zcu_reply_keyexpr_default, api.options.reply_keyexpr.default}
+ * tags{c.zcu_reply_keyexpr_default, api.options.reply_key_expr.default}
  */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**

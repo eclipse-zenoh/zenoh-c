@@ -217,9 +217,9 @@ pub extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
 #[repr(C)]
 /// tags{c.z_query_reply_options_t}
 pub struct z_query_reply_options_t {
-    /// tags{c.z_query_reply_options_t.encoding, api.reply.encoding.set}
+    /// tags{c.z_query_reply_options_t.encoding, api.query.reply.encoding.set}
     pub encoding: z_encoding_t,
-    /// tags{c.z_query_reply_options_t.attachment, api.reply.attachment.set}
+    /// tags{c.z_query_reply_options_t.attachment, api.query.reply.attachment.set}
     pub attachment: z_attachment_t,
 }
 

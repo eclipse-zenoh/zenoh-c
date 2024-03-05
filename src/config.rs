@@ -18,14 +18,14 @@ use zenoh::config::{Config, ValidatedMap, WhatAmI};
 use crate::{impl_guarded_transmute, z_owned_str_t, z_str_null, GuardedTransmute};
 
 #[no_mangle]
-/// tags{ api.options.whatami}
-/// tags{c.z_router, api.options.whatami.router}
+/// tags{api.options.what_am_i}
+/// tags{c.z_router, api.options.what_am_i.router}
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
 #[no_mangle]
-/// tags{c.z_router, api.options.whatami.peer}
+/// tags{c.z_router, api.options.what_am_i.peer}
 pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
 #[no_mangle]
-/// tags{c.z_client, api.options.whatami.client}
+/// tags{c.z_client, api.options.what_am_i.client}
 pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
 #[no_mangle]
@@ -36,7 +36,7 @@ pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const
 pub static Z_CONFIG_CONNECT_KEY: &c_char =
     unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_listen_key, api.config.listen.endpoints}
+/// tags{c.z_config_listen_key, api.config.listen.en}
 pub static Z_CONFIG_LISTEN_KEY: &c_char =
     unsafe { &*(b"listen/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
