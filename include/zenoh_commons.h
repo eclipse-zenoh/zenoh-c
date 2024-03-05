@@ -190,11 +190,22 @@ typedef struct z_attachment_t {
   z_attachment_iter_driver_t iteration_driver;
 } z_attachment_t;
 /**
- * A buffer owned by Zenoh.
+ * A split buffer that owns all of its data.
+ *
+ * To minimize copies and reallocations, Zenoh may provide you data in split buffers.
+ *
+ * You can use `z_buffer_contiguous` to obtain a contiguous version of a buffer.
+ * If the buffer was already contiguous, the reference count will simply be increased.
+ * Otherwise, the split buffer's entire content will be copied in a newly allocated buffer.
  */
 typedef struct z_owned_buffer_t {
   size_t _inner[5];
 } z_owned_buffer_t;
+/**
+ * A loan of a `z_owned_buffer_t`.
+ *
+ * As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
+ */
 typedef struct z_buffer_t {
   const void *_inner;
 } z_buffer_t;
@@ -1038,12 +1049,54 @@ int8_t z_attachment_iterate(struct z_attachment_t this_,
  * Returns the gravestone value for `z_attachment_t`.
  */
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
+/**
+ * Returns `true` if the buffer is in a valid state.
+ */
 ZENOHC_API bool z_buffer_check(const struct z_owned_buffer_t *buffer);
+/**
+ * Increments the buffer's reference count, returning an owned version of the buffer.
+ */
 ZENOHC_API struct z_owned_buffer_t z_buffer_clone(struct z_buffer_t buffer);
+/**
+ * Returns an owned version of this buffer whose data is guaranteed to be contiguous in memory.
+ *
+ * This is achieved by increasing the reference count if the buffer is already contiguous, and by copying its data in a new contiguous buffer if it wasn't.
+ */
+ZENOHC_API
+struct z_owned_buffer_t z_buffer_contiguous(struct z_buffer_t buffer);
+/**
+ * Decrements the buffer's reference counter, destroying it if applicable.
+ *
+ * `buffer` will be reset to `z_buffer_null`, preventing UB on double-frees.
+ */
 ZENOHC_API void z_buffer_drop(struct z_owned_buffer_t *buffer);
+/**
+ * Loans the buffer, allowing you to call functions that only need a loan of it.
+ */
 ZENOHC_API struct z_buffer_t z_buffer_loan(const struct z_owned_buffer_t *buffer);
+/**
+ * The gravestone value for `z_owned_buffer_t`.
+ */
 ZENOHC_API struct z_owned_buffer_t z_buffer_null(void);
+/**
+ * Returns the payload of the buffer if it is contiguous, aliasling it.
+ *
+ * If the payload was not contiguous in memory, `z_bytes_null` will be returned instead.
+ */
 ZENOHC_API struct z_bytes_t z_buffer_payload(struct z_buffer_t buffer);
+/**
+ * Returns the `index`th slice of the buffer, aliasing it.
+ *
+ * Out of bounds accesses will return `z_bytes_null`.
+ */
+ZENOHC_API struct z_bytes_t z_buffer_slice_at(struct z_buffer_t buffer, size_t index);
+/**
+ * Returns the number of slices in the buffer.
+ *
+ * If the return value is 0 or 1, then the buffer's data is contiguous in memory and `z_buffer_contiguous` will succeed.
+ */
+ZENOHC_API
+size_t z_buffer_slice_count(struct z_buffer_t buffer);
 /**
  * Returns ``true`` if `b` is initialized.
  */
