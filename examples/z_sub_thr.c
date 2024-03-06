@@ -12,7 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
-#include <time.h>
 
 #include "zenoh.h"
 
@@ -21,46 +20,40 @@
 typedef struct {
     volatile unsigned long count;
     volatile unsigned long finished_rounds;
-    struct timespec start;
-    struct timespec first_start;
+    z_clock_t start;
+    z_clock_t first_start;
+    bool started;
 } z_stats_t;
 
 z_stats_t *z_stats_make() {
     z_stats_t *stats = z_malloc(sizeof(z_stats_t));
     stats->count = 0;
     stats->finished_rounds = 0;
-    stats->first_start.tv_nsec = 0;
+    stats->started = false;
     return stats;
-}
-
-static inline double get_elapsed_s(const struct timespec *start, const struct timespec *end) {
-    return (double)(end->tv_sec - start->tv_sec) + (double)(end->tv_nsec - start->tv_nsec) / 1.0E9;
 }
 
 void on_sample(const z_sample_t *sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
-        clock_gettime(CLOCK_MONOTONIC, &stats->start);
-        if (stats->first_start.tv_nsec == 0) {
+        stats->start = z_clock_now();
+        if (!stats->started) {
             stats->first_start = stats->start;
+            stats->started = true;
         }
         stats->count++;
     } else if (stats->count < N) {
         stats->count++;
     } else {
-        struct timespec end;
-        clock_gettime(CLOCK_MONOTONIC, &end);
         stats->finished_rounds++;
-        printf("%f msg/s\n", (double)N / get_elapsed_s(&stats->start, &end));
+        printf("%f msg/s\n", 1000.0 * N / z_clock_elapsed_ms(&stats->start));
         stats->count = 0;
     }
 }
 void drop_stats(void *context) {
     const z_stats_t *stats = (z_stats_t *)context;
     const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
-    struct timespec end;
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    double elapsed_s = get_elapsed_s(&stats->first_start, &end);
+    double elapsed_s = z_clock_elapsed_s(&stats->first_start);
     printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
            elapsed_s, (double)sent_messages / elapsed_s);
     z_free(context);

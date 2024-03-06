@@ -15,12 +15,6 @@
 #include <string.h>
 
 #include "zenoh.h"
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
 
 void matching_status_handler(const zcu_matching_status_t *matching_status, void *arg) {
     if (matching_status->matching) {
@@ -72,7 +66,7 @@ int main(int argc, char **argv) {
 
     char buf[256];
     for (int idx = 0; 1; ++idx) {
-        sleep(1);
+        z_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
         z_publisher_put_options_t options = z_publisher_put_options_default();

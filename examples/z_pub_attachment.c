@@ -15,12 +15,6 @@
 #include <string.h>
 
 #include "zenoh.h"
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
 
 int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
@@ -69,7 +63,7 @@ int main(int argc, char **argv) {
     char buf[256];
     char buf_ind[16];
     for (int idx = 0; 1; ++idx) {
-        sleep(1);
+        z_sleep_s(1);
 
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);

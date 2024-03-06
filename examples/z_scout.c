@@ -12,14 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #include <stdio.h>
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <unistd.h>
-#endif
-
 #include "zenoh.h"
 
 void fprintpid(FILE *stream, z_id_t pid) {
@@ -96,6 +88,6 @@ int main(int argc, char **argv) {
     z_owned_closure_hello_t closure = z_closure(callback, drop, context);
     printf("Scouting...\n");
     z_scout(z_move(config), z_move(closure));
-    sleep(1);
+    z_sleep_s(1);
     return 0;
 }
