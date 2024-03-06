@@ -36,7 +36,7 @@ pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const
 pub static Z_CONFIG_CONNECT_KEY: &c_char =
     unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_listen_key, api.config.listen.en}
+/// tags{c.z_config_listen_key, api.config.listen.endpoints}
 pub static Z_CONFIG_LISTEN_KEY: &c_char =
     unsafe { &*(b"listen/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
@@ -99,7 +99,7 @@ impl From<Option<Box<Config>>> for z_owned_config_t {
     }
 }
 /// Returns a :c:type:`z_config_t` loaned from `s`.
-/// tags{} 
+/// tags{}
 #[no_mangle]
 pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
     z_config_t(s)
