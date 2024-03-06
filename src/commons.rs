@@ -340,7 +340,7 @@ pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_own
 ///     - **Z_ENCODING_PREFIX_IMAGE_GIF**
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
-/// tags{c.z_encoding_prefix_t, api.encoding_prefix}
+/// tags{c.z_encoding_prefix_t}
 pub enum z_encoding_prefix_t {
     Empty = 0,
     AppOctetStream = 1,
@@ -460,9 +460,7 @@ impl From<zenoh_protocol::core::KnownEncoding> for z_encoding_prefix_t {
 #[derive(Clone, Copy, Debug)]
 /// tags{c.z_encoding_t, api.encoding}
 pub struct z_encoding_t {
-    /// tags{c.z_encoding_t.prefix, api.encoding.prefix.get}
     pub prefix: z_encoding_prefix_t,
-    /// tags{c.z_encoding_t.suffix, api.encoding.suffix.get}
     pub suffix: z_bytes_t,
 }
 
@@ -508,9 +506,7 @@ impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
 #[repr(C)]
 /// tags{c.z_owned_encoding_t, api.encoding}
 pub struct z_owned_encoding_t {
-    /// tags{c.z_owned_encoding_t.prefix, api.encoding.prefix}
     pub prefix: z_encoding_prefix_t,
-    /// tags{c.z_owned_encoding_t.suffix, api.encoding.suffix}
     pub suffix: z_bytes_t,
     pub _dropped: bool,
 }
@@ -536,7 +532,7 @@ pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
 /// Constructs a specific :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_encoding, api.encoding.create}
+/// tags{c.z_encoding}
 pub unsafe extern "C" fn z_encoding(
     prefix: z_encoding_prefix_t,
     suffix: *const c_char,
@@ -555,7 +551,7 @@ pub unsafe extern "C" fn z_encoding(
 /// Constructs a default :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_encoding_default, api.encoding.create}
+/// tags{c.z_encoding_default}
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
     (&zenoh_protocol::core::Encoding::default()).into()
 }

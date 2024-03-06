@@ -40,7 +40,6 @@ mod pull_subscriber;
 pub use crate::pull_subscriber::*;
 mod publisher;
 pub use crate::publisher::*;
-// ignore_tagging
 mod closures;
 pub use closures::*;
 mod liveliness;

@@ -46,14 +46,14 @@ type FetchingSubscriber = Option<Box<FetchingSubscriberWrapper>>;
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
-/// tags{c.ze_owned_querying_subscriber_t, api.querying_subscriber}
+/// tags{c.ze_owned_querying_subscriber_t}
 pub struct ze_owned_querying_subscriber_t([usize; 1]);
 
 impl_guarded_transmute!(FetchingSubscriber, ze_owned_querying_subscriber_t);
 
 #[repr(C)]
 #[allow(non_camel_case_types)]
-/// tags{c.ze_querying_subscriber_t, api.querying_subscriber}
+/// tags{c.ze_querying_subscriber_t}
 pub struct ze_querying_subscriber_t<'a>(&'a ze_owned_querying_subscriber_t);
 
 impl From<FetchingSubscriber> for ze_owned_querying_subscriber_t {
@@ -119,19 +119,19 @@ pub extern "C" fn ze_querying_subscriber_null() -> ze_owned_querying_subscriber_
 #[allow(non_camel_case_types)]
 /// tags{c.ze_querying_subscriber_options_t}
 pub struct ze_querying_subscriber_options_t {
-    /// tags{c.ze_querying_subscriber_options_t.reliability, api.querying_subscriber.reliability.set}
+    /// tags{c.ze_querying_subscriber_options_t.reliability}
     reliability: z_reliability_t,
-    /// tags{c.ze_querying_subscriber_options_t.allowed_origin, api.querying_subscriber.allowed_origin.set}
+    /// tags{c.ze_querying_subscriber_options_t.allowed_origin}
     allowed_origin: zcu_locality_t,
-    /// tags{c.ze_querying_subscriber_options_t.query_selector, api.querying_subscriber.query_selector.set}
+    /// tags{c.ze_querying_subscriber_options_t.query_selector}
     query_selector: z_keyexpr_t,
-    /// tags{c.ze_querying_subscriber_options_t.query_target, api.querying_subscriber.query_target.set}
+    /// tags{c.ze_querying_subscriber_options_t.query_target}
     query_target: z_query_target_t,
-    /// tags{c.ze_querying_subscriber_options_t.query_consolidation, api.querying_subscriber.query_consolidation.set}
+    /// tags{c.ze_querying_subscriber_options_t.query_consolidation}
     query_consolidation: z_query_consolidation_t,
-    /// tags{c.ze_querying_subscriber_options_t.query_accept_replies, api.querying_subscriber.query_accept_replies.set}
+    /// tags{c.ze_querying_subscriber_options_t.query_accept_replies}
     query_accept_replies: zcu_reply_keyexpr_t,
-    /// tags{c.ze_querying_subscriber_options_t.query_timeout_ms, api.querying_subscriber.query_timeout.set}
+    /// tags{c.ze_querying_subscriber_options_t.query_timeout_ms}
     query_timeout_ms: u64,
 }
 
@@ -246,7 +246,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
 /// Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
 /// The queried samples will be merged with the received publications and made available in the subscriber callback.
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.ze_querying_subscriber_get, api.querying_subscriber.get}
+/// tags{c.ze_querying_subscriber_get}
 #[no_mangle]
 pub unsafe extern "C" fn ze_querying_subscriber_get(
     sub: ze_querying_subscriber_t,
@@ -291,7 +291,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.ze_undeclare_querying_subscriber, api.querying_subscriber.undeclare}
+/// tags{c.ze_undeclare_querying_subscriber}
 pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.fetching_subscriber.close().res_sync() {

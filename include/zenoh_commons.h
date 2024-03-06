@@ -89,7 +89,7 @@ typedef enum z_consolidation_mode_t {
  *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
  *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
  *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
- * tags{c.z_encoding_prefix_t, api.encoding_prefix}
+ * tags{c.z_encoding_prefix_t}
  */
 typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_EMPTY = 0,
@@ -498,13 +498,7 @@ typedef struct ALIGN(4) z_keyexpr_t {
  * tags{c.z_encoding_t, api.encoding}
  */
 typedef struct z_encoding_t {
-  /**
-   * tags{c.z_encoding_t.prefix, api.encoding.prefix.get}
-   */
   enum z_encoding_prefix_t prefix;
-  /**
-   * tags{c.z_encoding_t.suffix, api.encoding.suffix.get}
-   */
   struct z_bytes_t suffix;
 } z_encoding_t;
 /**
@@ -792,13 +786,7 @@ typedef struct z_delete_options_t {
  * tags{c.z_owned_encoding_t, api.encoding}
  */
 typedef struct z_owned_encoding_t {
-  /**
-   * tags{c.z_owned_encoding_t.prefix, api.encoding.prefix}
-   */
   enum z_encoding_prefix_t prefix;
-  /**
-   * tags{c.z_owned_encoding_t.suffix, api.encoding.suffix}
-   */
   struct z_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
@@ -1206,7 +1194,7 @@ typedef struct ze_publication_cache_options_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- * tags{c.ze_owned_querying_subscriber_t, api.querying_subscriber}
+ * tags{c.ze_owned_querying_subscriber_t}
  */
 typedef struct ze_owned_querying_subscriber_t {
   size_t _0[1];
@@ -1228,36 +1216,36 @@ typedef struct ze_owned_querying_subscriber_t {
  */
 typedef struct ze_querying_subscriber_options_t {
   /**
-   * tags{c.ze_querying_subscriber_options_t.reliability, api.querying_subscriber.reliability.set}
+   * tags{c.ze_querying_subscriber_options_t.reliability}
    */
   enum z_reliability_t reliability;
   /**
-   * tags{c.ze_querying_subscriber_options_t.allowed_origin, api.querying_subscriber.allowed_origin.set}
+   * tags{c.ze_querying_subscriber_options_t.allowed_origin}
    */
   enum zcu_locality_t allowed_origin;
   /**
-   * tags{c.ze_querying_subscriber_options_t.query_selector, api.querying_subscriber.query_selector.set}
+   * tags{c.ze_querying_subscriber_options_t.query_selector}
    */
   struct z_keyexpr_t query_selector;
   /**
-   * tags{c.ze_querying_subscriber_options_t.query_target, api.querying_subscriber.query_target.set}
+   * tags{c.ze_querying_subscriber_options_t.query_target}
    */
   enum z_query_target_t query_target;
   /**
-   * tags{c.ze_querying_subscriber_options_t.query_consolidation, api.querying_subscriber.query_consolidation.set}
+   * tags{c.ze_querying_subscriber_options_t.query_consolidation}
    */
   struct z_query_consolidation_t query_consolidation;
   /**
-   * tags{c.ze_querying_subscriber_options_t.query_accept_replies, api.querying_subscriber.query_accept_replies.set}
+   * tags{c.ze_querying_subscriber_options_t.query_accept_replies}
    */
   enum zcu_reply_keyexpr_t query_accept_replies;
   /**
-   * tags{c.ze_querying_subscriber_options_t.query_timeout_ms, api.querying_subscriber.query_timeout.set}
+   * tags{c.ze_querying_subscriber_options_t.query_timeout_ms}
    */
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
 /**
- * tags{c.ze_querying_subscriber_t, api.querying_subscriber}
+ * tags{c.ze_querying_subscriber_t}
  */
 typedef struct ze_querying_subscriber_t {
   const struct ze_owned_querying_subscriber_t *_0;
@@ -1738,7 +1726,7 @@ int8_t z_delete(struct z_session_t session,
 ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
 /**
  * Constructs a specific :c:type:`z_encoding_t`.
- * tags{c.z_encoding, api.encoding.create}
+ * tags{c.z_encoding}
  */
 ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
 /**
@@ -1748,7 +1736,7 @@ ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
  * Constructs a default :c:type:`z_encoding_t`.
- * tags{c.z_encoding_default, api.encoding.create}
+ * tags{c.z_encoding_default}
  */
 ZENOHC_API struct z_encoding_t z_encoding_default(void);
 /**
@@ -3060,7 +3048,7 @@ ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subs
 /**
  * Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
  * The queried samples will be merged with the received publications and made available in the subscriber callback.
- * tags{c.ze_querying_subscriber_get, api.querying_subscriber.get}
+ * tags{c.ze_querying_subscriber_get}
  */
 ZENOHC_API
 int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
@@ -3090,7 +3078,7 @@ ZENOHC_API
 int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_cache);
 /**
  * Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
- * tags{c.ze_undeclare_querying_subscriber, api.querying_subscriber.undeclare}
+ * tags{c.ze_undeclare_querying_subscriber}
  */
 ZENOHC_API
 int8_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *sub);
