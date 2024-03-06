@@ -357,7 +357,7 @@ pub unsafe extern "C" fn z_query_reply(
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_query_keyexpr, api.query.key_expr.get}
+/// tags{c.z_query_keyexpr, api.query.keyexpr.get}
 pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
     let Some(query) = query.as_ref() else {
         return z_keyexpr_t::null();

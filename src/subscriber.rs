@@ -240,7 +240,7 @@ pub extern "C" fn z_declare_subscriber(
 /// Returns the key expression of the subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_subscriber_keyexpr, api.subscriber.key_expr.get}
+/// tags{c.z_subscriber_keyexpr, api.subscriber.keyexpr.get}
 pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_owned_keyexpr_t {
     if let Some(p) = subscriber.as_ref() {
         p.key_expr().clone().into()

@@ -226,15 +226,15 @@ typedef enum zcu_locality_t {
   ZCU_LOCALITY_REMOTE = 2,
 } zcu_locality_t;
 /**
- * tags{c.zcu_reply_keyexpr_t, api.options.reply_key_expr}
+ * tags{c.zcu_reply_keyexpr_t, api.options.reply_keyexpr}
  */
 typedef enum zcu_reply_keyexpr_t {
   /**
-   * tags{c.zcu_reply_keyexpr_t.any, api.options.reply_key_expr.any}
+   * tags{c.zcu_reply_keyexpr_t.any, api.options.reply_keyexpr.any}
    */
   ZCU_REPLY_KEYEXPR_ANY = 0,
   /**
-   * tags{c.zcu_reply_keyexpr_t.matching_query, api.options.reply_key_expr.matching_query}
+   * tags{c.zcu_reply_keyexpr_t.matching_query, api.options.reply_keyexpr.matching_query}
    */
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
@@ -1990,7 +1990,7 @@ int8_t z_publisher_delete(struct z_publisher_t publisher,
 ZENOHC_API struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
 /**
  * Returns the key expression of the publisher
- * tags{c.z_publisher_keyexpr, api.publisher.key_expr.get}
+ * tags{c.z_publisher_keyexpr, api.publisher.keyexpr.get}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
 /**
@@ -2179,7 +2179,7 @@ ZENOHC_API
 void z_query_drop(struct z_owned_query_t *this_);
 /**
  * Get a query's key by aliasing it.
- * tags{c.z_query_keyexpr, api.query.key_expr.get}
+ * tags{c.z_query_keyexpr, api.query.keyexpr.get}
  */
 ZENOHC_API struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
 /**
@@ -2424,7 +2424,7 @@ ZENOHC_API struct z_owned_str_t z_str_null(void);
 ZENOHC_API bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
 /**
  * Returns the key expression of the subscriber.
- * tags{c.z_subscriber_keyexpr, api.subscriber.key_expr.get}
+ * tags{c.z_subscriber_keyexpr, api.subscriber.keyexpr.get}
  */
 ZENOHC_API struct z_owned_keyexpr_t z_subscriber_keyexpr(struct z_subscriber_t subscriber);
 /**
@@ -2931,7 +2931,7 @@ ZENOHC_API
 struct zcu_owned_matching_listener_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
                                                                               struct zcu_owned_closure_matching_status_t *callback);
 /**
- * tags{c.zcu_reply_keyexpr_default, api.options.reply_key_expr.default}
+ * tags{c.zcu_reply_keyexpr_default, api.options.reply_keyexpr.default}
  */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
