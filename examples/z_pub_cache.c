@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
 
     ze_publication_cache_options_t pub_cache_opts = ze_publication_cache_options_default();
     pub_cache_opts.history = 42;
+    pub_cache_opts.queryable_complete = false;
 
     printf("Declaring publication cache on '%s'...\n", keyexpr);
     ze_owned_publication_cache_t pub_cache =

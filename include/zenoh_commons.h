@@ -515,6 +515,13 @@ typedef struct z_timestamp_t {
   struct z_id_t id;
 } z_timestamp_t;
 /**
+ * QoS settings of zenoh message.
+ *
+ */
+typedef struct z_qos_t {
+  uint8_t _0;
+} z_qos_t;
+/**
  * A data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
@@ -550,6 +557,10 @@ typedef struct z_sample_t {
    * tags{c.z_sample_t.timestamp, api.sample.timestamp}
    */
   struct z_timestamp_t timestamp;
+  /**
+   * tags{c.z_sample_t.qos, api.sample.qos}
+   */
+  struct z_qos_t qos;
   /**
    * tags{c.z_sample_t.attachment, api.sample.attachment}
    */
@@ -597,6 +608,20 @@ typedef struct z_owned_closure_zid_t {
   void (*call)(const struct z_id_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_zid_t;
+/**
+ * Condvar
+ *
+ */
+typedef struct z_condvar_t {
+  size_t _0;
+} z_condvar_t;
+/**
+ * Mutex
+ *
+ */
+typedef struct z_mutex_t {
+  size_t _0;
+} z_mutex_t;
 /**
  * An owned zenoh configuration.
  *
@@ -1018,6 +1043,16 @@ typedef struct z_subscriber_t {
   const struct z_owned_subscriber_t *_0;
 } z_subscriber_t;
 /**
+ * Task
+ *
+ */
+typedef struct z_task_t {
+  size_t _0;
+} z_task_t;
+typedef struct z_task_attr_t {
+  size_t _0;
+} z_task_attr_t;
+/**
  * The options for `zc_liveliness_declare_token`
  * tags{c.zc_owned_liveliness_declaration_options_t}
  */
@@ -1148,6 +1183,7 @@ typedef struct ze_owned_publication_cache_t {
  *     z_keyexpr_t queryable_prefix: The prefix used for queryable
  *     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
  *                       publication cache
+ *     bool queryable_complete: the `complete` option for the queryable
  *     size_t history: The the history size
  *     size_t resources_limit: The limit number of cached resources
  * tags{c.ze_publication_cache_options_t}
@@ -1155,6 +1191,7 @@ typedef struct ze_owned_publication_cache_t {
 typedef struct ze_publication_cache_options_t {
   struct z_keyexpr_t queryable_prefix;
   enum zcu_locality_t queryable_origin;
+  bool queryable_complete;
   size_t history;
   size_t resources_limit;
 } ze_publication_cache_options_t;
@@ -1478,6 +1515,10 @@ ZENOHC_API void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
  * Constructs a null safe-to-drop value of 'z_owned_closure_zid_t' type
  */
 ZENOHC_API struct z_owned_closure_zid_t z_closure_zid_null(void);
+ZENOHC_API int8_t z_condvar_free(struct z_condvar_t *cv);
+ZENOHC_API int8_t z_condvar_init(struct z_condvar_t *cv);
+ZENOHC_API int8_t z_condvar_signal(struct z_condvar_t *cv);
+ZENOHC_API int8_t z_condvar_wait(struct z_condvar_t *cv, struct z_mutex_t *m);
 /**
  * Returns ``true`` if `config` is valid.
  * tags{}
@@ -1946,6 +1987,11 @@ ZENOHC_API struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
  */
 ZENOHC_API
 struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
+ZENOHC_API int8_t z_mutex_free(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_init(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_lock(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_try_lock(struct z_mutex_t *m);
+ZENOHC_API int8_t z_mutex_unlock(struct z_mutex_t *m);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
  * tags{c.z_open, api.session.create}
@@ -2066,6 +2112,22 @@ int8_t z_put(struct z_session_t session,
  * tags{c.z_put_options_default}
  */
 ZENOHC_API struct z_put_options_t z_put_options_default(void);
+/**
+ * Returns default qos settings.
+ */
+ZENOHC_API struct z_qos_t z_qos_default(void);
+/**
+ * Returns message congestion control.
+ */
+ZENOHC_API enum z_congestion_control_t z_qos_get_congestion_control(struct z_qos_t qos);
+/**
+ * Returns message express flag. If set to true, the message is not batched to reduce the latency.
+ */
+ZENOHC_API bool z_qos_get_express(struct z_qos_t qos);
+/**
+ * Returns message priority.
+ */
+ZENOHC_API enum z_priority_t z_qos_get_priority(struct z_qos_t qos);
 /**
  * Returns the attachment to the query by aliasing.
  *
@@ -2227,6 +2289,11 @@ ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
  * tags{c.z_queryable_options_default}
  */
 ZENOHC_API struct z_queryable_options_t z_queryable_options_default(void);
+ZENOHC_API void z_random_fill(void *buf, size_t len);
+ZENOHC_API uint16_t z_random_u16(void);
+ZENOHC_API uint32_t z_random_u32(void);
+ZENOHC_API uint64_t z_random_u64(void);
+ZENOHC_API uint8_t z_random_u8(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -2417,6 +2484,12 @@ ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
  * tags{c.z_subscriber_pull, api.pull_subscriber.pull}
  */
 ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
+ZENOHC_API
+int8_t z_task_init(struct z_task_t *task,
+                   const struct z_task_attr_t *_attr,
+                   void (*fun)(void *arg),
+                   void *arg);
+ZENOHC_API int8_t z_task_join(struct z_task_t *task);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
  * tags{}

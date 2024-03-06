@@ -26,7 +26,7 @@ typedef struct {
 } z_stats_t;
 
 z_stats_t *z_stats_make() {
-    z_stats_t *stats = malloc(sizeof(z_stats_t));
+    z_stats_t *stats = z_malloc(sizeof(z_stats_t));
     stats->count = 0;
     stats->finished_rounds = 0;
     stats->first_start.tv_nsec = 0;
@@ -63,7 +63,7 @@ void drop_stats(void *context) {
     double elapsed_s = get_elapsed_s(&stats->first_start, &end);
     printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
            elapsed_s, (double)sent_messages / elapsed_s);
-    free(context);
+    z_free(context);
 }
 
 int main(int argc, char **argv) {

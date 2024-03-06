@@ -50,6 +50,8 @@ pub use publication_cache::*;
 mod querying_subscriber;
 pub use querying_subscriber::*;
 pub mod attachment;
+pub use platform::*;
+pub mod platform;
 #[cfg(feature = "shared-memory")]
 mod shm;
 
