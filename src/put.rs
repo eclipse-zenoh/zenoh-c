@@ -96,7 +96,7 @@ impl From<z_priority_t> for Priority {
 pub enum z_congestion_control_t {
     /// tags{c.z_congestion_control_t.block, api.options.congestion_control.block}
     BLOCK,
-    /// tags{c.z_congestion_control_t.drop}
+    /// tags{c.z_congestion_control_t.drop, api.options.congestion_control.drop}
     DROP,
 }
 

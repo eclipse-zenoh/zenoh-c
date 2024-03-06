@@ -28,7 +28,7 @@ typedef enum z_congestion_control_t {
    */
   Z_CONGESTION_CONTROL_BLOCK,
   /**
-   * tags{c.z_congestion_control_t.drop}
+   * tags{c.z_congestion_control_t.drop, api.options.congestion_control.drop}
    */
   Z_CONGESTION_CONTROL_DROP,
 } z_congestion_control_t;
@@ -1619,7 +1619,7 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
  *
  *       z_subscriber_options_t opts = z_subscriber_options_default();
  *       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
- * tags{c.z_declare_pull_subscriber, api.session.declare_pull_subscriber}
+ * tags{c.z_declare_pull_subscriber}
  */
 ZENOHC_API
 struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t session,
