@@ -251,7 +251,7 @@ typedef struct z_bytes_t {
    */
   size_t len;
   /**
-   * tags{c.z_bytes_t.start, api.buffer.read}
+   * tags{c.z_bytes_t.start, api.buffer.contiguous}
    */
   const uint8_t *start;
 } z_bytes_t;
@@ -1276,7 +1276,7 @@ ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
  * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
  * `str == NULL` will cause this to return `z_bytes_null()`
- * tags{c.z_bytes_from_str, api.buffer.create.from_str}
+ * tags{c.z_bytes_from_str}
  */
 ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
 /**
@@ -1383,7 +1383,7 @@ struct z_bytes_t z_bytes_new(const char *str);
 ZENOHC_API struct z_bytes_t z_bytes_null(void);
 /**
  * Constructs a `len` bytes long view starting at `start`.
- * tags{c.z_bytes_wrap, api.buffer.create}
+ * tags{c.z_bytes_wrap}
  */
 ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
 /**

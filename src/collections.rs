@@ -24,7 +24,7 @@ use zenoh::prelude::ZenohId;
 pub struct z_bytes_t {
     /// tags{c.z_bytes_t.len, api.buffer.len}
     pub len: size_t,
-    /// tags{c.z_bytes_t.start, api.buffer.read}
+    /// tags{c.z_bytes_t.start, api.buffer.contiguous}
     pub start: *const u8,
 }
 
@@ -73,7 +73,7 @@ pub extern "C" fn z_bytes_null() -> z_bytes_t {
 /// `str == NULL` will cause this to return `z_bytes_null()`
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_bytes_from_str, api.buffer.create.from_str}
+/// tags{c.z_bytes_from_str}
 pub unsafe extern "C" fn z_bytes_from_str(str: *const c_char) -> z_bytes_t {
     if str.is_null() {
         z_bytes_null()
@@ -100,7 +100,7 @@ pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
 /// Constructs a `len` bytes long view starting at `start`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_bytes_wrap, api.buffer.create}
+/// tags{c.z_bytes_wrap}
 pub unsafe extern "C" fn z_bytes_wrap(start: *const u8, len: usize) -> z_bytes_t {
     if start.is_null() {
         z_bytes_null()
