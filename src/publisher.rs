@@ -407,7 +407,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyex
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C, align(8))]
-/// tags{c.z_owned_matching_listener_t, api.matching_listener}
+/// tags{c.zcu_owned_matching_listener_t, api.matching.listener}
 pub struct zcu_owned_matching_listener_t([u64; 4]);
 
 impl_guarded_transmute!(
@@ -434,15 +434,17 @@ impl zcu_owned_matching_listener_t {
 ///   bool matching: true if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-/// tags{c.zcu_matching_status_t, api.matching_status}
+// tags{c.zcu_matching_status_t, api.matching.status}
 pub struct zcu_matching_status_t {
+    // tags{c.zcu_matching_status_t.matching, api.matching.status.matching_subscribers.get}
     pub matching: bool,
 }
 
 /// Register callback for notifying subscribers matching.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.zcu_publisher_matching_listener_callback, api.matching_listener.callback}
+// tags{c.zcu_publisher_matching_listener_callback, api.publisher.declare_matching_listener}
+// tags{api.matching.listener.callback}
 pub extern "C" fn zcu_publisher_matching_listener_callback(
     publisher: z_publisher_t,
     callback: &mut zcu_owned_closure_matching_status_t,

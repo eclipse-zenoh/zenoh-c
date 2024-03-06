@@ -29,46 +29,46 @@ pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
 pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
 #[no_mangle]
-/// tags{c.z_config_mode_key, api.config.mode}
+/// tags{c.z_config_mode_key, api.config.entry.mode}
 pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_connect_key, api.config.connect.endpoints}
+/// tags{c.z_config_connect_key, api.config.entry.connect.endpoints}
 pub static Z_CONFIG_CONNECT_KEY: &c_char =
     unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_listen_key, api.config.listen.endpoints}
+/// tags{c.z_config_listen_key, api.config.entry.listen.endpoints}
 pub static Z_CONFIG_LISTEN_KEY: &c_char =
     unsafe { &*(b"listen/endpoints\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_user_key, api.config.transport.auth.usrpwd.user}
+/// tags{c.z_config_user_key, api.config.entry.transport.auth.usrpwd.user}
 pub static Z_CONFIG_USER_KEY: &c_char =
     unsafe { &*(b"transport/auth/usrpwd/user\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_password_key, api.config.transport.auth.usrpwd.password}
+/// tags{c.z_config_password_key, api.config.entry.transport.auth.usrpwd.password}
 pub static Z_CONFIG_PASSWORD_KEY: &c_char =
     unsafe { &*(b"transport/auth/usrpwd/password\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_multicast_scouting_key, api.config.scouting.multicast.enabled}
+/// tags{c.z_config_multicast_scouting_key, api.config.entry.scouting.multicast.enabled}
 pub static Z_CONFIG_MULTICAST_SCOUTING_KEY: &c_char =
     unsafe { &*(b"scouting/multicast/enabled\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_multicast_interface_key, api.config.scouting.multicast.interface}
+/// tags{c.z_config_multicast_interface_key, api.config.entry.scouting.multicast.interface}
 pub static Z_CONFIG_MULTICAST_INTERFACE_KEY: &c_char =
     unsafe { &*(b"scouting/multicast/interface\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_multicast_ipv4_address_key, api.config.scouting.multicast.address}
+/// tags{c.z_config_multicast_ipv4_address_key, api.config.entry.scouting.multicast.address}
 pub static Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: &c_char =
     unsafe { &*(b"scouting/multicast/address\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_multicast_port_key, api.config.scouting.multicast.port}
+/// tags{c.z_config_multicast_port_key, api.config.entry.scouting.multicast.port}
 pub static Z_CONFIG_SCOUTING_TIMEOUT_KEY: &c_char =
     unsafe { &*(b"scouting/timeout\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_scouting_delay_key, api.config.scouting.delay}
+/// tags{c.z_config_scouting_delay_key, api.config.entry.scouting.delay}
 pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
     unsafe { &*(b"scouting/delay\0".as_ptr() as *const c_char) };
 #[no_mangle]
-/// tags{c.z_config_add_timestamp_key, api.config.timestamping.enabled}
+/// tags{c.z_config_add_timestamp_key, api.config.entry.timestamping.enabled}
 pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"timestamping/enabled\0".as_ptr() as *const c_char) };
 

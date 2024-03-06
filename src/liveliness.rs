@@ -28,7 +28,7 @@ use crate::{
 /// expressions.
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
-/// tags{c.zc_owned_liveliness_token_t, api.liveliness_token}
+/// tags{c.zc_owned_liveliness_token_t, api.liveliness.token}
 #[repr(C)]
 pub struct zc_owned_liveliness_token_t {
     _inner: [usize; 4],
@@ -117,7 +117,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 }
 
 /// Destroys a liveliness token, notifying subscribers of its destruction.
-/// tags{c.zc_liveliness_undeclare_token, api.liveliness_token.undeclare}
+/// tags{c.zc_liveliness_undeclare_token, api.liveliness.token.undeclare}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(token: &mut zc_owned_liveliness_token_t) {
     let Some(token): Option<LivelinessToken> =
@@ -175,6 +175,7 @@ pub extern "C" fn zc_liveliness_subscriber_options_drop(
 ///    To check if the subscription succeeded and if the subscriber is still valid,
 ///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 /// tags{c.zc_liveliness_declare_subscriber, api.liveliness.declare_subscriber}
+/// tags{api.liveliness.subscriber.callback}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
     session: z_session_t,
@@ -247,7 +248,8 @@ pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_owned_liveliness_
 /// Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
 ///
 /// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
-/// tags{c.zc_liveliness_get, api.liveliness.get}
+/// tags{c.zc_liveliness_get, api.liveliness.send_request}
+/// tags{api.liveliness.request.callback}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get(
     session: z_session_t,

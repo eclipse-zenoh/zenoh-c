@@ -457,7 +457,7 @@ typedef struct ALIGN(8) z_owned_reply_t {
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- * tags{c.zc_reply_closure_t, api.get.callback}
+ * tags{c.zc_reply_closure_t, api.request.callback}
  */
 typedef struct z_owned_closure_reply_t {
   void *context;
@@ -801,23 +801,23 @@ typedef struct z_value_t {
  */
 typedef struct z_get_options_t {
   /**
-   * tags{c.z_get_options_t.target, api.get.target.set}
+   * tags{c.z_get_options_t.target, api.request.target.set}
    */
   enum z_query_target_t target;
   /**
-   * tags{c.z_get_options_t.consolidation, api.get.consolidation.set}
+   * tags{c.z_get_options_t.consolidation, api.request.consolidation.set}
    */
   struct z_query_consolidation_t consolidation;
   /**
-   * tags{c.z_get_options_t.value, api.get.value.set}
+   * tags{c.z_get_options_t.value, api.request.value.set}
    */
   struct z_value_t value;
   /**
-   * tags{c.z_get_options_t.attachment, api.get.attachment.set}
+   * tags{c.z_get_options_t.attachment, api.request.attachment.set}
    */
   struct z_attachment_t attachment;
   /**
-   * tags{c.z_get_options_t.timeout_ms, api.get.timeout.set}
+   * tags{c.z_get_options_t.timeout_ms, api.request.timeout.set}
    */
   uint64_t timeout_ms;
 } z_get_options_t;
@@ -1039,7 +1039,7 @@ typedef struct zc_owned_liveliness_declare_subscriber_options_t {
  * expressions.
  *
  * A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
- * tags{c.zc_owned_liveliness_token_t, api.liveliness_token}
+ * tags{c.zc_owned_liveliness_token_t, api.liveliness.token}
  */
 typedef struct zc_owned_liveliness_token_t {
   size_t _inner[4];
@@ -1085,7 +1085,6 @@ typedef struct zc_owned_shm_manager_t {
  *
  * Members:
  *   bool matching: true if there exist Subscribers matching the Publisher's key expression.
- * tags{c.zcu_matching_status_t, api.matching_status}
  */
 typedef struct zcu_matching_status_t {
   bool matching;
@@ -1122,7 +1121,7 @@ typedef struct zcu_owned_closure_matching_status_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- * tags{c.z_owned_matching_listener_t, api.matching_listener}
+ * tags{c.zcu_owned_matching_listener_t, api.matching.listener}
  */
 typedef struct ALIGN(8) zcu_owned_matching_listener_t {
   uint64_t _0[4];
@@ -1748,7 +1747,7 @@ ZENOHC_API struct z_owned_encoding_t z_encoding_null(void);
  *               but **will** be dropped once your callback exits to help you avoid memory leaks.
  *               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
  *     options: additional options for the get.
- * tags{c.z_get, api.session.get}
+ * tags{c.z_get, api.session.send_request}
  */
 ZENOHC_API
 int8_t z_get(struct z_session_t session,
@@ -2593,6 +2592,7 @@ struct zc_owned_liveliness_declaration_options_t zc_liveliness_declaration_optio
  *    To check if the subscription succeeded and if the subscriber is still valid,
  *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  * tags{c.zc_liveliness_declare_subscriber, api.liveliness.declare_subscriber}
+ * tags{api.liveliness.subscriber.callback}
  */
 ZENOHC_API
 struct z_owned_subscriber_t zc_liveliness_declare_subscriber(struct z_session_t session,
@@ -2618,7 +2618,8 @@ struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_
  * Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
  *
  * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
- * tags{c.zc_liveliness_get, api.liveliness.get}
+ * tags{c.zc_liveliness_get, api.liveliness.send_request}
+ * tags{api.liveliness.request.callback}
  */
 ZENOHC_API
 int8_t zc_liveliness_get(struct z_session_t session,
@@ -2676,7 +2677,7 @@ ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token
 ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
 /**
  * Destroys a liveliness token, notifying subscribers of its destruction.
- * tags{c.zc_liveliness_undeclare_token, api.liveliness_token.undeclare}
+ * tags{c.zc_liveliness_undeclare_token, api.liveliness.token.undeclare}
  */
 ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
 /**
@@ -2754,7 +2755,7 @@ int8_t zc_put_owned(struct z_session_t session,
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
  * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- * tags{c.zc_query_fifo_new, api.get.channel}
+ * tags{c.zc_query_fifo_new, api.request.channel}
  */
 ZENOHC_API
 struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
@@ -2768,7 +2769,7 @@ struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
  * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- * tags{c.zc_query_non_blocking_fifo_new , api.get.channel}
+ * tags{c.zc_query_non_blocking_fifo_new , api.request.channel}
  */
 ZENOHC_API
 struct z_owned_query_channel_t zc_query_non_blocking_fifo_new(size_t bound);
@@ -2925,7 +2926,6 @@ ZENOHC_API struct zcu_owned_closure_matching_status_t zcu_closure_matching_statu
 ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
 /**
  * Register callback for notifying subscribers matching.
- * tags{c.zcu_publisher_matching_listener_callback, api.matching_listener.callback}
  */
 ZENOHC_API
 struct zcu_owned_matching_listener_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,

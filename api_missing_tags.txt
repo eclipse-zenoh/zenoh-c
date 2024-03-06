@@ -14,13 +14,26 @@ Purposedly not added: in Rust they exists only because DeleteBuilder is an alias
 tags{api.downsampling_item_conf(TODO)}
 tags{api.downsampling_rule_conf(TODO)}
 
-tags{api.get.accept_replies.set(TODO)}
-tags{api.get.allowed_destination.set(TODO)}
+tags{api.request.accept_replies.set(TODO)}
+tags{api.request.allowed_destination.set(TODO)}
 
 tags{api.ke_tree(TODO)}
 tags{api.ke_tree.create(TODO)}
 tags{api.ke_tree.create.with_token(TODO)}
 
+tags{api.keyexpr.create.autocanonize(TODO)}
+tags{api.keyexpr.get_nonwild_prefix(TODO)}
+tags{api.keyexpr.is_wild(TODO)}
+
 tags{api.keyexpr.iter(N/A)}
 Could be useful, but it's not an essential part of the API.
 
+tags{api.keyexpr.relation_to(TODO)}
+tags{api.keyexpr.strip_prefix(TODO)}
+
+tags{api.liveliness.request.channel(N/A)}
+tags{api.liveliness.request.timeout.set(TODO)}
+tags{api.liveliness.subscriber.channel(N/A)}
+
+tags{api.matching.listener.channel(N/A)}
+tags{api.matching.listener.undeclare(TODO)}

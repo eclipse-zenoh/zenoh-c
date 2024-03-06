@@ -176,15 +176,15 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
 #[repr(C)]
 /// tags{c.z_get_options_t}
 pub struct z_get_options_t {
-    /// tags{c.z_get_options_t.target, api.get.target.set}
+    /// tags{c.z_get_options_t.target, api.request.target.set}
     pub target: z_query_target_t,
-    /// tags{c.z_get_options_t.consolidation, api.get.consolidation.set}
+    /// tags{c.z_get_options_t.consolidation, api.request.consolidation.set}
     pub consolidation: z_query_consolidation_t,
-    /// tags{c.z_get_options_t.value, api.get.value.set}
+    /// tags{c.z_get_options_t.value, api.request.value.set}
     pub value: z_value_t,
-    /// tags{c.z_get_options_t.attachment, api.get.attachment.set}
+    /// tags{c.z_get_options_t.attachment, api.request.attachment.set}
     pub attachment: z_attachment_t,
-    /// tags{c.z_get_options_t.timeout_ms, api.get.timeout.set}
+    /// tags{c.z_get_options_t.timeout_ms, api.request.timeout.set}
     pub timeout_ms: u64,
 }
 #[no_mangle]
@@ -220,7 +220,7 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
 ///     options: additional options for the get.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_get, api.session.get}
+/// tags{c.z_get, api.session.send_request}
 pub unsafe extern "C" fn z_get(
     session: z_session_t,
     keyexpr: z_keyexpr_t,

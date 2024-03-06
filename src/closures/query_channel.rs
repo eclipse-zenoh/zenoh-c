@@ -50,7 +50,7 @@ pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
-/// tags{c.zc_query_fifo_new, api.get.channel}
+/// tags{c.zc_query_fifo_new, api.request.channel}
 pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
     let (send, rx) = if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
@@ -99,7 +99,7 @@ pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
-/// tags{c.zc_query_non_blocking_fifo_new , api.get.channel}
+/// tags{c.zc_query_non_blocking_fifo_new , api.request.channel}
 pub extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_channel_t {
     let (send, rx) = if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
