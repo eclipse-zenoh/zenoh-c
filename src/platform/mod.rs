@@ -18,3 +18,6 @@ pub use sleep::*;
 mod sleep;
 pub use synchronization::*;
 mod synchronization;
+
+pub use random::*;
+mod random;

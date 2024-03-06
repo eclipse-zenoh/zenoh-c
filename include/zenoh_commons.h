@@ -1928,6 +1928,11 @@ ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
 ZENOHC_API struct z_queryable_options_t z_queryable_options_default(void);
+ZENOHC_API void z_random_fill(void *buf, size_t len);
+ZENOHC_API uint16_t z_random_u16(void);
+ZENOHC_API uint32_t z_random_u32(void);
+ZENOHC_API uint64_t z_random_u64(void);
+ZENOHC_API uint8_t z_random_u8(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
