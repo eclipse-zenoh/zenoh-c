@@ -108,10 +108,10 @@ impl AsMut<Subscriber> for z_owned_subscriber_t {
 }
 
 impl z_owned_subscriber_t {
-    fn new(sub: zenoh::subscriber::Subscriber<'static, ()>) -> Self {
+    pub(crate) fn new(sub: zenoh::subscriber::Subscriber<'static, ()>) -> Self {
         Some(Box::new(sub)).into()
     }
-    fn null() -> Self {
+    pub(crate) fn null() -> Self {
         None.into()
     }
 }
