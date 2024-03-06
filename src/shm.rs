@@ -26,7 +26,7 @@ use zenoh::{
 use crate::{z_session_t, zc_owned_payload_t, zc_payload_null};
 
 #[repr(C)]
-/// tags{c.zc_owned_shm_manager_t, api.shm.manager}
+/// tags{c.zc_owned_shm_manager_t}
 pub struct zc_owned_shm_manager_t(usize);
 impl From<Option<Box<UnsafeCell<zenoh::shm::SharedMemoryManager>>>> for zc_owned_shm_manager_t {
     fn from(value: Option<Box<UnsafeCell<zenoh::shm::SharedMemoryManager>>>) -> Self {
@@ -51,7 +51,7 @@ impl zc_owned_shm_manager_t {
 }
 
 #[no_mangle]
-/// tags{c.zc_shm_manager_new, api.shm.manager.create}
+/// tags{c.zc_shm_manager_new}
 pub extern "C" fn zc_shm_manager_new(
     session: z_session_t,
     id: *const c_char,
@@ -95,7 +95,7 @@ pub extern "C" fn zc_shm_manager_null() -> zc_owned_shm_manager_t {
 /// # Safety
 /// Calling this function concurrently with other shm functions on the same manager is UB.
 #[no_mangle]
-/// tags{c.zc_shm_gc, api.shm.manager.gc}
+/// tags{c.zc_shm_gc}
 pub unsafe extern "C" fn zc_shm_gc(manager: &zc_owned_shm_manager_t) -> usize {
     if let Some(shm) = manager.as_ref() {
         unsafe { (*shm.get()).garbage_collect() }
@@ -111,7 +111,7 @@ pub unsafe extern "C" fn zc_shm_gc(manager: &zc_owned_shm_manager_t) -> usize {
 /// # Safety
 /// Calling this function concurrently with other shm functions on the same manager is UB.
 #[no_mangle]
-/// tags{c.zc_shm_defrag, api.shm.manager.defrag}
+/// tags{c.zc_shm_defrag}
 pub unsafe extern "C" fn zc_shm_defrag(manager: &zc_owned_shm_manager_t) -> usize {
     if let Some(shm) = manager.as_ref() {
         unsafe { (*shm.get()).defragment() }
@@ -122,7 +122,7 @@ pub unsafe extern "C" fn zc_shm_defrag(manager: &zc_owned_shm_manager_t) -> usiz
 
 #[repr(C)]
 #[derive(Default)]
-/// tags{c.zc_owned_shmbuf_t, api.shm.buffer}
+/// tags{c.zc_owned_shmbuf_t}
 pub struct zc_owned_shmbuf_t([usize; 9]);
 impl From<UnsafeCell<Option<SharedMemoryBuf>>> for zc_owned_shmbuf_t {
     fn from(value: UnsafeCell<Option<SharedMemoryBuf>>) -> Self {
@@ -152,7 +152,7 @@ impl zc_owned_shmbuf_t {
 /// # Safety
 /// Calling this function concurrently with other shm functions on the same manager is UB.
 #[no_mangle]
-/// tags{c.zc_shm_alloc, api.shm.manager.alloc}
+/// tags{c.zc_shm_alloc}
 pub unsafe extern "C" fn zc_shm_alloc(
     manager: &zc_owned_shm_manager_t,
     capacity: usize,

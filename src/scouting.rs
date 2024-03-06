@@ -188,7 +188,7 @@ pub extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
 }
 
 #[repr(C)]
-/// tags{c.z_owned_scouting_config, api.scouting_config}
+/// tags{c.z_owned_scouting_config}
 pub struct z_owned_scouting_config_t {
     _config: z_owned_config_t,
     pub zc_timeout_ms: c_ulong,
@@ -211,7 +211,7 @@ pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_scouting_config_default, api.scouting_config.create.default}
+/// tags{c.z_scouting_config_default}
 pub extern "C" fn z_scouting_config_default() -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: z_config_default(),
@@ -222,7 +222,7 @@ pub extern "C" fn z_scouting_config_default() -> z_owned_scouting_config_t {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.z_scouting_config_from, api.scouting_config.create.from_config}
+/// tags{c.z_scouting_config_from}
 pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting_config_t {
     z_owned_scouting_config_t {
         _config: config.as_ref().clone().into(),

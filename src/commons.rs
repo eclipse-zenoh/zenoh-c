@@ -259,20 +259,13 @@ pub extern "C" fn z_qos_default() -> z_qos_t {
 /// tags{c.z_sample_t, api.sample}
 #[repr(C)]
 pub struct z_sample_t<'a> {
-    /// tags{c.z_sample_t.keyexpr, api.sample.keyexpr}
     pub keyexpr: z_keyexpr_t,
-    /// tags{c.z_sample_t.payload, api.sample.payload}
     pub payload: z_bytes_t,
-    /// tags{c.z_sample_t.encoding, api.sample.encoding}
     pub encoding: z_encoding_t,
     pub _zc_buf: &'a c_void,
-    /// tags{c.z_sample_t.kind, api.sample.kind}
     pub kind: z_sample_kind_t,
-    /// tags{c.z_sample_t.timestamp, api.sample.timestamp}
     pub timestamp: z_timestamp_t,
-    /// tags{c.z_sample_t.qos, api.sample.qos}
     pub qos: z_qos_t,
-    /// tags{c.z_sample_t.attachment, api.sample.attachment}
     pub attachment: z_attachment_t,
 }
 
@@ -302,7 +295,7 @@ impl<'a> z_sample_t<'a> {
 }
 
 /// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
-/// tags{c.zc_sample_payload_rcinc, api.sample.payload.rcinc}
+/// tags{c.zc_sample_payload_rcinc}
 #[no_mangle]
 pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
     let Some(sample) = sample else {

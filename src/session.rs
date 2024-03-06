@@ -175,7 +175,7 @@ pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
 /// Increments the session's reference count, returning a new owning handle.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.zc_session.rcinc, api.session.rcinc}
+/// tags{c.zc_session.rcinc}
 pub extern "C" fn zc_session_rcinc(session: z_session_t) -> z_owned_session_t {
     session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
 }

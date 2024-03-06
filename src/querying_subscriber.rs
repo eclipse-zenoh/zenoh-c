@@ -183,7 +183,7 @@ pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscr
 ///       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-/// tags{c.ze_declare_querying_subscriber, api.session.declare_querying_subscriber}
+/// tags{c.ze_declare_querying_subscriber}
 pub unsafe extern "C" fn ze_declare_querying_subscriber(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
