@@ -127,7 +127,9 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
 #[repr(C)]
 /// tags{c.z_value_t, api.value}
 pub struct z_value_t {
+    /// tags{api.value.payload{set,get}}
     pub payload: z_bytes_t,
+    /// tags{api.value.encoding{set,get}}
     pub encoding: z_encoding_t,
 }
 

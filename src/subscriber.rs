@@ -199,6 +199,7 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 /// tags{c.z_declare_subscriber, api.session.declare_subscriber}
+/// tags{api.subscriber.callback}
 pub extern "C" fn z_declare_subscriber(
     session: z_session_t,
     keyexpr: z_keyexpr_t,

@@ -97,6 +97,7 @@ impl From<zc_owned_liveliness_token_t> for Option<LivelinessToken<'static>> {
 ///
 /// Passing `NULL` as options is valid and equivalent to a pointer to the default options.
 /// tags{c.zc_liveliness_declare_token, api.liveliness.declare_token}
+/// tags{api.session.liveliness}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
     session: z_session_t,
@@ -176,6 +177,7 @@ pub extern "C" fn zc_liveliness_subscriber_options_drop(
 ///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 /// tags{c.zc_liveliness_declare_subscriber, api.liveliness.declare_subscriber}
 /// tags{api.liveliness.subscriber.callback}
+/// tags{api.session.liveliness}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
     session: z_session_t,
@@ -250,6 +252,7 @@ pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_owned_liveliness_
 /// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
 /// tags{c.zc_liveliness_get, api.liveliness.send_request}
 /// tags{api.liveliness.request.callback}
+/// tags{api.session.liveliness}
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get(
     session: z_session_t,

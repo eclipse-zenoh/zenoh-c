@@ -19,6 +19,10 @@ tags{api.request.accept_replies.set(TODO)}
 tags{api.request.allowed_destination.set(TODO)}
 tags{api.publisher.allowed_destination.set(TODO)}
 tags{api.queryable.allowed_origin.set(TODO)}
+tags{api.subscriber.allowed_origin.set(TODO)}
+tags{api.publisher.put.allowed_destination.set(TODO)}
+tags{api.publisher.delete.allowed_destination.set(TODO)}
+Also check, do we need separate option structures for session.put and publisher.put ?
 
 tags{api.ke_tree(TODO)}
 tags{api.ke_tree.create(TODO)}
@@ -47,6 +51,7 @@ tags{api.liveliness.request.channel(N/A)}
 tags{api.liveliness.subscriber.channel(N/A)}
 tags{api.scout.channel(N/A)}
 tags{api.matching.listener.channel(N/A)}
+tags{api.subscriber.channel(N/A)}
 Should the channel functionality in zenoh-c (channel for queryable and channel for 'get' request)
 be extended to use for all cases above?
 
@@ -147,10 +152,6 @@ tags{api.options.what_am_i.to_str(TODO)}
 
 tags{api.publisher.send_matching_status_request(TODO)}
 
-tags{api.publisher.put.allowed_destination.set(TODO)}
-tags{api.publisher.delete.allowed_destination.set(TODO)}
-Also check, do we need separate option structures for session.put and publisher.put ?
-
 tags{api.query.accepts_replies.get(TODO)}
 
 tags{api.reply.replier_id.get(TODO)}
@@ -169,10 +170,32 @@ tags{api.selector.keyexpr.get(TODO)}
 tags{api.selector.keyexpr.set(TODO)}
 tags{api.selector.parameters.get(TODO)}
 tags{api.selector.parameters.set(TODO)}
-tags{rust.selector.with_parameter(TODO)}
 tags{api.selector.time_range.get(TODO)}
 tags{api.selector.time_range.remove(TODO)}
 tags{api.selector.time_range.set(TODO)}
 There is no separate structure in zenoh-c for Selector, keyexpr and paramenters are accessed
 separately where necessary. Should we consider adding it?
 
+tags{api.session.config.set(TODO)}
+tags{api.session.config.get(TODO)}
+Is it possible to change configuration in zenoh-c dynamically? 
+
+tags{api.timestamp.create.now(TODO)}
+
+tags{api.session.hlc(N/A)}
+HLC is Rust specific. But need to check why `new_reception_timestamp` (tags{api.timestamp.create.now(See also)}) does not use it
+
+tags{api.what_am_i_matcher(TODO)}
+tags{api.what_am_i_matcher.create.client(TODO)}
+tags{api.what_am_i_matcher.create.empty(TODO)}
+tags{api.what_am_i_matcher.create.peer(TODO)}
+tags{api.what_am_i_matcher.create.router(TODO)}
+tags{api.what_am_i_matcher.is_empty(TODO)}
+tags{api.what_am_i_matcher.matches(TODO)}
+tags{api.what_am_i_matcher.to_str(TODO)}
+
+tags{api.zid.create.rand(TODO)}
+tags{api.zid.max_size(TODO)}
+tags{api.zid.size(TODO)}
+tags{api.zid.to_keyexpr(TODO)}
+tags{api.zid.to_le_bytes(TODO)}

@@ -791,7 +791,13 @@ typedef struct z_query_consolidation_t {
  * tags{c.z_value_t, api.value}
  */
 typedef struct z_value_t {
+  /**
+   * tags{api.value.payload{set,get}}
+   */
   struct z_bytes_t payload;
+  /**
+   * tags{api.value.encoding{set,get}}
+   */
   struct z_encoding_t encoding;
 } z_value_t;
 /**
@@ -1684,6 +1690,7 @@ struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
  *       z_subscriber_options_t opts = z_subscriber_options_default();
  *       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
  * tags{c.z_declare_subscriber, api.session.declare_subscriber}
+ * tags{api.subscriber.callback}
  */
 ZENOHC_API
 struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
@@ -2606,6 +2613,7 @@ struct zc_owned_liveliness_declaration_options_t zc_liveliness_declaration_optio
  *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  * tags{c.zc_liveliness_declare_subscriber, api.liveliness.declare_subscriber}
  * tags{api.liveliness.subscriber.callback}
+ * tags{api.session.liveliness}
  */
 ZENOHC_API
 struct z_owned_subscriber_t zc_liveliness_declare_subscriber(struct z_session_t session,
@@ -2620,6 +2628,7 @@ struct z_owned_subscriber_t zc_liveliness_declare_subscriber(struct z_session_t 
  *
  * Passing `NULL` as options is valid and equivalent to a pointer to the default options.
  * tags{c.zc_liveliness_declare_token, api.liveliness.declare_token}
+ * tags{api.session.liveliness}
  */
 ZENOHC_API
 struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_t session,
@@ -2633,6 +2642,7 @@ struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_
  * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
  * tags{c.zc_liveliness_get, api.liveliness.send_request}
  * tags{api.liveliness.request.callback}
+ * tags{api.session.liveliness}
  */
 ZENOHC_API
 int8_t zc_liveliness_get(struct z_session_t session,
