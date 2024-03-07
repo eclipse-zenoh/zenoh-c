@@ -162,7 +162,7 @@ typedef enum z_priority_t {
  *     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
  *     - **ALL_COMPLETE**: All complete queryables.
  *     - **ALL**: All matching queryables.
- * tags{c.z_query_target_t. api.options.query_target}
+ * tags{c.z_query_target_t, api.options.query_target}
  */
 typedef enum z_query_target_t {
   /**
@@ -535,8 +535,14 @@ typedef struct z_sample_t {
   struct z_encoding_t encoding;
   const void *_zc_buf;
   enum z_sample_kind_t kind;
+  /**
+   * tags{api.sample.timestamp{set,get}}
+   */
   struct z_timestamp_t timestamp;
   struct z_qos_t qos;
+  /**
+   * tags{api.sample.attachment{set,get}}
+   */
   struct z_attachment_t attachment;
 } z_sample_t;
 /**
@@ -742,11 +748,11 @@ typedef struct z_subscriber_options_t {
  */
 typedef struct z_delete_options_t {
   /**
-   * tags{c.z_delete_options_t.congestion_control, api.delete.congestion_control.set}
+   * tags{c.z_delete_options_t.congestion_control, api.publisher.delete.congestion_control.set}
    */
   enum z_congestion_control_t congestion_control;
   /**
-   * tags{c.z_delete_options_t.priority, api.delete.priority.set}
+   * tags{c.z_delete_options_t.priority, api.publisher.delete.priority.set}
    */
   enum z_priority_t priority;
 } z_delete_options_t;
@@ -883,11 +889,11 @@ typedef struct z_publisher_delete_options_t {
  */
 typedef struct z_publisher_put_options_t {
   /**
-   * tags{c.z_publisher_put_options_t.encoding, api.put.encoding.set}
+   * tags{c.z_publisher_put_options_t.encoding, api.publisher.put.encoding.set}
    */
   struct z_encoding_t encoding;
   /**
-   * tags{c.z_publisher_put_options_t.attachment, api.put.attachment.set}
+   * tags{c.z_publisher_put_options_t.attachment, api.publisher.put.attachment.set}
    */
   struct z_attachment_t attachment;
 } z_publisher_put_options_t;
@@ -909,19 +915,19 @@ typedef struct z_pull_subscriber_t {
  */
 typedef struct z_put_options_t {
   /**
-   * tags{c.z_put_options_t.encoding, api.put.encoding.set}
+   * tags{c.z_put_options_t.encoding, api.publisher.put.encoding.set}
    */
   struct z_encoding_t encoding;
   /**
-   * tags{c.z_put_options_t.congestion_control, api.put.congestion_control.set}
+   * tags{c.z_put_options_t.congestion_control, api.publisher.put.congestion_control.set}
    */
   enum z_congestion_control_t congestion_control;
   /**
-   * tags{c.z_put_options_t.priority, api.put.priority.set}
+   * tags{c.z_put_options_t.priority, api.publisher.put.priority.set}
    */
   enum z_priority_t priority;
   /**
-   * tags{c.z_put_options_t.attachment, api.put.attachment.set}
+   * tags{c.z_put_options_t.attachment, api.publisher.put.attachment.set}
    */
   struct z_attachment_t attachment;
 } z_put_options_t;
@@ -937,6 +943,7 @@ typedef struct z_put_options_t {
  * - `call` will never be called once `drop` has started.
  * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
  * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * tags{c.z_owned_query_channel_closure_t}
  */
 typedef struct z_owned_query_channel_closure_t {
   void *context;
@@ -1637,6 +1644,7 @@ struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t se
  * Returns:
  *    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
  * tags{c.z_declare_queryable, api.session.declare_queryable}
+ * tags{api.queryable.callback}
  */
 ZENOHC_API
 struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
@@ -2103,21 +2111,25 @@ ZENOHC_API enum z_priority_t z_qos_get_priority(struct z_qos_t qos);
 ZENOHC_API struct z_attachment_t z_query_attachment(const struct z_query_t *query);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
+ * tags{c.z_query_channel_closure_call}
  */
 ZENOHC_API
 bool z_query_channel_closure_call(const struct z_owned_query_channel_closure_t *closure,
                                   struct z_owned_query_t *sample);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
+ * tags{c.z_query_channel_closure_drop}
  */
 ZENOHC_API void z_query_channel_closure_drop(struct z_owned_query_channel_closure_t *closure);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_query_channel_closure_t' type
+ * tags{c.z_query_channel_closure_null}
  */
 ZENOHC_API struct z_owned_query_channel_closure_t z_query_channel_closure_null(void);
 ZENOHC_API void z_query_channel_drop(struct z_owned_query_channel_t *channel);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
+ * tags{c.z_query_channel_null}
  */
 ZENOHC_API struct z_owned_query_channel_t z_query_channel_null(void);
 /**
@@ -2178,7 +2190,7 @@ ZENOHC_API
 void z_query_drop(struct z_owned_query_t *this_);
 /**
  * Get a query's key by aliasing it.
- * tags{c.z_query_keyexpr, api.query.keyexpr.get}
+ * tags{c.z_query_keyexpr, api.query.selector.keyexpr.get}
  */
 ZENOHC_API struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
 /**
@@ -2196,7 +2208,7 @@ struct z_query_t z_query_loan(const struct z_owned_query_t *this_);
 ZENOHC_API struct z_owned_query_t z_query_null(void);
 /**
  * Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
- * tags{c.z_query_parameters, api.query.parameters.get}
+ * tags{c.z_query_parameters, api.query.selector.parameters.get}
  */
 ZENOHC_API
 struct z_bytes_t z_query_parameters(const struct z_query_t *query);
@@ -2334,6 +2346,7 @@ struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
  *
  * Returns 0 if successful, negative values upon failure.
  * tags{c.z_scout, api.scout}
+ * tags{api.scout.callback}
  */
 ZENOHC_API
 int8_t z_scout(struct z_owned_scouting_config_t *config,
@@ -2755,7 +2768,7 @@ int8_t zc_put_owned(struct z_session_t session,
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
  * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- * tags{c.zc_query_fifo_new, api.request.channel}
+ * tags{c.zc_query_fifo_new, api.queryable.channel}
  */
 ZENOHC_API
 struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
@@ -2769,7 +2782,7 @@ struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
  * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- * tags{c.zc_query_non_blocking_fifo_new , api.request.channel}
+ * tags{c.zc_query_non_blocking_fifo_new , api.queryable.channel}
  */
 ZENOHC_API
 struct z_owned_query_channel_t zc_query_non_blocking_fifo_new(size_t bound);
@@ -2796,6 +2809,7 @@ struct z_owned_reply_channel_t zc_reply_fifo_new(size_t bound);
  * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
  * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
  * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ * tags{c.zc_reply_non_blocking_fifo_new, api.request.channel}
  */
 ZENOHC_API
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);

@@ -259,13 +259,20 @@ pub extern "C" fn z_qos_default() -> z_qos_t {
 /// tags{c.z_sample_t, api.sample}
 #[repr(C)]
 pub struct z_sample_t<'a> {
+    // tags{api.sample.key_expr{set,get}}
     pub keyexpr: z_keyexpr_t,
+    // tags{api.sample.payload{set,get}}
     pub payload: z_bytes_t,
+    // tags{api.sample.encoding{set,get}}
     pub encoding: z_encoding_t,
     pub _zc_buf: &'a c_void,
+    // tags{api.sample.kind{set,get}}
     pub kind: z_sample_kind_t,
+    /// tags{api.sample.timestamp{set,get}}
     pub timestamp: z_timestamp_t,
+    // tags{api.sample.qos{set,get}}
     pub qos: z_qos_t,
+    /// tags{api.sample.attachment{set,get}}
     pub attachment: z_attachment_t,
 }
 

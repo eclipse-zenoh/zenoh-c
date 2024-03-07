@@ -247,6 +247,7 @@ pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 /// tags{c.z_declare_queryable, api.session.declare_queryable}
+/// tags{api.queryable.callback}
 pub extern "C" fn z_declare_queryable(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
@@ -357,7 +358,7 @@ pub unsafe extern "C" fn z_query_reply(
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_query_keyexpr, api.query.keyexpr.get}
+/// tags{c.z_query_keyexpr, api.query.selector.keyexpr.get}
 pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
     let Some(query) = query.as_ref() else {
         return z_keyexpr_t::null();
@@ -368,7 +369,7 @@ pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
 /// Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// tags{c.z_query_parameters, api.query.parameters.get}
+/// tags{c.z_query_parameters, api.query.selector.parameters.get}
 pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
     let Some(query) = query.as_ref() else {
         return z_bytes_t::empty();

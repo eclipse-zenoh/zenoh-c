@@ -256,6 +256,7 @@ pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t)
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 /// tags{c.z_scout, api.scout}
+/// tags{api.scout.callback}
 pub extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,

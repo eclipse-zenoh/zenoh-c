@@ -96,6 +96,7 @@ pub extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
 /// The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
 /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+/// tags{c.zc_reply_non_blocking_fifo_new, api.request.channel}
 #[no_mangle]
 pub extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_channel_t {
     let (send, rx) = if bound == 0 {

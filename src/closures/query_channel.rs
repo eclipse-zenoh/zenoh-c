@@ -13,6 +13,7 @@ use std::sync::mpsc::TryRecvError;
 /// - `call` will never be called once `drop` has started.
 /// - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
 /// - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+/// tags{c.z_owned_query_channel_closure_t}
 #[repr(C)]
 pub struct z_owned_query_channel_closure_t {
     context: *mut c_void,
@@ -32,6 +33,7 @@ pub extern "C" fn z_query_channel_drop(channel: &mut z_owned_query_channel_t) {
     z_query_channel_closure_drop(&mut channel.recv);
 }
 /// Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
+/// tags{c.z_query_channel_null}
 #[no_mangle]
 pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
     z_owned_query_channel_t {
@@ -50,7 +52,7 @@ pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
-/// tags{c.zc_query_fifo_new, api.request.channel}
+/// tags{c.zc_query_fifo_new, api.queryable.channel}
 pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
     let (send, rx) = if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
@@ -99,7 +101,7 @@ pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
-/// tags{c.zc_query_non_blocking_fifo_new , api.request.channel}
+/// tags{c.zc_query_non_blocking_fifo_new , api.queryable.channel}
 pub extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_channel_t {
     let (send, rx) = if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
@@ -168,12 +170,14 @@ impl Drop for z_owned_query_channel_closure_t {
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_query_channel_closure_t' type
+/// tags{c.z_query_channel_closure_null}
 #[no_mangle]
 pub extern "C" fn z_query_channel_closure_null() -> z_owned_query_channel_closure_t {
     z_owned_query_channel_closure_t::empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
+/// tags{c.z_query_channel_closure_call}
 #[no_mangle]
 pub extern "C" fn z_query_channel_closure_call(
     closure: &z_owned_query_channel_closure_t,
@@ -188,6 +192,7 @@ pub extern "C" fn z_query_channel_closure_call(
     }
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
+/// tags{c.z_query_channel_closure_drop}
 #[no_mangle]
 pub extern "C" fn z_query_channel_closure_drop(closure: &mut z_owned_query_channel_closure_t) {
     let mut empty_closure = z_owned_query_channel_closure_t::empty();

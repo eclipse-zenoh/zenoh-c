@@ -129,13 +129,13 @@ impl From<z_congestion_control_t> for CongestionControl {
 #[allow(non_camel_case_types)]
 /// tags{c.z_put_options_t}
 pub struct z_put_options_t {
-    /// tags{c.z_put_options_t.encoding, api.put.encoding.set}
+    /// tags{c.z_put_options_t.encoding, api.publisher.put.encoding.set}
     pub encoding: z_encoding_t,
-    /// tags{c.z_put_options_t.congestion_control, api.put.congestion_control.set}
+    /// tags{c.z_put_options_t.congestion_control, api.publisher.put.congestion_control.set}
     pub congestion_control: z_congestion_control_t,
-    /// tags{c.z_put_options_t.priority, api.put.priority.set}
+    /// tags{c.z_put_options_t.priority, api.publisher.put.priority.set}
     pub priority: z_priority_t,
-    /// tags{c.z_put_options_t.attachment, api.put.attachment.set}
+    /// tags{c.z_put_options_t.attachment, api.publisher.put.attachment.set}
     pub attachment: z_attachment_t,
 }
 
@@ -267,9 +267,9 @@ pub extern "C" fn zc_put_owned(
 #[allow(non_camel_case_types)]
 /// tags{c.z_delete_options_t}
 pub struct z_delete_options_t {
-    /// tags{c.z_delete_options_t.congestion_control, api.delete.congestion_control.set}
+    /// tags{c.z_delete_options_t.congestion_control, api.publisher.delete.congestion_control.set}
     pub congestion_control: z_congestion_control_t,
-    /// tags{c.z_delete_options_t.priority, api.delete.priority.set}
+    /// tags{c.z_delete_options_t.priority, api.publisher.delete.priority.set}
     pub priority: z_priority_t,
 }
 

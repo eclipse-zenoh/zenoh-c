@@ -293,7 +293,7 @@ pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
-/// tags{c.z_query_target_t. api.options.query_target}
+/// tags{c.z_query_target_t, api.options.query_target}
 pub enum z_query_target_t {
     /// tags{c.z_query_target_t.best_matching, api.options.query_target.best_matching}
     BEST_MATCHING,

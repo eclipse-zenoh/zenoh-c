@@ -233,9 +233,9 @@ pub extern "C" fn z_publisher_loan(p: &z_owned_publisher_t) -> z_publisher_t {
 #[repr(C)]
 /// tags{c.z_publisher_put_options_t}
 pub struct z_publisher_put_options_t {
-    /// tags{c.z_publisher_put_options_t.encoding, api.put.encoding.set}
+    /// tags{c.z_publisher_put_options_t.encoding, api.publisher.put.encoding.set}
     pub encoding: z_encoding_t,
-    /// tags{c.z_publisher_put_options_t.attachment, api.put.attachment.set}
+    /// tags{c.z_publisher_put_options_t.attachment, api.publisher.put.attachment.set}
     pub attachment: z_attachment_t,
 }
 
