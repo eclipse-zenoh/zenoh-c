@@ -3,19 +3,18 @@ See https://github.com/ZettaScaleLabs/zenoh-tests/tree/tagging/api_matrix for de
 
 tags{api.attachment.is_empty(TODO)}
 tags{api.attachment.len(TODO)}
+Add methods len and is_empty to z_owned_bytes_map_t and to z_attachment_t itself
 
 tags{api.buffer.slices(TODO)}
-To be implemented
+To be implemented - latest PR by Pierre
 
 tags{api.publisher.delete.attachment.set(N/A)}
 tags{api.publisher.delete.encoding.set(N/A)}
-Purposedly not added: in Rust they exists only because DeleteBuilder is an alias for PutBuilder, but actually they are not used for delete operations.
-
-tags{api.downsampling_item_conf(TODO)}
-tags{api.downsampling_rule_conf(TODO)}
+Purposedly not added: in Rust they exists only because DeleteBuilder is an alias 
+for PutBuilder, but actually they are not used for delete operations.
+TODO: consider updating API in Rust: make separate builders for Put and Delete
 
 tags{api.options.locality(See also)}
-tags{api.request.accept_replies.set(TODO)}
 tags{api.request.allowed_destination.set(TODO)}
 tags{api.publisher.allowed_destination.set(TODO)}
 tags{api.queryable.allowed_origin.set(TODO)}
@@ -23,17 +22,28 @@ tags{api.subscriber.allowed_origin.set(TODO)}
 tags{api.publisher.put.allowed_destination.set(TODO)}
 tags{api.publisher.delete.allowed_destination.set(TODO)}
 Also check, do we need separate option structures for session.put and publisher.put ?
+If rust API doesn't allow to change publisher.put options on fly, this is correct.
+It's unstable, to be decided do we need to add it to zenoh-c now
+
+tags{api.request.accept_replies.set(TODO)}
+tags{api.query.accepts_replies.get(TODO)}
+Also unsatble. To be decided.
 
 tags{api.ke_tree(TODO)}
 tags{api.ke_tree.create(TODO)}
 tags{api.ke_tree.create.with_token(TODO)}
+To be implemented in zenoh-c?
 
 tags{api.keyexpr.create.autocanonize(TODO)}
+Implement in zenoh-c, it exists in zenoh-pico
+
 tags{api.keyexpr.get_nonwild_prefix(TODO)}
 tags{api.keyexpr.is_wild(TODO)}
+Actually internal for zenoh, specify this in documentation, remove tags
 
 tags{api.keyexpr.iter(N/A)}
 Could be useful, but it's not an essential part of the API.
+Actually internal, mark it as it, remove tag
 
 tags{api.keyexpr.relation_to(TODO)}
 tags{api.options.keyexpr.set_intersection_level(TODO)}
@@ -42,22 +52,36 @@ tags{api.options.keyexpr.set_intersection_level.equals(TODO)}
 tags{api.options.keyexpr.set_intersection_level.includes(TODO)}
 tags{api.options.keyexpr.set_intersection_level.intersects(TODO)}
 SetIntersectionLevel is the return value of the relation_to function
+Add to zenoh-c
 
 tags{api.keyexpr.strip_prefix(TODO)}
+Mark as internal, for plugins mostly
 
 tags{api.liveliness.request.timeout.set(TODO)}
+Add option to zenoh-c
 
 tags{api.liveliness.request.channel(N/A)}
-tags{api.liveliness.subscriber.channel(N/A)}
+Same channel as the query channel, it's avaialable actually
+
 tags{api.scout.channel(N/A)}
+May be not worth to add, but possible
+
 tags{api.matching.listener.channel(N/A)}
+No support for channel in zenoh-c - same cloning issue as in subscriber
+
+tags{api.liveliness.subscriber.channel(N/A)}
 tags{api.subscriber.channel(N/A)}
+No support for subscriber channel in zenoh-c yet - no sample clone. Will be
+added soon, need to consider adding subscriber channels
+
 Should the channel functionality in zenoh-c (channel for queryable and channel for 'get' request)
 be extended to use for all cases above?
 
 tags{api.matching.listener.undeclare(TODO)}
+Not needed in zenoh-c, it's used for async only - undeclare can work asynchronously
 
 tags{api.config.create.from_env(TODO)}
+Need to be implemented in zenoh-c
 
 tags{api.config.entry.adminspace.permissions.read(TODO)}
 tags{api.config.entry.adminspace.permissions.write(TODO)}
@@ -130,6 +154,12 @@ tags{api.config.entry.transport.unicast.max_sessions(TODO)}
 tags{api.config.entry.transport.unicast.open_timeout(TODO)}
 tags{api.config.entry.transport.unicast.qos(TODO)}
 tags{api.config.entry.transport.unicast.qos.enabled(TODO)}
+Review these tags: they are configuration too:
+tags{api.downsampling_item_conf(TODO)}
+tags{api.downsampling_rule_conf(TODO)}
+
+Discuss it: this is useful for convenient work with both pico and zenoh-c, but they
+have different value format anyway
 
 tags{api.options.downsampling_flow(TODO)}
 tags{api.options.downsampling_flow.egress(TODO)}
@@ -139,29 +169,32 @@ Used in config only, need to be added if corresponding config option is added.
 tags{api.options.priority.max(TODO)}
 tags{api.options.priority.min(TODO)}
 tags{api.options.priority.num(TODO)}
+Internal ones, to be checked if it's really the case
 
 tags{api.options.query_target.complete(TODO)}
-
-tags{api.options.selector.time_range_key(TODO)}
-
-tags{api.options.source_info(TODO)}
-tags{api.options.source_info.source_id(TODO)}
-tags{api.options.source_info.source_sn(TODO)}
-
-tags{api.options.what_am_i.to_str(TODO)}
-
-tags{api.publisher.send_matching_status_request(TODO)}
-
-tags{api.query.accepts_replies.get(TODO)}
-
-tags{api.reply.replier_id.get(TODO)}
-
-tags{api.sample.timestamp.ensure(TODO)}
+To be discussed: was purposedly not exposed to zenoh-c, feature is not actually supported
 
 tags{api.sample.source_info.get(TODO)}
 tags{api.sample.source_info.set(TODO)}
+tags{api.options.source_info(TODO)}
+tags{api.options.source_info.source_id(TODO)}
+tags{api.options.source_info.source_sn(TODO)}
+Unstable, to be decided to include or not
+
+tags{api.options.what_am_i.to_str(TODO)}
+Consider exposing - examples reimplements it all the time
+
+tags{api.publisher.send_matching_status_request(TODO)}
+To be added to zenoh-c
+
+tags{api.reply.replier_id.get(TODO)}
+Expose to zenoh-c, after reply rework
+
+tags{api.sample.timestamp.ensure(TODO)}
+Find a way to expose: it takes mutable sample, which doesn't work for zenoh-c
 
 tags{api.scout.stop(TODO)}
+No sense for zenoh-c - scout function blocks the thread
 
 tags(api.query.selector.get(TODO))
 tags{api.selector(TODO)}
@@ -173,12 +206,13 @@ tags{api.selector.parameters.set(TODO)}
 tags{api.selector.time_range.get(TODO)}
 tags{api.selector.time_range.remove(TODO)}
 tags{api.selector.time_range.set(TODO)}
-There is no separate structure in zenoh-c for Selector, keyexpr and paramenters are accessed
-separately where necessary. Should we consider adding it?
+tags{api.options.selector.time_range_key(TODO)}
+Selector exists in rust only for set of utiulity url functions. As they are
+not exposed to zenoh-c, no need to have separate Selector structure
 
 tags{api.session.config.set(TODO)}
 tags{api.session.config.get(TODO)}
-Is it possible to change configuration in zenoh-c dynamically? 
+Think about adding config accessor method to the session
 
 tags{api.timestamp.create.now(TODO)}
 
@@ -193,9 +227,11 @@ tags{api.what_am_i_matcher.create.router(TODO)}
 tags{api.what_am_i_matcher.is_empty(TODO)}
 tags{api.what_am_i_matcher.matches(TODO)}
 tags{api.what_am_i_matcher.to_str(TODO)}
+Internal thing?
 
 tags{api.zid.create.rand(TODO)}
 tags{api.zid.max_size(TODO)}
 tags{api.zid.size(TODO)}
 tags{api.zid.to_keyexpr(TODO)}
 tags{api.zid.to_le_bytes(TODO)}
+To be decided
