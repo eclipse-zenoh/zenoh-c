@@ -383,14 +383,6 @@ typedef struct z_owned_closure_reply_t {
  * A data sample.
  *
  * A sample is the value associated to a given resource at a given point in time.
- *
- * Members:
- *   z_keyexpr_t keyexpr: The resource key of this data sample.
- *   z_bytes_t payload: The value of this data sample.
- *   z_encoding_t encoding: The encoding of the value of this data sample.
- *   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
- *   z_timestamp_t timestamp: The timestamp of this data sample.
- *   z_attachment_t attachment: The attachment of this data sample.
  */
 typedef struct z_sample_t {
   const void *_inner;
@@ -2503,6 +2495,7 @@ ZENOHC_API void zc_sample_drop(struct zc_owned_sample_t *sample);
  * Calling this function using a dropped sample is undefined behaviour.
  */
 ZENOHC_API struct z_sample_t zc_sample_loan(const struct zc_owned_sample_t *sample);
+ZENOHC_API struct zc_owned_sample_t zc_sample_null(void);
 /**
  * Increments the session's reference count, returning a new owning handle.
  */

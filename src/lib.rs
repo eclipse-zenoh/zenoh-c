@@ -58,6 +58,14 @@ trait GuardedTransmute<D> {
     fn transmute(self) -> D;
 }
 
+/// For internal use only.
+///
+/// This macro is used to establish the equivalence between a Rust type (first parameter) and a C layout (second parameter).
+///
+/// It automatically implements `From`, `Deref` and `DerefMut` to make writing code around these equivalent types.
+///
+/// Because carrying around the proper semantics of lifetimes is hard, this macro fails to produce working code when lifetimes are
+/// present in either parameter. You may then call it with the `noderefs` prefix to avoid the offending implementations being defined.
 #[macro_export]
 macro_rules! impl_guarded_transmute {
     ($src_type:ty, $dst_type:ty) => {

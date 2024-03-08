@@ -156,14 +156,6 @@ pub extern "C" fn z_qos_default() -> z_qos_t {
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
-///
-/// Members:
-///   z_keyexpr_t keyexpr: The resource key of this data sample.
-///   z_bytes_t payload: The value of this data sample.
-///   z_encoding_t encoding: The encoding of the value of this data sample.
-///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
-///   z_timestamp_t timestamp: The timestamp of this data sample.
-///   z_attachment_t attachment: The attachment of this data sample.
 #[repr(C)]
 pub struct z_sample_t<'a> {
     _inner: &'a (),
@@ -177,9 +169,6 @@ impl<'a> core::ops::Deref for z_sample_t<'a> {
 
 impl<'a> z_sample_t<'a> {
     pub fn new(sample: &'a Sample) -> Self {
-        if !sample.value.payload.zslices().count() <= 1 {
-            panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")
-        };
         z_sample_t {
             _inner: unsafe { core::mem::transmute(sample) },
         }
@@ -283,6 +272,11 @@ pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> z_sample_t {
 #[no_mangle]
 pub extern "C" fn zc_sample_drop(sample: &mut zc_owned_sample_t) {
     core::mem::drop(sample.take());
+}
+
+#[no_mangle]
+pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
+    None.into()
 }
 
 /// A :c:type:`z_encoding_t` integer `prefix`.
