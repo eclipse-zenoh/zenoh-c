@@ -1,63 +1,62 @@
 This file contains api tag missing in the project with the explanations for each case.
 See https://github.com/ZettaScaleLabs/zenoh-tests/tree/tagging/api_matrix for details.
 
-tags{api.attachment.is_empty(TODO)}
-tags{api.attachment.len(TODO)}
+tags{api.attachment.is_empty(issues/268)}
+tags{api.attachment.len(issues/268)}
 Add methods len and is_empty to z_owned_bytes_map_t and to z_attachment_t itself
 
-tags{api.buffer.slices(TODO)}
+tags{api.buffer.slices(pull/251)}
 To be implemented - latest PR by Pierre
 
-tags{api.publisher.delete.attachment.set(N/A)}
-tags{api.publisher.delete.encoding.set(N/A)}
+tags{api.publisher.delete.attachment.set(https://github.com/eclipse-zenoh/zenoh/issues/803)}
+tags{api.publisher.delete.encoding.set(https://github.com/eclipse-zenoh/zenoh/issues/803)}
 Purposedly not added: in Rust they exists only because DeleteBuilder is an alias 
 for PutBuilder, but actually they are not used for delete operations.
-TODO: consider updating API in Rust: make separate builders for Put and Delete
 
 tags{api.options.locality(See also)}
-tags{api.request.allowed_destination.set(TODO)}
-tags{api.publisher.allowed_destination.set(TODO)}
-tags{api.queryable.allowed_origin.set(TODO)}
-tags{api.subscriber.allowed_origin.set(TODO)}
-tags{api.publisher.put.allowed_destination.set(TODO)}
-tags{api.publisher.delete.allowed_destination.set(TODO)}
+tags{api.request.allowed_destination.set(UNSTABLE)}
+tags{api.publisher.allowed_destination.set(UNSTABLE)}
+tags{api.queryable.allowed_origin.set(UNSTABLE)}
+tags{api.subscriber.allowed_origin.set(UNSTABLE)}
+tags{api.publisher.put.allowed_destination.set(UNSTABLE)}
+tags{api.publisher.delete.allowed_destination.set(UNSTABLE)}
 Also check, do we need separate option structures for session.put and publisher.put ?
 If rust API doesn't allow to change publisher.put options on fly, this is correct.
 It's unstable, to be decided do we need to add it to zenoh-c now
 
-tags{api.request.accept_replies.set(TODO)}
-tags{api.query.accepts_replies.get(TODO)}
+tags{api.request.accept_replies.set(UNSTABLE)}
+tags{api.query.accepts_replies.get(UNSTABLE)}
 Also unsatble. To be decided.
 
-tags{api.ke_tree(TODO)}
-tags{api.ke_tree.create(TODO)}
-tags{api.ke_tree.create.with_token(TODO)}
+tags{api.ke_tree(issue/273)}
+tags{api.ke_tree.create(issue/273)}
+tags{api.ke_tree.create.with_token(issue/273)}
 To be implemented in zenoh-c?
 
-tags{api.keyexpr.create.autocanonize(TODO)}
+tags{api.keyexpr.create.autocanonize(issues/267)}
 Implement in zenoh-c, it exists in zenoh-pico
 
-tags{api.keyexpr.get_nonwild_prefix(TODO)}
-tags{api.keyexpr.is_wild(TODO)}
+tags{api.keyexpr.get_nonwild_prefix(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.keyexpr.is_wild(https://github.com/eclipse-zenoh/zenoh/issues/806)}
 Actually internal for zenoh, specify this in documentation, remove tags
 
 tags{api.keyexpr.iter(N/A)}
 Could be useful, but it's not an essential part of the API.
 Actually internal, mark it as it, remove tag
 
-tags{api.keyexpr.relation_to(TODO)}
-tags{api.options.keyexpr.set_intersection_level(TODO)}
-tags{api.options.keyexpr.set_intersection_level.disjoint(TODO)}
-tags{api.options.keyexpr.set_intersection_level.equals(TODO)}
-tags{api.options.keyexpr.set_intersection_level.includes(TODO)}
-tags{api.options.keyexpr.set_intersection_level.intersects(TODO)}
+tags{api.keyexpr.relation_to(issues/269)}
+tags{api.options.keyexpr.set_intersection_level(issues/269)}
+tags{api.options.keyexpr.set_intersection_level.disjoint(issues/269)}
+tags{api.options.keyexpr.set_intersection_level.equals(issues/269)}
+tags{api.options.keyexpr.set_intersection_level.includes(issues/269)}
+tags{api.options.keyexpr.set_intersection_level.intersects(issues/269)}
 SetIntersectionLevel is the return value of the relation_to function
 Add to zenoh-c
 
-tags{api.keyexpr.strip_prefix(TODO)}
+tags{api.keyexpr.strip_prefix(https://github.com/eclipse-zenoh/zenoh/issues/806)}
 Mark as internal, for plugins mostly
 
-tags{api.liveliness.request.timeout.set(TODO)}
+tags{api.liveliness.request.timeout.set(issues/274)}
 Add option to zenoh-c
 
 tags{api.liveliness.request.channel(N/A)}
@@ -77,161 +76,161 @@ added soon, need to consider adding subscriber channels
 Should the channel functionality in zenoh-c (channel for queryable and channel for 'get' request)
 be extended to use for all cases above?
 
-tags{api.matching.listener.undeclare(TODO)}
+tags{api.matching.listener.undeclare(N/A)}
 Not needed in zenoh-c, it's used for async only - undeclare can work asynchronously
 
-tags{api.config.create.from_env(TODO)}
+tags{api.config.create.from_env(issues/270)}
 Need to be implemented in zenoh-c
 
-tags{api.config.entry.adminspace.permissions.read(TODO)}
-tags{api.config.entry.adminspace.permissions.write(TODO)}
-tags{api.config.entry.aggregation.publishers(TODO)}
-tags{api.config.entry.aggregation.subscribers(TODO)}
-tags{api.config.entry.downsampling(TODO)}
-tags{api.config.entry.id(TODO)}
-tags{api.config.entry.metadata(TODO)}
-tags{api.config.entry.plugins(TODO)}
-tags{api.config.entry.plugins_search_dirs(TODO)}
-tags{api.config.entry.queries_default_timeout(TODO)}
-tags{api.config.entry.routing.peer.mode(TODO)}
-tags{api.config.entry.routing.router.peers_failover_brokering(TODO)}
-tags{api.config.entry.scouting.gossip.autoconnect(TODO)}
-tags{api.config.entry.scouting.gossip.enabled(TODO)}
-tags{api.config.entry.scouting.multicast.autoconnect(TODO)}
-tags{api.config.entry.scouting.multicast.listen(TODO)}
-tags{api.config.entry.scouting.timeout(TODO)}
-tags{api.config.entry.timestamping(TODO)}
-tags{api.config.entry.timestamping.drop_future_timestamp(TODO)}
-tags{api.config.entry.transport.auth.pubkey.algorithm(TODO)}
-tags{api.config.entry.transport.auth.pubkey.key_size(TODO)}
-tags{api.config.entry.transport.auth.pubkey.private_key_file(TODO)}
-tags{api.config.entry.transport.auth.pubkey.private_key_pem(TODO)}
-tags{api.config.entry.transport.auth.pubkey.public_key_file(TODO)}
-tags{api.config.entry.transport.auth.pubkey.public_key_pem(TODO)}
-tags{api.config.entry.transport.auth.usrpwd.dictionary_file(TODO)}
-tags{api.config.entry.transport.link.protocols(TODO)}
-tags{api.config.entry.transport.link.rx(TODO)}
-tags{api.config.entry.transport.link.rx.buffer_size(TODO)}
-tags{api.config.entry.transport.link.rx.defragmentation_buffer_size(TODO)}
-tags{api.config.entry.transport.link.tls.client_auth(TODO)}
-tags{api.config.entry.transport.link.tls.client_certificate(TODO)}
-tags{api.config.entry.transport.link.tls.client_certificate_base64(TODO)}
-tags{api.config.entry.transport.link.tls.client_private_key(TODO)}
-tags{api.config.entry.transport.link.tls.client_private_key_base64(TODO)}
-tags{api.config.entry.transport.link.tls.root_ca_certificate(TODO)}
-tags{api.config.entry.transport.link.tls.root_ca_certificate_base64(TODO)}
-tags{api.config.entry.transport.link.tls.server_certificate(TODO)}
-tags{api.config.entry.transport.link.tls.server_certificate_base64(TODO)}
-tags{api.config.entry.transport.link.tls.server_name_verification(TODO)}
-tags{api.config.entry.transport.link.tls.server_private_key(TODO)}
-tags{api.config.entry.transport.link.tls.server_private_key_base64(TODO)}
-tags{api.config.entry.transport.link.tx.keep_alive(TODO)}
-tags{api.config.entry.transport.link.tx.lease(TODO)}
-tags{api.config.entry.transport.link.tx.mtu(TODO)}
-tags{api.config.entry.transport.link.tx.queue.backoff(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.background(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.control(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.data(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.data_high(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.data_low(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.interactive_high(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.interactive_low(TODO)}
-tags{api.config.entry.transport.link.tx.queue.size.real_time(TODO)}
-tags{api.config.entry.transport.link.tx.sequence_number_resolution(TODO)}
-tags{api.config.entry.transport.link.tx.threads(TODO)}
-tags{api.config.entry.transport.link.unixpipe.path(TODO)}
-tags{api.config.entry.transport.multicast.compression.enabled(TODO)}
-tags{api.config.entry.transport.multicast.join_interval(TODO)}
-tags{api.config.entry.transport.multicast.max_sessions(TODO)}
-tags{api.config.entry.transport.multicast.qos.enabled(TODO)}
-tags{api.config.entry.transport.shared_memory.enabled(TODO)}
-tags{api.config.entry.transport.unicast.accept_pending(TODO)}
-tags{api.config.entry.transport.unicast.compression(TODO)}
-tags{api.config.entry.transport.unicast.compression.enabled(TODO)}
-tags{api.config.entry.transport.unicast.lowlatency(TODO)}
-tags{api.config.entry.transport.unicast.max_links(TODO)}
-tags{api.config.entry.transport.unicast.max_sessions(TODO)}
-tags{api.config.entry.transport.unicast.open_timeout(TODO)}
-tags{api.config.entry.transport.unicast.qos(TODO)}
-tags{api.config.entry.transport.unicast.qos.enabled(TODO)}
+tags{api.config.entry.adminspace.permissions.read(issues/270)}
+tags{api.config.entry.adminspace.permissions.write(issues/270)}
+tags{api.config.entry.aggregation.publishers(issues/270)}
+tags{api.config.entry.aggregation.subscribers(issues/270)}
+tags{api.config.entry.downsampling(issues/270)}
+tags{api.config.entry.id(issues/270)}
+tags{api.config.entry.metadata(issues/270)}
+tags{api.config.entry.plugins(issues/270)}
+tags{api.config.entry.plugins_search_dirs(issues/270)}
+tags{api.config.entry.queries_default_timeout(issues/270)}
+tags{api.config.entry.routing.peer.mode(issues/270)}
+tags{api.config.entry.routing.router.peers_failover_brokering(issues/270)}
+tags{api.config.entry.scouting.gossip.autoconnect(issues/270)}
+tags{api.config.entry.scouting.gossip.enabled(issues/270)}
+tags{api.config.entry.scouting.multicast.autoconnect(issues/270)}
+tags{api.config.entry.scouting.multicast.listen(issues/270)}
+tags{api.config.entry.scouting.timeout(issues/270)}
+tags{api.config.entry.timestamping(issues/270)}
+tags{api.config.entry.timestamping.drop_future_timestamp(issues/270)}
+tags{api.config.entry.transport.auth.pubkey.algorithm(issues/270)}
+tags{api.config.entry.transport.auth.pubkey.key_size(issues/270)}
+tags{api.config.entry.transport.auth.pubkey.private_key_file(issues/270)}
+tags{api.config.entry.transport.auth.pubkey.private_key_pem(issues/270)}
+tags{api.config.entry.transport.auth.pubkey.public_key_file(issues/270)}
+tags{api.config.entry.transport.auth.pubkey.public_key_pem(issues/270)}
+tags{api.config.entry.transport.auth.usrpwd.dictionary_file(issues/270)}
+tags{api.config.entry.transport.link.protocols(issues/270)}
+tags{api.config.entry.transport.link.rx(issues/270)}
+tags{api.config.entry.transport.link.rx.buffer_size(issues/270)}
+tags{api.config.entry.transport.link.rx.defragmentation_buffer_size(issues/270)}
+tags{api.config.entry.transport.link.tls.client_auth(issues/270)}
+tags{api.config.entry.transport.link.tls.client_certificate(issues/270)}
+tags{api.config.entry.transport.link.tls.client_certificate_base64(issues/270)}
+tags{api.config.entry.transport.link.tls.client_private_key(issues/270)}
+tags{api.config.entry.transport.link.tls.client_private_key_base64(issues/270)}
+tags{api.config.entry.transport.link.tls.root_ca_certificate(issues/270)}
+tags{api.config.entry.transport.link.tls.root_ca_certificate_base64(issues/270)}
+tags{api.config.entry.transport.link.tls.server_certificate(issues/270)}
+tags{api.config.entry.transport.link.tls.server_certificate_base64(issues/270)}
+tags{api.config.entry.transport.link.tls.server_name_verification(issues/270)}
+tags{api.config.entry.transport.link.tls.server_private_key(issues/270)}
+tags{api.config.entry.transport.link.tls.server_private_key_base64(issues/270)}
+tags{api.config.entry.transport.link.tx.keep_alive(issues/270)}
+tags{api.config.entry.transport.link.tx.lease(issues/270)}
+tags{api.config.entry.transport.link.tx.mtu(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.backoff(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.background(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.control(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.data(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.data_high(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.data_low(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.interactive_high(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.interactive_low(issues/270)}
+tags{api.config.entry.transport.link.tx.queue.size.real_time(issues/270)}
+tags{api.config.entry.transport.link.tx.sequence_number_resolution(issues/270)}
+tags{api.config.entry.transport.link.tx.threads(issues/270)}
+tags{api.config.entry.transport.link.unixpipe.path(issues/270)}
+tags{api.config.entry.transport.multicast.compression.enabled(issues/270)}
+tags{api.config.entry.transport.multicast.join_interval(issues/270)}
+tags{api.config.entry.transport.multicast.max_sessions(issues/270)}
+tags{api.config.entry.transport.multicast.qos.enabled(issues/270)}
+tags{api.config.entry.transport.shared_memory.enabled(issues/270)}
+tags{api.config.entry.transport.unicast.accept_pending(issues/270)}
+tags{api.config.entry.transport.unicast.compression(issues/270)}
+tags{api.config.entry.transport.unicast.compression.enabled(issues/270)}
+tags{api.config.entry.transport.unicast.lowlatency(issues/270)}
+tags{api.config.entry.transport.unicast.max_links(issues/270)}
+tags{api.config.entry.transport.unicast.max_sessions(issues/270)}
+tags{api.config.entry.transport.unicast.open_timeout(issues/270)}
+tags{api.config.entry.transport.unicast.qos(issues/270)}
+tags{api.config.entry.transport.unicast.qos.enabled(issues/270)}
 Review these tags: they are configuration too:
-tags{api.downsampling_item_conf(TODO)}
-tags{api.downsampling_rule_conf(TODO)}
+tags{api.downsampling_item_conf(issues/270)}
+tags{api.downsampling_rule_conf(issues/270)}
 
 Discuss it: this is useful for convenient work with both pico and zenoh-c, but they
 have different value format anyway
 
-tags{api.options.downsampling_flow(TODO)}
-tags{api.options.downsampling_flow.egress(TODO)}
-tags{api.options.downsampling_flow.ingress(TODO)}
+tags{api.options.downsampling_flow(issues/270)}
+tags{api.options.downsampling_flow.egress(issues/270)}
+tags{api.options.downsampling_flow.ingress(issues/270)}
 Used in config only, need to be added if corresponding config option is added.
 
-tags{api.options.priority.max(TODO)}
-tags{api.options.priority.min(TODO)}
-tags{api.options.priority.num(TODO)}
+tags{api.options.priority.max(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.options.priority.min(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.options.priority.num(https://github.com/eclipse-zenoh/zenoh/issues/806)}
 Internal ones, to be checked if it's really the case
 
-tags{api.options.query_target.complete(TODO)}
+tags{api.options.query_target.complete(https://github.com/eclipse-zenoh/zenoh/issues/807)}
 To be discussed: was purposedly not exposed to zenoh-c, feature is not actually supported
 
-tags{api.sample.source_info.get(TODO)}
-tags{api.sample.source_info.set(TODO)}
-tags{api.options.source_info(TODO)}
-tags{api.options.source_info.source_id(TODO)}
-tags{api.options.source_info.source_sn(TODO)}
-Unstable, to be decided to include or not
+tags{api.sample.source_info.get(issues/259)}
+tags{api.sample.source_info.set(issues/259)}
+tags{api.options.source_info(issues/259)}
+tags{api.options.source_info.source_id(issues/259)}
+tags{api.options.source_info.source_sn(issues/259)}
+Unstable
 
-tags{api.options.what_am_i.to_str(TODO)}
+tags{api.options.what_am_i.to_str(issues/271)}
 Consider exposing - examples reimplements it all the time
 
-tags{api.publisher.send_matching_status_request(TODO)}
+tags{api.publisher.send_matching_status_request(UNSTABLE)}
 To be added to zenoh-c
 
-tags{api.reply.replier_id.get(TODO)}
+tags{api.reply.replier_id.get(issues/278)}
 Expose to zenoh-c, after reply rework
 
-tags{api.sample.timestamp.ensure(TODO)}
+tags{api.sample.timestamp.ensure(issues/275)}
 Find a way to expose: it takes mutable sample, which doesn't work for zenoh-c
 
-tags{api.scout.stop(TODO)}
+tags{api.scout.stop(N/A)}
 No sense for zenoh-c - scout function blocks the thread
 
-tags(api.query.selector.get(TODO))
-tags{api.selector(TODO)}
-tags{api.selector.create(TODO)}
-tags{api.selector.keyexpr.get(TODO)}
-tags{api.selector.keyexpr.set(TODO)}
-tags{api.selector.parameters.get(TODO)}
-tags{api.selector.parameters.set(TODO)}
-tags{api.selector.time_range.get(TODO)}
-tags{api.selector.time_range.remove(TODO)}
-tags{api.selector.time_range.set(TODO)}
-tags{api.options.selector.time_range_key(TODO)}
+tags(api.query.selector.get(N/A))
+tags{api.selector(N/A)}
+tags{api.selector.create(N/A)}
+tags{api.selector.keyexpr.get(N/A)}
+tags{api.selector.keyexpr.set(N/A)}
+tags{api.selector.parameters.get(N/A)}
+tags{api.selector.parameters.set(N/A)}
+tags{api.selector.time_range.get(N/A)}
+tags{api.selector.time_range.remove(N/A)}
+tags{api.selector.time_range.set(N/A)}
+tags{api.options.selector.time_range_key(N/A)}
 Selector exists in rust only for set of utiulity url functions. As they are
 not exposed to zenoh-c, no need to have separate Selector structure
 
-tags{api.session.config.set(TODO)}
-tags{api.session.config.get(TODO)}
+tags{api.session.config.set(issues/277)}
+tags{api.session.config.get(issues/277)}
 Think about adding config accessor method to the session
 
-tags{api.timestamp.create.now(TODO)}
+tags{api.timestamp.create.now(https://github.com/eclipse-zenoh/zenoh-c/issues/276)}
 
 tags{api.session.hlc(N/A)}
-HLC is Rust specific. But need to check why `new_reception_timestamp` (tags{api.timestamp.create.now(See also)}) does not use it
+HLC is Rust specific. But need to check why `new_reception_timestamp` (tags{api.timestamp.create.now(See also)}) do not use it
 
-tags{api.what_am_i_matcher(TODO)}
-tags{api.what_am_i_matcher.create.client(TODO)}
-tags{api.what_am_i_matcher.create.empty(TODO)}
-tags{api.what_am_i_matcher.create.peer(TODO)}
-tags{api.what_am_i_matcher.create.router(TODO)}
-tags{api.what_am_i_matcher.is_empty(TODO)}
-tags{api.what_am_i_matcher.matches(TODO)}
-tags{api.what_am_i_matcher.to_str(TODO)}
+tags{api.what_am_i_matcher(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.client(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.empty(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.peer(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.router(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.is_empty(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.matches(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.to_str(https://github.com/eclipse-zenoh/zenoh/issues/806)}
 Internal thing?
 
-tags{api.zid.create.rand(TODO)}
-tags{api.zid.max_size(TODO)}
-tags{api.zid.size(TODO)}
-tags{api.zid.to_keyexpr(TODO)}
-tags{api.zid.to_le_bytes(TODO)}
+tags{api.zid.create.rand(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.max_size(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.size(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.to_keyexpr(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.to_le_bytes(https://github.com/eclipse-zenoh/zenoh/issues/806)}
 To be decided
