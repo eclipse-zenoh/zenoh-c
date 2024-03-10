@@ -1,5 +1,5 @@
 This file contains api tag missing in the project with the explanations for each case.
-See https://github.com/ZettaScaleLabs/zenoh-tests/tree/tagging/api_matrix for details.
+See github.com/ZettaScaleLabs/zenoh-tests/tree/tagging/api_matrix for details.
 
 tags{api.attachment.is_empty(issues/268)}
 tags{api.attachment.len(issues/268)}
@@ -8,8 +8,8 @@ Add methods len and is_empty to z_owned_bytes_map_t and to z_attachment_t itself
 tags{api.buffer.slices(pull/251)}
 To be implemented - latest PR by Pierre
 
-tags{api.publisher.delete.attachment.set(https://github.com/eclipse-zenoh/zenoh/issues/803)}
-tags{api.publisher.delete.encoding.set(https://github.com/eclipse-zenoh/zenoh/issues/803)}
+tags{api.publisher.delete.attachment.set(github.com/eclipse-zenoh/zenoh/issues/803)}
+tags{api.publisher.delete.encoding.set(github.com/eclipse-zenoh/zenoh/issues/803)}
 Purposedly not added: in Rust they exists only because DeleteBuilder is an alias 
 for PutBuilder, but actually they are not used for delete operations.
 
@@ -36,8 +36,8 @@ To be implemented in zenoh-c?
 tags{api.keyexpr.create.autocanonize(issues/267)}
 Implement in zenoh-c, it exists in zenoh-pico
 
-tags{api.keyexpr.get_nonwild_prefix(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.keyexpr.is_wild(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.keyexpr.get_nonwild_prefix(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.keyexpr.is_wild(github.com/eclipse-zenoh/zenoh/issues/806)}
 Actually internal for zenoh, specify this in documentation, remove tags
 
 tags{api.keyexpr.iter(N/A)}
@@ -53,7 +53,7 @@ tags{api.options.keyexpr.set_intersection_level.intersects(issues/269)}
 SetIntersectionLevel is the return value of the relation_to function
 Add to zenoh-c
 
-tags{api.keyexpr.strip_prefix(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.keyexpr.strip_prefix(github.com/eclipse-zenoh/zenoh/issues/806)}
 Mark as internal, for plugins mostly
 
 tags{api.liveliness.request.timeout.set(issues/274)}
@@ -165,12 +165,12 @@ tags{api.options.downsampling_flow.egress(issues/270)}
 tags{api.options.downsampling_flow.ingress(issues/270)}
 Used in config only, need to be added if corresponding config option is added.
 
-tags{api.options.priority.max(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.options.priority.min(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.options.priority.num(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.options.priority.max(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.options.priority.min(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.options.priority.num(github.com/eclipse-zenoh/zenoh/issues/806)}
 Internal ones, to be checked if it's really the case
 
-tags{api.options.query_target.complete(https://github.com/eclipse-zenoh/zenoh/issues/807)}
+tags{api.options.query_target.complete(github.com/eclipse-zenoh/zenoh/issues/807)}
 To be discussed: was purposedly not exposed to zenoh-c, feature is not actually supported
 
 tags{api.sample.source_info.get(issues/259)}
@@ -213,24 +213,24 @@ tags{api.session.config.set(issues/277)}
 tags{api.session.config.get(issues/277)}
 Think about adding config accessor method to the session
 
-tags{api.timestamp.create.now(https://github.com/eclipse-zenoh/zenoh-c/issues/276)}
+tags{api.timestamp.create.now(github.com/eclipse-zenoh/zenoh-c/issues/276)}
 
 tags{api.session.hlc(N/A)}
 HLC is Rust specific. But need to check why `new_reception_timestamp` (tags{api.timestamp.create.now(See also)}) do not use it
 
-tags{api.what_am_i_matcher(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.what_am_i_matcher.create.client(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.what_am_i_matcher.create.empty(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.what_am_i_matcher.create.peer(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.what_am_i_matcher.create.router(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.what_am_i_matcher.is_empty(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.what_am_i_matcher.matches(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.what_am_i_matcher.to_str(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.client(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.empty(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.peer(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.create.router(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.is_empty(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.matches(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.what_am_i_matcher.to_str(github.com/eclipse-zenoh/zenoh/issues/806)}
 Internal thing?
 
-tags{api.zid.create.rand(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.zid.max_size(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.zid.size(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.zid.to_keyexpr(https://github.com/eclipse-zenoh/zenoh/issues/806)}
-tags{api.zid.to_le_bytes(https://github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.create.rand(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.max_size(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.size(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.to_keyexpr(github.com/eclipse-zenoh/zenoh/issues/806)}
+tags{api.zid.to_le_bytes(github.com/eclipse-zenoh/zenoh/issues/806)}
 To be decided
