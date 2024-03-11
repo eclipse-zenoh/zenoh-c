@@ -854,7 +854,7 @@ typedef struct z_str_array_t {
  * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- * tags{z.z_hello_t, api.hello}
+ * tags{c.z_hello_t, api.hello}
  */
 typedef struct z_hello_t {
   unsigned int whatami;

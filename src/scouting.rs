@@ -107,7 +107,7 @@ pub struct z_owned_hello_t {
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
-/// tags{z.z_hello_t, api.hello}
+/// tags{c.z_hello_t, api.hello}
 pub struct z_hello_t {
     pub whatami: c_uint,
     pub pid: z_id_t,
