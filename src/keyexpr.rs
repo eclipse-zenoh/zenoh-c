@@ -119,6 +119,32 @@ pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t
     }
 }
 
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_new_autocanonize(name: *const c_char) -> z_owned_keyexpr_t {
+    if name.is_null() {
+        return z_owned_keyexpr_t::null();
+    }
+    let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
+    match std::str::from_utf8(name) {
+        Ok(name) => {
+            let name_owned = name.to_owned();
+            match KeyExpr::autocanonize(name_owned) {
+                Ok(v) => v.into_owned().into(),
+                Err(e) => {
+                    log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
+                    z_owned_keyexpr_t::null()
+                }
+            }
+        }
+        Err(e) => {
+            log::error!("{}", e);
+            z_owned_keyexpr_t::null()
+        }
+    }
+}
+
 /// Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
@@ -311,6 +337,22 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice(name: *const c_char, len: usize) 
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string.
 /// It is a loaned key expression that aliases `name`.
+/// The string is canonized in-place before being passed to keyexpr.
+/// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_keyexpr_from_slice_autocanonize(
+    name: *mut c_char,
+    len: &mut usize,
+) -> z_keyexpr_t {
+    if z_keyexpr_canonize(name, len) < 0 {
+        return z_keyexpr_t::null();
+    }
+    zc_keyexpr_from_slice(name, *len)
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string.
+/// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
@@ -318,6 +360,20 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
         z_keyexpr_t::null()
     } else {
         zc_keyexpr_from_slice(name, libc::strlen(name))
+    }
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string.
+/// It is a loaned key expression that aliases `name`.
+/// The string is canonized in-place before being passed to keyexpr.
+/// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_autocanonize(name: *mut c_char) -> z_keyexpr_t {
+    if name.is_null() || z_keyexpr_canonize_null_terminated(name) < 0 {
+        z_keyexpr_t::null()
+    } else {
+        z_keyexpr(name)
     }
 }
 

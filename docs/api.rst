@@ -106,6 +106,7 @@ Key expression
 .. autocstruct:: zenoh_commons.h::z_owned_keyexpr_t
 
 .. autocfunction:: zenoh_commons.h::z_keyexpr
+.. autocfunction:: zenoh_commons.h::z_keyexpr_autocanonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_unchecked
 .. autocfunction:: zenoh_commons.h::z_keyexpr_to_string
 .. autocfunction:: zenoh_commons.h::z_keyexpr_as_bytes
@@ -120,6 +121,7 @@ Key expression
 .. autocfunction:: zenoh_commons.h::z_keyexpr_intersects
 
 .. autocfunction:: zenoh_commons.h::z_keyexpr_new
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new_autocanonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_loan
 .. autocfunction:: zenoh_commons.h::z_keyexpr_check
 .. autocfunction:: zenoh_commons.h::z_keyexpr_drop

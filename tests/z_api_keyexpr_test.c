@@ -41,6 +41,22 @@ void canonize() {
     printf("'%s', err = %d\n", keyexpr, err);
     assert(err == 0);
     assert(strcmp(keyexpr, "a/**/c") == 0);
+
+    strcpy(keyexpr, "a/**/**/c");
+    z_keyexpr_t key_expr_canonized = z_keyexpr_autocanonize(keyexpr);
+    assert(z_keyexpr_check(keyexpr) == true);
+    assert(strcmp(keyexpr, "a/**/c") == 0);
+    assert(z_keyexpr_as_bytes(key_expr_canonized).len == len_new);
+    assert(strncmp(z_keyexpr_as_bytes(key_expr_canonized).start, "a/**/c", len_new) == 0);
+
+    strcpy(keyexpr, "a/**/**/c");
+    len_new = len_old;
+    key_expr_canonized = zc_keyexpr_from_slice_autocanonize(keyexpr, &len_new);
+    assert(z_keyexpr_check(keyexpr) == true);
+    assert(len_new == len_old - 3);
+    assert(strncmp(keyexpr, "a/**/c", len_new) == 0);
+    assert(z_keyexpr_as_bytes(key_expr_canonized).len == len_new);
+    assert(strncmp(z_keyexpr_as_bytes(key_expr_canonized).start, "a/**/c", len_new) == 0);
 }
 
 void includes() {
