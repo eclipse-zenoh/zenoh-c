@@ -1062,6 +1062,9 @@ typedef struct zc_owned_liveliness_token_t {
  * tags{c.zc_owned_liveliness_get_options_t}
  */
 typedef struct zc_owned_liveliness_get_options_t {
+  /**
+   * tags{c.zc_owned_liveliness_get_options_t, api.liveliness.request.timeout.set}
+   */
   uint32_t timeout_ms;
 } zc_owned_liveliness_get_options_t;
 /**

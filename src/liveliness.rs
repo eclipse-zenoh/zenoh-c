@@ -216,6 +216,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
 /// tags{c.zc_owned_liveliness_get_options_t}
 #[repr(C)]
 pub struct zc_owned_liveliness_get_options_t {
+    /// tags{c.zc_owned_liveliness_get_options_t,api.liveliness.request.timeout.set}
     timeout_ms: u32,
 }
 /// The gravestone value for `zc_owned_liveliness_get_options_t`

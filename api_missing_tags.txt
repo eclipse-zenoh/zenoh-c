@@ -56,9 +56,6 @@ Add to zenoh-c
 tags{api.keyexpr.strip_prefix(github.com/eclipse-zenoh/zenoh/issues/806)}
 Mark as internal, for plugins mostly
 
-tags{api.liveliness.request.timeout.set(issues/274)}
-Add option to zenoh-c
-
 tags{api.liveliness.request.channel(N/A)}
 Same channel as the query channel, it's avaialable actually
 
