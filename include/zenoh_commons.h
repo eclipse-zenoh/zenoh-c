@@ -1039,6 +1039,12 @@ int8_t z_attachment_iterate(struct z_attachment_t this_,
                             z_attachment_iter_body_t body,
                             void *context);
 /**
+ * Returns number of key-value pairs for `z_attachment_t`.
+ *
+ * Does so by iterating over all existing key-value pairs.
+ */
+ZENOHC_API size_t z_attachment_len(struct z_attachment_t this_);
+/**
  * Returns the gravestone value for `z_attachment_t`.
  */
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
@@ -1123,6 +1129,10 @@ ZENOHC_API
 int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
                         z_attachment_iter_body_t body,
                         void *ctx);
+/**
+ * Returns number of key-value pairs in the map.
+ */
+ZENOHC_API size_t z_bytes_map_len(struct z_owned_bytes_map_t *this_);
 /**
  * Constructs a new map.
  */

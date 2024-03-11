@@ -29,6 +29,10 @@ void writting_through_map_by_alias_read_by_get() {
     z_attachment_t attachment = z_bytes_map_as_attachment(&map);
 
     // Elements check
+
+    assert(z_bytes_map_len(&map) == 2);
+    assert(z_attachment_len(attachment) == 2);
+
     z_bytes_t a1 = z_attachment_get(attachment, z_bytes_from_str("k1"));
     ASSERT_STR_BYTES_EQUAL("v1", a1);
 
@@ -61,6 +65,9 @@ void writting_through_map_by_copy_read_by_iter() {
     z_attachment_t attachment = z_bytes_map_as_attachment(&map);
 
     // Elements check
+    assert(z_bytes_map_len(&map) == 2);
+    assert(z_attachment_len(attachment) == 2);
+
     int res = z_attachment_iterate(attachment, _attachment_reader, (void*)42);
     assert(res == 24);
 
@@ -81,6 +88,8 @@ void writting_no_map_read_by_get() {
     z_attachment_t attachment = {.data = NULL, .iteration_driver = &_iteration_driver};
 
     // Elements check
+    assert(z_attachment_len(attachment) == 2);
+
     z_bytes_t a1 = z_attachment_get(attachment, z_bytes_from_str("k1"));
     ASSERT_STR_BYTES_EQUAL("v1", a1);
 

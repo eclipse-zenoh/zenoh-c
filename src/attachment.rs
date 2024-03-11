@@ -115,6 +115,38 @@ pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_by
     }
 }
 
+/// Returns number of key-value pairs for `z_attachment_t`.
+/// 
+/// Does so by iterating over all existing key-value pairs.
+#[no_mangle]
+pub extern "C" fn z_attachment_len(this: z_attachment_t) -> usize {
+    match this.iteration_driver.as_ref() {
+        None => 0,
+        Some(iteration_driver) => {
+            let mut count: usize = 0;
+
+            extern "C" fn attachment_count_iterator(
+                _key: z_bytes_t,
+                _value: z_bytes_t,
+                context: *mut c_void,
+            ) -> i8 {
+                unsafe {
+                    let context = &mut *(context as *mut usize);
+                    *context += 1;
+                    0
+                }
+            }
+            (iteration_driver)(
+                this.data,
+                attachment_count_iterator,
+                &mut count as *mut _ as *mut c_void,
+            );
+            count
+        }
+
+    }
+}
+
 /// A map of maybe-owned vector of bytes to owned vector of bytes.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
@@ -160,6 +192,13 @@ pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
 pub extern "C" fn z_bytes_map_drop(this: &mut z_owned_bytes_map_t) {
     let this = unsafe { &mut *this.get() };
     this.take();
+}
+
+/// Returns number of key-value pairs in the map.
+#[no_mangle]
+pub extern "C" fn z_bytes_map_len(this: &mut z_owned_bytes_map_t) -> usize {
+    let this = unsafe { &*this.get() };
+    this.as_ref().map(|m| m.len()).unwrap_or(0)
 }
 
 /// Returns the value associated with `key`, returning a gravestone value if:
