@@ -32,6 +32,7 @@ void writting_through_map_by_alias_read_by_get() {
 
     assert(z_bytes_map_len(&map) == 2);
     assert(z_attachment_len(attachment) == 2);
+    assert(!z_attachment_is_empty(attachment));
 
     z_bytes_t a1 = z_attachment_get(attachment, z_bytes_from_str("k1"));
     ASSERT_STR_BYTES_EQUAL("v1", a1);
@@ -67,6 +68,7 @@ void writting_through_map_by_copy_read_by_iter() {
     // Elements check
     assert(z_bytes_map_len(&map) == 2);
     assert(z_attachment_len(attachment) == 2);
+    assert(!z_attachment_is_empty(attachment));
 
     int res = z_attachment_iterate(attachment, _attachment_reader, (void*)42);
     assert(res == 24);
@@ -89,6 +91,7 @@ void writting_no_map_read_by_get() {
 
     // Elements check
     assert(z_attachment_len(attachment) == 2);
+    assert(!z_attachment_is_empty(attachment));
 
     z_bytes_t a1 = z_attachment_get(attachment, z_bytes_from_str("k1"));
     ASSERT_STR_BYTES_EQUAL("v1", a1);
@@ -103,6 +106,8 @@ void writting_no_map_read_by_get() {
 
 void invalid_attachment_safety() {
     z_attachment_t attachment = z_attachment_null();
+    assert(z_attachment_is_empty(attachment));
+    assert(z_attachment_len(attachment) == 0);
 
     z_bytes_t a_non = z_attachment_get(attachment, z_bytes_from_str("k_non"));
     assert(a_non.start == NULL);

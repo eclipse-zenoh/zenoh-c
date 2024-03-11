@@ -39,6 +39,7 @@ Bytes map
 .. autocfunction:: zenoh_commons.h::z_bytes_map_drop
 .. autocfunction:: zenoh_commons.h::z_bytes_map_get
 .. autocfunction:: zenoh_commons.h::z_bytes_map_len
+.. autocfunction:: zenoh_commons.h::z_bytes_map_is_empty
 .. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_alias
 .. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_copy
 .. autocfunction:: zenoh_commons.h::z_bytes_map_iter
@@ -159,6 +160,7 @@ Attachment
 .. autocfunction:: zenoh_commons.h::z_attachment_null
 .. autocfunction:: zenoh_commons.h::z_attachment_get
 .. autocfunction:: zenoh_commons.h::z_attachment_len
+.. autocfunction:: zenoh_commons.h::z_attachment_is_empty
 .. autocfunction:: zenoh_commons.h::z_attachment_check
 .. autocfunction:: zenoh_commons.h::z_attachment_iterate
 
