@@ -33,13 +33,11 @@ void fprintpid(FILE *stream, z_id_t pid) {
 }
 
 void fprintwhatami(FILE *stream, unsigned int whatami) {
-    if (whatami == Z_ROUTER) {
-        fprintf(stream, "\"Router\"");
-    } else if (whatami == Z_PEER) {
-        fprintf(stream, "\"Peer\"");
-    } else {
-        fprintf(stream, "\"Other\"");
-    }
+    char buf[64];
+    z_time_now_as_str(buf, sizeof(buf));
+     fprintf(stream, "%s", buf);
+    z_whatami_to_str(whatami, buf, sizeof(buf));
+    fprintf(stream, "%s", buf);
 }
 
 void fprintlocators(FILE *stream, const z_str_array_t *locs) {

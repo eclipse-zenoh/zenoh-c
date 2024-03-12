@@ -2130,6 +2130,18 @@ ZENOHC_API int8_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
 ZENOHC_API
 int8_t z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
 /**
+ * Converts the kind of zenoh entity into a string.
+ *
+ * Parameters:
+ *     whatami: A whatami bitmask of zenoh entity kind.
+ *     buf: Buffer to write a null-terminated string to.
+ *     len: Maximum number of bytes that can be written to the `buf`.
+ *
+ * Returns 0 if successful, negative values if whatami contains an invalid bitmask or `buf` is null,
+ * or number of remaining bytes, if the null-terminated string size exceeds `len`.
+ */
+ZENOHC_API int8_t z_whatami_to_str(uint8_t whatami, char *buf, size_t len);
+/**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  */
 ZENOHC_API
