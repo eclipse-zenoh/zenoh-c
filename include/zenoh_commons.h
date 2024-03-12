@@ -94,6 +94,20 @@ typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_IMAGE_GIF = 20,
 } z_encoding_prefix_t;
 /**
+ * A :c:type:`z_keyexpr_intersection_level_t`.
+ *
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES**
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS**
+ */
+typedef enum z_keyexpr_intersection_level_t {
+  Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT = 0,
+  Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS = 1,
+  Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES = 2,
+  Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
+} z_keyexpr_intersection_level_t;
+/**
  * The priority of zenoh messages.
  *
  *     - **REAL_TIME**
@@ -1643,6 +1657,14 @@ ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
  * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_null(void);
+/**
+ * Returns the relation between `left` and `right` from `left`'s point of view.
+ *
+ * Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
+ */
+ZENOHC_API
+enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(struct z_keyexpr_t left,
+                                                          struct z_keyexpr_t right);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
  * The user is responsible of droping the returned string using `z_drop`

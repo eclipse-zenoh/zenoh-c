@@ -73,9 +73,23 @@ void undeclare() {
     assert(!z_keyexpr_check(&ke));
 }
 
+void relation_to() {
+    z_keyexpr_t nul = z_keyexpr(NULL);
+    z_keyexpr_t foobar = z_keyexpr("foo/bar");
+    z_keyexpr_t foostar = z_keyexpr("foo/*");
+    z_keyexpr_t barstar = z_keyexpr("bar/*");
+    assert(z_keyexpr_relation_to(foostar, foobar) == Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES);
+    assert(z_keyexpr_relation_to(foobar, foostar) == Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS);
+    assert(z_keyexpr_relation_to(foostar, foostar) == Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS);
+    assert(z_keyexpr_relation_to(barstar, foobar) == Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT);
+    assert(z_keyexpr_relation_to(nul, foobar) == Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT);
+    assert(z_keyexpr_relation_to(foobar, nul) == Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT);
+}
+
 int main(int argc, char **argv) {
     canonize();
     includes();
     intersects();
     undeclare();
+    relation_to();
 }
