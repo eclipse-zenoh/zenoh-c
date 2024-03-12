@@ -34,8 +34,6 @@ void fprintpid(FILE *stream, z_id_t pid) {
 
 void fprintwhatami(FILE *stream, unsigned int whatami) {
     char buf[64];
-    z_time_now_as_str(buf, sizeof(buf));
-     fprintf(stream, "%s", buf);
     z_whatami_to_str(whatami, buf, sizeof(buf));
     fprintf(stream, "%s", buf);
 }
