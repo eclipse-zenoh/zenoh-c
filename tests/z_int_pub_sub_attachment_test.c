@@ -106,7 +106,7 @@ int run_subscriber() {
     }
 
     SEM_POST(sem);
-    sleep(10);
+    z_sleep_s(10);
 
     z_undeclare_subscriber(z_move(sub));
     z_close(z_move(s));

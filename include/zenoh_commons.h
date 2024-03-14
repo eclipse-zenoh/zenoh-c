@@ -298,6 +298,14 @@ typedef struct z_owned_bytes_map_t {
   size_t _1[4];
 } z_owned_bytes_map_t;
 /**
+ * Clock
+ * Uses monotonic clock
+ */
+typedef struct z_clock_t {
+  uint64_t t;
+  const void *t_base;
+} z_clock_t;
+/**
  * Represents a Zenoh ID.
  *
  * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -1033,6 +1041,13 @@ typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
 /**
+ * Time
+ * Uses system clock
+ */
+typedef struct z_time_t {
+  uint64_t t;
+} z_time_t;
+/**
  * The options for `zc_liveliness_declare_token`
  * tags{c.zc_owned_liveliness_declaration_options_t}
  */
@@ -1405,6 +1420,10 @@ ZENOHC_API struct z_bytes_t z_bytes_null(void);
  * tags{c.z_bytes_wrap}
  */
 ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
+ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);
+ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
+ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
+ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *
@@ -2404,6 +2423,9 @@ struct z_session_t z_session_loan(const struct z_owned_session_t *s);
  * tags{}
  */
 ZENOHC_API struct z_owned_session_t z_session_null(void);
+ZENOHC_API int8_t z_sleep_ms(size_t time);
+ZENOHC_API int8_t z_sleep_s(size_t time);
+ZENOHC_API int8_t z_sleep_us(size_t time);
 /**
  * Returns ``true`` if `strs` is valid.
  * tags{}
@@ -2479,6 +2501,11 @@ int8_t z_task_init(struct z_task_t *task,
                    void (*fun)(void *arg),
                    void *arg);
 ZENOHC_API int8_t z_task_join(struct z_task_t *task);
+ZENOHC_API uint64_t z_time_elapsed_ms(const struct z_time_t *time);
+ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
+ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
+ZENOHC_API struct z_time_t z_time_now(void);
+ZENOHC_API const char *z_time_now_as_str(const char *buf, size_t len);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
  * tags{}
