@@ -186,9 +186,6 @@ To be added to zenoh-c
 tags{api.reply.replier_id.get(issues/278)}
 Expose to zenoh-c, after reply rework
 
-tags{api.sample.timestamp.ensure(issues/275)}
-Find a way to expose: it takes mutable sample, which doesn't work for zenoh-c
-
 tags{api.scout.stop(N/A)}
 No sense for zenoh-c - scout function blocks the thread
 
