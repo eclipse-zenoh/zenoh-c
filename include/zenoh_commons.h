@@ -874,9 +874,9 @@ typedef struct zc_owned_liveliness_token_t {
 /**
  * The options for :c:func:`zc_liveliness_declare_subscriber`
  */
-typedef struct zc_owned_liveliness_get_options_t {
+typedef struct zc_liveliness_get_options_t {
   uint32_t timeout_ms;
-} zc_owned_liveliness_get_options_t;
+} zc_liveliness_get_options_t;
 /**
  * An owned payload, backed by a reference counted owner.
  *
@@ -2320,24 +2320,23 @@ ZENOHC_API
 int8_t zc_liveliness_get(struct z_session_t session,
                          struct z_keyexpr_t key,
                          struct z_owned_closure_reply_t *callback,
-                         const struct zc_owned_liveliness_get_options_t *options);
+                         const struct zc_liveliness_get_options_t *options);
 /**
  * Returns `true` if the options are valid.
  */
-ZENOHC_API
-bool zc_liveliness_get_options_check(const struct zc_owned_liveliness_get_options_t *_opts);
+ZENOHC_API bool zc_liveliness_get_options_check(const struct zc_liveliness_get_options_t *_opts);
 /**
- * The gravestone value for `zc_owned_liveliness_get_options_t`
+ * The gravestone value for `zc_liveliness_get_options_t`
  */
-ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_default(void);
+ZENOHC_API struct zc_liveliness_get_options_t zc_liveliness_get_options_default(void);
 /**
  * Destroys the options.
  */
-ZENOHC_API void zc_liveliness_get_options_drop(struct zc_owned_liveliness_get_options_t *opts);
+ZENOHC_API void zc_liveliness_get_options_drop(struct zc_liveliness_get_options_t *opts);
 /**
- * The gravestone value for `zc_owned_liveliness_get_options_t`
+ * The gravestone value for `zc_liveliness_get_options_t`
  */
-ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_null(void);
+ZENOHC_API struct zc_liveliness_get_options_t zc_liveliness_get_options_null(void);
 /**
  * Returns `true` if the options are valid.
  */
