@@ -1,12 +1,11 @@
 use chrono::{DateTime, Local};
 use libc::c_char;
 use std::{
-    cmp::min,
     os::raw::c_void,
-    slice,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
+use crate::CopyableToCArray;
 use lazy_static::lazy_static;
 
 // Use initial time stored in static variable as a reference time,
@@ -77,16 +76,13 @@ pub struct z_time_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_time_now_as_str(buf: *const c_char, len: usize) -> *const c_char {
-    if len == 0 {
+    if len == 0 || buf.is_null() {
         return buf;
     }
     let datetime: DateTime<Local> = SystemTime::now().into();
     let s = datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string();
-    let sb = s.as_bytes();
-    let max_len = min(len - 1, s.len());
-    let b = slice::from_raw_parts_mut(buf as *mut u8, max_len + 1);
-    b[0..max_len].copy_from_slice(&sb[0..max_len]);
-    b[max_len] = 0;
+    let res = s.as_str().copy_to_c_array(buf as *mut c_void, len - 1);
+    *((buf as usize + res) as *mut c_char) = 0;
     buf
 }
 
