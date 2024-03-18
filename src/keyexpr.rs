@@ -24,6 +24,7 @@ use crate::z_str_null;
 use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
+use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
@@ -622,5 +623,45 @@ pub extern "C" fn z_keyexpr_join(left: z_keyexpr_t, right: z_keyexpr_t) -> z_own
             log::error!("{}", e);
             z_owned_keyexpr_t::null()
         }
+    }
+}
+
+/// A :c:type:`z_keyexpr_intersection_level_t`.
+///
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES**
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS**
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(C)]
+pub enum z_keyexpr_intersection_level_t {
+    DISJOINT = 0,
+    INTERSECTS = 1,
+    INCLUDES = 2,
+    EQUALS = 3,
+}
+
+impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
+    fn from(val: SetIntersectionLevel) -> Self {
+        match val {
+            SetIntersectionLevel::Disjoint => z_keyexpr_intersection_level_t::DISJOINT,
+            SetIntersectionLevel::Intersects => z_keyexpr_intersection_level_t::INTERSECTS,
+            SetIntersectionLevel::Includes => z_keyexpr_intersection_level_t::INCLUDES,
+            SetIntersectionLevel::Equals => z_keyexpr_intersection_level_t::EQUALS,
+        }
+    }
+}
+
+#[no_mangle]
+/// Returns the relation between `left` and `right` from `left`'s point of view.
+///
+/// Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
+pub extern "C" fn z_keyexpr_relation_to(
+    left: z_keyexpr_t,
+    right: z_keyexpr_t,
+) -> z_keyexpr_intersection_level_t {
+    match (&*left, &*right) {
+        (Some(l), Some(r)) => l.relation_to(r).into(),
+        _ => z_keyexpr_intersection_level_t::DISJOINT,
     }
 }
