@@ -1552,6 +1552,14 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr(const char *name);
  */
 ZENOHC_API struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
 /**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string.
+ * It is a loaned key expression that aliases `name`.
+ * The string is canonized in-place before being passed to keyexpr.
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ */
+ZENOHC_API
+struct z_keyexpr_t z_keyexpr_autocanonize(char *name);
+/**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
  * Returns ``0`` upon success, negative values upon failure.
@@ -1639,6 +1647,11 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *key
  * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
+/**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
+ */
+ZENOHC_API
+struct z_owned_keyexpr_t z_keyexpr_new_autocanonize(const char *name);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
  */
@@ -2186,6 +2199,15 @@ ZENOHC_API void zc_init_logger(void);
  * It is a loaned key expression that aliases `name`.
  */
 ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, size_t len);
+/**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string.
+ * It is a loaned key expression that aliases `name`.
+ * The string is canonized in-place before being passed to keyexpr.
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ */
+ZENOHC_API
+struct z_keyexpr_t zc_keyexpr_from_slice_autocanonize(char *name,
+                                                      size_t *len);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
  * - `name` MUST be valid UTF8.
