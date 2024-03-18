@@ -1041,6 +1041,10 @@ ZENOHC_API bool z_attachment_check(const struct z_attachment_t *this_);
  */
 ZENOHC_API struct z_bytes_t z_attachment_get(struct z_attachment_t this_, struct z_bytes_t key);
 /**
+ * Returns true if `z_attachment_t` contains no key-value pairs, false otherwise.
+ */
+ZENOHC_API bool z_attachment_is_empty(struct z_attachment_t this_);
+/**
  * Iterate over `this`'s key-value pairs, breaking if `body` returns a non-zero
  * value for a key-value pair, and returning the latest return value.
  *
@@ -1052,6 +1056,12 @@ ZENOHC_API
 int8_t z_attachment_iterate(struct z_attachment_t this_,
                             z_attachment_iter_body_t body,
                             void *context);
+/**
+ * Returns number of key-value pairs for `z_attachment_t`.
+ *
+ * Does so by iterating over all existing key-value pairs.
+ */
+ZENOHC_API size_t z_attachment_len(struct z_attachment_t this_);
 /**
  * Returns the gravestone value for `z_attachment_t`.
  */
@@ -1122,6 +1132,10 @@ void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
                                 struct z_bytes_t key,
                                 struct z_bytes_t value);
 /**
+ * Returns true if the map is empty, false otherwise.
+ */
+ZENOHC_API bool z_bytes_map_is_empty(struct z_owned_bytes_map_t *this_);
+/**
  * Iterates over the key-value pairs in the map.
  *
  * `body` will be called once per pair, with `ctx` as its last argument.
@@ -1137,6 +1151,10 @@ ZENOHC_API
 int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
                         z_attachment_iter_body_t body,
                         void *ctx);
+/**
+ * Returns number of key-value pairs in the map.
+ */
+ZENOHC_API size_t z_bytes_map_len(struct z_owned_bytes_map_t *this_);
 /**
  * Constructs a new map.
  */
