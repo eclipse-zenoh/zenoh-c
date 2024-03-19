@@ -197,29 +197,27 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
 
 /// The options for :c:func:`zc_liveliness_declare_subscriber`
 #[repr(C)]
-pub struct zc_owned_liveliness_get_options_t {
+pub struct zc_liveliness_get_options_t {
     timeout_ms: u32,
 }
-/// The gravestone value for `zc_owned_liveliness_get_options_t`
+/// The gravestone value for `zc_liveliness_get_options_t`
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_null() -> zc_owned_liveliness_get_options_t {
-    zc_owned_liveliness_get_options_t { timeout_ms: 0 }
+pub extern "C" fn zc_liveliness_get_options_null() -> zc_liveliness_get_options_t {
+    zc_liveliness_get_options_t { timeout_ms: 0 }
 }
-/// The gravestone value for `zc_owned_liveliness_get_options_t`
+/// The gravestone value for `zc_liveliness_get_options_t`
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_default() -> zc_owned_liveliness_get_options_t {
-    zc_owned_liveliness_get_options_t { timeout_ms: 10000 }
+pub extern "C" fn zc_liveliness_get_options_default() -> zc_liveliness_get_options_t {
+    zc_liveliness_get_options_t { timeout_ms: 10000 }
 }
 /// Returns `true` if the options are valid.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_check(
-    _opts: &zc_owned_liveliness_get_options_t,
-) -> bool {
+pub extern "C" fn zc_liveliness_get_options_check(_opts: &zc_liveliness_get_options_t) -> bool {
     true
 }
 /// Destroys the options.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_owned_liveliness_get_options_t) {
+pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_liveliness_get_options_t) {
     *opts = zc_liveliness_get_options_null()
 }
 
@@ -233,7 +231,7 @@ pub extern "C" fn zc_liveliness_get(
     session: z_session_t,
     key: z_keyexpr_t,
     callback: &mut z_owned_closure_reply_t,
-    options: Option<&zc_owned_liveliness_get_options_t>,
+    options: Option<&zc_liveliness_get_options_t>,
 ) -> i8 {
     let Some(session) = session.upgrade() else {
         log::error!("Failed to declare liveliness token: provided session was invalid");

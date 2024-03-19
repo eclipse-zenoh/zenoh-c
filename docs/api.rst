@@ -305,7 +305,7 @@ Types
 
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_token_t
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declaration_options_t
-.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_get_options_t
+.. autocstruct:: zenoh_commons.h::zc_liveliness_get_options_t
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declare_subscriber_options_t
 
 Functions
