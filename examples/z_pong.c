@@ -34,7 +34,8 @@ int main(int argc, char** argv) {
     z_owned_publisher_t pub = z_declare_publisher(z_loan(session), pong, NULL);
     z_owned_closure_sample_t respond = z_closure(callback, drop, (void*)z_move(pub));
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(session), ping, z_move(respond), NULL);
-    while (getchar() != 'q') {
+    while (1) {
+        z_sleep_s(1);
     }
     z_drop(z_move(sub));
     z_close(z_move(session));
