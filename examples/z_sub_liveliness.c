@@ -12,9 +12,18 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
+
+#include "parse_args.h"
 #include "zenoh.h"
 
-void data_handler(const z_sample_t *sample, void *arg) {
+#define DEFAULT_KEYEXPR "group1/**"
+
+struct args_t {
+    char* keyexpr;  // -k
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+void data_handler(const z_sample_t* sample, void* arg) {
     z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
     switch (sample->kind) {
         case Z_SAMPLE_KIND_PUT:
@@ -27,27 +36,14 @@ void data_handler(const z_sample_t *sample, void *arg) {
     z_drop(z_move(keystr));
 }
 
-int main(int argc, char **argv) {
-    char *expr = "group1/**";
-    if (argc > 1) {
-        expr = argv[1];
-    }
-
-    z_keyexpr_t keyexpr = z_keyexpr(expr);
-    if (!z_check(keyexpr)) {
-        printf("%s is not a valid key expression\n", expr);
-        exit(-1);
-    }
-
+int main(int argc, char** argv) {
     z_owned_config_t config = z_config_default();
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_LISTEN_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
-            exit(-1);
-        }
+    struct args_t args = parse_args(argc, argv, &config);
+
+    z_keyexpr_t keyexpr = z_keyexpr(args.keyexpr);
+    if (!z_check(keyexpr)) {
+        printf("%s is not a valid key expression\n", args.keyexpr);
+        exit(-1);
     }
 
     printf("Opening session...\n");
@@ -57,7 +53,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Declaring liveliness subscriber on '%s'...\n", expr);
+    printf("Declaring liveliness subscriber on '%s'...\n", args.keyexpr);
     z_owned_closure_sample_t callback = z_closure(data_handler);
     z_owned_subscriber_t sub = zc_liveliness_declare_subscriber(z_loan(s), keyexpr, z_move(callback), NULL);
     if (!z_check(sub)) {
@@ -73,4 +69,40 @@ int main(int argc, char **argv) {
     z_undeclare_subscriber(z_move(sub));
     z_close(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_sub_liveliness [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEY> (optional, string, default='%s'): The key expression matching liveliness tokens to subscribe to\n",
+        DEFAULT_KEYEXPR);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        exit(-1);
+    }
+    return (struct args_t){.keyexpr = keyexpr};
 }

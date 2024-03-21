@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
 #define DEFAULT_PKT_SIZE 8
@@ -11,7 +12,11 @@
 #define PING_TIMEOUT_SEC 1
 
 #define handle_error_en(en, msg) \
-    do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+    do {                         \
+        errno = en;              \
+        perror(msg);             \
+        exit(EXIT_FAILURE);      \
+    } while (0)
 
 z_condvar_t cond;
 z_mutex_t mutex;
@@ -23,27 +28,15 @@ struct args_t {
     unsigned int size;             // -s
     unsigned int number_of_pings;  // -n
     unsigned int warmup_ms;        // -w
-    char* config_path;             // -c
-    uint8_t help_requested;        // -h
 };
-struct args_t parse_args(int argc, char** argv);
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
-    struct args_t args = parse_args(argc, argv);
-    if (args.help_requested) {
-        printf(
-            "\
-		-n (optional, int, default=%d): the number of pings to be attempted\n\
-		-s (optional, int, default=%d): the size of the payload embedded in the ping and repeated by the pong\n\
-		-w (optional, int, default=%d): the warmup time in ms during which pings will be emitted but not measured\n\
-		-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
-		",
-            DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
-        return 1;
-    }
+    z_owned_config_t config = z_config_default();
+    struct args_t args = parse_args(argc, argv, &config);
+
     z_mutex_init(&mutex);
     z_condvar_init(&cond);
-    z_owned_config_t config = args.config_path ? zc_config_from_file(args.config_path) : z_config_default();
     z_owned_session_t session = z_open(z_move(config));
     z_keyexpr_t ping = z_keyexpr_unchecked("test/ping");
     z_keyexpr_t pong = z_keyexpr_unchecked("test/pong");
@@ -90,44 +83,40 @@ int main(int argc, char** argv) {
     z_close(z_move(session));
 }
 
-char* getopt(int argc, char** argv, char option) {
-    for (int i = 0; i < argc; i++) {
-        size_t len = strlen(argv[i]);
-        if (len >= 2 && argv[i][0] == '-' && argv[i][1] == option) {
-            if (len > 2 && argv[i][2] == '=') {
-                return argv[i] + 3;
-            } else if (i + 1 < argc) {
-                return argv[i + 1];
-            }
-        }
-    }
-    return NULL;
+void print_help() {
+    printf(
+        "\
+    Usage: z_ping [OPTIONS]\n\n\
+    Options:\n\
+        -n <SAMPLES> (optional, int, default=%d): The number of pings to be attempted\n\
+        -s <SIZE> (optional, int, default=%d): The size of the payload embedded in the ping and repeated by the pong\n\
+        -w <WARMUP> (optional, int, default=%d): The warmup time in ms during which pings will be emitted but not measured\n",
+        DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
 }
 
-struct args_t parse_args(int argc, char** argv) {
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-h") == 0) {
-            return (struct args_t){.help_requested = 1};
-        }
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
     }
-    char* arg = getopt(argc, argv, 's');
+    char* arg = parse_opt(argc, argv, "s", true);
     unsigned int size = DEFAULT_PKT_SIZE;
     if (arg) {
         size = atoi(arg);
     }
-    arg = getopt(argc, argv, 'n');
+    arg = parse_opt(argc, argv, "n", true);
     unsigned int number_of_pings = DEFAULT_PING_NB;
     if (arg) {
         number_of_pings = atoi(arg);
     }
-    arg = getopt(argc, argv, 'w');
+    arg = parse_opt(argc, argv, "w", true);
     unsigned int warmup_ms = DEFAULT_WARMUP_MS;
     if (arg) {
         warmup_ms = atoi(arg);
     }
-    return (struct args_t){.help_requested = 0,
-                           .size = size,
-                           .number_of_pings = number_of_pings,
-                           .warmup_ms = warmup_ms,
-                           .config_path = getopt(argc, argv, 'c')};
+    return (struct args_t){.size = size, .number_of_pings = number_of_pings, .warmup_ms = warmup_ms};
 }

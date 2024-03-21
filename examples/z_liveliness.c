@@ -13,29 +13,25 @@
 
 #include <stdio.h>
 #include <string.h>
+
+#include "parse_args.h"
 #include "zenoh.h"
 
+#define DEFAULT_KEYEXPR "group1/zenoh-rs"
+
+struct args_t {
+    char* keyexpr;  // -k
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
 int main(int argc, char **argv) {
-    char *expr = "group1/zenoh-rs";
-    if (argc > 1) {
-        expr = argv[1];
-    }
-
-    z_keyexpr_t keyexpr = z_keyexpr(expr);
-    if (!z_check(keyexpr)) {
-        printf("%s is not a valid key expression\n", expr);
-        exit(-1);
-    }
-
     z_owned_config_t config = z_config_default();
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
+    struct args_t args = parse_args(argc, argv, &config);
+
+    z_keyexpr_t keyexpr = z_keyexpr(args.keyexpr);
+    if (!z_check(keyexpr)) {
+        printf("%s is not a valid key expression\n", args.keyexpr);
+        exit(-1);
     }
 
     printf("Opening session...\n");
@@ -45,7 +41,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Declaring liveliness token '%s'...\n", expr);
+    printf("Declaring liveliness token '%s'...\n", args.keyexpr);
     zc_owned_liveliness_token_t token = zc_liveliness_declare_token(z_loan(s), keyexpr, NULL);
     if (!z_check(token)) {
         printf("Unable to create liveliness token!\n");
@@ -64,4 +60,40 @@ int main(int argc, char **argv) {
     
     z_close(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_liveliness [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEY> (optional, string, default='%s'): The key expression the liveliness token\n",
+        DEFAULT_KEYEXPR);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        exit(-1);
+    }
+    return (struct args_t){.keyexpr = keyexpr};
 }
