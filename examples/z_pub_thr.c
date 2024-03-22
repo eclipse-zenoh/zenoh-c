@@ -85,8 +85,10 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     }
     if (!pos_args[0]) {
         printf("<PAYLOAD_SIZE> argument is required\n");
+        free(pos_args);
         exit(-1);
     }
     unsigned int size = atoi(pos_args[0]);
+    free(pos_args);
     return (struct args_t){.size = size};
 }

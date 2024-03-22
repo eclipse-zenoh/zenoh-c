@@ -93,6 +93,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     char** pos_args = parse_pos_args(argc, argv, 1);
     if (!pos_args || pos_args[0]) {
         printf("Unexpected positional arguments\n");
+        free(pos_args);
         exit(-1);
     }
     return (struct args_t){.keyexpr = keyexpr};
