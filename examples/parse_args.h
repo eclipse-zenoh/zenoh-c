@@ -40,7 +40,7 @@
  * pointer will be returned if option is found.
  * @returns NULL if option was not found, else a non-null value depending on if `opt_has_value`.
  */
-char* parse_opt(int argc, char** argv, char* opt, bool opt_has_value) {
+char* parse_opt(const int argc, char** argv, const char* opt, const bool opt_has_value) {
     size_t optlen = strlen(opt);
     for (int i = 1; i < argc; i++) {
         if (argv[i] == NULL) {
@@ -52,7 +52,7 @@ char* parse_opt(int argc, char** argv, char* opt, bool opt_has_value) {
                 if (argv[i][0] == '-' && argv[i][1] == opt[0]) {
                     argv[i] = NULL;
                     if (!opt_has_value) {
-                        return opt;
+                        return (char*)opt;
                     } else if (i + 1 < argc && argv[i + 1]) {
                         char* value = argv[i + 1];
                         argv[i + 1] = NULL;
@@ -67,7 +67,7 @@ char* parse_opt(int argc, char** argv, char* opt, bool opt_has_value) {
                 if (strcmp(argv[i] + 2, opt) == 0) {
                     argv[i] = NULL;
                     if (!opt_has_value) {
-                        return opt;
+                        return (char*)opt;
                     } else if (i + 1 < argc && argv[i + 1]) {
                         char* value = argv[i + 1];
                         argv[i + 1] = NULL;
@@ -89,7 +89,7 @@ char* parse_opt(int argc, char** argv, char* opt, bool opt_has_value) {
  * @param argv
  * @returns NULL if no option was found, else the first option string that was found
  */
-char* check_unknown_opts(int argc, char** argv) {
+char* check_unknown_opts(const int argc, char** argv) {
     for (int i = 1; i < argc; i++) {
         if (argv[i] && argv[i][0] == '-') {
             return argv[i];
@@ -108,7 +108,7 @@ char* check_unknown_opts(int argc, char** argv) {
  * by NULL values if found less positional arguments than `nb_args`
  * @note Returned pointer is dynamically allocated and must be freed
  */
-char** parse_pos_args(int argc, char** argv, size_t nb_args) {
+char** parse_pos_args(const int argc, char** argv, const size_t nb_args) {
     char** pos_argv = (char**)malloc(nb_args * sizeof(char*));
     // Initialize pointers to NULL to detect when example is called with number of args < nb_args
     for (int i = 0; i < nb_args; i++) {
@@ -137,7 +137,8 @@ char** parse_pos_args(int argc, char** argv, size_t nb_args) {
  * @param config: address of an owned zenoh configuration
  * @param config_key: zenoh configuration key under which the parsed values will be inserted
  */
-void parse_zenoh_json_list_config(int argc, char** argv, char* opt, const char* config_key, z_owned_config_t* config) {
+void parse_zenoh_json_list_config(const int argc, char** argv, const char* opt, const char* config_key,
+                                  const z_owned_config_t* config) {
     char buf[256] = "";
     char* value = parse_opt(argc, argv, opt, true);
     while (value) {
@@ -177,7 +178,7 @@ void parse_zenoh_json_list_config(int argc, char** argv, char* opt, const char* 
  * @param argv
  * @param config: address of an owned zenoh configuration
  */
-void parse_zenoh_common_args(int argc, char** argv, z_owned_config_t* config) {
+void parse_zenoh_common_args(const int argc, char** argv, z_owned_config_t* config) {
     // -c: A configuration file.
     char* config_file = parse_opt(argc, argv, "c", true);
     if (config_file) {
