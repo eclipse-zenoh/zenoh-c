@@ -31,7 +31,7 @@
 
 /**
  * Parse an option of format `-f`, `--flag`, `-f <value>` or `--flag <value>` from `argv`. If found, the option and its
- * eventual value are each replaced by an empty string in `argv`
+ * eventual value are each replaced by NULL in `argv`
  * @param argc: argc passed from `main` function
  * @param argv: argv passed from `main` function
  * @param opt: option to parse (without `-` or `--` prefix)
@@ -43,18 +43,20 @@
 char* parse_opt(int argc, char** argv, char* opt, bool opt_has_value) {
     size_t optlen = strlen(opt);
     for (int i = 1; i < argc; i++) {
+        if (argv[i] == NULL) {
+            continue;
+        }
         size_t len = strlen(argv[i]);
         if (len >= 2) {
             if (optlen == 1) {
                 if (argv[i][0] == '-' && argv[i][1] == opt[0]) {
-                    argv[i][0] = '\0';
+                    argv[i] = NULL;
                     if (!opt_has_value) {
                         return opt;
-                    } else if (i + 1 < argc && strlen(argv[i + 1]) > 0) {
-                        char* buf = (char*)malloc(strlen(argv[i + 1]));
-                        strcpy(buf, argv[i + 1]);
-                        argv[i + 1][0] = '\0';
-                        return buf;
+                    } else if (i + 1 < argc && argv[i + 1]) {
+                        char* value = argv[i + 1];
+                        argv[i + 1] = NULL;
+                        return value;
                     } else {
                         printf("Option -%s given without a value\n", opt);
                         exit(-1);
@@ -63,14 +65,13 @@ char* parse_opt(int argc, char** argv, char* opt, bool opt_has_value) {
             } else if (optlen > 1 && len > 3 && argv[i][0] == '-' && argv[i][1] == '-') {
                 // Note: support for '--arg=<value>' syntax can be added here
                 if (strcmp(argv[i] + 2, opt) == 0) {
-                    argv[i][0] = '\0';
+                    argv[i] = NULL;
                     if (!opt_has_value) {
                         return opt;
-                    } else if (i + 1 < argc && strlen(argv[i + 1]) > 0) {
-                        char* buf = (char*)malloc(strlen(argv[i + 1]));
-                        strcpy(buf, argv[i + 1]);
-                        argv[i + 1][0] = '\0';
-                        return buf;
+                    } else if (i + 1 < argc && argv[i + 1]) {
+                        char* value = argv[i + 1];
+                        argv[i + 1] = NULL;
+                        return value;
                     } else {
                         printf("Option --%s given without a value\n", opt);
                         exit(-1);
@@ -90,7 +91,7 @@ char* parse_opt(int argc, char** argv, char* opt, bool opt_has_value) {
  */
 char* check_unknown_opts(int argc, char** argv) {
     for (int i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
+        if (argv[i] && argv[i][0] == '-') {
             return argv[i];
         }
     }
@@ -105,6 +106,7 @@ char* check_unknown_opts(int argc, char** argv) {
  * @param nb_args: number of expected positional arguments
  * @returns NULL if found more positional arguments than `nb_args`. Else an array of found arguments in order, followed
  * by NULL values if found less positional arguments than `nb_args`
+ * @note Returned pointer is dynamically allocated and must be freed
  */
 char** parse_pos_args(int argc, char** argv, size_t nb_args) {
     char** pos_argv = (char**)malloc(nb_args * sizeof(char*));
@@ -114,7 +116,7 @@ char** parse_pos_args(int argc, char** argv, size_t nb_args) {
     }
     size_t pos_argc = 0;
     for (int i = 1; i < argc; i++) {
-        if (strlen(argv[i]) > 0) {
+        if (argv[i]) {
             pos_argc++;
             if (pos_argc > nb_args) {
                 free(pos_argv);
