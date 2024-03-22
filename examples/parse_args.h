@@ -24,8 +24,8 @@
     "\
         -c <CONFIG> (optional, string): The path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
         -m <MODE> (optional, string, default='peer'): JSON-serialized string of the zenoh session mode. [possible values: 'peer', 'client', 'router']\n\
-        -e <CONNECT> (optional, string): JSON-serialized list of locators to connect to. If none are given, endpoints will be discovered through multicast-scouting if it is enabled.\n\
-        -l <LISTEN> (optional, string): JSON-serialized list of locators to listen on. If none are given, the default configuration will be used.\n\
+        -e <CONNECT> (optional, string): endpoint to connect to. Repeat option to pass multiple endpoints. If none are given, endpoints will be discovered through multicast-scouting if it is enabled.\n\
+        -l <LISTEN> (optional, string): locator to listen on. Repeat option to pass multiple locators. If none are given, the default configuration will be used.\n\
         --no-multicast-scouting (optional): By default zenohd replies to multicast scouting messages for being discovered by peers and clients. This option disables this feature.\n\
 "
 
@@ -129,6 +129,48 @@ char** parse_pos_args(int argc, char** argv, size_t nb_args) {
 }
 
 /**
+ * Parse zenoh options that require a JSON-serialized list (-e, -l from common args) and add them to
+ * `config`. Prints error message and exits if fails to insert parsed values
+ * @param argc
+ * @param argv
+ * @param opt: option to parse (without `-` or `--` prefix)
+ * @param config: address of an owned zenoh configuration
+ * @param config_key: zenoh configuration key under which the parsed values will be inserted
+ */
+void parse_zenoh_json_list_config(int argc, char** argv, char* opt, const char* config_key, z_owned_config_t* config) {
+    char buf[256] = "";
+    char* value = parse_opt(argc, argv, opt, true);
+    while (value) {
+        size_t len_format_value = strlen(value) + 4;  // value + quotes + comma + nullbyte
+        char* format_value = (char*)malloc(len_format_value);
+        snprintf(format_value, len_format_value, "'%s',", value);
+        strcat(buf, format_value);
+        free(format_value);
+        value = parse_opt(argc, argv, opt, true);
+    }
+    size_t buflen = strlen(buf);
+    if (buflen > 0) {
+        // remove trailing comma
+        buf[buflen - 1] = '\0';
+        buflen--;
+        // add list delimiters
+        size_t json_list_len = buflen + 3;  // buf + brackets + nullbyte
+        char* json_list = (char*)malloc(json_list_len);
+        snprintf(json_list, json_list_len, "[%s]", buf);
+        // insert in config
+        if (zc_config_insert_json(z_loan(*config), config_key, json_list) < 0) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
+                "JSON-serialized list of strings\n",
+                json_list, config_key, config_key);
+            free(json_list);
+            exit(-1);
+        }
+        free(json_list);
+    }
+}
+
+/**
  * Parse zenoh options that are common to all examples (-c, -m, -e, -l, --no-multicast-scouting) and add them to
  * `config`
  * @param argc
@@ -143,31 +185,24 @@ void parse_zenoh_common_args(int argc, char** argv, z_owned_config_t* config) {
     }
     // -m: The Zenoh session mode [default: peer].
     char* mode = parse_opt(argc, argv, "m", true);
-    if (mode && zc_config_insert_json(z_loan(*config), Z_CONFIG_MODE_KEY, mode) < 0) {
-        printf(
-            "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized string. Value must be one of: 'client', 'peer' or 'router'\n",
-            mode, Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_KEY);
-        exit(-1);
+    if (mode) {
+        size_t buflen = strlen(mode) + 3;  // mode + quotes + nullbyte
+        char* buf = (char*)malloc(buflen);
+        snprintf(buf, buflen, "'%s'", mode);
+        if (zc_config_insert_json(z_loan(*config), Z_CONFIG_MODE_KEY, buf) < 0) {
+            printf(
+                "Couldn't insert value `%s` in configuration at `%s`. Value must be one of: 'client', 'peer' or "
+                "'router'\n",
+                mode, Z_CONFIG_MODE_KEY);
+            free(buf);
+            exit(-1);
+        }
+        free(buf);
     }
-    // -e: Endpoints to connect to.
-    char* connect = parse_opt(argc, argv, "e", true);
-    if (connect && zc_config_insert_json(z_loan(*config), Z_CONFIG_CONNECT_KEY, connect) < 0) {
-        printf(
-            "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized list of strings\n",
-            connect, Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-        exit(-1);
-    }
-    // -l: Endpoints to listen on.
-    char* listen = parse_opt(argc, argv, "l", true);
-    if (listen && zc_config_insert_json(z_loan(*config), Z_CONFIG_LISTEN_KEY, listen) < 0) {
-        printf(
-            "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized list of strings\n",
-            listen, Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
-        exit(-1);
-    }
+    // -e: Endpoint to connect to. Can be repeated
+    parse_zenoh_json_list_config(argc, argv, "e", Z_CONFIG_CONNECT_KEY, config);
+    // -l: Endpoint to listen on. Can be repeated
+    parse_zenoh_json_list_config(argc, argv, "l", Z_CONFIG_LISTEN_KEY, config);
     // --no-multicast-scrouting: Disable the multicast-based scouting mechanism.
     char* no_multicast_scouting = parse_opt(argc, argv, "no-multicast-scouting", false);
     if (no_multicast_scouting && zc_config_insert_json(z_loan(*config), Z_CONFIG_MULTICAST_SCOUTING_KEY, "false") < 0) {
