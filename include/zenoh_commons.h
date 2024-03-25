@@ -345,13 +345,8 @@ typedef struct z_owned_closure_query_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
-#if defined(TARGET_ARCH_X86_64)
+#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[28];
-} z_owned_reply_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_owned_reply_t {
   uint64_t _0[30];
 } z_owned_reply_t;
 #endif
