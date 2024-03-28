@@ -15,6 +15,9 @@
 #![allow(non_camel_case_types)]
 
 mod collections;
+use std::cmp::min;
+use std::slice;
+
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;
@@ -43,6 +46,7 @@ pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
 mod liveliness;
+use libc::c_void;
 pub use liveliness::*;
 mod publication_cache;
 pub use publication_cache::*;
@@ -173,4 +177,27 @@ fn test_no_default_features() {
             // " zenoh/default",
         )
     );
+}
+
+trait CopyableToCArray {
+    fn copy_to_c_array(&self, buf: *mut c_void, len: usize) -> usize;
+}
+
+impl CopyableToCArray for &[u8] {
+    fn copy_to_c_array(&self, buf: *mut c_void, len: usize) -> usize {
+        if buf.is_null() || (len == 0 && !self.is_empty()) {
+            return 0;
+        }
+
+        let max_len = min(len, self.len());
+        let b = unsafe { slice::from_raw_parts_mut(buf as *mut u8, max_len) };
+        b[0..max_len].copy_from_slice(&self[0..max_len]);
+        max_len
+    }
+}
+
+impl CopyableToCArray for &str {
+    fn copy_to_c_array(&self, buf: *mut c_void, len: usize) -> usize {
+        self.as_bytes().copy_to_c_array(buf, len)
+    }
 }

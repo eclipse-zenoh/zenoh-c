@@ -41,6 +41,22 @@ void canonize() {
     printf("'%s', err = %d\n", keyexpr, err);
     assert(err == 0);
     assert(strcmp(keyexpr, "a/**/c") == 0);
+
+    strcpy(keyexpr, "a/**/**/c");
+    z_keyexpr_t key_expr_canonized = z_keyexpr_autocanonize(keyexpr);
+    assert(z_keyexpr_check(keyexpr) == true);
+    assert(strcmp(keyexpr, "a/**/c") == 0);
+    assert(z_keyexpr_as_bytes(key_expr_canonized).len == len_new);
+    assert(strncmp(z_keyexpr_as_bytes(key_expr_canonized).start, "a/**/c", len_new) == 0);
+
+    strcpy(keyexpr, "a/**/**/c");
+    len_new = len_old;
+    key_expr_canonized = zc_keyexpr_from_slice_autocanonize(keyexpr, &len_new);
+    assert(z_keyexpr_check(keyexpr) == true);
+    assert(len_new == len_old - 3);
+    assert(strncmp(keyexpr, "a/**/c", len_new) == 0);
+    assert(z_keyexpr_as_bytes(key_expr_canonized).len == len_new);
+    assert(strncmp(z_keyexpr_as_bytes(key_expr_canonized).start, "a/**/c", len_new) == 0);
 }
 
 void includes() {
@@ -73,9 +89,23 @@ void undeclare() {
     assert(!z_keyexpr_check(&ke));
 }
 
+void relation_to() {
+    z_keyexpr_t nul = z_keyexpr(NULL);
+    z_keyexpr_t foobar = z_keyexpr("foo/bar");
+    z_keyexpr_t foostar = z_keyexpr("foo/*");
+    z_keyexpr_t barstar = z_keyexpr("bar/*");
+    assert(z_keyexpr_relation_to(foostar, foobar) == Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES);
+    assert(z_keyexpr_relation_to(foobar, foostar) == Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS);
+    assert(z_keyexpr_relation_to(foostar, foostar) == Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS);
+    assert(z_keyexpr_relation_to(barstar, foobar) == Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT);
+    assert(z_keyexpr_relation_to(nul, foobar) == Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT);
+    assert(z_keyexpr_relation_to(foobar, nul) == Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT);
+}
+
 int main(int argc, char **argv) {
     canonize();
     includes();
     intersects();
     undeclare();
+    relation_to();
 }

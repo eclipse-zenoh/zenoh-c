@@ -122,7 +122,7 @@ int run_subscriber() {
     }
 
     SEM_POST(sem_sub);
-    sleep(10);
+    z_sleep_s(10);
 
     z_drop(z_move(sub));
     z_close(z_move(s));

@@ -13,11 +13,11 @@
 //
 use crate::{
     z_closure_hello_call, z_config_check, z_config_default, z_config_null, z_config_t, z_id_t,
-    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger,
+    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, CopyableToCArray,
 };
 use async_std::task;
 use libc::{c_char, c_uint, c_ulong, size_t};
-use std::ffi::CString;
+use std::{ffi::CString, os::raw::c_void};
 use zenoh::scouting::Hello;
 use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
@@ -267,4 +267,31 @@ pub extern "C" fn z_scout(
         std::mem::drop(scout);
     });
     0
+}
+
+/// Converts the kind of zenoh entity into a string.
+///
+/// Parameters:
+///     whatami: A whatami bitmask of zenoh entity kind.
+///     buf: Buffer to write a null-terminated string to.
+///     len: Maximum number of bytes that can be written to the `buf`.
+///
+/// Returns 0 if successful, negative values if whatami contains an invalid bitmask or `buf` is null,
+/// or number of remaining bytes, if the null-terminated string size exceeds `len`.
+#[no_mangle]
+pub extern "C" fn z_whatami_to_str(whatami: u8, buf: *mut c_char, len: usize) -> i8 {
+    if buf.is_null() || len == 0 {
+        return -1;
+    }
+    match WhatAmIMatcher::try_from(whatami) {
+        Err(_) => -1,
+        Ok(w) => {
+            let s = w.to_str();
+            let res = s.copy_to_c_array(buf as *mut c_void, len - 1);
+            unsafe {
+                *((buf as usize + res) as *mut c_char) = 0;
+            }
+            (s.len() - res) as i8
+        }
+    }
 }

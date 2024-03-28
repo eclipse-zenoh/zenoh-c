@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 #include "zenoh.h"
 
@@ -58,35 +57,27 @@ int main(int argc, char** argv) {
     z_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
-        struct timespec wmup_start, wmup_stop, wmup_timeout;
-        clock_gettime(CLOCK_MONOTONIC, &wmup_start);
+        z_clock_t warmup_start = z_clock_now();
+
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            clock_gettime(CLOCK_REALTIME, &wmup_timeout);
-            wmup_timeout.tv_sec += PING_TIMEOUT_SEC;
             z_publisher_put(z_loan(pub), data, args.size, NULL);
             int s = z_condvar_wait(&cond, &mutex);
             if (s != 0) {
                 handle_error_en(s, "z_condvar_wait");
             }
-            clock_gettime(CLOCK_MONOTONIC, &wmup_stop);
-            elapsed_us =
-                (1000000 * (wmup_stop.tv_sec - wmup_start.tv_sec) + (wmup_stop.tv_nsec - wmup_start.tv_nsec) / 1000);
+            elapsed_us = z_clock_elapsed_us(&warmup_start);
         }
     }
-    struct timespec t_start, t_stop, t_timeout;
     unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
-        clock_gettime(CLOCK_REALTIME, &t_timeout);
-        t_timeout.tv_sec += PING_TIMEOUT_SEC;
-        clock_gettime(CLOCK_MONOTONIC, &t_start);
+        z_clock_t measure_start = z_clock_now();
         z_publisher_put(z_loan(pub), data, args.size, NULL);
         int s = z_condvar_wait(&cond, &mutex);
         if (s != 0) {
             handle_error_en(s, "z_condvar_wait");
         }
-        clock_gettime(CLOCK_MONOTONIC, &t_stop);
-        results[i] = (1000000 * (t_stop.tv_sec - t_start.tv_sec) + (t_stop.tv_nsec - t_start.tv_nsec) / 1000);
+        results[i] = z_clock_elapsed_us(&measure_start);
     }
     for (int i = 0; i < args.number_of_pings; i++) {
         printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);

@@ -117,6 +117,58 @@ pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_by
     }
 }
 
+fn _z_attachment_len(this: z_attachment_t, check_if_non_empty: bool) -> usize {
+    match this.iteration_driver.as_ref() {
+        None => 0,
+        Some(iteration_driver) => {
+            struct count_context_t {
+                count: usize,
+                stop_if_not_empty: bool,
+            }
+
+            extern "C" fn attachment_count_iterator(
+                _key: z_bytes_t,
+                _value: z_bytes_t,
+                context: *mut c_void,
+            ) -> i8 {
+                unsafe {
+                    let context = &mut *(context as *mut count_context_t);
+                    context.count += 1;
+                    if context.stop_if_not_empty {
+                        1
+                    } else {
+                        0
+                    }
+                }
+            }
+            let mut count_context = count_context_t {
+                count: 0,
+                stop_if_not_empty: check_if_non_empty,
+            };
+            (iteration_driver)(
+                this.data,
+                attachment_count_iterator,
+                &mut count_context as *mut _ as *mut c_void,
+            );
+            count_context.count
+        }
+    }
+}
+
+/// Returns number of key-value pairs for `z_attachment_t`.
+///
+/// Does so by iterating over all existing key-value pairs.
+#[no_mangle]
+pub extern "C" fn z_attachment_len(this: z_attachment_t) -> usize {
+    _z_attachment_len(this, false)
+}
+
+/// Returns true if `z_attachment_t` contains no key-value pairs, false otherwise.
+#[no_mangle]
+pub extern "C" fn z_attachment_is_empty(this: z_attachment_t) -> bool {
+    _z_attachment_len(this, true) == 0
+}
+
 /// A map of maybe-owned vector of bytes to owned vector of bytes.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
@@ -162,6 +214,20 @@ pub extern "C" fn z_bytes_map_check(this: &z_owned_bytes_map_t) -> bool {
 pub extern "C" fn z_bytes_map_drop(this: &mut z_owned_bytes_map_t) {
     let this = unsafe { &mut *this.get() };
     this.take();
+}
+
+/// Returns number of key-value pairs in the map.
+#[no_mangle]
+pub extern "C" fn z_bytes_map_len(this: &mut z_owned_bytes_map_t) -> usize {
+    let this = unsafe { &*this.get() };
+    this.as_ref().map(|m| m.len()).unwrap_or(0)
+}
+
+/// Returns true if the map is empty, false otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_map_is_empty(this: &mut z_owned_bytes_map_t) -> bool {
+    let this = unsafe { &*this.get() };
+    this.as_ref().map(|m| m.is_empty()).unwrap_or(true)
 }
 
 /// Returns the value associated with `key`, returning a gravestone value if:

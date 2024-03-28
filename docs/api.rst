@@ -38,6 +38,8 @@ Bytes map
 .. autocfunction:: zenoh_commons.h::z_bytes_map_null
 .. autocfunction:: zenoh_commons.h::z_bytes_map_drop
 .. autocfunction:: zenoh_commons.h::z_bytes_map_get
+.. autocfunction:: zenoh_commons.h::z_bytes_map_len
+.. autocfunction:: zenoh_commons.h::z_bytes_map_is_empty
 .. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_alias
 .. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_copy
 .. autocfunction:: zenoh_commons.h::z_bytes_map_iter
@@ -106,6 +108,7 @@ Key expression
 .. autocstruct:: zenoh_commons.h::z_owned_keyexpr_t
 
 .. autocfunction:: zenoh_commons.h::z_keyexpr
+.. autocfunction:: zenoh_commons.h::z_keyexpr_autocanonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_unchecked
 .. autocfunction:: zenoh_commons.h::z_keyexpr_to_string
 .. autocfunction:: zenoh_commons.h::z_keyexpr_as_bytes
@@ -120,6 +123,7 @@ Key expression
 .. autocfunction:: zenoh_commons.h::z_keyexpr_intersects
 
 .. autocfunction:: zenoh_commons.h::z_keyexpr_new
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new_autocanonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_loan
 .. autocfunction:: zenoh_commons.h::z_keyexpr_check
 .. autocfunction:: zenoh_commons.h::z_keyexpr_drop
@@ -157,6 +161,8 @@ Attachment
 
 .. autocfunction:: zenoh_commons.h::z_attachment_null
 .. autocfunction:: zenoh_commons.h::z_attachment_get
+.. autocfunction:: zenoh_commons.h::z_attachment_len
+.. autocfunction:: zenoh_commons.h::z_attachment_is_empty
 .. autocfunction:: zenoh_commons.h::z_attachment_check
 .. autocfunction:: zenoh_commons.h::z_attachment_iterate
 
@@ -299,7 +305,7 @@ Types
 
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_token_t
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declaration_options_t
-.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_get_options_t
+.. autocstruct:: zenoh_commons.h::zc_liveliness_get_options_t
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declare_subscriber_options_t
 
 Functions

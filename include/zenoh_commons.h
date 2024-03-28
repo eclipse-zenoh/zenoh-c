@@ -94,6 +94,20 @@ typedef enum z_encoding_prefix_t {
   Z_ENCODING_PREFIX_IMAGE_GIF = 20,
 } z_encoding_prefix_t;
 /**
+ * A :c:type:`z_keyexpr_intersection_level_t`.
+ *
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES**
+ *     - **Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS**
+ */
+typedef enum z_keyexpr_intersection_level_t {
+  Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT = 0,
+  Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS = 1,
+  Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES = 2,
+  Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
+} z_keyexpr_intersection_level_t;
+/**
  * The priority of zenoh messages.
  *
  *     - **REAL_TIME**
@@ -219,6 +233,14 @@ typedef struct z_owned_bytes_map_t {
   size_t _1[4];
 } z_owned_bytes_map_t;
 /**
+ * Clock
+ * Uses monotonic clock
+ */
+typedef struct z_clock_t {
+  uint64_t t;
+  const void *t_base;
+} z_clock_t;
+/**
  * Represents a Zenoh ID.
  *
  * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -343,13 +365,8 @@ typedef struct z_owned_closure_query_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
-#if defined(TARGET_ARCH_X86_64)
+#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[28];
-} z_owned_reply_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_owned_reply_t {
   uint64_t _0[30];
 } z_owned_reply_t;
 #endif
@@ -826,6 +843,13 @@ typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
 /**
+ * Time
+ * Uses system clock
+ */
+typedef struct z_time_t {
+  uint64_t t;
+} z_time_t;
+/**
  * The options for `zc_liveliness_declare_token`
  */
 typedef struct zc_owned_liveliness_declaration_options_t {
@@ -850,9 +874,9 @@ typedef struct zc_owned_liveliness_token_t {
 /**
  * The options for :c:func:`zc_liveliness_declare_subscriber`
  */
-typedef struct zc_owned_liveliness_get_options_t {
+typedef struct zc_liveliness_get_options_t {
   uint32_t timeout_ms;
-} zc_owned_liveliness_get_options_t;
+} zc_liveliness_get_options_t;
 /**
  * An owned payload, backed by a reference counted owner.
  *
@@ -1026,6 +1050,10 @@ ZENOHC_API bool z_attachment_check(const struct z_attachment_t *this_);
  */
 ZENOHC_API struct z_bytes_t z_attachment_get(struct z_attachment_t this_, struct z_bytes_t key);
 /**
+ * Returns true if `z_attachment_t` contains no key-value pairs, false otherwise.
+ */
+ZENOHC_API bool z_attachment_is_empty(struct z_attachment_t this_);
+/**
  * Iterate over `this`'s key-value pairs, breaking if `body` returns a non-zero
  * value for a key-value pair, and returning the latest return value.
  *
@@ -1037,6 +1065,12 @@ ZENOHC_API
 int8_t z_attachment_iterate(struct z_attachment_t this_,
                             z_attachment_iter_body_t body,
                             void *context);
+/**
+ * Returns number of key-value pairs for `z_attachment_t`.
+ *
+ * Does so by iterating over all existing key-value pairs.
+ */
+ZENOHC_API size_t z_attachment_len(struct z_attachment_t this_);
 /**
  * Returns the gravestone value for `z_attachment_t`.
  */
@@ -1155,6 +1189,10 @@ void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
                                 struct z_bytes_t key,
                                 struct z_bytes_t value);
 /**
+ * Returns true if the map is empty, false otherwise.
+ */
+ZENOHC_API bool z_bytes_map_is_empty(struct z_owned_bytes_map_t *this_);
+/**
  * Iterates over the key-value pairs in the map.
  *
  * `body` will be called once per pair, with `ctx` as its last argument.
@@ -1170,6 +1208,10 @@ ZENOHC_API
 int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
                         z_attachment_iter_body_t body,
                         void *ctx);
+/**
+ * Returns number of key-value pairs in the map.
+ */
+ZENOHC_API size_t z_bytes_map_len(struct z_owned_bytes_map_t *this_);
 /**
  * Constructs a new map.
  */
@@ -1193,6 +1235,10 @@ ZENOHC_API struct z_bytes_t z_bytes_null(void);
  * Constructs a `len` bytes long view starting at `start`.
  */
 ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
+ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);
+ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
+ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
+ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
  * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
  *
@@ -1595,6 +1641,14 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr(const char *name);
  */
 ZENOHC_API struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
 /**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string.
+ * It is a loaned key expression that aliases `name`.
+ * The string is canonized in-place before being passed to keyexpr.
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ */
+ZENOHC_API
+struct z_keyexpr_t z_keyexpr_autocanonize(char *name);
+/**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
  * Returns ``0`` upon success, negative values upon failure.
@@ -1683,9 +1737,22 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *key
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
 /**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
+ */
+ZENOHC_API
+struct z_owned_keyexpr_t z_keyexpr_new_autocanonize(const char *name);
+/**
  * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
  */
 ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_null(void);
+/**
+ * Returns the relation between `left` and `right` from `left`'s point of view.
+ *
+ * Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
+ */
+ZENOHC_API
+enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(struct z_keyexpr_t left,
+                                                          struct z_keyexpr_t right);
 /**
  * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
  * The user is responsible of droping the returned string using `z_drop`
@@ -1971,6 +2038,11 @@ ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
 ZENOHC_API struct z_queryable_options_t z_queryable_options_default(void);
+ZENOHC_API void z_random_fill(void *buf, size_t len);
+ZENOHC_API uint16_t z_random_u16(void);
+ZENOHC_API uint32_t z_random_u32(void);
+ZENOHC_API uint64_t z_random_u64(void);
+ZENOHC_API uint8_t z_random_u8(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -2108,6 +2180,9 @@ struct z_session_t z_session_loan(const struct z_owned_session_t *s);
  * Constructs a null safe-to-drop value of 'z_owned_session_t' type
  */
 ZENOHC_API struct z_owned_session_t z_session_null(void);
+ZENOHC_API int8_t z_sleep_ms(size_t time);
+ZENOHC_API int8_t z_sleep_s(size_t time);
+ZENOHC_API int8_t z_sleep_us(size_t time);
 /**
  * Returns ``true`` if `strs` is valid.
  */
@@ -2170,6 +2245,11 @@ int8_t z_task_init(struct z_task_t *task,
                    void (*fun)(void *arg),
                    void *arg);
 ZENOHC_API int8_t z_task_join(struct z_task_t *task);
+ZENOHC_API uint64_t z_time_elapsed_ms(const struct z_time_t *time);
+ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
+ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
+ZENOHC_API struct z_time_t z_time_now(void);
+ZENOHC_API const char *z_time_now_as_str(const char *buf, size_t len);
 /**
  * Returns ``true`` if `ts` is a valid timestamp
  */
@@ -2200,6 +2280,18 @@ ZENOHC_API int8_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
  */
 ZENOHC_API
 int8_t z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
+/**
+ * Converts the kind of zenoh entity into a string.
+ *
+ * Parameters:
+ *     whatami: A whatami bitmask of zenoh entity kind.
+ *     buf: Buffer to write a null-terminated string to.
+ *     len: Maximum number of bytes that can be written to the `buf`.
+ *
+ * Returns 0 if successful, negative values if whatami contains an invalid bitmask or `buf` is null,
+ * or number of remaining bytes, if the null-terminated string size exceeds `len`.
+ */
+ZENOHC_API int8_t z_whatami_to_str(uint8_t whatami, char *buf, size_t len);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  */
@@ -2245,6 +2337,15 @@ ZENOHC_API void zc_init_logger(void);
  * It is a loaned key expression that aliases `name`.
  */
 ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, size_t len);
+/**
+ * Constructs a :c:type:`z_keyexpr_t` departing from a string.
+ * It is a loaned key expression that aliases `name`.
+ * The string is canonized in-place before being passed to keyexpr.
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ */
+ZENOHC_API
+struct z_keyexpr_t zc_keyexpr_from_slice_autocanonize(char *name,
+                                                      size_t *len);
 /**
  * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
  * - `name` MUST be valid UTF8.
@@ -2317,24 +2418,23 @@ ZENOHC_API
 int8_t zc_liveliness_get(struct z_session_t session,
                          struct z_keyexpr_t key,
                          struct z_owned_closure_reply_t *callback,
-                         const struct zc_owned_liveliness_get_options_t *options);
+                         const struct zc_liveliness_get_options_t *options);
 /**
  * Returns `true` if the options are valid.
  */
-ZENOHC_API
-bool zc_liveliness_get_options_check(const struct zc_owned_liveliness_get_options_t *_opts);
+ZENOHC_API bool zc_liveliness_get_options_check(const struct zc_liveliness_get_options_t *_opts);
 /**
- * The gravestone value for `zc_owned_liveliness_get_options_t`
+ * The gravestone value for `zc_liveliness_get_options_t`
  */
-ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_default(void);
+ZENOHC_API struct zc_liveliness_get_options_t zc_liveliness_get_options_default(void);
 /**
  * Destroys the options.
  */
-ZENOHC_API void zc_liveliness_get_options_drop(struct zc_owned_liveliness_get_options_t *opts);
+ZENOHC_API void zc_liveliness_get_options_drop(struct zc_liveliness_get_options_t *opts);
 /**
- * The gravestone value for `zc_owned_liveliness_get_options_t`
+ * The gravestone value for `zc_liveliness_get_options_t`
  */
-ZENOHC_API struct zc_owned_liveliness_get_options_t zc_liveliness_get_options_null(void);
+ZENOHC_API struct zc_liveliness_get_options_t zc_liveliness_get_options_null(void);
 /**
  * Returns `true` if the options are valid.
  */

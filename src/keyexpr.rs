@@ -24,6 +24,7 @@ use crate::z_str_null;
 use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
+use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
@@ -96,6 +97,32 @@ pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t
                 z_owned_keyexpr_t::null()
             }
         },
+        Err(e) => {
+            log::error!("{}", e);
+            z_owned_keyexpr_t::null()
+        }
+    }
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_new_autocanonize(name: *const c_char) -> z_owned_keyexpr_t {
+    if name.is_null() {
+        return z_owned_keyexpr_t::null();
+    }
+    let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
+    match std::str::from_utf8(name) {
+        Ok(name) => {
+            let name_owned = name.to_owned();
+            match KeyExpr::autocanonize(name_owned) {
+                Ok(v) => v.into_owned().into(),
+                Err(e) => {
+                    log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
+                    z_owned_keyexpr_t::null()
+                }
+            }
+        }
         Err(e) => {
             log::error!("{}", e);
             z_owned_keyexpr_t::null()
@@ -295,6 +322,22 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice(name: *const c_char, len: usize) 
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string.
 /// It is a loaned key expression that aliases `name`.
+/// The string is canonized in-place before being passed to keyexpr.
+/// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_keyexpr_from_slice_autocanonize(
+    name: *mut c_char,
+    len: &mut usize,
+) -> z_keyexpr_t {
+    if z_keyexpr_canonize(name, len) < 0 {
+        return z_keyexpr_t::null();
+    }
+    zc_keyexpr_from_slice(name, *len)
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string.
+/// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
@@ -302,6 +345,20 @@ pub unsafe extern "C" fn z_keyexpr(name: *const c_char) -> z_keyexpr_t {
         z_keyexpr_t::null()
     } else {
         zc_keyexpr_from_slice(name, libc::strlen(name))
+    }
+}
+
+/// Constructs a :c:type:`z_keyexpr_t` departing from a string.
+/// It is a loaned key expression that aliases `name`.
+/// The string is canonized in-place before being passed to keyexpr.
+/// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_autocanonize(name: *mut c_char) -> z_keyexpr_t {
+    if name.is_null() || z_keyexpr_canonize_null_terminated(name) < 0 {
+        z_keyexpr_t::null()
+    } else {
+        z_keyexpr(name)
     }
 }
 
@@ -550,5 +607,45 @@ pub extern "C" fn z_keyexpr_join(left: z_keyexpr_t, right: z_keyexpr_t) -> z_own
             log::error!("{}", e);
             z_owned_keyexpr_t::null()
         }
+    }
+}
+
+/// A :c:type:`z_keyexpr_intersection_level_t`.
+///
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES**
+///     - **Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS**
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(C)]
+pub enum z_keyexpr_intersection_level_t {
+    DISJOINT = 0,
+    INTERSECTS = 1,
+    INCLUDES = 2,
+    EQUALS = 3,
+}
+
+impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
+    fn from(val: SetIntersectionLevel) -> Self {
+        match val {
+            SetIntersectionLevel::Disjoint => z_keyexpr_intersection_level_t::DISJOINT,
+            SetIntersectionLevel::Intersects => z_keyexpr_intersection_level_t::INTERSECTS,
+            SetIntersectionLevel::Includes => z_keyexpr_intersection_level_t::INCLUDES,
+            SetIntersectionLevel::Equals => z_keyexpr_intersection_level_t::EQUALS,
+        }
+    }
+}
+
+#[no_mangle]
+/// Returns the relation between `left` and `right` from `left`'s point of view.
+///
+/// Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
+pub extern "C" fn z_keyexpr_relation_to(
+    left: z_keyexpr_t,
+    right: z_keyexpr_t,
+) -> z_keyexpr_intersection_level_t {
+    match (&*left, &*right) {
+        (Some(l), Some(r)) => l.relation_to(r).into(),
+        _ => z_keyexpr_intersection_level_t::DISJOINT,
     }
 }
