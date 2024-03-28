@@ -130,5 +130,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         free(pos_args);
         exit(-1);
     }
+    free(pos_args);
     return (struct args_t){.size = size, .number_of_pings = number_of_pings, .warmup_ms = warmup_ms};
 }

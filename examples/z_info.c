@@ -81,4 +81,5 @@ void parse_args(int argc, char** argv, z_owned_config_t* config) {
         free(pos_args);
         exit(-1);
     }
+    free(pos_args);
 }

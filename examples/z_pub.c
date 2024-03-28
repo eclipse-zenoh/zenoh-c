@@ -121,5 +121,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         free(pos_args);
         exit(-1);
     }
+    free(pos_args);
     return (struct args_t){.keyexpr = keyexpr, .value = value, .add_matching_listener = add_matching_listener};
 }
