@@ -47,35 +47,36 @@ char* parse_opt(const int argc, char** argv, const char* opt, const bool opt_has
             continue;
         }
         size_t len = strlen(argv[i]);
-        if (len >= 2) {
-            if (optlen == 1) {
-                if (argv[i][0] == '-' && argv[i][1] == opt[0]) {
-                    argv[i] = NULL;
-                    if (!opt_has_value) {
-                        return (char*)opt;
-                    } else if (i + 1 < argc && argv[i + 1]) {
-                        char* value = argv[i + 1];
-                        argv[i + 1] = NULL;
-                        return value;
-                    } else {
-                        printf("Option -%s given without a value\n", opt);
-                        exit(-1);
-                    }
+        if (len < 2) {
+            continue;
+        }
+        if (optlen == 1) {
+            if (argv[i][0] == '-' && argv[i][1] == opt[0]) {
+                argv[i] = NULL;
+                if (!opt_has_value) {
+                    return (char*)opt;
+                } else if (i + 1 < argc && argv[i + 1]) {
+                    char* value = argv[i + 1];
+                    argv[i + 1] = NULL;
+                    return value;
+                } else {
+                    printf("Option -%s given without a value\n", opt);
+                    exit(-1);
                 }
-            } else if (optlen > 1 && len > 3 && argv[i][0] == '-' && argv[i][1] == '-') {
-                // Note: support for '--arg=<value>' syntax can be added here
-                if (strcmp(argv[i] + 2, opt) == 0) {
-                    argv[i] = NULL;
-                    if (!opt_has_value) {
-                        return (char*)opt;
-                    } else if (i + 1 < argc && argv[i + 1]) {
-                        char* value = argv[i + 1];
-                        argv[i + 1] = NULL;
-                        return value;
-                    } else {
-                        printf("Option --%s given without a value\n", opt);
-                        exit(-1);
-                    }
+            }
+        } else if (optlen > 1 && len > 3 && argv[i][0] == '-' && argv[i][1] == '-') {
+            // Note: support for '--arg=<value>' syntax can be added here
+            if (strcmp(argv[i] + 2, opt) == 0) {
+                argv[i] = NULL;
+                if (!opt_has_value) {
+                    return (char*)opt;
+                } else if (i + 1 < argc && argv[i + 1]) {
+                    char* value = argv[i + 1];
+                    argv[i + 1] = NULL;
+                    return value;
+                } else {
+                    printf("Option --%s given without a value\n", opt);
+                    exit(-1);
                 }
             }
         }
@@ -109,11 +110,7 @@ char* check_unknown_opts(const int argc, char** argv) {
  * @note Returned pointer is dynamically allocated and must be freed
  */
 char** parse_pos_args(const int argc, char** argv, const size_t nb_args) {
-    char** pos_argv = (char**)malloc(nb_args * sizeof(char*));
-    // Initialize pointers to NULL to detect when example is called with number of args < nb_args
-    for (int i = 0; i < nb_args; i++) {
-        pos_argv[i] = NULL;
-    }
+    char** pos_argv = (char**)calloc(nb_args, sizeof(char*));
     size_t pos_argc = 0;
     for (int i = 1; i < argc; i++) {
         if (argv[i]) {
@@ -139,14 +136,14 @@ char** parse_pos_args(const int argc, char** argv, const size_t nb_args) {
  */
 void parse_zenoh_json_list_config(const int argc, char** argv, const char* opt, const char* config_key,
                                   const z_owned_config_t* config) {
-    char buf[256] = "";
+    char* buf = (char*)calloc(1, sizeof(char));
     char* value = parse_opt(argc, argv, opt, true);
     while (value) {
-        size_t len_format_value = strlen(value) + 4;  // value + quotes + comma + nullbyte
-        char* format_value = (char*)malloc(len_format_value);
-        snprintf(format_value, len_format_value, "'%s',", value);
-        strcat(buf, format_value);
-        free(format_value);
+        size_t len_newbuf = strlen(buf) + strlen(value) + 4; // value + quotes + comma + nullbyte
+        char* newbuf = (char*)malloc(len_newbuf);
+        snprintf(newbuf, len_newbuf, "%s'%s',", buf, value);
+        free(buf);
+        buf = newbuf;
         value = parse_opt(argc, argv, opt, true);
     }
     size_t buflen = strlen(buf);
@@ -158,6 +155,7 @@ void parse_zenoh_json_list_config(const int argc, char** argv, const char* opt, 
         size_t json_list_len = buflen + 3;  // buf + brackets + nullbyte
         char* json_list = (char*)malloc(json_list_len);
         snprintf(json_list, json_list_len, "[%s]", buf);
+        free(buf);
         // insert in config
         if (zc_config_insert_json(z_loan(*config), config_key, json_list) < 0) {
             printf(
