@@ -17,8 +17,7 @@ use crate::attachment::{
 };
 use crate::{
     impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, GuardedTransmute,
-    LOG_INVALID_SESSION,
+    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, LOG_INVALID_SESSION,
 };
 use libc::c_void;
 use std::ops::{Deref, DerefMut};
@@ -51,22 +50,6 @@ pub struct z_owned_queryable_t([u64; 4]);
 pub struct z_owned_queryable_t([u32; 4]);
 
 impl_guarded_transmute!(Queryable, z_owned_queryable_t);
-
-impl From<Queryable> for z_owned_queryable_t {
-    fn from(val: Queryable) -> Self {
-        val.transmute()
-    }
-}
-impl AsRef<Queryable> for z_owned_queryable_t {
-    fn as_ref(&self) -> &Queryable {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl AsMut<Queryable> for z_owned_queryable_t {
-    fn as_mut(&mut self) -> &mut Queryable {
-        unsafe { std::mem::transmute(self) }
-    }
-}
 
 impl z_owned_queryable_t {
     pub fn null() -> Self {
@@ -263,7 +246,7 @@ pub extern "C" fn z_declare_queryable(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
-    if let Some(qable) = qable.as_mut().take() {
+    if let Some(qable) = qable.take() {
         if let Err(e) = qable.undeclare().res_sync() {
             log::error!("{}", e);
             return e.errno().get();

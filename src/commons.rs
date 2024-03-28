@@ -198,20 +198,6 @@ pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
 pub struct z_qos_t(u8);
 
 impl_guarded_transmute!(QoS, z_qos_t);
-impl_guarded_transmute!(z_qos_t, QoS);
-
-impl From<QoS> for z_qos_t {
-    fn from(qos: QoS) -> Self {
-        qos.transmute()
-    }
-}
-
-impl From<z_qos_t> for QoS {
-    fn from(qos: z_qos_t) -> QoS {
-        qos.transmute()
-    }
-}
-
 /// Returns message priority.
 #[no_mangle]
 pub extern "C" fn z_qos_get_priority(qos: z_qos_t) -> z_priority_t {
