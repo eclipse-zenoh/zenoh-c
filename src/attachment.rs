@@ -176,7 +176,7 @@ pub struct z_owned_bytes_map_t {
     _1: [usize; 4],
 }
 
-impl_guarded_transmute!(
+impl_guarded_transmute!(noderefs
     Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>,
     z_owned_bytes_map_t
 );

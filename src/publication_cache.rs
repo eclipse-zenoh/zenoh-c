@@ -19,8 +19,7 @@ use zenoh_util::core::zresult::ErrNo;
 use zenoh_util::core::SyncResolve;
 
 use crate::{
-    impl_guarded_transmute, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t,
-    GuardedTransmute, UninitializedKeyExprError,
+    impl_guarded_transmute, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t, UninitializedKeyExprError,
 };
 
 /// Options passed to the :c:func:`ze_declare_publication_cache` function.
@@ -69,24 +68,6 @@ type PublicationCache = Option<Box<zenoh_ext::PublicationCache<'static>>>;
 pub struct ze_owned_publication_cache_t([usize; 1]);
 
 impl_guarded_transmute!(PublicationCache, ze_owned_publication_cache_t);
-
-impl From<PublicationCache> for ze_owned_publication_cache_t {
-    fn from(val: PublicationCache) -> Self {
-        val.transmute()
-    }
-}
-
-impl AsRef<PublicationCache> for ze_owned_publication_cache_t {
-    fn as_ref(&self) -> &PublicationCache {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl AsMut<PublicationCache> for ze_owned_publication_cache_t {
-    fn as_mut(&mut self) -> &mut PublicationCache {
-        unsafe { std::mem::transmute(self) }
-    }
-}
 
 impl ze_owned_publication_cache_t {
     pub fn new(pub_cache: zenoh_ext::PublicationCache<'static>) -> Self {
@@ -187,7 +168,7 @@ pub extern "C" fn ze_publication_cache_check(pub_cache: &ze_owned_publication_ca
 pub extern "C" fn ze_undeclare_publication_cache(
     pub_cache: &mut ze_owned_publication_cache_t,
 ) -> i8 {
-    if let Some(p) = pub_cache.as_mut().take() {
+    if let Some(p) = pub_cache.take() {
         if let Err(e) = p.close().res_sync() {
             log::error!("{}", e);
             return e.errno().get();

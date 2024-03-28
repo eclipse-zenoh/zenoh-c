@@ -22,8 +22,8 @@ pub struct ZMutexPtr {
 #[derive(Clone, Copy)]
 pub struct z_mutex_t(usize);
 
-impl_guarded_transmute!(z_mutex_t, ZMutexPtr);
-impl_guarded_transmute!(ZMutexPtr, z_mutex_t);
+impl_guarded_transmute!(noderefs z_mutex_t, ZMutexPtr);
+impl_guarded_transmute!(noderefs ZMutexPtr, z_mutex_t);
 
 // using the same error codes as in GNU pthreads, but with negative sign
 // due to convention to return negative values on error
@@ -141,8 +141,8 @@ struct ZCondvarPtr {
 #[derive(Clone, Copy)]
 pub struct z_condvar_t(usize);
 
-impl_guarded_transmute!(z_condvar_t, ZCondvarPtr);
-impl_guarded_transmute!(ZCondvarPtr, z_condvar_t);
+impl_guarded_transmute!(noderefs z_condvar_t, ZCondvarPtr);
+impl_guarded_transmute!(noderefs ZCondvarPtr, z_condvar_t);
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -233,8 +233,8 @@ pub struct z_task_t(usize);
 #[derive(Clone, Copy)]
 pub struct z_task_attr_t(usize);
 
-impl_guarded_transmute!(z_task_t, ZTaskPtr);
-impl_guarded_transmute!(ZTaskPtr, z_task_t);
+impl_guarded_transmute!(noderefs z_task_t, ZTaskPtr);
+impl_guarded_transmute!(noderefs ZTaskPtr, z_task_t);
 
 struct FunArgPair {
     fun: unsafe extern "C" fn(arg: *mut c_void),
