@@ -173,7 +173,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         return z_owned_subscriber_t::null();
     };
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
-    match session
+    let res = session
         .liveliness()
         .declare_subscriber(key)
         .callback(move |sample| {
@@ -185,8 +185,8 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
             let sample = z_sample_t::new(&sample, &owner);
             z_closure_sample_call(&callback, &sample)
         })
-        .res()
-    {
+        .res();
+    match res {
         Ok(token) => z_owned_subscriber_t::new(token),
         Err(e) => {
             log::error!("Failed to subscribe to liveliness: {e}");

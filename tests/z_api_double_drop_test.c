@@ -73,19 +73,6 @@ void test_scouting_config() {
 
 void data_handler(const z_sample_t *sample, void *arg) {}
 
-void test_pull_subscriber() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t s = z_open(z_move(config));
-    z_owned_closure_sample_t callback = z_closure(data_handler);
-    z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(URL), z_move(callback), NULL);
-    assert(z_check(sub));
-    z_drop(z_move(sub));
-    assert(!z_check(sub));
-    z_drop(z_move(sub));
-    assert(!z_check(sub));
-    z_drop(z_move(s));
-}
-
 void test_subscriber() {
     z_owned_config_t config = z_config_default();
     z_owned_session_t s = z_open(z_move(config));
@@ -120,7 +107,6 @@ int main(int argc, char **argv) {
     test_keyexpr();
     test_config();
     test_scouting_config();
-    test_pull_subscriber();
     test_subscriber();
     test_queryable();
 

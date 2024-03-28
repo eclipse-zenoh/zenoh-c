@@ -202,7 +202,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
                         .query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
                 }
             }
-            match sub
+            let res = sub
                 .callback(move |sample| {
                     let payload = sample.payload.contiguous();
                     let owner = match payload {
@@ -212,8 +212,8 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
                     let sample = z_sample_t::new(&sample, &owner);
                     z_closure_sample_call(&closure, &sample)
                 })
-                .res()
-            {
+                .res();
+            match res {
                 Ok(sub) => ze_owned_querying_subscriber_t::new(sub, session),
                 Err(e) => {
                     log::debug!("{}", e);

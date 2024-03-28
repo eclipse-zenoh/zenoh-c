@@ -203,8 +203,6 @@ Types
 
 .. autocstruct:: zenoh_concrete.h::z_owned_subscriber_t
 
-.. autocstruct:: zenoh_concrete.h::z_owned_pull_subscriber_t
-
 .. autocstruct:: zenoh_commons.h::z_owned_closure_sample_t
 
 .. autocenum:: zenoh_commons.h::z_reliability_t
@@ -218,11 +216,6 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_declare_subscriber
 .. autocfunction:: zenoh_commons.h::z_subscriber_check
 .. autocfunction:: zenoh_commons.h::z_undeclare_subscriber
-
-.. autocfunction:: zenoh_commons.h::z_declare_pull_subscriber
-.. autocfunction:: zenoh_commons.h::z_subscriber_pull
-.. autocfunction:: zenoh_commons.h::z_pull_subscriber_check
-.. autocfunction:: zenoh_commons.h::z_undeclare_pull_subscriber
 
 .. autocfunction:: zenoh_commons.h::z_closure_sample_call
 .. autocfunction:: zenoh_commons.h::z_closure_sample_drop
