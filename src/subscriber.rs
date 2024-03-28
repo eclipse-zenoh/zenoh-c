@@ -135,7 +135,7 @@ pub extern "C" fn z_subscriber_loan(p: &z_owned_subscriber_t) -> z_subscriber_t 
     z_subscriber_t(p)
 }
 
-/// Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
+/// Options passed to the :c:func:`z_declare_subscriber` function.
 ///
 /// Members:
 ///     z_reliability_t reliability: The subscription reliability.

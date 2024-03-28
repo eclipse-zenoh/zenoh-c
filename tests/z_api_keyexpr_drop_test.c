@@ -38,18 +38,6 @@ void test_publisher() {
 
 void data_handler(const z_sample_t *sample, void *arg) {}
 
-// void test_pull_subscriber() {
-//     z_owned_config_t config = z_config_default();
-//     z_owned_session_t s = z_open(z_move(config));
-//     z_owned_closure_sample_t callback = z_closure(data_handler);
-//     char keyexpr[256];
-//     strncpy(keyexpr, "foo/bar", 256);
-//     z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(keyexpr), z_move(callback), NULL);
-//     strncpy(keyexpr, "baz/quax", 256);
-//     z_drop(z_move(sub));
-//     z_drop(z_move(s));
-// }
-
 void test_subscriber() {
     z_owned_config_t config = z_config_default();
     z_owned_session_t s = z_open(z_move(config));
@@ -83,8 +71,7 @@ void test_subscriber() {
 int main(int argc, char **argv) {
     test_publisher();
     test_subscriber();
-    // TODO: Make same tests for pull subscriber and queryable when their `keyexpr` getters are implemented
-    // test_pull_subscriber();
+    // TODO: Make same tests for queryable when its `keyexpr` getters is implemented
     // test_queryable();
 
     return 0;

@@ -592,16 +592,6 @@ typedef struct z_publisher_options_t {
   enum z_priority_t priority;
 } z_publisher_options_t;
 /**
- * Represents the set of options that can be applied to a pull subscriber,
- * upon its declaration via :c:func:`z_declare_pull_subscriber`.
- *
- * Members:
- *   z_reliability_t reliability: The subscription reliability.
- */
-typedef struct z_pull_subscriber_options_t {
-  enum z_reliability_t reliability;
-} z_pull_subscriber_options_t;
-/**
  * Options passed to the :c:func:`z_declare_queryable` function.
  *
  * Members:
@@ -611,7 +601,7 @@ typedef struct z_queryable_options_t {
   bool complete;
 } z_queryable_options_t;
 /**
- * Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
+ * Options passed to the :c:func:`z_declare_subscriber` function.
  *
  * Members:
  *     z_reliability_t reliability: The subscription reliability.
@@ -736,9 +726,6 @@ typedef struct z_publisher_put_options_t {
   struct z_encoding_t encoding;
   struct z_attachment_t attachment;
 } z_publisher_put_options_t;
-typedef struct z_pull_subscriber_t {
-  const struct z_owned_pull_subscriber_t *_0;
-} z_pull_subscriber_t;
 /**
  * Options passed to the :c:func:`z_put` function.
  *
@@ -1364,44 +1351,6 @@ struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
                                                struct z_keyexpr_t keyexpr,
                                                const struct z_publisher_options_t *options);
 /**
- * Declares a pull subscriber for a given key expression.
- *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to subscribe.
- *     callback: The callback function that will be called each time a data matching the subscribed expression is received.
- *     opts: additional options for the pull subscriber.
- *
- * Returns:
- *    A :c:type:`z_owned_subscriber_t`.
- *
- *    To check if the subscription succeeded and if the pull subscriber is still valid,
- *    you may use `z_pull_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- *
- *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * Example:
- *    Declaring a subscriber passing ``NULL`` for the options:
- *
- *    .. code-block:: C
- *
- *       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
- *
- *    is equivalent to initializing and passing the default subscriber options:
- *
- *    .. code-block:: C
- *
- *       z_subscriber_options_t opts = z_subscriber_options_default();
- *       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
- */
-ZENOHC_API
-struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t session,
-                                                           struct z_keyexpr_t keyexpr,
-                                                           struct z_owned_closure_sample_t *callback,
-                                                           const struct z_pull_subscriber_options_t *opts);
-/**
  * Creates a Queryable for the given key expression.
  *
  * Parameters:
@@ -1779,23 +1728,6 @@ int8_t z_publisher_put(struct z_publisher_t publisher,
  */
 ZENOHC_API struct z_publisher_put_options_t z_publisher_put_options_default(void);
 /**
- * Returns ``true`` if `sub` is valid.
- */
-ZENOHC_API bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
-/**
- * Returns ``true`` if `sub` is valid.
- */
-ZENOHC_API
-struct z_pull_subscriber_t z_pull_subscriber_loan(const struct z_owned_pull_subscriber_t *sub);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
- */
-ZENOHC_API struct z_owned_pull_subscriber_t z_pull_subscriber_null(void);
-/**
- * Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
- */
-ZENOHC_API struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
-/**
  * Put data.
  *
  * The payload's encoding can be sepcified through the options.
@@ -2128,14 +2060,6 @@ ZENOHC_API struct z_owned_subscriber_t z_subscriber_null(void);
  * Constructs the default value for :c:type:`z_subscriber_options_t`.
  */
 ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
-/**
- * Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
- * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
- *
- * Parameters:
- *     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
- */
-ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
 ZENOHC_API
 int8_t z_task_init(struct z_task_t *task,
                    const struct z_task_attr_t *_attr,
@@ -2160,11 +2084,6 @@ ZENOHC_API int8_t z_undeclare_keyexpr(struct z_session_t session, struct z_owned
  */
 ZENOHC_API
 int8_t z_undeclare_publisher(struct z_owned_publisher_t *publisher);
-/**
- * Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
- */
-ZENOHC_API
-int8_t z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
 /**
  * Undeclares a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
  *

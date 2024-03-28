@@ -29,7 +29,6 @@ int main(int argc, char **argv) {
     z_owned_keyexpr_t keyexpr_null_1 = z_keyexpr_null();
     z_owned_config_t config_null_1 = z_config_null();
     z_owned_scouting_config_t scouting_config_null_1 = z_scouting_config_null();
-    z_owned_pull_subscriber_t pull_subscriber_null_1 = z_pull_subscriber_null();
     z_owned_subscriber_t subscriber_null_1 = z_subscriber_null();
     z_owned_queryable_t queryable_null_1 = z_queryable_null();
     z_owned_encoding_t encoding_null_1 = z_encoding_null();
@@ -55,7 +54,6 @@ int main(int argc, char **argv) {
     assert(!z_check(keyexpr_null_1));
     assert(!z_check(config_null_1));
     assert(!z_check(scouting_config_null_1));
-    assert(!z_check(pull_subscriber_null_1));
     assert(!z_check(subscriber_null_1));
     assert(!z_check(queryable_null_1));
     assert(!z_check(encoding_null_1));
@@ -74,7 +72,6 @@ int main(int argc, char **argv) {
     z_owned_keyexpr_t keyexpr_null_2;
     z_owned_config_t config_null_2;
     z_owned_scouting_config_t scouting_config_null_2;
-    z_owned_pull_subscriber_t pull_subscriber_null_2;
     z_owned_subscriber_t subscriber_null_2;
     z_owned_queryable_t queryable_null_2;
     z_owned_encoding_t encoding_null_2;
@@ -97,7 +94,6 @@ int main(int argc, char **argv) {
     z_null(&keyexpr_null_2);
     z_null(&config_null_2);
     z_null(&scouting_config_null_2);
-    z_null(&pull_subscriber_null_2);
     z_null(&subscriber_null_2);
     z_null(&queryable_null_2);
     z_null(&encoding_null_2);
@@ -123,7 +119,6 @@ int main(int argc, char **argv) {
     assert(!z_check(keyexpr_null_2));
     assert(!z_check(config_null_2));
     assert(!z_check(scouting_config_null_2));
-    assert(!z_check(pull_subscriber_null_2));
     assert(!z_check(subscriber_null_2));
     assert(!z_check(queryable_null_2));
     assert(!z_check(encoding_null_2));
@@ -143,7 +138,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(keyexpr_null_1));
         z_drop(z_move(config_null_1));
         z_drop(z_move(scouting_config_null_1));
-        z_drop(z_move(pull_subscriber_null_1));
         z_drop(z_move(subscriber_null_1));
         z_drop(z_move(queryable_null_1));
         z_drop(z_move(encoding_null_1));
@@ -166,7 +160,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(keyexpr_null_2));
         z_drop(z_move(config_null_2));
         z_drop(z_move(scouting_config_null_2));
-        z_drop(z_move(pull_subscriber_null_2));
         z_drop(z_move(subscriber_null_2));
         z_drop(z_move(queryable_null_2));
         z_drop(z_move(encoding_null_2));
