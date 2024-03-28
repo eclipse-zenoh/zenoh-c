@@ -1,4 +1,3 @@
-use crate::GuardedTransmute;
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -56,21 +55,9 @@ impl_guarded_transmute!(PullSubscriber, z_owned_pull_subscriber_t);
 #[allow(non_camel_case_types)]
 pub struct z_pull_subscriber_t<'a>(&'a z_owned_pull_subscriber_t);
 
-impl From<PullSubscriber> for z_owned_pull_subscriber_t {
-    fn from(val: PullSubscriber) -> Self {
-        val.transmute()
-    }
-}
-
-impl AsRef<PullSubscriber> for z_owned_pull_subscriber_t {
-    fn as_ref(&self) -> &PullSubscriber {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
 impl<'a> AsRef<PullSubscriber> for z_pull_subscriber_t<'a> {
     fn as_ref(&self) -> &PullSubscriber {
-        self.0.as_ref()
+        self.0
     }
 }
 
@@ -162,13 +149,11 @@ pub extern "C" fn z_declare_pull_subscriber(
         Some(s) => {
             let mut res = s
                 .declare_subscriber(keyexpr)
-                .callback(move |sample| {
-                    let payload = sample.payload.contiguous();
-                    let owner = match payload {
-                        std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
-                        _ => sample.payload.clone(),
-                    };
-                    let sample = z_sample_t::new(&sample, &owner);
+                .callback(move |mut sample| {
+                    if let std::borrow::Cow::Owned(v) = sample.payload.contiguous() {
+                        sample.payload = v.into();
+                    }
+                    let sample = z_sample_t::new(&sample);
                     z_closure_sample_call(&closure, &sample)
                 })
                 .pull_mode();

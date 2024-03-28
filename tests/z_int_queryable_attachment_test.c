@@ -109,11 +109,11 @@ int run_get() {
             assert(z_reply_is_ok(&reply));
 
             z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
+            z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
 
-            ASSERT_STR_BYTES_EQUAL(values[val_num], sample.payload);
+            ASSERT_STR_BYTES_EQUAL(values[val_num], z_sample_payload(&sample));
 
-            z_bytes_t v_const = z_attachment_get(sample.attachment, z_bytes_from_str(K_CONST));
+            z_bytes_t v_const = z_attachment_get(z_sample_attachment(&sample), z_bytes_from_str(K_CONST));
             ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
             z_drop(z_move(keystr));

@@ -11,8 +11,14 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+
 use libc::{c_char, size_t};
-use zenoh::prelude::ZenohId;
+use zenoh::{
+    buffers::{buffer::SplitBuffer, ZBuf},
+    prelude::ZenohId,
+};
+
+use crate::impl_guarded_transmute;
 
 /// A contiguous view of bytes owned by some other entity.
 ///
@@ -21,8 +27,8 @@ use zenoh::prelude::ZenohId;
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_bytes_t {
-    pub len: size_t,
     pub start: *const u8,
+    pub len: size_t,
 }
 
 impl z_bytes_t {
@@ -54,7 +60,7 @@ pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
 
 /// Returns the gravestone value for `z_bytes_t`
 #[no_mangle]
-pub extern "C" fn z_bytes_null() -> z_bytes_t {
+pub const extern "C" fn z_bytes_null() -> z_bytes_t {
     z_bytes_t {
         len: 0,
         start: core::ptr::null(),
@@ -153,5 +159,151 @@ impl From<&[u8]> for z_bytes_t {
             start: s.as_ptr(),
             len: s.len(),
         }
+    }
+}
+
+/// A split buffer that owns all of its data.
+///
+/// To minimize copies and reallocations, Zenoh may provide you data in split buffers.
+///
+/// You can use `z_buffer_contiguous` to obtain a contiguous version of a buffer.
+/// If the buffer was already contiguous, the reference count will simply be increased.
+/// Otherwise, the split buffer's entire content will be copied in a newly allocated buffer.
+#[repr(C)]
+pub struct z_owned_buffer_t {
+    _inner: [usize; 5],
+}
+impl_guarded_transmute!(noderefs Option<ZBuf>, z_owned_buffer_t);
+impl Default for z_owned_buffer_t {
+    fn default() -> Self {
+        z_buffer_null()
+    }
+}
+impl From<ZBuf> for z_owned_buffer_t {
+    fn from(value: ZBuf) -> Self {
+        let value = match value.contiguous() {
+            std::borrow::Cow::Borrowed(_) => value,
+            std::borrow::Cow::Owned(value) => value.into(),
+        };
+        unsafe { core::mem::transmute(Some(value)) }
+    }
+}
+impl From<Option<ZBuf>> for z_owned_buffer_t {
+    fn from(value: Option<ZBuf>) -> Self {
+        match value {
+            Some(value) => value.into(),
+            None => z_buffer_null(),
+        }
+    }
+}
+impl core::ops::Deref for z_owned_buffer_t {
+    type Target = Option<ZBuf>;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+impl core::ops::DerefMut for z_owned_buffer_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+
+/// The gravestone value for `z_owned_buffer_t`.
+#[no_mangle]
+pub extern "C" fn z_buffer_null() -> z_owned_buffer_t {
+    unsafe { core::mem::transmute(None::<ZBuf>) }
+}
+
+/// Decrements the buffer's reference counter, destroying it if applicable.
+///
+/// `buffer` will be reset to `z_buffer_null`, preventing UB on double-frees.
+#[no_mangle]
+pub extern "C" fn z_buffer_drop(buffer: &mut z_owned_buffer_t) {
+    core::mem::drop(buffer.take())
+}
+
+/// Returns `true` if the buffer is in a valid state.
+#[no_mangle]
+pub extern "C" fn z_buffer_check(buffer: &z_owned_buffer_t) -> bool {
+    buffer.is_some()
+}
+
+/// Loans the buffer, allowing you to call functions that only need a loan of it.
+#[no_mangle]
+pub extern "C" fn z_buffer_loan(buffer: &z_owned_buffer_t) -> z_buffer_t {
+    buffer.as_ref().into()
+}
+
+/// A loan of a `z_owned_buffer_t`.
+///
+/// As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct z_buffer_t<'a> {
+    _inner: &'a (),
+}
+impl_guarded_transmute!(Option<&'a ZBuf>, z_buffer_t<'a>, 'a);
+impl<'a> From<z_buffer_t<'a>> for Option<&'a ZBuf> {
+    fn from(value: z_buffer_t) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+
+/// Increments the buffer's reference count, returning an owned version of the buffer.
+#[no_mangle]
+pub extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
+    unsafe { Some(core::mem::transmute::<_, &ZBuf>(buffer).clone()).into() }
+}
+
+/// Returns the payload of the buffer if it is contiguous, aliasling it.
+///
+/// If the payload was not contiguous in memory, `z_bytes_null` will be returned instead.
+#[no_mangle]
+pub extern "C" fn z_buffer_payload(buffer: z_buffer_t) -> z_bytes_t {
+    let Some(buffer): Option<&ZBuf> = buffer.into() else {
+        return z_bytes_null();
+    };
+    match buffer.contiguous() {
+        std::borrow::Cow::Borrowed(buffer) => buffer.into(),
+        std::borrow::Cow::Owned(_) => z_bytes_null(),
+    }
+}
+
+/// Returns an owned version of this buffer whose data is guaranteed to be contiguous in memory.
+///
+/// This is achieved by increasing the reference count if the buffer is already contiguous, and by copying its data in a new contiguous buffer if it wasn't.
+#[no_mangle]
+pub extern "C" fn z_buffer_contiguous(buffer: z_buffer_t) -> z_owned_buffer_t {
+    let Some(buf): Option<&ZBuf> = buffer.into() else {
+        return z_buffer_null();
+    };
+    match buf.contiguous() {
+        std::borrow::Cow::Borrowed(_) => buf.clone().into(),
+        std::borrow::Cow::Owned(buf) => ZBuf::from(buf).into(),
+    }
+}
+
+/// Returns the number of slices in the buffer.
+///
+/// If the return value is 0 or 1, then the buffer's data is contiguous in memory and `z_buffer_contiguous` will succeed.
+#[no_mangle]
+pub extern "C" fn z_buffer_slice_count(buffer: z_buffer_t) -> usize {
+    match buffer.into() {
+        None => 0,
+        Some(buf) => ZBuf::slices(buf).len(),
+    }
+}
+
+/// Returns the `index`th slice of the buffer, aliasing it.
+///
+/// Out of bounds accesses will return `z_bytes_null`.
+#[no_mangle]
+pub extern "C" fn z_buffer_slice_at(buffer: z_buffer_t, index: usize) -> z_bytes_t {
+    match buffer.into() {
+        None => z_bytes_null(),
+        Some(buf) => ZBuf::slices(buf)
+            .nth(index)
+            .map_or(z_bytes_null(), |slice| slice.into()),
     }
 }

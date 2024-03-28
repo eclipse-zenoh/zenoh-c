@@ -6,7 +6,7 @@
 void callback(const z_sample_t* sample, void* context) {
     z_publisher_t pub = z_loan(*(z_owned_publisher_t*)context);
 #ifdef ZENOH_C  // The zc_owned_payload_t API is exclusive to zenoh-c, but allows avoiding some copies.
-    zc_owned_payload_t payload = zc_sample_payload_rcinc(sample);
+    z_owned_buffer_t payload = z_sample_owned_payload(sample);
     zc_publisher_put_owned(pub, z_move(payload), NULL);
 #else
     z_publisher_put(pub, sample->payload.start, sample->payload.len, NULL);
@@ -21,15 +21,17 @@ void drop(void* context) {
     //  valid.
 }
 struct args_t {
-    char* config_path;             // -c
-    uint8_t help_requested;        // -h
+    char* config_path;       // -c
+    uint8_t help_requested;  // -h
 };
 struct args_t parse_args(int argc, char** argv);
 
 int main(int argc, char** argv) {
     struct args_t args = parse_args(argc, argv);
     if (args.help_requested) {
-        printf("-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n");
+        printf(
+            "-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the "
+            "default configuration will be used.\n");
         return 1;
     }
     z_owned_config_t config = args.config_path ? zc_config_from_file(args.config_path) : z_config_default();

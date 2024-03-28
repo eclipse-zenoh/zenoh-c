@@ -59,21 +59,21 @@ int run_publisher() {
 
 void data_handler(const z_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
+    z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(sample));
     if (strcmp(keyexpr, z_loan(keystr))) {
         perror("Unexpected key received");
         exit(-1);
     }
     z_drop(z_move(keystr));
 
-    if (strncmp(values[val_num], (const char *)sample->payload.start, (int)sample->payload.len)) {
+    z_bytes_t payload = z_sample_payload(sample);
+    if (strncmp(values[val_num], (const char *)payload.start, (int)payload.len)) {
         perror("Unexpected value received");
         exit(-1);
     }
 
-    if (z_qos_get_congestion_control(sample->qos) != Z_CONGESTION_CONTROL_BLOCK
-        || z_qos_get_priority(sample->qos) != Z_PRIORITY_DATA
-    ) {
+    if (z_qos_get_congestion_control(z_sample_qos(sample)) != Z_CONGESTION_CONTROL_BLOCK ||
+        z_qos_get_priority(z_sample_qos(sample)) != Z_PRIORITY_DATA) {
         perror("Unexpected QoS values");
         exit(-1);
     }

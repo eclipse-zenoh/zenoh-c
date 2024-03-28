@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::{config::*, impl_guarded_transmute, zc_init_logger, GuardedTransmute};
+use crate::{config::*, impl_guarded_transmute, zc_init_logger};
 use std::sync::{Arc, Weak};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::Session;
@@ -32,24 +32,6 @@ use zenoh_util::core::zresult::ErrNo;
 pub struct z_owned_session_t(usize);
 
 impl_guarded_transmute!(Option<Arc<Session>>, z_owned_session_t);
-
-impl From<Option<Arc<Session>>> for z_owned_session_t {
-    fn from(val: Option<Arc<Session>>) -> Self {
-        val.transmute()
-    }
-}
-
-impl AsRef<Option<Arc<Session>>> for z_owned_session_t {
-    fn as_ref(&self) -> &Option<Arc<Session>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl AsMut<Option<Arc<Session>>> for z_owned_session_t {
-    fn as_mut(&mut self) -> &mut Option<Arc<Session>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
 
 impl AsRef<Option<Weak<Session>>> for z_session_t {
     fn as_ref(&self) -> &Option<Weak<Session>> {
@@ -150,7 +132,7 @@ pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
-    let Some(s) = session.as_mut().take() else {
+    let Some(s) = session.take() else {
         return 0;
     };
     let s = match Arc::try_unwrap(s) {
