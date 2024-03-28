@@ -17,8 +17,7 @@ use crate::attachment::{
 };
 use crate::{
     impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t,
-    LOG_INVALID_SESSION,
+    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, LOG_INVALID_SESSION,
 };
 use libc::c_void;
 use std::ops::{Deref, DerefMut};
