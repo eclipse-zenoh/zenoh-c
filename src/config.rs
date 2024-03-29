@@ -15,7 +15,7 @@ use libc::{c_char, c_uint};
 use std::ffi::CStr;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
-use crate::{impl_guarded_transmute, z_owned_str_t, z_str_null, GuardedTransmute};
+use crate::{impl_guarded_transmute, z_owned_str_t, z_str_null};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -76,11 +76,6 @@ pub struct z_config_t(*const z_owned_config_t);
 pub struct z_owned_config_t(*mut ());
 impl_guarded_transmute!(Option<Box<Config>>, z_owned_config_t);
 
-impl From<Option<Box<Config>>> for z_owned_config_t {
-    fn from(v: Option<Box<Config>>) -> Self {
-        v.transmute()
-    }
-}
 /// Returns a :c:type:`z_config_t` loaned from `s`.
 #[no_mangle]
 pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {

@@ -85,9 +85,37 @@ macro_rules! decl_rust_copy_type {
     };
 }
 
+/// For internal use only.
+///
+/// This macro is used to establish the equivalence between a Rust type (first parameter) and a C layout (second parameter).
+///
+/// It automatically implements `From`, `Deref` and `DerefMut` to make writing code around these equivalent types.
+///
+/// Because carrying around the proper semantics of lifetimes is hard, this macro fails to produce working code when lifetimes are
+/// present in either parameter. You may then call it with the `noderefs` prefix to avoid the offending implementations being defined.
 #[macro_export]
 macro_rules! impl_guarded_transmute {
     ($src_type:ty, $dst_type:ty) => {
+        impl_guarded_transmute!(noderefs $src_type, $dst_type);
+        impl From<$src_type> for $dst_type {
+            fn from(value: $src_type) -> $dst_type {
+                unsafe { core::mem::transmute(value) }
+            }
+        }
+        impl core::ops::Deref for $dst_type {
+            type Target = $src_type;
+            fn deref(&self) -> &$src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+        impl core::ops::DerefMut for $dst_type {
+            fn deref_mut(&mut self) -> &mut $src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+
+    };
+    (noderefs $src_type:ty, $dst_type:ty) => {
         const _: () = {
             let src = std::mem::align_of::<$src_type>();
             let dst = std::mem::align_of::<$dst_type>();
@@ -118,6 +146,30 @@ macro_rules! impl_guarded_transmute {
                 unsafe { std::mem::transmute::<&mut $src_type, &mut $dst_type>(self) }
             }
         }
+    };
+    ($src_type:ty, $dst_type:ty, $($gen: tt)*) => {
+        impl<$($gen)*>  $crate::GuardedTransmute<$dst_type> for $src_type {
+            fn transmute(self) -> $dst_type {
+                unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
+            }
+        }
+        impl<$($gen)*> From<$src_type> for $dst_type {
+            fn from(value: $src_type) -> $dst_type {
+                unsafe { core::mem::transmute(value) }
+            }
+        }
+        impl<$($gen)*> core::ops::Deref for $dst_type {
+            type Target = $src_type;
+            fn deref(&self) -> &$src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+        impl<$($gen)*> core::ops::DerefMut for $dst_type {
+            fn deref_mut(&mut self) -> &mut $src_type {
+                unsafe { core::mem::transmute(self) }
+            }
+        }
+
     };
 }
 

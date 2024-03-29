@@ -48,19 +48,15 @@ type ReplyInner = Option<Reply>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(target_arch = "x86_64")]
+#[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
 pub struct z_owned_reply_t([u64; 28]);
-
-#[cfg(target_arch = "aarch64")]
-#[repr(C, align(16))]
-pub struct z_owned_reply_t([u64; 30]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
 pub struct z_owned_reply_t([u64; 19]);
 
-impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
+impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
 
 impl From<ReplyInner> for z_owned_reply_t {
     fn from(mut val: ReplyInner) -> Self {
