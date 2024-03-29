@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
     assert_eq(_ret_int8, -1);
 #endif
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     size_t keyexpr_len = strlen("demo/example/**/*");
     char *keyexpr_str = (char *)malloc(keyexpr_len + 1);
@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
 #endif
 
     printf("Ok\n");
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     printf("Testing Configs...");
     z_owned_config_t _ret_config = z_config_new();
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
     z_drop(z_move(_ret_sconfig));
 
     printf("Ok\n");
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     printf("Testing Scouting...");
     _ret_sconfig = z_scouting_config_from(z_loan(_ret_config));
@@ -231,13 +231,13 @@ int main(int argc, char **argv) {
     z_owned_closure_zid_t _ret_closure_zid = z_closure(zid_handler, NULL, NULL);
     _ret_int8 = z_info_peers_zid(z_loan(s1), z_move(_ret_closure_zid));
     assert_eq(_ret_int8, 0);
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
     assert_eq(zids, 0);
 
     _ret_int8 = z_info_routers_zid(z_loan(s1), z_move(_ret_closure_zid));
     assert_eq(_ret_int8, 0);
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
     assert_eq(zids, 1);
 
 #ifdef ZENOH_PICO
@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
     zp_start_lease_task(z_loan(s1), &_ret_lease_opt);
 #endif
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     _ret_config = z_config_default();
 #ifdef ZENOH_PICO
@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
     zp_start_lease_task(z_loan(s2), NULL);
 #endif
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     z_session_t ls1 = z_loan(s1);
     printf("Declaring Subscriber...");
@@ -283,7 +283,7 @@ int main(int argc, char **argv) {
     assert(z_check(_ret_sub));
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     printf("Declaring Keyexpr...");
     char *s1_res = (char *)malloc(64);
@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
     assert_eq(_ret_int8, 0);
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
     assert_eq(datas, 1);
 
     printf("Session delete...");
@@ -313,7 +313,7 @@ int main(int argc, char **argv) {
     assert_eq(_ret_int8, 0);
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
     assert_eq(datas, 2);
 
     printf("Undeclaring Keyexpr...");
@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
     assert(z_check(_ret_pub));
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     printf("Publisher Put...");
     z_publisher_put_options_t _ret_pput_opt = z_publisher_put_options_default();
@@ -338,7 +338,7 @@ int main(int argc, char **argv) {
     assert_eq(_ret_int8, 0);
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
     assert_eq(datas, 3);
 
     printf("Publisher Delete...");
@@ -347,7 +347,7 @@ int main(int argc, char **argv) {
     assert_eq(_ret_int8, 0);
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
     assert_eq(datas, 4);
 
     printf("Undeclaring Publisher...");
@@ -356,7 +356,7 @@ int main(int argc, char **argv) {
     assert(!z_check(_ret_pub));
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     printf("Undeclaring Subscriber...");
     _ret_int8 = z_undeclare_subscriber(z_move(_ret_sub));
@@ -364,7 +364,7 @@ int main(int argc, char **argv) {
     assert(!z_check(_ret_sub));
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     printf("Declaring Queryable...");
     z_owned_closure_query_t _ret_closure_query = z_closure(query_handler, NULL, &ls1);
@@ -374,7 +374,7 @@ int main(int argc, char **argv) {
     assert(z_check(qle));
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
 
     printf("Testing Consolidations...");
     z_session_t ls2 = z_loan(s2);
@@ -398,7 +398,7 @@ int main(int argc, char **argv) {
     assert_eq(_ret_int8, 0);
     printf("Ok\n");
 
-    z_sleep(SLEEP);
+    z_sleep_s(SLEEP);
     assert_eq(queries, 1);
     assert_eq(replies, 1);
 
