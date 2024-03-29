@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 
     z_owned_config_t config = z_config_default();
     if (locator != NULL) {
-        zp_config_insert(z_loan(config), Z_CONFIG_CONNECT_KEY, z_string_make(locator));
+        zc_config_insert(z_loan(config), Z_CONFIG_CONNECT_KEY, z_string_make(locator));
     }
 
     printf("Opening session...\n");
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     //         z_drop(z_move(sample));
     //     }
     //     printf(">> [Subscriber] Nothing to pull... sleep for %zu ms\n", interval);
-    //     zp_sleep_ms(interval);
+    //     z_sleep_ms(interval);
     // }
 
     // z_undeclare_subscriber(z_move(sub));
