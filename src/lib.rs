@@ -56,10 +56,33 @@ pub mod attachment;
 pub use platform::*;
 pub mod platform;
 #[cfg(feature = "shared-memory")]
-mod shm;
+pub mod shm;
+#[cfg(feature = "shared-memory")]
+pub use crate::shm::*;
 
 trait GuardedTransmute<D> {
     fn transmute(self) -> D;
+    fn transmute_ref(&self) -> &D;
+    fn transmute_mut(&mut self) -> &mut D;
+}
+
+#[macro_export]
+macro_rules! decl_rust_copy_type {
+    (zenoh:($zenoh_type:ty), c:($c_type:ty)) => {
+        impl_guarded_transmute!($zenoh_type, $c_type);
+        impl_guarded_transmute!($c_type, $zenoh_type);
+
+        impl From<$zenoh_type> for $c_type {
+            fn from(value: $zenoh_type) -> Self {
+                value.transmute()
+            }
+        }
+        impl From<$c_type> for $zenoh_type {
+            fn from(value: $c_type) -> Self {
+                value.transmute()
+            }
+        }
+    };
 }
 
 #[macro_export]
@@ -81,9 +104,18 @@ macro_rules! impl_guarded_transmute {
                 });
             }
         };
+
         impl $crate::GuardedTransmute<$dst_type> for $src_type {
             fn transmute(self) -> $dst_type {
                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
+            }
+
+            fn transmute_ref(&self) -> &$dst_type {
+                unsafe { std::mem::transmute::<&$src_type, &$dst_type>(self) }
+            }
+
+            fn transmute_mut(&mut self) -> &mut $dst_type {
+                unsafe { std::mem::transmute::<&mut $src_type, &mut $dst_type>(self) }
             }
         }
     };
