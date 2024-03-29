@@ -69,19 +69,8 @@ trait GuardedTransmute<D> {
 #[macro_export]
 macro_rules! decl_rust_copy_type {
     (zenoh:($zenoh_type:ty), c:($c_type:ty)) => {
-        impl_guarded_transmute!($zenoh_type, $c_type);
-        impl_guarded_transmute!($c_type, $zenoh_type);
-
-        impl From<$zenoh_type> for $c_type {
-            fn from(value: $zenoh_type) -> Self {
-                value.transmute()
-            }
-        }
-        impl From<$c_type> for $zenoh_type {
-            fn from(value: $c_type) -> Self {
-                value.transmute()
-            }
-        }
+        impl_guarded_transmute!(noderefs $zenoh_type, $c_type);
+        impl_guarded_transmute!(noderefs $c_type, $zenoh_type);
     };
 }
 

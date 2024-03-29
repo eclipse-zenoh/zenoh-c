@@ -14,7 +14,7 @@
 
 use zenoh::shm::provider::zsliceshm::ZSliceShm;
 
-use crate::{decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute};
+use crate::{decl_rust_copy_type, impl_guarded_transmute};
 
 // A ZSliceSHM
 #[cfg(target_arch = "x86_64")]
