@@ -26,10 +26,8 @@ use zenoh::{
 use zenoh_util::core::bail;
 
 use crate::{
-    common::types::z_segment_id_t,
-    decl_rust_copy_type, impl_guarded_transmute,
-    provider::shared_memory_provider_backend::{zc_context_t, Context},
-    GuardedTransmute,
+    common::types::z_segment_id_t, decl_rust_copy_type, impl_guarded_transmute,
+    zc_threadsafe_context_t, DroppableContext, GuardedTransmute, ThreadsafeContext,
 };
 
 use super::shared_memory_segment::{z_shared_memory_segment_t, DynamicSharedMemorySegment};
@@ -65,18 +63,15 @@ decl_rust_copy_type!(
 
 #[derive(Debug)]
 pub struct DynamicSharedMemoryClient {
-    context: Context,
+    context: ThreadsafeContext,
     callbacks: zc_shared_memory_client_callbacks_t,
 }
 
 impl DynamicSharedMemoryClient {
-    pub fn new(context: Context, callbacks: zc_shared_memory_client_callbacks_t) -> Self {
+    pub fn new(context: ThreadsafeContext, callbacks: zc_shared_memory_client_callbacks_t) -> Self {
         Self { context, callbacks }
     }
 }
-
-unsafe impl Send for DynamicSharedMemoryClient {}
-unsafe impl Sync for DynamicSharedMemoryClient {}
 
 impl SharedMemoryClient for DynamicSharedMemoryClient {
     fn attach(&self, segment: SegmentID) -> Result<Arc<dyn SharedMemorySegment>> {
@@ -95,7 +90,7 @@ impl SharedMemoryClient for DynamicSharedMemoryClient {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shared_memory_client_new(
-    context: zc_context_t,
+    context: zc_threadsafe_context_t,
     callbacks: zc_shared_memory_client_callbacks_t,
     out_client: &mut MaybeUninit<z_shared_memory_client_t>,
 ) {

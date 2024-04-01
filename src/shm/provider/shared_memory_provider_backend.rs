@@ -12,6 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use std::fmt::Debug;
+
 use libc::c_void;
 use zenoh::shm::provider::{
     chunk::ChunkDescriptor,
@@ -21,41 +23,12 @@ use zenoh::shm::provider::{
 use zenoh::Result;
 use zenoh_util::core::bail;
 
-use crate::{decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute};
+use crate::{DroppableContext, GuardedTransmute};
 
 use super::{
     chunk::z_chunk_descriptor_t,
     types::{z_chunk_alloc_result_t, z_memory_layout_t},
 };
-
-/// A droppable context
-#[derive(Debug)]
-#[repr(C)]
-pub struct zc_context_t {
-    context: *mut c_void,
-    drop_fn: unsafe extern "C" fn(*mut c_void),
-}
-
-decl_rust_copy_type!(
-    zenoh:(Context),
-    c:(zc_context_t)
-);
-
-#[derive(Debug)]
-pub struct Context(zc_context_t);
-
-impl Context {
-    pub fn get(&self) -> *mut c_void {
-        self.0.context
-    }
-}
-impl Drop for Context {
-    fn drop(&mut self) {
-        unsafe {
-            (self.0.drop_fn)(self.0.context);
-        }
-    }
-}
 
 /// A callbacks for SharedMemoryProviderBackend
 #[derive(Debug)]
@@ -72,18 +45,30 @@ pub struct zc_shared_memory_provider_backend_callbacks_t {
 }
 
 #[derive(Debug)]
-pub struct DynamicSharedMemoryProviderBackend {
-    context: Context,
+pub struct DynamicSharedMemoryProviderBackend<TContext>
+where
+    TContext: DroppableContext,
+{
+    context: TContext,
     callbacks: zc_shared_memory_provider_backend_callbacks_t,
 }
 
-impl DynamicSharedMemoryProviderBackend {
-    pub fn new(context: Context, callbacks: zc_shared_memory_provider_backend_callbacks_t) -> Self {
+impl<TContext> DynamicSharedMemoryProviderBackend<TContext>
+where
+    TContext: DroppableContext,
+{
+    pub fn new(
+        context: TContext,
+        callbacks: zc_shared_memory_provider_backend_callbacks_t,
+    ) -> Self {
         Self { context, callbacks }
     }
 }
 
-impl SharedMemoryProviderBackend for DynamicSharedMemoryProviderBackend {
+impl<TContext> SharedMemoryProviderBackend for DynamicSharedMemoryProviderBackend<TContext>
+where
+    TContext: DroppableContext,
+{
     fn alloc(&self, layout: &MemoryLayout) -> ChunkAllocResult {
         let mut result = std::mem::MaybeUninit::uninit();
         unsafe {

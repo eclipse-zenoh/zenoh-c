@@ -50,11 +50,11 @@ type ReplyInner = Option<Reply>;
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[cfg(not(target_arch = "arm"))]
 #[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 28]);
+pub struct z_owned_reply_t([u64; 30]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 19]);
+pub struct z_owned_reply_t([u64; 21]);
 
 impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
 

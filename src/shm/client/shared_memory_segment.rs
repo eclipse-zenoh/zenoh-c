@@ -19,31 +19,31 @@ use zenoh::{
     shm::{client::shared_memory_segment::SharedMemorySegment, common::types::ChunkID},
     Result,
 };
+use zenoh_util::core::zerror;
 
 use crate::{
-    common::types::z_chunk_id_t,
-    provider::shared_memory_provider_backend::{zc_context_t, Context},
-    GuardedTransmute,
+    common::types::z_chunk_id_t, zc_threadsafe_context_t, DroppableContext, GuardedTransmute,
+    ThreadsafeContext,
 };
 
 /// A callbacks for SharedMemorySegment
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shared_memory_segment_callbacks_t {
-    map_fn: unsafe extern "C" fn(*mut c_void, z_chunk_id_t),
+    map_fn: unsafe extern "C" fn(*mut c_void, z_chunk_id_t) -> *mut u8,
 }
 
 /// A SharedMemorySegment
 #[derive(Debug)]
 #[repr(C)]
 pub struct z_shared_memory_segment_t {
-    context: zc_context_t,
+    context: zc_threadsafe_context_t,
     callbacks: zc_shared_memory_segment_callbacks_t,
 }
 
 #[derive(Debug)]
 pub struct DynamicSharedMemorySegment {
-    context: Context,
+    context: ThreadsafeContext,
     callbacks: zc_shared_memory_segment_callbacks_t,
 }
 
@@ -56,14 +56,14 @@ impl DynamicSharedMemorySegment {
     }
 }
 
-unsafe impl Send for DynamicSharedMemorySegment {}
-unsafe impl Sync for DynamicSharedMemorySegment {}
-
 impl SharedMemorySegment for DynamicSharedMemorySegment {
     fn map(&self, chunk: ChunkID) -> Result<AtomicPtr<u8>> {
         unsafe {
-            (self.callbacks.map_fn)(self.context.get(), chunk);
+            let cb_result = (self.callbacks.map_fn)(self.context.get(), chunk);
+            cb_result
+                .as_mut()
+                .map(|p| AtomicPtr::new(p))
+                .ok_or_else(|| zerror!("C callback returned null pointer!").into())
         }
-        todo!()
     }
 }

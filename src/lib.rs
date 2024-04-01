@@ -14,10 +14,14 @@
 
 #![allow(non_camel_case_types)]
 
-mod collections;
 use std::cmp::min;
 use std::slice;
 
+#[cfg(feature = "shared-memory")]
+mod context;
+#[cfg(feature = "shared-memory")]
+pub use crate::context::*;
+mod collections;
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;

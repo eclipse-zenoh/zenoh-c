@@ -53,7 +53,7 @@ pub unsafe extern "C" fn zc_shared_memory_client_list_new() -> zc_shared_memory_
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_shared_memory_client_list_add(
+pub unsafe extern "C" fn zc_shared_memory_client_list_add_client(
     id: z_protocol_id_t,
     client: z_shared_memory_client_t,
     list: &mut zc_shared_memory_client_list_t,
@@ -121,9 +121,8 @@ pub unsafe extern "C" fn z_shared_memory_client_storage_new_with_default_client_
     clients: zc_shared_memory_client_list_t,
     out_storage: &mut MaybeUninit<z_shared_memory_client_storage_t>,
 ) -> bool {
-    let mut builder = SharedMemoryClientStorage::builder().with_default_client_set();
-
     let mut clients = clients.transmute();
+    let mut builder = SharedMemoryClientStorage::builder().with_default_client_set();
 
     for (id, client) in clients.drain(0..) {
         match builder.with_client(id, client) {
