@@ -12,6 +12,8 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+#[cfg(feature = "shared-memory")]
+use crate::client_storage::z_shared_memory_client_storage_t;
 use crate::{config::*, impl_guarded_transmute, zc_init_logger};
 use std::sync::{Arc, Weak};
 use zenoh::prelude::sync::SyncResolve;
@@ -110,6 +112,39 @@ pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
         }
     };
     match zenoh::open(*config).res() {
+        Ok(s) => z_owned_session_t::new(Arc::new(s)),
+        Err(e) => {
+            log::error!("Error opening session: {}", e);
+            z_owned_session_t::null()
+        }
+    }
+}
+
+/// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+#[cfg(feature = "shared-memory")]
+pub extern "C" fn z_open_with_shm_clients(
+    config: &mut z_owned_config_t,
+    shm_clients: &z_shared_memory_client_storage_t,
+) -> z_owned_session_t {
+    use crate::GuardedTransmute;
+
+    if cfg!(feature = "logger-autoinit") {
+        zc_init_logger();
+    }
+
+    let config = match config.as_mut().take() {
+        Some(c) => c,
+        None => {
+            log::error!("Config not provided");
+            return z_owned_session_t::null();
+        }
+    };
+    match zenoh::open(*config)
+        .with_shm_clients(shm_clients.transmute_ref().clone())
+        .res()
+    {
         Ok(s) => z_owned_session_t::new(Arc::new(s)),
         Err(e) => {
             log::error!("Error opening session: {}", e);

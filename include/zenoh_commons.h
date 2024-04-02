@@ -174,8 +174,23 @@ typedef enum zcu_reply_keyexpr_t {
   ZCU_REPLY_KEYEXPR_ANY = 0,
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
+#if defined(TARGET_ARCH_X86_64)
+typedef struct ALIGN(4) z_alloc_alignment_t {
+  uint32_t _0[1];
+} z_alloc_alignment_t;
+#endif
+#if defined(TARGET_ARCH_AARCH64)
+typedef struct ALIGN(4) z_alloc_alignment_t {
+  uint32_t _0[1];
+} z_alloc_alignment_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_alloc_alignment_t {
+  uint32_t _0[1];
+} z_alloc_alignment_t;
+#endif
 /**
- * A thread-safe SharedMemoryProvider's AllocLayout
+ * A non-thread-safe SharedMemoryProvider's AllocLayout
  */
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_alloc_layout_t {
@@ -240,7 +255,7 @@ typedef struct ALIGN(8) z_alloc_layout_threadsafe_t {
  * be executed.
  */
 typedef struct zc_threadsafe_context_t {
-  AtomicPtr<void> context;
+  void *context;
   void (*delete_fn)(void*);
 } zc_threadsafe_context_t;
 /**
@@ -892,6 +907,12 @@ typedef struct ALIGN(8) z_memory_layout_t {
 } z_memory_layout_t;
 #endif
 /**
+ * A SharedMemoryClientStorage.
+ */
+typedef struct z_shared_memory_client_storage_t {
+  size_t _0;
+} z_shared_memory_client_storage_t;
+/**
  * A SharedMemoryClient
  */
 #if defined(TARGET_ARCH_X86_64)
@@ -1062,12 +1083,6 @@ typedef struct zc_shared_memory_client_callbacks_t {
   bool (*attach_fn)(void*, z_segment_id_t, struct z_shared_memory_segment_t*);
 } zc_shared_memory_client_callbacks_t;
 /**
- * A SharedMemoryClientStorage.
- */
-typedef struct z_shared_memory_client_storage_t {
-  size_t _0;
-} z_shared_memory_client_storage_t;
-/**
  * A list of SharedMemoryClients.
  */
 #if defined(TARGET_ARCH_X86_64)
@@ -1102,21 +1117,6 @@ typedef struct ALIGN(16) z_shared_memory_provider_t {
 typedef struct ALIGN(8) z_shared_memory_provider_t {
   uint64_t _0[14];
 } z_shared_memory_provider_t;
-#endif
-#if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(4) z_alloc_alignment_t {
-  uint32_t _0[1];
-} z_alloc_alignment_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(4) z_alloc_alignment_t {
-  uint32_t _0[1];
-} z_alloc_alignment_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_alloc_alignment_t {
-  uint32_t _0[1];
-} z_alloc_alignment_t;
 #endif
 /**
  * Unique protocol identifier.
@@ -1376,6 +1376,7 @@ ZENOHC_API extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
+ZENOHC_API void z_alloc_alignment_delete(struct z_alloc_alignment_t alignment);
 ZENOHC_API
 void z_alloc_layout_alloc(const struct z_alloc_layout_t *layout,
                           struct z_buf_alloc_result_t *out_buffer);
@@ -2131,6 +2132,12 @@ ZENOHC_API int8_t z_mutex_unlock(struct z_mutex_t *m);
  */
 ZENOHC_API
 struct z_owned_session_t z_open(struct z_owned_config_t *config);
+/**
+ * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
+ */
+ZENOHC_API
+struct z_owned_session_t z_open_with_shm_clients(struct z_owned_config_t *config,
+                                                 const struct z_shared_memory_client_storage_t *shm_clients);
 ZENOHC_API struct z_shared_memory_client_t z_posix_shared_memory_client_new(void);
 ZENOHC_API
 bool z_posix_shared_memory_provider_new(const struct z_memory_layout_t *layout,
@@ -2608,6 +2615,7 @@ void z_shared_memory_provider_threadsafe_new(z_protocol_id_t id,
 ZENOHC_API int8_t z_sleep_ms(size_t time);
 ZENOHC_API int8_t z_sleep_s(size_t time);
 ZENOHC_API int8_t z_sleep_us(size_t time);
+ZENOHC_API void z_slice_shm_delete(struct z_slice_shm_t slice);
 /**
  * Returns ``true`` if `strs` is valid.
  */

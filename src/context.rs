@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{fmt::Debug, sync::atomic::AtomicPtr};
+use std::fmt::Debug;
 
 use libc::c_void;
 
@@ -82,7 +82,7 @@ impl Drop for Context {
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_threadsafe_context_t {
-    context: AtomicPtr<c_void>,
+    context: *mut c_void,
     delete_fn: unsafe extern "C" fn(*mut c_void),
 }
 
@@ -95,13 +95,15 @@ decl_rust_copy_type!(
 pub struct ThreadsafeContext(zc_threadsafe_context_t);
 impl DroppableContext for ThreadsafeContext {
     fn get(&self) -> *mut c_void {
-        self.0.context.load(std::sync::atomic::Ordering::Relaxed)
+        self.0.context
     }
 }
 impl Drop for ThreadsafeContext {
     fn drop(&mut self) {
         unsafe {
-            (self.0.delete_fn)(self.0.context.load(std::sync::atomic::Ordering::Relaxed));
+            (self.0.delete_fn)(self.0.context);
         }
     }
 }
+unsafe impl Send for ThreadsafeContext {}
+unsafe impl Sync for ThreadsafeContext {}

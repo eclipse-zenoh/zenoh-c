@@ -24,7 +24,7 @@ use super::{
     shared_memory_provider_backend::DynamicSharedMemoryProviderBackend, types::z_buf_alloc_result_t,
 };
 
-/// A thread-safe SharedMemoryProvider's AllocLayout
+/// A non-thread-safe SharedMemoryProvider's AllocLayout
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
 pub struct z_alloc_layout_t([u64; 4]);

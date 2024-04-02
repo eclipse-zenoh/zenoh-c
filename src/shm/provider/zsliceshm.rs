@@ -14,7 +14,7 @@
 
 use zenoh::shm::provider::zsliceshm::ZSliceShm;
 
-use crate::{decl_rust_copy_type, impl_guarded_transmute};
+use crate::{decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute};
 
 // A ZSliceSHM
 #[cfg(target_arch = "x86_64")]
@@ -33,3 +33,9 @@ decl_rust_copy_type!(
     zenoh:(ZSliceShm),
     c:(z_slice_shm_t)
 );
+
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_slice_shm_delete(slice: z_slice_shm_t) {
+    let _ = slice.transmute();
+}

@@ -43,11 +43,25 @@
                   z_owned_query_channel_t * : z_query_channel_drop,                     \
                   z_owned_bytes_map_t * : z_bytes_map_drop,                             \
                   zc_owned_payload_t * : zc_payload_drop,                               \
-                  zc_owned_shmbuf_t * : zc_shmbuf_drop,                                 \
-                  zc_owned_shm_manager_t * : zc_shm_manager_drop,                       \
                   zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token,        \
                   ze_owned_publication_cache_t * : ze_undeclare_publication_cache,      \
                   ze_owned_querying_subscriber_t * : ze_undeclare_querying_subscriber   \
+                  /*
+                   z_shared_memory_client_t : z_shared_memory_client_delete,             
+                   z_shared_memory_client_storage_t : z_shared_memory_client_storage_deref,
+                   zc_shared_memory_client_list_t : zc_shared_memory_client_list_delete, 
+                   z_alloc_layout_threadsafe_t : z_alloc_layout_threadsafe_delete, \
+                   z_alloc_layout_t : z_alloc_layout_delete, \
+                   z_chunk_descriptor_t : z_chunk_descriptor_delete, \
+                   z_allocated_chunk_t : z_allocated_chunk_delete, \
+                   z_shared_memory_provider_threadsafe_t : z_shared_memory_provider_threadsafe_delete, \
+                   z_shared_memory_provider_t : z_shared_memory_provider_delete, \
+                   z_alloc_alignment_t : z_alloc_alignment_delete, \
+                   z_memory_layout_t : z_memory_layout_delete, \
+                   z_chunk_alloc_result_t : z_chunk_alloc_result_delete, \
+                   z_buf_alloc_result_t : z_buf_alloc_result_delete, \
+                   z_slice_shm_t : z_slice_shm_delete \
+                   */ \
             )(x)
 
 #define z_null(x) (*x = \
@@ -75,8 +89,6 @@
                   z_owned_bytes_map_t * : z_bytes_map_null,                             \
                   z_attachment_t * : z_attachment_null,                                 \
                   zc_owned_payload_t * : zc_payload_null,                               \
-                  zc_owned_shmbuf_t * : zc_shmbuf_null,                                 \
-                  zc_owned_shm_manager_t * : zc_shm_manager_null,                       \
                   ze_owned_publication_cache_t * : ze_publication_cache_null,           \
                   zc_owned_liveliness_token_t * : zc_liveliness_token_null              \
             )())
@@ -100,8 +112,6 @@
                   z_owned_bytes_map_t : z_bytes_map_check,                      \
                   z_attachment_t : z_attachment_check,                          \
                   zc_owned_payload_t : zc_payload_check,                        \
-                  zc_owned_shmbuf_t : zc_shmbuf_check,                          \
-                  zc_owned_shm_manager_t : zc_shm_manager_check,                \
                   zc_owned_liveliness_token_t : zc_liveliness_token_check,      \
                   ze_owned_publication_cache_t : ze_publication_cache_check,    \
                   ze_owned_querying_subscriber_t : ze_querying_subscriber_check \
@@ -124,6 +134,9 @@
     { .context = (void*)ctx, .call = callback, .drop = droper }
 #define z_closure(...) _z_closure_overloader(__VA_ARGS__, NULL, NULL)
 #define z_move(x) (&x)
+
+#define z_alt_move(x) (x)
+#define z_alt_loan(x) (&x)
 
 #else  // #ifndef __cplusplus
 
@@ -172,8 +185,6 @@ template<> struct zenoh_drop_type<z_owned_hello_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_query_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_str_t> { typedef void type; };
 template<> struct zenoh_drop_type<zc_owned_payload_t> { typedef void type; };
-template<> struct zenoh_drop_type<zc_owned_shmbuf_t> { typedef void type; };
-template<> struct zenoh_drop_type<zc_owned_shm_manager_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_sample_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_query_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_reply_t> { typedef void type; };
@@ -201,8 +212,6 @@ template<> inline void z_drop(z_owned_hello_t* v) { z_hello_drop(v); }
 template<> inline void z_drop(z_owned_query_t* v) { z_query_drop(v); }
 template<> inline void z_drop(z_owned_str_t* v) { z_str_drop(v); }
 template<> inline void z_drop(zc_owned_payload_t* v) { zc_payload_drop(v); }
-template<> inline void z_drop(zc_owned_shmbuf_t* v) { zc_shmbuf_drop(v); }
-template<> inline void z_drop(zc_owned_shm_manager_t* v) { zc_shm_manager_drop(v); }
 template<> inline void z_drop(z_owned_closure_sample_t* v) { z_closure_sample_drop(v); }
 template<> inline void z_drop(z_owned_closure_query_t* v) { z_closure_query_drop(v); }
 template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop(v); }
@@ -230,8 +239,6 @@ inline void z_null(z_owned_hello_t& v) { v = z_hello_null(); }
 inline void z_null(z_owned_query_t& v) { v = z_query_null(); }
 inline void z_null(z_owned_str_t& v) { v = z_str_null(); }
 inline void z_null(zc_owned_payload_t& v) { v = zc_payload_null(); }
-inline void z_null(zc_owned_shmbuf_t& v) { v = zc_shmbuf_null(); }
-inline void z_null(zc_owned_shm_manager_t& v) { v = zc_shm_manager_null(); }
 inline void z_null(z_owned_closure_sample_t& v) { v = z_closure_sample_null(); }
 inline void z_null(z_owned_closure_query_t& v) { v = z_closure_query_null(); }
 inline void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
@@ -253,8 +260,6 @@ inline bool z_check(const z_owned_config_t& v) { return z_config_check(&v); }
 inline bool z_check(const z_owned_scouting_config_t& v) { return z_scouting_config_check(&v); }
 inline bool z_check(const z_bytes_t& v) { return z_bytes_check(&v); }
 inline bool z_check(const zc_owned_payload_t& v) { return zc_payload_check(&v); }
-inline bool z_check(const zc_owned_shmbuf_t& v) { return zc_shmbuf_check(&v); }
-inline bool z_check(const zc_owned_shm_manager_t& v) { return zc_shm_manager_check(&v); }
 inline bool z_check(const z_owned_subscriber_t& v) { return z_subscriber_check(&v); }
 inline bool z_check(const z_owned_pull_subscriber_t& v) { return z_pull_subscriber_check(&v); }
 inline bool z_check(const z_owned_queryable_t& v) { return z_queryable_check(&v); }

@@ -77,6 +77,12 @@ decl_rust_copy_type!(
     c:(z_alloc_alignment_t)
 );
 
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_alloc_alignment_delete(alignment: z_alloc_alignment_t) {
+    let _ = alignment.transmute();
+}
+
 // An owned MemoryLayout.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
