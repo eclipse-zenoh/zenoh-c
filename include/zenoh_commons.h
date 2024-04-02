@@ -178,19 +178,19 @@ typedef enum zcu_reply_keyexpr_t {
  * A thread-safe SharedMemoryProvider's AllocLayout
  */
 #if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(8) z_alloc_layout_threadsafe_t {
+typedef struct ALIGN(8) z_alloc_layout_t {
   uint64_t _0[4];
-} z_alloc_layout_threadsafe_t;
+} z_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_alloc_layout_threadsafe_t {
+typedef struct ALIGN(16) z_alloc_layout_t {
   uint64_t _0[14];
-} z_alloc_layout_threadsafe_t;
+} z_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_alloc_layout_threadsafe_t {
+typedef struct ALIGN(8) z_alloc_layout_t {
   uint64_t _0[14];
-} z_alloc_layout_threadsafe_t;
+} z_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_buf_alloc_result_t {
@@ -206,6 +206,24 @@ typedef struct ALIGN(16) z_buf_alloc_result_t {
 typedef struct ALIGN(8) z_buf_alloc_result_t {
   uint64_t _0[10];
 } z_buf_alloc_result_t;
+#endif
+/**
+ * A thread-safe SharedMemoryProvider's AllocLayout
+ */
+#if defined(TARGET_ARCH_X86_64)
+typedef struct ALIGN(8) z_alloc_layout_threadsafe_t {
+  uint64_t _0[4];
+} z_alloc_layout_threadsafe_t;
+#endif
+#if defined(TARGET_ARCH_AARCH64)
+typedef struct ALIGN(16) z_alloc_layout_threadsafe_t {
+  uint64_t _0[14];
+} z_alloc_layout_threadsafe_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_alloc_layout_threadsafe_t {
+  uint64_t _0[14];
+} z_alloc_layout_threadsafe_t;
 #endif
 /**
  * A tread-safe droppable context.
@@ -1358,6 +1376,22 @@ ZENOHC_API extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
+ZENOHC_API
+void z_alloc_layout_alloc(const struct z_alloc_layout_t *layout,
+                          struct z_buf_alloc_result_t *out_buffer);
+ZENOHC_API
+void z_alloc_layout_alloc_gc(const struct z_alloc_layout_t *layout,
+                             struct z_buf_alloc_result_t *out_buffer);
+ZENOHC_API
+void z_alloc_layout_alloc_gc_defrag(const struct z_alloc_layout_t *layout,
+                                    struct z_buf_alloc_result_t *out_buffer);
+ZENOHC_API
+void z_alloc_layout_alloc_gc_defrag_blocking(const struct z_alloc_layout_t *layout,
+                                             struct z_buf_alloc_result_t *out_buffer);
+ZENOHC_API
+void z_alloc_layout_alloc_gc_defrag_dealloc(const struct z_alloc_layout_t *layout,
+                                            struct z_buf_alloc_result_t *out_buffer);
+ZENOHC_API void z_alloc_layout_delete(struct z_alloc_layout_t layout);
 ZENOHC_API
 void z_alloc_layout_threadsafe_alloc(const struct z_alloc_layout_threadsafe_t *layout,
                                      struct z_buf_alloc_result_t *out_buffer);

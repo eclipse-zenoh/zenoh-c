@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+pub mod alloc_layout;
 pub mod alloc_layout_threadsafe;
 pub mod chunk;
 pub mod shared_memory_provider;
