@@ -87,16 +87,16 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    char* selector = parse_opt(argc, argv, "s", true);
+    const char* selector = parse_opt(argc, argv, "s", true);
     if (!selector) {
         selector = DEFAULT_SELECTOR;
     }
-    char* value = parse_opt(argc, argv, "v", true);
+    const char* value = parse_opt(argc, argv, "v", true);
     if (!value) {
         value = DEFAULT_VALUE;
     }
     parse_zenoh_common_args(argc, argv, config);
-    char* arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
@@ -108,5 +108,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.selector = selector, .value = value};
+    return (struct args_t){.selector = (char*)selector, .value = (char*)value};
 }

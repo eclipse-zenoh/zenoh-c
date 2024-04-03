@@ -91,15 +91,15 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    char* keyexpr = parse_opt(argc, argv, "k", true);
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
     if (!keyexpr) {
         keyexpr = DEFAULT_KEYEXPR;
     }
-    char* value = parse_opt(argc, argv, "v", true);
+    const char* value = parse_opt(argc, argv, "v", true);
     if (!value) {
         value = DEFAULT_VALUE;
     }
-    char* arg = parse_opt(argc, argv, "i", true);
+    const char* arg = parse_opt(argc, argv, "i", true);
     unsigned int history = DEFAULT_HISTORY;
     if (arg) {
         history = atoi(arg);
@@ -117,5 +117,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = keyexpr, .value = value, .history = history};
+    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value, .history = history};
 }

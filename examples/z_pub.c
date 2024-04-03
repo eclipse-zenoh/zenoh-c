@@ -96,15 +96,15 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    char* keyexpr = parse_opt(argc, argv, "k", true);
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
     if (!keyexpr) {
         keyexpr = DEFAULT_KEYEXPR;
     }
-    char* value = parse_opt(argc, argv, "v", true);
+    const char* value = parse_opt(argc, argv, "v", true);
     if (!value) {
         value = DEFAULT_VALUE;
     }
-    char* arg = parse_opt(argc, argv, "add-matching-listener", false);
+    const char* arg = parse_opt(argc, argv, "add-matching-listener", false);
     bool add_matching_listener = false;
     if (arg) {
         add_matching_listener = true;
@@ -122,5 +122,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = keyexpr, .value = value, .add_matching_listener = add_matching_listener};
+    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
 }

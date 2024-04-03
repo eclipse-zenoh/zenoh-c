@@ -40,7 +40,7 @@
  * pointer will be returned if option is found.
  * @returns NULL if option was not found, else a non-null value depending on if `opt_has_value`.
  */
-char* parse_opt(const int argc, char** argv, const char* opt, const bool opt_has_value) {
+const char* parse_opt(const int argc, char** argv, const char* opt, const bool opt_has_value) {
     size_t optlen = strlen(opt);
     for (int i = 1; i < argc; i++) {
         if (argv[i] == NULL) {
@@ -90,7 +90,7 @@ char* parse_opt(const int argc, char** argv, const char* opt, const bool opt_has
  * @param argv
  * @returns NULL if no option was found, else the first option string that was found
  */
-char* check_unknown_opts(const int argc, char** argv) {
+const char* check_unknown_opts(const int argc, char** argv) {
     for (int i = 1; i < argc; i++) {
         if (argv[i] && argv[i][0] == '-') {
             return argv[i];
@@ -137,7 +137,7 @@ char** parse_pos_args(const int argc, char** argv, const size_t nb_args) {
 void parse_zenoh_json_list_config(const int argc, char** argv, const char* opt, const char* config_key,
                                   const z_owned_config_t* config) {
     char* buf = (char*)calloc(1, sizeof(char));
-    char* value = parse_opt(argc, argv, opt, true);
+    const char* value = parse_opt(argc, argv, opt, true);
     while (value) {
         size_t len_newbuf = strlen(buf) + strlen(value) + 4; // value + quotes + comma + nullbyte
         char* newbuf = (char*)malloc(len_newbuf);
@@ -178,12 +178,12 @@ void parse_zenoh_json_list_config(const int argc, char** argv, const char* opt, 
  */
 void parse_zenoh_common_args(const int argc, char** argv, z_owned_config_t* config) {
     // -c: A configuration file.
-    char* config_file = parse_opt(argc, argv, "c", true);
+    const char* config_file = parse_opt(argc, argv, "c", true);
     if (config_file) {
         *config = zc_config_from_file(config_file);
     }
     // -m: The Zenoh session mode [default: peer].
-    char* mode = parse_opt(argc, argv, "m", true);
+    const char* mode = parse_opt(argc, argv, "m", true);
     if (mode) {
         size_t buflen = strlen(mode) + 3;  // mode + quotes + nullbyte
         char* buf = (char*)malloc(buflen);
@@ -203,7 +203,7 @@ void parse_zenoh_common_args(const int argc, char** argv, z_owned_config_t* conf
     // -l: Endpoint to listen on. Can be repeated
     parse_zenoh_json_list_config(argc, argv, "l", Z_CONFIG_LISTEN_KEY, config);
     // --no-multicast-scrouting: Disable the multicast-based scouting mechanism.
-    char* no_multicast_scouting = parse_opt(argc, argv, "no-multicast-scouting", false);
+    const char* no_multicast_scouting = parse_opt(argc, argv, "no-multicast-scouting", false);
     if (no_multicast_scouting && zc_config_insert_json(z_loan(*config), Z_CONFIG_MULTICAST_SCOUTING_KEY, "false") < 0) {
         printf("Couldn't disable multicast-scouting.\n");
         exit(-1);

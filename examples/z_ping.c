@@ -103,7 +103,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    char* arg = parse_opt(argc, argv, "s", true);
+    const char* arg = parse_opt(argc, argv, "s", true);
     unsigned int size = DEFAULT_PKT_SIZE;
     if (arg) {
         size = atoi(arg);
