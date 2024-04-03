@@ -22,10 +22,12 @@ z_keyexpr_t keyexpr;
 void query_handler(const z_query_t *query, void *context) {
     z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(query));
     z_bytes_t pred = z_query_parameters(query);
-    z_value_t payload_value = z_query_value(query);
-    if (payload_value.payload.len > 0) {
-        printf(">> [Queryable ] Received Query '%s?%.*s' with value '%.*s'\n", z_loan(keystr), (int)pred.len,
-               pred.start, (int)payload_value.payload.len, payload_value.payload.start);
+    zc_payload_t payload = z_query_value(query).payload;
+    if (zc_payload_len(payload) > 0) {
+        z_owned_str_t payload_string = zc_payload_decode_into_string(payload);
+        printf(">> [Queryable ] Received Query '%s?%.*s' with value '%s'\n", z_loan(keystr), (int)pred.len,
+               pred.start, z_loan(payload_string));
+        z_drop(z_move(payload_string));
     } else {
         printf(">> [Queryable ] Received Query '%s?%.*s'\n", z_loan(keystr), (int)pred.len, pred.start);
     }

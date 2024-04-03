@@ -110,13 +110,18 @@ int run_get() {
 
             z_sample_t sample = z_reply_ok(&reply);
             z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
-
-            ASSERT_STR_BYTES_EQUAL(values[val_num], z_sample_payload(&sample));
+            z_owned_str_t payload = zc_payload_decode_into_string(z_sample_payload(&sample));
+            if (strcmp(values[val_num], z_loan(payload))) {
+                perror("Unexpected value received");
+                z_drop(z_move(payload));
+                exit(-1);
+            }
 
             z_bytes_t v_const = z_attachment_get(z_sample_attachment(&sample), z_bytes_from_str(K_CONST));
             ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
             z_drop(z_move(keystr));
+            z_drop(z_move(payload));
         }
         z_drop(z_move(reply));
         z_drop(z_move(channel));

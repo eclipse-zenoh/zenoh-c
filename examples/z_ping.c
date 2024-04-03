@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
+    zc_owned_payload_t payload = zc_payload_encode_from_bytes((z_bytes_t){.start = data, .len = args.size});
     z_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
@@ -61,7 +62,7 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_publisher_put(z_loan(pub), data, args.size, NULL);
+            z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(&cond, &mutex);
             if (s != 0) {
                 handle_error_en(s, "z_condvar_wait");
@@ -72,7 +73,7 @@ int main(int argc, char** argv) {
     unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
         z_clock_t measure_start = z_clock_now();
-        z_publisher_put(z_loan(pub), data, args.size, NULL);
+        z_publisher_put(z_loan(pub), z_move(payload), NULL);
         int s = z_condvar_wait(&cond, &mutex);
         if (s != 0) {
             handle_error_en(s, "z_condvar_wait");

@@ -55,7 +55,8 @@ int run_publisher() {
     options.attachment = z_bytes_map_as_attachment(&map);
     for (int i = 0; i < values_count; ++i) {
         z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_VAR), z_bytes_from_str(values[i]));
-        z_publisher_put(z_loan(pub), (const uint8_t *)values[i], strlen(values[i]), &options);
+        zc_owned_payload_t payload = zc_payload_encode_from_string(values[i]);
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));
@@ -73,11 +74,13 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(keystr));
 
-    z_bytes_t payload = z_sample_payload(sample);
-    if (strncmp(values[val_num], (const char *)payload.start, (int)payload.len)) {
+    z_owned_str_t payload = zc_payload_decode_into_string(z_sample_payload(sample));
+    if (strcmp(values[val_num], z_loan(payload))) {
         perror("Unexpected value received");
+        z_drop(z_move(payload));
         exit(-1);
     }
+    z_drop(z_move(payload));
 
     z_bytes_t v_const = z_attachment_get(z_sample_attachment(sample), z_bytes_from_str(K_CONST));
     ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);

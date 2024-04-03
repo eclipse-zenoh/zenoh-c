@@ -21,7 +21,6 @@ use crate::z_owned_closure_sample_t;
 use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
 use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
@@ -179,10 +178,7 @@ pub extern "C" fn z_declare_subscriber(
 
     match session.upgrade() {
         Some(s) => {
-            let mut res = s.declare_subscriber(keyexpr).callback(move |mut sample| {
-                if let std::borrow::Cow::Owned(v) = sample.payload.contiguous() {
-                    sample.payload = v.into();
-                }
+            let mut res = s.declare_subscriber(keyexpr).callback(move |sample| {
                 let sample = z_sample_t::new(&sample);
                 z_closure_sample_call(&closure, &sample)
             });

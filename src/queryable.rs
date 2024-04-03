@@ -16,17 +16,17 @@ use crate::attachment::{
     z_attachment_iterate, z_attachment_null, z_attachment_t,
 };
 use crate::{
-    impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, LOG_INVALID_SESSION,
+    impl_guarded_transmute, z_buffer_t, z_bytes_t, z_closure_query_call, z_encoding_default,
+    z_encoding_t, z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t,
+    LOG_INVALID_SESSION,
 };
 use libc::c_void;
 use std::ops::{Deref, DerefMut};
 use zenoh::prelude::SessionDeclarations;
 use zenoh::{
-    prelude::{Sample, SplitBuffer},
+    prelude::Sample,
     queryable::{Query, Queryable as CallbackQueryable},
     sample::AttachmentBuilder,
-    value::Value,
 };
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
@@ -346,14 +346,15 @@ pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
 #[no_mangle]
 pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
     match query.as_ref().and_then(|q| q.value()) {
-        Some(value) => {
+        Some(value) =>
+        {
             #[allow(mutable_transmutes)]
-            if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
-                unsafe { std::mem::transmute::<_, &mut Value>(value).payload = payload.into() }
-            }
             value.into()
         }
-        None => (&Value::empty()).into(),
+        None => z_value_t {
+            payload: z_buffer_t::default(),
+            encoding: z_encoding_default(),
+        },
     }
 }
 

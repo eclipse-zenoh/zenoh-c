@@ -260,7 +260,8 @@ int main(int argc, char **argv) {
     z_encoding_t _ret_encoding = z_encoding_default();
     _ret_encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
     _ret_put_opt.encoding = _ret_encoding;
-    _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), (const uint8_t *)value, strlen(value), &_ret_put_opt);
+    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 
     z_sleep_s(SLEEP);
@@ -292,7 +293,8 @@ int main(int argc, char **argv) {
     assert(z_check(_ret_pub));
 
     z_publisher_put_options_t _ret_pput_opt = z_publisher_put_options_default();
-    _ret_int8 = z_publisher_put(z_loan(_ret_pub), (const uint8_t *)value, strlen(value), &_ret_pput_opt);
+    payload = zc_payload_encode_from_string(value);
+    _ret_int8 = z_publisher_put(z_loan(_ret_pub), z_move(payload), &_ret_pput_opt);
     assert(_ret_int8 == 0);
 
     z_sleep_s(SLEEP);

@@ -12,7 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use std::any::Any;
 use std::ops::Deref;
+use std::slice;
 
 use crate::collections::*;
 use crate::keyexpr::*;
@@ -22,8 +24,10 @@ use crate::z_priority_t;
 use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
+use zenoh::buffers::buffer::SplitBuffer;
+use zenoh::buffers::ZBuf;
+use zenoh::buffers::ZSliceBuffer;
 use zenoh::prelude::SampleKind;
-use zenoh::prelude::SplitBuffer;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
 use zenoh::sample::QoS;
@@ -93,14 +97,7 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 
 /// An owned payload, backed by a reference counted owner.
 ///
-/// The `payload` field may be modified, and Zenoh will take the new values into account,
-/// however, assuming `ostart` and `olen` are the respective values of `payload.start` and
-/// `payload.len` when constructing the `zc_owned_payload_t payload` value was created,
-/// then `payload.start` MUST remain within the `[ostart, ostart + olen[` interval, and
-/// `payload.len` must remain within `[0, olen -(payload.start - ostart)]`.
-///
-/// Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
-/// functions, then the operation will fail (but the passed value will still be consumed).
+/// The `payload` field may be modified, and Zenoh will take the new values into account.
 #[allow(non_camel_case_types)]
 pub type zc_owned_payload_t = z_owned_buffer_t;
 
@@ -123,6 +120,81 @@ pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
 #[no_mangle]
 pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
     z_buffer_null()
+}
+
+/// Returns a :c:type:`zc_payload_t` loaned from `payload`.
+#[no_mangle]
+pub extern "C" fn zc_payload_loan(payload: &zc_owned_payload_t) -> zc_payload_t {
+    z_buffer_loan(payload)
+}
+
+#[allow(non_camel_case_types)]
+pub type zc_payload_t = z_buffer_t;
+
+/// Increments internal payload reference count, returning owned payload.
+#[no_mangle]
+pub extern "C" fn zc_payload_clone(payload: zc_payload_t) -> zc_owned_payload_t {
+    z_buffer_clone(payload)
+}
+
+/// Decodes payload into null-terminated string
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_decode_into_string(payload: zc_payload_t) -> z_owned_str_t {
+    let payload: Option<&ZBuf> = payload.into();
+    if payload.is_none() {
+        return z_str_null();
+    }
+    let mut cstr = z_owned_str_t::preallocate(zc_payload_len(payload.into()));
+    let payload = payload.unwrap();
+
+    let mut pos = 0;
+    for s in payload.slices() {
+        cstr.insert_unchecked(pos, s);
+        pos += s.len();
+    }
+    cstr
+}
+
+unsafe impl Send for z_bytes_t {}
+unsafe impl Sync for z_bytes_t {}
+
+impl ZSliceBuffer for z_bytes_t {
+    fn as_slice(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.start, self.len) }
+    }
+    fn as_mut_slice(&mut self) -> &mut [u8] {
+        unsafe { slice::from_raw_parts_mut(self.start as *mut u8, self.len) }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// Encodes byte sequence by aliasing.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_encode_from_bytes(bytes: z_bytes_t) -> zc_owned_payload_t {
+    ZBuf::from(bytes).into()
+}
+
+/// Encodes a null-terminated string by aliasing.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_encode_from_string(
+    cstr: *const libc::c_char,
+) -> zc_owned_payload_t {
+    let bytes = z_bytes_t {
+        start: cstr as *const u8,
+        len: libc::strlen(cstr),
+    };
+    zc_payload_encode_from_bytes(bytes)
+}
+
+/// Returns total number bytes in the payload.
+#[no_mangle]
+pub extern "C" fn zc_payload_len(payload: zc_payload_t) -> usize {
+    z_buffer_len(payload)
 }
 
 /// QoS settings of zenoh message.
@@ -191,8 +263,8 @@ pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> z_encoding_t {
 ///
 /// If you need ownership of the buffer, you may use `z_sample_owned_payload`.
 #[no_mangle]
-pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_bytes_t {
-    sample.payload.slices().next().unwrap_or(b"").into()
+pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_buffer_t {
+    Some(&sample.payload).into()
 }
 /// Returns the sample's payload after incrementing its internal reference count.
 ///
@@ -231,18 +303,7 @@ pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
     }
 }
 
-/// An owned sample.
-///
-/// This is a read only type that can only be constructed by cloning a `z_sample_t`.
-/// Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
-#[repr(C)]
-pub struct zc_owned_sample_t {
-    _0: z_owned_keyexpr_t,
-    _1: z_owned_buffer_t,
-    _2: z_owned_buffer_t,
-    _3: [usize; 12],
-}
-
+pub use crate::zc_owned_sample_t;
 impl_guarded_transmute!(Option<Sample>, zc_owned_sample_t);
 
 /// Clone a sample in the cheapest way available.
@@ -422,24 +483,21 @@ impl From<zenoh_protocol::core::KnownEncoding> for z_encoding_prefix_t {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_encoding_t {
-    pub prefix: u64,
+    pub prefix: z_encoding_prefix_t,
     pub suffix: z_bytes_t,
 }
 
 impl From<z_encoding_t> for zenoh_protocol::core::Encoding {
     fn from(enc: z_encoding_t) -> Self {
         if enc.suffix.len == 0 {
-            zenoh_protocol::core::Encoding::Exact((enc.prefix as u8).try_into().unwrap())
+            zenoh_protocol::core::Encoding::Exact(enc.prefix.into())
         } else {
             let suffix = unsafe {
                 let slice: &'static [u8] =
                     std::slice::from_raw_parts(enc.suffix.start, enc.suffix.len);
                 std::str::from_utf8_unchecked(slice)
             };
-            zenoh_protocol::core::Encoding::WithSuffix(
-                (enc.prefix as u8).try_into().unwrap(),
-                suffix.into(),
-            )
+            zenoh_protocol::core::Encoding::WithSuffix(enc.prefix.into(), suffix.into())
         }
     }
 }
@@ -448,7 +506,7 @@ impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
     fn from(val: &zenoh_protocol::core::Encoding) -> Self {
         let suffix = val.suffix();
         z_encoding_t {
-            prefix: u8::from(*val.prefix()) as u64,
+            prefix: (*val.prefix()).into(),
             suffix: z_bytes_t {
                 start: suffix.as_ptr(),
                 len: suffix.len(),
@@ -470,7 +528,7 @@ impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[repr(C)]
 pub struct z_owned_encoding_t {
-    pub prefix: u64,
+    pub prefix: z_encoding_prefix_t,
     pub suffix: z_bytes_t,
     pub _dropped: bool,
 }
@@ -478,7 +536,7 @@ pub struct z_owned_encoding_t {
 impl z_owned_encoding_t {
     pub fn null() -> Self {
         z_owned_encoding_t {
-            prefix: 0,
+            prefix: z_encoding_prefix_t::Empty,
             suffix: z_bytes_t::default(),
             _dropped: true,
         }
@@ -506,10 +564,7 @@ pub unsafe extern "C" fn z_encoding(
             len: libc::strlen(suffix),
         }
     };
-    z_encoding_t {
-        prefix: prefix as u64,
-        suffix,
-    }
+    z_encoding_t { prefix, suffix }
 }
 
 /// Constructs a default :c:type:`z_encoding_t`.
@@ -562,13 +617,30 @@ pub struct z_owned_str_t {
     pub _cstr: *mut libc::c_char,
 }
 
+impl z_owned_str_t {
+    #[allow(clippy::missing_safety_doc)]
+    pub unsafe fn preallocate(len: usize) -> z_owned_str_t {
+        let cstr = libc::malloc(len + 1) as *mut libc::c_char;
+        *cstr.add(len) = 0;
+        z_owned_str_t { _cstr: cstr }
+    }
+
+    #[allow(clippy::missing_safety_doc)]
+    pub unsafe fn insert_unchecked(&mut self, start: usize, value: &[u8]) {
+        std::ptr::copy_nonoverlapping(
+            value.as_ptr(),
+            (self._cstr as *mut u8).add(start),
+            value.len(),
+        );
+    }
+}
+
 impl From<&[u8]> for z_owned_str_t {
     fn from(value: &[u8]) -> Self {
         unsafe {
-            let cstr = libc::malloc(value.len() + 1) as *mut libc::c_char;
-            std::ptr::copy_nonoverlapping(value.as_ptr(), cstr as _, value.len());
-            *cstr.add(value.len()) = 0;
-            z_owned_str_t { _cstr: cstr }
+            let mut cstr = Self::preallocate(value.len());
+            cstr.insert_unchecked(0, value);
+            cstr
         }
     }
 }

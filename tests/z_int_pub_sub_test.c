@@ -49,7 +49,8 @@ int run_publisher() {
     for (int i = 0; i < values_count; ++i) {
         z_publisher_put_options_t options = z_publisher_put_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        z_publisher_put(z_loan(pub), (const uint8_t *)values[i], strlen(values[i]), &options);
+        zc_owned_payload_t payload = zc_payload_encode_from_string(values[i]);
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));
@@ -66,11 +67,13 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(keystr));
 
-    z_bytes_t payload = z_sample_payload(sample);
-    if (strncmp(values[val_num], (const char *)payload.start, (int)payload.len)) {
+    z_owned_str_t payload = zc_payload_decode_into_string(z_sample_payload(sample));
+    if (strcmp(values[val_num], z_loan(payload))) {
         perror("Unexpected value received");
+        z_drop(z_move(payload));
         exit(-1);
     }
+    z_drop(z_move(payload));
 
     if (z_qos_get_congestion_control(z_sample_qos(sample)) != Z_CONGESTION_CONTROL_BLOCK ||
         z_qos_get_priority(z_sample_qos(sample)) != Z_PRIORITY_DATA) {

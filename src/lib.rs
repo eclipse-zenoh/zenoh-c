@@ -55,6 +55,8 @@ pub use querying_subscriber::*;
 pub mod attachment;
 pub use platform::*;
 pub mod platform;
+pub use opaque_types::*;
+pub mod opaque_types;
 #[cfg(feature = "shared-memory")]
 mod shm;
 

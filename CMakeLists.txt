@@ -179,6 +179,10 @@ set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
+set_genexpr_condition(cargo_dep_flags DEBUG $<CONFIG:Debug> 
+	"--manifest-path=${CMAKE_CURRENT_SOURCE_DIR}/build-resources/opaque-types/Cargo.toml"
+	"--release;--manifest-path=${CMAKE_CURRENT_SOURCE_DIR}/build-resources/opaque-types/Cargo.toml")
+set(cargo_dep_flags ${cargo_dep_flags} ${ZENOHC_CARGO_FLAGS})
 
 if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
@@ -199,6 +203,7 @@ add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
+	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_dep_flags} &> ${CMAKE_CURRENT_SOURCE_DIR}/.build_resources_opaque_types.txt || echo ""
 	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS

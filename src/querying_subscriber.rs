@@ -15,7 +15,6 @@
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::SplitBuffer;
 use zenoh_ext::*;
 use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
@@ -185,10 +184,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
                 }
             }
             match sub
-                .callback(move |mut sample| {
-                    if let std::borrow::Cow::Owned(v) = sample.payload.contiguous() {
-                        sample.payload = v.into();
-                    }
+                .callback(move |sample| {
                     let sample = z_sample_t::new(&sample);
                     z_closure_sample_call(&closure, &sample)
                 })

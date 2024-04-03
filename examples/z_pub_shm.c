@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         z_publisher_put_options_t options = z_publisher_put_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
         zc_owned_payload_t payload = zc_shmbuf_into_payload(z_move(shmbuf));
-        zc_publisher_put_owned(z_loan(pub), z_move(payload), &options);
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));

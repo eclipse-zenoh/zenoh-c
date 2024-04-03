@@ -1,4 +1,5 @@
 use fs2::FileExt;
+use regex::Regex;
 use std::io::{Read, Write};
 use std::{borrow::Cow, collections::HashMap, io::BufWriter, path::Path};
 
@@ -24,6 +25,7 @@ const HEADER: &str = r"//
 ";
 
 fn main() {
+    generate_opaque_types();
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
         .expect("Unable to generate bindings")
         .write_to_file(GENERATION_PATH);
@@ -36,7 +38,60 @@ fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=splitguide.yaml");
-    println!("cargo:rerun-if-changed=cbindgen.toml")
+    println!("cargo:rerun-if-changed=cbindgen.toml");
+    println!("cargo:rerun-if-changed=build-resources")
+}
+
+fn generate_opaque_types() {
+    let current_folder = std::env::current_dir().unwrap();
+    let path_in = current_folder.join("./.build_resources_opaque_types.txt");
+    let path_out = current_folder.join("./src/opaque_types/mod.rs");
+
+    let data_in = std::fs::read_to_string(path_in).unwrap();
+    let mut data_out = String::new();
+    let docs = get_opaque_type_docs();
+
+    let re = Regex::new(r"type:(\w+) *, align:0*(\d+), size:0*(\d+)").unwrap();
+    for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
+        let s = format!(
+            "#[repr(C, align({align}))]
+pub struct {type_name} {{
+    _0: [u8; {size}]
+}}
+"
+        );
+        if let Some(doc) = docs.get(type_name) {
+            for d in doc {
+                data_out += d;
+                data_out += "\r\n";
+            }
+        }
+        data_out += &s;
+    }
+    std::fs::write(path_out, data_out).unwrap();
+}
+
+fn get_opaque_type_docs() -> HashMap<String, std::vec::Vec<String>> {
+    let current_folder = std::env::current_dir().unwrap();
+    let path_in = current_folder.join("./build-resources/opaque-types/src/lib.rs");
+    let re = Regex::new(r#"get_opaque_type_data!\(.*, "(\w+)"\)"#).unwrap();
+    let mut comments = std::vec::Vec::<String>::new();
+    let mut res = HashMap::<String, std::vec::Vec<String>>::new();
+
+    for line in std::fs::read_to_string(path_in).unwrap().lines() {
+        if line.starts_with("///") {
+            comments.push(line.to_string());
+            continue;
+        }
+        if comments.is_empty() {
+            continue;
+        }
+        if let Some(c) = re.captures(line) {
+            res.insert(c[1].to_string(), comments.clone());
+        }
+        comments.clear();
+    }
+    res
 }
 
 fn configure() {
