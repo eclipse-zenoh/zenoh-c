@@ -54,7 +54,7 @@ pub extern "C" fn z_closure_hello_call(
     match closure.call {
         Some(call) => call(hello, closure.context),
         None => {
-            log::error!("Attempted to call an uninitialized closure!");
+            tracing::error!("Attempted to call an uninitialized closure!");
         }
     }
 }

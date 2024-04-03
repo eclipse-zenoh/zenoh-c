@@ -57,7 +57,7 @@ pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
             From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
@@ -69,7 +69,7 @@ pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
             From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
@@ -105,7 +105,7 @@ pub extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_
             From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
@@ -117,7 +117,7 @@ pub extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_
             From::from(move |query: &mut z_owned_query_t| {
                 if let Some(query) = query.take() {
                     if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed query_fifo: {}", e)
                     }
                 }
             }),
@@ -180,7 +180,7 @@ pub extern "C" fn z_query_channel_closure_call(
     match closure.call {
         Some(call) => call(sample, closure.context),
         None => {
-            log::error!("Attempted to call an uninitialized closure!");
+            tracing::error!("Attempted to call an uninitialized closure!");
             true
         }
     }

@@ -198,13 +198,13 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
             {
                 Ok(sub) => ze_owned_querying_subscriber_t::new(sub, session),
                 Err(e) => {
-                    log::debug!("{}", e);
+                    tracing::debug!("{}", e);
                     ze_owned_querying_subscriber_t::null()
                 }
             }
         }
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             ze_owned_querying_subscriber_t::null()
         }
     }
@@ -241,12 +241,12 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                     })
                     .res()
                 {
-                    log::debug!("{}", e);
+                    tracing::debug!("{}", e);
                     return -1;
                 }
             }
             None => {
-                log::debug!("{}", LOG_INVALID_SESSION);
+                tracing::debug!("{}", LOG_INVALID_SESSION);
                 return -1;
             }
         }
@@ -260,7 +260,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_subscriber_t) -> i8 {
     if let Some(s) = sub.take() {
         if let Err(e) = s.fetching_subscriber.close().res_sync() {
-            log::warn!("{}", e);
+            tracing::warn!("{}", e);
             return e.errno().get();
         }
     }

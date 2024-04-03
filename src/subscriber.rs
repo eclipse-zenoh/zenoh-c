@@ -194,13 +194,13 @@ pub extern "C" fn z_declare_subscriber(
             match res.res() {
                 Ok(sub) => z_owned_subscriber_t::new(sub),
                 Err(e) => {
-                    log::debug!("{}", e);
+                    tracing::debug!("{}", e);
                     z_owned_subscriber_t::null()
                 }
             }
         }
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             z_owned_subscriber_t::null()
         }
     }
@@ -223,7 +223,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_owned_ke
 pub extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) -> i8 {
     if let Some(s) = sub.take() {
         if let Err(e) = s.undeclare().res_sync() {
-            log::warn!("{}", e);
+            tracing::warn!("{}", e);
             return e.errno().get();
         }
     }

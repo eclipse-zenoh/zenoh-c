@@ -136,12 +136,12 @@ pub extern "C" fn ze_declare_publication_cache(
                 match p.res_sync() {
                     Ok(publication_cache) => ze_owned_publication_cache_t::new(publication_cache),
                     Err(e) => {
-                        log::error!("{}", e);
+                        tracing::error!("{}", e);
                         ze_owned_publication_cache_t::null()
                     }
                 }
             } else {
-                log::error!("{}", UninitializedKeyExprError);
+                tracing::error!("{}", UninitializedKeyExprError);
                 ze_owned_publication_cache_t::null()
             }
         }
@@ -171,7 +171,7 @@ pub extern "C" fn ze_undeclare_publication_cache(
 ) -> i8 {
     if let Some(p) = pub_cache.take() {
         if let Err(e) = p.close().res_sync() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return e.errno().get();
         }
     }

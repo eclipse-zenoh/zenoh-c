@@ -151,18 +151,18 @@ pub extern "C" fn z_declare_publisher(
                 }
                 match p.res_sync() {
                     Err(e) => {
-                        log::error!("{}", e);
+                        tracing::error!("{}", e);
                         None
                     }
                     Ok(publisher) => Some(publisher),
                 }
             } else {
-                log::error!("{}", UninitializedKeyExprError);
+                tracing::error!("{}", UninitializedKeyExprError);
                 None
             }
         }
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             None
         }
     }
@@ -272,7 +272,7 @@ pub unsafe extern "C" fn z_publisher_put(
             None => p.put(value),
         };
         if let Err(e) = put.res_sync() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             e.errno().get()
         } else {
             0
@@ -306,7 +306,7 @@ pub unsafe extern "C" fn zc_publisher_put_owned(
 ) -> i8 {
     if let Some(p) = publisher.as_ref() {
         let Some(payload) = payload.and_then(|p| p.take()) else {
-            log::debug!("Attempted to put without a payload");
+            tracing::debug!("Attempted to put without a payload");
             return i8::MIN;
         };
         let value: Value = payload.into();
@@ -315,7 +315,7 @@ pub unsafe extern "C" fn zc_publisher_put_owned(
             None => p.put(value),
         };
         if let Err(e) = put.res_sync() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             e.errno().get()
         } else {
             0
@@ -353,7 +353,7 @@ pub extern "C" fn z_publisher_delete(
 ) -> i8 {
     if let Some(p) = publisher.as_ref() {
         if let Err(e) = p.delete().res_sync() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             e.errno().get()
         } else {
             0
@@ -449,7 +449,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 pub extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> i8 {
     if let Some(p) = publisher.take() {
         if let Err(e) = p.undeclare().res_sync() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return e.errno().get();
         }
     }

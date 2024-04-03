@@ -223,7 +223,7 @@ pub extern "C" fn z_declare_queryable(
     let session = match session.upgrade() {
         Some(s) => s,
         None => {
-            log::error!("{}", LOG_INVALID_SESSION);
+            tracing::error!("{}", LOG_INVALID_SESSION);
             return None.into();
         }
     };
@@ -234,7 +234,7 @@ pub extern "C" fn z_declare_queryable(
     builder
         .callback(move |query| z_closure_query_call(&closure, &z_query_t::from(&query)))
         .res_sync()
-        .map_err(|e| log::error!("{}", e))
+        .map_err(|e| tracing::error!("{}", e))
         .ok()
         .into()
 }
@@ -248,7 +248,7 @@ pub extern "C" fn z_declare_queryable(
 pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
     if let Some(qable) = qable.take() {
         if let Err(e) = qable.undeclare().res_sync() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return e.errno().get();
         }
     }
@@ -285,7 +285,7 @@ pub unsafe extern "C" fn z_query_reply(
     options: Option<&z_query_reply_options_t>,
 ) -> i8 {
     let Some(query) = query.as_ref() else {
-        log::error!("Called `z_query_reply` with invalidated `query`");
+        tracing::error!("Called `z_query_reply` with invalidated `query`");
         return i8::MIN;
     };
     if let Some(key) = &*key {
@@ -306,7 +306,7 @@ pub unsafe extern "C" fn z_query_reply(
             };
         }
         if let Err(e) = query.reply(Ok(s)).res_sync() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return e.errno().get();
         }
         0

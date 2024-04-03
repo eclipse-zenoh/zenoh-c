@@ -165,13 +165,13 @@ pub extern "C" fn z_declare_pull_subscriber(
             match res.res() {
                 Ok(sub) => z_owned_pull_subscriber_t::new(sub),
                 Err(e) => {
-                    log::debug!("{}", e);
+                    tracing::debug!("{}", e);
                     z_owned_pull_subscriber_t::null()
                 }
             }
         }
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             z_owned_pull_subscriber_t::null()
         }
     }
@@ -183,7 +183,7 @@ pub extern "C" fn z_declare_pull_subscriber(
 pub extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) -> i8 {
     if let Some(s) = sub.as_mut().take() {
         if let Err(e) = s.undeclare().res_sync() {
-            log::warn!("{}", e);
+            tracing::warn!("{}", e);
             return e.errno().get();
         }
     }
@@ -215,7 +215,7 @@ pub extern "C" fn z_subscriber_pull(sub: z_pull_subscriber_t) -> i8 {
     match sub.0.as_ref() {
         Some(tx) => {
             if let Err(e) = tx.pull().res_sync() {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 e.errno().get()
             } else {
                 0

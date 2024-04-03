@@ -56,7 +56,7 @@ pub extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
             From::from(move |reply: &mut z_owned_reply_t| {
                 if let Some(reply) = reply.take() {
                     if let Err(e) = tx.send(reply) {
-                        log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed reply_fifo: {}", e)
                     }
                 }
             }),
@@ -68,7 +68,7 @@ pub extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
             From::from(move |reply: &mut z_owned_reply_t| {
                 if let Some(reply) = reply.take() {
                     if let Err(e) = tx.send(reply) {
-                        log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed reply_fifo: {}", e)
                     }
                 }
             }),
@@ -104,7 +104,7 @@ pub extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_
             From::from(move |reply: &mut z_owned_reply_t| {
                 if let Some(reply) = reply.take() {
                     if let Err(e) = tx.send(reply) {
-                        log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed reply_fifo: {}", e)
                     }
                 }
             }),
@@ -116,7 +116,7 @@ pub extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_
             From::from(move |reply: &mut z_owned_reply_t| {
                 if let Some(reply) = reply.take() {
                     if let Err(e) = tx.send(reply) {
-                        log::error!("Attempted to push onto a closed reply_fifo: {}", e)
+                        tracing::error!("Attempted to push onto a closed reply_fifo: {}", e)
                     }
                 }
             }),
@@ -180,7 +180,7 @@ pub extern "C" fn z_reply_channel_closure_call(
     match closure.call {
         Some(call) => call(sample, closure.context),
         None => {
-            log::error!("Attempted to call an uninitialized closure!");
+            tracing::error!("Attempted to call an uninitialized closure!");
             true
         }
     }

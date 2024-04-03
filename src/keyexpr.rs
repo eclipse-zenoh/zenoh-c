@@ -93,12 +93,12 @@ pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t
         Ok(name) => match KeyExpr::try_from(name) {
             Ok(v) => v.into_owned().into(),
             Err(e) => {
-                log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
+                tracing::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
                 z_owned_keyexpr_t::null()
             }
         },
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             z_owned_keyexpr_t::null()
         }
     }
@@ -118,13 +118,13 @@ pub unsafe extern "C" fn z_keyexpr_new_autocanonize(name: *const c_char) -> z_ow
             match KeyExpr::autocanonize(name_owned) {
                 Ok(v) => v.into_owned().into(),
                 Err(e) => {
-                    log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
+                    tracing::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
                     z_owned_keyexpr_t::null()
                 }
             }
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             z_owned_keyexpr_t::null()
         }
     }
@@ -240,12 +240,12 @@ pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) ->
         Ok(name) => match keyexpr::new(name) {
             Ok(_) => 0,
             Err(e) => {
-                log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
+                tracing::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
                 e.errno().get()
             }
         },
         Err(e) => {
-            log::error!("{:02x?} is not valid UTF8 {}", name, e);
+            tracing::error!("{:02x?} is not valid UTF8 {}", name, e);
             i8::MIN
         }
     }
@@ -288,12 +288,12 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
                 0
             }
             Err(e) => {
-                log::error!("Canonization error: {e}");
+                tracing::error!("Canonization error: {e}");
                 e.errno().get()
             }
         },
         Err(e) => {
-            log::error!("{:02x?} is not valid UTF8 {}", name, e);
+            tracing::error!("{:02x?} is not valid UTF8 {}", name, e);
             i8::MIN
         }
     }
@@ -309,12 +309,12 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice(name: *const c_char, len: usize) 
         Ok(name) => match KeyExpr::try_from(name) {
             Ok(v) => v.into(),
             Err(e) => {
-                log::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
+                tracing::error!("Couldn't construct a keyexpr from `{}`: {}", name, e);
                 z_keyexpr_t::null()
             }
         },
         Err(e) => {
-            log::error!("{:02x?} is not valid UTF8 {}", name, e);
+            tracing::error!("{:02x?} is not valid UTF8 {}", name, e);
             z_keyexpr_t::null()
         }
     }
@@ -455,7 +455,7 @@ pub extern "C" fn z_declare_keyexpr(
     let key_expr = match keyexpr.as_ref() {
         Some(ke) => ke,
         None => {
-            log::warn!("{}", UninitializedKeyExprError);
+            tracing::warn!("{}", UninitializedKeyExprError);
             return z_owned_keyexpr_t::null();
         }
     };
@@ -463,12 +463,12 @@ pub extern "C" fn z_declare_keyexpr(
         Some(s) => match s.declare_keyexpr(key_expr).res_sync() {
             Ok(id) => id.into_owned().into(),
             Err(e) => {
-                log::debug!("{}", e);
+                tracing::debug!("{}", e);
                 z_owned_keyexpr_t::null()
             }
         },
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             z_owned_keyexpr_t::null()
         }
     }
@@ -479,7 +479,7 @@ pub extern "C" fn z_declare_keyexpr(
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_keyexpr_t) -> i8 {
     let Some(kexpr) = kexpr.deref_mut().take() else {
-        log::debug!("Attempted to undeclare dropped keyexpr");
+        tracing::debug!("Attempted to undeclare dropped keyexpr");
         return i8::MIN;
     };
 
@@ -487,12 +487,12 @@ pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_
         Some(s) => match s.undeclare(kexpr).res() {
             Ok(()) => 0,
             Err(e) => {
-                log::debug!("{}", e);
+                tracing::debug!("{}", e);
                 e.errno().get()
             }
         },
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             i8::MIN
         }
     }
@@ -570,7 +570,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
     let right = match std::str::from_utf8(right) {
         Ok(r) => r,
         Err(e) => {
-            log::error!(
+            tracing::error!(
                 "Couldn't concatenate {:02x?} to {} because it is not valid UTF8: {}",
                 right,
                 left,
@@ -582,7 +582,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
     match left.concat(right) {
         Ok(result) => result.into(),
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             z_owned_keyexpr_t::null()
         }
     }
@@ -604,7 +604,7 @@ pub extern "C" fn z_keyexpr_join(left: z_keyexpr_t, right: z_keyexpr_t) -> z_own
     match left.join(right.as_str()) {
         Ok(result) => result.into(),
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             z_owned_keyexpr_t::null()
         }
     }

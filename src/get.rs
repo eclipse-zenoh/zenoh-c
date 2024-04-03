@@ -216,7 +216,7 @@ pub unsafe extern "C" fn z_get(
         CStr::from_ptr(parameters).to_str().unwrap()
     };
     let Some(s) = session.upgrade() else {
-        log::error!("{LOG_INVALID_SESSION}");
+        tracing::error!("{LOG_INVALID_SESSION}");
         return i8::MIN;
     };
     let mut q = s.get(KeyExpr::try_from(keyexpr).unwrap().with_parameters(p));
@@ -244,7 +244,7 @@ pub unsafe extern "C" fn z_get(
     {
         Ok(()) => 0,
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             e.errno().get()
         }
     }
