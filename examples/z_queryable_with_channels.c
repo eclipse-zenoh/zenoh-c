@@ -79,7 +79,8 @@ int main(int argc, char **argv) {
         }
         z_query_reply_options_t options = z_query_reply_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        z_query_reply(&query, keyexpr, (const unsigned char *)value, strlen(value), &options);
+        zc_owned_payload_t reply_payload = zc_payload_encode_from_string(value);
+        z_query_reply(&query, keyexpr, z_move(reply_payload), &options);
         z_drop(z_move(keystr));
         z_drop(z_move(oquery));
     }

@@ -1994,14 +1994,12 @@ struct z_bytes_t z_query_parameters(const struct z_query_t *query);
  *     query: The query to reply to.
  *     key: The key of this reply.
  *     payload: The value of this reply.
- *     len: The length of the value of this reply.
  *     options: The options of this reply.
  */
 ZENOHC_API
 int8_t z_query_reply(const struct z_query_t *query,
                      struct z_keyexpr_t key,
-                     const uint8_t *payload,
-                     size_t len,
+                     zc_owned_payload_t *payload,
                      const struct z_query_reply_options_t *options);
 /**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.

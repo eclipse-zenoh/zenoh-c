@@ -56,7 +56,8 @@ void query_handler(const z_query_t *query, void *arg) {
     z_value_t payload_value = z_query_value(query);
     (void)(payload_value);
     z_query_reply_options_t _ret_qreply_opt = z_query_reply_options_default();
-    z_query_reply(query, z_keyexpr(z_loan(k_str)), (const uint8_t *)value, strlen(value), &_ret_qreply_opt);
+    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    z_query_reply(query, z_keyexpr(z_loan(k_str)), z_move(payload), &_ret_qreply_opt);
 
     z_drop(z_move(k_str));
 }
