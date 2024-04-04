@@ -240,6 +240,9 @@ typedef struct ALIGN(8) z_alloc_layout_threadsafe_t {
   uint64_t _0[14];
 } z_alloc_layout_threadsafe_t;
 #endif
+typedef struct zc_threadsafe_context_data_t {
+  void *ptr;
+} zc_threadsafe_context_data_t;
 /**
  * A tread-safe droppable context.
  * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
@@ -255,7 +258,7 @@ typedef struct ALIGN(8) z_alloc_layout_threadsafe_t {
  * be executed.
  */
 typedef struct zc_threadsafe_context_t {
-  void *context;
+  struct zc_threadsafe_context_data_t context;
   void (*delete_fn)(void*);
 } zc_threadsafe_context_t;
 /**

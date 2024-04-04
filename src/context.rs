@@ -82,9 +82,17 @@ impl Drop for Context {
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_threadsafe_context_t {
-    context: *mut c_void,
+    context: zc_threadsafe_context_data_t,
     delete_fn: unsafe extern "C" fn(*mut c_void),
 }
+
+#[derive(Debug)]
+#[repr(C)]
+pub struct zc_threadsafe_context_data_t {
+    ptr: *mut c_void,
+}
+unsafe impl Send for zc_threadsafe_context_data_t {}
+unsafe impl Sync for zc_threadsafe_context_data_t {}
 
 decl_rust_copy_type!(
     zenoh:(ThreadsafeContext),
@@ -95,15 +103,13 @@ decl_rust_copy_type!(
 pub struct ThreadsafeContext(zc_threadsafe_context_t);
 impl DroppableContext for ThreadsafeContext {
     fn get(&self) -> *mut c_void {
-        self.0.context
+        self.0.context.ptr
     }
 }
 impl Drop for ThreadsafeContext {
     fn drop(&mut self) {
         unsafe {
-            (self.0.delete_fn)(self.0.context);
+            (self.0.delete_fn)(self.0.context.ptr);
         }
     }
 }
-unsafe impl Send for ThreadsafeContext {}
-unsafe impl Sync for ThreadsafeContext {}
