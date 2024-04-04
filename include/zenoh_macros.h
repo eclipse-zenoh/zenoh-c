@@ -89,7 +89,7 @@
                   z_keyexpr_t : z_keyexpr_is_initialized,                       \
                   z_owned_config_t : z_config_check,                            \
                   z_owned_scouting_config_t : z_scouting_config_check,          \
-                  z_bytes_t : z_bytes_check,                                    \
+                  z_owned_bytes_t : z_bytes_check,                                    \
                   z_owned_subscriber_t : z_subscriber_check,                    \
                   z_owned_pull_subscriber_t : z_pull_subscriber_check,          \
                   z_owned_queryable_t : z_queryable_check,                      \
@@ -257,7 +257,7 @@ inline bool z_check(const z_owned_keyexpr_t& v) { return z_keyexpr_check(&v); }
 inline bool z_check(const z_keyexpr_t& v) { return z_keyexpr_is_initialized(&v); }
 inline bool z_check(const z_owned_config_t& v) { return z_config_check(&v); }
 inline bool z_check(const z_owned_scouting_config_t& v) { return z_scouting_config_check(&v); }
-inline bool z_check(const z_bytes_t& v) { return z_bytes_check(&v); }
+inline bool z_check(const z_owned_bytes_t& v) { return z_bytes_check(&v); }
 inline bool z_check(const zc_owned_payload_t& v) { return zc_payload_check(&v); }
 inline bool z_check(const zc_owned_shmbuf_t& v) { return zc_shmbuf_check(&v); }
 inline bool z_check(const zc_owned_shm_manager_t& v) { return zc_shm_manager_check(&v); }

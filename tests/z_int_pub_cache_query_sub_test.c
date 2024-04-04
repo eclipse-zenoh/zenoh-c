@@ -93,13 +93,14 @@ void data_handler(const z_sample_t *sample, void *arg) {
         exit(-1);
     }
     z_drop(z_move(keystr));
-    z_owned_str_t payload = zc_payload_decode_into_string(z_sample_payload(sample));
-    if (strcmp(values[val_num], z_loan(payload))) {
+    z_owned_str_t payload_value = z_str_null();
+    zc_payload_decode_into_string(z_sample_payload(sample), &payload_value);
+    if (strcmp(values[val_num], z_loan(payload_value))) {
         perror("Unexpected value received");
-        z_drop(z_move(payload));
+        z_drop(z_move(payload_value));
         exit(-1);
     }
-    z_drop(z_move(payload));
+    z_drop(z_move(payload_value));
 
     printf("data_handler: %i\n", val_num);
     if (++val_num == values_count) {

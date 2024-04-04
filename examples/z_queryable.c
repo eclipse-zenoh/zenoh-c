@@ -24,15 +24,17 @@ void query_handler(const z_query_t *query, void *context) {
     z_bytes_t pred = z_query_parameters(query);
     zc_payload_t payload = z_query_value(query).payload;
     if (zc_payload_len(payload) > 0) {
-        z_owned_str_t payload_string = zc_payload_decode_into_string(payload);
+        z_owned_str_t payload_value = z_str_null();
+        zc_payload_decode_into_string(payload, &payload_value);
         printf(">> [Queryable ] Received Query '%s?%.*s' with value '%s'\n", z_loan(keystr), (int)pred.len,
-               pred.start, z_loan(payload_string));
-        z_drop(z_move(payload_string));
+               pred.start, z_loan(payload_value));
+        z_drop(z_move(payload_value));
     } else {
         printf(">> [Queryable ] Received Query '%s?%.*s'\n", z_loan(keystr), (int)pred.len, pred.start);
     }
     z_query_reply_options_t options = z_query_reply_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
+    
     zc_owned_payload_t reply_payload = zc_payload_encode_from_string(value);
     z_query_reply(query, z_keyexpr((const char *)context), z_move(reply_payload), &options);
     z_drop(z_move(keystr));

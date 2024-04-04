@@ -219,6 +219,10 @@ typedef struct ALIGN(8) z_owned_buffer_t {
 typedef struct z_buffer_t {
   struct z_owned_buffer_t *_inner;
 } z_buffer_t;
+typedef struct z_owned_bytes_t {
+  uint8_t *start;
+  size_t len;
+} z_owned_bytes_t;
 /**
  * A map of maybe-owned vector of bytes to owned vector of bytes.
  *
@@ -631,7 +635,7 @@ typedef struct z_encoding_t {
  */
 typedef struct z_owned_encoding_t {
   enum z_encoding_prefix_t prefix;
-  struct z_bytes_t suffix;
+  struct z_owned_bytes_t suffix;
   bool _dropped;
 } z_owned_encoding_t;
 /**
@@ -647,17 +651,6 @@ typedef struct z_query_consolidation_t {
  */
 typedef struct z_owned_buffer_t zc_owned_payload_t;
 /**
- * An owned zenoh value.
- *
- * Members:
- *   zc_owned_payload_t payload: The payload of this zenoh value.
- *   z_owned_encoding_t encoding: The encoding of this zenoh value `payload`.
- */
-typedef struct z_owned_value_t {
-  zc_owned_payload_t payload;
-  struct z_owned_encoding_t encoding;
-} z_owned_value_t;
-/**
  * Options passed to the :c:func:`z_get` function.
  *
  * Members:
@@ -670,7 +663,8 @@ typedef struct z_owned_value_t {
 typedef struct z_get_options_t {
   enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
-  struct z_owned_value_t value;
+  zc_owned_payload_t payload;
+  struct z_encoding_t encoding;
   struct z_attachment_t attachment;
   uint64_t timeout_ms;
 } z_get_options_t;
@@ -1102,7 +1096,7 @@ ZENOHC_API struct z_owned_buffer_t z_buffer_null(void);
 /**
  * Returns the `index`th slice of the buffer, aliasing it.
  *
- * Out of bounds accesses will return `z_bytes_null`.
+ * Out of bounds accesses will return `z_bytes_empty`.
  */
 ZENOHC_API struct z_bytes_t z_buffer_slice_at(struct z_buffer_t buffer, size_t index);
 /**
@@ -1114,13 +1108,23 @@ ZENOHC_API size_t z_buffer_slice_count(struct z_buffer_t buffer);
 /**
  * Returns ``true`` if `b` is initialized.
  */
-ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
+ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *b);
+ZENOHC_API struct z_owned_bytes_t z_bytes_clone(const struct z_bytes_t *b);
+/**
+ * Returns the gravestone value for `z_bytes_t`
+ */
+ZENOHC_API struct z_bytes_t z_bytes_empty(void);
 /**
  * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
- * `str == NULL` will cause this to return `z_bytes_null()`
+ * `str == NULL` will cause this to return `z_bytes_empty()`
  */
 ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
+/**
+ * Returns ``true`` if `b` is initialized.
+ */
+ZENOHC_API bool z_bytes_is_initialized(const struct z_bytes_t *b);
+ZENOHC_API struct z_bytes_t z_bytes_loan(const struct z_owned_bytes_t *b);
 /**
  * Aliases `this` into a generic `z_attachment_t`, allowing it to be passed to corresponding APIs.
  */
@@ -1211,14 +1215,14 @@ ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
 /**
  * Deprecated in favor of `z_bytes_from_str`: Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
- * `str == NULL` will cause this to return `z_bytes_null()`
+ * `str == NULL` will cause this to return `z_bytes_empty()`
  */
 ZENOHC_API
 struct z_bytes_t z_bytes_new(const char *str);
 /**
- * Returns the gravestone value for `z_bytes_t`
+ * Returns the gravestone value for `z_owned_bytes_t`
  */
-ZENOHC_API struct z_bytes_t z_bytes_null(void);
+ZENOHC_API struct z_owned_bytes_t z_bytes_null(void);
 /**
  * Constructs a `len` bytes long view starting at `start`.
  */
@@ -2270,10 +2274,6 @@ ZENOHC_API int8_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
  */
 ZENOHC_API
 int8_t z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
-ZENOHC_API bool z_value_check(const struct z_owned_value_t *value);
-ZENOHC_API void z_value_drop(struct z_owned_value_t *value);
-ZENOHC_API struct z_value_t z_value_loan(const struct z_owned_value_t *value);
-ZENOHC_API struct z_owned_value_t z_value_null(void);
 /**
  * Converts the kind of zenoh entity into a string.
  *
@@ -2467,7 +2467,11 @@ ZENOHC_API zc_owned_payload_t zc_payload_clone(zc_payload_t payload);
 /**
  * Decodes payload into null-terminated string
  */
-ZENOHC_API struct z_owned_str_t zc_payload_decode_into_string(zc_payload_t payload);
+ZENOHC_API int8_t zc_payload_decode_into_bytes(zc_payload_t payload, struct z_owned_bytes_t *b);
+/**
+ * Decodes payload into null-terminated string
+ */
+ZENOHC_API int8_t zc_payload_decode_into_string(zc_payload_t payload, struct z_owned_str_t *cstr);
 /**
  * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
  */

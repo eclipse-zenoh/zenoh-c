@@ -140,12 +140,13 @@ pub extern "C" fn zc_payload_clone(payload: zc_payload_t) -> zc_owned_payload_t 
 /// Decodes payload into null-terminated string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_decode_into_string(payload: zc_payload_t) -> z_owned_str_t {
+pub unsafe extern "C" fn zc_payload_decode_into_string(payload: zc_payload_t, cstr: &mut z_owned_str_t) -> i8 {
     let payload: Option<&ZBuf> = payload.into();
     if payload.is_none() {
-        return z_str_null();
+        *cstr = z_str_null();
+        return 0;
     }
-    let mut cstr = z_owned_str_t::preallocate(zc_payload_len(payload.into()));
+    *cstr = z_owned_str_t::preallocate(zc_payload_len(payload.into()));
     let payload = payload.unwrap();
 
     let mut pos = 0;
@@ -153,7 +154,27 @@ pub unsafe extern "C" fn zc_payload_decode_into_string(payload: zc_payload_t) ->
         cstr.insert_unchecked(pos, s);
         pos += s.len();
     }
-    cstr
+    return 0;
+}
+
+/// Decodes payload into null-terminated string
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_decode_into_bytes(payload: zc_payload_t, b: &mut z_owned_bytes_t) -> i8 {
+    let payload: Option<&ZBuf> = payload.into();
+    if payload.is_none() {
+        *b = z_bytes_null();
+        return 0;
+    }
+    *b = z_owned_bytes_t::preallocate(zc_payload_len(payload.into()));
+    let payload = payload.unwrap();
+
+    let mut pos = 0;
+    for s in payload.slices() {
+        b.insert_unchecked(pos, s);
+        pos += s.len();
+    }
+    return 0;
 }
 
 unsafe impl Send for z_bytes_t {}
@@ -529,7 +550,7 @@ impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
 #[repr(C)]
 pub struct z_owned_encoding_t {
     pub prefix: z_encoding_prefix_t,
-    pub suffix: z_bytes_t,
+    pub suffix: z_owned_bytes_t,
     pub _dropped: bool,
 }
 
@@ -537,7 +558,7 @@ impl z_owned_encoding_t {
     pub fn null() -> Self {
         z_owned_encoding_t {
             prefix: z_encoding_prefix_t::Empty,
-            suffix: z_bytes_t::default(),
+            suffix: z_bytes_null(),
             _dropped: true,
         }
     }
@@ -595,7 +616,7 @@ pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
 pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
     z_encoding_t {
         prefix: encoding.prefix,
-        suffix: encoding.suffix,
+        suffix: z_bytes_loan(&encoding.suffix),
     }
 }
 
@@ -603,7 +624,7 @@ impl From<z_encoding_t> for z_owned_encoding_t {
     fn from(val: z_encoding_t) -> Self {
         z_owned_encoding_t {
             prefix: val.prefix,
-            suffix: val.suffix,
+            suffix: z_bytes_clone(&val.suffix),
             _dropped: false,
         }
     }
@@ -655,6 +676,9 @@ impl Drop for z_owned_str_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
+    if s._cstr.is_null() {
+        return;
+    }
     libc::free(std::mem::transmute(s._cstr));
     s._cstr = std::ptr::null_mut();
 }

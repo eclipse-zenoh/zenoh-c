@@ -86,15 +86,16 @@ int run_get() {
 
             z_sample_t sample = z_reply_ok(&reply);
             z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
-            z_owned_str_t payload = zc_payload_decode_into_string(z_sample_payload(&sample));
-            if (strcmp(values[val_num], z_loan(payload))) {
+            z_owned_str_t payload_value = z_str_null();
+            zc_payload_decode_into_string(z_sample_payload(&sample), &payload_value);
+            if (strcmp(values[val_num], z_loan(payload_value))) {
                 perror("Unexpected value received");
-                z_drop(z_move(payload));
+                z_drop(z_move(payload_value));
                 exit(-1);
             }
 
             z_drop(z_move(keystr));
-            z_drop(z_move(payload));
+            z_drop(z_move(payload_value));
         }
         z_drop(z_move(reply));
         z_drop(z_move(channel));

@@ -33,15 +33,8 @@ use crate::attachment::{
     insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
     z_attachment_t,
 };
-use crate::z_encoding_check;
-use crate::z_encoding_drop;
-use crate::z_encoding_loan;
-use crate::z_encoding_null;
-use crate::z_owned_encoding_t;
+use crate::z_encoding_default;
 use crate::zc_owned_payload_t;
-use crate::zc_payload_check;
-use crate::zc_payload_drop;
-use crate::zc_payload_loan;
 use crate::zc_payload_null;
 use crate::zc_payload_t;
 use crate::{
@@ -122,45 +115,6 @@ pub struct z_value_t {
     pub encoding: z_encoding_t,
 }
 
-/// An owned zenoh value.
-///
-/// Members:
-///   zc_owned_payload_t payload: The payload of this zenoh value.
-///   z_owned_encoding_t encoding: The encoding of this zenoh value `payload`.
-#[repr(C)]
-pub struct z_owned_value_t {
-    pub payload: zc_owned_payload_t,
-    pub encoding: z_owned_encoding_t,
-}
-
-#[no_mangle]
-pub extern "C" fn z_value_null() -> z_owned_value_t {
-    z_owned_value_t {
-        payload: zc_payload_null(),
-        encoding: z_encoding_null(),
-    }
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_value_drop(value: &mut z_owned_value_t) {
-    z_encoding_drop(&mut value.encoding);
-    zc_payload_drop(&mut value.payload);
-}
-
-#[no_mangle]
-pub extern "C" fn z_value_loan(value: &z_owned_value_t) -> z_value_t {
-    z_value_t {
-        payload: zc_payload_loan(&value.payload),
-        encoding: z_encoding_loan(&value.encoding),
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn z_value_check(value: &z_owned_value_t) -> bool {
-    zc_payload_check(&value.payload) && z_encoding_check(&value.encoding)
-}
-
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
 /// You should always make sure that :c:func:`z_reply_is_ok` returns ``false`` before calling this function.
@@ -202,7 +156,8 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
 pub struct z_get_options_t {
     pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
-    pub value: z_owned_value_t,
+    pub payload: zc_owned_payload_t,
+    pub encoding: z_encoding_t,
     pub attachment: z_attachment_t,
     pub timeout_ms: u64,
 }
@@ -212,7 +167,8 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         timeout_ms: 0,
-        value: z_value_null(),
+        payload: zc_payload_null(),
+        encoding: z_encoding_default(),
         attachment: z_attachment_null(),
     }
 }
@@ -257,22 +213,10 @@ pub unsafe extern "C" fn z_get(
             .consolidation(options.consolidation)
             .target(options.target.into());
 
-        if let Some(payload) = options.value.payload.take() {
+        if let Some(payload) = options.payload.take() {
             let mut value = Value::new(payload);
-            if z_encoding_check(&options.value.encoding) {
-                value = value.encoding(z_encoding_loan(&options.value.encoding).into());
-            }
+            value = value.encoding(options.encoding.into());
             q = q.with_value(value);
-        }
-        z_encoding_drop(&mut options.value.encoding);
-        if zc_payload_check(&options.value.payload) {
-            let buf: ZBuf = options.value.payload.as_ref().unwrap().clone();
-            let mut value = Value::new(buf);
-            if z_encoding_check(&options.value.encoding) {
-                value = value.encoding(z_encoding_loan(&options.value.encoding).into());
-            }
-            q = q.with_value(value);
-            z_value_drop(&mut options.value);
         }
         if options.timeout_ms != 0 {
             q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));

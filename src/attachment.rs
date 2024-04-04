@@ -2,7 +2,7 @@ use std::{borrow::Cow, cell::UnsafeCell, collections::HashMap};
 
 use libc::c_void;
 
-use crate::{impl_guarded_transmute, z_bytes_null, z_bytes_t};
+use crate::{impl_guarded_transmute, z_bytes_empty, z_bytes_t};
 
 use zenoh::sample::{Attachment, AttachmentBuilder};
 
@@ -101,7 +101,7 @@ pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_by
 
     let mut context = attachment_get_iterator_context {
         key,
-        value: z_bytes_null(),
+        value: z_bytes_empty(),
     };
 
     if this.iteration_driver.map_or(false, |iteration_driver| {
@@ -113,7 +113,7 @@ pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_by
     }) {
         context.value
     } else {
-        z_bytes_null()
+        z_bytes_empty()
     }
 }
 
@@ -237,12 +237,12 @@ pub extern "C" fn z_bytes_map_is_empty(this: &mut z_owned_bytes_map_t) -> bool {
 pub extern "C" fn z_bytes_map_get(this: &z_owned_bytes_map_t, key: z_bytes_t) -> z_bytes_t {
     let this = unsafe { &*this.get() };
     let (Some(this), Some(key)) = (this.as_ref(), key.as_slice()) else {
-        return z_bytes_null();
+        return z_bytes_empty();
     };
     if let Some(value) = this.get(key) {
         value.as_ref().into()
     } else {
-        z_bytes_null()
+        z_bytes_empty()
     }
 }
 

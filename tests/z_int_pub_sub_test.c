@@ -67,13 +67,14 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(keystr));
 
-    z_owned_str_t payload = zc_payload_decode_into_string(z_sample_payload(sample));
-    if (strcmp(values[val_num], z_loan(payload))) {
+    z_owned_str_t payload_value = z_str_null();
+    zc_payload_decode_into_string(z_sample_payload(sample), &payload_value);
+    if (strcmp(values[val_num], z_loan(payload_value))) {
         perror("Unexpected value received");
-        z_drop(z_move(payload));
+        z_drop(z_move(payload_value));
         exit(-1);
     }
-    z_drop(z_move(payload));
+    z_drop(z_move(payload_value));
 
     if (z_qos_get_congestion_control(z_sample_qos(sample)) != Z_CONGESTION_CONTROL_BLOCK ||
         z_qos_get_priority(z_sample_qos(sample)) != Z_PRIORITY_DATA) {
