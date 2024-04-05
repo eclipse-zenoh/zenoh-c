@@ -9,7 +9,8 @@ use crate::{
 };
 
 pub use crate::z_owned_buffer_t;
-impl_guarded_transmute!(noderefs Option<ZBuf>, z_owned_buffer_t);
+impl_guarded_transmute!(Option<ZBuf>, z_owned_buffer_t);
+
 impl Default for z_owned_buffer_t {
     fn default() -> Self {
         z_buffer_null()
@@ -21,31 +22,10 @@ impl From<ZBuf> for z_owned_buffer_t {
     }
 }
 
-impl From<Option<ZBuf>> for z_owned_buffer_t {
-    fn from(value: Option<ZBuf>) -> Self {
-        match value {
-            Some(value) => value.into(),
-            None => z_buffer_null(),
-        }
-    }
-}
-impl core::ops::Deref for z_owned_buffer_t {
-    type Target = Option<ZBuf>;
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
-impl core::ops::DerefMut for z_owned_buffer_t {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
-
 /// The gravestone value for `z_owned_buffer_t`.
 #[no_mangle]
 pub extern "C" fn z_buffer_null() -> z_owned_buffer_t {
-    unsafe { core::mem::transmute(None::<ZBuf>) }
+    None::<ZBuf>.transmute()
 }
 
 /// Decrements the buffer's reference counter, destroying it if applicable.
@@ -77,15 +57,18 @@ pub struct z_buffer_t {
     _inner: Option<NonNull<z_owned_buffer_t>>,
 }
 
+impl_guarded_transmute!(noderefs Option<&ZBuf>, z_buffer_t);
+impl_guarded_transmute!(noderefs z_buffer_t, Option<&'static ZBuf>);
+
 impl From<Option<&ZBuf>> for z_buffer_t {
     fn from(value: Option<&ZBuf>) -> Self {
-        unsafe { core::mem::transmute(value) }
+        value.transmute()
     }
 }
 
 impl From<z_buffer_t> for Option<&'static ZBuf> {
     fn from(value: z_buffer_t) -> Self {
-        unsafe { core::mem::transmute(value) }
+        value.transmute()
     }
 }
 
