@@ -1,0 +1,261 @@
+use core::slice;
+use std::{any::Any, ops::Deref, ptr::NonNull};
+
+use zenoh::buffers::{buffer::SplitBuffer, ZBuf, ZSliceBuffer};
+
+use crate::{
+    impl_guarded_transmute, z_bytes_empty, z_bytes_null, z_bytes_t, z_owned_bytes_t, z_owned_str_t,
+    z_str_null, GuardedTransmute,
+};
+
+pub use crate::z_owned_buffer_t;
+impl_guarded_transmute!(noderefs Option<ZBuf>, z_owned_buffer_t);
+impl Default for z_owned_buffer_t {
+    fn default() -> Self {
+        z_buffer_null()
+    }
+}
+impl From<ZBuf> for z_owned_buffer_t {
+    fn from(value: ZBuf) -> Self {
+        Some(value).transmute()
+    }
+}
+
+impl From<Option<ZBuf>> for z_owned_buffer_t {
+    fn from(value: Option<ZBuf>) -> Self {
+        match value {
+            Some(value) => value.into(),
+            None => z_buffer_null(),
+        }
+    }
+}
+impl core::ops::Deref for z_owned_buffer_t {
+    type Target = Option<ZBuf>;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+impl core::ops::DerefMut for z_owned_buffer_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+
+/// The gravestone value for `z_owned_buffer_t`.
+#[no_mangle]
+pub extern "C" fn z_buffer_null() -> z_owned_buffer_t {
+    unsafe { core::mem::transmute(None::<ZBuf>) }
+}
+
+/// Decrements the buffer's reference counter, destroying it if applicable.
+///
+/// `buffer` will be reset to `z_buffer_null`, preventing UB on double-frees.
+#[no_mangle]
+pub extern "C" fn z_buffer_drop(buffer: &mut z_owned_buffer_t) {
+    core::mem::drop(buffer.take())
+}
+
+/// Returns `true` if the buffer is in a valid state.
+#[no_mangle]
+pub extern "C" fn z_buffer_check(buffer: &z_owned_buffer_t) -> bool {
+    buffer.is_some()
+}
+
+/// Loans the buffer, allowing you to call functions that only need a loan of it.
+#[no_mangle]
+pub extern "C" fn z_buffer_loan(buffer: &z_owned_buffer_t) -> z_buffer_t {
+    buffer.as_ref().into()
+}
+
+/// A loan of a `z_owned_buffer_t`.
+///
+/// As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct z_buffer_t {
+    _inner: Option<NonNull<z_owned_buffer_t>>,
+}
+
+impl From<Option<&ZBuf>> for z_buffer_t {
+    fn from(value: Option<&ZBuf>) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+
+impl From<z_buffer_t> for Option<&'static ZBuf> {
+    fn from(value: z_buffer_t) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+
+/// Increments the buffer's reference count, returning an owned version of the buffer.
+#[no_mangle]
+pub extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
+    match buffer._inner {
+        Some(b) => unsafe { b.as_ref().deref().clone().transmute() },
+        None => ZBuf::empty().into(),
+    }
+}
+
+/// Returns the number of slices in the buffer.
+///
+/// If the return value is 0 or 1, then the buffer's data is contiguous in memory.
+#[no_mangle]
+pub extern "C" fn z_buffer_slice_count(buffer: z_buffer_t) -> usize {
+    match buffer.into() {
+        None => 0,
+        Some(buf) => ZBuf::slices(buf).len(),
+    }
+}
+
+/// Returns total number bytes in the buffer.
+#[no_mangle]
+pub extern "C" fn z_buffer_len(buffer: z_buffer_t) -> usize {
+    match buffer.into() {
+        None => 0,
+        Some(buf) => ZBuf::slices(buf).fold(0, |acc, s| acc + s.len()),
+    }
+}
+
+/// Returns the `index`th slice of the buffer, aliasing it.
+///
+/// Out of bounds accesses will return `z_bytes_empty`.
+#[no_mangle]
+pub extern "C" fn z_buffer_slice_at(buffer: z_buffer_t, index: usize) -> z_bytes_t {
+    match buffer.into() {
+        None => z_bytes_empty(),
+        Some(buf) => ZBuf::slices(buf)
+            .nth(index)
+            .map_or(z_bytes_empty(), |slice| slice.into()),
+    }
+}
+
+/// An owned payload, backed by a reference counted owner.
+///
+/// The `payload` field may be modified, and Zenoh will take the new values into account.
+#[allow(non_camel_case_types)]
+pub type zc_owned_payload_t = z_owned_buffer_t;
+
+/// Clones the `payload` by incrementing its reference counter.
+#[no_mangle]
+pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
+    z_buffer_clone(z_buffer_loan(payload))
+}
+/// Returns `false` if `payload` is the gravestone value.
+#[no_mangle]
+pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
+    z_buffer_check(payload)
+}
+/// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
+#[no_mangle]
+pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
+    z_buffer_drop(payload)
+}
+/// Constructs `zc_owned_payload_t`'s gravestone value.
+#[no_mangle]
+pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
+    z_buffer_null()
+}
+
+/// Returns a :c:type:`zc_payload_t` loaned from `payload`.
+#[no_mangle]
+pub extern "C" fn zc_payload_loan(payload: &zc_owned_payload_t) -> zc_payload_t {
+    z_buffer_loan(payload)
+}
+
+#[allow(non_camel_case_types)]
+pub type zc_payload_t = z_buffer_t;
+
+/// Increments internal payload reference count, returning owned payload.
+#[no_mangle]
+pub extern "C" fn zc_payload_clone(payload: zc_payload_t) -> zc_owned_payload_t {
+    z_buffer_clone(payload)
+}
+
+/// Decodes payload into null-terminated string
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_decode_into_string(
+    payload: zc_payload_t,
+    cstr: &mut z_owned_str_t,
+) -> i8 {
+    let payload: Option<&ZBuf> = payload.into();
+    if payload.is_none() {
+        *cstr = z_str_null();
+        return 0;
+    }
+    *cstr = z_owned_str_t::preallocate(zc_payload_len(payload.into()));
+    let payload = payload.unwrap();
+
+    let mut pos = 0;
+    for s in payload.slices() {
+        cstr.insert_unchecked(pos, s);
+        pos += s.len();
+    }
+    0
+}
+
+/// Decodes payload into null-terminated string
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_decode_into_bytes(
+    payload: zc_payload_t,
+    b: &mut z_owned_bytes_t,
+) -> i8 {
+    let payload: Option<&ZBuf> = payload.into();
+    if payload.is_none() {
+        *b = z_bytes_null();
+        return 0;
+    }
+    *b = z_owned_bytes_t::preallocate(zc_payload_len(payload.into()));
+    let payload = payload.unwrap();
+
+    let mut pos = 0;
+    for s in payload.slices() {
+        b.insert_unchecked(pos, s);
+        pos += s.len();
+    }
+    0
+}
+
+unsafe impl Send for z_bytes_t {}
+unsafe impl Sync for z_bytes_t {}
+
+impl ZSliceBuffer for z_bytes_t {
+    fn as_slice(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.start, self.len) }
+    }
+    fn as_mut_slice(&mut self) -> &mut [u8] {
+        unsafe { slice::from_raw_parts_mut(self.start as *mut u8, self.len) }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// Encodes byte sequence by aliasing.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_encode_from_bytes(bytes: z_bytes_t) -> zc_owned_payload_t {
+    ZBuf::from(bytes).into()
+}
+
+/// Encodes a null-terminated string by aliasing.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_encode_from_string(
+    cstr: *const libc::c_char,
+) -> zc_owned_payload_t {
+    let bytes = z_bytes_t {
+        start: cstr as *const u8,
+        len: libc::strlen(cstr),
+    };
+    zc_payload_encode_from_bytes(bytes)
+}
+
+/// Returns total number bytes in the payload.
+#[no_mangle]
+pub extern "C" fn zc_payload_len(payload: zc_payload_t) -> usize {
+    z_buffer_len(payload)
+}

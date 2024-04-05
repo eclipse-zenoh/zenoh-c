@@ -2121,13 +2121,13 @@ ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_sample_t *sample);
  * Note that other samples may have received the same buffer, meaning that mutating this buffer may
  * affect the samples received by other subscribers.
  */
-ZENOHC_API struct z_owned_buffer_t z_sample_owned_payload(const struct z_sample_t *sample);
+ZENOHC_API zc_owned_payload_t z_sample_owned_payload(const struct z_sample_t *sample);
 /**
  * The sample's data, the return value aliases the sample.
  *
  * If you need ownership of the buffer, you may use `z_sample_owned_payload`.
  */
-ZENOHC_API struct z_buffer_t z_sample_payload(const struct z_sample_t *sample);
+ZENOHC_API zc_payload_t z_sample_payload(const struct z_sample_t *sample);
 /**
  * The qos with which the sample was received.
  */

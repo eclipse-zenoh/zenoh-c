@@ -14,6 +14,7 @@
 use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
+use crate::zc_owned_payload_t;
 use crate::LOG_INVALID_SESSION;
 use libc::c_void;
 use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};

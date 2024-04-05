@@ -12,21 +12,18 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::any::Any;
 use std::ops::Deref;
-use std::slice;
 
 use crate::collections::*;
 use crate::keyexpr::*;
 use crate::z_congestion_control_t;
 use crate::z_id_t;
 use crate::z_priority_t;
+use crate::zc_owned_payload_t;
+use crate::zc_payload_t;
 use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
-use zenoh::buffers::buffer::SplitBuffer;
-use zenoh::buffers::ZBuf;
-use zenoh::buffers::ZSliceBuffer;
 use zenoh::prelude::SampleKind;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
@@ -95,135 +92,6 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
     }
 }
 
-/// An owned payload, backed by a reference counted owner.
-///
-/// The `payload` field may be modified, and Zenoh will take the new values into account.
-#[allow(non_camel_case_types)]
-pub type zc_owned_payload_t = z_owned_buffer_t;
-
-/// Clones the `payload` by incrementing its reference counter.
-#[no_mangle]
-pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
-    z_buffer_clone(z_buffer_loan(payload))
-}
-/// Returns `false` if `payload` is the gravestone value.
-#[no_mangle]
-pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
-    z_buffer_check(payload)
-}
-/// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
-#[no_mangle]
-pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
-    z_buffer_drop(payload)
-}
-/// Constructs `zc_owned_payload_t`'s gravestone value.
-#[no_mangle]
-pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
-    z_buffer_null()
-}
-
-/// Returns a :c:type:`zc_payload_t` loaned from `payload`.
-#[no_mangle]
-pub extern "C" fn zc_payload_loan(payload: &zc_owned_payload_t) -> zc_payload_t {
-    z_buffer_loan(payload)
-}
-
-#[allow(non_camel_case_types)]
-pub type zc_payload_t = z_buffer_t;
-
-/// Increments internal payload reference count, returning owned payload.
-#[no_mangle]
-pub extern "C" fn zc_payload_clone(payload: zc_payload_t) -> zc_owned_payload_t {
-    z_buffer_clone(payload)
-}
-
-/// Decodes payload into null-terminated string
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_decode_into_string(
-    payload: zc_payload_t,
-    cstr: &mut z_owned_str_t,
-) -> i8 {
-    let payload: Option<&ZBuf> = payload.into();
-    if payload.is_none() {
-        *cstr = z_str_null();
-        return 0;
-    }
-    *cstr = z_owned_str_t::preallocate(zc_payload_len(payload.into()));
-    let payload = payload.unwrap();
-
-    let mut pos = 0;
-    for s in payload.slices() {
-        cstr.insert_unchecked(pos, s);
-        pos += s.len();
-    }
-    0
-}
-
-/// Decodes payload into null-terminated string
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_decode_into_bytes(
-    payload: zc_payload_t,
-    b: &mut z_owned_bytes_t,
-) -> i8 {
-    let payload: Option<&ZBuf> = payload.into();
-    if payload.is_none() {
-        *b = z_bytes_null();
-        return 0;
-    }
-    *b = z_owned_bytes_t::preallocate(zc_payload_len(payload.into()));
-    let payload = payload.unwrap();
-
-    let mut pos = 0;
-    for s in payload.slices() {
-        b.insert_unchecked(pos, s);
-        pos += s.len();
-    }
-    0
-}
-
-unsafe impl Send for z_bytes_t {}
-unsafe impl Sync for z_bytes_t {}
-
-impl ZSliceBuffer for z_bytes_t {
-    fn as_slice(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.start, self.len) }
-    }
-    fn as_mut_slice(&mut self) -> &mut [u8] {
-        unsafe { slice::from_raw_parts_mut(self.start as *mut u8, self.len) }
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-/// Encodes byte sequence by aliasing.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_encode_from_bytes(bytes: z_bytes_t) -> zc_owned_payload_t {
-    ZBuf::from(bytes).into()
-}
-
-/// Encodes a null-terminated string by aliasing.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_encode_from_string(
-    cstr: *const libc::c_char,
-) -> zc_owned_payload_t {
-    let bytes = z_bytes_t {
-        start: cstr as *const u8,
-        len: libc::strlen(cstr),
-    };
-    zc_payload_encode_from_bytes(bytes)
-}
-
-/// Returns total number bytes in the payload.
-#[no_mangle]
-pub extern "C" fn zc_payload_len(payload: zc_payload_t) -> usize {
-    z_buffer_len(payload)
-}
-
 /// QoS settings of zenoh message.
 ///
 #[repr(C)]
@@ -290,7 +158,7 @@ pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> z_encoding_t {
 ///
 /// If you need ownership of the buffer, you may use `z_sample_owned_payload`.
 #[no_mangle]
-pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_buffer_t {
+pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> zc_payload_t {
     Some(&sample.payload).into()
 }
 /// Returns the sample's payload after incrementing its internal reference count.
@@ -298,7 +166,7 @@ pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_buffer_t {
 /// Note that other samples may have received the same buffer, meaning that mutating this buffer may
 /// affect the samples received by other subscribers.
 #[no_mangle]
-pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> z_owned_buffer_t {
+pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> zc_owned_payload_t {
     sample.payload.clone().into()
 }
 /// The sample's kind (put or delete).
