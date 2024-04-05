@@ -57,7 +57,6 @@ fn produce_opaque_types_data() -> PathBuf {
     let target = env::var("TARGET").unwrap();
     let current_folder = get_build_rs_path();
     let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
-    println!("cargo:warning={}", current_folder.to_str().unwrap());
     let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = Stdio::from(out_file);
