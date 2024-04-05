@@ -40,7 +40,7 @@
  * pointer will be returned if option is found.
  * @returns NULL if option was not found, else a non-null value depending on if `opt_has_value`.
  */
-const char* parse_opt(const int argc, char** argv, const char* opt, const bool opt_has_value) {
+const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value) {
     size_t optlen = strlen(opt);
     for (int i = 1; i < argc; i++) {
         if (argv[i] == NULL) {
@@ -90,7 +90,7 @@ const char* parse_opt(const int argc, char** argv, const char* opt, const bool o
  * @param argv
  * @returns NULL if no option was found, else the first option string that was found
  */
-const char* check_unknown_opts(const int argc, char** argv) {
+const char* check_unknown_opts(int argc, char** argv) {
     for (int i = 1; i < argc; i++) {
         if (argv[i] && argv[i][0] == '-') {
             return argv[i];
@@ -134,7 +134,7 @@ char** parse_pos_args(const int argc, char** argv, const size_t nb_args) {
  * @param config: address of an owned zenoh configuration
  * @param config_key: zenoh configuration key under which the parsed values will be inserted
  */
-void parse_zenoh_json_list_config(const int argc, char** argv, const char* opt, const char* config_key,
+void parse_zenoh_json_list_config(int argc, char** argv, const char* opt, const char* config_key,
                                   const z_owned_config_t* config) {
     char* buf = (char*)calloc(1, sizeof(char));
     const char* value = parse_opt(argc, argv, opt, true);
