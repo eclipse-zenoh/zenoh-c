@@ -46,10 +46,18 @@ fn main() {
     println!("cargo:rerun-if-changed=build-resources")
 }
 
+fn get_build_rs_path() -> PathBuf {
+    let file_path = file!();
+    let mut path_buf = PathBuf::new();
+    path_buf.push(file_path);
+    path_buf.parent().unwrap().to_path_buf()
+}
+
 fn produce_opaque_types_data() -> PathBuf {
     let target = env::var("TARGET").unwrap();
-    let current_folder = std::env::current_dir().unwrap();
+    let current_folder = get_build_rs_path();
     let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
+    println!("cargo:warning={}", current_folder.to_str().unwrap());
     let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = Stdio::from(out_file);
@@ -67,7 +75,7 @@ fn produce_opaque_types_data() -> PathBuf {
 }
 
 fn generate_opaque_types() {
-    let current_folder = std::env::current_dir().unwrap();
+    let current_folder = get_build_rs_path();
     let path_in = produce_opaque_types_data();
     let path_out = current_folder.join("./src/opaque_types/mod.rs");
 
@@ -96,7 +104,7 @@ pub struct {type_name} {{
 }
 
 fn get_opaque_type_docs() -> HashMap<String, std::vec::Vec<String>> {
-    let current_folder = std::env::current_dir().unwrap();
+    let current_folder = get_build_rs_path();
     let path_in = current_folder.join("./build-resources/opaque-types/src/lib.rs");
     let re = Regex::new(r#"get_opaque_type_data!\(.*, "(\w+)"\)"#).unwrap();
     let mut comments = std::vec::Vec::<String>::new();
