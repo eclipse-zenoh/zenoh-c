@@ -140,7 +140,10 @@ pub extern "C" fn zc_payload_clone(payload: zc_payload_t) -> zc_owned_payload_t 
 /// Decodes payload into null-terminated string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_decode_into_string(payload: zc_payload_t, cstr: &mut z_owned_str_t) -> i8 {
+pub unsafe extern "C" fn zc_payload_decode_into_string(
+    payload: zc_payload_t,
+    cstr: &mut z_owned_str_t,
+) -> i8 {
     let payload: Option<&ZBuf> = payload.into();
     if payload.is_none() {
         *cstr = z_str_null();
@@ -154,13 +157,16 @@ pub unsafe extern "C" fn zc_payload_decode_into_string(payload: zc_payload_t, cs
         cstr.insert_unchecked(pos, s);
         pos += s.len();
     }
-    return 0;
+    0
 }
 
 /// Decodes payload into null-terminated string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_decode_into_bytes(payload: zc_payload_t, b: &mut z_owned_bytes_t) -> i8 {
+pub unsafe extern "C" fn zc_payload_decode_into_bytes(
+    payload: zc_payload_t,
+    b: &mut z_owned_bytes_t,
+) -> i8 {
     let payload: Option<&ZBuf> = payload.into();
     if payload.is_none() {
         *b = z_bytes_null();
@@ -174,7 +180,7 @@ pub unsafe extern "C" fn zc_payload_decode_into_bytes(payload: zc_payload_t, b: 
         b.insert_unchecked(pos, s);
         pos += s.len();
     }
-    return 0;
+    0
 }
 
 unsafe impl Send for z_bytes_t {}

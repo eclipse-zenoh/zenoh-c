@@ -68,8 +68,8 @@ impl Drop for z_owned_bytes_t {
 }
 
 impl z_owned_bytes_t {
-    pub fn new(data: &[u8]) ->z_owned_bytes_t {
-        if data.len() == 0 {
+    pub fn new(data: &[u8]) -> z_owned_bytes_t {
+        if data.is_empty() {
             return z_bytes_null();
         }
         let data = data.to_vec().into_boxed_slice();
@@ -83,17 +83,13 @@ impl z_owned_bytes_t {
         let data = vec![0u8; len].into_boxed_slice();
         z_owned_bytes_t {
             len,
-            start: Box::leak(data).as_mut_ptr(), 
+            start: Box::leak(data).as_mut_ptr(),
         }
     }
 
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn insert_unchecked(&mut self, start: usize, value: &[u8]) {
-        std::ptr::copy_nonoverlapping(
-            value.as_ptr(),
-            (self.start as *mut u8).add(start),
-            value.len(),
-        );
+        std::ptr::copy_nonoverlapping(value.as_ptr(), self.start.add(start), value.len());
     }
 }
 
@@ -182,9 +178,9 @@ pub const extern "C" fn z_bytes_loan(b: &z_owned_bytes_t) -> z_bytes_t {
 #[no_mangle]
 pub extern "C" fn z_bytes_clone(b: &z_bytes_t) -> z_owned_bytes_t {
     if !z_bytes_is_initialized(b) {
-        return z_bytes_null();
+        z_bytes_null()
     } else {
-        return z_owned_bytes_t::new(unsafe { std::slice::from_raw_parts(b.start, b.len) } )
+        z_owned_bytes_t::new(unsafe { std::slice::from_raw_parts(b.start, b.len) })
     }
 }
 
@@ -193,7 +189,6 @@ pub extern "C" fn z_bytes_clone(b: &z_bytes_t) -> z_owned_bytes_t {
 pub extern "C" fn z_bytes_check(b: &z_owned_bytes_t) -> bool {
     !b.start.is_null()
 }
-
 
 impl From<ZenohId> for z_bytes_t {
     #[inline]

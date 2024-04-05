@@ -1,6 +1,8 @@
 use fs2::FileExt;
 use regex::Regex;
 use std::io::{Read, Write};
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::{borrow::Cow, collections::HashMap, io::BufWriter, path::Path};
 
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
@@ -24,6 +26,8 @@ const HEADER: &str = r"//
 #endif
 ";
 
+use std::env;
+
 fn main() {
     generate_opaque_types();
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
@@ -42,9 +46,29 @@ fn main() {
     println!("cargo:rerun-if-changed=build-resources")
 }
 
+fn produce_opaque_types_data() -> PathBuf {
+    let target = env::var("TARGET").unwrap();
+    let current_folder = std::env::current_dir().unwrap();
+    let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
+    let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
+    let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
+    let stdio = Stdio::from(out_file);
+    let _ = Command::new("cargo")
+        .arg("build")
+        .arg("--target")
+        .arg(target)
+        .arg("--manifest-path")
+        .arg(manifest_path)
+        .stderr(stdio)
+        .output()
+        .unwrap();
+
+    output_file_path
+}
+
 fn generate_opaque_types() {
     let current_folder = std::env::current_dir().unwrap();
-    let path_in = current_folder.join("./.build_resources_opaque_types.txt");
+    let path_in = produce_opaque_types_data();
     let path_out = current_folder.join("./src/opaque_types/mod.rs");
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
@@ -56,7 +80,7 @@ fn generate_opaque_types() {
         let s = format!(
             "#[repr(C, align({align}))]
 pub struct {type_name} {{
-    _0: [u8; {size}]
+    _0: [u8; {size}],
 }}
 "
         );
