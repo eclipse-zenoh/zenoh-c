@@ -23,7 +23,7 @@
 
 void test_reader() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    uint8_t data_out[10] = {};
+    uint8_t data_out[10] = {0};
     z_bytes_t bytes = {.start = data, .len = 10 };
 
     zc_owned_payload_t payload = zc_payload_encode_from_bytes(bytes);
