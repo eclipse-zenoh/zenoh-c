@@ -16,7 +16,7 @@ use crate::attachment::{
     z_attachment_iterate, z_attachment_null, z_attachment_t,
 };
 use crate::{
-    impl_guarded_transmute, z_buffer_t, z_bytes_t, z_closure_query_call, z_encoding_default,
+    impl_guarded_transmute, zc_payload_t, z_bytes_t, z_closure_query_call, z_encoding_default,
     z_encoding_t, z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, zc_owned_payload_t,
     LOG_INVALID_SESSION,
 };
@@ -348,7 +348,7 @@ pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
             value.into()
         }
         None => z_value_t {
-            payload: z_buffer_t::default(),
+            payload: zc_payload_t::default(),
             encoding: z_encoding_default(),
         },
     }
