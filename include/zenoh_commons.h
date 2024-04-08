@@ -203,6 +203,22 @@ typedef struct z_attachment_t {
   const void *data;
   z_attachment_iter_driver_t iteration_driver;
 } z_attachment_t;
+/**
+ * A split buffer that owns all of its data.
+ *
+ * To minimize copies and reallocations, Zenoh may provide you data in split buffers.
+ */
+typedef struct ALIGN(8) z_owned_buffer_t {
+  uint8_t _0[40];
+} z_owned_buffer_t;
+/**
+ * A loan of a `z_owned_buffer_t`.
+ *
+ * As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
+ */
+typedef struct z_buffer_t {
+  struct z_owned_buffer_t *_inner;
+} z_buffer_t;
 typedef struct z_owned_bytes_t {
   uint8_t *start;
   size_t len;
@@ -629,14 +645,6 @@ typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 /**
- * A split buffer that owns all of its data.
- *
- * To minimize copies and reallocations, Zenoh may provide you data in split buffers.
- */
-typedef struct ALIGN(8) z_owned_buffer_t {
-  uint8_t _0[40];
-} z_owned_buffer_t;
-/**
  * An owned payload, backed by a reference counted owner.
  *
  * The `payload` field may be modified, and Zenoh will take the new values into account.
@@ -737,13 +745,6 @@ typedef struct z_put_options_t {
   struct z_attachment_t attachment;
 } z_put_options_t;
 /**
- * QoS settings of zenoh message.
- *
- */
-typedef struct z_qos_t {
-  uint8_t _0;
-} z_qos_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
  * - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -780,14 +781,6 @@ typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
-/**
- * A loan of a `z_owned_buffer_t`.
- *
- * As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
- */
-typedef struct z_buffer_t {
-  struct z_owned_buffer_t *_inner;
-} z_buffer_t;
 typedef struct z_buffer_t zc_payload_t;
 /**
  * A zenoh value.
@@ -1073,6 +1066,44 @@ ZENOHC_API size_t z_attachment_len(struct z_attachment_t this_);
  * Returns the gravestone value for `z_attachment_t`.
  */
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
+/**
+ * Returns `true` if the buffer is in a valid state.
+ */
+ZENOHC_API bool z_buffer_check(const struct z_owned_buffer_t *buffer);
+/**
+ * Increments the buffer's reference count, returning an owned version of the buffer.
+ */
+ZENOHC_API struct z_owned_buffer_t z_buffer_clone(struct z_buffer_t buffer);
+/**
+ * Decrements the buffer's reference counter, destroying it if applicable.
+ *
+ * `buffer` will be reset to `z_buffer_null`, preventing UB on double-frees.
+ */
+ZENOHC_API void z_buffer_drop(struct z_owned_buffer_t *buffer);
+/**
+ * Returns total number bytes in the buffer.
+ */
+ZENOHC_API size_t z_buffer_len(struct z_buffer_t buffer);
+/**
+ * Loans the buffer, allowing you to call functions that only need a loan of it.
+ */
+ZENOHC_API struct z_buffer_t z_buffer_loan(const struct z_owned_buffer_t *buffer);
+/**
+ * The gravestone value for `z_owned_buffer_t`.
+ */
+ZENOHC_API struct z_owned_buffer_t z_buffer_null(void);
+/**
+ * Returns the `index`th slice of the buffer, aliasing it.
+ *
+ * Out of bounds accesses will return `z_bytes_empty`.
+ */
+ZENOHC_API struct z_bytes_t z_buffer_slice_at(struct z_buffer_t buffer, size_t index);
+/**
+ * Returns the number of slices in the buffer.
+ *
+ * If the return value is 0 or 1, then the buffer's data is contiguous in memory.
+ */
+ZENOHC_API size_t z_buffer_slice_count(struct z_buffer_t buffer);
 /**
  * Returns ``true`` if `b` is initialized.
  */
@@ -1846,22 +1877,6 @@ int8_t z_put(struct z_session_t session,
  */
 ZENOHC_API struct z_put_options_t z_put_options_default(void);
 /**
- * Returns default qos settings.
- */
-ZENOHC_API struct z_qos_t z_qos_default(void);
-/**
- * Returns message congestion control.
- */
-ZENOHC_API enum z_congestion_control_t z_qos_get_congestion_control(struct z_qos_t qos);
-/**
- * Returns message express flag. If set to true, the message is not batched to reduce the latency.
- */
-ZENOHC_API bool z_qos_get_express(struct z_qos_t qos);
-/**
- * Returns message priority.
- */
-ZENOHC_API enum z_priority_t z_qos_get_priority(struct z_qos_t qos);
-/**
  * Returns the attachment to the query by aliasing.
  *
  * `z_check(return_value) == false` if there was no attachment to the query.
@@ -2064,6 +2079,8 @@ ZENOHC_API struct z_owned_reply_t z_reply_null(void);
 ZENOHC_API
 struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
 /**
+ * The qos with which the sample was received.
+ * TODO: split to methods (priority, congestion_control, express)
  * The sample's attachment.
  *
  * `sample` is aliased by the return value.
@@ -2096,10 +2113,6 @@ ZENOHC_API zc_owned_payload_t z_sample_owned_payload(const struct z_sample_t *sa
  * If you need ownership of the buffer, you may use `z_sample_owned_payload`.
  */
 ZENOHC_API zc_payload_t z_sample_payload(const struct z_sample_t *sample);
-/**
- * The qos with which the sample was received.
- */
-ZENOHC_API struct z_qos_t z_sample_qos(const struct z_sample_t *sample);
 /**
  * The samples timestamp
  */

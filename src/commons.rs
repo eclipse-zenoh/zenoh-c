@@ -27,7 +27,6 @@ use libc::{c_char, c_ulong};
 use zenoh::prelude::SampleKind;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
-use zenoh::sample::QoS;
 use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
 
@@ -92,34 +91,6 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
     }
 }
 
-/// QoS settings of zenoh message.
-///
-#[repr(C)]
-pub struct z_qos_t(u8);
-
-impl_guarded_transmute!(QoS, z_qos_t);
-
-/// Returns message priority.
-#[no_mangle]
-pub extern "C" fn z_qos_get_priority(qos: z_qos_t) -> z_priority_t {
-    qos.transmute().priority().into()
-}
-/// Returns message congestion control.
-#[no_mangle]
-pub extern "C" fn z_qos_get_congestion_control(qos: z_qos_t) -> z_congestion_control_t {
-    qos.transmute().congestion_control().into()
-}
-/// Returns message express flag. If set to true, the message is not batched to reduce the latency.
-#[no_mangle]
-pub extern "C" fn z_qos_get_express(qos: z_qos_t) -> bool {
-    qos.transmute().express()
-}
-/// Returns default qos settings.
-#[no_mangle]
-pub extern "C" fn z_qos_default() -> z_qos_t {
-    QoS::default().transmute()
-}
-
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -147,19 +118,19 @@ impl<'a> z_sample_t<'a> {
 /// `sample` is aliased by its return value.
 #[no_mangle]
 pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
-    (&sample.key_expr).into()
+    sample.key_expr().into()
 }
 /// The encoding of the payload.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> z_encoding_t {
-    (&sample.encoding).into()
+    sample.encoding().into()
 }
 /// The sample's data, the return value aliases the sample.
 ///
 /// If you need ownership of the buffer, you may use `z_sample_owned_payload`.
 #[no_mangle]
 pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> zc_payload_t {
-    Some(&sample.payload).into()
+    sample.payload().into()
 }
 /// Returns the sample's payload after incrementing its internal reference count.
 ///
@@ -167,29 +138,27 @@ pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> zc_payload_t {
 /// affect the samples received by other subscribers.
 #[no_mangle]
 pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> zc_owned_payload_t {
-    sample.payload.clone().into()
+    sample.payload().clone().into()
 }
 /// The sample's kind (put or delete).
 #[no_mangle]
 pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
-    sample.kind.into()
+    sample.kind().into()
 }
 /// The samples timestamp
 #[no_mangle]
 pub extern "C" fn z_sample_timestamp(sample: &z_sample_t) -> z_timestamp_t {
-    sample.timestamp.as_ref().into()
+    sample.timestamp().into()
 }
 /// The qos with which the sample was received.
-#[no_mangle]
-pub extern "C" fn z_sample_qos(sample: &z_sample_t) -> z_qos_t {
-    sample.qos.into()
-}
+/// TODO: split to methods (priority, congestion_control, express)
+
 /// The sample's attachment.
 ///
 /// `sample` is aliased by the return value.
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
-    match &sample.attachment {
+    match sample.attachment() {
         Some(attachment) => z_attachment_t {
             data: attachment as *const _ as *mut c_void,
             iteration_driver: Some(attachment_iteration_driver),
