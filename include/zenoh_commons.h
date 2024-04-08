@@ -203,22 +203,6 @@ typedef struct z_attachment_t {
   const void *data;
   z_attachment_iter_driver_t iteration_driver;
 } z_attachment_t;
-/**
- * A split buffer that owns all of its data.
- *
- * To minimize copies and reallocations, Zenoh may provide you data in split buffers.
- */
-typedef struct ALIGN(8) z_owned_buffer_t {
-  uint8_t _0[40];
-} z_owned_buffer_t;
-/**
- * A loan of a `z_owned_buffer_t`.
- *
- * As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
- */
-typedef struct z_buffer_t {
-  struct z_owned_buffer_t *_inner;
-} z_buffer_t;
 typedef struct z_owned_bytes_t {
   uint8_t *start;
   size_t len;
@@ -645,6 +629,14 @@ typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 /**
+ * A split buffer that owns all of its data.
+ *
+ * To minimize copies and reallocations, Zenoh may provide you data in split buffers.
+ */
+typedef struct ALIGN(8) z_owned_buffer_t {
+  uint8_t _0[40];
+} z_owned_buffer_t;
+/**
  * An owned payload, backed by a reference counted owner.
  *
  * The `payload` field may be modified, and Zenoh will take the new values into account.
@@ -788,6 +780,14 @@ typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
+/**
+ * A loan of a `z_owned_buffer_t`.
+ *
+ * As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
+ */
+typedef struct z_buffer_t {
+  struct z_owned_buffer_t *_inner;
+} z_buffer_t;
 typedef struct z_buffer_t zc_payload_t;
 /**
  * A zenoh value.
@@ -1073,44 +1073,6 @@ ZENOHC_API size_t z_attachment_len(struct z_attachment_t this_);
  * Returns the gravestone value for `z_attachment_t`.
  */
 ZENOHC_API struct z_attachment_t z_attachment_null(void);
-/**
- * Returns `true` if the buffer is in a valid state.
- */
-ZENOHC_API bool z_buffer_check(const struct z_owned_buffer_t *buffer);
-/**
- * Increments the buffer's reference count, returning an owned version of the buffer.
- */
-ZENOHC_API struct z_owned_buffer_t z_buffer_clone(struct z_buffer_t buffer);
-/**
- * Decrements the buffer's reference counter, destroying it if applicable.
- *
- * `buffer` will be reset to `z_buffer_null`, preventing UB on double-frees.
- */
-ZENOHC_API void z_buffer_drop(struct z_owned_buffer_t *buffer);
-/**
- * Returns total number bytes in the buffer.
- */
-ZENOHC_API size_t z_buffer_len(struct z_buffer_t buffer);
-/**
- * Loans the buffer, allowing you to call functions that only need a loan of it.
- */
-ZENOHC_API struct z_buffer_t z_buffer_loan(const struct z_owned_buffer_t *buffer);
-/**
- * The gravestone value for `z_owned_buffer_t`.
- */
-ZENOHC_API struct z_owned_buffer_t z_buffer_null(void);
-/**
- * Returns the `index`th slice of the buffer, aliasing it.
- *
- * Out of bounds accesses will return `z_bytes_empty`.
- */
-ZENOHC_API struct z_bytes_t z_buffer_slice_at(struct z_buffer_t buffer, size_t index);
-/**
- * Returns the number of slices in the buffer.
- *
- * If the return value is 0 or 1, then the buffer's data is contiguous in memory.
- */
-ZENOHC_API size_t z_buffer_slice_count(struct z_buffer_t buffer);
 /**
  * Returns ``true`` if `b` is initialized.
  */

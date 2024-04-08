@@ -28,7 +28,7 @@ impl From<ZBuf> for z_owned_buffer_t {
 
 /// The gravestone value for `z_owned_buffer_t`.
 #[no_mangle]
-pub extern "C" fn z_buffer_null() -> z_owned_buffer_t {
+extern "C" fn z_buffer_null() -> z_owned_buffer_t {
     None::<ZBuf>.transmute()
 }
 
@@ -36,19 +36,19 @@ pub extern "C" fn z_buffer_null() -> z_owned_buffer_t {
 ///
 /// `buffer` will be reset to `z_buffer_null`, preventing UB on double-frees.
 #[no_mangle]
-pub extern "C" fn z_buffer_drop(buffer: &mut z_owned_buffer_t) {
+extern "C" fn z_buffer_drop(buffer: &mut z_owned_buffer_t) {
     core::mem::drop(buffer.take())
 }
 
 /// Returns `true` if the buffer is in a valid state.
 #[no_mangle]
-pub extern "C" fn z_buffer_check(buffer: &z_owned_buffer_t) -> bool {
+extern "C" fn z_buffer_check(buffer: &z_owned_buffer_t) -> bool {
     buffer.is_some()
 }
 
 /// Loans the buffer, allowing you to call functions that only need a loan of it.
 #[no_mangle]
-pub extern "C" fn z_buffer_loan(buffer: &z_owned_buffer_t) -> z_buffer_t {
+extern "C" fn z_buffer_loan(buffer: &z_owned_buffer_t) -> z_buffer_t {
     buffer.as_ref().into()
 }
 
@@ -78,7 +78,7 @@ impl From<z_buffer_t> for Option<&'static ZBuf> {
 
 /// Increments the buffer's reference count, returning an owned version of the buffer.
 #[no_mangle]
-pub extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
+extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
     match buffer._inner {
         Some(b) => unsafe { b.as_ref().deref().clone().transmute() },
         None => ZBuf::empty().into(),
@@ -89,7 +89,7 @@ pub extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
 ///
 /// If the return value is 0 or 1, then the buffer's data is contiguous in memory.
 #[no_mangle]
-pub extern "C" fn z_buffer_slice_count(buffer: z_buffer_t) -> usize {
+extern "C" fn z_buffer_slice_count(buffer: z_buffer_t) -> usize {
     match buffer.into() {
         None => 0,
         Some(buf) => ZBuf::slices(buf).len(),
@@ -98,7 +98,7 @@ pub extern "C" fn z_buffer_slice_count(buffer: z_buffer_t) -> usize {
 
 /// Returns total number bytes in the buffer.
 #[no_mangle]
-pub extern "C" fn z_buffer_len(buffer: z_buffer_t) -> usize {
+extern "C" fn z_buffer_len(buffer: z_buffer_t) -> usize {
     match buffer.into() {
         None => 0,
         Some(buf) => ZBuf::slices(buf).fold(0, |acc, s| acc + s.len()),
@@ -109,7 +109,7 @@ pub extern "C" fn z_buffer_len(buffer: z_buffer_t) -> usize {
 ///
 /// Out of bounds accesses will return `z_bytes_empty`.
 #[no_mangle]
-pub extern "C" fn z_buffer_slice_at(buffer: z_buffer_t, index: usize) -> z_bytes_t {
+extern "C" fn z_buffer_slice_at(buffer: z_buffer_t, index: usize) -> z_bytes_t {
     match buffer.into() {
         None => z_bytes_empty(),
         Some(buf) => ZBuf::slices(buf)
