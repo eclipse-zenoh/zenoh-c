@@ -1,6 +1,10 @@
 use core::slice;
+use std::slice::from_raw_parts_mut;
 use std::{any::Any, ops::Deref, ptr::NonNull};
 
+use zenoh::buffers::reader::HasReader;
+use zenoh::buffers::reader::Reader;
+use zenoh::buffers::ZBufReader;
 use zenoh::buffers::{buffer::SplitBuffer, ZBuf, ZSliceBuffer};
 
 use crate::{
@@ -241,4 +245,42 @@ pub unsafe extern "C" fn zc_payload_encode_from_string(
 #[no_mangle]
 pub extern "C" fn zc_payload_len(payload: zc_payload_t) -> usize {
     z_buffer_len(payload)
+}
+
+
+
+pub use crate::zc_payload_reader;
+impl_guarded_transmute!(ZBufReader<'static>, zc_payload_reader);
+impl_guarded_transmute!(noderefs zc_payload_reader, ZBufReader<'static>);
+
+/// Creates a reader for the specified `payload`. 
+///
+/// Returns 0 in case of success, -1 if `payload` is not valid.
+#[no_mangle]
+pub unsafe extern "C" fn zc_payload_reader_init(payload: zc_payload_t, reader: *mut zc_payload_reader) -> i8 {
+    if payload._inner.is_none() {
+        return -1;
+    }
+    *reader = payload.transmute().unwrap().reader().transmute();
+    0
+}
+
+
+/// Reads data into specified destination.
+/// 
+/// Will read at most `len` bytes. 
+/// Returns number of bytes read. If return value is smaller than `len`, it means that end of the payload was reached.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_reader_read(reader: *mut zc_payload_reader, dest: *mut u8, len: usize) -> usize {
+    let buf = unsafe { from_raw_parts_mut(dest, len) } ;
+    reader.as_mut().unwrap().read(buf).map(|n| n.get()).unwrap_or(0)
+}
+
+/// Returns number of the remaining bytes in the payload
+/// 
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_payload_reader_remaining(reader: *const zc_payload_reader) -> usize {
+    reader.as_ref().unwrap().remaining()
 }

@@ -886,6 +886,12 @@ typedef struct zc_liveliness_get_options_t {
   uint32_t timeout_ms;
 } zc_liveliness_get_options_t;
 /**
+ * A reader for payload data.
+ */
+typedef struct ALIGN(8) zc_payload_reader {
+  uint8_t _0[24];
+} zc_payload_reader;
+/**
  * An owned sample.
  *
  * This is a read only type that can only be constructed by cloning a `z_sample_t`.
@@ -2500,6 +2506,27 @@ ZENOHC_API zc_owned_payload_t zc_payload_null(void);
  * Clones the `payload` by incrementing its reference counter.
  */
 ZENOHC_API zc_owned_payload_t zc_payload_rcinc(const zc_owned_payload_t *payload);
+/**
+ * Creates a reader for the specified `payload`.
+ *
+ * Returns 0 in case of success, -1 if `payload` is not valid.
+ */
+ZENOHC_API int8_t zc_payload_reader_init(zc_payload_t payload, struct zc_payload_reader *reader);
+/**
+ * Reads data into specified destination.
+ *
+ * Will read at most `len` bytes.
+ * Returns number of bytes read. If return value is smaller than `len`, it means that end of the payload was reached.
+ */
+ZENOHC_API
+size_t zc_payload_reader_read(struct zc_payload_reader *reader,
+                              uint8_t *dest,
+                              size_t len);
+/**
+ * Returns number of the remaining bytes in the payload
+ *
+ */
+ZENOHC_API size_t zc_payload_reader_remaining(const struct zc_payload_reader *reader);
 /**
  * Creates a new blocking fifo channel, returned as a pair of closures.
  *

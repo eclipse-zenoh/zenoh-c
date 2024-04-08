@@ -1,5 +1,5 @@
 use zenoh::sample::Sample;
-use zenoh::buffers::ZBuf;
+use zenoh::buffers::{ZBuf, ZBufReader};
 
 #[macro_export]
 macro_rules! get_opaque_type_data {
@@ -36,3 +36,6 @@ get_opaque_type_data!(Option<ZBuf>, "z_owned_buffer_t");
 /// This is a read only type that can only be constructed by cloning a `z_sample_t`.
 /// Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
 get_opaque_type_data!(Option<Sample>, "zc_owned_sample_t");
+
+/// A reader for payload data.
+get_opaque_type_data!(ZBufReader, "zc_payload_reader");
