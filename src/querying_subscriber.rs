@@ -15,7 +15,6 @@
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::SplitBuffer;
 use zenoh_ext::*;
 use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
@@ -25,10 +24,10 @@ use crate::{
     z_owned_closure_sample_t, z_query_consolidation_none, z_query_consolidation_t,
     z_query_target_default, z_query_target_t, z_reliability_t, z_sample_t, z_session_t,
     zcu_locality_default, zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
-    GuardedTransmute, LOG_INVALID_SESSION,
+    LOG_INVALID_SESSION,
 };
 
-struct FetchingSubscriberWrapper {
+pub struct FetchingSubscriberWrapper {
     fetching_subscriber: zenoh_ext::FetchingSubscriber<'static, ()>,
     session: z_session_t,
 }
@@ -54,27 +53,9 @@ impl_guarded_transmute!(FetchingSubscriber, ze_owned_querying_subscriber_t);
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_t<'a>(&'a ze_owned_querying_subscriber_t);
 
-impl From<FetchingSubscriber> for ze_owned_querying_subscriber_t {
-    fn from(val: FetchingSubscriber) -> Self {
-        val.transmute()
-    }
-}
-
-impl AsRef<FetchingSubscriber> for ze_owned_querying_subscriber_t {
-    fn as_ref(&self) -> &FetchingSubscriber {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
 impl<'a> AsRef<FetchingSubscriber> for ze_querying_subscriber_t<'a> {
     fn as_ref(&self) -> &FetchingSubscriber {
-        self.0.as_ref()
-    }
-}
-
-impl AsMut<FetchingSubscriber> for ze_owned_querying_subscriber_t {
-    fn as_mut(&mut self) -> &mut FetchingSubscriber {
-        unsafe { std::mem::transmute(self) }
+        self.0
     }
 }
 
@@ -204,12 +185,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
             }
             match sub
                 .callback(move |sample| {
-                    let payload = sample.payload.contiguous();
-                    let owner = match payload {
-                        std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
-                        _ => sample.payload.clone(),
-                    };
-                    let sample = z_sample_t::new(&sample, &owner);
+                    let sample = z_sample_t::new(&sample);
                     z_closure_sample_call(&closure, &sample)
                 })
                 .res()
@@ -276,7 +252,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_subscriber_t) -> i8 {
-    if let Some(s) = sub.as_mut().take() {
+    if let Some(s) = sub.take() {
         if let Err(e) = s.fetching_subscriber.close().res_sync() {
             log::warn!("{}", e);
             return e.errno().get();

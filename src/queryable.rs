@@ -17,17 +17,16 @@ use crate::attachment::{
 };
 use crate::{
     impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, GuardedTransmute,
+    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, zc_owned_payload_t, zc_payload_t,
     LOG_INVALID_SESSION,
 };
 use libc::c_void;
 use std::ops::{Deref, DerefMut};
 use zenoh::prelude::SessionDeclarations;
 use zenoh::{
-    prelude::{Sample, SplitBuffer},
+    prelude::Sample,
     queryable::{Query, Queryable as CallbackQueryable},
     sample::AttachmentBuilder,
-    value::Value,
 };
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
@@ -51,22 +50,6 @@ pub struct z_owned_queryable_t([u64; 4]);
 pub struct z_owned_queryable_t([u32; 4]);
 
 impl_guarded_transmute!(Queryable, z_owned_queryable_t);
-
-impl From<Queryable> for z_owned_queryable_t {
-    fn from(val: Queryable) -> Self {
-        val.transmute()
-    }
-}
-impl AsRef<Queryable> for z_owned_queryable_t {
-    fn as_ref(&self) -> &Queryable {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl AsMut<Queryable> for z_owned_queryable_t {
-    fn as_mut(&mut self) -> &mut Queryable {
-        unsafe { std::mem::transmute(self) }
-    }
-}
 
 impl z_owned_queryable_t {
     pub fn null() -> Self {
@@ -263,7 +246,7 @@ pub extern "C" fn z_declare_queryable(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
-    if let Some(qable) = qable.as_mut().take() {
+    if let Some(qable) = qable.take() {
         if let Err(e) = qable.undeclare().res_sync() {
             log::error!("{}", e);
             return e.errno().get();
@@ -290,15 +273,13 @@ pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
 ///     query: The query to reply to.
 ///     key: The key of this reply.
 ///     payload: The value of this reply.
-///     len: The length of the value of this reply.
 ///     options: The options of this reply.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply(
     query: &z_query_t,
     key: z_keyexpr_t,
-    payload: *const u8,
-    len: usize,
+    payload: Option<&mut zc_owned_payload_t>,
     options: Option<&z_query_reply_options_t>,
 ) -> i8 {
     let Some(query) = query.as_ref() else {
@@ -306,30 +287,28 @@ pub unsafe extern "C" fn z_query_reply(
         return i8::MIN;
     };
     if let Some(key) = &*key {
-        let mut s = Sample::new(
-            key.clone().into_owned(),
-            std::slice::from_raw_parts(payload, len),
-        );
-        if let Some(o) = options {
-            s.encoding = o.encoding.into();
-            if z_attachment_check(&o.attachment) {
-                let mut attachment_builder = AttachmentBuilder::new();
-                z_attachment_iterate(
-                    o.attachment,
-                    insert_in_attachment_builder,
-                    &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-                );
-                s = s.with_attachment(attachment_builder.build());
-            };
+        if let Some(payload) = payload.and_then(|p| p.take()) {
+            let mut s = Sample::new(key.clone().into_owned(), payload);
+            if let Some(o) = options {
+                s.encoding = o.encoding.into();
+                if z_attachment_check(&o.attachment) {
+                    let mut attachment_builder = AttachmentBuilder::new();
+                    z_attachment_iterate(
+                        o.attachment,
+                        insert_in_attachment_builder,
+                        &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
+                    );
+                    s = s.with_attachment(attachment_builder.build());
+                };
+            }
+            if let Err(e) = query.reply(Ok(s)).res_sync() {
+                log::error!("{}", e);
+                return e.errno().get();
+            }
+            return 0;
         }
-        if let Err(e) = query.reply(Ok(s)).res_sync() {
-            log::error!("{}", e);
-            return e.errno().get();
-        }
-        0
-    } else {
-        i8::MIN
     }
+    i8::MIN
 }
 
 /// Get a query's key by aliasing it.
@@ -363,14 +342,15 @@ pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
 #[no_mangle]
 pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
     match query.as_ref().and_then(|q| q.value()) {
-        Some(value) => {
+        Some(value) =>
+        {
             #[allow(mutable_transmutes)]
-            if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
-                unsafe { std::mem::transmute::<_, &mut Value>(value).payload = payload.into() }
-            }
             value.into()
         }
-        None => (&Value::empty()).into(),
+        None => z_value_t {
+            payload: zc_payload_t::default(),
+            encoding: z_encoding_default(),
+        },
     }
 }
 

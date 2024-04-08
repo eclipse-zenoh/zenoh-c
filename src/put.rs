@@ -14,9 +14,9 @@
 use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
+use crate::zc_owned_payload_t;
 use crate::LOG_INVALID_SESSION;
 use libc::c_void;
-use libc::size_t;
 use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};
 use zenoh::publication::CongestionControl;
 use zenoh::sample::AttachmentBuilder;
@@ -135,62 +135,6 @@ pub extern "C" fn z_put_options_default() -> z_put_options_t {
     }
 }
 
-/// Put data.
-///
-/// The payload's encoding can be sepcified through the options.
-///
-/// Parameters:
-///     session: The zenoh session.
-///     keyexpr: The key expression to put.
-///     payload: The value to put.
-///     len: The length of the value to put.
-///     options: The put options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_put(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    payload: *const u8,
-    len: size_t,
-    opts: Option<&z_put_options_t>,
-) -> i8 {
-    match session.upgrade() {
-        Some(s) => {
-            let mut res = s
-                .put(keyexpr, std::slice::from_raw_parts(payload, len))
-                .kind(SampleKind::Put);
-            if let Some(opts) = opts {
-                res = res
-                    .encoding(opts.encoding)
-                    .congestion_control(opts.congestion_control.into())
-                    .priority(opts.priority.into());
-                if z_attachment_check(&opts.attachment) {
-                    let mut attachment_builder = AttachmentBuilder::new();
-                    z_attachment_iterate(
-                        opts.attachment,
-                        insert_in_attachment_builder,
-                        &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-                    );
-                    res = res.with_attachment(attachment_builder.build());
-                };
-            }
-            match res.res_sync() {
-                Err(e) => {
-                    log::error!("{}", e);
-                    e.errno().get()
-                }
-                Ok(()) => 0,
-            }
-        }
-        None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
-            i8::MIN
-        }
-    }
-}
-
 /// Put data, transfering the buffer ownership.
 ///
 /// This is avoids copies when transfering data that was either:
@@ -208,7 +152,7 @@ pub unsafe extern "C" fn z_put(
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_put_owned(
+pub extern "C" fn z_put(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
     payload: Option<&mut zc_owned_payload_t>,
@@ -223,6 +167,15 @@ pub extern "C" fn zc_put_owned(
                         .encoding(opts.encoding)
                         .congestion_control(opts.congestion_control.into())
                         .priority(opts.priority.into());
+                    if z_attachment_check(&opts.attachment) {
+                        let mut attachment_builder = AttachmentBuilder::new();
+                        z_attachment_iterate(
+                            opts.attachment,
+                            insert_in_attachment_builder,
+                            &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
+                        );
+                        res = res.with_attachment(attachment_builder.build());
+                    };
                 }
                 match res.res_sync() {
                     Err(e) => {

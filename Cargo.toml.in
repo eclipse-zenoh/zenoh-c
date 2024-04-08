@@ -59,6 +59,7 @@ zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/ze
 [build-dependencies]
 cbindgen = "0.24.3"
 fs2 = "0.4.3"
+regex = "1.7.1"
 serde_yaml = "0.9.19"
 
 [lib]

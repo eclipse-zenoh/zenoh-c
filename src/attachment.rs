@@ -2,7 +2,7 @@ use std::{borrow::Cow, cell::UnsafeCell, collections::HashMap};
 
 use libc::c_void;
 
-use crate::{impl_guarded_transmute, z_bytes_null, z_bytes_t};
+use crate::{impl_guarded_transmute, z_bytes_empty, z_bytes_t};
 
 use zenoh::sample::{Attachment, AttachmentBuilder};
 
@@ -13,6 +13,7 @@ use zenoh::sample::{Attachment, AttachmentBuilder};
 ///
 /// Returning `0` is treated as `continue`.
 /// Returning any other value is treated as `break`.
+#[allow(non_camel_case_types)]
 pub type z_attachment_iter_body_t =
     extern "C" fn(key: z_bytes_t, value: z_bytes_t, context: *mut c_void) -> i8;
 
@@ -20,6 +21,7 @@ pub type z_attachment_iter_body_t =
 ///
 /// This function is expected to call `loop_body` once for each key-value pair
 /// within `iterator`, passing `context`, and returning any non-zero value immediately (breaking iteration).
+#[allow(non_camel_case_types)]
 pub type z_attachment_iter_driver_t = Option<
     extern "C" fn(
         iterator: *const c_void,
@@ -99,7 +101,7 @@ pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_by
 
     let mut context = attachment_get_iterator_context {
         key,
-        value: z_bytes_null(),
+        value: z_bytes_empty(),
     };
 
     if this.iteration_driver.map_or(false, |iteration_driver| {
@@ -111,7 +113,7 @@ pub extern "C" fn z_attachment_get(this: z_attachment_t, key: z_bytes_t) -> z_by
     }) {
         context.value
     } else {
-        z_bytes_null()
+        z_bytes_empty()
     }
 }
 
@@ -176,7 +178,7 @@ pub struct z_owned_bytes_map_t {
     _1: [usize; 4],
 }
 
-impl_guarded_transmute!(
+impl_guarded_transmute!(noderefs
     Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>,
     z_owned_bytes_map_t
 );
@@ -235,12 +237,12 @@ pub extern "C" fn z_bytes_map_is_empty(this: &mut z_owned_bytes_map_t) -> bool {
 pub extern "C" fn z_bytes_map_get(this: &z_owned_bytes_map_t, key: z_bytes_t) -> z_bytes_t {
     let this = unsafe { &*this.get() };
     let (Some(this), Some(key)) = (this.as_ref(), key.as_slice()) else {
-        return z_bytes_null();
+        return z_bytes_empty();
     };
     if let Some(value) = this.get(key) {
         value.as_ref().into()
     } else {
-        z_bytes_null()
+        z_bytes_empty()
     }
 }
 

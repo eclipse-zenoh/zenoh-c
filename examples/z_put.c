@@ -48,7 +48,8 @@ int main(int argc, char **argv) {
     z_put_options_t options = z_put_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
     options.attachment = z_bytes_map_as_attachment(&attachment);
-    int res = z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)value, strlen(value), &options);
+    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    int res = z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), &options);
     if (res < 0) {
         printf("Put failed...\n");
     }

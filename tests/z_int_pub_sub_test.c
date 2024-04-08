@@ -49,7 +49,8 @@ int run_publisher() {
     for (int i = 0; i < values_count; ++i) {
         z_publisher_put_options_t options = z_publisher_put_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        z_publisher_put(z_loan(pub), (const uint8_t *)values[i], strlen(values[i]), &options);
+        zc_owned_payload_t payload = zc_payload_encode_from_string(values[i]);
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));
@@ -59,21 +60,24 @@ int run_publisher() {
 
 void data_handler(const z_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
+    z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(sample));
     if (strcmp(keyexpr, z_loan(keystr))) {
         perror("Unexpected key received");
         exit(-1);
     }
     z_drop(z_move(keystr));
 
-    if (strncmp(values[val_num], (const char *)sample->payload.start, (int)sample->payload.len)) {
+    z_owned_str_t payload_value = z_str_null();
+    zc_payload_decode_into_string(z_sample_payload(sample), &payload_value);
+    if (strcmp(values[val_num], z_loan(payload_value))) {
         perror("Unexpected value received");
+        z_drop(z_move(payload_value));
         exit(-1);
     }
+    z_drop(z_move(payload_value));
 
-    if (z_qos_get_congestion_control(sample->qos) != Z_CONGESTION_CONTROL_BLOCK
-        || z_qos_get_priority(sample->qos) != Z_PRIORITY_DATA
-    ) {
+    if (z_qos_get_congestion_control(z_sample_qos(sample)) != Z_CONGESTION_CONTROL_BLOCK ||
+        z_qos_get_priority(z_sample_qos(sample)) != Z_PRIORITY_DATA) {
         perror("Unexpected QoS values");
         exit(-1);
     }

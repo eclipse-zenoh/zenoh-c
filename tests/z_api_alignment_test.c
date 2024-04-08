@@ -56,7 +56,8 @@ void query_handler(const z_query_t *query, void *arg) {
     z_value_t payload_value = z_query_value(query);
     (void)(payload_value);
     z_query_reply_options_t _ret_qreply_opt = z_query_reply_options_default();
-    z_query_reply(query, z_keyexpr(z_loan(k_str)), (const uint8_t *)value, strlen(value), &_ret_qreply_opt);
+    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    z_query_reply(query, z_keyexpr(z_loan(k_str)), z_move(payload), &_ret_qreply_opt);
 
     z_drop(z_move(k_str));
 }
@@ -68,7 +69,7 @@ void reply_handler(z_owned_reply_t *reply, void *arg) {
     if (z_reply_is_ok(reply)) {
         z_sample_t sample = z_reply_ok(reply);
 
-        z_owned_str_t k_str = z_keyexpr_to_string(sample.keyexpr);
+        z_owned_str_t k_str = z_keyexpr_to_string(z_sample_keyexpr(&sample));
 #ifdef ZENOH_PICO
         if (k_str == NULL) {
             k_str = zp_keyexpr_resolve(*(z_session_t *)arg, sample.keyexpr);
@@ -87,7 +88,7 @@ volatile unsigned int datas = 0;
 void data_handler(const z_sample_t *sample, void *arg) {
     datas++;
 
-    z_owned_str_t k_str = z_keyexpr_to_string(sample->keyexpr);
+    z_owned_str_t k_str = z_keyexpr_to_string(z_sample_keyexpr(sample));
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
         k_str = zp_keyexpr_resolve(*(z_session_t *)arg, sample->keyexpr);
@@ -260,7 +261,8 @@ int main(int argc, char **argv) {
     z_encoding_t _ret_encoding = z_encoding_default();
     _ret_encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
     _ret_put_opt.encoding = _ret_encoding;
-    _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), (const uint8_t *)value, strlen(value), &_ret_put_opt);
+    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 
     z_sleep_s(SLEEP);
@@ -292,7 +294,8 @@ int main(int argc, char **argv) {
     assert(z_check(_ret_pub));
 
     z_publisher_put_options_t _ret_pput_opt = z_publisher_put_options_default();
-    _ret_int8 = z_publisher_put(z_loan(_ret_pub), (const uint8_t *)value, strlen(value), &_ret_pput_opt);
+    payload = zc_payload_encode_from_string(value);
+    _ret_int8 = z_publisher_put(z_loan(_ret_pub), z_move(payload), &_ret_pput_opt);
     assert(_ret_int8 == 0);
 
     z_sleep_s(SLEEP);

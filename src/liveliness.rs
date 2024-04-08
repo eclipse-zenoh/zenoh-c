@@ -14,7 +14,7 @@
 
 use zenoh::{
     liveliness::{Liveliness, LivelinessToken},
-    prelude::{SessionDeclarations, SplitBuffer},
+    prelude::SessionDeclarations,
 };
 use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
@@ -177,12 +177,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .liveliness()
         .declare_subscriber(key)
         .callback(move |sample| {
-            let payload = sample.payload.contiguous();
-            let owner = match payload {
-                std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
-                _ => sample.payload.clone(),
-            };
-            let sample = z_sample_t::new(&sample, &owner);
+            let sample = z_sample_t::new(&sample);
             z_closure_sample_call(&callback, &sample)
         })
         .res()

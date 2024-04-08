@@ -75,7 +75,7 @@ pub struct z_owned_publisher_t([u64; 7]);
 #[repr(C, align(4))]
 pub struct z_owned_publisher_t([u32; 8]);
 
-impl_guarded_transmute!(Option<Publisher<'_>>, z_owned_publisher_t);
+impl_guarded_transmute!(noderefs Option<Publisher<'_>>, z_owned_publisher_t);
 
 impl<'a> From<Option<Publisher<'a>>> for z_owned_publisher_t {
     fn from(val: Option<Publisher>) -> Self {
@@ -234,14 +234,17 @@ pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t
     }
 }
 
-/// Sends a `PUT` message onto the publisher's key expression.
+/// Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
+///
+/// This is avoids copies when transfering data that was either:
+/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+/// - constructed from a `zc_owned_shmbuf_t`
 ///
 /// The payload's encoding can be sepcified through the options.
 ///
 /// Parameters:
 ///     session: The zenoh session.
 ///     payload: The value to put.
-///     len: The length of the value to put.
 ///     options: The publisher put options.
 /// Returns:
 ///     ``0`` in case of success, negative values in case of failure.
@@ -249,12 +252,15 @@ pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
     publisher: z_publisher_t,
-    payload: *const u8,
-    len: usize,
+    payload: Option<&mut zc_owned_payload_t>,
     options: Option<&z_publisher_put_options_t>,
 ) -> i8 {
     if let Some(p) = publisher.as_ref() {
-        let value: Value = std::slice::from_raw_parts(payload, len).into();
+        let Some(payload) = payload.and_then(|p| p.take()) else {
+            log::debug!("Attempted to put without a payload");
+            return i8::MIN;
+        };
+        let value: Value = payload.into();
         let put = match options {
             Some(options) => {
                 let mut put = p.put(value.encoding(options.encoding.into()));
@@ -269,49 +275,6 @@ pub unsafe extern "C" fn z_publisher_put(
                 };
                 put
             }
-            None => p.put(value),
-        };
-        if let Err(e) = put.res_sync() {
-            log::error!("{}", e);
-            e.errno().get()
-        } else {
-            0
-        }
-    } else {
-        i8::MIN
-    }
-}
-
-/// Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
-///
-/// This is avoids copies when transfering data that was either:
-/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
-/// - constructed from a `zc_owned_shmbuf_t`
-///
-/// The payload's encoding can be sepcified through the options.
-///
-/// Parameters:
-///     session: The zenoh session.
-///     payload: The value to put.
-///     len: The length of the value to put.
-///     options: The publisher put options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_publisher_put_owned(
-    publisher: z_publisher_t,
-    payload: Option<&mut zc_owned_payload_t>,
-    options: Option<&z_publisher_put_options_t>,
-) -> i8 {
-    if let Some(p) = publisher.as_ref() {
-        let Some(payload) = payload.and_then(|p| p.take()) else {
-            log::debug!("Attempted to put without a payload");
-            return i8::MIN;
-        };
-        let value: Value = payload.into();
-        let put = match options {
-            Some(options) => p.put(value.encoding(options.encoding.into())),
             None => p.put(value),
         };
         if let Err(e) = put.res_sync() {
@@ -387,7 +350,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyex
 #[repr(C, align(8))]
 pub struct zcu_owned_matching_listener_t([u64; 4]);
 
-impl_guarded_transmute!(
+impl_guarded_transmute!(noderefs
     Option<MatchingListener<'_, ()>>,
     zcu_owned_matching_listener_t
 );

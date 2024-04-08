@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+
 use libc::{c_char, size_t};
 use zenoh::prelude::ZenohId;
 
@@ -21,8 +22,8 @@ use zenoh::prelude::ZenohId;
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct z_bytes_t {
-    pub len: size_t,
     pub start: *const u8,
+    pub len: size_t,
 }
 
 impl z_bytes_t {
@@ -46,15 +47,54 @@ impl Default for z_bytes_t {
     }
 }
 
+#[repr(C)]
+#[derive(Clone, Debug)]
+pub struct z_owned_bytes_t {
+    pub start: *mut u8,
+    pub len: size_t,
+}
+
+impl Drop for z_owned_bytes_t {
+    fn drop(&mut self) {
+        unsafe { z_bytes_drop(self) }
+    }
+}
+
+impl z_owned_bytes_t {
+    pub fn new(data: &[u8]) -> z_owned_bytes_t {
+        if data.is_empty() {
+            return z_bytes_null();
+        }
+        let data = data.to_vec().into_boxed_slice();
+        z_owned_bytes_t {
+            len: data.len(),
+            start: Box::leak(data).as_mut_ptr(),
+        }
+    }
+
+    pub fn preallocate(len: usize) -> z_owned_bytes_t {
+        let data = vec![0u8; len].into_boxed_slice();
+        z_owned_bytes_t {
+            len,
+            start: Box::leak(data).as_mut_ptr(),
+        }
+    }
+
+    #[allow(clippy::missing_safety_doc)]
+    pub unsafe fn insert_unchecked(&mut self, start: usize, value: &[u8]) {
+        std::ptr::copy_nonoverlapping(value.as_ptr(), self.start.add(start), value.len());
+    }
+}
+
 /// Returns ``true`` if `b` is initialized.
 #[no_mangle]
-pub extern "C" fn z_bytes_check(b: &z_bytes_t) -> bool {
+pub extern "C" fn z_bytes_is_initialized(b: &z_bytes_t) -> bool {
     !b.start.is_null()
 }
 
 /// Returns the gravestone value for `z_bytes_t`
 #[no_mangle]
-pub extern "C" fn z_bytes_null() -> z_bytes_t {
+pub const extern "C" fn z_bytes_empty() -> z_bytes_t {
     z_bytes_t {
         len: 0,
         start: core::ptr::null(),
@@ -63,12 +103,12 @@ pub extern "C" fn z_bytes_null() -> z_bytes_t {
 
 /// Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
-/// `str == NULL` will cause this to return `z_bytes_null()`
+/// `str == NULL` will cause this to return `z_bytes_empty()`
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_from_str(str: *const c_char) -> z_bytes_t {
     if str.is_null() {
-        z_bytes_null()
+        z_bytes_empty()
     } else {
         let len = unsafe { libc::strlen(str) };
         z_bytes_t {
@@ -81,7 +121,7 @@ pub unsafe extern "C" fn z_bytes_from_str(str: *const c_char) -> z_bytes_t {
 #[deprecated = "Renamed to z_bytes_from_str"]
 /// Deprecated in favor of `z_bytes_from_str`: Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
-/// `str == NULL` will cause this to return `z_bytes_null()`
+/// `str == NULL` will cause this to return `z_bytes_empty()`
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
@@ -93,7 +133,7 @@ pub unsafe extern "C" fn z_bytes_new(str: *const c_char) -> z_bytes_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_wrap(start: *const u8, len: usize) -> z_bytes_t {
     if start.is_null() {
-        z_bytes_null()
+        z_bytes_empty()
     } else {
         z_bytes_t { len, start }
     }
@@ -101,13 +141,46 @@ pub unsafe extern "C" fn z_bytes_wrap(start: *const u8, len: usize) -> z_bytes_t
 
 /// Frees `b` and invalidates it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
-pub(crate) unsafe fn z_bytes_drop(b: &mut z_bytes_t) {
+pub unsafe extern "C" fn z_bytes_drop(b: &mut z_owned_bytes_t) {
     if !b.start.is_null() {
         std::mem::drop(Box::from_raw(
             core::ptr::slice_from_raw_parts(b.start, b.len).cast_mut(),
         ));
-        b.start = std::ptr::null();
+        b.start = std::ptr::null_mut();
+        b.len = 0;
     }
+}
+
+/// Returns the gravestone value for `z_owned_bytes_t`
+#[no_mangle]
+pub const extern "C" fn z_bytes_null() -> z_owned_bytes_t {
+    z_owned_bytes_t {
+        len: 0,
+        start: core::ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub const extern "C" fn z_bytes_loan(b: &z_owned_bytes_t) -> z_bytes_t {
+    z_bytes_t {
+        len: b.len,
+        start: b.start,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn z_bytes_clone(b: &z_bytes_t) -> z_owned_bytes_t {
+    if !z_bytes_is_initialized(b) {
+        z_bytes_null()
+    } else {
+        z_owned_bytes_t::new(unsafe { std::slice::from_raw_parts(b.start, b.len) })
+    }
+}
+
+/// Returns ``true`` if `b` is initialized.
+#[no_mangle]
+pub extern "C" fn z_bytes_check(b: &z_owned_bytes_t) -> bool {
+    !b.start.is_null()
 }
 
 impl From<ZenohId> for z_bytes_t {

@@ -15,14 +15,14 @@
 use libc::c_char;
 use libc::c_void;
 use std::{
-    borrow::Cow,
     convert::TryFrom,
     ffi::CStr,
     ops::{Deref, DerefMut},
 };
+use zenoh::buffers::ZBuf;
 
 use zenoh::{
-    prelude::{ConsolidationMode, KeyExpr, QueryTarget, SplitBuffer},
+    prelude::{ConsolidationMode, KeyExpr, QueryTarget},
     query::{Mode, QueryConsolidation, Reply},
     sample::AttachmentBuilder,
     value::Value,
@@ -33,10 +33,13 @@ use crate::attachment::{
     insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
     z_attachment_t,
 };
+use crate::z_encoding_default;
+use crate::zc_owned_payload_t;
+use crate::zc_payload_null;
+use crate::zc_payload_t;
 use crate::{
-    impl_guarded_transmute, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_reply_t, z_sample_t, z_session_t, GuardedTransmute,
-    LOG_INVALID_SESSION,
+    impl_guarded_transmute, z_closure_reply_call, z_encoding_t, z_keyexpr_t,
+    z_owned_closure_reply_t, z_sample_t, z_session_t, GuardedTransmute, LOG_INVALID_SESSION,
 };
 
 type ReplyInner = Option<Reply>;
@@ -56,16 +59,10 @@ pub struct z_owned_reply_t([u64; 30]);
 #[repr(C, align(8))]
 pub struct z_owned_reply_t([u64; 19]);
 
-impl_guarded_transmute!(ReplyInner, z_owned_reply_t);
+impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
 
 impl From<ReplyInner> for z_owned_reply_t {
-    fn from(mut val: ReplyInner) -> Self {
-        if let Some(val) = &mut val {
-            match &mut val.sample {
-                Ok(inner) => inner.payload = inner.payload.contiguous().into_owned().into(),
-                Err(inner) => inner.payload = inner.payload.contiguous().into_owned().into(),
-            };
-        }
+    fn from(val: ReplyInner) -> Self {
         val.transmute()
     }
 }
@@ -101,10 +98,7 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
     if let Some(sample) = reply.as_ref().and_then(|s| s.sample.as_ref().ok()) {
-        if let Cow::Owned(_) = sample.payload.contiguous() {
-            unreachable!("z_reply_ok found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions. This is definitely a bug with zenoh, please contact us.")
-        }
-        z_sample_t::new(sample, &sample.payload)
+        z_sample_t::new(sample)
     } else {
         panic!("Assertion failed: tried to treat `z_owned_reply_t` as Ok despite that not being the case")
     }
@@ -113,11 +107,11 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
 /// A zenoh value.
 ///
 /// Members:
-///   z_bytes_t payload: The payload of this zenoh value.
+///   zc_payload_t payload: The payload of this zenoh value.
 ///   z_encoding_t encoding: The encoding of this zenoh value `payload`.
 #[repr(C)]
 pub struct z_value_t {
-    pub payload: z_bytes_t,
+    pub payload: zc_payload_t,
     pub encoding: z_encoding_t,
 }
 
@@ -129,10 +123,7 @@ pub struct z_value_t {
 pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
     if let Some(inner) = reply.as_ref().and_then(|s| s.sample.as_ref().err()) {
         z_value_t {
-            payload: match &inner.payload.contiguous() {
-                Cow::Borrowed(payload) => crate::z_bytes_t { start: payload.as_ptr(), len: payload.len() },
-                Cow::Owned(_) => unreachable!("z_reply_err found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions."),
-            },
+            payload: Some(&inner.payload).into(),
             encoding: (&inner.encoding).into(),
         }
     } else {
@@ -165,7 +156,8 @@ pub extern "C" fn z_reply_null() -> z_owned_reply_t {
 pub struct z_get_options_t {
     pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
-    pub value: z_value_t,
+    pub payload: zc_owned_payload_t,
+    pub encoding: z_encoding_t,
     pub attachment: z_attachment_t,
     pub timeout_ms: u64,
 }
@@ -175,12 +167,8 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         timeout_ms: 0,
-        value: {
-            z_value_t {
-                payload: z_bytes_t::empty(),
-                encoding: z_encoding_default(),
-            }
-        },
+        payload: zc_payload_null(),
+        encoding: z_encoding_default(),
         attachment: z_attachment_null(),
     }
 }
@@ -206,7 +194,7 @@ pub unsafe extern "C" fn z_get(
     keyexpr: z_keyexpr_t,
     parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
-    options: Option<&z_get_options_t>,
+    options: Option<&mut z_get_options_t>,
 ) -> i8 {
     let mut closure = z_owned_closure_reply_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -223,8 +211,13 @@ pub unsafe extern "C" fn z_get(
     if let Some(options) = options {
         q = q
             .consolidation(options.consolidation)
-            .target(options.target.into())
-            .with_value(&options.value);
+            .target(options.target.into());
+
+        if let Some(payload) = options.payload.take() {
+            let mut value = Value::new(payload);
+            value = value.encoding(options.encoding.into());
+            q = q.with_value(value);
+        }
         if options.timeout_ms != 0 {
             q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));
         }
@@ -302,30 +295,29 @@ impl From<z_query_target_t> for QueryTarget {
 impl From<&z_value_t> for Value {
     #[inline]
     fn from(val: &z_value_t) -> Value {
-        unsafe {
-            let value: Value =
-                std::slice::from_raw_parts(val.payload.start, val.payload.len).into();
-            let encoding = std::str::from_utf8(std::slice::from_raw_parts(
+        let payload: Option<&ZBuf> = val.payload.into();
+        let payload = match payload {
+            Some(b) => b.clone(),
+            None => ZBuf::empty(),
+        };
+        let encoding = unsafe {
+            std::str::from_utf8(std::slice::from_raw_parts(
                 val.encoding.suffix.start,
                 val.encoding.suffix.len,
             ))
-            .expect("encodings must be UTF8");
-            value.encoding(
-                zenoh::prelude::Encoding::new(val.encoding.prefix as u8, encoding).unwrap(),
-            )
-        }
+            .expect("encodings must be UTF8")
+        };
+        let v = Value::new(payload);
+        v.encoding(zenoh::prelude::Encoding::new(val.encoding.prefix as u8, encoding).unwrap())
     }
 }
 
 impl From<&Value> for z_value_t {
     #[inline]
     fn from(val: &Value) -> z_value_t {
-        let std::borrow::Cow::Borrowed(payload) = val.payload.contiguous() else {
-            panic!("Would have returned a reference to a temporary, make sure you the Value's payload is contiguous BEFORE calling this constructor.")
-        };
         z_value_t {
             encoding: (&val.encoding).into(),
-            payload: payload.into(),
+            payload: Some(&val.payload).into(),
         }
     }
 }

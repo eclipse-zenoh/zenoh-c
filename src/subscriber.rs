@@ -18,11 +18,9 @@ use crate::keyexpr::*;
 use crate::session::*;
 use crate::z_closure_sample_call;
 use crate::z_owned_closure_sample_t;
-use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::SplitBuffer;
 use zenoh::subscriber::Reliability;
 use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
@@ -84,24 +82,6 @@ pub struct z_owned_subscriber_t([u32; 1]);
 
 impl_guarded_transmute!(Subscriber, z_owned_subscriber_t);
 
-impl From<Subscriber> for z_owned_subscriber_t {
-    fn from(sub: Subscriber) -> Self {
-        sub.transmute()
-    }
-}
-
-impl AsRef<Subscriber> for z_owned_subscriber_t {
-    fn as_ref(&self) -> &Subscriber {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl AsMut<Subscriber> for z_owned_subscriber_t {
-    fn as_mut(&mut self) -> &mut Subscriber {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
 impl z_owned_subscriber_t {
     pub fn new(sub: zenoh::subscriber::Subscriber<'static, ()>) -> Self {
         Some(Box::new(sub)).into()
@@ -125,7 +105,7 @@ pub struct z_subscriber_t(*const z_owned_subscriber_t);
 
 impl AsRef<Subscriber> for z_subscriber_t {
     fn as_ref(&self) -> &Subscriber {
-        unsafe { (*self.0).as_ref() }
+        unsafe { &(*self.0) }
     }
 }
 
@@ -199,12 +179,7 @@ pub extern "C" fn z_declare_subscriber(
     match session.upgrade() {
         Some(s) => {
             let mut res = s.declare_subscriber(keyexpr).callback(move |sample| {
-                let payload = sample.payload.contiguous();
-                let owner = match payload {
-                    std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
-                    _ => sample.payload.clone(),
-                };
-                let sample = z_sample_t::new(&sample, &owner);
+                let sample = z_sample_t::new(&sample);
                 z_closure_sample_call(&closure, &sample)
             });
             if let Some(opts) = opts {
@@ -240,7 +215,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_owned_ke
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_subscriber(sub: &mut z_owned_subscriber_t) -> i8 {
-    if let Some(s) = sub.as_mut().take() {
+    if let Some(s) = sub.take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::warn!("{}", e);
             return e.errno().get();

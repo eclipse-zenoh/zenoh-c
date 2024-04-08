@@ -34,8 +34,8 @@ void query_handler(const z_query_t *query, void *context) {
 
     z_query_reply_options_t options = z_query_reply_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    z_query_reply(query, z_keyexpr((const char *)context), (const uint8_t *)values[value_num],
-                  strlen(values[value_num]), &options);
+    zc_owned_payload_t payload = zc_payload_encode_from_string(values[value_num]);
+    z_query_reply(query, z_keyexpr((const char *)context), z_move(payload), &options);
     z_drop(z_move(keystr));
 
     if (++value_num == values_count) {
@@ -85,11 +85,17 @@ int run_get() {
             assert(z_reply_is_ok(&reply));
 
             z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
-
-            ASSERT_STR_BYTES_EQUAL(values[val_num], sample.payload);
+            z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_owned_str_t payload_value = z_str_null();
+            zc_payload_decode_into_string(z_sample_payload(&sample), &payload_value);
+            if (strcmp(values[val_num], z_loan(payload_value))) {
+                perror("Unexpected value received");
+                z_drop(z_move(payload_value));
+                exit(-1);
+            }
 
             z_drop(z_move(keystr));
+            z_drop(z_move(payload_value));
         }
         z_drop(z_move(reply));
         z_drop(z_move(channel));
