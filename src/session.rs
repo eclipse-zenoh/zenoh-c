@@ -15,7 +15,7 @@
 use crate::{config::*, impl_guarded_transmute, zc_init_logger};
 use std::sync::{Arc, Weak};
 use zenoh::prelude::sync::SyncResolve;
-use zenoh::Session;
+use zenoh::session::Session;
 use zenoh_util::core::zresult::ErrNo;
 
 /// An owned zenoh session.

@@ -21,41 +21,41 @@ use crate::z_owned_closure_sample_t;
 use crate::LOG_INVALID_SESSION;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::subscriber::Reliability;
-use zenoh_protocol::core::SubInfo;
+// use zenoh::subscriber::Reliability;
+// use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
 
 /// The subscription reliability.
 ///
 ///     - **Z_RELIABILITY_BEST_EFFORT**
 ///     - **Z_RELIABILITY_RELIABLE**
-#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_reliability_t {
-    BEST_EFFORT,
-    RELIABLE,
-}
+// #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
+// #[repr(C)]
+// #[derive(Clone, Copy)]
+// pub enum z_reliability_t {
+//     BEST_EFFORT,
+//     RELIABLE,
+// }
 
-impl From<Reliability> for z_reliability_t {
-    #[inline]
-    fn from(r: Reliability) -> Self {
-        match r {
-            Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
-            Reliability::Reliable => z_reliability_t::RELIABLE,
-        }
-    }
-}
+// impl From<Reliability> for z_reliability_t {
+//     #[inline]
+//     fn from(r: Reliability) -> Self {
+//         match r {
+//             Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
+//             Reliability::Reliable => z_reliability_t::RELIABLE,
+//         }
+//     }
+// }
 
-impl From<z_reliability_t> for Reliability {
-    #[inline]
-    fn from(val: z_reliability_t) -> Self {
-        match val {
-            z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
-            z_reliability_t::RELIABLE => Reliability::Reliable,
-        }
-    }
-}
+// impl From<z_reliability_t> for Reliability {
+//     #[inline]
+//     fn from(val: z_reliability_t) -> Self {
+//         match val {
+//             z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
+//             z_reliability_t::RELIABLE => Reliability::Reliable,
+//         }
+//     }
+// }
 
 /**************************************/
 /*            DECLARATION             */
@@ -122,15 +122,15 @@ pub extern "C" fn z_subscriber_loan(p: &z_owned_subscriber_t) -> z_subscriber_t 
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
-    pub reliability: z_reliability_t,
+    // pub reliability: z_reliability_t,
 }
 
 /// Constructs the default value for :c:type:`z_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
-    let info = SubInfo::default();
+    // let info = SubInfo::default();
     z_subscriber_options_t {
-        reliability: info.reliability.into(),
+        // reliability: info.reliability.into(),
     }
 }
 
@@ -183,7 +183,7 @@ pub extern "C" fn z_declare_subscriber(
                 z_closure_sample_call(&closure, &sample)
             });
             if let Some(opts) = opts {
-                res = res.reliability(opts.reliability.into())
+                // res = res.reliability(opts.reliability.into())
             }
             match res.res() {
                 Ok(sub) => z_owned_subscriber_t::new(sub),

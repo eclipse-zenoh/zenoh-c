@@ -15,7 +15,9 @@
 use crate::zcu_closure_matching_status_call;
 use crate::zcu_owned_closure_matching_status_t;
 use std::ops::{Deref, DerefMut};
+use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
+use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 use zenoh::{
@@ -264,6 +266,7 @@ pub unsafe extern "C" fn z_publisher_put(
         };
         let put = match options {
             Some(options) => {
+                let encoding = *options.encoding;
                 let mut put = p.put(payload).encoding(options.encoding.into());
                 if z_attachment_check(&options.attachment) {
                     let mut attachment_builder = AttachmentBuilder::new();

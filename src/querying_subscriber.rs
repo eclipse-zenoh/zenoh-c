@@ -16,13 +16,12 @@ use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
 use zenoh::prelude::SessionDeclarations;
 use zenoh_ext::*;
-use zenoh_protocol::core::SubInfo;
 use zenoh_util::core::zresult::ErrNo;
 
 use crate::{
     impl_guarded_transmute, z_closure_sample_call, z_get_options_t, z_keyexpr_t,
     z_owned_closure_sample_t, z_query_consolidation_none, z_query_consolidation_t,
-    z_query_target_default, z_query_target_t, z_reliability_t, z_sample_t, z_session_t,
+    z_query_target_default, z_query_target_t, z_sample_t, z_session_t,
     zcu_locality_default, zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
     LOG_INVALID_SESSION,
 };
@@ -94,7 +93,7 @@ pub extern "C" fn ze_querying_subscriber_null() -> ze_owned_querying_subscriber_
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
-    reliability: z_reliability_t,
+    // reliability: z_reliability_t,
     allowed_origin: zcu_locality_t,
     query_selector: z_keyexpr_t,
     query_target: z_query_target_t,
@@ -107,7 +106,7 @@ pub struct ze_querying_subscriber_options_t {
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscriber_options_t {
     ze_querying_subscriber_options_t {
-        reliability: SubInfo::default().reliability.into(),
+        // reliability: SubInfo::default().reliability.into(),
         allowed_origin: zcu_locality_default(),
         query_selector: z_keyexpr_t::null(),
         query_target: z_query_target_default(),
@@ -164,7 +163,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
             let mut sub = s.declare_subscriber(keyexpr).querying();
             if let Some(options) = options {
                 sub = sub
-                    .reliability(options.reliability.into())
+                    // .reliability(options.reliability.into())
                     .allowed_origin(options.allowed_origin.into())
                     .query_target(options.query_target.into())
                     .query_consolidation(options.query_consolidation)

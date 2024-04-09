@@ -131,7 +131,7 @@ pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
 /// The encoding of the payload.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> z_encoding_t {
-    Some(sample.encoding()).into()
+    sample.encoding().into()
 }
 /// The sample's data, the return value aliases the sample.
 ///
@@ -232,8 +232,7 @@ pub struct z_encoding_t([u64; 4]);
 #[repr(C, align(4))]
 pub struct z_encoding_t([u32; 4]);
 
-impl_guarded_transmute!(Option<&'static Encoding>, z_encoding_t);
-impl_guarded_transmute!(z_encoding_t, Option<&'static Encoding>);
+impl_guarded_transmute!(&'static Encoding, z_encoding_t);
 
 /// An owned payload encoding.
 ///
@@ -246,16 +245,21 @@ impl_guarded_transmute!(z_encoding_t, Option<&'static Encoding>);
 #[repr(C, align(8))]
 pub struct z_owned_encoding_t([u64; 4]);
 
+impl Drop for z_owned_encoding_t {
+    fn drop(&mut self) {
+    }
+}
+
 #[cfg(target_arch = "arm")]
 #[repr(C, align(4))]
 pub struct z_owned_encoding_t([u32; 4]);
 
-impl_guarded_transmute!(Option<Encoding>, z_owned_encoding_t);
+impl_guarded_transmute!(Encoding, z_owned_encoding_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
 pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
-    None::<Encoding>.into()
+    Encoding::default().into()
 }
 
 /// Constructs a specific :c:type:`z_encoding_t`.
@@ -266,7 +270,7 @@ pub unsafe extern "C" fn z_encoding_from_str(s: *const c_char) -> z_owned_encodi
         z_encoding_null()
     } else {
         let s = CStr::from_ptr(s).to_string_lossy().as_ref();
-        Some(Encoding::from(s)).into()
+        Encoding::from(s).into()
     }
 }
 
@@ -274,7 +278,7 @@ pub unsafe extern "C" fn z_encoding_from_str(s: *const c_char) -> z_owned_encodi
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    let encoding = Some(&Encoding::default());
+    let encoding = &Encoding::ZENOH_BYTES;
     encoding.into()
 }
 
@@ -282,14 +286,14 @@ pub extern "C" fn z_encoding_default() -> z_encoding_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
-    std::mem::drop(encoding.take());
+    std::mem::drop(std::mem::replace(encoding, z_encoding_null()));
 }
 
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
-    encoding.is_some()
+    *encoding == Encoding::default()
 }
 
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
