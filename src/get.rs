@@ -215,7 +215,7 @@ pub unsafe extern "C" fn z_get(
 
         if let Some(payload) = options.payload.take() {
             let mut value = Value::new(payload);
-            value = value.encoding(options.encoding.into());
+            value.encoding = options.encoding.into();
             q = q.with_value(value);
         }
         if options.timeout_ms != 0 {

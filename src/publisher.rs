@@ -16,6 +16,8 @@ use crate::zcu_closure_matching_status_call;
 use crate::zcu_owned_closure_matching_status_t;
 use std::ops::{Deref, DerefMut};
 use zenoh::prelude::SessionDeclarations;
+use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::ValueBuilderTrait;
 use zenoh::{
     prelude::{Priority, Value},
     publication::MatchingListener,
@@ -260,10 +262,9 @@ pub unsafe extern "C" fn z_publisher_put(
             log::debug!("Attempted to put without a payload");
             return i8::MIN;
         };
-        let value: Value = payload.into();
         let put = match options {
             Some(options) => {
-                let mut put = p.put(value.encoding(options.encoding.into()));
+                let mut put = p.put(payload).encoding(options.encoding.into());
                 if z_attachment_check(&options.attachment) {
                     let mut attachment_builder = AttachmentBuilder::new();
                     z_attachment_iterate(
@@ -271,11 +272,11 @@ pub unsafe extern "C" fn z_publisher_put(
                         insert_in_attachment_builder,
                         &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
                     );
-                    put = put.with_attachment(attachment_builder.build());
+                    put = put.attachment(attachment_builder.build());
                 };
                 put
             }
-            None => p.put(value),
+            None => p.put(payload),
         };
         if let Err(e) = put.res_sync() {
             log::error!("{}", e);

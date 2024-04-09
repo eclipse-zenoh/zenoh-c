@@ -12,23 +12,31 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use std::ffi::CStr;
 use std::ops::Deref;
 
 use crate::collections::*;
 use crate::keyexpr::*;
 use crate::z_congestion_control_t;
 use crate::z_id_t;
+use crate::z_owned_buffer_t;
 use crate::z_priority_t;
 use crate::zc_owned_payload_t;
 use crate::zc_payload_t;
 use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
+use zenoh::buffers::ZBuf;
+use zenoh::encoding::Encoding;
+use zenoh::payload::Deserialize;
+use zenoh::payload::ZSerde;
 use zenoh::prelude::SampleKind;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
+use unwrap_infallible::UnwrapInfallible;
+use std::convert::Infallible;
 
 use crate::attachment::{attachment_iteration_driver, z_attachment_null, z_attachment_t};
 
@@ -123,22 +131,30 @@ pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
 /// The encoding of the payload.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> z_encoding_t {
-    sample.encoding().into()
+    Some(sample.encoding()).into()
 }
 /// The sample's data, the return value aliases the sample.
 ///
 /// If you need ownership of the buffer, you may use `z_sample_owned_payload`.
 #[no_mangle]
 pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> zc_payload_t {
-    sample.payload().into()
+    // TODO: here returning reference not to sample's payload, but to temporary copy
+    // THIS WILL CRASH FOR SURE, MADE IT ONLY TO MAKE IT COMPILE
+    // Need a way to get reference to sample's payload
+    let buffer: ZBuf = ZSerde.deserialize(sample.payload()).unwrap_infallible();
+    let owned_buffer: z_owned_buffer_t = Some(buffer).into();
+    owned_buffer.as_ref().into()
 }
+
 /// Returns the sample's payload after incrementing its internal reference count.
 ///
 /// Note that other samples may have received the same buffer, meaning that mutating this buffer may
 /// affect the samples received by other subscribers.
 #[no_mangle]
 pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> zc_owned_payload_t {
-    sample.payload().clone().into()
+    let buffer: ZBuf = ZSerde.deserialize(sample.payload()).unwrap_infallible();
+    let owned_buffer: z_owned_buffer_t = Some(buffer).into();
+    owned_buffer.into()
 }
 /// The sample's kind (put or delete).
 #[no_mangle]
@@ -204,273 +220,82 @@ pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
     None.into()
 }
 
-/// A :c:type:`z_encoding_t` integer `prefix`.
-///
-///     - **Z_ENCODING_PREFIX_EMPTY**
-///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
-///     - **Z_ENCODING_PREFIX_APP_CUSTOM**
-///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
-///     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
-///     - **Z_ENCODING_PREFIX_APP_JSON**
-///     - **Z_ENCODING_PREFIX_APP_SQL**
-///     - **Z_ENCODING_PREFIX_APP_INTEGER**
-///     - **Z_ENCODING_PREFIX_APP_FLOAT**
-///     - **Z_ENCODING_PREFIX_APP_XML**
-///     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
-///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
-///     - **Z_ENCODING_PREFIX_TEXT_JSON**
-///     - **Z_ENCODING_PREFIX_TEXT_HTML**
-///     - **Z_ENCODING_PREFIX_TEXT_XML**
-///     - **Z_ENCODING_PREFIX_TEXT_CSS**
-///     - **Z_ENCODING_PREFIX_TEXT_CSV**
-///     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
-///     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
-///     - **Z_ENCODING_PREFIX_IMAGE_PNG**
-///     - **Z_ENCODING_PREFIX_IMAGE_GIF**
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub enum z_encoding_prefix_t {
-    Empty = 0,
-    AppOctetStream = 1,
-    AppCustom = 2,
-    TextPlain = 3,
-    AppProperties = 4,
-    AppJson = 5,
-    AppSql = 6,
-    AppInteger = 7,
-    AppFloat = 8,
-    AppXml = 9,
-    AppXhtmlXml = 10,
-    AppXWwwFormUrlencoded = 11,
-    TextJson = 12,
-    TextHtml = 13,
-    TextXml = 14,
-    TextCss = 15,
-    TextCsv = 16,
-    TextJavascript = 17,
-    ImageJpeg = 18,
-    ImagePng = 19,
-    ImageGif = 20,
-}
-
-impl From<z_encoding_prefix_t> for zenoh_protocol::core::KnownEncoding {
-    fn from(val: z_encoding_prefix_t) -> Self {
-        if cfg!(debug_assertions) {
-            match val {
-                z_encoding_prefix_t::Empty => zenoh_protocol::core::KnownEncoding::Empty,
-                z_encoding_prefix_t::AppOctetStream => {
-                    zenoh_protocol::core::KnownEncoding::AppOctetStream
-                }
-                z_encoding_prefix_t::AppCustom => zenoh_protocol::core::KnownEncoding::AppCustom,
-                z_encoding_prefix_t::TextPlain => zenoh_protocol::core::KnownEncoding::TextPlain,
-                z_encoding_prefix_t::AppProperties => {
-                    zenoh_protocol::core::KnownEncoding::AppProperties
-                }
-                z_encoding_prefix_t::AppJson => zenoh_protocol::core::KnownEncoding::AppJson,
-                z_encoding_prefix_t::AppSql => zenoh_protocol::core::KnownEncoding::AppSql,
-                z_encoding_prefix_t::AppInteger => zenoh_protocol::core::KnownEncoding::AppInteger,
-                z_encoding_prefix_t::AppFloat => zenoh_protocol::core::KnownEncoding::AppFloat,
-                z_encoding_prefix_t::AppXml => zenoh_protocol::core::KnownEncoding::AppXml,
-                z_encoding_prefix_t::AppXhtmlXml => {
-                    zenoh_protocol::core::KnownEncoding::AppXhtmlXml
-                }
-                z_encoding_prefix_t::AppXWwwFormUrlencoded => {
-                    zenoh_protocol::core::KnownEncoding::AppXWwwFormUrlencoded
-                }
-                z_encoding_prefix_t::TextJson => zenoh_protocol::core::KnownEncoding::TextJson,
-                z_encoding_prefix_t::TextHtml => zenoh_protocol::core::KnownEncoding::TextHtml,
-                z_encoding_prefix_t::TextXml => zenoh_protocol::core::KnownEncoding::TextXml,
-                z_encoding_prefix_t::TextCss => zenoh_protocol::core::KnownEncoding::TextCss,
-                z_encoding_prefix_t::TextCsv => zenoh_protocol::core::KnownEncoding::TextCsv,
-                z_encoding_prefix_t::TextJavascript => {
-                    zenoh_protocol::core::KnownEncoding::TextJavascript
-                }
-                z_encoding_prefix_t::ImageJpeg => zenoh_protocol::core::KnownEncoding::ImageJpeg,
-                z_encoding_prefix_t::ImagePng => zenoh_protocol::core::KnownEncoding::ImagePng,
-                z_encoding_prefix_t::ImageGif => zenoh_protocol::core::KnownEncoding::ImageGif,
-            }
-        } else {
-            unsafe { std::mem::transmute(val as u8) }
-        }
-    }
-}
-
-impl From<zenoh_protocol::core::KnownEncoding> for z_encoding_prefix_t {
-    fn from(val: zenoh_protocol::core::KnownEncoding) -> Self {
-        if cfg!(debug_assertions) {
-            match val {
-                zenoh_protocol::core::KnownEncoding::Empty => z_encoding_prefix_t::Empty,
-                zenoh_protocol::core::KnownEncoding::AppOctetStream => {
-                    z_encoding_prefix_t::AppOctetStream
-                }
-                zenoh_protocol::core::KnownEncoding::AppCustom => z_encoding_prefix_t::AppCustom,
-                zenoh_protocol::core::KnownEncoding::TextPlain => z_encoding_prefix_t::TextPlain,
-                zenoh_protocol::core::KnownEncoding::AppProperties => {
-                    z_encoding_prefix_t::AppProperties
-                }
-                zenoh_protocol::core::KnownEncoding::AppJson => z_encoding_prefix_t::AppJson,
-                zenoh_protocol::core::KnownEncoding::AppSql => z_encoding_prefix_t::AppSql,
-                zenoh_protocol::core::KnownEncoding::AppInteger => z_encoding_prefix_t::AppInteger,
-                zenoh_protocol::core::KnownEncoding::AppFloat => z_encoding_prefix_t::AppFloat,
-                zenoh_protocol::core::KnownEncoding::AppXml => z_encoding_prefix_t::AppXml,
-                zenoh_protocol::core::KnownEncoding::AppXhtmlXml => {
-                    z_encoding_prefix_t::AppXhtmlXml
-                }
-                zenoh_protocol::core::KnownEncoding::AppXWwwFormUrlencoded => {
-                    z_encoding_prefix_t::AppXWwwFormUrlencoded
-                }
-                zenoh_protocol::core::KnownEncoding::TextJson => z_encoding_prefix_t::TextJson,
-                zenoh_protocol::core::KnownEncoding::TextHtml => z_encoding_prefix_t::TextHtml,
-                zenoh_protocol::core::KnownEncoding::TextXml => z_encoding_prefix_t::TextXml,
-                zenoh_protocol::core::KnownEncoding::TextCss => z_encoding_prefix_t::TextCss,
-                zenoh_protocol::core::KnownEncoding::TextCsv => z_encoding_prefix_t::TextCsv,
-                zenoh_protocol::core::KnownEncoding::TextJavascript => {
-                    z_encoding_prefix_t::TextJavascript
-                }
-                zenoh_protocol::core::KnownEncoding::ImageJpeg => z_encoding_prefix_t::ImageJpeg,
-                zenoh_protocol::core::KnownEncoding::ImagePng => z_encoding_prefix_t::ImagePng,
-                zenoh_protocol::core::KnownEncoding::ImageGif => z_encoding_prefix_t::ImageGif,
-            }
-        } else {
-            unsafe { std::mem::transmute(val as u32) }
-        }
-    }
-}
-
 /// The encoding of a payload, in a MIME-like format.
 ///
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
 ///
-/// Members:
-///   z_encoding_prefix_t prefix: The integer prefix of this encoding.
-///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub struct z_encoding_t {
-    pub prefix: z_encoding_prefix_t,
-    pub suffix: z_bytes_t,
-}
+#[cfg(not(target_arch = "arm"))]
+#[repr(C, align(8))]
+pub struct z_encoding_t([u64; 4]);
 
-impl From<z_encoding_t> for zenoh_protocol::core::Encoding {
-    fn from(enc: z_encoding_t) -> Self {
-        if enc.suffix.len == 0 {
-            zenoh_protocol::core::Encoding::Exact(enc.prefix.into())
-        } else {
-            let suffix = unsafe {
-                let slice: &'static [u8] =
-                    std::slice::from_raw_parts(enc.suffix.start, enc.suffix.len);
-                std::str::from_utf8_unchecked(slice)
-            };
-            zenoh_protocol::core::Encoding::WithSuffix(enc.prefix.into(), suffix.into())
-        }
-    }
-}
+#[cfg(target_arch = "arm")]
+#[repr(C, align(4))]
+pub struct z_encoding_t([u32; 4]);
 
-impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
-    fn from(val: &zenoh_protocol::core::Encoding) -> Self {
-        let suffix = val.suffix();
-        z_encoding_t {
-            prefix: (*val.prefix()).into(),
-            suffix: z_bytes_t {
-                start: suffix.as_ptr(),
-                len: suffix.len(),
-            },
-        }
-    }
-}
+impl_guarded_transmute!(Option<&'static Encoding>, z_encoding_t);
 
 /// An owned payload encoding.
-///
-/// Members:
-///   z_encoding_prefix_t prefix: The integer prefix of this encoding.
-///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_encoding_t {
-    pub prefix: z_encoding_prefix_t,
-    pub suffix: z_owned_bytes_t,
-    pub _dropped: bool,
-}
+#[cfg(not(target_arch = "arm"))]
+#[repr(C, align(8))]
+pub struct z_owned_encoding_t([u64; 4]);
 
-impl z_owned_encoding_t {
-    pub fn null() -> Self {
-        z_owned_encoding_t {
-            prefix: z_encoding_prefix_t::Empty,
-            suffix: z_bytes_null(),
-            _dropped: true,
-        }
-    }
-}
+#[cfg(target_arch = "arm")]
+#[repr(C, align(4))]
+pub struct z_owned_encoding_t([u32; 4]);
+
+impl_guarded_transmute!(Option<Encoding>, z_owned_encoding_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
 pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
-    z_owned_encoding_t::null()
+    None::<Encoding>.into()
 }
 
 /// Constructs a specific :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding(
-    prefix: z_encoding_prefix_t,
-    suffix: *const c_char,
-) -> z_encoding_t {
-    let suffix = if suffix.is_null() {
-        z_bytes_t::empty()
+pub unsafe extern "C" fn z_encoding_from_str(s: *const c_char) -> z_owned_encoding_t {
+    if s.is_null() {
+        z_encoding_null()
     } else {
-        z_bytes_t {
-            start: suffix as *const u8,
-            len: libc::strlen(suffix),
-        }
-    };
-    z_encoding_t { prefix, suffix }
+        let s = CStr::from_ptr(s).to_string_lossy().as_ref();
+        Some(Encoding::from(s)).into()
+    }
 }
 
 /// Constructs a default :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    (&zenoh_protocol::core::Encoding::default()).into()
+    let encoding = Some(&Encoding::default());
+    encoding.into()
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
-    z_bytes_drop(&mut encoding.suffix);
-    encoding._dropped = true
+    std::mem::drop(encoding.take());
 }
 
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
-    !encoding._dropped
+    encoding.is_some()
 }
 
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
-    z_encoding_t {
-        prefix: encoding.prefix,
-        suffix: z_bytes_loan(&encoding.suffix),
-    }
-}
-
-impl From<z_encoding_t> for z_owned_encoding_t {
-    fn from(val: z_encoding_t) -> Self {
-        z_owned_encoding_t {
-            prefix: val.prefix,
-            suffix: z_bytes_clone(&val.suffix),
-            _dropped: false,
-        }
-    }
+    encoding.as_ref().into()
 }
 
 /// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`

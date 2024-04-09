@@ -2,10 +2,10 @@ use core::slice;
 use std::slice::from_raw_parts_mut;
 use std::{any::Any, ops::Deref, ptr::NonNull};
 
-use zenoh::buffers::reader::HasReader;
-use zenoh::buffers::reader::Reader;
+use zenoh::buffers::HasReader;
+use zenoh::buffers::Reader;
 use zenoh::buffers::ZBufReader;
-use zenoh::buffers::{buffer::SplitBuffer, ZBuf, ZSliceBuffer};
+use zenoh::buffers::{SplitBuffer, ZBuf, ZSliceBuffer};
 
 use crate::{
     impl_guarded_transmute, z_bytes_empty, z_bytes_null, z_bytes_t, z_owned_bytes_t, z_owned_str_t,

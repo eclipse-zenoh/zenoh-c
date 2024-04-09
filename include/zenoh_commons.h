@@ -46,54 +46,6 @@ typedef enum z_consolidation_mode_t {
   Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
 /**
- * A :c:type:`z_encoding_t` integer `prefix`.
- *
- *     - **Z_ENCODING_PREFIX_EMPTY**
- *     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
- *     - **Z_ENCODING_PREFIX_APP_CUSTOM**
- *     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
- *     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
- *     - **Z_ENCODING_PREFIX_APP_JSON**
- *     - **Z_ENCODING_PREFIX_APP_SQL**
- *     - **Z_ENCODING_PREFIX_APP_INTEGER**
- *     - **Z_ENCODING_PREFIX_APP_FLOAT**
- *     - **Z_ENCODING_PREFIX_APP_XML**
- *     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
- *     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
- *     - **Z_ENCODING_PREFIX_TEXT_JSON**
- *     - **Z_ENCODING_PREFIX_TEXT_HTML**
- *     - **Z_ENCODING_PREFIX_TEXT_XML**
- *     - **Z_ENCODING_PREFIX_TEXT_CSS**
- *     - **Z_ENCODING_PREFIX_TEXT_CSV**
- *     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
- *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
- *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
- *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
- */
-typedef enum z_encoding_prefix_t {
-  Z_ENCODING_PREFIX_EMPTY = 0,
-  Z_ENCODING_PREFIX_APP_OCTET_STREAM = 1,
-  Z_ENCODING_PREFIX_APP_CUSTOM = 2,
-  Z_ENCODING_PREFIX_TEXT_PLAIN = 3,
-  Z_ENCODING_PREFIX_APP_PROPERTIES = 4,
-  Z_ENCODING_PREFIX_APP_JSON = 5,
-  Z_ENCODING_PREFIX_APP_SQL = 6,
-  Z_ENCODING_PREFIX_APP_INTEGER = 7,
-  Z_ENCODING_PREFIX_APP_FLOAT = 8,
-  Z_ENCODING_PREFIX_APP_XML = 9,
-  Z_ENCODING_PREFIX_APP_XHTML_XML = 10,
-  Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED = 11,
-  Z_ENCODING_PREFIX_TEXT_JSON = 12,
-  Z_ENCODING_PREFIX_TEXT_HTML = 13,
-  Z_ENCODING_PREFIX_TEXT_XML = 14,
-  Z_ENCODING_PREFIX_TEXT_CSS = 15,
-  Z_ENCODING_PREFIX_TEXT_CSV = 16,
-  Z_ENCODING_PREFIX_TEXT_JAVASCRIPT = 17,
-  Z_ENCODING_PREFIX_IMAGE_JPEG = 18,
-  Z_ENCODING_PREFIX_IMAGE_PNG = 19,
-  Z_ENCODING_PREFIX_IMAGE_GIF = 20,
-} z_encoding_prefix_t;
-/**
  * A :c:type:`z_keyexpr_intersection_level_t`.
  *
  *     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
@@ -608,24 +560,7 @@ typedef struct z_delete_options_t {
   enum z_priority_t priority;
 } z_delete_options_t;
 /**
- * The encoding of a payload, in a MIME-like format.
- *
- * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
- *
- * Members:
- *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
- *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
- */
-typedef struct z_encoding_t {
-  enum z_encoding_prefix_t prefix;
-  struct z_bytes_t suffix;
-} z_encoding_t;
-/**
  * An owned payload encoding.
- *
- * Members:
- *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
- *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
  *
  * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
  * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
@@ -633,11 +568,32 @@ typedef struct z_encoding_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
-typedef struct z_owned_encoding_t {
-  enum z_encoding_prefix_t prefix;
-  struct z_owned_bytes_t suffix;
-  bool _dropped;
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_encoding_t {
+  uint64_t _0[4];
 } z_owned_encoding_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_owned_encoding_t {
+  uint32_t _0[4];
+} z_owned_encoding_t;
+#endif
+/**
+ * The encoding of a payload, in a MIME-like format.
+ *
+ * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
+ *
+ */
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_encoding_t {
+  uint64_t _0[4];
+} z_encoding_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_encoding_t {
+  uint32_t _0[4];
+} z_encoding_t;
+#endif
 /**
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
  */
@@ -1528,10 +1484,6 @@ int8_t z_delete(struct z_session_t session,
  */
 ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
 /**
- * Constructs a specific :c:type:`z_encoding_t`.
- */
-ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
-/**
  * Returns ``true`` if `encoding` is valid.
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
@@ -1543,6 +1495,10 @@ ZENOHC_API struct z_encoding_t z_encoding_default(void);
  * Frees `encoding`, invalidating it for double-drop safety.
  */
 ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
+/**
+ * Constructs a specific :c:type:`z_encoding_t`.
+ */
+ZENOHC_API struct z_owned_encoding_t z_encoding_from_str(const char *s);
 /**
  * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
  */
