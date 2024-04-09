@@ -267,7 +267,7 @@ pub unsafe extern "C" fn z_publisher_put(
         let put = match options {
             Some(options) => {
                 let encoding = *options.encoding;
-                let mut put = p.put(payload).encoding(options.encoding.into());
+                let mut put = p.put(payload).encoding(*encoding);
                 if z_attachment_check(&options.attachment) {
                     let mut attachment_builder = AttachmentBuilder::new();
                     z_attachment_iterate(

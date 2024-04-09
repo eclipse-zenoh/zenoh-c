@@ -24,6 +24,7 @@ use crate::z_str_null;
 use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
+use zenoh::core::SyncResolve;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::KeyExpr;

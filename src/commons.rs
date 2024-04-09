@@ -14,6 +14,7 @@
 
 use std::ffi::CStr;
 use std::ops::Deref;
+use std::ops::DerefMut;
 
 use crate::collections::*;
 use crate::keyexpr::*;
@@ -26,7 +27,10 @@ use crate::zc_payload_t;
 use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
+use std::convert::Infallible;
+use unwrap_infallible::UnwrapInfallible;
 use zenoh::buffers::ZBuf;
+use zenoh::encoding;
 use zenoh::encoding::Encoding;
 use zenoh::payload::Deserialize;
 use zenoh::payload::ZSerde;
@@ -35,8 +39,6 @@ use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh_protocol::core::Timestamp;
-use unwrap_infallible::UnwrapInfallible;
-use std::convert::Infallible;
 
 use crate::attachment::{attachment_iteration_driver, z_attachment_null, z_attachment_t};
 
@@ -247,6 +249,8 @@ pub struct z_owned_encoding_t([u64; 4]);
 
 impl Drop for z_owned_encoding_t {
     fn drop(&mut self) {
+        let encoding = self.deref_mut();
+        *encoding = Encoding::default();
     }
 }
 
@@ -286,21 +290,24 @@ pub extern "C" fn z_encoding_default() -> z_encoding_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
-    std::mem::drop(std::mem::replace(encoding, z_encoding_null()));
+    let encoding = encoding.deref_mut();
+    *encoding = Encoding::default();
 }
 
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
-    *encoding == Encoding::default()
+    let encoding = encoding.deref();
+    *encoding != Encoding::default()
 }
 
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
-    encoding.as_ref().into()
+    let encoding = encoding.deref();
+    encoding.into()
 }
 
 /// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`

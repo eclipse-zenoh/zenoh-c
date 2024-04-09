@@ -14,14 +14,16 @@
 
 use libc::c_char;
 use libc::c_void;
-use zenoh::encoding::Encoding;
-use zenoh::payload;
 use std::{
     convert::TryFrom,
     ffi::CStr,
     ops::{Deref, DerefMut},
 };
 use zenoh::buffers::ZBuf;
+use zenoh::encoding::Encoding;
+use zenoh::payload;
+use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::ValueBuilderTrait;
 
 use zenoh::{
     prelude::{ConsolidationMode, KeyExpr, QueryTarget},
@@ -107,9 +109,8 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
 }
 
 /// A zenoh value.
-/// 
-/// 
-
+///
+///
 
 #[repr(C)]
 #[cfg(not(target_arch = "arm"))]
@@ -129,7 +130,18 @@ pub struct z_value_t([u64; 4]);
 pub struct z_value_t([u32; 4]);
 
 impl_guarded_transmute!(Value, z_owned_value_t);
-impl_guarded_transmute!(Option<&'static Value>, z_value_t);
+impl_guarded_transmute!(&'static Value, z_value_t);
+
+const Z_VALUE_NULL: Value = Value::empty();
+
+impl From<Option<&Value>> for z_value_t {
+    fn from(val: Option<&Value>) -> Self {
+        match val {
+            Some(val) => val.transmute(),
+            None => (&Z_VALUE_NULL).transmute(),
+        }
+    }
+}
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
@@ -228,9 +240,8 @@ pub unsafe extern "C" fn z_get(
 
         if let Some(payload) = options.payload.take() {
             let mut value = Value::new(payload);
-            let encoding: Option<&Encoding> = options.encoding.into();
-            value.encoding = encoding.cloned().unwrap_or_default();
-            q = q.with_value(value);
+            value.encoding = **options.encoding;
+            q = q.value(value);
         }
         if options.timeout_ms != 0 {
             q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));
@@ -242,7 +253,7 @@ pub unsafe extern "C" fn z_get(
                 insert_in_attachment_builder,
                 &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
             );
-            q = q.with_attachment(attachment_builder.build());
+            q = q.attachment(attachment_builder.build());
         };
     }
     match q
@@ -303,26 +314,6 @@ impl From<z_query_target_t> for QueryTarget {
             z_query_target_t::ALL => QueryTarget::All,
             z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
         }
-    }
-}
-
-impl From<&z_value_t> for Value {
-    #[inline]
-    fn from(val: &z_value_t) -> Value {
-        let payload: Option<&ZBuf> = val.payload.into();
-        let payload = match payload {
-            Some(b) => b.clone(),
-            None => ZBuf::empty(),
-        };
-        let encoding = unsafe {
-            std::str::from_utf8(std::slice::from_raw_parts(
-                val.encoding.suffix.start,
-                val.encoding.suffix.len,
-            ))
-            .expect("encodings must be UTF8")
-        };
-        let v = Value::new(payload);
-        v.encoding(zenoh::prelude::Encoding::new(val.encoding.prefix as u8, encoding).unwrap())
     }
 }
 

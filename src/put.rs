@@ -17,9 +17,13 @@ use crate::session::*;
 use crate::zc_owned_payload_t;
 use crate::LOG_INVALID_SESSION;
 use libc::c_void;
+use zenoh::encoding;
 use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};
 use zenoh::publication::CongestionControl;
 use zenoh::sample::AttachmentBuilder;
+use zenoh::sample::QoSBuilderTrait;
+use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::ValueBuilderTrait;
 use zenoh_util::core::zresult::ErrNo;
 
 use crate::attachment::{
@@ -161,10 +165,10 @@ pub extern "C" fn z_put(
     match session.upgrade() {
         Some(s) => {
             if let Some(payload) = payload.and_then(|p| p.take()) {
-                let mut res = s.put(keyexpr, payload).kind(SampleKind::Put);
+                let mut res = s.put(keyexpr, payload);
                 if let Some(opts) = opts {
                     res = res
-                        .encoding(opts.encoding)
+                        .encoding(**opts.encoding)
                         .congestion_control(opts.congestion_control.into())
                         .priority(opts.priority.into());
                     if z_attachment_check(&opts.attachment) {
@@ -174,7 +178,7 @@ pub extern "C" fn z_put(
                             insert_in_attachment_builder,
                             &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
                         );
-                        res = res.with_attachment(attachment_builder.build());
+                        res = res.attachment(attachment_builder.build());
                     };
                 }
                 match res.res_sync() {

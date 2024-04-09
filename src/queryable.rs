@@ -100,27 +100,8 @@ impl Deref for z_query_t {
 #[repr(C)]
 pub struct z_owned_query_t(*mut c_void);
 
-impl From<Option<Query>> for z_owned_query_t {
-    fn from(value: Option<Query>) -> Self {
-        unsafe { core::mem::transmute(value) }
-    }
-}
-impl From<Query> for z_owned_query_t {
-    fn from(value: Query) -> Self {
-        Some(value).into()
-    }
-}
-impl Deref for z_owned_query_t {
-    type Target = Option<Query>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
-impl DerefMut for z_owned_query_t {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
+impl_guarded_transmute!(Option<Query>, z_owned_query_t);
+
 impl Drop for z_owned_query_t {
     fn drop(&mut self) {
         let _: Option<Query> = self.take();
@@ -129,7 +110,7 @@ impl Drop for z_owned_query_t {
 /// The gravestone value of `z_owned_query_t`.
 #[no_mangle]
 pub extern "C" fn z_query_null() -> z_owned_query_t {
-    unsafe { core::mem::transmute(None::<Query>) }
+    None.into()
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
 ///
@@ -287,26 +268,28 @@ pub unsafe extern "C" fn z_query_reply(
         return i8::MIN;
     };
     if let Some(key) = &*key {
-        if let Some(payload) = payload.and_then(|p| p.take()) {
-            let mut s = Sample::new(key.clone().into_owned(), payload);
-            if let Some(o) = options {
-                s.encoding = o.encoding.into();
-                if z_attachment_check(&o.attachment) {
-                    let mut attachment_builder = AttachmentBuilder::new();
-                    z_attachment_iterate(
-                        o.attachment,
-                        insert_in_attachment_builder,
-                        &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-                    );
-                    s = s.with_attachment(attachment_builder.build());
-                };
-            }
-            if let Err(e) = query.reply(Ok(s)).res_sync() {
-                log::error!("{}", e);
-                return e.errno().get();
-            }
-            return 0;
-        }
+        // TODO: reimplement with reply builder
+        //
+        // if let Some(payload) = payload.and_then(|p| p.take()) {
+        //     let mut s = Sample::new(key.clone().into_owned(), payload);
+        //     if let Some(o) = options {
+        //         s.encoding = o.encoding.into();
+        //         if z_attachment_check(&o.attachment) {
+        //             let mut attachment_builder = AttachmentBuilder::new();
+        //             z_attachment_iterate(
+        //                 o.attachment,
+        //                 insert_in_attachment_builder,
+        //                 &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
+        //             );
+        //             s = s.with_attachment(attachment_builder.build());
+        //         };
+        //     }
+        //     if let Err(e) = query.reply(Ok(s)).res_sync() {
+        //         log::error!("{}", e);
+        //         return e.errno().get();
+        //     }
+        //     return 0;
+        // }
     }
     i8::MIN
 }
@@ -341,17 +324,8 @@ pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
-    match query.as_ref().and_then(|q| q.value()) {
-        Some(value) =>
-        {
-            #[allow(mutable_transmutes)]
-            value.into()
-        }
-        None => z_value_t {
-            payload: zc_payload_t::default(),
-            encoding: z_encoding_default(),
-        },
-    }
+    let v = query.as_ref().and_then(|q| q.value());
+    v.into()
 }
 
 /// Returns the attachment to the query by aliasing.
