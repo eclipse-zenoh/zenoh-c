@@ -737,18 +737,16 @@ typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
-typedef struct z_buffer_t zc_payload_t;
-/**
- * A zenoh value.
- *
- * Members:
- *   zc_payload_t payload: The payload of this zenoh value.
- *   z_encoding_t encoding: The encoding of this zenoh value `payload`.
- */
-typedef struct z_value_t {
-  zc_payload_t payload;
-  struct z_encoding_t encoding;
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_value_t {
+  uint64_t _0[4];
 } z_value_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) z_value_t {
+  uint32_t _0[4];
+} z_value_t;
+#endif
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -774,6 +772,7 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
+typedef struct z_buffer_t zc_payload_t;
 typedef struct z_timestamp_t {
   uint64_t time;
   struct z_id_t id;

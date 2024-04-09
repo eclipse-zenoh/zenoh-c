@@ -233,6 +233,7 @@ pub struct z_encoding_t([u64; 4]);
 pub struct z_encoding_t([u32; 4]);
 
 impl_guarded_transmute!(Option<&'static Encoding>, z_encoding_t);
+impl_guarded_transmute!(z_encoding_t, Option<&'static Encoding>);
 
 /// An owned payload encoding.
 ///

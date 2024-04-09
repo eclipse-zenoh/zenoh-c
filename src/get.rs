@@ -14,6 +14,8 @@
 
 use libc::c_char;
 use libc::c_void;
+use zenoh::encoding::Encoding;
+use zenoh::payload;
 use std::{
     convert::TryFrom,
     ffi::CStr,
@@ -105,15 +107,29 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
 }
 
 /// A zenoh value.
-///
-/// Members:
-///   zc_payload_t payload: The payload of this zenoh value.
-///   z_encoding_t encoding: The encoding of this zenoh value `payload`.
+/// 
+/// 
+
+
 #[repr(C)]
-pub struct z_value_t {
-    pub payload: zc_payload_t,
-    pub encoding: z_encoding_t,
-}
+#[cfg(not(target_arch = "arm"))]
+#[repr(C, align(8))]
+pub struct z_owned_value_t([u64; 4]);
+
+#[cfg(target_arch = "arm")]
+#[repr(C, align(4))]
+pub struct z_owned_value_t([u32; 4]);
+
+#[cfg(not(target_arch = "arm"))]
+#[repr(C, align(8))]
+pub struct z_value_t([u64; 4]);
+
+#[cfg(target_arch = "arm")]
+#[repr(C, align(4))]
+pub struct z_value_t([u32; 4]);
+
+impl_guarded_transmute!(Value, z_owned_value_t);
+impl_guarded_transmute!(Option<&'static Value>, z_value_t);
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
@@ -122,10 +138,7 @@ pub struct z_value_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
     if let Some(inner) = reply.as_ref().and_then(|s| s.sample.as_ref().err()) {
-        z_value_t {
-            payload: Some(&inner.payload).into(),
-            encoding: (&inner.encoding).into(),
-        }
+        inner.into()
     } else {
         panic!("Assertion failed: tried to treat `z_owned_reply_t` as Err despite that not being the case")
     }
@@ -215,7 +228,8 @@ pub unsafe extern "C" fn z_get(
 
         if let Some(payload) = options.payload.take() {
             let mut value = Value::new(payload);
-            value.encoding = options.encoding.into();
+            let encoding: Option<&Encoding> = options.encoding.into();
+            value.encoding = encoding.cloned().unwrap_or_default();
             q = q.with_value(value);
         }
         if options.timeout_ms != 0 {
@@ -312,16 +326,6 @@ impl From<&z_value_t> for Value {
     }
 }
 
-impl From<&Value> for z_value_t {
-    #[inline]
-    fn from(val: &Value) -> z_value_t {
-        z_value_t {
-            encoding: (&val.encoding).into(),
-            payload: Some(&val.payload).into(),
-        }
-    }
-}
-
 /// Create a default :c:type:`z_query_target_t`.
 #[no_mangle]
 pub extern "C" fn z_query_target_default() -> z_query_target_t {
@@ -364,6 +368,7 @@ impl From<ConsolidationMode> for z_consolidation_mode_t {
     #[inline]
     fn from(cm: ConsolidationMode) -> Self {
         match cm {
+            ConsolidationMode::Auto => z_consolidation_mode_t::AUTO,
             ConsolidationMode::None => z_consolidation_mode_t::NONE,
             ConsolidationMode::Monotonic => z_consolidation_mode_t::MONOTONIC,
             ConsolidationMode::Latest => z_consolidation_mode_t::LATEST,

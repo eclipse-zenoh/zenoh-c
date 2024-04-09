@@ -26,7 +26,6 @@ use crate::LOG_INVALID_SESSION;
 use libc::c_char;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
-use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
 use zenoh_util::core::zresult::ErrNo;
 
