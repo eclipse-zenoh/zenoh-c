@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
+
+# NOTE(fuzzpixelz): The ci/scripts/bump.bash scripts sets the project version
+# using regular expressions on this statement.
+set(ZENOHC_VERSION 0.11.0.0)
+
 project(
 	zenohc
-	VERSION 0.11.0.0
+	VERSION ${ZENOHC_VERSION}
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
@@ -36,10 +41,10 @@ declare_cache_var(ZENOHC_LIB_STATIC FALSE BOOL "Alias zenohc::lib target to zeno
 #
 set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 if(NOT PROJECT_VERSION_TWEAK)
+	set(project_version "${project_version}")
+elseif(PROJECT_VERSION_TWEAK EQUAL 0)
 	set(project_version "${project_version}-dev")
-elseif(PROJECT_VERSION_TWEAK EQUAL 1)
-	set(project_version "${project_version}-rc")
-elseif(PROJECT_VERSION_TWEAK LESS 255)
+elseif(PROJECT_VERSION_TWEAK GREATER 1)
 	set(project_version "${project_version}-rc.${PROJECT_VERSION_TWEAK}")
 endif()
 status_print(project_version)
