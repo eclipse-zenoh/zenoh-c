@@ -23,6 +23,8 @@ function toml_set_in_place() {
 sed -i "s;^set(ZENOHC_VERSION .*)$;set(ZENOHC_VERSION $VERSION);" CMakeLists.txt
 # Propagate version change to Cargo.toml and Cargo.toml.in
 cmake . -DZENOHC_BUILD_IN_SOURCE_TREE=TRUE -DCMAKE_BUILD_TYPE=Release
+# Update Read the Docs version
+sed -i "s;^release = .*$;release = '$VERSION';" docs/conf.py
 
 git commit CMakeLists.txt Cargo.toml Cargo.lock -m "chore: Bump version to $VERSION"
 
