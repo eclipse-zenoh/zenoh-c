@@ -25,8 +25,11 @@ sed -i "s;^set(ZENOHC_VERSION .*)$;set(ZENOHC_VERSION $VERSION);" CMakeLists.txt
 cmake . -DZENOHC_BUILD_IN_SOURCE_TREE=TRUE -DCMAKE_BUILD_TYPE=Release
 # Update Read the Docs version
 sed -i "s;^release = .*$;release = '$VERSION';" docs/conf.py
+# Update Debian dependency of libzenohc-dev
+toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$VERSION)"
+toml_set_in_place Cargo.toml.in "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$VERSION)"
 
-git commit CMakeLists.txt Cargo.toml Cargo.lock -m "chore: Bump version to $VERSION"
+git commit CMakeLists.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump version to $VERSION"
 
 # Select all package dependencies that match 'zenoh.*' and bump them to $ZENOH_VERSION
 zenoh_deps=$(toml get Cargo.toml dependencies | jq -r 'keys.[] | select(test("zenoh.*"))')
