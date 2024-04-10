@@ -34,14 +34,21 @@ git commit CMakeLists.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump ve
 # Select all package dependencies that match 'zenoh.*' and bump them to $ZENOH_VERSION
 zenoh_deps=$(toml get Cargo.toml dependencies | jq -r 'keys.[] | select(test("zenoh.*"))')
 for dep in $zenoh_deps; do
-  [[ -n $ZENOH_VERSION ]] && toml_set_in_place Cargo.toml "dependencies.$dep.version" "$ZENOH_VERSION"
-  [[ -n $ZENOH_BRANCH ]] && toml_set_in_place Cargo.toml "dependencies.$dep.branch" "$ZENOH_BRANCH"
+  if [[ -n $ZENOH_VERSION ]]; then
+    toml_set_in_place Cargo.toml "dependencies.$dep.version" "$ZENOH_VERSION"
+    toml_set_in_place Cargo.toml.in "dependencies.$dep.version" "$ZENOH_VERSION"
+  fi
+
+  if [[ -n $ZENOH_BRANCH ]]; then
+    toml_set_in_place Cargo.toml "dependencies.$dep.branch" "$ZENOH_BRANCH"
+    toml_set_in_place Cargo.toml.in "dependencies.$dep.branch" "$ZENOH_BRANCH"
+  fi
 done
 # Update lockfile
 cargo check
 
 if [[ -n $ZENOH_VERSION || -n $ZENOH_BRANCH ]]; then
-  git commit Cargo.toml Cargo.lock -m "chore: Bump Zenoh version to $ZENOH_VERSION"
+  git commit Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump Zenoh version to $ZENOH_VERSION"
 else
   echo "info: no changes have been made to Zenoh dependencies"
 fi
