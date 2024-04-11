@@ -3,23 +3,23 @@
 set -eo pipefail
 
 # Repository
-readonly REPO
+readonly repo=${REPO:?input REPO is required}
 # Release number
-readonly VERSION
+readonly version=${VERSION:-''}
 # Release branch
-readonly BRANCH
+readonly branch=${BRANCH:?input BRANCH is required}
 # Dependencies' pattern
-readonly BUMP_DEPS_PATTERN
+readonly bump_deps_pattern=${BUMP_DEPS_PATTERN:-input BUMP_DEPS_PATTERN is required}
 # Dependencies' version
-readonly BUMP_DEPS_VERSION
+readonly bump_deps_version=${BUMP_DEPS_VERSION:-''}
 # Dependencies' git branch
-readonly BUMP_DEPS_BRANCH
+readonly bump_deps_branch=${BUMP_DEPS_BRANCH:-''}
 # GitHub token
-readonly GH_TOKEN
+readonly github_token=${GITHUB_TOKEN:?input GITHUB_TOKEN is required}
 # Git actor name
-readonly GIT_USER_NAME
+readonly git_user_name=${GIT_USER_NAME:?input GIT_USER_NAME is required}
 # Git actor email
-readonly GIT_USER_EMAIL
+readonly git_user_email=${GIT_USER_EMAIL:?input GIT_USER_EMAIL is required}
 
 cargo +stable install toml-cli
 
@@ -31,49 +31,51 @@ function toml_set_in_place() {
   mv "$tmp" "$1"
 }
 
-export GIT_AUTHOR_NAME=$GIT_USER_NAME
-export GIT_AUTHOR_EMAIL=$GIT_USER_EMAIL
-export GIT_COMMITTER_NAME=$GIT_USER_NAME
-export GIT_COMMITTER_EMAIL=$GIT_USER_EMAIL
+export GIT_AUTHOR_NAME=$git_user_name
+export GIT_AUTHOR_EMAIL=$git_user_email
+export GIT_COMMITTER_NAME=$git_user_name
+export GIT_COMMITTER_EMAIL=$git_user_email
 
-git clone --recursive --single-branch --branch "$BRANCH" "https://github.com/$REPO"
+git clone --recursive --single-branch --branch "$branch" "https://github.com/$repo"
 
 # Bump CMake project version
-sed -i "s;^set(ZENOHC_VERSION .*)$;set(ZENOHC_VERSION $VERSION);" CMakeLists.txt
+if [[ "$version" == '' ]]; then
+  # If no version has been specified, infer it using git-describe
+  printf '%s' "$(git describe)" > version.txt
+else
+  printf '%s' "$version" > version.txt
+fi
 # Propagate version change to Cargo.toml and Cargo.toml.in
 cmake . -DZENOHC_BUILD_IN_SOURCE_TREE=TRUE -DCMAKE_BUILD_TYPE=Release
-# Update Read the Docs version
-sed -i "s;^release = .*$;release = '$VERSION';" docs/conf.py
 # Update Debian dependency of libzenohc-dev
-toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$VERSION)"
-toml_set_in_place Cargo.toml.in "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$VERSION)"
+toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$version)"
+toml_set_in_place Cargo.toml.in "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$version)"
 
-git commit CMakeLists.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump version to $VERSION"
+git commit version.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump version to $version"
 
-# Select all package dependencies that match $BUMP_DEPS_PATTERN and bump them to $BUMP_DEPS_VERSION
-deps=$(toml get Cargo.toml dependencies | jq -r "keys.[] | select(test(\"$BUMP_DEPS_PATTERN\"))")
+# Select all package dependencies that match $bump_deps_pattern and bump them to $bump_deps_version
+deps=$(toml get Cargo.toml dependencies | jq -r "keys.[] | select(test(\"$bump_deps_pattern\"))")
 for dep in $deps; do
-  if [[ -n $BUMP_DEPS_VERSION ]]; then
-    toml_set_in_place Cargo.toml "dependencies.$dep.version" "$BUMP_DEPS_VERSION"
-    toml_set_in_place Cargo.toml.in "dependencies.$dep.version" "$BUMP_DEPS_VERSION"
+  if [[ -n $bump_deps_version ]]; then
+    toml_set_in_place Cargo.toml "dependencies.$dep.version" "$bump_deps_version"
+    toml_set_in_place Cargo.toml.in "dependencies.$dep.version" "$bump_deps_version"
   fi
 
-  if [[ -n $BUMP_DEPS_BRANCH ]]; then
-    toml_set_in_place Cargo.toml "dependencies.$dep.branch" "$BUMP_DEPS_BRANCH"
-    toml_set_in_place Cargo.toml.in "dependencies.$dep.branch" "$BUMP_DEPS_BRANCH"
+  if [[ -n $bump_deps_branch ]]; then
+    toml_set_in_place Cargo.toml "dependencies.$dep.branch" "$bump_deps_branch"
+    toml_set_in_place Cargo.toml.in "dependencies.$dep.branch" "$bump_deps_branch"
   fi
 done
 # Update lockfile
 cargo check
 
-if [[ -n $BUMP_DEPS_VERSION || -n $BUMP_DEPS_BRANCH ]]; then
-  git commit Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump $BUMP_DEPS_PATTERN
- version to $BUMP_DEPS_VERSION"
+if [[ -n $bump_deps_version || -n $bump_deps_branch ]]; then
+  git commit Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump $bump_deps_pattern version to $bump_deps_version"
 else
   echo "info: no changes have been made to any dependencies"
 fi
 
-git tag "$VERSION" -m "v$VERSION"
+git tag "$version" -m "v$version"
 git log -10
 git show-ref --tags
-git push "https://$GH_TOKEN@github.com/$REPO" "$BRANCH" "$VERSION"
+git push "https://$github_token@github.com/$repo" "$branch" "$version"
