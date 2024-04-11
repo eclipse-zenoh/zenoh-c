@@ -23,8 +23,8 @@ mod reply_closure;
 pub use zenohid_closure::*;
 mod zenohid_closure;
 
-pub use response_channel::*;
-mod response_channel;
+pub use reply_channel::*;
+mod reply_channel;
 
 pub use query_channel::*;
 mod query_channel;

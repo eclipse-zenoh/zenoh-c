@@ -47,24 +47,25 @@ int main(int argc, char **argv) {
     printf("Sending Query '%s'...\n", expr);
     z_get_options_t opts = z_get_options_default();
     opts.target = Z_QUERY_TARGET_ALL;
-    z_owned_reply_channel_t channel = zc_reply_non_blocking_fifo_new(16);
+    z_owned_reply_fifo_channel_t channel = z_reply_fifo_channel_new(16);
     z_get(z_loan(s), keyexpr, "", z_move(channel.send),
           &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply = z_reply_null();
-    for (bool call_success = z_call(channel.recv, &reply); !call_success || z_check(reply);
-         call_success = z_call(channel.recv, &reply)) {
-        if (!call_success) {
-            continue;
+    while (true) {
+        for (z_call(channel.try_recv, &reply); z_check(reply); z_call(channel.try_recv, &reply)) {
+            if (z_reply_is_ok(&reply)) {
+                z_sample_t sample = z_reply_ok(&reply);
+                z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
+                printf(">> Received ('%s': '%.*s')\n", z_loan(keystr), (int)sample.payload.len, sample.payload.start);
+                z_drop(z_move(keystr));
+            } else {
+                printf(">> Received an error\n");
+            }
         }
-        if (z_reply_is_ok(&reply)) {
-            z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
-            printf(">> Received ('%s': '%.*s')\n", z_loan(keystr), (int)sample.payload.len, sample.payload.start);
-            z_drop(z_move(keystr));
-        } else {
-            printf("Received an error\n");
-        }
+        printf(">> Nothing to get... sleep for 5 s\n");
+        z_sleep_s(5);
     }
+
     z_drop(z_move(reply));
     z_drop(z_move(channel));
     z_close(z_move(s));
