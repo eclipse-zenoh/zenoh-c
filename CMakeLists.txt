@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-# NOTE(fuzzpixelz): The ci/scripts/bump.bash scripts sets the project version
-# using regular expressions on this statement.
+# NOTE(fuzzpixelz): The ci/scripts/bump-and-tag.bash script sets the project
+# version using regular expressions on this statement.
 set(ZENOHC_VERSION 0.11.0.0)
 
 project(
