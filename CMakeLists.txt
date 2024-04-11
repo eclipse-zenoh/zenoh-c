@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
-# NOTE(fuzzpixelz): The ci/scripts/bump-and-tag.bash script sets the project
-# version using regular expressions on this statement.
-set(ZENOHC_VERSION 0.11.0.0)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/version.txt version)
 
 project(
 	zenohc
-	VERSION ${ZENOHC_VERSION}
+	VERSION ${version}
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
