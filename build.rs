@@ -2,7 +2,6 @@ use fs2::FileExt;
 use regex::Regex;
 use std::env;
 use std::io::{Read, Write};
-use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::{
     borrow::Cow,
@@ -32,8 +31,6 @@ const HEADER: &str = r"//
 #endif
 ";
 
-use std::env;
-
 fn main() {
     generate_opaque_types();
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
@@ -58,27 +55,6 @@ fn main() {
     println!("cargo:rerun-if-changed=cbindgen.toml");
     println!("cargo:rerun-if-changed=build-resources");
     println!("cargo:rerun-if-changed=include");
-}
-
-// See: https://github.com/rust-lang/cargo/issues/9661
-// See: https://github.com/rust-lang/cargo/issues/545
-fn cargo_target_dir() -> PathBuf {
-    let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR should be set"));
-    let profile = env::var("PROFILE").expect("PROFILE should be set");
-
-    let mut target_dir = None;
-    let mut out_dir_path = out_dir.as_path();
-    while let Some(parent) = out_dir_path.parent() {
-        if parent.ends_with(&profile) {
-            target_dir = Some(parent);
-            break;
-        }
-        out_dir_path = parent;
-    }
-
-    target_dir
-        .expect("OUT_DIR should be a child of a PROFILE directory")
-        .to_path_buf()
 }
 
 fn get_build_rs_path() -> PathBuf {
