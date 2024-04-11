@@ -44,7 +44,11 @@ jobs:
         with:
           repo: ${{ github.repository }}
           live-run: ${{ inputs.live-run || false }}
-          version: ${{ inputs.version }}
+          # NOTE(fuzzypixelz): When the version is undefined (e.g. on schedule
+          # events) we cannot use git-describe as CMake doesn't support it.
+          # However, we still need some placeholder version to test that the
+          # version can be reliably bumped.
+          version: ${{ inputs.version || '0.0.0' }}
           github-token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
       - name: Checkout this repository
