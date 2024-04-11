@@ -47,16 +47,18 @@ jobs:
           version: ${{ inputs.version }}
           github-token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.create-release-branch.outputs.branch }}
+
       - name: Bump and tag project
         run: bash ci/scripts/bump-and-tag.bash
         env:
-          REPO: ${{ github.repository }}
           VERSION: ${{ steps.create-release-branch.outputs.version }}
-          BRANCH: ${{ steps.create-release-branch.outputs.branch }}
           BUMP_DEPS_VERSION: ${{ inputs.zenoh-version }}
           BUMP_DEPS_PATTERN: ${{ inputs.zenoh-version && 'zenoh.*' || '^$' }}
           BUMP_DEPS_BRANCH: ${{ inputs.zenoh-version && format('release/{0}', inputs.zenoh-version) || '' }}
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN_WORKFLOW }}
           GIT_USER_NAME: eclipse-zenoh-bot
           GIT_USER_EMAIL: eclipse-zenoh-bot@users.noreply.github.com
 

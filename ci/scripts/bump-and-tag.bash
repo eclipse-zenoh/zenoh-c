@@ -2,20 +2,14 @@
 
 set -eo pipefail
 
-# Repository
-readonly repo=${REPO:?input REPO is required}
 # Release number
 readonly version=${VERSION:-''}
-# Release branch
-readonly branch=${BRANCH:?input BRANCH is required}
 # Dependencies' pattern
 readonly bump_deps_pattern=${BUMP_DEPS_PATTERN:-input BUMP_DEPS_PATTERN is required}
 # Dependencies' version
 readonly bump_deps_version=${BUMP_DEPS_VERSION:-''}
 # Dependencies' git branch
 readonly bump_deps_branch=${BUMP_DEPS_BRANCH:-''}
-# GitHub token
-readonly github_token=${GITHUB_TOKEN:?input GITHUB_TOKEN is required}
 # Git actor name
 readonly git_user_name=${GIT_USER_NAME:?input GIT_USER_NAME is required}
 # Git actor email
@@ -35,8 +29,6 @@ export GIT_AUTHOR_NAME=$git_user_name
 export GIT_AUTHOR_EMAIL=$git_user_email
 export GIT_COMMITTER_NAME=$git_user_name
 export GIT_COMMITTER_EMAIL=$git_user_email
-
-git clone --recursive --single-branch --branch "$branch" "https://github.com/$repo"
 
 # Bump CMake project version
 if [[ "$version" == '' ]]; then
@@ -78,4 +70,5 @@ fi
 git tag "$version" -m "v$version"
 git log -10
 git show-ref --tags
-git push "https://$github_token@github.com/$repo" "$branch" "$version"
+git push
+git push "$version"
