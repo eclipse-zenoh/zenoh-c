@@ -74,3 +74,5 @@ include/zenoh_configure.h
 
 # CMake
 CMakeFiles/
+debug/
+release/
