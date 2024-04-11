@@ -1,9 +1,14 @@
 use fs2::FileExt;
 use regex::Regex;
+use std::env;
 use std::io::{Read, Write};
-use std::path::PathBuf;
 use std::process::{Command, Stdio};
-use std::{borrow::Cow, collections::HashMap, io::BufWriter, path::Path};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    io::BufWriter,
+    path::{Path, PathBuf},
+};
 
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
@@ -26,8 +31,6 @@ const HEADER: &str = r"//
 #endif
 ";
 
-use std::env;
-
 fn main() {
     generate_opaque_types();
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
@@ -39,11 +42,19 @@ fn main() {
     split_bindings(&split_guide).unwrap();
     text_replace(split_guide.rules.iter().map(|(name, _)| name.as_str()));
 
+    fs_extra::copy_items(
+        &["include"],
+        cargo_target_dir(),
+        &fs_extra::dir::CopyOptions::default().overwrite(true),
+    )
+    .expect("include should be copied to CARGO_TARGET_DIR");
+
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=splitguide.yaml");
     println!("cargo:rerun-if-changed=cbindgen.toml");
-    println!("cargo:rerun-if-changed=build-resources")
+    println!("cargo:rerun-if-changed=build-resources");
+    println!("cargo:rerun-if-changed=include");
 }
 
 fn get_build_rs_path() -> PathBuf {
@@ -123,6 +134,27 @@ fn get_opaque_type_docs() -> HashMap<String, std::vec::Vec<String>> {
         comments.clear();
     }
     res
+}
+
+// See: https://github.com/rust-lang/cargo/issues/9661
+// See: https://github.com/rust-lang/cargo/issues/545
+fn cargo_target_dir() -> PathBuf {
+    let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR should be set"));
+    let profile = env::var("PROFILE").expect("PROFILE should be set");
+
+    let mut target_dir = None;
+    let mut out_dir_path = out_dir.as_path();
+    while let Some(parent) = out_dir_path.parent() {
+        if parent.ends_with(&profile) {
+            target_dir = Some(parent);
+            break;
+        }
+        out_dir_path = parent;
+    }
+
+    target_dir
+        .expect("OUT_DIR should be a child of a PROFILE directory")
+        .to_path_buf()
 }
 
 fn configure() {
