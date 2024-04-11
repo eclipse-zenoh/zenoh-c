@@ -132,7 +132,9 @@ pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
 }
 /// The encoding of the payload.
 #[no_mangle]
-pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> z_encoding_t {
+pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
+    let encoding = sample.encoding();
+
     sample.encoding().into()
 }
 /// The sample's data, the return value aliases the sample.
@@ -226,15 +228,8 @@ pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
 ///
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
 ///
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_encoding_t([u64; 4]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_encoding_t([u32; 4]);
-
-impl_guarded_transmute!(&'static Encoding, z_encoding_t);
+pub use crate::z_encoding_t;
+impl_guarded_transmute!(noderefs &'static Encoding, z_encoding_t);
 
 /// An owned payload encoding.
 ///
@@ -243,9 +238,8 @@ impl_guarded_transmute!(&'static Encoding, z_encoding_t);
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_encoding_t([u64; 4]);
+pub use crate::z_owned_encoding_t;
+impl_guarded_transmute!(Encoding, z_owned_encoding_t);
 
 impl Drop for z_owned_encoding_t {
     fn drop(&mut self) {
@@ -254,11 +248,6 @@ impl Drop for z_owned_encoding_t {
     }
 }
 
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_owned_encoding_t([u32; 4]);
-
-impl_guarded_transmute!(Encoding, z_owned_encoding_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]

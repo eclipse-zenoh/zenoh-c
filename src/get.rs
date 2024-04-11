@@ -55,14 +55,7 @@ type ReplyInner = Option<Reply>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 30]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 19]);
-
+pub use crate::z_owned_reply_t;
 impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
 
 impl From<ReplyInner> for z_owned_reply_t {
@@ -111,25 +104,9 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
 /// A zenoh value.
 ///
 ///
-
-#[repr(C)]
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_value_t([u64; 4]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_owned_value_t([u32; 4]);
-
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_value_t([u64; 4]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_value_t([u32; 4]);
-
+pub use crate::z_owned_value_t;
 impl_guarded_transmute!(Value, z_owned_value_t);
+pub use crate::z_value_t;
 impl_guarded_transmute!(&'static Value, z_value_t);
 
 const Z_VALUE_NULL: Value = Value::empty();

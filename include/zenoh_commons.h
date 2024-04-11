@@ -243,18 +243,8 @@ typedef struct z_owned_closure_hello_t {
   void (*call)(struct z_owned_hello_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_hello_t;
-/**
- * Owned variant of a Query received by a Queryable.
- *
- * You may construct it by `z_query_clone`-ing a loaned query.
- * When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
- * the query will receive its termination signal.
- *
- * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
- * to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
- */
-typedef struct z_owned_query_t {
-  void *_0;
+typedef struct ALIGN(8) z_owned_query_t {
+  uint8_t _0[16];
 } z_owned_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -298,25 +288,9 @@ typedef struct z_owned_closure_query_t {
   void (*call)(const struct z_query_t*, void *context);
   void (*drop)(void*);
 } z_owned_closure_query_t;
-/**
- * An owned reply to a :c:func:`z_get`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[30];
+  uint8_t _0[256];
 } z_owned_reply_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[19];
-} z_owned_reply_t;
-#endif
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -539,41 +513,12 @@ typedef struct z_delete_options_t {
   enum z_congestion_control_t congestion_control;
   enum z_priority_t priority;
 } z_delete_options_t;
-/**
- * An owned payload encoding.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_encoding_t {
-  uint64_t _0[4];
+  uint8_t _0[48];
 } z_owned_encoding_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_owned_encoding_t {
-  uint32_t _0[4];
-} z_owned_encoding_t;
-#endif
-/**
- * The encoding of a payload, in a MIME-like format.
- *
- * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
- *
- */
-#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_encoding_t {
-  uint64_t _0[4];
+  uint8_t _0[8];
 } z_encoding_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_encoding_t {
-  uint32_t _0[4];
-} z_encoding_t;
-#endif
 /**
  * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
  */
@@ -714,16 +659,9 @@ typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
-#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_value_t {
-  uint64_t _0[4];
+  uint8_t _0[8];
 } z_value_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_value_t {
-  uint32_t _0[4];
-} z_value_t;
-#endif
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  * - `this` is a pointer to an arbitrary state.
@@ -823,7 +761,7 @@ typedef struct ALIGN(8) zc_payload_reader {
  * Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
  */
 typedef struct ALIGN(8) zc_owned_sample_t {
-  uint8_t _0[224];
+  uint8_t _0[240];
 } zc_owned_sample_t;
 typedef struct zc_owned_shmbuf_t {
   size_t _0[9];
@@ -1965,7 +1903,7 @@ ZENOHC_API struct z_attachment_t z_sample_attachment(const struct z_sample_t *sa
 /**
  * The encoding of the payload.
  */
-ZENOHC_API struct z_encoding_t z_sample_encoding(const struct z_sample_t *sample);
+ZENOHC_API struct z_encoding_t z_sample_encoding(struct z_sample_t sample);
 /**
  * The Key Expression of the sample.
  *

@@ -629,9 +629,9 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c012a26a7f605efc424dd53697843a72be7dc86ad2d01f7814337794a12231d"
+checksum = "38b35839ba51819680ba087cd351788c9a3c476841207e0b8cee0b04722343b9"
 dependencies = [
  "anstream",
  "anstyle",
@@ -976,9 +976,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b32afd38673a8016f7c9ae69e5af41a58f81b1d31689040f2f1959594ce194ea"
+checksum = "21b9ddb458710bc376481b842f5da65cdf31522de232c1ca8146abce2a358258"
 dependencies = [
  "bytes",
  "fnv",
@@ -1213,9 +1213,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.20"
+version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
+checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 dependencies = [
  "value-bag",
 ]
@@ -1899,9 +1899,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.22.2"
+version = "0.22.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e87c9956bd9807afa1f77e0f7594af32566e830e088a5576d27c5b6f30f49d41"
+checksum = "99008d7ad0bbbea527ec27bddbc0e432c5b87d8175178cee68d2eec9c4a1813c"
 dependencies = [
  "log",
  "ring 0.17.6",
@@ -2470,7 +2470,7 @@ version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "775e0c0f0adb3a2f22a00c4745d728b479985fc15ee7ca6a2608388c5569860f"
 dependencies = [
- "rustls 0.22.2",
+ "rustls 0.22.3",
  "rustls-pki-types",
  "tokio",
 ]
@@ -2719,9 +2719,9 @@ dependencies = [
 
 [[package]]
 name = "value-bag"
-version = "1.4.1"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d92ccd67fb88503048c01b59152a04effd0782d035a83a6d256ce6085f08f4a3"
+checksum = "74797339c3b98616c009c7c3eb53a0ce41e85c8ec66bd3db96ed132d20cfdee8"
 
 [[package]]
 name = "vec_map"
@@ -3063,7 +3063,7 @@ dependencies = [
  "async-trait",
  "base64",
  "const_format",
- "env_logger 0.11.2",
+ "env_logger 0.11.3",
  "event-listener 4.0.0",
  "flume",
  "form_urlencoded",
@@ -3088,6 +3088,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "uhlc",
+ "unwrap-infallible",
  "uuid",
  "vec_map",
  "zenoh-buffers",
@@ -3105,6 +3106,7 @@ dependencies = [
  "zenoh-runtime",
  "zenoh-shm",
  "zenoh-sync",
+ "zenoh-task",
  "zenoh-transport",
  "zenoh-util",
 ]
@@ -3206,7 +3208,7 @@ name = "zenoh-ext"
 version = "0.11.0-dev"
 dependencies = [
  "bincode",
- "env_logger 0.11.2",
+ "env_logger 0.11.3",
  "flume",
  "futures",
  "log",
@@ -3256,7 +3258,7 @@ dependencies = [
  "flume",
  "futures",
  "log",
- "rustls 0.22.2",
+ "rustls 0.22.3",
  "rustls-webpki 0.102.2",
  "serde",
  "tokio",
@@ -3322,7 +3324,7 @@ dependencies = [
  "base64",
  "futures",
  "log",
- "rustls 0.22.2",
+ "rustls 0.22.3",
  "rustls-pemfile 2.0.0",
  "rustls-pki-types",
  "rustls-webpki 0.102.2",
@@ -3449,6 +3451,7 @@ dependencies = [
 name = "zenoh-runtime"
 version = "0.11.0-dev"
 dependencies = [
+ "futures",
  "lazy_static",
  "tokio",
  "zenoh-collections",
@@ -3475,6 +3478,18 @@ dependencies = [
  "tokio",
  "zenoh-buffers",
  "zenoh-collections",
+ "zenoh-core",
+ "zenoh-runtime",
+]
+
+[[package]]
+name = "zenoh-task"
+version = "0.11.0-dev"
+dependencies = [
+ "futures",
+ "log",
+ "tokio",
+ "tokio-util",
  "zenoh-core",
  "zenoh-runtime",
 ]
@@ -3507,6 +3522,7 @@ dependencies = [
  "zenoh-runtime",
  "zenoh-shm",
  "zenoh-sync",
+ "zenoh-task",
  "zenoh-util",
 ]
 

@@ -1,13 +1,18 @@
-use zenoh::sample::Sample;
 use zenoh::buffers::{ZBuf, ZBufReader};
+use zenoh::encoding::Encoding;
+use zenoh::query::Reply;
+use zenoh::queryable::Query;
+use zenoh::sample::Sample;
+use zenoh::value::Value;
 
 #[macro_export]
 macro_rules! get_opaque_type_data {
-($src_type:ty, $expr:expr) => {
+    ($src_type:ty, $expr:expr) => {
         const _: () = {
             let align = std::mem::align_of::<$src_type>();
             let size = std::mem::size_of::<$src_type>();
-            let mut msg: [u8; 61] = *b"type:                                 , align:    , size:    ";
+            let mut msg: [u8; 61] =
+                *b"type:                                 , align:    , size:    ";
             let mut i = 0;
             while i < 4 {
                 msg[i as usize + 46] = b'0' + ((align / 10u32.pow(3 - i) as usize) % 10) as u8;
@@ -23,7 +28,7 @@ macro_rules! get_opaque_type_data {
                 std::str::from_utf8_unchecked(msg.as_slice())
             });
         };
-    }
+    };
 }
 
 /// A split buffer that owns all of its data.
@@ -39,3 +44,10 @@ get_opaque_type_data!(Option<Sample>, "zc_owned_sample_t");
 
 /// A reader for payload data.
 get_opaque_type_data!(ZBufReader, "zc_payload_reader");
+
+get_opaque_type_data!(&'static Encoding, "z_encoding_t");
+get_opaque_type_data!(Encoding, "z_owned_encoding_t");
+get_opaque_type_data!(Option<Reply>, "z_owned_reply_t");
+get_opaque_type_data!(Value, "z_owned_value_t");
+get_opaque_type_data!(&'static Value, "z_value_t");
+get_opaque_type_data!(Option<Query>, "z_owned_query_t");

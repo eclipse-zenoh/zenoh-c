@@ -80,7 +80,7 @@ pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
         send,
         recv: From::from(move |receptacle: &mut z_owned_query_t| {
             *receptacle = match rx.recv() {
-                Ok(val) => val.into(),
+                Ok(val) => Some(val).into(),
                 Err(_) => None.into(),
             };
             true
@@ -129,7 +129,7 @@ pub extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_
         recv: From::from(
             move |receptacle: &mut z_owned_query_t| match rx.try_recv() {
                 Ok(val) => {
-                    let mut tmp = z_owned_query_t::from(val);
+                    let mut tmp = z_owned_query_t::from(Some(val));
                     std::mem::swap(&mut tmp, receptacle);
                     true
                 }
