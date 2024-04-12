@@ -90,7 +90,7 @@ const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value
  * @param argv
  * @returns NULL if no option was found, else the first option string that was found
  */
-const char* check_unknown_opts(int argc, char** argv) {
+const char* check_unknown_opts(int argc, char** const argv) {
     for (int i = 1; i < argc; i++) {
         if (argv[i] && argv[i][0] == '-') {
             return argv[i];
@@ -155,7 +155,6 @@ void parse_zenoh_json_list_config(int argc, char** argv, const char* opt, const 
         size_t json_list_len = buflen + 3;  // buf + brackets + nullbyte
         char* json_list = (char*)malloc(json_list_len);
         snprintf(json_list, json_list_len, "[%s]", buf);
-        free(buf);
         // insert in config
         if (zc_config_insert_json(z_loan(*config), config_key, json_list) < 0) {
             printf(
@@ -167,6 +166,7 @@ void parse_zenoh_json_list_config(int argc, char** argv, const char* opt, const 
         }
         free(json_list);
     }
+    free(buf);
 }
 
 /**
