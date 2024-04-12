@@ -24,8 +24,8 @@ use crate::keyexpr::*;
 use crate::transmute::Inplace;
 use crate::transmute::InplaceDefault;
 use crate::transmute::StaticRef;
-use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteRef;
+use crate::transmute::TransmuteValue;
 use crate::z_congestion_control_t;
 use crate::z_id_t;
 use crate::z_owned_buffer_t;
@@ -140,8 +140,8 @@ pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
 /// The encoding of the payload.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
-    // let encoding = sample.encoding();
-    // sample.encoding().transmute()
+    let encoding = sample.encoding();
+    StaticRef::new(encoding).transmute_value()
 }
 /// The sample's data, the return value aliases the sample.
 ///
@@ -275,7 +275,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    StaticRef::new(&Encoding::ZENOH_BYTES).transmute()
+    StaticRef::new(&Encoding::ZENOH_BYTES).transmute_value()
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.
@@ -287,7 +287,7 @@ pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
-    let encoding = encoding.deref();
+    let encoding = encoding.transmute_ref();
     *encoding != Encoding::default()
 }
 
@@ -295,8 +295,8 @@ pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
-    let encoding = encoding.deref();
-    encoding.into()
+    let encoding = encoding.transmute_ref();
+    StaticRef::new(encoding).transmute_value()
 }
 
 /// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`

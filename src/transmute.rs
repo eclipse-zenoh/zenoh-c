@@ -30,8 +30,8 @@ pub(crate) trait TransmuteRef<T> {
     fn transmute_mut(&mut self) -> &mut T;
 }
 
-pub(crate) trait TransmuteCopy<T: Copy>: TransmuteRef<T> {
-    fn transmute(self) -> T;
+pub(crate) trait TransmuteValue<T: Copy>: TransmuteRef<T> {
+    fn transmute_value(self) -> T;
 }
 
 pub(crate) trait Inplace<T: Sized>: Sized {
@@ -42,6 +42,7 @@ pub(crate) trait Inplace<T: Sized>: Sized {
     }
     // Initialize the object in place with an empty value
     fn empty(this: *mut std::mem::MaybeUninit<Self>);
+    // TODO: for effective inplace_init, we can provide a method that takes a closure that initializes the object in place
 }
 
 pub(crate) trait InplaceDrop<T: Sized>: Sized + Inplace<T> {
@@ -147,8 +148,8 @@ macro_rules! impl_transmute_ref {
 
 macro_rules! impl_transmute_copy {
     ($src_type:ty, $dst_type:ty) => {
-        impl $crate::transmute::TransmuteCopy<$dst_type> for $src_type {
-            fn transmute(self) -> $dst_type {
+        impl $crate::transmute::TransmuteValue<$dst_type> for $src_type {
+            fn transmute_value(self) -> $dst_type {
                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
             }
         }
