@@ -54,7 +54,7 @@ pub struct z_owned_reply_t([u64; 30]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 19]);
+pub struct z_owned_reply_t([u64; 21]);
 
 impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
 

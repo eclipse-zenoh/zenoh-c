@@ -352,7 +352,7 @@ typedef struct ALIGN(8) z_owned_reply_t {
 #endif
 #if defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[19];
+  uint64_t _0[21];
 } z_owned_reply_t;
 #endif
 /**
@@ -936,9 +936,16 @@ typedef struct zcu_owned_closure_matching_status_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
+#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) zcu_owned_matching_listener_t {
   uint64_t _0[4];
 } zcu_owned_matching_listener_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(4) zcu_owned_matching_listener_t {
+  uint32_t _0[4];
+} zcu_owned_matching_listener_t;
+#endif
 /**
  * An owned zenoh publication_cache.
  *

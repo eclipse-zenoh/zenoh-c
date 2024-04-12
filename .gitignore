@@ -71,3 +71,8 @@ dkms.conf
 
 # Platform dependent generated files
 include/zenoh_configure.h
+
+# CMake
+CMakeFiles/
+debug/
+release/
