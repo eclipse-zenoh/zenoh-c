@@ -12,6 +12,19 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+pub(crate) struct StaticRef<T: 'static>(&'static T);
+impl<T> StaticRef<T> {
+    pub(crate) fn new<'a>(value: &'a T) -> Self {
+        StaticRef(unsafe { std::mem::transmute::<&'a T, &'static T>(value) })
+    }
+}
+impl<T> Clone for StaticRef<T> {
+    fn clone(&self) -> Self {
+        StaticRef(self.0)
+    }
+}
+impl<T> Copy for StaticRef<T> {}
+
 pub(crate) trait TransmuteRef<T> {
     fn transmute_ref(&self) -> &T;
     fn transmute_mut(&mut self) -> &mut T;
@@ -21,35 +34,37 @@ pub(crate) trait TransmuteCopy<T: Copy>: TransmuteRef<T> {
     fn transmute(self) -> T;
 }
 
-pub(crate) trait InplaceInit<T: Sized>: Sized {
+pub(crate) trait Inplace<T: Sized>: Sized {
     // Initialize the object in place with a memcpy of the provided value. Assumes that the memory passed to the function is uninitialized
-    fn inplace_init(&mut self, value: T) -> &mut Self {
-        unsafe { std::ptr::write(self as *mut Self as *mut T, value) };
-        self
+    fn init(this: *mut std::mem::MaybeUninit<Self>, value: T) {
+        let this = this as *mut T;
+        unsafe { std::ptr::write(this, value) };
     }
-    // Initialize the object in place with a memcpy of the provided value. Assumes that the memory passed to the function is uninitialized
-    fn inplace_default(&mut self) -> &mut Self
-    where
-        T: Default,
-    {
-        unsafe { std::ptr::write(self as *mut Self as *mut T, T::default()) };
-        self
+    // Initialize the object in place with an empty value
+    fn empty(this: *mut std::mem::MaybeUninit<Self>);
+}
+
+pub(crate) trait InplaceDrop<T: Sized>: Sized + Inplace<T> {
+    // Drop the object in place and replaces it with default value
+    fn drop(this: &mut Self) {
+        unsafe { std::ptr::drop_in_place(this as *mut Self) };
+        Inplace::empty(this as *mut Self as *mut std::mem::MaybeUninit<Self>);
     }
 }
 
-pub(crate) trait InplaceInitDefault: Default {
+pub(crate) trait InplaceDefault: Default {
     // Default implementation of inplace_init for object implementing Default trait. May be less efficient than a custom implementation
-    // because it involves a copy of the default value.
-    fn inplace_default_impl(&mut self) {
-        unsafe { std::ptr::write(self as *mut Self, Self::default()) };
+    // because for `empty` operation it performs a copy of the default value from stack to provided memory
+    fn default(this: *mut std::mem::MaybeUninit<Self>) {
+        let this = this as *mut Self;
+        unsafe { std::ptr::write(this, <Self as Default>::default()) };
     }
 }
 
 // For types implementing Default, we can use provide default implementation of InplaceInit through InplaceInitDefault
-impl<T: InplaceInitDefault> InplaceInit<T> for T {
-    fn inplace_default(&mut self) -> &mut Self {
-        self.inplace_default_impl();
-        self
+impl<T: InplaceDefault> Inplace<T> for T {
+    fn empty(this: *mut std::mem::MaybeUninit<Self>) {
+        InplaceDefault::default(this);
     }
 }
 
@@ -85,7 +100,7 @@ macro_rules! validate_equivalence {
 #[macro_export]
 macro_rules! decl_transmute_ref {
     (default_inplace_init $zenoh_type:ty, $c_type:ty) => {
-        impl InplaceInitDefault for $zenoh_type {}
+        impl InplaceDefault for $zenoh_type {}
         decl_transmute_ref!(custom_inplace_init $zenoh_type, $c_type);
 
     };
@@ -93,14 +108,14 @@ macro_rules! decl_transmute_ref {
         validate_equivalence!($zenoh_type, $c_type);
         impl_transmute_ref!($zenoh_type, $c_type);
         impl_transmute_ref!($c_type, $zenoh_type);
-        impl InplaceInit<$zenoh_type> for $c_type {
-            fn inplace_init(&mut self, value: $zenoh_type) -> &mut Self {
-                self.transmute_mut().inplace_init(value);
-                self
+        impl Inplace<$zenoh_type> for $c_type {
+            fn init(this: *mut std::mem::MaybeUninit<Self>, value: $zenoh_type) {
+                let this = this as *mut std::mem::MaybeUninit<$zenoh_type>;
+                Inplace::init(this, value);
             }
-            fn inplace_default(&mut self) -> &mut Self {
-                self.transmute_mut().inplace_default();
-                self
+            fn empty(this: *mut std::mem::MaybeUninit<Self>) {
+                let this = this as *mut std::mem::MaybeUninit<$zenoh_type>;
+                Inplace::empty(this);
             }
         }
     }

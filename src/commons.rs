@@ -13,6 +13,7 @@
 //
 
 use std::ffi::CStr;
+use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::str::FromStr;
@@ -20,8 +21,10 @@ use std::str::FromStr;
 use crate::collections::*;
 use crate::decl_transmute_copy;
 use crate::keyexpr::*;
-use crate::transmute::InplaceInit;
-use crate::transmute::InplaceInitDefault;
+use crate::transmute::Inplace;
+use crate::transmute::InplaceDefault;
+use crate::transmute::StaticRef;
+use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteRef;
 use crate::z_congestion_control_t;
 use crate::z_id_t;
@@ -35,6 +38,7 @@ use libc::{c_char, c_ulong};
 use std::convert::Infallible;
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::buffers::ZBuf;
+use zenoh::encoding::Encoding;
 use zenoh::payload::Deserialize;
 use zenoh::payload::ZSerde;
 use zenoh::prelude::SampleKind;
@@ -231,7 +235,7 @@ pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
 ///
 pub use crate::z_encoding_t;
-decl_transmute_copy!(&'static Encoding, z_encoding_t);
+decl_transmute_copy!(StaticRef<Encoding>, z_encoding_t);
 
 /// An owned payload encoding.
 ///
@@ -245,24 +249,24 @@ decl_transmute_ref!(default_inplace_init Encoding, z_owned_encoding_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
-pub extern "C" fn z_encoding_null(encoding: &mut z_owned_encoding_t) {
-    encoding.transmute_mut().inplace_default();
+pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>) {
+    Inplace::empty(encoding);
 }
 
 /// Constructs a specific :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_str(
-    encoding: &mut z_owned_encoding_t,
+    encoding: *mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
 ) -> i8 {
     if s.is_null() {
-        z_encoding_null(encoding);
+        Inplace::empty(encoding);
         0
     } else {
         let s = CStr::from_ptr(s).to_string_lossy().as_ref();
         let value = Encoding::from_str(s).unwrap_infallible();
-        encoding.transmute_mut().inplace_init(value);
+        Inplace::init(encoding, value);
         0
     }
 }
@@ -271,7 +275,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    let encoding = Encoding::ZENOH_BYTES;
+    StaticRef::new(&Encoding::ZENOH_BYTES).transmute()
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.
