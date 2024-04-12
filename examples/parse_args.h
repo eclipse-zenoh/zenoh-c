@@ -139,7 +139,7 @@ void parse_zenoh_json_list_config(int argc, char** argv, const char* opt, const 
     char* buf = (char*)calloc(1, sizeof(char));
     const char* value = parse_opt(argc, argv, opt, true);
     while (value) {
-        size_t len_newbuf = strlen(buf) + strlen(value) + 4; // value + quotes + comma + nullbyte
+        size_t len_newbuf = strlen(buf) + strlen(value) + 4;  // value + quotes + comma + nullbyte
         char* newbuf = (char*)malloc(len_newbuf);
         snprintf(newbuf, len_newbuf, "%s'%s',", buf, value);
         free(buf);
@@ -158,9 +158,9 @@ void parse_zenoh_json_list_config(int argc, char** argv, const char* opt, const 
         // insert in config
         if (zc_config_insert_json(z_loan(*config), config_key, json_list) < 0) {
             printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                json_list, config_key, config_key);
+                "Couldn't insert value `%s` in configuration at `%s`\n`%s` is either not a JSON-serialized list of "
+                "strings, or values within the list do not respect expected format for `%s`\n",
+                json_list, json_list, json_list, config_key);
             free(json_list);
             exit(-1);
         }
