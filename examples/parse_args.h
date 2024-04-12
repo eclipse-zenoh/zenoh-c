@@ -25,7 +25,7 @@
         -c <CONFIG> (optional, string): The path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
         -m <MODE> (optional, string, default='peer'): The zenoh session mode. [possible values: peer, client, router]\n\
         -e <CONNECT> (optional, string): endpoint to connect to. Repeat option to pass multiple endpoints. If none are given, endpoints will be discovered through multicast-scouting if it is enabled.\n\
-            ex: '-e tcp/192.168.1.1:7447'\n\
+            e.g.: '-e tcp/192.168.1.1:7447'\n\
         -l <LISTEN> (optional, string): locator to listen on. Repeat option to pass multiple locators. If none are given, the default configuration will be used.\n\
             e.g.: '-l tcp/192.168.1.1:7447'\n\
         --no-multicast-scouting (optional): By default zenohd replies to multicast scouting messages for being discovered by peers and clients. This option disables this feature.\n\
