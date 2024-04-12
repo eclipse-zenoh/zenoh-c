@@ -35,10 +35,10 @@
                   z_owned_closure_hello_t * : z_closure_hello_drop,                     \
                   z_owned_closure_zid_t * : z_closure_zid_drop,                         \
                   zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_drop, \
-                  z_owned_query_channel_closure_t * : z_query_channel_closure_drop,     \
                   z_owned_reply_fifo_channel_t * : z_reply_fifo_channel_drop,           \
                   z_owned_reply_ring_channel_t * : z_reply_ring_channel_drop,           \
-                  z_owned_query_channel_t * : z_query_channel_drop,                     \
+                  z_owned_query_fifo_channel_t * : z_query_fifo_channel_drop,           \
+                  z_owned_query_ring_channel_t * : z_query_ring_channel_drop,           \
                   z_owned_bytes_map_t * : z_bytes_map_drop,                             \
                   zc_owned_payload_t * : zc_payload_drop,                               \
                   zc_owned_shmbuf_t * : zc_shmbuf_drop,                                 \
@@ -69,6 +69,8 @@
                   zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_null, \
                   z_owned_reply_fifo_channel_t * : z_reply_fifo_channel_null,           \
                   z_owned_reply_ring_channel_t * : z_reply_ring_channel_null,           \
+                  z_owned_query_fifo_channel_t * : z_query_fifo_channel_null,           \
+                  z_owned_query_ring_channel_t * : z_query_ring_channel_null,           \
                   z_owned_bytes_map_t * : z_bytes_map_null,                             \
                   z_attachment_t * : z_attachment_null,                                 \
                   zc_owned_payload_t * : zc_payload_null,                               \
@@ -110,8 +112,7 @@
                   z_owned_closure_reply_t : z_closure_reply_call,                       \
                   z_owned_closure_hello_t : z_closure_hello_call,                       \
                   z_owned_closure_zid_t : z_closure_zid_call,                           \
-                  zcu_owned_closure_matching_status_t : zcu_closure_matching_status_call, \
-                  z_owned_query_channel_closure_t : z_query_channel_closure_call        \
+                  zcu_owned_closure_matching_status_t : zcu_closure_matching_status_call \
             ) (&x, __VA_ARGS__)
 // clang-format on
 

@@ -741,31 +741,11 @@ typedef struct z_put_options_t {
   enum z_priority_t priority;
   struct z_attachment_t attachment;
 } z_put_options_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_query_channel_closure_t {
-  void *context;
-  bool (*call)(struct z_owned_query_t*, void*);
-  void (*drop)(void*);
-} z_owned_query_channel_closure_t;
-/**
- * A pair of closures
- */
-typedef struct z_owned_query_channel_t {
-  struct z_owned_closure_owned_query_t send;
-  struct z_owned_query_channel_closure_t recv;
-} z_owned_query_channel_t;
+typedef struct z_owned_query_fifo_channel_t {
+  struct z_owned_closure_query_t send;
+  struct z_owned_closure_owned_query_t recv;
+  struct z_owned_closure_owned_query_t try_recv;
+} z_owned_query_fifo_channel_t;
 /**
  * Represents the set of options that can be applied to a query reply,
  * sent via :c:func:`z_query_reply`.
@@ -778,6 +758,11 @@ typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
+typedef struct z_owned_query_ring_channel_t {
+  struct z_owned_closure_query_t send;
+  struct z_owned_closure_owned_query_t recv;
+  struct z_owned_closure_owned_query_t try_recv;
+} z_owned_query_ring_channel_t;
 typedef struct z_owned_reply_fifo_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_closure_reply_t recv;
@@ -1759,25 +1744,6 @@ ZENOHC_API enum z_priority_t z_qos_get_priority(struct z_qos_t qos);
  */
 ZENOHC_API struct z_attachment_t z_query_attachment(const struct z_query_t *query);
 /**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-bool z_query_channel_closure_call(const struct z_owned_query_channel_closure_t *closure,
-                                  struct z_owned_query_t *sample);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API void z_query_channel_closure_drop(struct z_owned_query_channel_closure_t *closure);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_query_channel_closure_t' type
- */
-ZENOHC_API struct z_owned_query_channel_closure_t z_query_channel_closure_null(void);
-ZENOHC_API void z_query_channel_drop(struct z_owned_query_channel_t *channel);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
- */
-ZENOHC_API struct z_owned_query_channel_t z_query_channel_null(void);
-/**
  * Returns `false` if `this` is in a gravestone state, `true` otherwise.
  *
  * This function may not be called with the null pointer, but can be called with the gravestone value.
@@ -1825,6 +1791,24 @@ ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
  */
 ZENOHC_API
 void z_query_drop(struct z_owned_query_t *this_);
+ZENOHC_API void z_query_fifo_channel_drop(struct z_owned_query_fifo_channel_t *channel);
+/**
+ * Creates a new blocking fifo channel, returned as a pair of closures.
+ *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+ */
+ZENOHC_API
+struct z_owned_query_fifo_channel_t z_query_fifo_channel_new(size_t bound);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_query_fifo_channel_t' type
+ */
+ZENOHC_API struct z_owned_query_fifo_channel_t z_query_fifo_channel_null(void);
 /**
  * Get a query's key by aliasing it.
  */
@@ -1870,6 +1854,24 @@ int8_t z_query_reply(const struct z_query_t *query,
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
 ZENOHC_API struct z_query_reply_options_t z_query_reply_options_default(void);
+ZENOHC_API void z_query_ring_channel_drop(struct z_owned_query_ring_channel_t *channel);
+/**
+ * Creates a new blocking ring channel, returned as a pair of closures.
+ *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+ */
+ZENOHC_API
+struct z_owned_query_ring_channel_t z_query_ring_channel_new(size_t bound);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_query_ring_channel_t' type
+ */
+ZENOHC_API struct z_owned_query_ring_channel_t z_query_ring_channel_null(void);
 /**
  * Create a default :c:type:`z_query_target_t`.
  */
@@ -2339,32 +2341,6 @@ int8_t zc_put_owned(struct z_session_t session,
                     struct z_keyexpr_t keyexpr,
                     struct zc_owned_payload_t *payload,
                     const struct z_put_options_t *opts);
-/**
- * Creates a new blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
- * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
- * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- */
-ZENOHC_API
-struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
-/**
- * Creates a new non-blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
- * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
- * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- */
-ZENOHC_API
-struct z_owned_query_channel_t zc_query_non_blocking_fifo_new(size_t bound);
 /**
  * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
  */
