@@ -99,11 +99,12 @@ impl Deref for z_query_t {
 pub use crate::z_owned_query_t;
 impl_guarded_transmute!(Option<Query>, z_owned_query_t);
 
-impl Drop for z_owned_query_t {
-    fn drop(&mut self) {
-        let _: Option<Query> = self.take();
-    }
-}
+// impl Drop for z_owned_query_t {
+//     fn drop(&mut self) {
+//         let _: Option<Query> = self.take();
+//     }
+// }
+
 /// The gravestone value of `z_owned_query_t`.
 #[no_mangle]
 pub extern "C" fn z_query_null() -> z_owned_query_t {

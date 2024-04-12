@@ -18,6 +18,9 @@ mod collections;
 use std::cmp::min;
 use std::slice;
 
+#[macro_use]
+mod transmute;
+
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;

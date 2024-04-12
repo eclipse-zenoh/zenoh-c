@@ -96,7 +96,8 @@ fn generate_opaque_types() {
     let re = Regex::new(r"type:(\w+) *, align:0*(\d+), size:0*(\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
         let s = format!(
-            "#[repr(C, align({align}))]
+            "#[derive(Copy, Clone)]
+#[repr(C, align({align}))]
 pub struct {type_name} {{
     _0: [u8; {size}],
 }}

@@ -15,9 +15,14 @@
 use std::ffi::CStr;
 use std::ops::Deref;
 use std::ops::DerefMut;
+use std::str::FromStr;
 
 use crate::collections::*;
+use crate::decl_transmute_copy;
 use crate::keyexpr::*;
+use crate::transmute::InplaceInit;
+use crate::transmute::InplaceInitDefault;
+use crate::transmute::TransmuteRef;
 use crate::z_congestion_control_t;
 use crate::z_id_t;
 use crate::z_owned_buffer_t;
@@ -133,9 +138,8 @@ pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
 /// The encoding of the payload.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
-    let encoding = sample.encoding();
-
-    sample.encoding().into()
+    // let encoding = sample.encoding();
+    // sample.encoding().transmute()
 }
 /// The sample's data, the return value aliases the sample.
 ///
@@ -229,7 +233,9 @@ pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
 ///
 pub use crate::z_encoding_t;
-impl_guarded_transmute!(noderefs &'static Encoding, z_encoding_t);
+decl_transmute_copy!(&'static Encoding, z_encoding_t);
+
+// impl_guarded_transmute!(noderefs &'static Encoding, z_encoding_t);
 
 /// An owned payload encoding.
 ///
@@ -239,31 +245,26 @@ impl_guarded_transmute!(noderefs &'static Encoding, z_encoding_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 pub use crate::z_owned_encoding_t;
-impl_guarded_transmute!(Encoding, z_owned_encoding_t);
-
-impl Drop for z_owned_encoding_t {
-    fn drop(&mut self) {
-        let encoding = self.deref_mut();
-        *encoding = Encoding::default();
-    }
-}
-
+decl_transmute_ref!(default_inplace_init Encoding, z_owned_encoding_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
-pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
-    Encoding::default().into()
+pub extern "C" fn z_encoding_null(encoding: &mut z_owned_encoding_t) {
+    encoding.transmute_mut().inplace_default();
 }
 
 /// Constructs a specific :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_from_str(s: *const c_char) -> z_owned_encoding_t {
+pub unsafe extern "C" fn z_encoding_from_str(encoding: &mut z_owned_encoding_t, s: *const c_char) -> i8 {
     if s.is_null() {
-        z_encoding_null()
+        z_encoding_null(encoding);
+        0
     } else {
         let s = CStr::from_ptr(s).to_string_lossy().as_ref();
-        Encoding::from(s).into()
+        let value = Encoding::from_str(s).unwrap_infallible();
+        encoding.transmute_mut().inplace_init(value);
+        0
     }
 }
 
@@ -279,8 +280,7 @@ pub extern "C" fn z_encoding_default() -> z_encoding_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
-    let encoding = encoding.deref_mut();
-    *encoding = Encoding::default();
+
 }
 
 /// Returns ``true`` if `encoding` is valid.

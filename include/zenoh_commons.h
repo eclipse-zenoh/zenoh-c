@@ -1373,7 +1373,7 @@ ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
  * Constructs a specific :c:type:`z_encoding_t`.
  */
-ZENOHC_API struct z_owned_encoding_t z_encoding_from_str(const char *s);
+ZENOHC_API int8_t z_encoding_from_str(struct z_owned_encoding_t *encoding, const char *s);
 /**
  * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
  */
@@ -1381,7 +1381,7 @@ ZENOHC_API struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *
 /**
  * Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
  */
-ZENOHC_API struct z_owned_encoding_t z_encoding_null(void);
+ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *encoding);
 /**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
