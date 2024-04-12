@@ -60,6 +60,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.create-release-branch.outputs.branch }}
+          token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
       - name: Bump and tag project
         run: bash ci/scripts/bump-and-tag.bash
