@@ -21,7 +21,6 @@ pub(crate) trait TransmuteCopy<T: Copy>: TransmuteRef<T> {
     fn transmute(self) -> T;
 }
 
-
 pub(crate) trait InplaceInit<T: Sized>: Sized {
     // Initialize the object in place with a memcpy of the provided value. Assumes that the memory passed to the function is uninitialized
     fn inplace_init(&mut self, value: T) -> &mut Self {
@@ -95,11 +94,13 @@ macro_rules! decl_transmute_ref {
         impl_transmute_ref!($zenoh_type, $c_type);
         impl_transmute_ref!($c_type, $zenoh_type);
         impl InplaceInit<$zenoh_type> for $c_type {
-            fn inplace_init(&mut self, value: $zenoh_type) {
+            fn inplace_init(&mut self, value: $zenoh_type) -> &mut Self {
                 self.transmute_mut().inplace_init(value);
+                self
             }
-            fn inplace_default(&mut self) {
+            fn inplace_default(&mut self) -> &mut Self {
                 self.transmute_mut().inplace_default();
+                self
             }
         }
     }
@@ -109,10 +110,10 @@ macro_rules! decl_transmute_ref {
 macro_rules! decl_transmute_copy {
     ($zenoh_type:ty, $c_type:ty) => {
         validate_equivalence!($zenoh_type, $c_type);
-        impl_guarded_transmute_ref!($zenoh_type, $c_type);
-        impl_guarded_transmute_ref!($c_type, $zenoh_type);
-        impl_guarded_transmute_copy!($zenoh_type, $c_type);
-        impl_guarded_transmute_copy!($c_type, $zenoh_type);
+        impl_transmute_ref!($zenoh_type, $c_type);
+        impl_transmute_ref!($c_type, $zenoh_type);
+        impl_transmute_copy!($zenoh_type, $c_type);
+        impl_transmute_copy!($c_type, $zenoh_type);
     };
 }
 
@@ -126,7 +127,7 @@ macro_rules! impl_transmute_ref {
                 unsafe { std::mem::transmute::<&mut $src_type, &mut $dst_type>(self) }
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_transmute_copy {
@@ -136,5 +137,5 @@ macro_rules! impl_transmute_copy {
                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
             }
         }
-    }
+    };
 }

@@ -35,15 +35,13 @@ use libc::{c_char, c_ulong};
 use std::convert::Infallible;
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::buffers::ZBuf;
-use zenoh::encoding;
-use zenoh::encoding::Encoding;
 use zenoh::payload::Deserialize;
 use zenoh::payload::ZSerde;
 use zenoh::prelude::SampleKind;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
 use zenoh::sample::Sample;
-use zenoh_protocol::core::Timestamp;
+use zenoh::time::Timestamp;
 
 use crate::attachment::{attachment_iteration_driver, z_attachment_null, z_attachment_t};
 
@@ -235,8 +233,6 @@ pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
 pub use crate::z_encoding_t;
 decl_transmute_copy!(&'static Encoding, z_encoding_t);
 
-// impl_guarded_transmute!(noderefs &'static Encoding, z_encoding_t);
-
 /// An owned payload encoding.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
@@ -256,7 +252,10 @@ pub extern "C" fn z_encoding_null(encoding: &mut z_owned_encoding_t) {
 /// Constructs a specific :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_from_str(encoding: &mut z_owned_encoding_t, s: *const c_char) -> i8 {
+pub unsafe extern "C" fn z_encoding_from_str(
+    encoding: &mut z_owned_encoding_t,
+    s: *const c_char,
+) -> i8 {
     if s.is_null() {
         z_encoding_null(encoding);
         0
@@ -272,16 +271,13 @@ pub unsafe extern "C" fn z_encoding_from_str(encoding: &mut z_owned_encoding_t, 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    let encoding = &Encoding::ZENOH_BYTES;
-    encoding.into()
+    let encoding = Encoding::ZENOH_BYTES;
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
-
-}
+pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {}
 
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
