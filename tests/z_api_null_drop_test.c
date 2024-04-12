@@ -39,8 +39,7 @@ int main(int argc, char **argv) {
     z_owned_closure_reply_t closure_reply_null_1 = z_closure_reply_null();
     z_owned_closure_hello_t closure_hello_null_1 = z_closure_hello_null();
     z_owned_closure_zid_t closure_zid_null_1 = z_closure_zid_null();
-    z_owned_reply_channel_closure_t reply_channel_closure_null_1 = z_reply_channel_closure_null();
-    z_owned_reply_channel_t reply_channel_null_1 = z_reply_channel_null();
+    z_owned_reply_fifo_channel_t reply_channel_null_1 = z_reply_fifo_channel_null();
     z_owned_str_t str_null_1 = z_str_null();
     zc_owned_payload_t payload_null_1 = zc_payload_null();
     zc_owned_shmbuf_t shmbuf_null_1 = zc_shmbuf_null();
@@ -82,8 +81,7 @@ int main(int argc, char **argv) {
     z_owned_closure_reply_t closure_reply_null_2;
     z_owned_closure_hello_t closure_hello_null_2;
     z_owned_closure_zid_t closure_zid_null_2;
-    z_owned_reply_channel_closure_t reply_channel_closure_null_2;
-    z_owned_reply_channel_t reply_channel_null_2;
+    z_owned_reply_fifo_channel_t reply_channel_null_2;
     z_owned_str_t str_null_2;
     zc_owned_payload_t payload_null_2;
     zc_owned_shmbuf_t shmbuf_null_2;
@@ -104,7 +102,6 @@ int main(int argc, char **argv) {
     z_null(&closure_reply_null_2);
     z_null(&closure_hello_null_2);
     z_null(&closure_zid_null_2);
-    z_null(&reply_channel_closure_null_2);
     z_null(&reply_channel_null_2);
     z_null(&str_null_2);
     z_null(&payload_null_2);
@@ -148,7 +145,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(closure_reply_null_1));
         z_drop(z_move(closure_hello_null_1));
         z_drop(z_move(closure_zid_null_1));
-        z_drop(z_move(reply_channel_closure_null_1));
         z_drop(z_move(reply_channel_null_1));
         z_drop(z_move(str_null_1));
         z_drop(z_move(payload_null_1));
@@ -170,7 +166,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(closure_reply_null_2));
         z_drop(z_move(closure_hello_null_2));
         z_drop(z_move(closure_zid_null_2));
-        z_drop(z_move(reply_channel_closure_null_2));
         z_drop(z_move(reply_channel_null_2));
         z_drop(z_move(str_null_2));
         z_drop(z_move(payload_null_2));
