@@ -778,14 +778,16 @@ typedef struct z_query_reply_options_t {
   struct z_encoding_t encoding;
   struct z_attachment_t attachment;
 } z_query_reply_options_t;
-/**
- * A pair of closures, the `send` one accepting
- */
 typedef struct z_owned_reply_fifo_channel_t {
   struct z_owned_closure_reply_t send;
   struct z_owned_closure_reply_t recv;
   struct z_owned_closure_reply_t try_recv;
 } z_owned_reply_fifo_channel_t;
+typedef struct z_owned_reply_ring_channel_t {
+  struct z_owned_closure_reply_t send;
+  struct z_owned_closure_reply_t recv;
+  struct z_owned_closure_reply_t try_recv;
+} z_owned_reply_ring_channel_t;
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
   unsigned long zc_timeout_ms;
@@ -1953,6 +1955,24 @@ ZENOHC_API struct z_owned_reply_t z_reply_null(void);
  */
 ZENOHC_API
 struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
+ZENOHC_API void z_reply_ring_channel_drop(struct z_owned_reply_ring_channel_t *channel);
+/**
+ * Creates a new blocking ring channel, returned as a pair of closures.
+ *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ */
+ZENOHC_API
+struct z_owned_reply_ring_channel_t z_reply_ring_channel_new(size_t bound);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_reply_ring_channel_t' type
+ */
+ZENOHC_API struct z_owned_reply_ring_channel_t z_reply_ring_channel_null(void);
 /**
  * Scout for routers and/or peers.
  *
