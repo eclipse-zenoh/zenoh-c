@@ -35,10 +35,12 @@
                   z_owned_closure_hello_t * : z_closure_hello_drop,                     \
                   z_owned_closure_zid_t * : z_closure_zid_drop,                         \
                   zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_drop, \
-                  z_owned_reply_fifo_channel_t * : z_reply_fifo_channel_drop,           \
-                  z_owned_reply_ring_channel_t * : z_reply_ring_channel_drop,           \
+                  z_owned_sample_fifo_channel_t * : z_sample_fifo_channel_drop,         \
+                  z_owned_sample_ring_channel_t * : z_sample_ring_channel_drop,         \
                   z_owned_query_fifo_channel_t * : z_query_fifo_channel_drop,           \
                   z_owned_query_ring_channel_t * : z_query_ring_channel_drop,           \
+                  z_owned_reply_fifo_channel_t * : z_reply_fifo_channel_drop,           \
+                  z_owned_reply_ring_channel_t * : z_reply_ring_channel_drop,           \
                   z_owned_bytes_map_t * : z_bytes_map_drop,                             \
                   zc_owned_payload_t * : zc_payload_drop,                               \
                   zc_owned_shmbuf_t * : zc_shmbuf_drop,                                 \
@@ -67,10 +69,12 @@
                   z_owned_closure_hello_t * : z_closure_hello_null,                     \
                   z_owned_closure_zid_t * : z_closure_zid_null,                         \
                   zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_null, \
-                  z_owned_reply_fifo_channel_t * : z_reply_fifo_channel_null,           \
-                  z_owned_reply_ring_channel_t * : z_reply_ring_channel_null,           \
+                  z_owned_sample_fifo_channel_t * : z_sample_fifo_channel_null,         \
+                  z_owned_sample_ring_channel_t * : z_sample_ring_channel_null,         \
                   z_owned_query_fifo_channel_t * : z_query_fifo_channel_null,           \
                   z_owned_query_ring_channel_t * : z_query_ring_channel_null,           \
+                  z_owned_reply_fifo_channel_t * : z_reply_fifo_channel_null,           \
+                  z_owned_reply_ring_channel_t * : z_reply_ring_channel_null,           \
                   z_owned_bytes_map_t * : z_bytes_map_null,                             \
                   z_attachment_t * : z_attachment_null,                                 \
                   zc_owned_payload_t * : zc_payload_null,                               \
@@ -173,7 +177,12 @@ template<> struct zenoh_drop_type<z_owned_closure_reply_t> { typedef void type; 
 template<> struct zenoh_drop_type<z_owned_closure_hello_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_zid_t> { typedef void type; };
 template<> struct zenoh_drop_type<zcu_owned_closure_matching_status_t> { typedef void type; };
-template<> struct zenoh_drop_type<z_owned_reply_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_sample_fifo_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_sample_ring_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_query_fifo_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_query_ring_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_reply_fifo_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_reply_ring_channel_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_bytes_map_t> { typedef void type; };
 template<> struct zenoh_drop_type<zc_owned_liveliness_token_t> { typedef void type; };
 template<> struct zenoh_drop_type<ze_owned_publication_cache_t> { typedef int8_t type; };
@@ -200,7 +209,12 @@ template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop
 template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop(v); }
 template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v); }
 template<> inline void z_drop(zcu_owned_closure_matching_status_t* v) { zcu_closure_matching_status_drop(v); }
-template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
+template<> inline void z_drop(z_owned_sample_fifo_channel_t* v) { z_sample_fifo_channel_drop(v); }
+template<> inline void z_drop(z_owned_sample_ring_channel_t* v) { z_sample_ring_channel_drop(v); }
+template<> inline void z_drop(z_owned_query_fifo_channel_t* v) { z_query_fifo_channel_drop(v); }
+template<> inline void z_drop(z_owned_query_ring_channel_t* v) { z_query_ring_channel_drop(v); }
+template<> inline void z_drop(z_owned_reply_fifo_channel_t* v) { z_reply_fifo_channel_drop(v); }
+template<> inline void z_drop(z_owned_reply_ring_channel_t* v) { z_reply_ring_channel_drop(v); }
 template<> inline void z_drop(z_owned_bytes_map_t* v) { z_bytes_map_drop(v); }
 template<> inline void z_drop(zc_owned_liveliness_token_t* v) { zc_liveliness_undeclare_token(v); }
 template<> inline int8_t z_drop(ze_owned_publication_cache_t* v) { return ze_undeclare_publication_cache(v); }
@@ -227,7 +241,12 @@ inline void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
 inline void z_null(z_owned_closure_hello_t& v) { v = z_closure_hello_null(); }
 inline void z_null(z_owned_closure_zid_t& v) { v = z_closure_zid_null(); }
 inline void z_null(zcu_owned_closure_matching_status_t& v) { v = zcu_closure_matching_status_null(); }
-inline void z_null(z_owned_reply_channel_t& v) { v = z_reply_channel_null(); }
+inline void z_null(z_owned_sample_fifo_channel_t& v) { v = z_sample_fifo_channel_null(); }
+inline void z_null(z_owned_sample_ring_channel_t& v) { v = z_sample_ring_channel_null(); }
+inline void z_null(z_owned_query_fifo_channel_t& v) { v = z_query_fifo_channel_null(); }
+inline void z_null(z_owned_query_ring_channel_t& v) { v = z_query_ring_channel_null(); }
+inline void z_null(z_owned_reply_fifo_channel_t& v) { v = z_reply_fifo_channel_null(); }
+inline void z_null(z_owned_reply_ring_channel_t& v) { v = z_reply_ring_channel_null(); }
 inline void z_null(z_owned_bytes_map_t& v) { v = z_bytes_map_null(); }
 inline void z_null(zc_owned_liveliness_token_t& v) { v = zc_liveliness_token_null(); }
 inline void z_null(ze_owned_publication_cache_t& v) { v = ze_publication_cache_null(); }

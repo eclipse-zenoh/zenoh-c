@@ -23,11 +23,14 @@ mod reply_closure;
 pub use zenohid_closure::*;
 mod zenohid_closure;
 
-pub use reply_channel::*;
-mod reply_channel;
+pub use sample_channel::*;
+mod sample_channel;
 
 pub use query_channel::*;
 mod query_channel;
+
+pub use reply_channel::*;
+mod reply_channel;
 
 pub use hello_closure::*;
 mod hello_closure;
