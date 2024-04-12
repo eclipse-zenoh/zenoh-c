@@ -3,7 +3,7 @@
 set -xeo pipefail
 
 # Release number
-readonly version=${VERSION:-''}
+readonly version=${VERSION:?input VERSION is required}
 # Dependencies' pattern
 readonly bump_deps_pattern=${BUMP_DEPS_PATTERN:-''}
 # Dependencies' version
@@ -31,12 +31,7 @@ export GIT_COMMITTER_NAME=$git_user_name
 export GIT_COMMITTER_EMAIL=$git_user_email
 
 # Bump CMake project version
-if [[ "$version" == '' ]]; then
-  # If no version has been specified, infer it using git-describe
-  printf '%s' "$(git describe)" > version.txt
-else
-  printf '%s' "$version" > version.txt
-fi
+printf '%s' "$version" > version.txt
 # Propagate version change to Cargo.toml and Cargo.toml.in
 cmake . -DZENOHC_BUILD_IN_SOURCE_TREE=TRUE -DCMAKE_BUILD_TYPE=Release
 # Update Debian dependency of libzenohc-dev
