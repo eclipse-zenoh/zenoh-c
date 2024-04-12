@@ -72,5 +72,5 @@ fi
 git tag "$version" -m "v$version"
 git log -10
 git show-ref --tags
-git push
-git push "$version"
+git push origin
+git push origin "$version"
