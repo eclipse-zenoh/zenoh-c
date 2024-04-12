@@ -64,8 +64,8 @@ if [[ "$bump_deps_pattern" != '' ]]; then
   fi
 fi
 
-git tag "$version" -m "v$version"
+git tag --force "$version" -m "v$version"
 git log -10
 git show-ref --tags
 git push origin
-git push origin "$version"
+git push --force origin "$version"
