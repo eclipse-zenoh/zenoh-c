@@ -12,45 +12,46 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-pub(crate) struct StaticRef<T: 'static>(&'static T);
-impl<T> StaticRef<T> {
-    pub(crate) fn new<'a>(value: &'a T) -> Self {
-        StaticRef(unsafe { std::mem::transmute::<&'a T, &'static T>(value) })
-    }
-}
-impl<T> Clone for StaticRef<T> {
-    fn clone(&self) -> Self {
-        StaticRef(self.0)
-    }
-}
-impl<T> Copy for StaticRef<T> {}
+// pub fn as_static_ref<'a, T: 'a>(value: &'a T) -> &'static T {
+//     unsafe { std::mem::transmute::<&'a T, &'static T>(value) }
+// }
 
-pub(crate) trait TransmuteRef<T> {
+pub fn unwrap_ref_unchecked<T>(value: &Option<T>) -> &T {
+    debug_assert!(value.is_some());
+    unsafe { value.as_ref().unwrap_unchecked() }
+}
+
+pub(crate) trait TransmuteRef<T: Sized>: Sized {
     fn transmute_ref(&self) -> &T;
     fn transmute_mut(&mut self) -> &mut T;
+    fn transmute_uninit_ptr(
+        this: *mut std::mem::MaybeUninit<Self>,
+    ) -> *mut std::mem::MaybeUninit<T> {
+        this as *mut std::mem::MaybeUninit<T>
+    }
 }
 
-pub(crate) trait TransmuteValue<T: Copy>: TransmuteRef<T> {
-    fn transmute_value(self) -> T;
+pub(crate) trait TransmuteCopy<T: Copy>: TransmuteRef<T> {
+    fn transmute_copy(self) -> T;
 }
 
-pub(crate) trait Inplace<T: Sized>: Sized {
+pub(crate) trait Inplace: Sized {
     // Initialize the object in place with a memcpy of the provided value. Assumes that the memory passed to the function is uninitialized
-    fn init(this: *mut std::mem::MaybeUninit<Self>, value: T) {
-        let this = this as *mut T;
+    fn init(this: *mut std::mem::MaybeUninit<Self>, value: Self) {
+        let this = this as *mut Self;
         unsafe { std::ptr::write(this, value) };
     }
+
     // Initialize the object in place with an empty value
     fn empty(this: *mut std::mem::MaybeUninit<Self>);
-    // TODO: for effective inplace_init, we can provide a method that takes a closure that initializes the object in place
-}
 
-pub(crate) trait InplaceDrop<T: Sized>: Sized + Inplace<T> {
-    // Drop the object in place and replaces it with default value
+    // Drop the object in place and replaces it with empty value
     fn drop(this: &mut Self) {
-        unsafe { std::ptr::drop_in_place(this as *mut Self) };
-        Inplace::empty(this as *mut Self as *mut std::mem::MaybeUninit<Self>);
+        let this = this as *mut Self;
+        unsafe { std::ptr::drop_in_place(this) };
+        Inplace::empty(this as *mut std::mem::MaybeUninit<Self>);
     }
+    // TODO: for effective inplace_init, we can provide a method that takes a closure that initializes the object in place
 }
 
 pub(crate) trait InplaceDefault: Default {
@@ -63,7 +64,7 @@ pub(crate) trait InplaceDefault: Default {
 }
 
 // For types implementing Default, we can use provide default implementation of InplaceInit through InplaceInitDefault
-impl<T: InplaceDefault> Inplace<T> for T {
+impl<T: InplaceDefault> Inplace for T {
     fn empty(this: *mut std::mem::MaybeUninit<Self>) {
         InplaceDefault::default(this);
     }
@@ -109,16 +110,6 @@ macro_rules! decl_transmute_ref {
         validate_equivalence!($zenoh_type, $c_type);
         impl_transmute_ref!($zenoh_type, $c_type);
         impl_transmute_ref!($c_type, $zenoh_type);
-        impl Inplace<$zenoh_type> for $c_type {
-            fn init(this: *mut std::mem::MaybeUninit<Self>, value: $zenoh_type) {
-                let this = this as *mut std::mem::MaybeUninit<$zenoh_type>;
-                Inplace::init(this, value);
-            }
-            fn empty(this: *mut std::mem::MaybeUninit<Self>) {
-                let this = this as *mut std::mem::MaybeUninit<$zenoh_type>;
-                Inplace::empty(this);
-            }
-        }
     }
 }
 
@@ -148,8 +139,8 @@ macro_rules! impl_transmute_ref {
 
 macro_rules! impl_transmute_copy {
     ($src_type:ty, $dst_type:ty) => {
-        impl $crate::transmute::TransmuteValue<$dst_type> for $src_type {
-            fn transmute_value(self) -> $dst_type {
+        impl $crate::transmute::TransmuteCopy<$dst_type> for $src_type {
+            fn transmute_copy(self) -> $dst_type {
                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
             }
         }

@@ -15,27 +15,21 @@
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::ops::Deref;
-use std::ops::DerefMut;
 use std::str::FromStr;
 
-use crate::collections::*;
 use crate::decl_transmute_copy;
 use crate::keyexpr::*;
+use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
 use crate::transmute::InplaceDefault;
-use crate::transmute::StaticRef;
+use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteValue;
-use crate::z_congestion_control_t;
 use crate::z_id_t;
 use crate::z_owned_buffer_t;
-use crate::z_priority_t;
 use crate::zc_owned_payload_t;
 use crate::zc_payload_t;
-use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
-use std::convert::Infallible;
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::buffers::ZBuf;
 use zenoh::encoding::Encoding;
@@ -111,37 +105,22 @@ impl From<Option<&Timestamp>> for z_timestamp_t {
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
-#[repr(C)]
-pub struct z_sample_t<'a> {
-    _inner: &'a (),
-}
-impl<'a> core::ops::Deref for z_sample_t<'a> {
-    type Target = Sample;
-    fn deref(&self) -> &Self::Target {
-        unsafe { core::mem::transmute::<&(), &Sample>(self._inner) }
-    }
-}
-
-impl<'a> z_sample_t<'a> {
-    pub fn new(sample: &'a Sample) -> Self {
-        z_sample_t {
-            _inner: unsafe { core::mem::transmute(sample) },
-        }
-    }
-}
+use crate::z_sample_t;
+decl_transmute_copy!(&'static Option<Sample>, z_sample_t);
 
 /// The Key Expression of the sample.
 ///
 /// `sample` is aliased by its return value.
 #[no_mangle]
 pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
+    let sample = unwrap_ref_unchecked(sample.transmute_copy());
     sample.key_expr().into()
 }
 /// The encoding of the payload.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
-    let encoding = sample.encoding();
-    StaticRef::new(encoding).transmute_value()
+    let sample = unwrap_ref_unchecked(sample.transmute_copy());
+    sample.encoding().transmute_copy()
 }
 /// The sample's data, the return value aliases the sample.
 ///
@@ -151,6 +130,7 @@ pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> zc_payload_t {
     // TODO: here returning reference not to sample's payload, but to temporary copy
     // THIS WILL CRASH FOR SURE, MADE IT ONLY TO MAKE IT COMPILE
     // Need a way to get reference to sample's payload
+    let sample = unwrap_ref_unchecked(sample.transmute_copy());
     let buffer: ZBuf = ZSerde.deserialize(sample.payload()).unwrap_infallible();
     let owned_buffer: z_owned_buffer_t = Some(buffer).into();
     owned_buffer.as_ref().into()
@@ -162,6 +142,7 @@ pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> zc_payload_t {
 /// affect the samples received by other subscribers.
 #[no_mangle]
 pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> zc_owned_payload_t {
+    let sample = unwrap_ref_unchecked(sample.transmute_copy());
     let buffer: ZBuf = ZSerde.deserialize(sample.payload()).unwrap_infallible();
     let owned_buffer: z_owned_buffer_t = Some(buffer).into();
     owned_buffer.into()
@@ -169,11 +150,13 @@ pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> zc_owned_payloa
 /// The sample's kind (put or delete).
 #[no_mangle]
 pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
+    let sample = unwrap_ref_unchecked(sample.transmute_copy());
     sample.kind().into()
 }
 /// The samples timestamp
 #[no_mangle]
 pub extern "C" fn z_sample_timestamp(sample: &z_sample_t) -> z_timestamp_t {
+    let sample = unwrap_ref_unchecked(sample.transmute_copy());
     sample.timestamp().into()
 }
 /// The qos with which the sample was received.
@@ -184,6 +167,7 @@ pub extern "C" fn z_sample_timestamp(sample: &z_sample_t) -> z_timestamp_t {
 /// `sample` is aliased by the return value.
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
+    let sample = unwrap_ref_unchecked(sample.transmute_copy());
     match sample.attachment() {
         Some(attachment) => z_attachment_t {
             data: attachment as *const _ as *mut c_void,
@@ -194,12 +178,15 @@ pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
 }
 
 pub use crate::zc_owned_sample_t;
-impl_guarded_transmute!(Option<Sample>, zc_owned_sample_t);
+decl_transmute_ref!(default_inplace_init Option<Sample>, zc_owned_sample_t);
 
 /// Clone a sample in the cheapest way available.
 #[no_mangle]
-pub extern "C" fn zc_sample_clone(sample: &z_sample_t) -> zc_owned_sample_t {
-    Some(sample.deref().clone()).into()
+pub extern "C" fn zc_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owned_sample_t>) {
+    let src = unwrap_ref_unchecked(src.transmute_copy());
+    let src = src.deref().clone();
+    let dst = zc_owned_sample_t::transmute_uninit_ptr(dst);
+    Inplace::init(dst, Some(src));
 }
 
 /// Returns `true` if `sample` is valid.
@@ -207,7 +194,8 @@ pub extern "C" fn zc_sample_clone(sample: &z_sample_t) -> zc_owned_sample_t {
 /// Note that there exist no fallinle constructors for `zc_owned_sample_t`, so validity is always guaranteed
 /// unless the value has been dropped already.
 #[no_mangle]
-pub extern "C" fn zc_sample_check(sample: &zc_owned_sample_t) -> bool {
+pub extern "C" fn zc_sample_check(sample: &z_sample_t) -> bool {
+    let sample = sample.transmute_copy();
     sample.is_some()
 }
 
@@ -216,18 +204,20 @@ pub extern "C" fn zc_sample_check(sample: &zc_owned_sample_t) -> bool {
 /// Calling this function using a dropped sample is undefined behaviour.
 #[no_mangle]
 pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> z_sample_t {
-    z_sample_t::new(unsafe { sample.as_ref().unwrap_unchecked() })
+    sample.transmute_ref().transmute_copy()
 }
 
 /// Destroy the sample.
 #[no_mangle]
 pub extern "C" fn zc_sample_drop(sample: &mut zc_owned_sample_t) {
-    core::mem::drop(sample.take());
+    let sample = sample.transmute_mut();
+    Inplace::drop(sample);
 }
 
 #[no_mangle]
-pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
-    None.into()
+pub extern "C" fn zc_sample_null(sample: *mut MaybeUninit<zc_owned_sample_t>) {
+    let sample = zc_owned_sample_t::transmute_uninit_ptr(sample);
+    Inplace::empty(sample);
 }
 
 /// The encoding of a payload, in a MIME-like format.
@@ -235,7 +225,7 @@ pub extern "C" fn zc_sample_null() -> zc_owned_sample_t {
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
 ///
 pub use crate::z_encoding_t;
-decl_transmute_copy!(StaticRef<Encoding>, z_encoding_t);
+decl_transmute_copy!(&'static Encoding, z_encoding_t);
 
 /// An owned payload encoding.
 ///
@@ -250,6 +240,7 @@ decl_transmute_ref!(default_inplace_init Encoding, z_owned_encoding_t);
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
 pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>) {
+    let encoding = z_owned_encoding_t::transmute_uninit_ptr(encoding);
     Inplace::empty(encoding);
 }
 
@@ -260,6 +251,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
     encoding: *mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
 ) -> i8 {
+    let encoding = z_owned_encoding_t::transmute_uninit_ptr(encoding);
     if s.is_null() {
         Inplace::empty(encoding);
         0
@@ -275,7 +267,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    StaticRef::new(&Encoding::ZENOH_BYTES).transmute_value()
+    (&Encoding::ZENOH_BYTES).transmute_copy()
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.
@@ -286,7 +278,7 @@ pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {}
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
+pub extern "C" fn z_encoding_check(encoding: &'static z_owned_encoding_t) -> bool {
     let encoding = encoding.transmute_ref();
     *encoding != Encoding::default()
 }
@@ -294,9 +286,8 @@ pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
-    let encoding = encoding.transmute_ref();
-    StaticRef::new(encoding).transmute_value()
+pub extern "C" fn z_encoding_loan(encoding: &'static z_owned_encoding_t) -> z_encoding_t {
+    encoding.transmute_ref().transmute_copy()
 }
 
 /// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`

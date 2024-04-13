@@ -42,6 +42,8 @@ get_opaque_type_data!(Option<ZBuf>, "z_owned_buffer_t");
 /// Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
 get_opaque_type_data!(Option<Sample>, "zc_owned_sample_t");
 
+get_opaque_type_data!(&'static Sample, "z_sample_t");
+
 /// A reader for payload data.
 get_opaque_type_data!(ZBufReader, "zc_payload_reader");
 

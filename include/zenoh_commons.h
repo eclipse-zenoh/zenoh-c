@@ -312,13 +312,8 @@ typedef struct z_owned_closure_reply_t {
   void (*call)(struct z_owned_reply_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_reply_t;
-/**
- * A data sample.
- *
- * A sample is the value associated to a given resource at a given point in time.
- */
-typedef struct z_sample_t {
-  const void *_inner;
+typedef struct ALIGN(8) z_sample_t {
+  uint8_t _0[8];
 } z_sample_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -2362,11 +2357,11 @@ struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
  * unless the value has been dropped already.
  */
 ZENOHC_API
-bool zc_sample_check(const struct zc_owned_sample_t *sample);
+bool zc_sample_check(const struct z_sample_t *sample);
 /**
  * Clone a sample in the cheapest way available.
  */
-ZENOHC_API struct zc_owned_sample_t zc_sample_clone(const struct z_sample_t *sample);
+ZENOHC_API void zc_sample_clone(const struct z_sample_t *src, struct zc_owned_sample_t *dst);
 /**
  * Destroy the sample.
  */
@@ -2377,7 +2372,7 @@ ZENOHC_API void zc_sample_drop(struct zc_owned_sample_t *sample);
  * Calling this function using a dropped sample is undefined behaviour.
  */
 ZENOHC_API struct z_sample_t zc_sample_loan(const struct zc_owned_sample_t *sample);
-ZENOHC_API struct zc_owned_sample_t zc_sample_null(void);
+ZENOHC_API void zc_sample_null(struct zc_owned_sample_t *sample);
 /**
  * Increments the session's reference count, returning a new owning handle.
  */
