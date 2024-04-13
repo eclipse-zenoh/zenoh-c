@@ -2357,7 +2357,7 @@ struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
  * unless the value has been dropped already.
  */
 ZENOHC_API
-bool zc_sample_check(const struct z_sample_t *sample);
+bool zc_sample_check(const struct zc_owned_sample_t *sample);
 /**
  * Clone a sample in the cheapest way available.
  */
