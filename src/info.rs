@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{session::*, z_closure_zid_call, z_owned_closure_zid_t};
+use zenoh::config::ZenohId;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::SessionDeclarations;
-use zenoh_protocol::core::ZenohId;
 
 /// Represents a Zenoh ID.
 ///

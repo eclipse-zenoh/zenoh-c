@@ -2,8 +2,15 @@ use zenoh::buffers::{ZBuf, ZBufReader};
 use zenoh::encoding::Encoding;
 use zenoh::query::Reply;
 use zenoh::queryable::Query;
+use zenoh::queryable::Queryable;
 use zenoh::sample::Sample;
 use zenoh::value::Value;
+
+// Disabled due to dependency on z_session_t. To be reworked as for autogeneration this dependency is cicrular.
+// pub struct FetchingSubscriberWrapper {
+//     fetching_subscriber: zenoh_ext::FetchingSubscriber<'static, ()>,
+//     session: z_session_t,
+// }
 
 #[macro_export]
 macro_rules! get_opaque_type_data {
@@ -53,3 +60,14 @@ get_opaque_type_data!(Option<Reply>, "z_owned_reply_t");
 get_opaque_type_data!(Value, "z_owned_value_t");
 get_opaque_type_data!(&'static Value, "z_value_t");
 get_opaque_type_data!(Option<Query>, "z_owned_query_t");
+get_opaque_type_data!(&'static Query, "z_query_t");
+get_opaque_type_data!(Option<Queryable<'static, ()>>, "z_owned_queryable_t");
+get_opaque_type_data!(&'static Queryable<'static, ()>, "z_queryable_t");
+// get_opaque_type_data!(
+//     Option<Box<FetchingSubscriberWrapper>>,
+//     "ze_owned_querying_subscriber_t"
+// );
+// get_opaque_type_data!(
+//     &'static FetchingSubscriberWrapper,
+//     "ze_querying_subscriber_t"
+// );

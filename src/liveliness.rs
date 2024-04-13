@@ -16,11 +16,10 @@ use zenoh::{
     liveliness::{Liveliness, LivelinessToken},
     prelude::SessionDeclarations,
 };
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
-    z_closure_reply_call, z_closure_sample_call, z_keyexpr_t, z_owned_closure_reply_t,
-    z_owned_closure_sample_t, z_owned_subscriber_t, z_sample_t, z_session_t,
+    opaque_types::z_sample_t, z_closure_reply_call, z_closure_sample_call, z_keyexpr_t,
+    z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t, z_session_t,
 };
 
 /// A liveliness token that can be used to provide the network with information about connectivity to its

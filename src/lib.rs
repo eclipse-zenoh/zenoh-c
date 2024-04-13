@@ -55,8 +55,9 @@ use libc::c_void;
 pub use liveliness::*;
 mod publication_cache;
 pub use publication_cache::*;
-mod querying_subscriber;
-pub use querying_subscriber::*;
+// Disabled due to dependency on z_session_t. To be reworked as for autogeneration this dependency is cicrular.
+// mod querying_subscriber;
+// pub use querying_subscriber::*;
 pub mod attachment;
 pub use platform::*;
 pub mod opaque_types;

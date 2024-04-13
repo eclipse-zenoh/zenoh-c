@@ -15,8 +15,6 @@
 use std::ops::Deref;
 
 use zenoh_ext::SessionExt;
-use zenoh_util::core::zresult::ErrNo;
-use zenoh_util::core::SyncResolve;
 
 use crate::{
     impl_guarded_transmute, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t,

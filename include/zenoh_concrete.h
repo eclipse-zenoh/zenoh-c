@@ -36,14 +36,8 @@
 typedef struct z_owned_session_t {
   size_t _0;
 } z_owned_session_t;
-/**
- * Loaned variant of a Query received by a Queryable.
- *
- * Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
- * `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
- */
-typedef struct z_query_t {
-  void *_0;
+typedef struct ALIGN(8) z_query_t {
+  uint8_t _0[8];
 } z_query_t;
 /**
  * A loaned zenoh session.
@@ -51,28 +45,9 @@ typedef struct z_query_t {
 typedef struct z_session_t {
   size_t _0;
 } z_session_t;
-/**
- * An owned zenoh queryable.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-#if !defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_queryable_t {
-  uint64_t _0[4];
+  uint8_t _0[32];
 } z_owned_queryable_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_owned_queryable_t {
-  uint32_t _0[4];
-} z_owned_queryable_t;
-#endif
 /**
  * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
  *

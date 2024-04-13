@@ -15,22 +15,22 @@ use crate::attachment::{
     attachment_iteration_driver, insert_in_attachment_builder, z_attachment_check,
     z_attachment_iterate, z_attachment_null, z_attachment_t,
 };
+use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteRef};
 use crate::{
-    impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, zc_owned_payload_t, zc_payload_t,
+    z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t, z_keyexpr_t,
+    z_owned_closure_query_t, z_session_t, z_value_t, zc_owned_payload_t, zc_payload_t,
     LOG_INVALID_SESSION,
 };
 use libc::c_void;
+use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use zenoh::prelude::SessionDeclarations;
 use zenoh::{
     prelude::Sample,
-    queryable::{Query, Queryable as CallbackQueryable},
+    queryable::{Query, Queryable},
     sample::AttachmentBuilder,
 };
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
-type Queryable = Option<CallbackQueryable<'static, ()>>;
 /// An owned zenoh queryable.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
@@ -41,52 +41,22 @@ type Queryable = Option<CallbackQueryable<'static, ()>>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_queryable_t([u64; 4]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_owned_queryable_t([u32; 4]);
-
-impl_guarded_transmute!(Queryable, z_owned_queryable_t);
-
-impl z_owned_queryable_t {
-    pub fn null() -> Self {
-        None.into()
-    }
-}
+pub use crate::opaque_types::z_owned_queryable_t;
+decl_transmute_owned!(default_inplace_init Option<Queryable<'static,()>>, z_owned_queryable_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
-    z_owned_queryable_t::null()
+pub extern "C" fn z_queryable_null(this: *mut MaybeUninit<z_owned_queryable_t>) {
+    Inplace::empty(z_owned_queryable_t::transmute_uninit_ptr(this));
 }
 
-/// Loaned variant of a Query received by a Queryable.
+// Loaned variant of a Query received by a Queryable.
 ///
 /// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
 /// `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
-#[allow(non_camel_case_types)]
-#[repr(C)]
-pub struct z_query_t(*mut c_void);
-impl From<&Query> for z_query_t {
-    fn from(value: &Query) -> Self {
-        z_query_t(value as *const _ as *mut _)
-    }
-}
-impl From<Option<&Query>> for z_query_t {
-    fn from(value: Option<&Query>) -> Self {
-        value.map_or(Self(core::ptr::null_mut()), Into::into)
-    }
-}
-impl Deref for z_query_t {
-    type Target = Option<&'static Query>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
+pub use crate::opaque_types::z_query_t;
+decl_transmute_copy!(&'static Query, z_query_t);
 
 /// Owned variant of a Query received by a Queryable.
 ///
@@ -96,46 +66,43 @@ impl Deref for z_query_t {
 ///
 /// Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
 /// to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
-pub use crate::z_owned_query_t;
-impl_guarded_transmute!(Option<Query>, z_owned_query_t);
-
-// impl Drop for z_owned_query_t {
-//     fn drop(&mut self) {
-//         let _: Option<Query> = self.take();
-//     }
-// }
+pub use crate::opaque_types::z_owned_query_t;
+decl_transmute_owned!(default_inplace_init Option<Query>, z_owned_query_t);
 
 /// The gravestone value of `z_owned_query_t`.
 #[no_mangle]
-pub extern "C" fn z_query_null() -> z_owned_query_t {
-    None.into()
+pub extern "C" fn z_query_null(query: *mut MaybeUninit<z_owned_query_t>) {
+    Inplace::empty(z_owned_query_t::transmute_uninit_ptr(query));
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
-    this.is_some()
+pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
+    query.transmute_ref().is_some()
 }
 /// Aliases the query.
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
-    this.as_ref().into()
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_copy()
 }
 /// Destroys the query, setting `this` to its gravestone value to prevent double-frees.
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
-    let _: Option<Query> = this.take();
+    Inplace::drop(this.transmute_mut())
 }
 /// Clones the query, allowing to keep it in an "open" state past the callback's return.
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
-pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
+pub extern "C" fn z_query_clone(query: z_query_t) -> z_owned_query_t {
+    let query = query.transmute_copy();
     query.and_then(|q| q.cloned()).into()
 }
 

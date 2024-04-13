@@ -14,6 +14,7 @@
 
 use libc::c_char;
 use libc::c_void;
+use std::mem::MaybeUninit;
 use std::{
     convert::TryFrom,
     ffi::CStr,
@@ -31,22 +32,22 @@ use zenoh::{
     sample::AttachmentBuilder,
     value::Value,
 };
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::attachment::{
     insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
     z_attachment_t,
 };
+use crate::transmute::Inplace;
+use crate::transmute::TransmuteCopy;
+use crate::transmute::TransmuteRef;
 use crate::z_encoding_default;
 use crate::zc_owned_payload_t;
 use crate::zc_payload_null;
 use crate::zc_payload_t;
 use crate::{
-    impl_guarded_transmute, z_closure_reply_call, z_encoding_t, z_keyexpr_t,
-    z_owned_closure_reply_t, z_sample_t, z_session_t, GuardedTransmute, LOG_INVALID_SESSION,
+    opaque_types::z_sample_t, z_closure_reply_call, z_encoding_t, z_keyexpr_t,
+    z_owned_closure_reply_t, z_session_t, LOG_INVALID_SESSION,
 };
-
-type ReplyInner = Option<Reply>;
 
 /// An owned reply to a :c:func:`z_get`.
 ///
@@ -55,36 +56,16 @@ type ReplyInner = Option<Reply>;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-pub use crate::z_owned_reply_t;
-impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
+pub use crate::opaque_types::z_owned_reply_t;
+decl_transmute_owned!(default_inplace_init Option<Reply>, z_owned_reply_t);
 
-impl From<ReplyInner> for z_owned_reply_t {
-    fn from(val: ReplyInner) -> Self {
-        val.transmute()
-    }
-}
-impl From<Reply> for z_owned_reply_t {
-    fn from(val: Reply) -> z_owned_reply_t {
-        Some(val).into()
-    }
-}
-impl Deref for z_owned_reply_t {
-    type Target = ReplyInner;
-    fn deref(&self) -> &Self::Target {
-        unsafe { std::mem::transmute::<&Self, &Self::Target>(self) }
-    }
-}
-impl DerefMut for z_owned_reply_t {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { std::mem::transmute::<&mut Self, &mut Self::Target>(self) }
-    }
-}
 /// Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
 ///
 /// If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
+    let reply = reply.transmute_ref();
     reply.as_ref().map(|r| r.sample.is_ok()).unwrap_or(false)
 }
 
@@ -94,8 +75,9 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
+    let reply = reply.transmute_ref();
     if let Some(sample) = reply.as_ref().and_then(|s| s.sample.as_ref().ok()) {
-        z_sample_t::new(sample)
+        sample.transmute_copy()
     } else {
         panic!("Assertion failed: tried to treat `z_owned_reply_t` as Ok despite that not being the case")
     }
@@ -104,21 +86,10 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
 /// A zenoh value.
 ///
 ///
-pub use crate::z_owned_value_t;
-impl_guarded_transmute!(Value, z_owned_value_t);
-pub use crate::z_value_t;
-impl_guarded_transmute!(&'static Value, z_value_t);
-
-const Z_VALUE_NULL: Value = Value::empty();
-
-impl From<Option<&Value>> for z_value_t {
-    fn from(val: Option<&Value>) -> Self {
-        match val {
-            Some(val) => val.transmute(),
-            None => (&Z_VALUE_NULL).transmute(),
-        }
-    }
-}
+pub use crate::opaque_types::z_owned_value_t;
+decl_transmute_owned!(default_inplace_init Value, z_owned_value_t);
+pub use crate::opaque_types::z_value_t;
+decl_transmute_copy!(&'static Value, z_value_t);
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
@@ -126,8 +97,9 @@ impl From<Option<&Value>> for z_value_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
-    if let Some(inner) = reply.as_ref().and_then(|s| s.sample.as_ref().err()) {
-        inner.into()
+    let reply = reply.transmute_ref();
+    if let Some(value) = reply.as_ref().and_then(|s| s.sample.as_ref().err()) {
+        value.into()
     } else {
         panic!("Assertion failed: tried to treat `z_owned_reply_t` as Err despite that not being the case")
     }
@@ -142,8 +114,8 @@ pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
 ///     - you are now responsible for dropping your copy of the reply.
 #[no_mangle]
 #[allow(improper_ctypes_definitions)]
-pub extern "C" fn z_reply_null() -> z_owned_reply_t {
-    None.into()
+pub extern "C" fn z_reply_null(reply: *mut MaybeUninit<z_owned_reply_t>) {
+    Inplace::empty(z_owned_reply_t::transmute_uninit_ptr(reply));
 }
 
 /// Options passed to the :c:func:`z_get` function.

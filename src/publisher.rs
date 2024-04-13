@@ -17,6 +17,7 @@ use crate::zcu_owned_closure_matching_status_t;
 use std::ops::{Deref, DerefMut};
 use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
+use zenoh::publication::CongestionControl;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
@@ -26,8 +27,6 @@ use zenoh::{
     publication::Publisher,
     sample::AttachmentBuilder,
 };
-use zenoh_protocol::core::CongestionControl;
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::attachment::{
     insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,

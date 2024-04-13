@@ -102,7 +102,7 @@ macro_rules! validate_equivalence {
 #[macro_export]
 macro_rules! decl_transmute_owned {
     (default_inplace_init $zenoh_type:ty, $c_type:ty) => {
-        impl InplaceDefault for $zenoh_type {}
+        impl $crate::transmute::InplaceDefault for $zenoh_type {}
         decl_transmute_owned!(custom_inplace_init $zenoh_type, $c_type);
 
     };

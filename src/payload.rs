@@ -1,4 +1,5 @@
 use core::slice;
+use std::mem::MaybeUninit;
 use std::slice::from_raw_parts_mut;
 use std::{any::Any, ops::Deref, ptr::NonNull};
 
@@ -12,7 +13,7 @@ use crate::{
     z_str_null, GuardedTransmute,
 };
 
-pub use crate::z_owned_buffer_t;
+pub use crate::opaque_types::z_owned_buffer_t;
 impl_guarded_transmute!(Option<ZBuf>, z_owned_buffer_t);
 
 impl Default for z_owned_buffer_t {
@@ -247,9 +248,8 @@ pub extern "C" fn zc_payload_len(payload: zc_payload_t) -> usize {
     z_buffer_len(payload)
 }
 
-pub use crate::zc_payload_reader;
-impl_guarded_transmute!(ZBufReader<'static>, zc_payload_reader);
-impl_guarded_transmute!(noderefs zc_payload_reader, ZBufReader<'static>);
+pub use crate::opaque_types::zc_payload_reader;
+decl_transmute_copy!(ZBufReader<'static>, zc_payload_reader);
 
 /// Creates a reader for the specified `payload`.
 ///
@@ -258,7 +258,7 @@ impl_guarded_transmute!(noderefs zc_payload_reader, ZBufReader<'static>);
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_payload_reader_init(
     payload: zc_payload_t,
-    reader: *mut zc_payload_reader,
+    reader: *mut MaybeUninit<zc_payload_reader>,
 ) -> i8 {
     if payload._inner.is_none() {
         return -1;

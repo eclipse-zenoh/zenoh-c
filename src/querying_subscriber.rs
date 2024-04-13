@@ -12,70 +12,55 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use std::mem::MaybeUninit;
+
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::KeyExpr;
 use zenoh::prelude::SessionDeclarations;
 use zenoh_ext::*;
-use zenoh_util::core::zresult::ErrNo;
 
+use crate::z_closure_owned_query_call;
+use crate::ze_owned_publication_cache_t;
 use crate::{
-    impl_guarded_transmute, z_closure_sample_call, z_get_options_t, z_keyexpr_t,
-    z_owned_closure_sample_t, z_query_consolidation_none, z_query_consolidation_t,
-    z_query_target_default, z_query_target_t, z_sample_t, z_session_t,
-    zcu_locality_default, zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
-    LOG_INVALID_SESSION,
+    impl_guarded_transmute, opaque_types::z_sample_t, z_closure_sample_call, z_get_options_t,
+    z_keyexpr_t, z_owned_closure_sample_t, z_query_consolidation_none, z_query_consolidation_t,
+    z_query_target_default, z_query_target_t, z_session_t, zcu_locality_default, zcu_locality_t,
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t, LOG_INVALID_SESSION,
 };
 
 pub struct FetchingSubscriberWrapper {
     fetching_subscriber: zenoh_ext::FetchingSubscriber<'static, ()>,
     session: z_session_t,
 }
-type FetchingSubscriber = Option<Box<FetchingSubscriberWrapper>>;
 //type FetchingSubscriber = Option<Box<zenoh_ext::FetchingSubscriber<'static, ()>>>;
 
 /// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
 ///
-/// Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+/// Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
 ///
 /// Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct ze_owned_querying_subscriber_t([usize; 1]);
+use crate::opaque_types::ze_owned_querying_subscriber_t;
+decl_transmute_owned!(default_inplace_init Option<Box<FetchingSubscriberWrapper>>, z_owned_querying_subscriber_t);
 
-impl_guarded_transmute!(FetchingSubscriber, ze_owned_querying_subscriber_t);
-
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct ze_querying_subscriber_t<'a>(&'a ze_owned_querying_subscriber_t);
-
-impl<'a> AsRef<FetchingSubscriber> for ze_querying_subscriber_t<'a> {
-    fn as_ref(&self) -> &FetchingSubscriber {
-        self.0
-    }
-}
-
-impl ze_owned_querying_subscriber_t {
-    pub fn new(sub: zenoh_ext::FetchingSubscriber<'static, ()>, session: z_session_t) -> Self {
-        Some(Box::new(FetchingSubscriberWrapper {
-            fetching_subscriber: sub,
-            session,
-        }))
-        .into()
-    }
-    pub fn null() -> Self {
-        None.into()
-    }
-}
+use crate::opaque_types::ze_querying_subscriber_t;
+decl_transmute_copy!(
+    &'static Option<Box<FetchingSubscriberWrapper>>,
+    z_querying_subscriber_t
+);
 
 /// Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_querying_subscriber_null() -> ze_owned_querying_subscriber_t {
-    ze_owned_querying_subscriber_t::null()
+pub extern "C" fn ze_querying_subscriber_null(
+    this: *mut MaybeUninit<ze_owned_querying_subscriber_t>,
+) {
+    let this = ze_owned_querying_subscriber_t::transmute_uninit_ptr(this);
+    Inplace::empty(this);
 }
 
 /// Represents the set of options that can be applied to a querying subscriber,
@@ -251,6 +236,8 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_subscriber_t) -> i8 {
+    let sub = sub.transmute_mut();
+
     if let Some(s) = sub.take() {
         if let Err(e) = s.fetching_subscriber.close().res_sync() {
             log::warn!("{}", e);
