@@ -14,139 +14,56 @@
 
 #![allow(non_camel_case_types)]
 
-mod collections;
-use std::cmp::min;
-use std::slice;
+// mod collections;
+// use std::cmp::min;
+// use std::slice;
 
 #[macro_use]
 mod transmute;
 
-pub use crate::collections::*;
-mod config;
-pub use crate::config::*;
-mod commons;
-pub use crate::commons::*;
-mod payload;
-pub use crate::payload::*;
-mod keyexpr;
-pub use crate::keyexpr::*;
-mod info;
-pub use crate::info::*;
-mod get;
-pub use crate::get::*;
-mod queryable;
-pub use crate::queryable::*;
-mod put;
-pub use crate::put::*;
-mod scouting;
-pub use crate::scouting::*;
-mod session;
-pub use crate::session::*;
-mod subscriber;
-pub use crate::subscriber::*;
-// mod pull_subscriber;
-// pub use crate::pull_subscriber::*;
-mod publisher;
-pub use crate::publisher::*;
-mod closures;
-pub use closures::*;
-mod liveliness;
-use libc::c_void;
-pub use liveliness::*;
-mod publication_cache;
-pub use publication_cache::*;
-// Disabled due to dependency on z_session_t. To be reworked as for autogeneration this dependency is cicrular.
-// mod querying_subscriber;
-// pub use querying_subscriber::*;
-pub mod attachment;
-pub use platform::*;
-pub mod opaque_types;
-pub mod platform;
-#[cfg(feature = "shared-memory")]
-mod shm;
-
-trait GuardedTransmute<D> {
-    fn transmute(self) -> D;
-}
-
-/// For internal use only.
-///
-/// This macro is used to establish the equivalence between a Rust type (first parameter) and a C layout (second parameter).
-///
-/// It automatically implements `From`, `Deref` and `DerefMut` to make writing code around these equivalent types.
-///
-/// Because carrying around the proper semantics of lifetimes is hard, this macro fails to produce working code when lifetimes are
-/// present in either parameter. You may then call it with the `noderefs` prefix to avoid the offending implementations being defined.
-#[macro_export]
-macro_rules! impl_guarded_transmute {
-    ($src_type:ty, $dst_type:ty) => {
-        impl_guarded_transmute!(noderefs $src_type, $dst_type);
-        impl From<$src_type> for $dst_type {
-            fn from(value: $src_type) -> $dst_type {
-                unsafe { core::mem::transmute(value) }
-            }
-        }
-        impl core::ops::Deref for $dst_type {
-            type Target = $src_type;
-            fn deref(&self) -> &$src_type {
-                unsafe { core::mem::transmute(self) }
-            }
-        }
-        impl core::ops::DerefMut for $dst_type {
-            fn deref_mut(&mut self) -> &mut $src_type {
-                unsafe { core::mem::transmute(self) }
-            }
-        }
-
-    };
-    (noderefs $src_type:ty, $dst_type:ty) => {
-        const _: () = {
-            let src = std::mem::align_of::<$src_type>();
-            let dst = std::mem::align_of::<$dst_type>();
-            if src != dst {
-                let mut msg: [u8; 20] = *b"src:     , dst:     ";
-                let mut i = 0;
-                while i < 4 {
-                    msg[i as usize + 5] = b'0' + ((src / 10u32.pow(3 - i) as usize) % 10) as u8;
-                    msg[i as usize + 16] = b'0' + ((dst / 10u32.pow(3 - i) as usize) % 10) as u8;
-                    i += 1;
-                }
-                panic!("{}", unsafe {
-                    std::str::from_utf8_unchecked(msg.as_slice())
-                });
-            }
-        };
-        impl  $crate::GuardedTransmute<$dst_type> for $src_type {
-            fn transmute(self) -> $dst_type {
-                unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
-            }
-        }
-    };
-    ($src_type:ty, $dst_type:ty, $($gen: tt)*) => {
-        impl<$($gen)*>  $crate::GuardedTransmute<$dst_type> for $src_type {
-            fn transmute(self) -> $dst_type {
-                unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
-            }
-        }
-        impl<$($gen)*> From<$src_type> for $dst_type {
-            fn from(value: $src_type) -> $dst_type {
-                unsafe { core::mem::transmute(value) }
-            }
-        }
-        impl<$($gen)*> core::ops::Deref for $dst_type {
-            type Target = $src_type;
-            fn deref(&self) -> &$src_type {
-                unsafe { core::mem::transmute(self) }
-            }
-        }
-        impl<$($gen)*> core::ops::DerefMut for $dst_type {
-            fn deref_mut(&mut self) -> &mut $src_type {
-                unsafe { core::mem::transmute(self) }
-            }
-        }
-
-    };
-}
+// pub use crate::collections::*;
+// mod config;
+// pub use crate::config::*;
+// mod commons;
+// pub use crate::commons::*;
+// mod payload;
+// pub use crate::payload::*;
+// mod keyexpr;
+// pub use crate::keyexpr::*;
+// mod info;
+// pub use crate::info::*;
+// mod get;
+// pub use crate::get::*;
+// mod queryable;
+// pub use crate::queryable::*;
+// mod put;
+// pub use crate::put::*;
+// mod scouting;
+// pub use crate::scouting::*;
+// mod session;
+// pub use crate::session::*;
+// mod subscriber;
+// pub use crate::subscriber::*;
+// // mod pull_subscriber;
+// // pub use crate::pull_subscriber::*;
+// mod publisher;
+// pub use crate::publisher::*;
+// mod closures;
+// pub use closures::*;
+// mod liveliness;
+// use libc::c_void;
+// pub use liveliness::*;
+// mod publication_cache;
+// pub use publication_cache::*;
+// // Disabled due to dependency on z_session_t. To be reworked as for autogeneration this dependency is cicrular.
+// // mod querying_subscriber;
+// // pub use querying_subscriber::*;
+// pub mod attachment;
+// pub use platform::*;
+// pub mod opaque_types;
+// pub mod platform;
+// #[cfg(feature = "shared-memory")]
+// mod shm;
 
 pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";
 
