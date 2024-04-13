@@ -39,8 +39,8 @@ fn main() {
 
     configure();
     let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
-    split_bindings(&split_guide).unwrap();
-    text_replace(split_guide.rules.iter().map(|(name, _)| name.as_str()));
+    // split_bindings(&split_guide).unwrap();
+    // text_replace(split_guide.rules.iter().map(|(name, _)| name.as_str()));
 
     fs_extra::copy_items(
         &["include"],

@@ -14,9 +14,10 @@
 
 #![allow(non_camel_case_types)]
 
-// mod collections;
-// use std::cmp::min;
-// use std::slice;
+mod collections;
+use libc::c_void;
+use std::cmp::min;
+use std::slice;
 
 #[macro_use]
 mod transmute;
@@ -51,7 +52,6 @@ mod transmute;
 // mod closures;
 // pub use closures::*;
 // mod liveliness;
-// use libc::c_void;
 // pub use liveliness::*;
 // mod publication_cache;
 // pub use publication_cache::*;
