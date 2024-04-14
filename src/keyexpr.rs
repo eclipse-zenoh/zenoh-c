@@ -13,17 +13,20 @@
 //
 
 use std::convert::TryFrom;
+use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::ops::DerefMut;
 
-use crate::impl_guarded_transmute;
-use crate::session::*;
+use crate::transmute::unwrap_ref_unchecked;
+use crate::transmute::Inplace;
+use crate::transmute::TransmuteCopy;
+use crate::transmute::TransmuteRef;
 use crate::z_bytes_t;
 use crate::z_owned_str_t;
 use crate::z_str_null;
-use crate::GuardedTransmute;
 use crate::LOG_INVALID_SESSION;
 use libc::c_char;
+use zenoh::core::ErrNo;
 use zenoh::core::SyncResolve;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
@@ -53,52 +56,45 @@ use zenoh::prelude::KeyExpr;
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_keyexpr_t([u64; 4]);
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_owned_keyexpr_t([u32; 5]);
-
-impl_guarded_transmute!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
-
-impl From<KeyExpr<'static>> for z_owned_keyexpr_t {
-    fn from(val: KeyExpr<'static>) -> Self {
-        Some(val).into()
-    }
-}
-impl z_owned_keyexpr_t {
-    pub fn null() -> Self {
-        None::<KeyExpr>.into()
-    }
-}
+pub use crate::opaque_types::z_owned_keyexpr_t;
+decl_transmute_owned!(default_inplace_init Option<KeyExpr<'static>>, z_owned_keyexpr_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_keyexpr_null() -> z_owned_keyexpr_t {
-    z_owned_keyexpr_t::null()
+pub extern "C" fn z_keyexpr_null(this: *mut MaybeUninit<z_owned_keyexpr_t>) {
+    Inplace::empty(z_owned_keyexpr_t::transmute_uninit_ptr(this));
 }
 
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t {
+pub unsafe extern "C" fn z_keyexpr_new(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    name: *const c_char,
+) -> i8 {
+    let this = z_owned_keyexpr_t::transmute_uninit_ptr(this);
     if name.is_null() {
-        return z_owned_keyexpr_t::null();
+        Inplace::empty(this);
+        return -1;
     }
     let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
     match std::str::from_utf8(name) {
         Ok(name) => match KeyExpr::try_from(name) {
-            Ok(v) => v.into_owned().into(),
+            Ok(v) => {
+                Inplace::init(this, Some(v));
+                0
+            }
             Err(e) => {
                 log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
-                z_owned_keyexpr_t::null()
+                Inplace::empty(this);
+                -1
             }
         },
         Err(e) => {
             log::error!("{}", e);
-            z_owned_keyexpr_t::null()
+            Inplace::empty(this);
+            -1
         }
     }
 }
@@ -106,25 +102,35 @@ pub unsafe extern "C" fn z_keyexpr_new(name: *const c_char) -> z_owned_keyexpr_t
 /// Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_new_autocanonize(name: *const c_char) -> z_owned_keyexpr_t {
+pub unsafe extern "C" fn z_keyexpr_new_autocanonize(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    name: *const c_char,
+) -> i8 {
+    let this = z_owned_keyexpr_t::transmute_uninit_ptr(this);
     if name.is_null() {
-        return z_owned_keyexpr_t::null();
+        Inplace::empty(this);
+        return -1;
     }
     let name = std::slice::from_raw_parts(name as _, libc::strlen(name));
     match std::str::from_utf8(name) {
         Ok(name) => {
             let name_owned = name.to_owned();
             match KeyExpr::autocanonize(name_owned) {
-                Ok(v) => v.into_owned().into(),
+                Ok(v) => {
+                    Inplace::init(this, Some(v));
+                    0
+                }
                 Err(e) => {
                     log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
-                    z_owned_keyexpr_t::null()
+                    Inplace::empty(this);
+                    -1
                 }
             }
         }
         Err(e) => {
             log::error!("{}", e);
-            z_owned_keyexpr_t::null()
+            Inplace::empty(this);
+            -1
         }
     }
 }
@@ -132,21 +138,21 @@ pub unsafe extern "C" fn z_keyexpr_new_autocanonize(name: *const c_char) -> z_ow
 /// Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_loan(keyexpr: &z_owned_keyexpr_t) -> z_keyexpr_t {
-    keyexpr.as_ref().map(|k| k.borrowing_clone()).into()
+    unwrap_ref_unchecked(keyexpr.transmute_ref()).transmute_copy()
 }
 
 /// Frees `keyexpr` and invalidates it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_keyexpr_drop(keyexpr: &mut z_owned_keyexpr_t) {
-    std::mem::drop(keyexpr.take())
+    Inplace::drop(keyexpr.transmute_mut());
 }
 
 /// Returns ``true`` if `keyexpr` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
-    keyexpr.deref().is_some()
+    keyexpr.transmute_ref().is_some()
 }
 
 /// A loaned key expression.
@@ -159,49 +165,9 @@ pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
 ///
 /// Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
 /// both for local processing and network-wise.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_keyexpr_t([u64; 4]);
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_keyexpr_t([u32; 5]);
+pub use crate::opaque_types::z_keyexpr_t;
+decl_transmute_copy!(&'static KeyExpr<'static>, z_keyexpr_t);
 
-impl_guarded_transmute!(noderefs Option<KeyExpr<'_>>, z_keyexpr_t);
-impl_guarded_transmute!(noderefs z_keyexpr_t, z_owned_keyexpr_t);
-
-impl<'a> From<KeyExpr<'a>> for z_keyexpr_t {
-    fn from(val: KeyExpr<'a>) -> Self {
-        Some(val).into()
-    }
-}
-
-impl From<z_keyexpr_t> for z_owned_keyexpr_t {
-    fn from(oke: z_keyexpr_t) -> Self {
-        oke.transmute()
-    }
-}
-
-impl<'a> From<Option<KeyExpr<'a>>> for z_keyexpr_t {
-    fn from(val: Option<KeyExpr<'a>>) -> Self {
-        val.transmute()
-    }
-}
-impl Deref for z_keyexpr_t {
-    type Target = Option<KeyExpr<'static>>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl DerefMut for z_keyexpr_t {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl z_keyexpr_t {
-    pub fn null() -> Self {
-        None.into()
-    }
-}
 #[derive(Debug, Clone, Copy)]
 pub struct UninitializedKeyExprError;
 impl std::fmt::Display for UninitializedKeyExprError {
@@ -210,24 +176,6 @@ impl std::fmt::Display for UninitializedKeyExprError {
     }
 }
 impl std::error::Error for UninitializedKeyExprError {}
-impl<'a> TryFrom<z_keyexpr_t> for KeyExpr<'a> {
-    type Error = UninitializedKeyExprError;
-    fn try_from(value: z_keyexpr_t) -> Result<Self, Self::Error> {
-        match value.as_ref() {
-            Some(ke) => {
-                Ok(unsafe { std::mem::transmute::<KeyExpr, KeyExpr<'a>>(ke.borrowing_clone()) })
-            }
-            None => Err(UninitializedKeyExprError),
-        }
-    }
-}
-
-/// Returns ``true`` if `keyexpr` is initialized.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_keyexpr_is_initialized(keyexpr: &z_keyexpr_t) -> bool {
-    keyexpr.deref().is_some()
-}
 
 /// Returns ``0`` if the passed string is a valid (and canon) key expression.
 /// Otherwise returns error value
@@ -448,27 +396,29 @@ impl<'a> From<&'a KeyExpr<'a>> for z_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_declare_keyexpr(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
     session: z_session_t,
     keyexpr: z_keyexpr_t,
-) -> z_owned_keyexpr_t {
-    let key_expr = match keyexpr.as_ref() {
-        Some(ke) => ke,
-        None => {
-            log::warn!("{}", UninitializedKeyExprError);
-            return z_owned_keyexpr_t::null();
-        }
-    };
+) -> i8 {
+    let this = z_owned_keyexpr_t::transmute_uninit_ptr(this);
+    let key_expr = keyexpr.transmute_copy();
+    let session = session.transmute_ref();
     match session.upgrade() {
         Some(s) => match s.declare_keyexpr(key_expr).res_sync() {
-            Ok(id) => id.into_owned().into(),
+            Ok(id) => {
+                id.into_owned().into();
+                // TODO: store id to keyexpr
+            }
             Err(e) => {
                 log::debug!("{}", e);
-                z_owned_keyexpr_t::null()
+                Inplace::empty(this);
+                i8::MIN
             }
         },
         None => {
             log::debug!("{}", LOG_INVALID_SESSION);
-            z_owned_keyexpr_t::null()
+            Inplace::empty(this);
+            i8::MIN
         }
     }
 }

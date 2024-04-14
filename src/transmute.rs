@@ -31,7 +31,7 @@ pub(crate) trait TransmuteRef<T: Sized>: Sized {
     }
 }
 
-pub(crate) trait TransmuteCopy<T: Copy>: TransmuteRef<T> {
+pub(crate) trait TransmuteCopy<T: Copy> {
     fn transmute_copy(self) -> T;
 }
 
@@ -101,7 +101,7 @@ macro_rules! validate_equivalence {
 
 #[macro_export]
 macro_rules! decl_transmute_owned {
-    (default_inplace_init $zenoh_type:ty, $c_type:ty) => {
+    ($zenoh_type:ty, $c_type:ty) => {
         impl $crate::transmute::InplaceDefault for $zenoh_type {}
         decl_transmute_owned!(custom_inplace_init $zenoh_type, $c_type);
 
@@ -117,8 +117,6 @@ macro_rules! decl_transmute_owned {
 macro_rules! decl_transmute_copy {
     ($zenoh_type:ty, $c_type:ty) => {
         validate_equivalence!($zenoh_type, $c_type);
-        impl_transmute_ref!($zenoh_type, $c_type);
-        impl_transmute_ref!($c_type, $zenoh_type);
         impl_transmute_copy!($zenoh_type, $c_type);
         impl_transmute_copy!($c_type, $zenoh_type);
     };

@@ -12,7 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef};
 use crate::{config::*, impl_guarded_transmute, zc_init_logger};
+use std::mem::MaybeUninit;
+use std::ops::Deref;
 use std::sync::{Arc, Weak};
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::Session;
@@ -20,51 +23,20 @@ use zenoh_util::core::zresult::ErrNo;
 
 /// An owned zenoh session.
 ///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
 ///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_session_t(usize);
-
-impl_guarded_transmute!(Option<Arc<Session>>, z_owned_session_t);
-
-impl AsRef<Option<Weak<Session>>> for z_session_t {
-    fn as_ref(&self) -> &Option<Weak<Session>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl z_session_t {
-    pub fn upgrade(&self) -> Option<Arc<Session>> {
-        self.as_ref().as_ref().and_then(Weak::upgrade)
-    }
-}
-
-impl From<Option<Weak<Session>>> for z_session_t {
-    fn from(val: Option<Weak<Session>>) -> Self {
-        unsafe { std::mem::transmute(val) }
-    }
-}
-
-impl z_owned_session_t {
-    pub fn new(session: Arc<Session>) -> Self {
-        Some(session).into()
-    }
-    pub fn null() -> Self {
-        None::<Arc<Session>>.into()
-    }
-}
+use crate::opaque_types::z_owned_session_t;
+decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
 
 /// A loaned zenoh session.
-#[allow(non_camel_case_types)]
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub struct z_session_t(usize);
+use crate::opaque_types::z_session_t;
+decl_transmute_copy!(&'static Session, z_session_t);
 
 /// Returns a :c:type:`z_session_t` loaned from `s`.
 ///
@@ -76,22 +48,17 @@ pub struct z_session_t(usize);
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
 pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
-    match s.as_ref() {
-        Some(s) => {
-            let mut weak = Arc::downgrade(s);
-            unsafe { std::ptr::drop_in_place(&mut weak) };
-            Some(weak)
-        }
-        None => None,
-    }
-    .into()
+    let s = s.transmute_ref();
+    let s = unwrap_ref_unchecked(s);
+    let s = s.as_ref();
+    s.transmute_copy()
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_session_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_session_null() -> z_owned_session_t {
-    z_owned_session_t::null()
+pub extern "C" fn z_session_null(s: *mut MaybeUninit<z_owned_session_t>) {
+    Inplace::empty(z_owned_session_t::transmute_uninit_ptr(s));
 }
 
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.

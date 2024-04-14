@@ -21,15 +21,16 @@ use std::slice;
 
 #[macro_use]
 mod transmute;
+mod opaque_types;
 
-// pub use crate::collections::*;
-// mod config;
+pub use crate::collections::*;
+mod config;
 // pub use crate::config::*;
 // mod commons;
 // pub use crate::commons::*;
 // mod payload;
 // pub use crate::payload::*;
-// mod keyexpr;
+mod keyexpr;
 // pub use crate::keyexpr::*;
 // mod info;
 // pub use crate::info::*;
@@ -41,7 +42,7 @@ mod transmute;
 // pub use crate::put::*;
 // mod scouting;
 // pub use crate::scouting::*;
-// mod session;
+mod session;
 // pub use crate::session::*;
 // mod subscriber;
 // pub use crate::subscriber::*;
@@ -60,7 +61,6 @@ mod transmute;
 // // pub use querying_subscriber::*;
 // pub mod attachment;
 // pub use platform::*;
-// pub mod opaque_types;
 // pub mod platform;
 // #[cfg(feature = "shared-memory")]
 // mod shm;
