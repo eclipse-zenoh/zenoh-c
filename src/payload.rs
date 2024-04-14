@@ -1,36 +1,24 @@
+use crate::transmute::{
+    unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef, TransmuteUninitPtr,
+};
+use crate::{z_bytes_empty, z_bytes_t, z_owned_bytes_t, z_owned_str_t};
 use core::slice;
+use std::any::Any;
 use std::mem::MaybeUninit;
 use std::slice::from_raw_parts_mut;
-use std::{any::Any, ops::Deref, ptr::NonNull};
-
 use zenoh::buffers::HasReader;
 use zenoh::buffers::Reader;
 use zenoh::buffers::ZBufReader;
 use zenoh::buffers::{SplitBuffer, ZBuf, ZSliceBuffer};
 
-use crate::{
-    impl_guarded_transmute, z_bytes_empty, z_bytes_null, z_bytes_t, z_owned_bytes_t, z_owned_str_t,
-    z_str_null, GuardedTransmute,
-};
-
 pub use crate::opaque_types::z_owned_buffer_t;
-impl_guarded_transmute!(Option<ZBuf>, z_owned_buffer_t);
-
-impl Default for z_owned_buffer_t {
-    fn default() -> Self {
-        z_buffer_null()
-    }
-}
-impl From<ZBuf> for z_owned_buffer_t {
-    fn from(value: ZBuf) -> Self {
-        Some(value).transmute()
-    }
-}
+decl_transmute_owned!(Option<ZBuf>, z_owned_buffer_t);
 
 /// The gravestone value for `z_owned_buffer_t`.
 #[no_mangle]
-extern "C" fn z_buffer_null() -> z_owned_buffer_t {
-    None::<ZBuf>.transmute()
+extern "C" fn z_buffer_null(this: *mut MaybeUninit<z_owned_buffer_t>) {
+    let this = z_owned_buffer_t::transmute_uninit_ptr(this);
+    Inplace::empty(this);
 }
 
 /// Decrements the buffer's reference counter, destroying it if applicable.
@@ -38,52 +26,37 @@ extern "C" fn z_buffer_null() -> z_owned_buffer_t {
 /// `buffer` will be reset to `z_buffer_null`, preventing UB on double-frees.
 #[no_mangle]
 extern "C" fn z_buffer_drop(buffer: &mut z_owned_buffer_t) {
-    core::mem::drop(buffer.take())
+    let buffer = buffer.transmute_mut();
+    Inplace::drop(buffer);
 }
 
 /// Returns `true` if the buffer is in a valid state.
 #[no_mangle]
 extern "C" fn z_buffer_check(buffer: &z_owned_buffer_t) -> bool {
-    buffer.is_some()
+    buffer.transmute_ref().is_some()
 }
 
 /// Loans the buffer, allowing you to call functions that only need a loan of it.
 #[no_mangle]
 extern "C" fn z_buffer_loan(buffer: &z_owned_buffer_t) -> z_buffer_t {
-    buffer.as_ref().into()
+    let buffer = buffer.transmute_ref();
+    let buffer = unwrap_ref_unchecked(buffer);
+    buffer.transmute_copy()
 }
 
 /// A loan of a `z_owned_buffer_t`.
 ///
 /// As it is a split buffer, it may contain more than one slice. It's number of slices is returned by `z_buffer_slice_count`.
-#[repr(C)]
-#[derive(Clone, Copy, Default)]
-pub struct z_buffer_t {
-    _inner: Option<NonNull<z_owned_buffer_t>>,
-}
-
-impl_guarded_transmute!(noderefs Option<&ZBuf>, z_buffer_t);
-impl_guarded_transmute!(noderefs z_buffer_t, Option<&'static ZBuf>);
-
-impl From<Option<&ZBuf>> for z_buffer_t {
-    fn from(value: Option<&ZBuf>) -> Self {
-        value.transmute()
-    }
-}
-
-impl From<z_buffer_t> for Option<&'static ZBuf> {
-    fn from(value: z_buffer_t) -> Self {
-        value.transmute()
-    }
-}
+pub use crate::opaque_types::z_buffer_t;
+decl_transmute_copy!(&'static ZBuf, z_buffer_t);
 
 /// Increments the buffer's reference count, returning an owned version of the buffer.
 #[no_mangle]
-extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
-    match buffer._inner {
-        Some(b) => unsafe { b.as_ref().deref().clone().transmute() },
-        None => ZBuf::empty().into(),
-    }
+extern "C" fn z_buffer_clone(dst: *mut MaybeUninit<z_owned_buffer_t>, buffer: &z_owned_buffer_t) {
+    let dst = dst.transmute_uninit_ptr();
+    let buffer = buffer.transmute_ref();
+    let buffer = buffer.as_ref().map(Clone::clone);
+    Inplace::init(dst, buffer);
 }
 
 /// Returns the number of slices in the buffer.
@@ -91,19 +64,13 @@ extern "C" fn z_buffer_clone(buffer: z_buffer_t) -> z_owned_buffer_t {
 /// If the return value is 0 or 1, then the buffer's data is contiguous in memory.
 #[no_mangle]
 extern "C" fn z_buffer_slice_count(buffer: z_buffer_t) -> usize {
-    match buffer.into() {
-        None => 0,
-        Some(buf) => ZBuf::slices(buf).len(),
-    }
+    ZBuf::slices(buffer.transmute_copy()).len()
 }
 
 /// Returns total number bytes in the buffer.
 #[no_mangle]
 extern "C" fn z_buffer_len(buffer: z_buffer_t) -> usize {
-    match buffer.into() {
-        None => 0,
-        Some(buf) => ZBuf::slices(buf).fold(0, |acc, s| acc + s.len()),
-    }
+    ZBuf::slices(buffer.transmute_copy()).fold(0, |acc, s| acc + s.len())
 }
 
 /// Returns the `index`th slice of the buffer, aliasing it.
@@ -111,12 +78,10 @@ extern "C" fn z_buffer_len(buffer: z_buffer_t) -> usize {
 /// Out of bounds accesses will return `z_bytes_empty`.
 #[no_mangle]
 extern "C" fn z_buffer_slice_at(buffer: z_buffer_t, index: usize) -> z_bytes_t {
-    match buffer.into() {
-        None => z_bytes_empty(),
-        Some(buf) => ZBuf::slices(buf)
-            .nth(index)
-            .map_or(z_bytes_empty(), |slice| slice.into()),
-    }
+    let buf = buffer.transmute_copy();
+    ZBuf::slices(buf)
+        .nth(index)
+        .map_or(z_bytes_empty(), |slice| slice.into())
 }
 
 /// An owned payload, backed by a reference counted owner.
@@ -127,8 +92,11 @@ pub type zc_owned_payload_t = z_owned_buffer_t;
 
 /// Clones the `payload` by incrementing its reference counter.
 #[no_mangle]
-pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
-    z_buffer_clone(z_buffer_loan(payload))
+pub extern "C" fn zc_payload_rcinc(
+    dst: *mut MaybeUninit<zc_owned_payload_t>,
+    payload: &zc_owned_payload_t,
+) {
+    z_buffer_clone(dst, payload)
 }
 /// Returns `false` if `payload` is the gravestone value.
 #[no_mangle]
@@ -142,8 +110,8 @@ pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
 }
 /// Constructs `zc_owned_payload_t`'s gravestone value.
 #[no_mangle]
-pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
-    z_buffer_null()
+pub extern "C" fn zc_payload_null(this: *mut MaybeUninit<zc_owned_payload_t>) {
+    z_buffer_null(this);
 }
 
 /// Returns a :c:type:`zc_payload_t` loaned from `payload`.
@@ -157,8 +125,11 @@ pub type zc_payload_t = z_buffer_t;
 
 /// Increments internal payload reference count, returning owned payload.
 #[no_mangle]
-pub extern "C" fn zc_payload_clone(payload: zc_payload_t) -> zc_owned_payload_t {
-    z_buffer_clone(payload)
+pub extern "C" fn zc_payload_clone(
+    dst: *mut MaybeUninit<zc_owned_payload_t>,
+    payload: &zc_owned_payload_t,
+) {
+    z_buffer_clone(dst, payload)
 }
 
 /// Decodes payload into null-terminated string
@@ -168,14 +139,8 @@ pub unsafe extern "C" fn zc_payload_decode_into_string(
     payload: zc_payload_t,
     cstr: &mut z_owned_str_t,
 ) -> i8 {
-    let payload: Option<&ZBuf> = payload.into();
-    if payload.is_none() {
-        *cstr = z_str_null();
-        return 0;
-    }
-    *cstr = z_owned_str_t::preallocate(zc_payload_len(payload.into()));
-    let payload = payload.unwrap();
-
+    *cstr = z_owned_str_t::preallocate(zc_payload_len(payload));
+    let payload = payload.transmute_copy();
     let mut pos = 0;
     for s in payload.slices() {
         cstr.insert_unchecked(pos, s);
@@ -191,14 +156,8 @@ pub unsafe extern "C" fn zc_payload_decode_into_bytes(
     payload: zc_payload_t,
     b: &mut z_owned_bytes_t,
 ) -> i8 {
-    let payload: Option<&ZBuf> = payload.into();
-    if payload.is_none() {
-        *b = z_bytes_null();
-        return 0;
-    }
-    *b = z_owned_bytes_t::preallocate(zc_payload_len(payload.into()));
-    let payload = payload.unwrap();
-
+    *b = z_owned_bytes_t::preallocate(zc_payload_len(payload));
+    let payload = payload.transmute_copy();
     let mut pos = 0;
     for s in payload.slices() {
         b.insert_unchecked(pos, s);
@@ -225,21 +184,27 @@ impl ZSliceBuffer for z_bytes_t {
 /// Encodes byte sequence by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_encode_from_bytes(bytes: z_bytes_t) -> zc_owned_payload_t {
-    ZBuf::from(bytes).into()
+pub unsafe extern "C" fn zc_payload_encode_from_bytes(
+    dst: *mut MaybeUninit<zc_owned_payload_t>,
+    bytes: z_bytes_t,
+) {
+    let dst = dst.transmute_uninit_ptr();
+    let buf = ZBuf::from(bytes);
+    Inplace::init(dst, Some(buf));
 }
 
 /// Encodes a null-terminated string by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_payload_encode_from_string(
+    dst: *mut MaybeUninit<zc_owned_payload_t>,
     cstr: *const libc::c_char,
-) -> zc_owned_payload_t {
+) {
     let bytes = z_bytes_t {
         start: cstr as *const u8,
         len: libc::strlen(cstr),
     };
-    zc_payload_encode_from_bytes(bytes)
+    zc_payload_encode_from_bytes(dst, bytes);
 }
 
 /// Returns total number bytes in the payload.
@@ -248,8 +213,11 @@ pub extern "C" fn zc_payload_len(payload: zc_payload_t) -> usize {
     z_buffer_len(payload)
 }
 
+pub use crate::opaque_types::zc_owned_payload_reader;
+decl_transmute_owned!(Option<ZBufReader<'static>>, zc_owned_payload_reader);
+
 pub use crate::opaque_types::zc_payload_reader;
-decl_transmute_copy!(ZBufReader<'static>, zc_payload_reader);
+decl_transmute_copy!(&'static ZBufReader<'static>, zc_payload_reader);
 
 /// Creates a reader for the specified `payload`.
 ///
@@ -257,14 +225,13 @@ decl_transmute_copy!(ZBufReader<'static>, zc_payload_reader);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_payload_reader_init(
+    this: *mut MaybeUninit<zc_owned_payload_reader>,
     payload: zc_payload_t,
-    reader: *mut MaybeUninit<zc_payload_reader>,
-) -> i8 {
-    if payload._inner.is_none() {
-        return -1;
-    }
-    *reader = payload.transmute().unwrap().reader().transmute();
-    0
+) {
+    let this = this.transmute_uninit_ptr();
+    let payload = payload.transmute_copy();
+    let reader = payload.reader();
+    Inplace::init(this, Some(reader));
 }
 
 /// Reads data into specified destination.
@@ -274,23 +241,20 @@ pub unsafe extern "C" fn zc_payload_reader_init(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_payload_reader_read(
-    reader: *mut zc_payload_reader,
+    reader: zc_payload_reader,
     dest: *mut u8,
     len: usize,
 ) -> usize {
+    let reader = reader.transmute_copy();
     let buf = unsafe { from_raw_parts_mut(dest, len) };
-    reader
-        .as_mut()
-        .unwrap()
-        .read(buf)
-        .map(|n| n.get())
-        .unwrap_or(0)
+    reader.read(buf).map(|n| n.get()).unwrap_or(0)
 }
 
 /// Returns number of the remaining bytes in the payload
 ///
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_payload_reader_remaining(reader: *const zc_payload_reader) -> usize {
-    reader.as_ref().unwrap().remaining()
+pub unsafe extern "C" fn zc_payload_reader_remaining(reader: zc_payload_reader) -> usize {
+    let reader = reader.transmute_copy();
+    reader.remaining()
 }

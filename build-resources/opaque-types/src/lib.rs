@@ -46,6 +46,7 @@ macro_rules! get_opaque_type_data {
 ///
 /// To minimize copies and reallocations, Zenoh may provide you data in split buffers.
 get_opaque_type_data!(Option<ZBuf>, "z_owned_buffer_t");
+get_opaque_type_data!(&'static ZBuf, "z_buffer_t");
 
 /// An owned sample.
 ///
@@ -56,7 +57,8 @@ get_opaque_type_data!(Option<Sample>, "zc_owned_sample_t");
 get_opaque_type_data!(&'static Sample, "z_sample_t");
 
 /// A reader for payload data.
-get_opaque_type_data!(ZBufReader, "zc_payload_reader");
+get_opaque_type_data!(Option<ZBufReader<'static>>, "zc_owned_payload_reader");
+get_opaque_type_data!(&'static ZBufReader, "zc_payload_reader");
 
 get_opaque_type_data!(&'static Encoding, "z_encoding_t");
 get_opaque_type_data!(Encoding, "z_owned_encoding_t");

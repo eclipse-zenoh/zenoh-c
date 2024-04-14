@@ -17,7 +17,6 @@ use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::str::FromStr;
 
-use crate::keyexpr::*;
 use crate::opaque_types::z_owned_buffer_t;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;

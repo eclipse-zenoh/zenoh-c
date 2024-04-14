@@ -13,8 +13,10 @@
 //
 use libc::{c_char, c_uint};
 use std::ffi::CStr;
+use std::mem::MaybeUninit;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
+use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef};
 use crate::{impl_guarded_transmute, z_owned_str_t, z_str_null};
 
 #[no_mangle]
@@ -58,9 +60,8 @@ pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"timestamping/enabled\0".as_ptr() as *const c_char) };
 
 /// A loaned zenoh configuration.
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_config_t(*const z_owned_config_t);
+pub use crate::opaque_types::z_config_t;
+decl_transmute_copy!(&'static Config, z_config_t);
 
 /// An owned zenoh configuration.
 ///
@@ -72,39 +73,16 @@ pub struct z_config_t(*const z_owned_config_t);
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_config_t(*mut ());
-impl_guarded_transmute!(Option<Box<Config>>, z_owned_config_t);
+pub use crate::opaque_types::z_owned_config_t;
+decl_transmute_owned!(Option<Box<Config>>, z_owned_config_t);
 
 /// Returns a :c:type:`z_config_t` loaned from `s`.
 #[no_mangle]
 pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
-    z_config_t(s)
-}
-impl AsRef<Option<Box<Config>>> for z_config_t {
-    fn as_ref(&self) -> &Option<Box<Config>> {
-        unsafe { (*self.0).as_ref() }
-    }
-}
-impl AsMut<Option<Box<Config>>> for z_config_t {
-    fn as_mut(&mut self) -> &mut Option<Box<Config>> {
-        unsafe { (*(self.0 as *mut z_owned_config_t)).as_mut() }
-    }
-}
-impl AsRef<Option<Box<Config>>> for z_owned_config_t {
-    fn as_ref(&self) -> &Option<Box<Config>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl AsMut<Option<Box<Config>>> for z_owned_config_t {
-    fn as_mut(&mut self) -> &mut Option<Box<Config>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl z_owned_config_t {
-    pub fn null() -> Self {
-        None.into()
-    }
+    let s = s.transmute_ref();
+    let s = unwrap_ref_unchecked(s);
+    let s = s.as_ref();
+    s.transmute_copy()
 }
 
 /// Return a new, zenoh-allocated, empty configuration.
@@ -118,15 +96,17 @@ impl z_owned_config_t {
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
-pub extern "C" fn z_config_new() -> z_owned_config_t {
+pub extern "C" fn z_config_new(this: *mut MaybeUninit<z_owned_config_t>) {
+    let this = z_owned_config_t::transmute_uninit_ptr(this);
     let config: Box<Config> = Box::default();
-    unsafe { z_owned_config_t(std::mem::transmute(Some(config))) }
+    Inplace::init(this, Some(config));
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_config_t' type
 #[no_mangle]
-pub extern "C" fn z_config_null() -> z_owned_config_t {
-    z_owned_config_t::null()
+pub extern "C" fn z_config_null(this: *mut MaybeUninit<z_owned_config_t>) {
+    let this = z_owned_config_t::transmute_uninit_ptr(this);
+    Inplace::empty(this);
 }
 
 /// Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
