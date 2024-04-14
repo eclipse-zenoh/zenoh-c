@@ -162,7 +162,7 @@ void parse_zenoh_json_list_config(int argc, char** argv, const char* opt, const 
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`\n`%s` is either not a JSON-serialized list of "
                 "strings, or values within the list do not respect expected format for `%s`\n",
-                json_list, json_list, json_list, config_key);
+                json_list, config_key, json_list, config_key);
             free(json_list);
             exit(-1);
         }
