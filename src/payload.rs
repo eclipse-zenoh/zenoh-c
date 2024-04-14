@@ -17,7 +17,7 @@ decl_transmute_owned!(Option<ZBuf>, z_owned_buffer_t);
 /// The gravestone value for `z_owned_buffer_t`.
 #[no_mangle]
 extern "C" fn z_buffer_null(this: *mut MaybeUninit<z_owned_buffer_t>) {
-    let this = z_owned_buffer_t::transmute_uninit_ptr(this);
+    let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 

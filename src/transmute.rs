@@ -24,11 +24,6 @@ pub fn unwrap_ref_unchecked<T>(value: &Option<T>) -> &T {
 pub(crate) trait TransmuteRef<T: Sized>: Sized {
     fn transmute_ref(&self) -> &T;
     fn transmute_mut(&mut self) -> &mut T;
-    fn transmute_uninit_ptr(
-        this: *mut std::mem::MaybeUninit<Self>,
-    ) -> *mut std::mem::MaybeUninit<T> {
-        this as *mut std::mem::MaybeUninit<T>
-    }
 }
 
 pub(crate) trait TransmuteCopy<T: Copy> {

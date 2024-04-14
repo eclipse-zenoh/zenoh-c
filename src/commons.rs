@@ -183,7 +183,7 @@ decl_transmute_owned!(default_inplace_init Option<Sample>, zc_owned_sample_t);
 pub extern "C" fn zc_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owned_sample_t>) {
     let src = src.transmute_copy();
     let src = src.deref().clone();
-    let dst = zc_owned_sample_t::transmute_uninit_ptr(dst);
+    let dst = dst.transmute_uninit_ptr();
     Inplace::init(dst, Some(src));
 }
 
@@ -213,7 +213,7 @@ pub extern "C" fn zc_sample_drop(sample: &mut zc_owned_sample_t) {
 
 #[no_mangle]
 pub extern "C" fn zc_sample_null(sample: *mut MaybeUninit<zc_owned_sample_t>) {
-    Inplace::empty(zc_owned_sample_t::transmute_uninit_ptr(sample));
+    Inplace::empty(sample.transmute_uninit_ptr());
 }
 
 /// The encoding of a payload, in a MIME-like format.
@@ -236,7 +236,7 @@ decl_transmute_owned!(default_inplace_init Encoding, z_owned_encoding_t);
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
 pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>) {
-    Inplace::empty(z_owned_encoding_t::transmute_uninit_ptr(encoding));
+    Inplace::empty(encoding.transmute_uninit_ptr());
 }
 
 /// Constructs a specific :c:type:`z_encoding_t`.
@@ -246,7 +246,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
     encoding: *mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
 ) -> i8 {
-    let encoding = z_owned_encoding_t::transmute_uninit_ptr(encoding);
+    let encoding = encoding.transmute_uninit_ptr();
     if s.is_null() {
         Inplace::empty(encoding);
         0
