@@ -13,13 +13,13 @@
 //
 
 use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef};
-use crate::{config::*, impl_guarded_transmute, zc_init_logger};
+use crate::{config::*, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::sync::{Arc, Weak};
+use zenoh::core::ErrNo;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::Session;
-use zenoh_util::core::zresult::ErrNo;
 
 /// An owned zenoh session.
 ///
@@ -64,23 +64,31 @@ pub extern "C" fn z_session_null(s: *mut MaybeUninit<z_owned_session_t>) {
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
+pub extern "C" fn z_open(
+    this: *mut MaybeUninit<z_owned_session_t>,
+    config: &mut z_owned_config_t,
+) -> i8 {
+    let this = z_owned_session_t::transmute_uninit_ptr(this);
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-
     let config = match config.as_mut().take() {
         Some(c) => c,
         None => {
             log::error!("Config not provided");
-            return z_owned_session_t::null();
+            Inplace::empty(this);
+            return -1;
         }
     };
     match zenoh::open(*config).res() {
-        Ok(s) => z_owned_session_t::new(Arc::new(s)),
+        Ok(s) => {
+            Inplace::init(this, Some(Arc::new(s)));
+            0
+        }
         Err(e) => {
             log::error!("Error opening session: {}", e);
-            z_owned_session_t::null()
+            Inplace::empty(this);
+            -1
         }
     }
 }
@@ -89,7 +97,7 @@ pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
-    session.as_ref().is_some()
+    session.transmute_ref().is_some()
 }
 
 /// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
@@ -99,6 +107,7 @@ pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
+    let session = session.transmute_mut();
     let Some(s) = session.take() else {
         return 0;
     };
@@ -117,6 +126,15 @@ pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
 /// Increments the session's reference count, returning a new owning handle.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_session_rcinc(session: z_session_t) -> z_owned_session_t {
-    session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
+pub extern "C" fn zc_session_rcinc(
+    dst: *mut MaybeUninit<z_owned_session_t>,
+    src: &z_owned_session_t,
+) -> i8 {
+    // session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
+    let dst = z_owned_session_t::transmute_uninit_ptr(dst);
+    let Some(src) = src.transmute_ref() else {
+        return -1;
+    };
+    Inplace::init(dst, Some(src.clone()));
+    0
 }

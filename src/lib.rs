@@ -21,16 +21,17 @@ use std::slice;
 
 #[macro_use]
 mod transmute;
-mod opaque_types;
+pub mod opaque_types;
+pub use crate::opaque_types::*;
 
 pub use crate::collections::*;
-mod config;
+// mod config;
 // pub use crate::config::*;
 // mod commons;
 // pub use crate::commons::*;
 // mod payload;
 // pub use crate::payload::*;
-mod keyexpr;
+// mod keyexpr;
 // pub use crate::keyexpr::*;
 // mod info;
 // pub use crate::info::*;
