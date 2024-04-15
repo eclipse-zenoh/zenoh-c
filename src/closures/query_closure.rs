@@ -48,7 +48,7 @@ pub extern "C" fn z_closure_query_null() -> z_owned_closure_query_t {
 pub extern "C" fn z_closure_query_call(closure: &z_owned_closure_query_t, query: &z_query_t) {
     match closure.call {
         Some(call) => call(query, closure.context),
-        None => log::error!("Attempted to call an uninitialized closure!"),
+        None => tracing::error!("Attempted to call an uninitialized closure!"),
     }
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
@@ -126,7 +126,7 @@ pub extern "C" fn z_closure_owned_query_call(
 ) {
     match closure.call {
         Some(call) => call(query, closure.context),
-        None => log::error!("Attempted to call an uninitialized closure!"),
+        None => tracing::error!("Attempted to call an uninitialized closure!"),
     }
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.

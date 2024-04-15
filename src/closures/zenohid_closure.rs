@@ -51,7 +51,7 @@ pub extern "C" fn z_closure_zid_call(closure: &z_owned_closure_zid_t, sample: &z
     match closure.call {
         Some(call) => call(sample, closure.context),
         None => {
-            log::error!("Attempted to call an uninitialized closure!");
+            tracing::error!("Attempted to call an uninitialized closure!");
         }
     }
 }

@@ -96,13 +96,13 @@ pub extern "C" fn zc_liveliness_declare_token(
     _options: Option<&zc_owned_liveliness_declaration_options_t>,
 ) -> zc_owned_liveliness_token_t {
     let Some(session) = session.upgrade() else {
-        log::error!("Failed to declare liveliness token: provided session was invalid");
+        tracing::error!("Failed to declare liveliness token: provided session was invalid");
         return zc_liveliness_token_null();
     };
     match session.liveliness().declare_token(key).res() {
         Ok(token) => unsafe { core::mem::transmute(token) },
         Err(e) => {
-            log::error!("Failed to declare liveliness token: {e}");
+            tracing::error!("Failed to declare liveliness token: {e}");
             zc_liveliness_token_null()
         }
     }
@@ -117,7 +117,7 @@ pub extern "C" fn zc_liveliness_undeclare_token(token: &mut zc_owned_liveliness_
         return;
     };
     if let Err(e) = token.undeclare().res() {
-        log::error!("Failed to undeclare token: {e}");
+        tracing::error!("Failed to undeclare token: {e}");
     }
 }
 
@@ -169,7 +169,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     _options: Option<&zc_owned_liveliness_declare_subscriber_options_t>,
 ) -> z_owned_subscriber_t {
     let Some(session) = session.upgrade() else {
-        log::error!("Failed to declare liveliness token: provided session was invalid");
+        tracing::error!("Failed to declare liveliness token: provided session was invalid");
         return z_owned_subscriber_t::null();
     };
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
@@ -189,7 +189,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     {
         Ok(token) => z_owned_subscriber_t::new(token),
         Err(e) => {
-            log::error!("Failed to subscribe to liveliness: {e}");
+            tracing::error!("Failed to subscribe to liveliness: {e}");
             z_owned_subscriber_t::null()
         }
     }
@@ -234,7 +234,7 @@ pub extern "C" fn zc_liveliness_get(
     options: Option<&zc_liveliness_get_options_t>,
 ) -> i8 {
     let Some(session) = session.upgrade() else {
-        log::error!("Failed to declare liveliness token: provided session was invalid");
+        tracing::error!("Failed to declare liveliness token: provided session was invalid");
         return i8::MIN;
     };
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
@@ -248,7 +248,7 @@ pub extern "C" fn zc_liveliness_get(
     match builder.res() {
         Ok(()) => 0,
         Err(e) => {
-            log::error!("Failed to subscribe to liveliness: {e}");
+            tracing::error!("Failed to subscribe to liveliness: {e}");
             e.errno().get()
         }
     }

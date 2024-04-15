@@ -42,12 +42,10 @@ maintenance = { status = "actively-developed" }
 async-std = "=1.12.0"
 async-trait = "0.1.66"
 chrono = "0.4.34"
-env_logger = "0.10.0"
 futures = "0.3.26"
 json5 = "0.4.1"
 lazy_static = "1.4.0"
 libc = "0.2.139"
-log = "0.4.17"
 rand = "0.8.5"
 spin = "0.9.5"
 # shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
@@ -55,6 +53,7 @@ zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.
 zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = ["shared-memory"] }
 zenoh-util = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = ["unstable"] }
+tracing = "0.1"
 
 [build-dependencies]
 cbindgen = "0.24.3"

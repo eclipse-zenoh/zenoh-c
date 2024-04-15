@@ -178,14 +178,14 @@ pub unsafe extern "C" fn z_put(
             }
             match res.res_sync() {
                 Err(e) => {
-                    log::error!("{}", e);
+                    tracing::error!("{}", e);
                     e.errno().get()
                 }
                 Ok(()) => 0,
             }
         }
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             i8::MIN
         }
     }
@@ -226,18 +226,18 @@ pub extern "C" fn zc_put_owned(
                 }
                 match res.res_sync() {
                     Err(e) => {
-                        log::error!("{}", e);
+                        tracing::error!("{}", e);
                         e.errno().get()
                     }
                     Ok(()) => 0,
                 }
             } else {
-                log::debug!("zc_payload_null was provided as payload for put");
+                tracing::debug!("zc_payload_null was provided as payload for put");
                 i8::MIN
             }
         }
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             i8::MIN
         }
     }
@@ -286,14 +286,14 @@ pub extern "C" fn z_delete(
             }
             match res.res_sync() {
                 Err(e) => {
-                    log::error!("{}", e);
+                    tracing::error!("{}", e);
                     e.errno().get()
                 }
                 Ok(()) => 0,
             }
         }
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
+            tracing::debug!("{}", LOG_INVALID_SESSION);
             i8::MIN
         }
     }

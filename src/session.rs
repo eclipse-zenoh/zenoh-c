@@ -105,14 +105,14 @@ pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
     let config = match config.as_mut().take() {
         Some(c) => c,
         None => {
-            log::error!("Config not provided");
+            tracing::error!("Config not provided");
             return z_owned_session_t::null();
         }
     };
     match zenoh::open(*config).res() {
         Ok(s) => z_owned_session_t::new(Arc::new(s)),
         Err(e) => {
-            log::error!("Error opening session: {}", e);
+            tracing::error!("Error opening session: {}", e);
             z_owned_session_t::null()
         }
     }

@@ -69,7 +69,7 @@ pub extern "C" fn z_attachment_iterate(
     if let Some(driver) = this.iteration_driver {
         return driver(this.data, body, context);
     }
-    log::error!("Invalid iteration_driver");
+    tracing::error!("Invalid iteration_driver");
     i8::MIN
 }
 

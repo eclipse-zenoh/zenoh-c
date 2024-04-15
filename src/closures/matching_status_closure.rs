@@ -54,7 +54,7 @@ pub extern "C" fn zcu_closure_matching_status_call(
     match closure.call {
         Some(call) => call(sample, closure.context),
         None => {
-            log::error!("Attempted to call an uninitialized closure!");
+            tracing::error!("Attempted to call an uninitialized closure!");
         }
     }
 }
