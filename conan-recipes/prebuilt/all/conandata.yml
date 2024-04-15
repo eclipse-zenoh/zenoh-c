@@ -1,0 +1,29 @@
+sources:
+  "0.10.1-rc":
+    "Windows":
+      "x86_64":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/releases/download/0.10.1-rc/zenoh-c-0.10.1-rc-x86_64-pc-windows-msvc.zip"
+        sha256: "a59a4c33a160298409649f16bee5f32f14de52c03273fe29d4497934cf05789e"
+    "Linux":
+      "x86_64":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/releases/download/0.10.1-rc/zenoh-c-0.10.1-rc-x86_64-unknown-linux-gnu.zip"
+        sha256: "0554b0fe753df3c023b09e005b309d654b1cc33ddc34190b5a5c370b72281c3b"
+      "armv6":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/releases/download/0.10.1-rc/zenoh-c-0.10.1-rc-arm-unknown-linux-gnueabi.zip"
+        sha256: "ca76eccb4dae25e0571f8724e161e26230137ee6134d8452548b94de174c9cb9"
+      "armv7hf":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/releases/download/0.10.1-rc/zenoh-c-0.10.1-rc-armv7-unknown-linux-gnueabihf.zip"
+        sha256: "542099758e543abec289daeff2fcf8eef26dc997832de2f13ac7e15b0b05474f"
+      "armv8":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/releases/download/0.10.1-rc/zenoh-c-0.10.1-rc-aarch64-unknown-linux-gnu.zip"
+        sha256: "1def0f7b7d7cd04ac6583d4c7ce96c82af7f2407422a54d778f658527da0e6ea"
+    "Macos":
+      "x86_64":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/releases/download/0.10.1-rc/zenoh-c-0.10.1-rc-x86_64-apple-darwin.zip"
+        sha256: "bd44c88b8ba3d8245d97f780fe82873ed8ee87c09c37365509e2feae2a198e28"
+      "armv8":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/releases/download/0.10.1-rc/zenoh-c-0.10.1-rc-aarch64-apple-darwin.zip"
+        sha256: "0df497b16cf1bd968deea36aca43d6c086a54d69ea78e3feaed309760e0dcaa4"
+    "license":
+        url: "https://github.com/eclipse-zenoh/zenoh-c/raw/0.10.1-rc/LICENSE"
+        sha256: "01a44774f7b1a453595c7c6d7f7308284ba6a1059dc49e14dad6647e1d44a338"
