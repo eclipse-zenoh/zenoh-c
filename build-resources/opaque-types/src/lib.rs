@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use zenoh::buffers::{ZBuf, ZBufReader};
 use zenoh::config::Config;
+use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
 use zenoh::key_expr::KeyExpr;
 use zenoh::query::Reply;
@@ -91,3 +92,5 @@ get_opaque_type_data!(&'static Session, "z_session_t");
 
 get_opaque_type_data!(Option<Box<Config>>, "z_owned_config_t");
 get_opaque_type_data!(&'static Config, "z_config_t");
+
+get_opaque_type_data!(ZenohId, "z_id_t");

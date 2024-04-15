@@ -19,11 +19,8 @@ use zenoh::session::SessionDeclarations;
 /// Represents a Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct z_id_t {
-    pub id: [u8; 16],
-}
+pub use crate::opaque_types::z_id_t;
+decl_transmute_copy!(ZenohId, z_id_t);
 
 /// Returns the local Zenoh ID.
 ///

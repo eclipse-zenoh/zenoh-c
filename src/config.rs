@@ -16,8 +16,10 @@ use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
-use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef};
-use crate::{impl_guarded_transmute, z_owned_str_t, z_str_null};
+use crate::transmute::{
+    unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef, TransmuteUninitPtr,
+};
+use crate::{z_owned_str_t, z_str_null};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -97,7 +99,7 @@ pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
 pub extern "C" fn z_config_new(this: *mut MaybeUninit<z_owned_config_t>) {
-    let this = z_owned_config_t::transmute_uninit_ptr(this);
+    let this = this.transmute_uninit_ptr();
     let config: Box<Config> = Box::default();
     Inplace::init(this, Some(config));
 }
@@ -105,7 +107,7 @@ pub extern "C" fn z_config_new(this: *mut MaybeUninit<z_owned_config_t>) {
 /// Constructs a null safe-to-drop value of 'z_owned_config_t' type
 #[no_mangle]
 pub extern "C" fn z_config_null(this: *mut MaybeUninit<z_owned_config_t>) {
-    let this = z_owned_config_t::transmute_uninit_ptr(this);
+    let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 
@@ -114,12 +116,12 @@ pub extern "C" fn z_config_null(this: *mut MaybeUninit<z_owned_config_t>) {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -> z_owned_str_t {
+    let config = config.transmute_copy();
     let key = match CStr::from_ptr(key).to_str() {
         Ok(s) => s,
         Err(_) => return z_str_null(),
     };
-
-    let val = config.as_ref().as_ref().and_then(|c| c.get_json(key).ok());
+    let val = config.get_json(key).ok();
     match val {
         Some(val) => val.as_bytes().into(),
         None => z_str_null(),
@@ -132,18 +134,14 @@ pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 pub unsafe extern "C" fn zc_config_insert_json(
-    mut config: z_config_t,
+    config: z_config_t,
     key: *const c_char,
     value: *const c_char,
 ) -> i8 {
+    let config = config.transmute_copy();
     let key = CStr::from_ptr(key);
     let value = CStr::from_ptr(value);
-    match config
-        .as_mut()
-        .as_mut()
-        .expect("uninitialized config")
-        .insert_json5(&key.to_string_lossy(), &value.to_string_lossy())
-    {
+    match config.insert_json5(&key.to_string_lossy(), &value.to_string_lossy()) {
         Ok(_) => 0,
         Err(_) => i8::MIN,
     }
@@ -153,12 +151,14 @@ pub unsafe extern "C" fn zc_config_insert_json(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_drop(config: &mut z_owned_config_t) {
-    std::mem::drop(config.as_mut().take())
+    let config = config.transmute_mut();
+    Inplace::drop(config);
 }
 /// Returns ``true`` if `config` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
+    let config = config.transmute_ref();
     config.as_ref().is_some()
 }
 
