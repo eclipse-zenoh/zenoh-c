@@ -37,6 +37,7 @@ class ZenohCPackageConan(ConanFile):
         "fPIC": [True, False],
         "ZENOHC_BUILD_WITH_LOGGER_AUTOINIT":[True, False],
         "ZENOHC_BUILD_WITH_SHARED_MEMORY":[True, False],
+        "ZENOHC_INSTALL_STATIC_LIBRARY":[True, False],
         "ZENOHC_CARGO_FLAGS": ["ANY"],
     }
 
@@ -45,6 +46,7 @@ class ZenohCPackageConan(ConanFile):
         "fPIC": True,
         "ZENOHC_BUILD_WITH_LOGGER_AUTOINIT": True,
         "ZENOHC_BUILD_WITH_SHARED_MEMORY": True,
+        "ZENOHC_INSTALL_STATIC_LIBRARY": False,
         "ZENOHC_CARGO_FLAGS": "",
     }
 
@@ -91,7 +93,6 @@ class ZenohCPackageConan(ConanFile):
         for opt, val in self.options.items():
             tc.variables[opt] = val
         tc.variables["ZENOHC_LIB_STATIC"] = str(not self.options.shared)
-        tc.variables["ZENOHC_INSTALL_STATIC_LIBRARY"] = tc.variables["ZENOHC_LIB_STATIC"]
     
         tc.generate()
         deps = CMakeDeps(self)
