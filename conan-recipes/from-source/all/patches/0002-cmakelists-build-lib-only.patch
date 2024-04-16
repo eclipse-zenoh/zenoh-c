@@ -1,0 +1,70 @@
+diff --git a/examples/CMakeLists.txt b/examples/CMakeLists.txt
+index c2aecbd..e69de29 100644
+--- a/examples/CMakeLists.txt
++++ b/examples/CMakeLists.txt
+@@ -1,32 +0,0 @@
+-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+-    # Settings when 'examples' is the root projet
+-    cmake_minimum_required(VERSION 3.16)
+-    project(zenohc_examples LANGUAGES C)
+-    set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" ${CMAKE_MODULE_PATH})
+-    include(helpers)
+-    set_default_build_type(Release)
+-    configure_include_project(ZENOHC zenohc zenohc::lib ".." zenohc "https://github.com/eclipse-zenoh/zenoh-c" "")
+-    add_custom_target(examples ALL)
+-else()
+-    message(STATUS "zenoh-c examples")
+-    add_custom_target(examples)
+-endif()
+-
+-file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+-
+-foreach(file ${files})
+-    get_filename_component(target ${file} NAME_WE)
+-
+-    if(NOT(UNIX) AND(${target} STREQUAL "z_ping" OR ${target} STREQUAL "z_pong"))
+-        continue()
+-    endif()
+-
+-    add_executable(${target} EXCLUDE_FROM_ALL ${file})
+-    add_dependencies(examples ${target})
+-
+-    add_dependencies(${target} zenohc::lib)
+-    target_link_libraries(${target} PRIVATE zenohc::lib)
+-    copy_dlls(${target})
+-
+-    set_property(TARGET ${target} PROPERTY C_STANDARD 11)
+-endforeach()
+diff --git a/tests/CMakeLists.txt b/tests/CMakeLists.txt
+index 21695a4..e69de29 100644
+--- a/tests/CMakeLists.txt
++++ b/tests/CMakeLists.txt
+@@ -1,28 +0,0 @@
+-message(STATUS "zenoh-c tests")
+-
+-add_custom_target(tests)
+-
+-file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+-foreach(file ${files})
+-    get_filename_component(target ${file} NAME_WE)
+-    
+-    # Check the filename prefix to determine the test type
+-    if (${file} MATCHES "^.*z_api_.*$")
+-        set(test_type "unit")
+-    elseif (${file} MATCHES "^.*z_int_.*$")
+-        set(test_type "integration")
+-    elseif (${file} MATCHES "^.*z_build_.*$")
+-        set(test_type "build")
+-    else()
+-        message(FATAL_ERROR "Test file ${file} does not match any known type (z_api_ or z_int_ or z_build)")
+-    endif()
+-
+-    add_executable(${target} EXCLUDE_FROM_ALL ${file})
+-    add_dependencies(tests ${target})
+-    add_dependencies(${target} zenohc::lib)
+-    target_link_libraries(${target} PRIVATE zenohc::lib)
+-    copy_dlls(${target})
+-    set_property(TARGET ${target} PROPERTY C_STANDARD 11)
+-    add_test(NAME "${test_type}_${target}" COMMAND ${target})
+-endforeach()
+-
