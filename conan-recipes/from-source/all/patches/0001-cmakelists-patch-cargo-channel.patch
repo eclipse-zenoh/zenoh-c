@@ -16,8 +16,8 @@ index 419b583..81527fb 100644
  	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 -	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
 -	COMMAND cargo +${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
-+	COMMAND ${CMAKE_COMMAND} -E echo \"cargo build ${cargo_flags}\"
-+	COMMAND cargo build ${cargo_flags}
++	COMMAND ${CMAKE_COMMAND} -E echo \"cargo +1.72.0 build ${cargo_flags}\"
++	COMMAND cargo +1.72.0 build ${cargo_flags}
  	VERBATIM
  	COMMAND_EXPAND_LISTS
  	DEPENDS "${rust_sources}"
