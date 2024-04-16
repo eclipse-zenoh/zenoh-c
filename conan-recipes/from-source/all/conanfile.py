@@ -26,7 +26,7 @@ class ZenohCPackageConan(ConanFile):
     license = "EPL-2.0 OR Apache-2.0"
     author = "ZettaScale Zenoh Team"
 
-    url = "https://github.com/conan-io/conan-center-index"
+    url = "https://github.com/eclipse-zenoh/zenoh-c"
     homepage = "https://github.com/eclipse-zenoh/zenoh-c"
 
     package_type = "library"
