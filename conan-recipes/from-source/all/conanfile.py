@@ -23,7 +23,7 @@ class ZenohCPackageConan(ConanFile):
     name = "zenohc"
     description = "C-API for Eclipse Zenoh: Zero Overhead Pub/sub, Store/Query and Compute protocol"
     tags = ["iot", "networking", "robotics", "messaging", "ros2", "edge-computing", "micro-controller"]
-    license = "Apache License 2.0"
+    license = "EPL-2.0 OR Apache-2.0"
     author = "ZettaScale Zenoh Team"
 
     url = "https://github.com/conan-io/conan-center-index"
