@@ -149,7 +149,7 @@ pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";
 /// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
 pub extern "C" fn zc_init_logger() {
-    zenoh_util::init_log_from_env();
+    zenoh_util::try_init_log_from_env();
 }
 
 // Test should be runned with `cargo test --no-default-features`
