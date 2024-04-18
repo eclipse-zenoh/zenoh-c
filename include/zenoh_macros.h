@@ -181,7 +181,9 @@ template<> struct zenoh_drop_type<z_owned_closure_hello_t> { typedef void type; 
 template<> struct zenoh_drop_type<z_owned_closure_zid_t> { typedef void type; };
 template<> struct zenoh_drop_type<zcu_owned_closure_matching_status_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_closure_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_query_channel_closure_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_query_channel_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_bytes_map_t> { typedef void type; };
 template<> struct zenoh_drop_type<zc_owned_liveliness_token_t> { typedef void type; };
 template<> struct zenoh_drop_type<ze_owned_publication_cache_t> { typedef int8_t type; };
@@ -210,7 +212,9 @@ template<> inline void z_drop(z_owned_closure_hello_t* v) { z_closure_hello_drop
 template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v); }
 template<> inline void z_drop(zcu_owned_closure_matching_status_t* v) { zcu_closure_matching_status_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
+template<> inline void z_drop(z_owned_query_channel_closure_t* v) { z_query_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
+template<> inline void z_drop(z_owned_query_channel_t* v) { z_query_channel_drop(v); }
 template<> inline void z_drop(z_owned_bytes_map_t* v) { z_bytes_map_drop(v); }
 template<> inline void z_drop(zc_owned_liveliness_token_t* v) { zc_liveliness_undeclare_token(v); }
 template<> inline int8_t z_drop(ze_owned_publication_cache_t* v) { return ze_undeclare_publication_cache(v); }
@@ -273,6 +277,8 @@ inline void z_call(const struct z_owned_closure_sample_t &closure, const struct 
     { z_closure_sample_call(&closure, sample); }
 inline void z_call(const struct z_owned_closure_query_t &closure, const struct z_query_t *query)
     { z_closure_query_call(&closure, query); }
+inline void z_call(const struct z_owned_closure_owned_query_t &closure, struct z_owned_query_t *query)
+    { z_closure_owned_query_call(&closure, query); }
 inline void z_call(const struct z_owned_closure_reply_t &closure, struct z_owned_reply_t *sample)
     { z_closure_reply_call(&closure, sample); }
 inline void z_call(const struct z_owned_closure_hello_t &closure, struct z_owned_hello_t *hello)
@@ -283,6 +289,8 @@ inline void z_call(const struct zcu_owned_closure_matching_status_t &closure, co
     { zcu_closure_matching_status_call(&closure, matching_status); }
 inline bool z_call(const struct z_owned_reply_channel_closure_t &closure, struct z_owned_reply_t *sample)
     { return z_reply_channel_closure_call(&closure, sample); }
+inline bool z_call(const struct z_owned_query_channel_closure_t &closure, struct z_owned_query_t *query)
+    { return z_query_channel_closure_call(&closure, query); }
 // clang-format on
 
 #define _z_closure_overloader(callback, droper, ctx, ...) \
