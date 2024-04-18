@@ -14,32 +14,28 @@
 #include <stdio.h>
 #include <string.h>
 #include <zenoh_macros.h>
+
+#include "parse_args.h"
 #include "zenoh.h"
 
-const char *expr = "demo/example/zenoh-c-queryable";
-const char *value = "Queryable from C!";
-z_keyexpr_t keyexpr;
+#define DEFAULT_KEYEXPR "demo/example/zenoh-c-queryable"
+#define DEFAULT_VALUE "Queryable from C!"
 
-void query_handler(const z_query_t *query, void *context) {
-    z_owned_closure_owned_query_t *channel = (z_owned_closure_owned_query_t *)context;
+struct args_t {
+    char* keyexpr;  // -k
+    char* value;    // -v
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+void query_handler(const z_query_t* query, void* context) {
+    z_owned_closure_owned_query_t* channel = (z_owned_closure_owned_query_t*)context;
     z_owned_query_t oquery = z_query_clone(query);
     z_call(*channel, &oquery);
 }
 
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        expr = argv[1];
-    }
+int main(int argc, char** argv) {
     z_owned_config_t config = z_config_default();
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
     z_owned_session_t s = z_open(z_move(config));
@@ -47,13 +43,13 @@ int main(int argc, char **argv) {
         printf("Unable to open session!\n");
         exit(-1);
     }
-    keyexpr = z_keyexpr(expr);
+    z_keyexpr_t keyexpr = z_keyexpr(args.keyexpr);
     if (!z_check(keyexpr)) {
-        printf("%s is not a valid key expression", expr);
+        printf("%s is not a valid key expression", args.keyexpr);
         exit(-1);
     }
 
-    printf("Declaring Queryable on '%s'...\n", expr);
+    printf("Declaring Queryable on '%s'...\n", args.keyexpr);
     z_owned_query_channel_t channel = zc_query_fifo_new(16);
     z_owned_closure_query_t callback = z_closure(query_handler, NULL, &channel.send);
     z_owned_queryable_t qable = z_declare_queryable(z_loan(s), keyexpr, z_move(callback), NULL);
@@ -62,7 +58,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("^C to quit...\n");
+    printf("Press CTRL-C to quit...\n");
     z_owned_query_t oquery = z_query_null();
     for (z_call(channel.recv, &oquery); z_check(oquery); z_call(channel.recv, &oquery)) {
         z_query_t query = z_loan(oquery);
@@ -77,7 +73,7 @@ int main(int argc, char **argv) {
         }
         z_query_reply_options_t options = z_query_reply_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        z_query_reply(&query, keyexpr, (const unsigned char *)value, strlen(value), &options);
+        z_query_reply(&query, keyexpr, (const unsigned char*)args.value, strlen(args.value), &options);
         z_drop(z_move(keystr));
         z_drop(z_move(oquery));
     }
@@ -86,4 +82,47 @@ int main(int argc, char **argv) {
     z_drop(z_move(channel));
     z_drop(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_queryable_with_channels [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEYEXPR> (optional, string, default='%s'): The key expression matching queries to reply to\n\
+        -v <VALUE> (optional, string, default='%s'): The value to reply to queries with\n",
+        DEFAULT_KEYEXPR, DEFAULT_VALUE);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    const char* value = parse_opt(argc, argv, "v", true);
+    if (!value) {
+        value = DEFAULT_VALUE;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value};
 }

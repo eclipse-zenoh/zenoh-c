@@ -13,9 +13,12 @@
 //
 #include <stdio.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
 #define N 1000000
+
+void parse_args(int argc, char **argv, z_owned_config_t *config);
 
 typedef struct {
     volatile unsigned long count;
@@ -61,15 +64,7 @@ void drop_stats(void *context) {
 
 int main(int argc, char **argv) {
     z_owned_config_t config = z_config_default();
-    if (argc > 1) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    parse_args(argc, argv, &config);
 
     z_owned_session_t s = z_open(z_move(config));
     if (!z_check(s)) {
@@ -87,13 +82,44 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    char c = 0;
-    while (c != 'q') {
-        c = fgetc(stdin);
+    printf("Press CTRL-C to quit...\n");
+    while (1) {
+        z_sleep_s(1);
     }
 
     z_undeclare_subscriber(z_move(sub));
     z_undeclare_keyexpr(z_loan(s), z_move(ke));
     z_close(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_sub_thr [OPTIONS]\n\n\
+    Options:\n");
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+void parse_args(int argc, char **argv, z_owned_config_t *config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    const char *arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char **pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
 }
