@@ -12,25 +12,14 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef};
-use crate::{config::*, z_owned_config_t, zc_init_logger};
+use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef, TransmuteUninitPtr};
+use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
-use std::ops::Deref;
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 use zenoh::core::ErrNo;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::Session;
 
-/// An owned zenoh session.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
 
@@ -47,7 +36,7 @@ decl_transmute_copy!(&'static Session, z_session_t);
 /// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
-pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
+pub extern "C" fn z_session_loan(s: &'static z_owned_session_t) -> z_session_t {
     let s = s.transmute_ref();
     let s = unwrap_ref_unchecked(s);
     let s = s.as_ref();
@@ -58,37 +47,38 @@ pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_session_null(s: *mut MaybeUninit<z_owned_session_t>) {
-    Inplace::empty(z_owned_session_t::transmute_uninit_ptr(s));
+    Inplace::empty(s.transmute_uninit_ptr());
 }
 
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
+/// Config value is always consumed upon function return.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_open(
     this: *mut MaybeUninit<z_owned_session_t>,
     config: &mut z_owned_config_t,
-) -> i8 {
-    let this = z_owned_session_t::transmute_uninit_ptr(this);
+) -> errors::ZCError {
+    let this = this.transmute_uninit_ptr();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let config = match config.as_mut().take() {
+    let config = match config.transmute_mut().take() {
         Some(c) => c,
         None => {
             log::error!("Config not provided");
             Inplace::empty(this);
-            return -1;
+            return errors::Z_EINVAL;
         }
     };
     match zenoh::open(*config).res() {
         Ok(s) => {
             Inplace::init(this, Some(Arc::new(s)));
-            0
+            errors::Z_OK
         }
         Err(e) => {
             log::error!("Error opening session: {}", e);
             Inplace::empty(this);
-            -1
+            errors::Z_ENETWORK
         }
     }
 }
@@ -131,7 +121,7 @@ pub extern "C" fn zc_session_rcinc(
     src: &z_owned_session_t,
 ) -> i8 {
     // session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
-    let dst = z_owned_session_t::transmute_uninit_ptr(dst);
+    let dst = dst.transmute_uninit_ptr();
     let Some(src) = src.transmute_ref() else {
         return -1;
     };

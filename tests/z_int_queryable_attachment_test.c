@@ -33,24 +33,24 @@ void query_handler(const z_query_t *query, void *context) {
     static int value_num = 0;
 
     z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(query));
-    z_bytes_t pred = z_query_parameters(query);
+    z_slice_t pred = z_query_parameters(query);
     z_value_t payload_value = z_query_value(query);
 
-    z_attachment_t attachment = z_query_attachment(query);
+   z_bytes_t attachment = z_query_attachment(query);
 
-    z_bytes_t v_const = z_attachment_get(attachment, z_bytes_from_str(K_CONST));
+    z_slice_t v_const = z_attachment_get(attachment, z_slice_from_str(K_CONST));
     ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
-    z_bytes_t v_var = z_attachment_get(attachment, z_bytes_from_str(K_VAR));
+    z_slice_t v_var = z_attachment_get(attachment, z_slice_from_str(K_VAR));
     ASSERT_STR_BYTES_EQUAL(values[value_num], v_var);
 
-    z_owned_bytes_map_t map = z_bytes_map_new();
-    z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_CONST), z_bytes_from_str(V_CONST));
+    z_owned_bytes_map_t map = z_slice_map_new();
+    z_slice_map_insert_by_copy(&map, z_slice_from_str(K_CONST), z_slice_from_str(V_CONST));
 
     z_query_reply_options_t options = z_query_reply_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    options.attachment = z_bytes_map_as_attachment(&map);
-    zc_owned_payload_t payload = zc_payload_encode_from_string(values[value_num]);
+    options.attachment = z_slice_map_as_attachment(&map);
+    z_owned_bytes_t payload = z_bytes_encode_from_string(values[value_num]);
     z_query_reply(query, z_keyexpr((const char *)context), z_move(payload), &options);
     z_drop(z_move(keystr));
     z_drop(z_move(map));
@@ -93,14 +93,14 @@ int run_get() {
         return -1;
     }
 
-    z_owned_bytes_map_t map = z_bytes_map_new();
-    z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_CONST), z_bytes_from_str(V_CONST));
+    z_owned_bytes_map_t map = z_slice_map_new();
+    z_slice_map_insert_by_copy(&map, z_slice_from_str(K_CONST), z_slice_from_str(V_CONST));
 
     z_get_options_t opts = z_get_options_default();
-    opts.attachment = z_bytes_map_as_attachment(&map);
+    opts.attachment = z_slice_map_as_attachment(&map);
 
     for (int val_num = 0; val_num < values_count; ++val_num) {
-        z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_VAR), z_bytes_from_str(values[val_num]));
+        z_slice_map_insert_by_copy(&map, z_slice_from_str(K_VAR), z_slice_from_str(values[val_num]));
 
         z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
         z_get(z_loan(s), z_keyexpr(keyexpr), "", z_move(channel.send), &opts);
@@ -111,14 +111,14 @@ int run_get() {
             z_sample_t sample = z_reply_ok(&reply);
             z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
             z_owned_str_t payload_value = z_str_null();
-            zc_payload_decode_into_string(z_sample_payload(&sample), &payload_value);
+            z_bytes_decode_into_string(z_sample_payload(&sample), &payload_value);
             if (strcmp(values[val_num], z_loan(payload_value))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_value));
                 exit(-1);
             }
 
-            z_bytes_t v_const = z_attachment_get(z_sample_attachment(&sample), z_bytes_from_str(K_CONST));
+            z_slice_t v_const = z_attachment_get(z_sample_attachment(&sample), z_slice_from_str(K_CONST));
             ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
             z_drop(z_move(keystr));

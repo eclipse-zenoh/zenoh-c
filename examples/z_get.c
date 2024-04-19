@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
     z_get_options_t opts = z_get_options_default();
     if (value != NULL) {
-        opts.payload = zc_payload_encode_from_string(value);
+        opts.payload = z_bytes_encode_from_string(value);
     }
     z_get(z_loan(s), keyexpr, "", z_move(channel.send),
           z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         if (z_reply_is_ok(&reply)) {
             z_sample_t sample = z_reply_ok(&reply);
             z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
-            zc_payload_decode_into_string(z_sample_payload(&sample), &payload_value);
+            z_bytes_decode_into_string(z_sample_payload(&sample), &payload_value);
             printf(">> Received ('%s': '%s')\n", z_loan(keystr), z_loan(payload_value));
             z_drop(z_move(payload_value));
             z_drop(z_move(keystr));

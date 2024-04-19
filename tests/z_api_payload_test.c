@@ -24,17 +24,17 @@
 void test_reader() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     uint8_t data_out[10] = {0};
-    z_bytes_t bytes = {.start = data, .len = 10 };
+    z_slice_t bytes = {.start = data, .len = 10 };
 
-    zc_owned_payload_t payload = zc_payload_encode_from_bytes(bytes);
-    zc_payload_reader reader;
-    zc_payload_reader_init(z_loan(payload), &reader);
-    assert(zc_payload_reader_remaining(&reader) == 10);
+    z_owned_bytes_t payload = z_bytes_encode_from_bytes(bytes);
+    z_bytes_reader reader;
+    z_bytes_reader_init(z_loan(payload), &reader);
+    assert(z_bytes_reader_remaining(&reader) == 10);
 
-    zc_payload_reader_read(&reader, data_out, 5);
-    assert(zc_payload_reader_remaining(&reader) == 5);
-    zc_payload_reader_read(&reader, data_out, 5);
-    assert(zc_payload_reader_remaining(&reader) == 0);
+    z_bytes_reader_read(&reader, data_out, 5);
+    assert(z_bytes_reader_remaining(&reader) == 5);
+    z_bytes_reader_read(&reader, data_out, 5);
+    assert(z_bytes_reader_remaining(&reader) == 0);
     assert(memcmp(data, data_out, 10));
 }
 

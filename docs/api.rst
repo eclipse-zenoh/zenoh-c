@@ -22,29 +22,29 @@ Generic types
 Bytes
 -----
 
-.. autocstruct:: zenoh_commons.h::z_bytes_t
+.. autocstruct:: zenoh_commons.h::z_slice_t
 
-.. autocfunction:: zenoh_commons.h::z_bytes_new
-.. autocfunction:: zenoh_commons.h::z_bytes_check
-.. autocfunction:: zenoh_commons.h::z_bytes_null
+.. autocfunction:: zenoh_commons.h::z_slice_new
+.. autocfunction:: zenoh_commons.h::z_slice_check
+.. autocfunction:: zenoh_commons.h::z_slice_null
 
 Bytes map
 ---------
 
 .. autocstruct:: zenoh_commons.h::z_owned_bytes_map_t
 
-.. autocfunction:: zenoh_commons.h::z_bytes_map_new
-.. autocfunction:: zenoh_commons.h::z_bytes_map_check
-.. autocfunction:: zenoh_commons.h::z_bytes_map_null
-.. autocfunction:: zenoh_commons.h::z_bytes_map_drop
-.. autocfunction:: zenoh_commons.h::z_bytes_map_get
-.. autocfunction:: zenoh_commons.h::z_bytes_map_len
-.. autocfunction:: zenoh_commons.h::z_bytes_map_is_empty
-.. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_alias
-.. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_copy
-.. autocfunction:: zenoh_commons.h::z_bytes_map_iter
-.. autocfunction:: zenoh_commons.h::z_bytes_map_from_attachment
-.. autocfunction:: zenoh_commons.h::z_bytes_map_from_attachment_aliasing
+.. autocfunction:: zenoh_commons.h::z_slice_map_new
+.. autocfunction:: zenoh_commons.h::z_slice_map_check
+.. autocfunction:: zenoh_commons.h::z_slice_map_null
+.. autocfunction:: zenoh_commons.h::z_slice_map_drop
+.. autocfunction:: zenoh_commons.h::z_slice_map_get
+.. autocfunction:: zenoh_commons.h::z_slice_map_len
+.. autocfunction:: zenoh_commons.h::z_slice_map_is_empty
+.. autocfunction:: zenoh_commons.h::z_slice_map_insert_by_alias
+.. autocfunction:: zenoh_commons.h::z_slice_map_insert_by_copy
+.. autocfunction:: zenoh_commons.h::z_slice_map_iter
+.. autocfunction:: zenoh_commons.h::z_slice_map_from_attachment
+.. autocfunction:: zenoh_commons.h::z_slice_map_from_attachment_aliasing
 
 .. Scouting
 .. ========

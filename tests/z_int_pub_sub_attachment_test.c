@@ -47,15 +47,15 @@ int run_publisher() {
         return -1;
     }
 
-    z_owned_bytes_map_t map = z_bytes_map_new();
-    z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_CONST), z_bytes_from_str(V_CONST));
+    z_owned_bytes_map_t map = z_slice_map_new();
+    z_slice_map_insert_by_copy(&map, z_slice_from_str(K_CONST), z_slice_from_str(V_CONST));
 
     z_publisher_put_options_t options = z_publisher_put_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    options.attachment = z_bytes_map_as_attachment(&map);
+    options.attachment = z_slice_map_as_attachment(&map);
     for (int i = 0; i < values_count; ++i) {
-        z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_VAR), z_bytes_from_str(values[i]));
-        zc_owned_payload_t payload = zc_payload_encode_from_string(values[i]);
+        z_slice_map_insert_by_copy(&map, z_slice_from_str(K_VAR), z_slice_from_str(values[i]));
+        z_owned_bytes_t payload = z_bytes_encode_from_string(values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
@@ -75,7 +75,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
     z_drop(z_move(keystr));
 
     z_owned_str_t payload_value = z_str_null();
-    zc_payload_decode_into_string(z_sample_payload(sample), &payload_value);
+    z_bytes_decode_into_string(z_sample_payload(sample), &payload_value);
     if (strcmp(values[val_num], z_loan(payload_value))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_value));
@@ -83,10 +83,10 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(payload_value));
 
-    z_bytes_t v_const = z_attachment_get(z_sample_attachment(sample), z_bytes_from_str(K_CONST));
+    z_slice_t v_const = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_CONST));
     ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
-    z_bytes_t v_var = z_attachment_get(z_sample_attachment(sample), z_bytes_from_str(K_VAR));
+    z_slice_t v_var = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_VAR));
     ASSERT_STR_BYTES_EQUAL(values[val_num], v_var);
 
     if (++val_num == values_count) {

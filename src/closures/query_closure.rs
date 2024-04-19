@@ -4,7 +4,7 @@ use libc::c_void;
 ///
 /// Members:
 ///   void *context: a pointer to an arbitrary state.
-///   void *call(const struct z_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+///   void *call(z_query_t, const void *context): the typical callback function. `context` will be passed as its last argument.
 ///   void *drop(void*): allows the callback's state to be freed.
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -17,7 +17,7 @@ use libc::c_void;
 #[repr(C)]
 pub struct z_owned_closure_query_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(&z_query_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(z_query_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 impl z_owned_closure_query_t {
@@ -45,7 +45,7 @@ pub extern "C" fn z_closure_query_null() -> z_owned_closure_query_t {
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_query_call(closure: &z_owned_closure_query_t, query: &z_query_t) {
+pub extern "C" fn z_closure_query_call(closure: &z_owned_closure_query_t, query: z_query_t) {
     match closure.call {
         Some(call) => call(query, closure.context),
         None => log::error!("Attempted to call an uninitialized closure!"),
@@ -57,10 +57,10 @@ pub extern "C" fn z_closure_query_drop(closure: &mut z_owned_closure_query_t) {
     let mut empty_closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut empty_closure, closure);
 }
-impl<F: Fn(&z_query_t)> From<F> for z_owned_closure_query_t {
+impl<F: Fn(z_query_t)> From<F> for z_owned_closure_query_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_query_t)>(sample: &z_query_t, this: *mut c_void) {
+        extern "C" fn call<F: Fn(z_query_t)>(sample: z_query_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
             this(sample)
         }

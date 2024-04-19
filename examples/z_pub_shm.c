@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
         z_publisher_put_options_t options = z_publisher_put_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        zc_owned_payload_t payload = zc_shmbuf_into_payload(z_move(shmbuf));
+        z_owned_bytes_t payload = zc_shmbuf_into_payload(z_move(shmbuf));
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 

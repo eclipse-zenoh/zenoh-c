@@ -14,7 +14,7 @@
 use crate::commons::*;
 use crate::keyexpr::*;
 use crate::session::*;
-use crate::zc_owned_payload_t;
+use crate::z_owned_bytes_t;
 use crate::LOG_INVALID_SESSION;
 use libc::c_void;
 use zenoh::encoding;
@@ -27,88 +27,8 @@ use zenoh::sample::ValueBuilderTrait;
 
 use crate::attachment::{
     insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
-    z_attachment_t,
+   z_bytes_t,
 };
-
-/// The priority of zenoh messages.
-///
-///     - **REAL_TIME**
-///     - **INTERACTIVE_HIGH**
-///     - **INTERACTIVE_LOW**
-///     - **DATA_HIGH**
-///     - **DATA**
-///     - **DATA_LOW**
-///     - **BACKGROUND**
-#[allow(non_camel_case_types)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_priority_t {
-    REAL_TIME = 1,
-    INTERACTIVE_HIGH = 2,
-    INTERACTIVE_LOW = 3,
-    DATA_HIGH = 4,
-    DATA = 5,
-    DATA_LOW = 6,
-    BACKGROUND = 7,
-}
-
-impl From<Priority> for z_priority_t {
-    fn from(p: Priority) -> Self {
-        match p {
-            Priority::RealTime => z_priority_t::REAL_TIME,
-            Priority::InteractiveHigh => z_priority_t::INTERACTIVE_HIGH,
-            Priority::InteractiveLow => z_priority_t::INTERACTIVE_LOW,
-            Priority::DataHigh => z_priority_t::DATA_HIGH,
-            Priority::Data => z_priority_t::DATA,
-            Priority::DataLow => z_priority_t::DATA_LOW,
-            Priority::Background => z_priority_t::BACKGROUND,
-        }
-    }
-}
-
-impl From<z_priority_t> for Priority {
-    fn from(p: z_priority_t) -> Self {
-        match p {
-            z_priority_t::REAL_TIME => Priority::RealTime,
-            z_priority_t::INTERACTIVE_HIGH => Priority::InteractiveHigh,
-            z_priority_t::INTERACTIVE_LOW => Priority::InteractiveLow,
-            z_priority_t::DATA_HIGH => Priority::DataHigh,
-            z_priority_t::DATA => Priority::Data,
-            z_priority_t::DATA_LOW => Priority::DataLow,
-            z_priority_t::BACKGROUND => Priority::Background,
-        }
-    }
-}
-
-/// The kind of congestion control.
-///
-///     - **BLOCK**
-///     - **DROP**
-#[allow(non_camel_case_types)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_congestion_control_t {
-    BLOCK,
-    DROP,
-}
-
-impl From<CongestionControl> for z_congestion_control_t {
-    fn from(cc: CongestionControl) -> Self {
-        match cc {
-            CongestionControl::Block => z_congestion_control_t::BLOCK,
-            CongestionControl::Drop => z_congestion_control_t::DROP,
-        }
-    }
-}
-
-impl From<z_congestion_control_t> for CongestionControl {
-    fn from(cc: z_congestion_control_t) -> Self {
-        match cc {
-            z_congestion_control_t::BLOCK => CongestionControl::Block,
-            z_congestion_control_t::DROP => CongestionControl::Drop,
-        }
-    }
-}
 
 /// Options passed to the :c:func:`z_put` function.
 ///
@@ -116,14 +36,14 @@ impl From<z_congestion_control_t> for CongestionControl {
 ///     z_encoding_t encoding: The encoding of the payload.
 ///     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
 ///     z_priority_t priority: The priority of this message.
-///     z_attachment_t attachment: The attachment to this message.
+///    z_bytes_t attachment: The attachment to this message.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
     pub encoding: z_encoding_t,
     pub congestion_control: z_congestion_control_t,
     pub priority: z_priority_t,
-    pub attachment: z_attachment_t,
+    pub attachment:z_bytes_t,
 }
 
 /// Constructs the default value for :c:type:`z_put_options_t`.
@@ -158,7 +78,7 @@ pub extern "C" fn z_put_options_default() -> z_put_options_t {
 pub extern "C" fn z_put(
     session: z_session_t,
     keyexpr: z_keyexpr_t,
-    payload: Option<&mut zc_owned_payload_t>,
+    payload: Option<&mut z_owned_bytes_t>,
     opts: Option<&z_put_options_t>,
 ) -> i8 {
     match session.upgrade() {
@@ -188,7 +108,7 @@ pub extern "C" fn z_put(
                     Ok(()) => 0,
                 }
             } else {
-                log::debug!("zc_payload_null was provided as payload for put");
+                log::debug!("z_bytes_null was provided as payload for put");
                 i8::MIN
             }
         }

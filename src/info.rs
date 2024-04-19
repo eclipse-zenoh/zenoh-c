@@ -1,3 +1,4 @@
+use crate::transmute::TransmuteCopy;
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -11,16 +12,20 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{session::*, z_closure_zid_call, z_owned_closure_zid_t};
+use std::mem::MaybeUninit;
+use crate::{errors, z_closure_zid_call, z_owned_closure_zid_t, z_session_t};
 use zenoh::config::ZenohId;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::SessionDeclarations;
 
-/// Represents a Zenoh ID.
-///
-/// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
 pub use crate::opaque_types::z_id_t;
 decl_transmute_copy!(ZenohId, z_id_t);
+
+impl From<[u8;16]> for z_id_t {
+    fn from(value: [u8;16]) -> Self {
+        unsafe { std::mem::transmute(value) }
+    }
+}
 
 /// Returns the local Zenoh ID.
 ///
@@ -30,10 +35,8 @@ decl_transmute_copy!(ZenohId, z_id_t);
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
-    match session.upgrade() {
-        Some(s) => std::mem::transmute::<ZenohId, z_id_t>(s.info().zid().res_sync()),
-        None => z_id_t { id: [0; 16] },
-    }
+    let session = session.transmute_copy();
+    session.info().zid().res_sync().transmute_copy()
 }
 
 /// Fetches the Zenoh IDs of all connected peers.
@@ -47,18 +50,14 @@ pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
 pub unsafe extern "C" fn z_info_peers_zid(
     session: z_session_t,
     callback: &mut z_owned_closure_zid_t,
-) -> i8 {
+) -> errors::ZCError {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    match session.upgrade() {
-        Some(s) => {
-            for id in s.info().peers_zid().res_sync() {
-                z_closure_zid_call(&closure, &std::mem::transmute(id));
-            }
-            0
-        }
-        None => i8::MIN,
+    let session = session.transmute_copy();
+    for id in session.info().peers_zid().res_sync() {
+        z_closure_zid_call(&closure, &id.transmute_copy());
     }
+    errors::Z_OK
 }
 
 /// Fetches the Zenoh IDs of all connected routers.
@@ -72,16 +71,12 @@ pub unsafe extern "C" fn z_info_peers_zid(
 pub unsafe extern "C" fn z_info_routers_zid(
     session: z_session_t,
     callback: &mut z_owned_closure_zid_t,
-) -> i8 {
+) -> errors::ZCError {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    match session.upgrade() {
-        Some(s) => {
-            for id in s.info().routers_zid().res_sync() {
-                z_closure_zid_call(&closure, &std::mem::transmute(id));
-            }
-            0
-        }
-        None => i8::MIN,
+    let session = session.transmute_copy();
+    for id in session.info().routers_zid().res_sync() {
+        z_closure_zid_call(&closure, &id.transmute_copy());
     }
+    errors::Z_OK
 }

@@ -49,7 +49,7 @@ int run_publisher() {
     for (int i = 0; i < values_count; ++i) {
         z_publisher_put_options_t options = z_publisher_put_options_default();
         options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        zc_owned_payload_t payload = zc_payload_encode_from_string(values[i]);
+        z_owned_bytes_t payload = z_bytes_encode_from_string(values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
@@ -68,7 +68,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
     z_drop(z_move(keystr));
 
     z_owned_str_t payload_value = z_str_null();
-    zc_payload_decode_into_string(z_sample_payload(sample), &payload_value);
+    z_bytes_decode_into_string(z_sample_payload(sample), &payload_value);
     if (strcmp(values[val_num], z_loan(payload_value))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_value));

@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
-    zc_owned_payload_t payload = zc_payload_encode_from_bytes((z_bytes_t){.start = data, .len = args.size});
+    z_owned_bytes_t payload = z_bytes_encode_from_bytes((z_slice_t){.start = data, .len = args.size});
     z_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);

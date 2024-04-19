@@ -1,4 +1,5 @@
 use fs2::FileExt;
+use fs_extra::dir::remove;
 use regex::Regex;
 use std::env;
 use std::io::{Read, Write};
@@ -91,9 +92,12 @@ fn generate_opaque_types() {
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     let mut data_out = String::new();
-    let docs = get_opaque_type_docs();
+    data_out += "#[rustfmt::skip]
+#[allow(clippy::all)]
+";
+    let mut docs = get_opaque_type_docs();
 
-    let re = Regex::new(r"type:(\w+) *, align:0*(\d+), size:0*(\d+)").unwrap();
+    let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
         let s = format!(
             "#[derive(Copy, Clone)]
@@ -103,13 +107,17 @@ pub struct {type_name} {{
 }}
 "
         );
-        if let Some(doc) = docs.get(type_name) {
-            for d in doc {
-                data_out += d;
-                data_out += "\r\n";
-            }
+        let doc = docs.remove(type_name).expect(&format!(
+            "Failed to extract docs for opaque type: {type_name}"
+        ));
+        for d in doc {
+            data_out += &d;
+            data_out += "\r\n";
         }
         data_out += &s;
+    }
+    for d in docs.keys() {
+        panic!("Failed to find type information for opaque type: {d}");
     }
     std::fs::write(path_out, data_out).unwrap();
 }
@@ -117,7 +125,7 @@ pub struct {type_name} {{
 fn get_opaque_type_docs() -> HashMap<String, std::vec::Vec<String>> {
     let current_folder = get_build_rs_path();
     let path_in = current_folder.join("./build-resources/opaque-types/src/lib.rs");
-    let re = Regex::new(r#"get_opaque_type_data!\(.*, "(\w+)"\)"#).unwrap();
+    let re = Regex::new(r#"(?m)^\s*get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\)"#).unwrap();
     let mut comments = std::vec::Vec::<String>::new();
     let mut res = HashMap::<String, std::vec::Vec<String>>::new();
 
@@ -126,11 +134,8 @@ fn get_opaque_type_docs() -> HashMap<String, std::vec::Vec<String>> {
             comments.push(line.to_string());
             continue;
         }
-        if comments.is_empty() {
-            continue;
-        }
         if let Some(c) = re.captures(line) {
-            res.insert(c[1].to_string(), comments.clone());
+            res.insert(c[2].to_string(), comments.clone());
         }
         comments.clear();
     }

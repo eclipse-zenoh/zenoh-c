@@ -14,32 +14,31 @@
 
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
-use std::ops::Deref;
 use std::str::FromStr;
 
-use crate::opaque_types::z_owned_buffer_t;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
-use crate::transmute::InplaceDefault;
 use crate::transmute::TransmuteCopy;
+use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
+use crate::transmute::TransmuteUninitPtr;
 use crate::z_id_t;
-use crate::zc_owned_payload_t;
-use crate::zc_payload_t;
-use libc::c_void;
+use crate::z_bytes_t;
+use crate::z_keyexpr_t;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
-use zenoh::buffers::ZBuf;
 use zenoh::encoding::Encoding;
-use zenoh::payload::Deserialize;
-use zenoh::payload::ZSerde;
 use zenoh::prelude::SampleKind;
+use zenoh::publication::CongestionControl;
+use zenoh::publication::Priority;
+use zenoh::query::ConsolidationMode;
+use zenoh::query::Mode;
+use zenoh::query::QueryTarget;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh::time::Timestamp;
-
-use crate::attachment::{attachment_iteration_driver, z_attachment_null, z_attachment_t};
+use zenoh::value::Value;
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -70,35 +69,19 @@ impl From<z_sample_kind_t> for SampleKind {
         }
     }
 }
+use crate::opaque_types::z_timestamp_t;
+decl_transmute_copy!(Timestamp, z_timestamp_t);
 
-#[repr(C)]
-pub struct z_timestamp_t {
-    time: u64,
-    id: z_id_t,
-}
-
-/// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
-pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
-    ts.id.id.iter().any(|byte| *byte != 0)
+pub extern "C" fn z_timestamp_npt64_time(timestamp: &z_timestamp_t) -> u64 {
+    timestamp.transmute_copy().get_time().0
 }
-impl From<Option<&Timestamp>> for z_timestamp_t {
-    fn from(ts: Option<&Timestamp>) -> Self {
-        if let Some(ts) = ts {
-            z_timestamp_t {
-                time: ts.get_time().as_u64(),
-                id: z_id_t {
-                    id: ts.get_id().to_le_bytes(),
-                },
-            }
-        } else {
-            z_timestamp_t {
-                time: 0,
-                id: z_id_t { id: [0u8; 16] },
-            }
-        }
-    }
+
+#[no_mangle]
+pub unsafe extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t {
+    timestamp.transmute_copy().get_id().to_le_bytes().into()
 }
+
 
 /// A data sample.
 ///
@@ -122,29 +105,12 @@ pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
 }
 /// The sample's data, the return value aliases the sample.
 ///
-/// If you need ownership of the buffer, you may use `z_sample_owned_payload`.
 #[no_mangle]
-pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> zc_payload_t {
-    // TODO: here returning reference not to sample's payload, but to temporary copy
-    // THIS WILL CRASH FOR SURE, MADE IT ONLY TO MAKE IT COMPILE
-    // Need a way to get reference to sample's payload
+pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_bytes_t {
     let sample = sample.transmute_copy();
-    let buffer: ZBuf = ZSerde.deserialize(sample.payload()).unwrap_infallible();
-    let owned_buffer: z_owned_buffer_t = Some(buffer).into();
-    owned_buffer.as_ref().into()
+    sample.payload().transmute_handle()
 }
 
-/// Returns the sample's payload after incrementing its internal reference count.
-///
-/// Note that other samples may have received the same buffer, meaning that mutating this buffer may
-/// affect the samples received by other subscribers.
-#[no_mangle]
-pub extern "C" fn z_sample_owned_payload(sample: &z_sample_t) -> zc_owned_payload_t {
-    let sample = sample.transmute_copy();
-    let buffer: ZBuf = ZSerde.deserialize(sample.payload()).unwrap_infallible();
-    let owned_buffer: z_owned_buffer_t = Some(buffer).into();
-    owned_buffer.into()
-}
 /// The sample's kind (put or delete).
 #[no_mangle]
 pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
@@ -152,37 +118,45 @@ pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
     sample.kind().into()
 }
 /// The samples timestamp
+/// 
+/// Returns true if Sample contains timestamp, false otherwise. In the latter case the timestamp_out value is not altered.
 #[no_mangle]
-pub extern "C" fn z_sample_timestamp(sample: &z_sample_t) -> z_timestamp_t {
+pub extern "C" fn z_sample_timestamp(sample: &z_sample_t, timestamp_out: &mut z_timestamp_t) -> bool {
     let sample = sample.transmute_copy();
-    sample.timestamp().into()
+    if let Some(t) = sample.timestamp() {
+        *timestamp_out = t.transmute_copy();
+        true
+    } else {
+        false
+    }
 }
 /// The qos with which the sample was received.
 /// TODO: split to methods (priority, congestion_control, express)
 
-/// The sample's attachment.
-///
-/// `sample` is aliased by the return value.
+/// Checks if sample contains an attachment.
 #[no_mangle]
-pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> z_attachment_t {
+pub extern "C" fn z_sample_has_attachment(sample: z_sample_t) -> bool {
     let sample = sample.transmute_copy();
-    match sample.attachment() {
-        Some(attachment) => z_attachment_t {
-            data: attachment as *const _ as *mut c_void,
-            iteration_driver: Some(attachment_iteration_driver),
-        },
-        None => z_attachment_null(),
-    }
+    sample.attachment().is_some()
+}
+
+/// Gets sample's attachment.
+///
+/// Before calling this function, ensure that `zc_sample_has_attachment` returns true
+#[no_mangle]
+pub extern "C" fn z_sample_attachment(sample: z_sample_t) -> z_bytes_t {
+    let sample = sample.transmute_copy();
+    sample.attachment().expect("Sample does not have an attachment").transmute_handle()
 }
 
 pub use crate::opaque_types::zc_owned_sample_t;
-decl_transmute_owned!(default_inplace_init Option<Sample>, zc_owned_sample_t);
+decl_transmute_owned!(Option<Sample>, zc_owned_sample_t);
 
 /// Clone a sample in the cheapest way available.
 #[no_mangle]
 pub extern "C" fn zc_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owned_sample_t>) {
     let src = src.transmute_copy();
-    let src = src.deref().clone();
+    let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
     Inplace::init(dst, Some(src));
 }
@@ -201,7 +175,7 @@ pub extern "C" fn zc_sample_check(sample: &zc_owned_sample_t) -> bool {
 ///
 /// Calling this function using a dropped sample is undefined behaviour.
 #[no_mangle]
-pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> z_sample_t {
+pub extern "C" fn zc_sample_loan(sample: &'static zc_owned_sample_t) -> z_sample_t {
     unwrap_ref_unchecked(sample.transmute_ref()).transmute_copy()
 }
 
@@ -216,10 +190,6 @@ pub extern "C" fn zc_sample_null(sample: *mut MaybeUninit<zc_owned_sample_t>) {
     Inplace::empty(sample.transmute_uninit_ptr());
 }
 
-/// The encoding of a payload, in a MIME-like format.
-///
-/// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
-///
 pub use crate::opaque_types::z_encoding_t;
 decl_transmute_copy!(&'static Encoding, z_encoding_t);
 
@@ -231,7 +201,7 @@ decl_transmute_copy!(&'static Encoding, z_encoding_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 pub use crate::opaque_types::z_owned_encoding_t;
-decl_transmute_owned!(default_inplace_init Encoding, z_owned_encoding_t);
+decl_transmute_owned!(Encoding, z_owned_encoding_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
@@ -251,8 +221,8 @@ pub unsafe extern "C" fn z_encoding_from_str(
         Inplace::empty(encoding);
         0
     } else {
-        let s = CStr::from_ptr(s).to_string_lossy().as_ref();
-        let value = Encoding::from_str(s).unwrap_infallible();
+        let s = CStr::from_ptr(s).to_string_lossy();
+        let value = Encoding::from_str(s.as_ref()).unwrap_infallible();
         Inplace::init(encoding, value);
         0
     }
@@ -269,7 +239,7 @@ pub extern "C" fn z_encoding_default() -> z_encoding_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
-    Inplace::drop(encoding);
+    Inplace::drop(encoding.transmute_mut());
 }
 
 /// Returns ``true`` if `encoding` is valid.
@@ -286,78 +256,11 @@ pub extern "C" fn z_encoding_loan(encoding: &'static z_owned_encoding_t) -> z_en
     encoding.transmute_ref().transmute_copy()
 }
 
-/// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
-/// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
-/// `z_check` and `z_str_check` correspondently
-#[repr(C)]
-pub struct z_owned_str_t {
-    pub _cstr: *mut libc::c_char,
-}
 
-impl z_owned_str_t {
-    #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn preallocate(len: usize) -> z_owned_str_t {
-        let cstr = libc::malloc(len + 1) as *mut libc::c_char;
-        *cstr.add(len) = 0;
-        z_owned_str_t { _cstr: cstr }
-    }
-
-    #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn insert_unchecked(&mut self, start: usize, value: &[u8]) {
-        std::ptr::copy_nonoverlapping(
-            value.as_ptr(),
-            (self._cstr as *mut u8).add(start),
-            value.len(),
-        );
-    }
-}
-
-impl From<&[u8]> for z_owned_str_t {
-    fn from(value: &[u8]) -> Self {
-        unsafe {
-            let mut cstr = Self::preallocate(value.len());
-            cstr.insert_unchecked(0, value);
-            cstr
-        }
-    }
-}
-
-impl Drop for z_owned_str_t {
-    fn drop(&mut self) {
-        unsafe { z_str_drop(self) }
-    }
-}
-
-/// Frees `z_owned_str_t`, invalidating it for double-drop safety.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
-    if s._cstr.is_null() {
-        return;
-    }
-    libc::free(std::mem::transmute(s._cstr));
-    s._cstr = std::ptr::null_mut();
-}
-
-/// Returns ``true`` if `s` is a valid string
-#[no_mangle]
-pub extern "C" fn z_str_check(s: &z_owned_str_t) -> bool {
-    !s._cstr.is_null()
-}
-
-/// Returns undefined `z_owned_str_t`
-#[no_mangle]
-pub extern "C" fn z_str_null() -> z_owned_str_t {
-    z_owned_str_t {
-        _cstr: std::ptr::null_mut(),
-    }
-}
-
-/// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
-#[no_mangle]
-pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
-    s._cstr
-}
+pub use crate::opaque_types::z_owned_value_t;
+decl_transmute_owned!(Value, z_owned_value_t);
+pub use crate::opaque_types::z_value_t;
+decl_transmute_copy!(&'static Value, z_value_t);
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -420,4 +323,183 @@ impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
 #[no_mangle]
 pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
+}
+
+
+/// The Queryables that should be target of a :c:func:`z_get`.
+///
+///     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+///     - **ALL_COMPLETE**: All complete queryables.
+///     - **ALL**: All matching queryables.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_query_target_t {
+    BEST_MATCHING,
+    ALL,
+    ALL_COMPLETE,
+}
+
+impl From<QueryTarget> for z_query_target_t {
+    #[inline]
+    fn from(t: QueryTarget) -> Self {
+        match t {
+            QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
+            QueryTarget::All => z_query_target_t::ALL,
+            QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
+        }
+    }
+}
+
+impl From<z_query_target_t> for QueryTarget {
+    #[inline]
+    fn from(val: z_query_target_t) -> Self {
+        match val {
+            z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
+            z_query_target_t::ALL => QueryTarget::All,
+            z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
+        }
+    }
+}
+
+/// Create a default :c:type:`z_query_target_t`.
+#[no_mangle]
+pub extern "C" fn z_query_target_default() -> z_query_target_t {
+    QueryTarget::default().into()
+}
+
+/// Consolidation mode values.
+///
+///     - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
+///       If the selector contains time range properties, consolidation mode `NONE` is used.
+///       Otherwise the `LATEST` consolidation mode is used.
+///     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+///     - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
+///       w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+///       replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+///       ts2 > ts1. It optimizes latency.
+///     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
+///       It optimizes bandwidth.
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub enum z_consolidation_mode_t {
+    AUTO = -1,
+    #[default]
+    NONE = 0,
+    MONOTONIC = 1,
+    LATEST = 2,
+}
+
+impl From<Mode<ConsolidationMode>> for z_consolidation_mode_t {
+    #[inline]
+    fn from(cm: Mode<ConsolidationMode>) -> Self {
+        match cm {
+            Mode::Manual(cm) => Self::from(cm),
+            Mode::Auto => z_consolidation_mode_t::AUTO,
+        }
+    }
+}
+
+impl From<ConsolidationMode> for z_consolidation_mode_t {
+    #[inline]
+    fn from(cm: ConsolidationMode) -> Self {
+        match cm {
+            ConsolidationMode::Auto => z_consolidation_mode_t::AUTO,
+            ConsolidationMode::None => z_consolidation_mode_t::NONE,
+            ConsolidationMode::Monotonic => z_consolidation_mode_t::MONOTONIC,
+            ConsolidationMode::Latest => z_consolidation_mode_t::LATEST,
+        }
+    }
+}
+
+impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
+    #[inline]
+    fn from(val: z_consolidation_mode_t) -> Self {
+        match val {
+            z_consolidation_mode_t::AUTO => Mode::Auto,
+            z_consolidation_mode_t::NONE => Mode::Manual(ConsolidationMode::None),
+            z_consolidation_mode_t::MONOTONIC => Mode::Manual(ConsolidationMode::Monotonic),
+            z_consolidation_mode_t::LATEST => Mode::Manual(ConsolidationMode::Latest),
+        }
+    }
+}
+
+/// The priority of zenoh messages.
+///
+///     - **REAL_TIME**
+///     - **INTERACTIVE_HIGH**
+///     - **INTERACTIVE_LOW**
+///     - **DATA_HIGH**
+///     - **DATA**
+///     - **DATA_LOW**
+///     - **BACKGROUND**
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_priority_t {
+    REAL_TIME = 1,
+    INTERACTIVE_HIGH = 2,
+    INTERACTIVE_LOW = 3,
+    DATA_HIGH = 4,
+    DATA = 5,
+    DATA_LOW = 6,
+    BACKGROUND = 7,
+}
+
+impl From<Priority> for z_priority_t {
+    fn from(p: Priority) -> Self {
+        match p {
+            Priority::RealTime => z_priority_t::REAL_TIME,
+            Priority::InteractiveHigh => z_priority_t::INTERACTIVE_HIGH,
+            Priority::InteractiveLow => z_priority_t::INTERACTIVE_LOW,
+            Priority::DataHigh => z_priority_t::DATA_HIGH,
+            Priority::Data => z_priority_t::DATA,
+            Priority::DataLow => z_priority_t::DATA_LOW,
+            Priority::Background => z_priority_t::BACKGROUND,
+        }
+    }
+}
+
+impl From<z_priority_t> for Priority {
+    fn from(p: z_priority_t) -> Self {
+        match p {
+            z_priority_t::REAL_TIME => Priority::RealTime,
+            z_priority_t::INTERACTIVE_HIGH => Priority::InteractiveHigh,
+            z_priority_t::INTERACTIVE_LOW => Priority::InteractiveLow,
+            z_priority_t::DATA_HIGH => Priority::DataHigh,
+            z_priority_t::DATA => Priority::Data,
+            z_priority_t::DATA_LOW => Priority::DataLow,
+            z_priority_t::BACKGROUND => Priority::Background,
+        }
+    }
+}
+
+/// The kind of congestion control.
+///
+///     - **BLOCK**
+///     - **DROP**
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_congestion_control_t {
+    BLOCK,
+    DROP,
+}
+
+impl From<CongestionControl> for z_congestion_control_t {
+    fn from(cc: CongestionControl) -> Self {
+        match cc {
+            CongestionControl::Block => z_congestion_control_t::BLOCK,
+            CongestionControl::Drop => z_congestion_control_t::DROP,
+        }
+    }
+}
+
+impl From<z_congestion_control_t> for CongestionControl {
+    fn from(cc: z_congestion_control_t) -> Self {
+        match cc {
+            z_congestion_control_t::BLOCK => CongestionControl::Block,
+            z_congestion_control_t::DROP => CongestionControl::Drop,
+        }
+    }
 }

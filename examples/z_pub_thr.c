@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     }
 
     while (1) {
-        zc_owned_payload_t payload = zc_payload_encode_from_bytes((z_bytes_t){.start = value, .len = len});
+        z_owned_bytes_t payload = z_bytes_encode_from_bytes((z_slice_t){.start = value, .len = len});
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 

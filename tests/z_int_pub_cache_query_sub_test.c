@@ -61,7 +61,7 @@ int run_publisher() {
 
     // values for cache
     for (int i = 0; i < values_count / 2; ++i) {
-        zc_owned_payload_t payload = zc_payload_encode_from_string(values[i]);
+        z_owned_bytes_t payload = z_bytes_encode_from_string(values[i]);
         z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), NULL);
     }
 
@@ -71,7 +71,7 @@ int run_publisher() {
 
     // values for subscribe
     for (int i = values_count / 2; i < values_count; ++i) {
-        zc_owned_payload_t payload = zc_payload_encode_from_string(values[i]);
+        z_owned_bytes_t payload = z_bytes_encode_from_string(values[i]);
         z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), NULL);
     }
 
@@ -94,7 +94,7 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(keystr));
     z_owned_str_t payload_value = z_str_null();
-    zc_payload_decode_into_string(z_sample_payload(sample), &payload_value);
+    z_bytes_decode_into_string(z_sample_payload(sample), &payload_value);
     if (strcmp(values[val_num], z_loan(payload_value))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_value));

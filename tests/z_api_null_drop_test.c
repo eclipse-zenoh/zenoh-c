@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_closure_t reply_channel_closure_null_1 = z_reply_channel_closure_null();
     z_owned_reply_channel_t reply_channel_null_1 = z_reply_channel_null();
     z_owned_str_t str_null_1 = z_str_null();
-    zc_owned_payload_t payload_null_1 = zc_payload_null();
+    z_owned_bytes_t payload_null_1 = z_bytes_null();
     zc_owned_shmbuf_t shmbuf_null_1 = zc_shmbuf_null();
     zc_owned_shm_manager_t shm_manager_null_1 = zc_shm_manager_null();
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_closure_t reply_channel_closure_null_2;
     z_owned_reply_channel_t reply_channel_null_2;
     z_owned_str_t str_null_2;
-    zc_owned_payload_t payload_null_2;
+    z_owned_bytes_t payload_null_2;
     zc_owned_shmbuf_t shmbuf_null_2;
     zc_owned_shm_manager_t shm_manager_null_2;
 

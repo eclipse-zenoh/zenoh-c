@@ -12,12 +12,11 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    z_closure_hello_call, z_config_check, z_config_default, z_config_null, z_config_t, z_id_t,
-    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, CopyableToCArray,
+    errors::{self, Z_OK}, transmute::{Inplace, TransmuteRef}, z_closure_hello_call, z_config_check, z_config_clone, z_config_drop, z_config_new, z_config_null, z_config_t, z_id_t, z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, CopyableToCArray
 };
 use async_std::task;
 use libc::{c_char, c_uint, c_ulong, size_t};
-use std::{ffi::CString, os::raw::c_void};
+use std::{ffi::CString, mem::MaybeUninit, os::raw::c_void};
 use zenoh::scouting::Hello;
 use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
@@ -157,7 +156,7 @@ pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
 pub extern "C" fn z_hello_null() -> z_owned_hello_t {
     z_owned_hello_t {
         _whatami: 0,
-        _pid: z_id_t { id: [0; 16] },
+        _pid: [0; 16].into(),
         _locators: z_owned_str_array_t {
             val: std::ptr::null_mut(),
             len: 0,
@@ -188,32 +187,47 @@ pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
-    z_owned_scouting_config_t {
-        _config: z_config_null(),
+pub extern "C" fn z_scouting_config_null(this: *mut MaybeUninit<z_owned_scouting_config_t>) {
+    let mut _config = MaybeUninit::<z_owned_config_t>::uninit();
+    z_config_null(&mut _config as *mut MaybeUninit<z_owned_config_t>);
+    let _config = unsafe { _config.assume_init() };
+
+    let config = z_owned_scouting_config_t {
+        _config,
         zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         zc_what: DEFAULT_SCOUTING_WHAT,
-    }
+    };
+    (unsafe { &mut *this }).write(config);
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_default() -> z_owned_scouting_config_t {
-    z_owned_scouting_config_t {
-        _config: z_config_default(),
+pub extern "C" fn z_scouting_config_default(this: *mut MaybeUninit<z_owned_scouting_config_t>) {
+    let mut _config =  MaybeUninit::<z_owned_config_t>::uninit();
+    z_config_new(&mut _config as *mut MaybeUninit<z_owned_config_t>);
+    let _config = unsafe { _config.assume_init() };
+
+    let config = z_owned_scouting_config_t {
+        _config,
         zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         zc_what: DEFAULT_SCOUTING_WHAT,
-    }
+    };
+    (unsafe { &mut *this }).write(config);
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting_config_t {
-    z_owned_scouting_config_t {
-        _config: config.as_ref().clone().into(),
+pub extern "C" fn z_scouting_config_from(config: z_config_t, this: *mut MaybeUninit<z_owned_scouting_config_t>) {
+    let mut dst = MaybeUninit::uninit();
+    z_config_clone(&config, &mut dst as *mut _);
+    let _config = unsafe { dst.assume_init() };
+
+    let config = z_owned_scouting_config_t {
+        _config,
         zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         zc_what: DEFAULT_SCOUTING_WHAT,
-    }
+    };
+    (unsafe { &mut *this }).write(config);
 }
 
 #[no_mangle]
@@ -225,7 +239,7 @@ pub extern "C" fn z_scouting_config_check(config: &z_owned_scouting_config_t) ->
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t) {
-    std::mem::drop(std::mem::replace(config, z_scouting_config_null()));
+    z_config_drop(&mut config._config)
 }
 
 /// Scout for routers and/or peers.
@@ -241,16 +255,17 @@ pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t)
 pub extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
-) -> i8 {
+) -> errors::ZCError {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let config = std::mem::replace(config, z_scouting_config_null());
     let what = WhatAmIMatcher::try_from(config.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = config.zc_timeout_ms as u64;
-    let mut config = config._config;
-    let config = config.as_mut().take().expect("invalid config");
+    let config = match config._config.transmute_mut().extract().take() {
+        Some(c) => c,
+        None => { return errors::Z_EINVAL ;}
+    };
     let mut closure = z_owned_closure_hello_t::empty();
     std::mem::swap(&mut closure, callback);
 
@@ -266,7 +281,7 @@ pub extern "C" fn z_scout(
         async_std::task::sleep(std::time::Duration::from_millis(timeout)).await;
         std::mem::drop(scout);
     });
-    0
+    Z_OK
 }
 
 /// Converts the kind of zenoh entity into a string.

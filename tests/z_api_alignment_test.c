@@ -51,12 +51,12 @@ void query_handler(const z_query_t *query, void *arg) {
     }
 #endif
 
-    z_bytes_t pred = z_query_parameters(query);
+    z_slice_t pred = z_query_parameters(query);
     (void)(pred);
     z_value_t payload_value = z_query_value(query);
     (void)(payload_value);
     z_query_reply_options_t _ret_qreply_opt = z_query_reply_options_default();
-    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    z_owned_bytes_t payload = z_bytes_encode_from_string(value);
     z_query_reply(query, z_keyexpr(z_loan(k_str)), z_move(payload), &_ret_qreply_opt);
 
     z_drop(z_move(k_str));
@@ -261,7 +261,7 @@ int main(int argc, char **argv) {
     z_encoding_t _ret_encoding = z_encoding_default();
     _ret_encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
     _ret_put_opt.encoding = _ret_encoding;
-    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    z_owned_bytes_t payload = z_bytes_encode_from_string(value);
     _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 
@@ -294,7 +294,7 @@ int main(int argc, char **argv) {
     assert(z_check(_ret_pub));
 
     z_publisher_put_options_t _ret_pput_opt = z_publisher_put_options_default();
-    payload = zc_payload_encode_from_string(value);
+    payload = z_bytes_encode_from_string(value);
     _ret_int8 = z_publisher_put(z_loan(_ret_pub), z_move(payload), &_ret_pput_opt);
     assert(_ret_int8 == 0);
 
