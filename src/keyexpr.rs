@@ -44,7 +44,7 @@ pub extern "C" fn z_keyexpr_null(this: *mut MaybeUninit<z_owned_keyexpr_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
-fn keyexpr_create_inner(name: &mut str, should_auto_canonize: bool, should_copy: bool) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
+fn keyexpr_create_inner(name: &'static mut str, should_auto_canonize: bool, should_copy: bool) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
     if should_copy {
         let s = name.to_owned();
         match should_auto_canonize {
@@ -69,7 +69,7 @@ unsafe fn keyexpr_create(name: &'static mut [u8], should_auto_canonize: bool, sh
                     Ok(v)
                 }
                 Err(e) => {
-                    log::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
+                    log::error!("Couldn't construct a keyexpr: {}", e);
                     Err(errors::Z_EINVAL)
                 }
             }

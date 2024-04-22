@@ -5,7 +5,6 @@ use crate::transmute::{
 use crate::{z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, ZHashMap};
 use core::slice;
 use std::any::Any;
-use std::borrow::Cow;
 use std::io::{Read, Seek, SeekFrom};
 use std::mem::MaybeUninit;
 use std::slice::from_raw_parts_mut;
@@ -87,7 +86,11 @@ pub unsafe extern "C" fn z_bytes_decode_into_bytes_map(
 ) -> ZCError {
     let dst = dst.transmute_uninit_ptr();
     let payload = payload.transmute_ref();
-    let hm = ZHashMap::from_iter(payload.iter::<(Cow<'static, [u8]>, Cow<'static, [u8]>)>());
+    let iter = payload.iter::<(Vec<u8>, Vec<u8>)>();
+    let mut hm = ZHashMap::new();
+    for (k, v) in iter {
+        hm.insert(k.into(), v.into());
+    }
     Inplace::init(dst, Some(hm));
     errors::Z_OK
 }

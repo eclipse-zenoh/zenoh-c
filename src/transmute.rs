@@ -92,27 +92,24 @@ impl<T: InplaceDefault> Inplace for T {
 macro_rules! validate_equivalence {
     ($type_a:ty, $type_b:ty) => {
         const _: () = {
-            let align_a = std::mem::align_of::<$type_a>();
-            let align_b = std::mem::align_of::<$type_b>();
-            if align_a != align_b {
-                panic!(
-                    "Alingment mismatch: type `{}` has align {}, type `{}` has align {}",
-                    stringify!($type_a),
-                    align_a,
-                    stringify!($type_b),
-                    align_b
-                );
+            use const_format::concatcp;
+            const TYPE_NAME_A: &str = stringify!($type_a);
+            const TYPE_NAME_B: &str = stringify!($type_b);
+            const ALIGN_A: usize = std::mem::align_of::<$type_a>();
+            const ALIGN_B: usize = std::mem::align_of::<$type_b>();
+            if ALIGN_A != ALIGN_B {
+                const ERR_MESSAGE: &str = concatcp!(
+                    "Alingment mismatch: type ", TYPE_NAME_A, " has alignment ", ALIGN_A,
+                " while type ", TYPE_NAME_B, " has alignment ", ALIGN_B);
+                panic!("{}", ERR_MESSAGE);
             }
-            let size_a = std::mem::size_of::<$type_a>();
-            let size_b = std::mem::size_of::<$type_b>();
-            if size_a != size_b {
-                panic!(
-                    "Size mismatch: type `{}` has size {}, type `{}` has size {}",
-                    stringify!($type_a),
-                    size_a,
-                    stringify!($type_b),
-                    size_b
-                );
+            const SIZE_A: usize = std::mem::size_of::<$type_a>();
+            const SIZE_B: usize = std::mem::size_of::<$type_b>();
+            if SIZE_A != SIZE_B {
+                const ERR_MESSAGE: &str = concatcp!(
+                    "Size mismatch: type ", TYPE_NAME_A, " has size ", SIZE_A,
+                " while type ", TYPE_NAME_B, " has size ", SIZE_B);
+                panic!("{}", ERR_MESSAGE);
             }
         };
     };

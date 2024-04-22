@@ -19,6 +19,7 @@ use std::str::FromStr;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteCopy;
+use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
@@ -87,34 +88,34 @@ pub unsafe extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t
 ///
 /// A sample is the value associated to a given resource at a given point in time.
 use crate::opaque_types::z_sample_t;
-decl_transmute_copy!(&'static Sample, z_sample_t);
+decl_transmute_handle!(Sample, z_sample_t);
 
 /// The Key Expression of the sample.
 ///
 /// `sample` is aliased by its return value.
 #[no_mangle]
 pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
-    let sample = sample.transmute_copy();
+    let sample = sample.transmute_ref();
     sample.key_expr().into()
 }
 /// The encoding of the payload.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
-    let sample = sample.transmute_copy();
+    let sample = sample.transmute_ref();
     sample.encoding().transmute_copy()
 }
 /// The sample's data, the return value aliases the sample.
 ///
 #[no_mangle]
 pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_bytes_t {
-    let sample = sample.transmute_copy();
+    let sample = sample.transmute_ref();
     sample.payload().transmute_handle()
 }
 
 /// The sample's kind (put or delete).
 #[no_mangle]
 pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
-    let sample = sample.transmute_copy();
+    let sample = sample.transmute_ref();
     sample.kind().into()
 }
 /// The samples timestamp
@@ -122,7 +123,7 @@ pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
 /// Returns true if Sample contains timestamp, false otherwise. In the latter case the timestamp_out value is not altered.
 #[no_mangle]
 pub extern "C" fn z_sample_timestamp(sample: &z_sample_t, timestamp_out: &mut z_timestamp_t) -> bool {
-    let sample = sample.transmute_copy();
+    let sample = sample.transmute_ref();
     if let Some(t) = sample.timestamp() {
         *timestamp_out = t.transmute_copy();
         true
@@ -136,7 +137,7 @@ pub extern "C" fn z_sample_timestamp(sample: &z_sample_t, timestamp_out: &mut z_
 /// Checks if sample contains an attachment.
 #[no_mangle]
 pub extern "C" fn z_sample_has_attachment(sample: z_sample_t) -> bool {
-    let sample = sample.transmute_copy();
+    let sample = sample.transmute_ref();
     sample.attachment().is_some()
 }
 
@@ -145,7 +146,7 @@ pub extern "C" fn z_sample_has_attachment(sample: z_sample_t) -> bool {
 /// Before calling this function, ensure that `zc_sample_has_attachment` returns true
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(sample: z_sample_t) -> z_bytes_t {
-    let sample = sample.transmute_copy();
+    let sample = sample.transmute_ref();
     sample.attachment().expect("Sample does not have an attachment").transmute_handle()
 }
 
@@ -155,7 +156,7 @@ decl_transmute_owned!(Option<Sample>, zc_owned_sample_t);
 /// Clone a sample in the cheapest way available.
 #[no_mangle]
 pub extern "C" fn zc_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owned_sample_t>) {
-    let src = src.transmute_copy();
+    let src = src.transmute_ref();
     let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
     Inplace::init(dst, Some(src));
@@ -176,7 +177,7 @@ pub extern "C" fn zc_sample_check(sample: &zc_owned_sample_t) -> bool {
 /// Calling this function using a dropped sample is undefined behaviour.
 #[no_mangle]
 pub extern "C" fn zc_sample_loan(sample: &'static zc_owned_sample_t) -> z_sample_t {
-    unwrap_ref_unchecked(sample.transmute_ref()).transmute_copy()
+    unwrap_ref_unchecked(sample.transmute_ref()).transmute_handle()
 }
 
 /// Destroy the sample.

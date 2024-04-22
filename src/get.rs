@@ -62,7 +62,7 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: z_reply_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(reply: z_reply_t) -> z_sample_t {
     let reply = reply.transmute_ref();
-    reply.result().expect("Reply does not contain a sample").transmute_copy()
+    reply.result().expect("Reply does not contain a sample").transmute_handle()
 }
 
 /// Yields the contents of the reply by asserting it indicates a failure.

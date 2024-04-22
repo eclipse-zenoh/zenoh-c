@@ -304,7 +304,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
         })
         .res();
     match listener {
-        Ok(l) => {
+        Ok(_) => {
             Inplace::empty(this);
             errors::Z_OK
         },

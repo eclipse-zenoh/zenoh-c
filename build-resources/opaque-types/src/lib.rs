@@ -1,12 +1,17 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::Condvar;
+use std::sync::Mutex;
+use std::sync::MutexGuard;
+use std::thread::JoinHandle;
 use zenoh::config::Config;
 use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
 use zenoh::handlers::DefaultHandler;
 use zenoh::key_expr::KeyExpr;
 use zenoh::bytes::{ZBytes, ZBytesReader};
+use zenoh::liveliness::LivelinessToken;
 use zenoh::publication::MatchingListener;
 use zenoh::publication::Publisher;
 use zenoh::query::Reply;
@@ -14,75 +19,22 @@ use zenoh::queryable::Query;
 use zenoh::queryable::Queryable;
 use zenoh::sample::Sample;
 use zenoh::session::Session;
+use zenoh::subscriber::Subscriber;
 use zenoh::time::Timestamp;
 use zenoh::value::Value;
-
-// Disabled due to dependency on z_session_t. To be reworked as for autogeneration this dependency is cicrular.
-// pub struct FetchingSubscriberWrapper {
-//     fetching_subscriber: zenoh_ext::FetchingSubscriber<'static, ()>,
-//     session: z_session_t,
-// }
 
 #[macro_export]
 macro_rules! get_opaque_type_data {
     ($src_type:ty, $name:ident) => {
         const _: () = {
-            const fn get_num_digits(n: usize) -> usize {
-                let mut out = 0;
-                let mut res = n;
-                while res > 0 {
-                    out += 1;
-                    res = res / 10;
-                }
-                if out == 0 {
-                    out = 1;
-                }
-                out
-            }
-
-            const fn write_str(src: &[u8], mut dst: [u8; MSG_LEN], offset: usize) -> [u8; MSG_LEN] {
-                let mut i = 0;
-                while i < src.len() {
-                    dst[i + offset] = src[i];
-                    i += 1;
-                }
-                dst
-            }
-
-            const fn write_num(src: usize, mut dst: [u8; MSG_LEN], offset: usize) -> [u8; MSG_LEN] {
-                let mut i = 0;
-                let num_digits = get_num_digits(src) as u32;
-                while i < num_digits {
-                    dst[i as usize + offset] = b'0' + ((src / 10u32.pow(num_digits - i - 1) as usize) % 10) as u8;
-                    i += 1;
-                }
-                dst
-            }
-
+            use const_format::concatcp;
             const DST_NAME: &str = stringify!($name);
             const ALIGN: usize = std::mem::align_of::<$src_type>();
             const SIZE: usize = std::mem::size_of::<$src_type>();
-            const TYPE_TOKEN: [u8; 6] = *b"type: ";
-            const ALIGN_TOKEN: [u8; 9] = *b", align: ";
-            const SIZE_TOKEN: [u8; 8] = *b", size: ";
-            const SIZE_NUM_DIGITS: usize = get_num_digits(SIZE);
-            const ALIGN_NUM_DIGITS: usize = get_num_digits(ALIGN);
-            const MSG_LEN: usize = TYPE_TOKEN.len() + ALIGN_TOKEN.len() + SIZE_TOKEN.len() + SIZE_NUM_DIGITS + ALIGN_NUM_DIGITS + DST_NAME.len();
-            const TYPE_OFFSET: usize = TYPE_TOKEN.len();
-            const ALIGN_OFFSET: usize = TYPE_OFFSET + DST_NAME.len() + ALIGN_TOKEN.len();
-            const SIZE_OFFSET: usize = ALIGN_OFFSET + ALIGN_NUM_DIGITS + SIZE_TOKEN.len();
-            let mut msg: [u8; MSG_LEN] = [b' '; MSG_LEN];
-
-            msg = write_str(&TYPE_TOKEN, msg, 0);
-            msg = write_str(&DST_NAME.as_bytes(), msg, TYPE_OFFSET);
-            msg = write_str(&ALIGN_TOKEN, msg, ALIGN_OFFSET - ALIGN_TOKEN.len());
-            msg = write_num(ALIGN, msg, ALIGN_OFFSET);
-            msg = write_str(&SIZE_TOKEN, msg, SIZE_OFFSET - SIZE_TOKEN.len());
-            msg = write_num(SIZE, msg, SIZE_OFFSET);
-
-            panic!("{}", unsafe {
-                std::str::from_utf8_unchecked(msg.as_slice())
-            });
+            const INFO_MESSAGE: &str = concatcp!(
+                "type: ", DST_NAME, ", align: ", ALIGN, ", size: ", SIZE
+            );
+            panic!("{}", INFO_MESSAGE);
         };
     }
 }
@@ -151,14 +103,18 @@ get_opaque_type_data!(&'static Query, z_query_t);
 get_opaque_type_data!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 get_opaque_type_data!(&'static Queryable<'static, ()>, z_queryable_t);
 
-// get_opaque_type_data!(
-//     Option<Box<FetchingSubscriberWrapper>>,
-//     ze_owned_querying_subscriber_t
-// );
-// get_opaque_type_data!(
-//     &'static FetchingSubscriberWrapper,
-//     ze_querying_subscriber_t
-// );
+/// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
+///
+/// Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+///
+/// Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+get_opaque_type_data!(Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>, ze_owned_querying_subscriber_t);
+get_opaque_type_data!(&'static (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session), ze_querying_subscriber_t);
 
 /// A zenoh-allocated key expression.
 ///
@@ -255,3 +211,48 @@ get_opaque_type_data!(&'static Publisher<'static>, z_publisher_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<MatchingListener<'static, DefaultHandler>>, zcu_owned_matching_listener_t);
+
+
+/// An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+get_opaque_type_data!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
+get_opaque_type_data!(&'static Subscriber<'static, ()>, z_subscriber_t);
+
+/// A liveliness token that can be used to provide the network with information about connectivity to its
+/// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
+/// expressions.
+///
+/// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
+get_opaque_type_data!(Option<LivelinessToken<'static>>, zc_owned_liveliness_token_t);
+get_opaque_type_data!(&'static LivelinessToken<'static>, zc_liveliness_token_t);
+
+
+/// An owned zenoh publication_cache.
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+get_opaque_type_data!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
+get_opaque_type_data!(&'static zenoh_ext::PublicationCache<'static>, ze_publication_cache_t);
+
+
+get_opaque_type_data!(Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>, z_owned_mutex_t);
+get_opaque_type_data!(&'static (Mutex<()>, Option<MutexGuard<'static, ()>>), z_mutex_t);
+
+get_opaque_type_data!(Option<Condvar>, z_owned_condvar_t);
+get_opaque_type_data!(&'static Condvar, z_condvar_t);
+
+get_opaque_type_data!(Option<JoinHandle<()>>, z_owned_task_t);

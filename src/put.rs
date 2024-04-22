@@ -1,3 +1,5 @@
+use std::ptr::null_mut;
+
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -12,23 +14,24 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::commons::*;
+use crate::errors;
 use crate::keyexpr::*;
 use crate::session::*;
+use crate::transmute::Inplace;
+use crate::transmute::TransmuteCopy;
+use crate::transmute::TransmuteFromHandle;
+use crate::transmute::TransmuteRef;
 use crate::z_owned_bytes_t;
+use crate::z_session_t;
 use crate::LOG_INVALID_SESSION;
 use libc::c_void;
 use zenoh::encoding;
+use zenoh::key_expr;
 use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};
 use zenoh::publication::CongestionControl;
-use zenoh::sample::AttachmentBuilder;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
-
-use crate::attachment::{
-    insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
-   z_bytes_t,
-};
 
 /// Options passed to the :c:func:`z_put` function.
 ///
@@ -40,10 +43,10 @@ use crate::attachment::{
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
-    pub encoding: z_encoding_t,
+    pub encoding: *mut z_owned_encoding_t,
     pub congestion_control: z_congestion_control_t,
     pub priority: z_priority_t,
-    pub attachment:z_bytes_t,
+    pub attachment: *mut z_owned_bytes_t,
 }
 
 /// Constructs the default value for :c:type:`z_put_options_t`.
@@ -51,71 +54,60 @@ pub struct z_put_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put_options_default() -> z_put_options_t {
     z_put_options_t {
-        encoding: z_encoding_default(),
+        encoding: null_mut(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
-        attachment: z_attachment_null(),
+        attachment: null_mut(),
     }
 }
 
-/// Put data, transfering the buffer ownership.
+/// Put data, transfering its ownership.
 ///
-/// This is avoids copies when transfering data that was either:
-/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
-/// - constructed from a `zc_owned_shmbuf_t`
 ///
-/// The payload's encoding can be sepcified through the options.
+/// The payload's encoding and attachment can be sepcified through the options. These values are consumed upon function
+/// return.
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     keyexpr: The key expression to put.
-///     payload: The value to put.
+///     key_expr: The key expression to put.
+///     payload: The value to put (consumed upon function return).
 ///     options: The put options.
 /// Returns:
-///     ``0`` in case of success, negative values in case of failure.
+///     ``0`` in case of success, negative error values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put(
     session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    payload: Option<&mut z_owned_bytes_t>,
-    opts: Option<&z_put_options_t>,
-) -> i8 {
-    match session.upgrade() {
-        Some(s) => {
-            if let Some(payload) = payload.and_then(|p| p.take()) {
-                let mut res = s.put(keyexpr, payload);
-                if let Some(opts) = opts {
-                    res = res
-                        .encoding(**opts.encoding)
-                        .congestion_control(opts.congestion_control.into())
-                        .priority(opts.priority.into());
-                    if z_attachment_check(&opts.attachment) {
-                        let mut attachment_builder = AttachmentBuilder::new();
-                        z_attachment_iterate(
-                            opts.attachment,
-                            insert_in_attachment_builder,
-                            &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-                        );
-                        res = res.attachment(attachment_builder.build());
-                    };
-                }
-                match res.res_sync() {
-                    Err(e) => {
-                        log::error!("{}", e);
-                        e.errno().get()
-                    }
-                    Ok(()) => 0,
-                }
-            } else {
-                log::debug!("z_bytes_null was provided as payload for put");
-                i8::MIN
-            }
-        }
+    key_expr: z_keyexpr_t,
+    payload: &mut z_owned_bytes_t,
+    options: z_put_options_t,
+) -> errors::ZCError {
+    let session = session.transmute_copy();
+    let key_expr = key_expr.transmute_ref();
+    let payload = match payload.transmute_mut().extract() {
+        Some(p) => p,
         None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
-            i8::MIN
+            log::debug!("Attempted to put with a null payload");
+            return errors::Z_EINVAL;
         }
+    };
+    
+    let mut put = session.put(key_expr, payload);
+
+    if !options.encoding.is_null() {
+        let encoding = unsafe{ *options.encoding }.transmute_mut().extract();
+        put = put.encoding(encoding);
+    };
+    if !options.attachment.is_null() {
+        let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+        put = put.attachment(attachment);
+    }
+
+    if let Err(e) = put.res_sync() {
+        log::error!("{}", e);
+        errors::Z_EGENERIC
+    } else {
+        errors::Z_OK
     }
 }
 
@@ -141,7 +133,7 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     keyexpr: The key expression to delete.
+///     key_expr: The key expression to delete.
 ///     options: The put options.
 /// Returns:
 ///     ``0`` in case of success, negative values in case of failure.
@@ -149,28 +141,21 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_delete(
     session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    opts: Option<&z_delete_options_t>,
-) -> i8 {
-    match session.upgrade() {
-        Some(s) => {
-            let mut res = s.delete(keyexpr);
-            if let Some(opts) = opts {
-                res = res
-                    .congestion_control(opts.congestion_control.into())
-                    .priority(opts.priority.into());
-            }
-            match res.res_sync() {
-                Err(e) => {
-                    log::error!("{}", e);
-                    e.errno().get()
-                }
-                Ok(()) => 0,
-            }
+    key_expr: z_keyexpr_t,
+    opts: z_delete_options_t,
+) -> errors::ZCError {
+    let session = session.transmute_copy();
+    let key_expr = key_expr.transmute_ref();
+    let del 
+        = session.delete(key_expr)
+        .congestion_control(opts.congestion_control.into())
+        .priority(opts.priority.into());
+ 
+    match del.res_sync() {
+        Err(e) => {
+            log::error!("{}", e);
+            errors::Z_EGENERIC
         }
-        None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
-            i8::MIN
-        }
+        Ok(()) => errors::Z_OK,
     }
 }
