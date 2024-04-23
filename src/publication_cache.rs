@@ -90,7 +90,7 @@ pub extern "C" fn ze_declare_publication_cache(
     session: z_session_t,
     key_expr: z_keyexpr_t,
     options: ze_publication_cache_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
@@ -138,7 +138,7 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
     this: &mut ze_owned_publication_cache_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     if let Some(p) = this.transmute_mut().extract().take() {
         if let Err(e) = p.close().res_sync() {
             log::error!("{}", e);

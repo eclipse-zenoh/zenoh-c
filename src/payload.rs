@@ -1,4 +1,4 @@
-use crate::errors::{self, ZCError};
+use crate::errors::{self, z_error_t};
 use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
@@ -71,7 +71,7 @@ extern "C" fn z_bytes_len(payload: z_bytes_t) -> usize {
 pub unsafe extern "C" fn z_bytes_decode_into_string(
     payload: z_bytes_t,
     dst: *mut MaybeUninit<z_owned_str_t>,
-) -> ZCError {
+) -> z_error_t {
     let len = z_bytes_len(payload);
     let cstr = z_owned_str_t::preallocate(len);
     let payload = payload.transmute_ref();
@@ -94,7 +94,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
 pub unsafe extern "C" fn z_bytes_decode_into_bytes_map(
     payload: z_bytes_t,
     dst: *mut MaybeUninit<z_owned_slice_map_t>,
-) -> ZCError {
+) -> z_error_t {
     let dst = dst.transmute_uninit_ptr();
     let payload = payload.transmute_ref();
     let iter = payload.iter::<(Vec<u8>, Vec<u8>)>();
@@ -112,7 +112,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_bytes_map(
 pub unsafe extern "C" fn z_bytes_decode_into_bytes(
     payload: z_bytes_t,
     dst: *mut MaybeUninit<z_owned_slice_t>,
-) -> ZCError {
+) -> z_error_t {
     let len = z_bytes_len(payload);
     let b = z_owned_slice_t::preallocate(len);
     let payload = payload.transmute_ref();
@@ -253,7 +253,7 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
     this: z_bytes_reader_t,
     offset: i64,
     origin: libc::c_int,
-) -> ZCError {
+) -> z_error_t {
     let reader = this.transmute_mut();
     let pos = match origin {
         libc::SEEK_SET => offset.try_into().map(SeekFrom::Start),

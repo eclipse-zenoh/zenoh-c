@@ -134,7 +134,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: ze_querying_subscriber_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -180,7 +180,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     sub: ze_querying_subscriber_t,
     selector: z_keyexpr_t,
     options: Option<&z_get_options_t>,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     unsafe impl Sync for z_get_options_t {}
     let sub = sub.transmute_ref();
     let session = sub.1;
@@ -212,7 +212,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
     this: &mut ze_owned_querying_subscriber_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     if let Some(s) = this.transmute_mut().extract().take() {
         if let Err(e) = s.0.close().res_sync() {
             log::error!("{}", e);

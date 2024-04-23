@@ -16,7 +16,7 @@ use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
-use crate::errors::{ZCError, Z_EPARSE};
+use crate::errors::{z_error_t, Z_EPARSE};
 use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
@@ -170,7 +170,7 @@ pub extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
 pub unsafe extern "C" fn zc_config_from_str(
     s: *const c_char,
     this: *mut MaybeUninit<z_owned_config_t>,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let mut res = errors::Z_OK;
     if s.is_null() {
         z_config_null(this);
@@ -205,7 +205,7 @@ pub extern "C" fn zc_config_to_string(config: z_config_t) -> z_owned_str_t {
 pub unsafe extern "C" fn zc_config_from_file(
     path: *const c_char,
     this: *mut MaybeUninit<z_owned_config_t>,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let path_str = CStr::from_ptr(path);
     let mut res = errors::Z_OK;
     let config = match path_str.to_str() {
@@ -245,7 +245,7 @@ pub unsafe extern "C" fn z_config_client(
     peers: *const *const c_char,
     n_peers: usize,
     this: *mut MaybeUninit<z_owned_config_t>,
-) -> ZCError {
+) -> z_error_t {
     let mut res = errors::Z_OK;
     let locators = if peers.is_null() {
         Vec::new()

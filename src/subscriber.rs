@@ -140,7 +140,7 @@ pub extern "C" fn z_declare_subscriber(
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: z_subscriber_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -178,7 +178,9 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_keyexpr_
 /// Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(subscriber: &mut z_owned_subscriber_t) -> errors::ZCError {
+pub extern "C" fn z_undeclare_subscriber(
+    subscriber: &mut z_owned_subscriber_t,
+) -> errors::z_error_t {
     if let Some(s) = subscriber.transmute_mut().extract().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::error!("{}", e);

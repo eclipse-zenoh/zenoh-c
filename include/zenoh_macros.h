@@ -14,8 +14,13 @@
                   z_owned_hello_t : z_hello_loan,                              \
                   z_owned_str_t : z_str_loan,                                  \
                   z_owned_query_t : z_query_loan,                              \
-                  z_owned_bytes_t : z_bytes_loan,                        \
-                  ze_owned_querying_subscriber_t : ze_querying_subscriber_loan \
+                  z_owned_slice_map_t : z_slice_map_loan                       \
+                  z_owned_slice_t : z_slice_loan,                              \
+                  z_owned_bytes_t : z_bytes_loan,                              \
+                  ze_owned_querying_subscriber_t : ze_querying_subscriber_loan,\
+                  z_owned_mutex_t : z_mutex_loan,                              \
+                  z_condvar_t : z_condvar_loan,                                \
+                  z_owned_bytes_reader_t : z_bytes_reader_loan,                \
             )(&x)
 
 #define z_drop(x) \
@@ -24,7 +29,6 @@
                   z_owned_keyexpr_t * : z_keyexpr_drop,                                 \
                   z_owned_config_t * : z_config_drop,                                   \
                   z_owned_scouting_config_t * : z_scouting_config_drop,                 \
-                  z_owned_pull_subscriber_t * : z_undeclare_pull_subscriber,            \
                   z_owned_subscriber_t * : z_undeclare_subscriber,                      \
                   z_owned_queryable_t * : z_undeclare_queryable,                        \
                   z_owned_encoding_t * : z_encoding_drop,                               \
@@ -42,13 +46,16 @@
                   z_owned_query_channel_closure_t * : z_query_channel_closure_drop,     \
                   z_owned_reply_channel_t * : z_reply_channel_drop,                     \
                   z_owned_query_channel_t * : z_query_channel_drop,                     \
-                  z_owned_bytes_map_t * : z_slice_map_drop,                             \
-                  z_owned_bytes_t * : z_bytes_drop,                               \
-                  zc_owned_shmbuf_t * : zc_shmbuf_drop,                                 \
-                  zc_owned_shm_manager_t * : zc_shm_manager_drop,                       \
+                  z_owned_slice_map_t * : z_slice_map_drop,                             \
+                  z_owned_slice_t * : z_slice_drop,                                     \
                   zc_owned_liveliness_token_t * : zc_liveliness_undeclare_token,        \
                   ze_owned_publication_cache_t * : ze_undeclare_publication_cache,      \
-                  ze_owned_querying_subscriber_t * : ze_undeclare_querying_subscriber   \
+                  ze_owned_querying_subscriber_t * : ze_undeclare_querying_subscriber,  \
+                  z_owned_bytes_t * : z_bytes_drop,                                     \
+                  z_owned_bytes_reader_t * : z_bytes_reader_drop,                       \
+                  z_owned_mutex_t * : z_mutex_drop,                                     \
+                  z_owned_condvar_t * : z_condvar_drop,                                 \
+                  z_owned_bytes_reader_t * : z_bytes_reader_drop                        \
             )(x)
 
 #define z_null(x) (*x = \
@@ -57,7 +64,6 @@
                   z_owned_keyexpr_t * : z_keyexpr_null,                                 \
                   z_owned_config_t * : z_config_null,                                   \
                   z_owned_scouting_config_t * : z_scouting_config_null,                 \
-                  z_owned_pull_subscriber_t * : z_pull_subscriber_null,                 \
                   z_owned_subscriber_t * : z_subscriber_null,                           \
                   z_owned_queryable_t * : z_queryable_null,                             \
                   z_owned_encoding_t * : z_encoding_null,                               \
@@ -73,13 +79,15 @@
                   zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_null, \
                   z_owned_reply_channel_closure_t * : z_reply_channel_closure_null,     \
                   z_owned_reply_channel_t * : z_reply_channel_null,                     \
-                  z_owned_bytes_map_t * : z_slice_map_null,                             \
-                  z_owned_bytes_t * : z_bytes_null,                               \
-                 z_bytes_t * : z_attachment_null,                                 \
-                  zc_owned_shmbuf_t * : zc_shmbuf_null,                                 \
-                  zc_owned_shm_manager_t * : zc_shm_manager_null,                       \
+                  z_owned_slice_map_t * : z_slice_map_null,                             \
+                  z_owned_bytes_t * : z_bytes_null,                                     \
+                  z_owned_slice_t * : z_slice_null,                                     \
                   ze_owned_publication_cache_t * : ze_publication_cache_null,           \
-                  zc_owned_liveliness_token_t * : zc_liveliness_token_null              \
+                  zc_owned_liveliness_token_t * : zc_liveliness_token_null,             \
+                  z_owned_bytes_reader_t * : z_bytes_reader_null,                       \
+                  z_owned_mutex_t * : z_mutex_null,                                     \
+                  z_owned_condvar_t * : z_condvar_null,                                 \
+                  z_owned_task_t * : z_task_null                                        \
             )())
 
 #define z_check(x) \
@@ -89,7 +97,6 @@
                   z_keyexpr_t : z_keyexpr_is_initialized,                       \
                   z_owned_config_t : z_config_check,                            \
                   z_owned_scouting_config_t : z_scouting_config_check,          \
-                  z_owned_bytes_t : z_slice_check,                              \
                   z_owned_subscriber_t : z_subscriber_check,                    \
                   z_owned_pull_subscriber_t : z_pull_subscriber_check,          \
                   z_owned_queryable_t : z_queryable_check,                      \
@@ -98,14 +105,15 @@
                   z_owned_hello_t : z_hello_check,                              \
                   z_owned_query_t : z_query_check,                              \
                   z_owned_str_t : z_str_check,                                  \
-                  z_owned_bytes_map_t : z_slice_map_check,                      \
-                  z_owned_bytes_t: z_bytes_check,                         \
-                 z_bytes_t : z_attachment_check,                          \
-                  zc_owned_shmbuf_t : zc_shmbuf_check,                          \
-                  zc_owned_shm_manager_t : zc_shm_manager_check,                \
+                  z_owned_slice_map_t : z_slice_map_check,                      \
+                  z_owned_slice_t: z_slice_check,                               \
+                  z_owned_bytes_t : z_bytes_check,                              \
                   zc_owned_liveliness_token_t : zc_liveliness_token_check,      \
                   ze_owned_publication_cache_t : ze_publication_cache_check,    \
                   ze_owned_querying_subscriber_t : ze_querying_subscriber_check \
+                  z_owned_mutex_t : z_mutex_check,                              \
+                  z_owned_condvar_t : z_owned_condar_check,                     \
+                  z_owned_task_t : z_task_check                                 \
             )(&x)
 
 #define z_call(x, ...) \
@@ -138,12 +146,16 @@ template<> struct zenoh_loan_type<z_owned_config_t>{ typedef z_config_t type; };
 template<> struct zenoh_loan_type<z_owned_publisher_t>{ typedef z_publisher_t type; };
 template<> struct zenoh_loan_type<z_owned_subscriber_t>{ typedef z_subscriber_t type; };
 template<> struct zenoh_loan_type<z_owned_query_t>{ typedef z_query_t type; };
-template<> struct zenoh_loan_type<z_owned_pull_subscriber_t>{ typedef z_pull_subscriber_t type; };
 template<> struct zenoh_loan_type<z_owned_encoding_t>{ typedef z_encoding_t type; };
 template<> struct zenoh_loan_type<z_owned_hello_t>{ typedef z_hello_t type; };
 template<> struct zenoh_loan_type<z_owned_str_t>{ typedef const char* type; };
 template<> struct zenoh_loan_type<z_owned_bytes_t>{ typedef z_bytes_t type; };
+template<> struct zenoh_loan_type<z_owned_bytes_reader_t>{ typedef z_bytes_reader_t type; };
 template<> struct zenoh_loan_type<ze_owned_querying_subscriber_t>{ typedef ze_querying_subscriber_t type; };
+template<> struct zenoh_loan_type<z_owned_slice_t>{ typedef z_slice_t type; };
+template<> struct zenoh_loan_type<z_owned_slice_map_t>{ typedef z_slice_map_t type; };
+template<> struct zenoh_loan_type<z_owned_mutex_t>{ typedef z_mutex_t type; };
+template<> struct zenoh_loan_type<z_owned_condvar_t>{ typedef z_condvar_t type; };
 
 template<> inline z_session_t z_loan(const z_owned_session_t& x) { return z_session_loan(&x); }
 template<> inline z_keyexpr_t z_loan(const z_owned_keyexpr_t& x) { return z_keyexpr_loan(&x); }
@@ -156,7 +168,12 @@ template<> inline z_hello_t z_loan(const z_owned_hello_t& x) { return z_hello_lo
 template<> inline z_query_t z_loan(const z_owned_query_t& x) { return z_query_loan(&x); }
 template<> inline const char* z_loan(const z_owned_str_t& x) { return z_str_loan(&x); }
 template<> inline z_bytes_t z_loan(const z_owned_bytes_t& x) { return z_bytes_loan(&x); }
+template<> inline z_bytes_reader_t z_loan(const z_owned_bytes_reader_t& x) { return z_bytes_reader_loan(&x); }
 template<> inline ze_querying_subscriber_t z_loan(const ze_owned_querying_subscriber_t& x) { return ze_querying_subscriber_loan(&x); }
+template<> inline z_slice_t z_loan(const z_owned_slice_t& x) { return z_slice_loan(&x); }
+template<> inline z_slice_map_t z_loan(const z_owned_slice_map_t& x) { return z_slice_map_loan(&x); }
+template<> inline z_mutex_t z_loan(const z_owned_mutex_t& x) { return z_mutex_loan(&x); }
+template<> inline z_condvar_t z_loan(const z_owned_condvar_t& x) { return z_condvar_loan(&x); }
 
 template<class T> struct zenoh_drop_type { typedef T type; };
 template<class T> inline typename zenoh_drop_type<T>::type z_drop(T*);
@@ -166,7 +183,6 @@ template<> struct zenoh_drop_type<z_owned_publisher_t> { typedef int8_t type; };
 template<> struct zenoh_drop_type<z_owned_keyexpr_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_config_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_scouting_config_t> { typedef void type; };
-template<> struct zenoh_drop_type<z_owned_pull_subscriber_t> { typedef int8_t type; };
 template<> struct zenoh_drop_type<z_owned_subscriber_t> { typedef int8_t type; };
 template<> struct zenoh_drop_type<z_owned_queryable_t> { typedef int8_t type; };
 template<> struct zenoh_drop_type<z_owned_encoding_t> { typedef void type; };
@@ -175,9 +191,7 @@ template<> struct zenoh_drop_type<z_owned_hello_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_query_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_str_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_bytes_t> { typedef void type; };
-template<> struct zenoh_drop_type<z_owned_bytes_t> { typedef void type; };
-template<> struct zenoh_drop_type<zc_owned_shmbuf_t> { typedef void type; };
-template<> struct zenoh_drop_type<zc_owned_shm_manager_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_bytes_reader_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_sample_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_query_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_closure_reply_t> { typedef void type; };
@@ -186,10 +200,13 @@ template<> struct zenoh_drop_type<z_owned_closure_zid_t> { typedef void type; };
 template<> struct zenoh_drop_type<zcu_owned_closure_matching_status_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_closure_t> { typedef void type; };
 template<> struct zenoh_drop_type<z_owned_reply_channel_t> { typedef void type; };
-template<> struct zenoh_drop_type<z_owned_bytes_map_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_slice_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_slice_map_t> { typedef void type; };
 template<> struct zenoh_drop_type<zc_owned_liveliness_token_t> { typedef void type; };
 template<> struct zenoh_drop_type<ze_owned_publication_cache_t> { typedef int8_t type; };
 template<> struct zenoh_drop_type<ze_owned_querying_subscriber_t> { typedef int8_t type; };
+template<> struct zenoh_drop_type<z_owned_mutex_t> { typedef void type; };
+template<> struct zenoh_drop_type<z_owned_condvar_t> { typedef void type; };
 
 template<> inline int8_t z_drop(z_owned_session_t* v) { return z_close(v); }
 template<> inline int8_t z_drop(z_owned_publisher_t* v) { return z_undeclare_publisher(v); }
@@ -205,9 +222,7 @@ template<> inline void z_drop(z_owned_hello_t* v) { z_hello_drop(v); }
 template<> inline void z_drop(z_owned_query_t* v) { z_query_drop(v); }
 template<> inline void z_drop(z_owned_str_t* v) { z_str_drop(v); }
 template<> inline void z_drop(z_owned_bytes_t* v) { z_bytes_drop(v); }
-template<> inline void z_drop(z_owned_bytes_t* v) { z_bytes_drop(v); }
-template<> inline void z_drop(zc_owned_shmbuf_t* v) { zc_shmbuf_drop(v); }
-template<> inline void z_drop(zc_owned_shm_manager_t* v) { zc_shm_manager_drop(v); }
+template<> inline void z_drop(z_owned_bytes_reader_t* v) { z_bytes_reader_drop(v); }
 template<> inline void z_drop(z_owned_closure_sample_t* v) { z_closure_sample_drop(v); }
 template<> inline void z_drop(z_owned_closure_query_t* v) { z_closure_query_drop(v); }
 template<> inline void z_drop(z_owned_closure_reply_t* v) { z_closure_reply_drop(v); }
@@ -216,17 +231,19 @@ template<> inline void z_drop(z_owned_closure_zid_t* v) { z_closure_zid_drop(v);
 template<> inline void z_drop(zcu_owned_closure_matching_status_t* v) { zcu_closure_matching_status_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_closure_t* v) { z_reply_channel_closure_drop(v); }
 template<> inline void z_drop(z_owned_reply_channel_t* v) { z_reply_channel_drop(v); }
-template<> inline void z_drop(z_owned_bytes_map_t* v) { z_slice_map_drop(v); }
+template<> inline void z_drop(z_owned_slice_t* v) { z_slice_drop(v); }
+template<> inline void z_drop(z_owned_slice_map_t* v) { z_slice_map_drop(v); }
 template<> inline void z_drop(zc_owned_liveliness_token_t* v) { zc_liveliness_undeclare_token(v); }
 template<> inline int8_t z_drop(ze_owned_publication_cache_t* v) { return ze_undeclare_publication_cache(v); }
 template<> inline int8_t z_drop(ze_owned_querying_subscriber_t* v) { return ze_undeclare_querying_subscriber(v); }
+template<> inline void z_drop(z_owned_mutex_t* v) { z_mutex_drop(v); }
+template<> inline void z_drop(z_owned_condvar_t* v) { z_condvar_drop(v); }
 
 inline void z_null(z_owned_session_t& v) { v = z_session_null(); }
 inline void z_null(z_owned_publisher_t& v) { v = z_publisher_null(); }
 inline void z_null(z_owned_keyexpr_t& v) { v = z_keyexpr_null(); }
 inline void z_null(z_owned_config_t& v) { v = z_config_null(); }
 inline void z_null(z_owned_scouting_config_t& v) { v = z_scouting_config_null(); }
-inline void z_null(z_owned_pull_subscriber_t& v) { v = z_pull_subscriber_null(); }
 inline void z_null(z_owned_subscriber_t& v) { v = z_subscriber_null(); }
 inline void z_null(z_owned_queryable_t& v) { v = z_queryable_null(); }
 inline void z_null(z_owned_encoding_t& v) { v = z_encoding_null(); }
@@ -235,9 +252,7 @@ inline void z_null(z_owned_hello_t& v) { v = z_hello_null(); }
 inline void z_null(z_owned_query_t& v) { v = z_query_null(); }
 inline void z_null(z_owned_str_t& v) { v = z_str_null(); }
 inline void z_null(z_owned_bytes_t& v) { v = z_bytes_null(); }
-inline void z_null(z_owned_bytes_t& v) { v = z_bytes_null(); }
-inline void z_null(zc_owned_shmbuf_t& v) { v = zc_shmbuf_null(); }
-inline void z_null(zc_owned_shm_manager_t& v) { v = zc_shm_manager_null(); }
+inline void z_null(z_owned_bytes_reader_t& v) { v = z_bytes_reader_null(); }
 inline void z_null(z_owned_closure_sample_t& v) { v = z_closure_sample_null(); }
 inline void z_null(z_owned_closure_query_t& v) { v = z_closure_query_null(); }
 inline void z_null(z_owned_closure_reply_t& v) { v = z_closure_reply_null(); }
@@ -246,10 +261,14 @@ inline void z_null(z_owned_closure_zid_t& v) { v = z_closure_zid_null(); }
 inline void z_null(zcu_owned_closure_matching_status_t& v) { v = zcu_closure_matching_status_null(); }
 inline void z_null(z_owned_reply_channel_closure_t& v) { v = z_reply_channel_closure_null(); }
 inline void z_null(z_owned_reply_channel_t& v) { v = z_reply_channel_null(); }
-inline void z_null(z_owned_bytes_map_t& v) { v = z_slice_map_null(); }
+inline void z_null(z_owned_slice_t& v) { v = z_slice_null(); }
+inline void z_null(z_owned_slice_map_t& v) { v = z_slice_map_null(); }
 inline void z_null(zc_owned_liveliness_token_t& v) { v = zc_liveliness_token_null(); }
 inline void z_null(ze_owned_publication_cache_t& v) { v = ze_publication_cache_null(); }
 inline void z_null(ze_owned_querying_subscriber_t& v) { v = ze_querying_subscriber_null(); }
+inline void z_null(z_owned_mutex_t& v) { v = z_mutex_null(); }
+inline void z_null(z_owned_condvar_t& v) { v = z_condvar_null(); }
+inline void z_null(z_owned_task_t& v) { v = z_task_null(); }
 
 inline bool z_check(const z_owned_session_t& v) { return z_session_check(&v); }
 inline bool z_check(const z_owned_publisher_t& v) { return z_publisher_check(&v); }
@@ -258,9 +277,7 @@ inline bool z_check(const z_keyexpr_t& v) { return z_keyexpr_is_initialized(&v);
 inline bool z_check(const z_owned_config_t& v) { return z_config_check(&v); }
 inline bool z_check(const z_owned_scouting_config_t& v) { return z_scouting_config_check(&v); }
 inline bool z_check(const z_owned_bytes_t& v) { return z_slice_check(&v); }
-inline bool z_check(const z_owned_bytes_t& v) { return z_bytes_check(&v); }
-inline bool z_check(const zc_owned_shmbuf_t& v) { return zc_shmbuf_check(&v); }
-inline bool z_check(const zc_owned_shm_manager_t& v) { return zc_shm_manager_check(&v); }
+inline bool z_check(const z_owned_bytes_reader_t& v) { return z_bytes_reader_check(&v); }
 inline bool z_check(const z_owned_subscriber_t& v) { return z_subscriber_check(&v); }
 inline bool z_check(const z_owned_pull_subscriber_t& v) { return z_pull_subscriber_check(&v); }
 inline bool z_check(const z_owned_queryable_t& v) { return z_queryable_check(&v); }
@@ -269,12 +286,14 @@ inline bool z_check(const z_owned_reply_t& v) { return z_reply_check(&v); }
 inline bool z_check(const z_owned_hello_t& v) { return z_hello_check(&v); }
 inline bool z_check(const z_owned_query_t& v) { return z_query_check(&v); }
 inline bool z_check(const z_owned_str_t& v) { return z_str_check(&v); }
-inline bool z_check(const z_owned_bytes_t& v) { return z_bytes_check(&v); }
-inline bool z_check(const z_owned_bytes_map_t& v) { return z_slice_map_check(&v); }
-inline bool z_check(constz_bytes_t& v) { return z_attachment_check(&v); }
+inline bool z_check(const z_owned_slice_t& v) { return z_slice_check(&v); }
+inline bool z_check(const z_owned_slice_map_t& v) { return z_slice_map_check(&v); }
 inline bool z_check(const zc_owned_liveliness_token_t& v) { return zc_liveliness_token_check(&v); }
 inline bool z_check(const ze_owned_publication_cache_t& v) { return ze_publication_cache_check(&v); }
 inline bool z_check(const ze_owned_querying_subscriber_t& v) { return ze_querying_subscriber_check(&v); }
+inline bool z_check(const z_owned_mutex_t& v) { return z_mutex_check(&v); }
+inline bool z_check(const z_owned_condvar_t& v) { return z_condvar_check(&v); }
+inline bool z_check(const z_owned_task_t& v) { return z_task_check(&v); }
 
 inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample)
     { z_closure_sample_call(&closure, sample); }

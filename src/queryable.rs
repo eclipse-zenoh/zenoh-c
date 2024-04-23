@@ -146,7 +146,7 @@ pub extern "C" fn z_declare_queryable(
     callback: &mut z_owned_closure_query_t,
     options: Option<&z_queryable_options_t>,
     this: *mut MaybeUninit<z_owned_queryable_t>,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
@@ -177,7 +177,7 @@ pub extern "C" fn z_declare_queryable(
 ///     qable: The :c:type:`z_owned_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> errors::ZCError {
+pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> errors::z_error_t {
     if let Some(qable) = qable.transmute_mut().extract().take() {
         if let Err(e) = qable.undeclare().res_sync() {
             log::error!("{}", e);
@@ -214,7 +214,7 @@ pub unsafe extern "C" fn z_query_reply(
     key_expr: z_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: z_query_reply_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let query = query.transmute_ref();
     let key_expr = key_expr.transmute_ref();
 

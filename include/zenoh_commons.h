@@ -122,7 +122,7 @@ typedef enum zcu_reply_keyexpr_t {
 typedef struct ALIGN(8) z_owned_bytes_t {
   uint8_t _0[40];
 } z_owned_bytes_t;
-typedef int8_t ZCError;
+typedef int8_t z_error_t;
 /**
  * A loaned payload.
  */
@@ -875,17 +875,21 @@ ZENOHC_API void z_bytes_clone(const struct z_owned_bytes_t *src, struct z_owned_
 /**
  * Decodes payload into owned bytes
  */
-ZENOHC_API ZCError z_bytes_decode_into_bytes(struct z_bytes_t payload, struct z_owned_slice_t *dst);
+ZENOHC_API
+z_error_t z_bytes_decode_into_bytes(struct z_bytes_t payload,
+                                    struct z_owned_slice_t *dst);
 /**
  * Decodes payload into bytes map.
  */
 ZENOHC_API
-ZCError z_bytes_decode_into_bytes_map(struct z_bytes_t payload,
-                                      struct z_owned_slice_map_t *dst);
+z_error_t z_bytes_decode_into_bytes_map(struct z_bytes_t payload,
+                                        struct z_owned_slice_map_t *dst);
 /**
  * Decodes payload into null-terminated string.
  */
-ZENOHC_API ZCError z_bytes_decode_into_string(struct z_bytes_t payload, struct z_owned_str_t *dst);
+ZENOHC_API
+z_error_t z_bytes_decode_into_string(struct z_bytes_t payload,
+                                     struct z_owned_str_t *dst);
 /**
  * Decrements the payload's reference counter, destroying it if applicable.
  *
@@ -948,9 +952,9 @@ size_t z_bytes_reader_read(struct z_bytes_reader_t this_,
  * Return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
-ZCError z_bytes_reader_seek(struct z_bytes_reader_t this_,
-                            int64_t offset,
-                            int origin);
+z_error_t z_bytes_reader_seek(struct z_bytes_reader_t this_,
+                              int64_t offset,
+                              int origin);
 /**
  * Returns the read position indicator.
  * Returns read position indicator on success or -1L if failure occurs.
@@ -1056,8 +1060,8 @@ ZENOHC_API void z_condvar_drop(struct z_owned_condvar_t *this_);
 ZENOHC_API void z_condvar_init(struct z_owned_condvar_t *this_);
 ZENOHC_API struct z_condvar_t z_condvar_loan(const struct z_owned_condvar_t *this_);
 ZENOHC_API void z_condvar_null(struct z_owned_condvar_t *this_);
-ZENOHC_API ZCError z_condvar_signal(struct z_condvar_t this_);
-ZENOHC_API ZCError z_condvar_wait(struct z_condvar_t this_, struct z_mutex_t m);
+ZENOHC_API z_error_t z_condvar_signal(struct z_condvar_t this_);
+ZENOHC_API z_error_t z_condvar_wait(struct z_condvar_t this_, struct z_mutex_t m);
 /**
  * Returns ``true`` if `config` is valid.
  */
@@ -1067,9 +1071,9 @@ ZENOHC_API bool z_config_check(const struct z_owned_config_t *config);
  * If `peer` is not null, it is added to the configuration as remote peer.
  */
 ZENOHC_API
-ZCError z_config_client(const char *const *peers,
-                        size_t n_peers,
-                        struct z_owned_config_t *this_);
+z_error_t z_config_client(const char *const *peers,
+                          size_t n_peers,
+                          struct z_owned_config_t *this_);
 /**
  * Clones the config.
  */
@@ -1111,9 +1115,9 @@ ZENOHC_API void z_config_peer(struct z_owned_config_t *this_);
  * ease the retrieval of the concerned resource in the routing tables.
  */
 ZENOHC_API
-ZCError z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
-                          struct z_session_t session,
-                          struct z_keyexpr_t key_expr);
+z_error_t z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
+                            struct z_session_t session,
+                            struct z_keyexpr_t key_expr);
 /**
  * Declares a publisher for the given key expression.
  *
@@ -1150,10 +1154,10 @@ ZCError z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
  *       z_owned_publisher_t sub = z_declare_publisher(z_loan(s), z_keyexpr(expr), &opts);
  */
 ZENOHC_API
-ZCError z_declare_publisher(struct z_session_t session,
-                            struct z_keyexpr_t key_expr,
-                            const struct z_publisher_options_t *options,
-                            struct z_owned_publisher_t *this_);
+z_error_t z_declare_publisher(struct z_session_t session,
+                              struct z_keyexpr_t key_expr,
+                              const struct z_publisher_options_t *options,
+                              struct z_owned_publisher_t *this_);
 /**
  * Creates a Queryable for the given key expression.
  *
@@ -1167,11 +1171,11 @@ ZCError z_declare_publisher(struct z_session_t session,
  *    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
  */
 ZENOHC_API
-ZCError z_declare_queryable(struct z_session_t session,
-                            struct z_keyexpr_t key_expr,
-                            struct z_owned_closure_query_t *callback,
-                            const struct z_queryable_options_t *options,
-                            struct z_owned_queryable_t *this_);
+z_error_t z_declare_queryable(struct z_session_t session,
+                              struct z_keyexpr_t key_expr,
+                              struct z_owned_closure_query_t *callback,
+                              const struct z_queryable_options_t *options,
+                              struct z_owned_queryable_t *this_);
 /**
  * Declare a subscriber for a given key expression.
  *
@@ -1206,11 +1210,11 @@ ZCError z_declare_queryable(struct z_session_t session,
  *       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
  */
 ZENOHC_API
-ZCError z_declare_subscriber(struct z_owned_subscriber_t *this_,
-                             struct z_session_t session,
-                             struct z_keyexpr_t key_expr,
-                             struct z_owned_closure_sample_t *callback,
-                             struct z_subscriber_options_t options);
+z_error_t z_declare_subscriber(struct z_owned_subscriber_t *this_,
+                               struct z_session_t session,
+                               struct z_keyexpr_t key_expr,
+                               struct z_owned_closure_sample_t *callback,
+                               struct z_subscriber_options_t options);
 /**
  * Delete data.
  *
@@ -1222,9 +1226,9 @@ ZCError z_declare_subscriber(struct z_owned_subscriber_t *this_,
  *     ``0`` in case of success, negative values in case of failure.
  */
 ZENOHC_API
-ZCError z_delete(struct z_session_t session,
-                 struct z_keyexpr_t key_expr,
-                 struct z_delete_options_t opts);
+z_error_t z_delete(struct z_session_t session,
+                   struct z_keyexpr_t key_expr,
+                   struct z_delete_options_t opts);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
@@ -1270,11 +1274,11 @@ ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *encoding);
  *     options: additional options for the get.
  */
 ZENOHC_API
-ZCError z_get(struct z_session_t session,
-              struct z_keyexpr_t key_expr,
-              const char *parameters,
-              struct z_owned_closure_reply_t *callback,
-              struct z_get_options_t options);
+z_error_t z_get(struct z_session_t session,
+                struct z_keyexpr_t key_expr,
+                const char *parameters,
+                struct z_owned_closure_reply_t *callback,
+                struct z_get_options_t options);
 ZENOHC_API struct z_get_options_t z_get_options_default(void);
 /**
  * Returns ``true`` if `hello` is valid.
@@ -1301,8 +1305,8 @@ ZENOHC_API struct z_owned_hello_t z_hello_null(void);
  * Retuns 0 on success, negative values on failure
  */
 ZENOHC_API
-ZCError z_info_peers_zid(struct z_session_t session,
-                         struct z_owned_closure_zid_t *callback);
+z_error_t z_info_peers_zid(struct z_session_t session,
+                           struct z_owned_closure_zid_t *callback);
 /**
  * Fetches the Zenoh IDs of all connected routers.
  *
@@ -1312,8 +1316,8 @@ ZCError z_info_peers_zid(struct z_session_t session,
  * Retuns 0 on success, negative values on failure.
  */
 ZENOHC_API
-ZCError z_info_routers_zid(struct z_session_t session,
-                           struct z_owned_closure_zid_t *callback);
+z_error_t z_info_routers_zid(struct z_session_t session,
+                             struct z_owned_closure_zid_t *callback);
 /**
  * Returns the local Zenoh ID.
  *
@@ -1326,7 +1330,7 @@ ZENOHC_API struct z_id_t z_info_zid(struct z_session_t session);
  * Constructs a :c:type:`z_keyexpr_t` departing from a string.
  * It is a loaned key expression that aliases `name`.
  */
-ZENOHC_API ZCError z_keyexpr(struct z_owned_keyexpr_t *this_, const char *name);
+ZENOHC_API z_error_t z_keyexpr(struct z_owned_keyexpr_t *this_, const char *name);
 /**
  * Returns the key expression's internal string by aliasing it.
  *
@@ -1339,8 +1343,8 @@ ZENOHC_API struct z_slice_t z_keyexpr_as_bytes(struct z_keyexpr_t ke);
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
  */
 ZENOHC_API
-ZCError z_keyexpr_autocanonize(struct z_owned_keyexpr_t *this_,
-                               char *name);
+z_error_t z_keyexpr_autocanonize(struct z_owned_keyexpr_t *this_,
+                                 char *name);
 /**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
@@ -1351,8 +1355,8 @@ ZCError z_keyexpr_autocanonize(struct z_owned_keyexpr_t *this_,
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
  */
 ZENOHC_API
-ZCError z_keyexpr_canonize(char *start,
-                           size_t *len);
+z_error_t z_keyexpr_canonize(char *start,
+                             size_t *len);
 /**
  * Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
  *
@@ -1363,7 +1367,7 @@ ZCError z_keyexpr_canonize(char *start,
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
  */
 ZENOHC_API
-ZCError z_keyexpr_canonize_null_terminated(char *start);
+z_error_t z_keyexpr_canonize_null_terminated(char *start);
 /**
  * Returns ``true`` if `keyexpr` is valid.
  */
@@ -1378,10 +1382,10 @@ ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
  * as this would extremely likely cause bugs.
  */
 ZENOHC_API
-ZCError z_keyexpr_concat(struct z_keyexpr_t left,
-                         const char *right_start,
-                         size_t right_len,
-                         struct z_owned_keyexpr_t *this_);
+z_error_t z_keyexpr_concat(struct z_keyexpr_t left,
+                           const char *right_start,
+                           size_t right_len,
+                           struct z_owned_keyexpr_t *this_);
 /**
  * Frees `keyexpr` and invalidates it for double-drop safety.
  */
@@ -1408,15 +1412,15 @@ bool z_keyexpr_intersects(struct z_keyexpr_t left,
  * Returns ``0`` if the passed string is a valid (and canon) key expression.
  * Otherwise returns error value
  */
-ZENOHC_API ZCError z_keyexpr_is_canon(const char *start, size_t len);
+ZENOHC_API z_error_t z_keyexpr_is_canon(const char *start, size_t len);
 /**
  * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
  * In case of error, the return value will be set to its invalidated state.
  */
 ZENOHC_API
-ZCError z_keyexpr_join(struct z_keyexpr_t left,
-                       struct z_keyexpr_t right,
-                       struct z_owned_keyexpr_t *this_);
+z_error_t z_keyexpr_join(struct z_keyexpr_t left,
+                         struct z_keyexpr_t right,
+                         struct z_owned_keyexpr_t *this_);
 /**
  * Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
  */
@@ -1424,13 +1428,13 @@ ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *key
 /**
  * Constructs a :c:type:`z_owned_keyexpr_t` departing from a string, copying the passed string.
  */
-ZENOHC_API ZCError z_keyexpr_new(const char *name, struct z_owned_keyexpr_t *this_);
+ZENOHC_API z_error_t z_keyexpr_new(const char *name, struct z_owned_keyexpr_t *this_);
 /**
  * Constructs a :c:type:`z_owned_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
  */
 ZENOHC_API
-ZCError z_keyexpr_new_autocanonize(const char *name,
-                                   struct z_owned_keyexpr_t *this_);
+z_error_t z_keyexpr_new_autocanonize(const char *name,
+                                     struct z_owned_keyexpr_t *this_);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
  */
@@ -1465,18 +1469,19 @@ void z_keyexpr_unchecked(struct z_owned_keyexpr_t *this_,
                          const char *name);
 ZENOHC_API bool z_mutex_check(const struct z_owned_mutex_t *this_);
 ZENOHC_API void z_mutex_drop(struct z_owned_mutex_t *this_);
-ZENOHC_API ZCError z_mutex_init(struct z_owned_mutex_t *this_);
+ZENOHC_API z_error_t z_mutex_init(struct z_owned_mutex_t *this_);
 ZENOHC_API struct z_mutex_t z_mutex_loan(const struct z_owned_mutex_t *this_);
-ZENOHC_API ZCError z_mutex_lock(struct z_mutex_t this_);
-ZENOHC_API ZCError z_mutex_try_lock(struct z_mutex_t this_);
-ZENOHC_API ZCError z_mutex_unlock(struct z_mutex_t this_);
+ZENOHC_API z_error_t z_mutex_lock(struct z_mutex_t this_);
+ZENOHC_API void z_mutex_null(struct z_owned_mutex_t *this_);
+ZENOHC_API z_error_t z_mutex_try_lock(struct z_mutex_t this_);
+ZENOHC_API z_error_t z_mutex_unlock(struct z_mutex_t this_);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
  * Config value is always consumed upon function return.
  */
 ZENOHC_API
-ZCError z_open(struct z_owned_session_t *this_,
-               struct z_owned_config_t *config);
+z_error_t z_open(struct z_owned_session_t *this_,
+                 struct z_owned_config_t *config);
 /**
  * Returns ``true`` if `pub` is valid.
  */
@@ -1488,8 +1493,8 @@ ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *pbl);
  *     ``0`` in case of success, ``1`` in case of failure.
  */
 ZENOHC_API
-ZCError z_publisher_delete(struct z_publisher_t publisher,
-                           struct z_publisher_delete_options_t _options);
+z_error_t z_publisher_delete(struct z_publisher_t publisher,
+                             struct z_publisher_delete_options_t _options);
 /**
  * Constructs the default values for the delete operation via a publisher entity.
  *
@@ -1530,9 +1535,9 @@ ZENOHC_API struct z_publisher_options_t z_publisher_options_default(void);
  *     ``0`` in case of success, negative values in case of failure.
  */
 ZENOHC_API
-ZCError z_publisher_put(struct z_publisher_t publisher,
-                        struct z_owned_bytes_t *payload,
-                        struct z_publisher_put_options_t options);
+z_error_t z_publisher_put(struct z_publisher_t publisher,
+                          struct z_owned_bytes_t *payload,
+                          struct z_publisher_put_options_t options);
 /**
  * Constructs the default value for :c:type:`z_publisher_put_options_t`.
  */
@@ -1553,10 +1558,10 @@ ZENOHC_API struct z_publisher_put_options_t z_publisher_put_options_default(void
  *     ``0`` in case of success, negative error values in case of failure.
  */
 ZENOHC_API
-ZCError z_put(struct z_session_t session,
-              struct z_keyexpr_t key_expr,
-              struct z_owned_bytes_t *payload,
-              struct z_put_options_t options);
+z_error_t z_put(struct z_session_t session,
+                struct z_keyexpr_t key_expr,
+                struct z_owned_bytes_t *payload,
+                struct z_put_options_t options);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
  */
@@ -1672,10 +1677,10 @@ struct z_slice_t z_query_parameters(struct z_query_t query);
  * The payload and all owned options fields are consumed upon function return.
  */
 ZENOHC_API
-ZCError z_query_reply(struct z_query_t query,
-                      struct z_keyexpr_t key_expr,
-                      struct z_owned_bytes_t *payload,
-                      struct z_query_reply_options_t options);
+z_error_t z_query_reply(struct z_query_t query,
+                        struct z_keyexpr_t key_expr,
+                        struct z_owned_bytes_t *payload,
+                        struct z_query_reply_options_t options);
 /**
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
@@ -1818,8 +1823,8 @@ bool z_sample_timestamp(const struct z_sample_t *sample,
  * Returns 0 if successful, negative values upon failure.
  */
 ZENOHC_API
-ZCError z_scout(struct z_owned_scouting_config_t *config,
-                struct z_owned_closure_hello_t *callback);
+z_error_t z_scout(struct z_owned_scouting_config_t *config,
+                  struct z_owned_closure_hello_t *callback);
 ZENOHC_API bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
 ZENOHC_API void z_scouting_config_default(struct z_owned_scouting_config_t *this_);
 ZENOHC_API void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
@@ -1893,18 +1898,18 @@ ZENOHC_API struct z_slice_t z_slice_map_get(struct z_slice_map_t this_, struct z
  * Returns 0 in case of success, -1 if one of the arguments were in gravestone state.
  */
 ZENOHC_API
-ZCError z_slice_map_insert_by_alias(struct z_slice_map_t this_,
-                                    struct z_slice_t key,
-                                    struct z_slice_t value);
+z_error_t z_slice_map_insert_by_alias(struct z_slice_map_t this_,
+                                      struct z_slice_t key,
+                                      struct z_slice_t value);
 /**
  * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
  *
  * Returns 0 in case of success, -1 if one of the arguments were in gravestone state.
  */
 ZENOHC_API
-ZCError z_slice_map_insert_by_copy(struct z_slice_map_t this_,
-                                   struct z_slice_t key,
-                                   struct z_slice_t value);
+z_error_t z_slice_map_insert_by_copy(struct z_slice_map_t this_,
+                                     struct z_slice_t key,
+                                     struct z_slice_t value);
 /**
  * Returns true if the map is empty, false otherwise.
  */
@@ -1994,14 +1999,14 @@ ZENOHC_API bool z_task_check(const struct z_owned_task_t *this_);
  */
 ZENOHC_API void z_task_detach(struct z_owned_task_t *this_);
 ZENOHC_API
-ZCError z_task_init(struct z_owned_task_t *this_,
-                    const struct z_task_attr_t *_attr,
-                    void (*fun)(void *arg),
-                    void *arg);
+z_error_t z_task_init(struct z_owned_task_t *this_,
+                      const struct z_task_attr_t *_attr,
+                      void (*fun)(void *arg),
+                      void *arg);
 /**
  * Joins the task and releases all allocated resources
  */
-ZENOHC_API ZCError z_task_join(struct z_owned_task_t *this_);
+ZENOHC_API z_error_t z_task_join(struct z_owned_task_t *this_);
 ZENOHC_API void z_task_null(struct z_owned_task_t *this_);
 ZENOHC_API uint64_t z_time_elapsed_ms(const struct z_time_t *time);
 ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
@@ -2019,19 +2024,19 @@ ZENOHC_API int8_t z_undeclare_keyexpr(struct z_session_t session, struct z_owned
  * Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
  */
 ZENOHC_API
-ZCError z_undeclare_publisher(struct z_owned_publisher_t *publisher);
+z_error_t z_undeclare_publisher(struct z_owned_publisher_t *publisher);
 /**
  * Undeclares a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
  *
  * Parameters:
  *     qable: The :c:type:`z_owned_queryable_t` to undeclare.
  */
-ZENOHC_API ZCError z_undeclare_queryable(struct z_owned_queryable_t *qable);
+ZENOHC_API z_error_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
 /**
  * Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
  */
 ZENOHC_API
-ZCError z_undeclare_subscriber(struct z_owned_subscriber_t *subscriber);
+z_error_t z_undeclare_subscriber(struct z_owned_subscriber_t *subscriber);
 /**
  * Converts the kind of zenoh entity into a string.
  *
@@ -2048,16 +2053,16 @@ ZENOHC_API int8_t z_whatami_to_str(uint8_t whatami, char *buf, size_t len);
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  */
 ZENOHC_API
-ZCError zc_config_from_file(const char *path,
-                            struct z_owned_config_t *this_);
+z_error_t zc_config_from_file(const char *path,
+                              struct z_owned_config_t *this_);
 /**
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
  * Passing a null-ptr will result in a gravestone value (`z_check(x) == false`).
  */
 ZENOHC_API
-ZCError zc_config_from_str(const char *s,
-                           struct z_owned_config_t *this_);
+z_error_t zc_config_from_str(const char *s,
+                             struct z_owned_config_t *this_);
 /**
  * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
  * Use `z_drop` to safely deallocate this string
@@ -2090,18 +2095,18 @@ ZENOHC_API void zc_init_logger(void);
  * Constructs a :c:type:`z_keyexpr_t` by aliasing a string.
  */
 ZENOHC_API
-ZCError zc_keyexpr_from_slice(struct z_owned_keyexpr_t *this_,
-                              const char *name,
-                              size_t len);
+z_error_t zc_keyexpr_from_slice(struct z_owned_keyexpr_t *this_,
+                                const char *name,
+                                size_t len);
 /**
  * Constructs a :c:type:`z_owned_keyexpr_t` by aliasing a string.
  * The string is canonized in-place before being passed to keyexpr.
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
  */
 ZENOHC_API
-ZCError zc_keyexpr_from_slice_autocanonize(struct z_owned_keyexpr_t *this_,
-                                           char *name,
-                                           size_t *len);
+z_error_t zc_keyexpr_from_slice_autocanonize(struct z_owned_keyexpr_t *this_,
+                                             char *name,
+                                             size_t *len);
 /**
  * Constructs a :c:type:`z_owned_eyexpr_t` by aliasing a string without checking any of `z_keyexpr_t`'s assertions:
  * - `name` MUST be valid UTF8.
@@ -2135,11 +2140,11 @@ struct zc_liveliness_declaration_options_t zc_liveliness_declaration_options_def
  *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 ZENOHC_API
-ZCError zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
-                                         struct z_session_t session,
-                                         struct z_keyexpr_t key_expr,
-                                         struct z_owned_closure_sample_t *callback,
-                                         struct zc_liveliness_declare_subscriber_options_t _options);
+z_error_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
+                                           struct z_session_t session,
+                                           struct z_keyexpr_t key_expr,
+                                           struct z_owned_closure_sample_t *callback,
+                                           struct zc_liveliness_declare_subscriber_options_t _options);
 /**
  * Constructs and declares a liveliness token on the network.
  *
@@ -2149,10 +2154,10 @@ ZCError zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
  * Passing `NULL` as options is valid and equivalent to a pointer to the default options.
  */
 ZENOHC_API
-ZCError zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_,
-                                    struct z_session_t session,
-                                    struct z_keyexpr_t key_expr,
-                                    struct zc_liveliness_declaration_options_t _options);
+z_error_t zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_,
+                                      struct z_session_t session,
+                                      struct z_keyexpr_t key_expr,
+                                      struct zc_liveliness_declaration_options_t _options);
 /**
  * Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
  *
@@ -2161,10 +2166,10 @@ ZCError zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_,
  * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
  */
 ZENOHC_API
-ZCError zc_liveliness_get(struct z_session_t session,
-                          struct z_keyexpr_t key_expr,
-                          struct z_owned_closure_reply_t *callback,
-                          struct zc_liveliness_get_options_t options);
+z_error_t zc_liveliness_get(struct z_session_t session,
+                            struct z_keyexpr_t key_expr,
+                            struct z_owned_closure_reply_t *callback,
+                            struct zc_liveliness_get_options_t options);
 /**
  * The gravestone value for `zc_liveliness_get_options_t`
  */
@@ -2182,7 +2187,7 @@ ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *thi
 /**
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
-ZENOHC_API ZCError zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *this_);
+ZENOHC_API z_error_t zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *this_);
 /**
  * Creates a new blocking fifo channel, returned as a pair of closures.
  *
@@ -2284,9 +2289,9 @@ ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
  * Register callback for notifying subscribers matching.
  */
 ZENOHC_API
-ZCError zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
-                                                 struct zcu_owned_closure_matching_status_t *callback,
-                                                 struct zcu_owned_matching_listener_t *this_);
+z_error_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
+                                                   struct zcu_owned_closure_matching_status_t *callback,
+                                                   struct zcu_owned_matching_listener_t *this_);
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
  * Declares a Publication Cache.
@@ -2315,10 +2320,10 @@ ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
  *       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), &opts);
  */
 ZENOHC_API
-ZCError ze_declare_publication_cache(struct ze_owned_publication_cache_t *this_,
-                                     struct z_session_t session,
-                                     struct z_keyexpr_t key_expr,
-                                     struct ze_publication_cache_options_t options);
+z_error_t ze_declare_publication_cache(struct ze_owned_publication_cache_t *this_,
+                                       struct z_session_t session,
+                                       struct z_keyexpr_t key_expr,
+                                       struct ze_publication_cache_options_t options);
 /**
  * Declares a Querying Subscriber for a given key expression.
  *
@@ -2353,11 +2358,11 @@ ZCError ze_declare_publication_cache(struct ze_owned_publication_cache_t *this_,
  *       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
  */
 ZENOHC_API
-ZCError ze_declare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_,
-                                       struct z_session_t session,
-                                       struct z_keyexpr_t key_expr,
-                                       struct z_owned_closure_sample_t *callback,
-                                       struct ze_querying_subscriber_options_t options);
+z_error_t ze_declare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_,
+                                         struct z_session_t session,
+                                         struct z_keyexpr_t key_expr,
+                                         struct z_owned_closure_sample_t *callback,
+                                         struct ze_querying_subscriber_options_t options);
 /**
  * Returns ``true`` if `pub_cache` is valid.
  */
@@ -2379,9 +2384,9 @@ ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subs
  * The queried samples will be merged with the received publications and made available in the subscriber callback.
  */
 ZENOHC_API
-ZCError ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
-                                   struct z_keyexpr_t selector,
-                                   const struct z_get_options_t *options);
+z_error_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
+                                     struct z_keyexpr_t selector,
+                                     const struct z_get_options_t *options);
 /**
  * Returns a :c:type:`ze_querying_subscriber_loan` loaned from `this`.
  */
@@ -2399,9 +2404,9 @@ ZENOHC_API struct ze_querying_subscriber_options_t ze_querying_subscriber_option
  * Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
  */
 ZENOHC_API
-ZCError ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *this_);
+z_error_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *this_);
 /**
  * Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
  */
 ZENOHC_API
-ZCError ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_);
+z_error_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_);

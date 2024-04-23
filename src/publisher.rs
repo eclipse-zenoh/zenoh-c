@@ -101,7 +101,7 @@ pub extern "C" fn z_declare_publisher(
     key_expr: z_keyexpr_t,
     options: Option<&z_publisher_options_t>,
     this: *mut MaybeUninit<z_owned_publisher_t>,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref().clone().into_owned();
@@ -188,7 +188,7 @@ pub unsafe extern "C" fn z_publisher_put(
     publisher: z_publisher_t,
     payload: &mut z_owned_bytes_t,
     options: z_publisher_put_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let publisher = publisher.transmute_ref();
     let payload = match payload.transmute_mut().extract() {
         Some(p) => p,
@@ -242,7 +242,7 @@ pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_opt
 pub extern "C" fn z_publisher_delete(
     publisher: z_publisher_t,
     _options: z_publisher_delete_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let publisher = publisher.transmute_ref();
     if let Err(e) = publisher.delete().res_sync() {
         log::error!("{}", e);
@@ -283,7 +283,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     publisher: z_publisher_t,
     callback: &mut zcu_owned_closure_matching_status_t,
     this: *mut MaybeUninit<zcu_owned_matching_listener_t>,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = zcu_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -312,7 +312,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 /// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> errors::ZCError {
+pub extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> errors::z_error_t {
     if let Some(p) = publisher.transmute_mut().extract().take() {
         if let Err(e) = p.undeclare().res_sync() {
             log::error!("{}", e);

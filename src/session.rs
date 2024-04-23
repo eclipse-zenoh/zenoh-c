@@ -59,7 +59,7 @@ pub extern "C" fn z_session_null(this: *mut MaybeUninit<z_owned_session_t>) {
 pub extern "C" fn z_open(
     this: *mut MaybeUninit<z_owned_session_t>,
     config: &mut z_owned_config_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();

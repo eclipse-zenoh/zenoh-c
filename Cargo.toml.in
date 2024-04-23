@@ -60,6 +60,9 @@ const_format = "0.2.32"
 
 zenoh = { path="../zenoh/zenoh", features = ["shared-memory", "unstable"], default-features = false }
 zenoh-ext = { path = "../zenoh/zenoh-ext", features = ["unstable"]}
+zenoh-protocol = { path = "../zenoh/commons/zenoh-protocol", features = ["shared-memory"] }
+zenoh-util = { path = "../zenoh/commons/zenoh-util" }
+
 
 [build-dependencies]
 cbindgen = "0.26.0"

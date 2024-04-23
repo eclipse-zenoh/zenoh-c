@@ -71,7 +71,7 @@ pub extern "C" fn zc_liveliness_declare_token(
     session: z_session_t,
     key_expr: z_keyexpr_t,
     _options: zc_liveliness_declaration_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
@@ -92,7 +92,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(
     this: &mut zc_owned_liveliness_token_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_mut();
     if let Some(token) = this.extract().take() {
         if let Err(e) = token.undeclare().res() {
@@ -136,7 +136,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     _options: zc_liveliness_declare_subscriber_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
@@ -185,7 +185,7 @@ pub extern "C" fn zc_liveliness_get(
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_reply_t,
     options: zc_liveliness_get_options_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());

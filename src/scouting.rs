@@ -264,7 +264,7 @@ pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t)
 pub extern "C" fn z_scout(
     config: &mut z_owned_scouting_config_t,
     callback: &mut z_owned_closure_hello_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }

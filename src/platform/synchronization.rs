@@ -23,7 +23,7 @@ decl_transmute_owned!(
 decl_transmute_handle!((Mutex<()>, Option<MutexGuard<'static, ()>>), z_mutex_t);
 
 #[no_mangle]
-pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> errors::ZCError {
+pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let m = (Mutex::<()>::new(()), None::<MutexGuard<'static, ()>>);
     Inplace::init(this, Some(m));
@@ -41,6 +41,11 @@ pub extern "C" fn z_mutex_check(this: &z_owned_mutex_t) -> bool {
 }
 
 #[no_mangle]
+pub extern "C" fn z_mutex_null(this: *mut MaybeUninit<z_owned_mutex_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
+}
+
+#[no_mangle]
 pub extern "C" fn z_mutex_loan(this: &z_owned_mutex_t) -> z_mutex_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
@@ -48,7 +53,7 @@ pub extern "C" fn z_mutex_loan(this: &z_owned_mutex_t) -> z_mutex_t {
 }
 
 #[no_mangle]
-pub extern "C" fn z_mutex_lock(this: z_mutex_t) -> errors::ZCError {
+pub extern "C" fn z_mutex_lock(this: z_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
 
     match this.0.lock() {
@@ -64,7 +69,7 @@ pub extern "C" fn z_mutex_lock(this: z_mutex_t) -> errors::ZCError {
 }
 
 #[no_mangle]
-pub extern "C" fn z_mutex_unlock(this: z_mutex_t) -> errors::ZCError {
+pub extern "C" fn z_mutex_unlock(this: z_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
     if this.1.is_none() {
         return errors::Z_EINVAL_MUTEX;
@@ -76,7 +81,7 @@ pub extern "C" fn z_mutex_unlock(this: z_mutex_t) -> errors::ZCError {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_try_lock(this: z_mutex_t) -> errors::ZCError {
+pub unsafe extern "C" fn z_mutex_try_lock(this: z_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
     match this.0.try_lock() {
         Ok(new_lock) => {
@@ -126,7 +131,7 @@ pub extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> z_condvar_t {
 }
 
 #[no_mangle]
-pub extern "C" fn z_condvar_signal(this: z_condvar_t) -> errors::ZCError {
+pub extern "C" fn z_condvar_signal(this: z_condvar_t) -> errors::z_error_t {
     let this = this.transmute_mut();
     this.notify_one();
     errors::Z_OK
@@ -134,7 +139,7 @@ pub extern "C" fn z_condvar_signal(this: z_condvar_t) -> errors::ZCError {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_wait(this: z_condvar_t, m: z_mutex_t) -> errors::ZCError {
+pub unsafe extern "C" fn z_condvar_wait(this: z_condvar_t, m: z_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
     let m = m.transmute_mut();
     if m.1.is_none() {
@@ -172,7 +177,7 @@ pub extern "C" fn z_task_detach(this: &mut z_owned_task_t) {
 
 /// Joins the task and releases all allocated resources
 #[no_mangle]
-pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::ZCError {
+pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_error_t {
     let this = this.transmute_mut().extract().take();
     if let Some(task) = this {
         match task.join() {
@@ -209,7 +214,7 @@ pub unsafe extern "C" fn z_task_init(
     _attr: *const z_task_attr_t,
     fun: unsafe extern "C" fn(arg: *mut c_void),
     arg: *mut c_void,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let fun_arg_pair = FunArgPair { fun, arg };
 

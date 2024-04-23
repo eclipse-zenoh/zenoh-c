@@ -429,7 +429,7 @@ pub extern "C" fn z_slice_map_insert_by_copy(
     this: z_slice_map_t,
     key: z_slice_t,
     value: z_slice_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_mut();
     if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice()) {
         this.insert(Cow::Owned(key.to_owned()), Cow::Owned(value.to_owned()));
@@ -449,7 +449,7 @@ pub extern "C" fn z_slice_map_insert_by_alias(
     this: z_slice_map_t,
     key: z_slice_t,
     value: z_slice_t,
-) -> errors::ZCError {
+) -> errors::z_error_t {
     let this = this.transmute_mut();
     if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice()) {
         this.insert(Cow::Borrowed(key), Cow::Borrowed(value));
