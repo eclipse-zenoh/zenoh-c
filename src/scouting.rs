@@ -191,50 +191,52 @@ pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_scouting_config_null(this: *mut MaybeUninit<z_owned_scouting_config_t>) {
+pub unsafe extern "C" fn z_scouting_config_null(this: *mut MaybeUninit<z_owned_scouting_config_t>) {
     let mut _config = MaybeUninit::<z_owned_config_t>::uninit();
     z_config_null(&mut _config as *mut MaybeUninit<z_owned_config_t>);
-    let _config = unsafe { _config.assume_init() };
+    let _config = _config.assume_init();
 
     let config = z_owned_scouting_config_t {
         _config,
         zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         zc_what: DEFAULT_SCOUTING_WHAT,
     };
-    (unsafe { &mut *this }).write(config);
+    (*this).write(config);
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_default(this: *mut MaybeUninit<z_owned_scouting_config_t>) {
+pub unsafe extern "C" fn z_scouting_config_default(
+    this: *mut MaybeUninit<z_owned_scouting_config_t>,
+) {
     let mut _config = MaybeUninit::<z_owned_config_t>::uninit();
     z_config_new(&mut _config as *mut MaybeUninit<z_owned_config_t>);
-    let _config = unsafe { _config.assume_init() };
+    let _config = _config.assume_init();
 
     let config = z_owned_scouting_config_t {
         _config,
         zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         zc_what: DEFAULT_SCOUTING_WHAT,
     };
-    (unsafe { &mut *this }).write(config);
+    (*this).write(config);
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_from(
+pub unsafe extern "C" fn z_scouting_config_from(
     config: z_config_t,
     this: *mut MaybeUninit<z_owned_scouting_config_t>,
 ) {
     let mut dst = MaybeUninit::uninit();
     z_config_clone(&config, &mut dst as *mut _);
-    let _config = unsafe { dst.assume_init() };
+    let _config = dst.assume_init();
 
     let config = z_owned_scouting_config_t {
         _config,
         zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
         zc_what: DEFAULT_SCOUTING_WHAT,
     };
-    (unsafe { &mut *this }).write(config);
+    (*this).write(config);
 }
 
 #[no_mangle]

@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
-    TransmuteRef, TransmuteUninitPtr,
+    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+    TransmuteUninitPtr,
 };
 use crate::{
     errors, z_bytes_t, z_closure_query_call, z_keyexpr_t, z_owned_bytes_t, z_owned_closure_query_t,
@@ -241,7 +241,7 @@ pub unsafe extern "C" fn z_query_reply(
         log::error!("{}", e);
         return errors::Z_EGENERIC;
     }
-    return errors::Z_OK;
+    errors::Z_OK
 }
 
 /// Get a query's key by aliasing it.

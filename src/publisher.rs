@@ -15,7 +15,6 @@
 use crate::errors;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
-use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;

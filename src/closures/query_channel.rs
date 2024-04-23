@@ -86,6 +86,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
     let (send, rx) = get_send_recv_ends(bound);
     z_owned_query_channel_t {
@@ -111,6 +112,7 @@ pub unsafe extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channe
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_channel_t {
     let (send, rx) = get_send_recv_ends(bound);
     z_owned_query_channel_t {

@@ -79,7 +79,7 @@ pub extern "C" fn z_timestamp_npt64_time(timestamp: &z_timestamp_t) -> u64 {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t {
+pub extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t {
     timestamp.transmute_copy().get_id().to_le_bytes().into()
 }
 
@@ -238,7 +238,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    (&Encoding::ZENOH_BYTES).transmute_handle()
+    Encoding::ZENOH_BYTES.transmute_handle()
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.

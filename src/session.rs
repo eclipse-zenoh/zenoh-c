@@ -13,8 +13,7 @@
 //
 
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
+    unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;

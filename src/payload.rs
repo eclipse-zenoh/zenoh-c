@@ -256,7 +256,7 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 ) -> ZCError {
     let reader = this.transmute_mut();
     let pos = match origin {
-        libc::SEEK_SET => offset.try_into().map(|r| SeekFrom::Start(r)),
+        libc::SEEK_SET => offset.try_into().map(SeekFrom::Start),
         libc::SEEK_CUR => Ok(SeekFrom::Current(offset)),
         libc::SEEK_END => Ok(SeekFrom::End(offset)),
         _ => {

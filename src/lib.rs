@@ -65,8 +65,6 @@ pub mod platform;
 // #[cfg(feature = "shared-memory")]
 // mod shm;
 
-pub(crate) const LOG_INVALID_SESSION: &str = "Invalid session";
-
 /// Initialises the zenoh runtime logger.
 ///
 /// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,

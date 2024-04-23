@@ -63,7 +63,7 @@ pub(crate) trait Inplace: Sized {
     }
 
     // Move the object out of this, leaving it in empty state
-    fn extract(self: &mut Self) -> Self {
+    fn extract(&mut self) -> Self {
         let mut out: MaybeUninit<Self> = MaybeUninit::uninit();
         Self::empty(&mut out);
         let mut out = unsafe { out.assume_init() };

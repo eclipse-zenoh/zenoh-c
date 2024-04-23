@@ -22,7 +22,7 @@ use zenoh::{
 use crate::transmute::TransmuteIntoHandle;
 use crate::{
     errors,
-    transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr},
+    transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr},
     z_closure_reply_call, z_closure_sample_call, z_keyexpr_t, z_owned_closure_reply_t,
     z_owned_closure_sample_t, z_owned_subscriber_t, z_session_t,
 };

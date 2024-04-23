@@ -84,6 +84,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
 /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
     let (send, rx) = get_send_recv_ends(bound);
     z_owned_reply_channel_t {
@@ -109,6 +110,7 @@ pub unsafe extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channe
 /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_channel_t {
     let (send, rx) = get_send_recv_ends(bound);
     z_owned_reply_channel_t {

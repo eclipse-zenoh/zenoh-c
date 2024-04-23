@@ -18,9 +18,7 @@ use zenoh::prelude::SyncResolve;
 
 use zenoh_ext::SessionExt;
 
-use crate::transmute::{
-    Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
-};
+use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
 use crate::{errors, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t};
 
 /// Options passed to the :c:func:`ze_declare_publication_cache` function.

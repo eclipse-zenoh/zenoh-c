@@ -1,5 +1,4 @@
 use fs2::FileExt;
-use fs_extra::dir::remove;
 use regex::Regex;
 use std::env;
 use std::io::{Read, Write};
@@ -107,9 +106,9 @@ pub struct {type_name} {{
 }}
 "
         );
-        let doc = docs.remove(type_name).expect(&format!(
-            "Failed to extract docs for opaque type: {type_name}"
-        ));
+        let doc = docs
+            .remove(type_name)
+            .unwrap_or_else(|| panic!("Failed to extract docs for opaque type: {type_name}"));
         for d in doc {
             data_out += &d;
             data_out += "\r\n";
@@ -125,7 +124,7 @@ pub struct {type_name} {{
 fn get_opaque_type_docs() -> HashMap<String, std::vec::Vec<String>> {
     let current_folder = get_build_rs_path();
     let path_in = current_folder.join("./build-resources/opaque-types/src/lib.rs");
-    let re = Regex::new(r#"(?m)^\s*get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\)"#).unwrap();
+    let re = Regex::new(r"(?m)^\s*get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\)").unwrap();
     let mut comments = std::vec::Vec::<String>::new();
     let mut res = HashMap::<String, std::vec::Vec<String>>::new();
 

@@ -15,18 +15,9 @@
 use std::mem::MaybeUninit;
 use std::ptr::null;
 
-use zenoh::prelude::sync::SyncResolve;
-use zenoh::prelude::KeyExpr;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::session;
-use zenoh::session::Session;
-use zenoh::subscriber::Reliability;
-use zenoh_ext::*;
-
 use crate::errors;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
-use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
@@ -39,6 +30,11 @@ use crate::{
     z_query_target_default, z_query_target_t, z_session_t, zcu_locality_default, zcu_locality_t,
     zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
+use zenoh::prelude::sync::SyncResolve;
+use zenoh::prelude::SessionDeclarations;
+use zenoh::session::Session;
+use zenoh::subscriber::Reliability;
+use zenoh_ext::*;
 
 use crate::opaque_types::ze_owned_querying_subscriber_t;
 use crate::opaque_types::ze_querying_subscriber_t;
@@ -192,7 +188,6 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     if let Err(e) = sub
         .0
         .fetch({
-            let selector = KeyExpr::try_from(selector).unwrap();
             move |cb| match options {
                 Some(options) => session
                     .get(selector)

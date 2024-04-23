@@ -19,7 +19,6 @@ use crate::errors::ZCError;
 use crate::errors::Z_OK;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
-use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
@@ -293,7 +292,7 @@ pub unsafe extern "C" fn z_keyexpr(
 ) -> ZCError {
     if name.is_null() {
         Inplace::empty(this.transmute_uninit_ptr());
-        return errors::Z_EINVAL;
+        errors::Z_EINVAL
     } else {
         let len = libc::strlen(name);
         zc_keyexpr_from_slice(this, name, len)
@@ -311,7 +310,7 @@ pub unsafe extern "C" fn z_keyexpr_autocanonize(
 ) -> ZCError {
     if name.is_null() {
         Inplace::empty(this.transmute_uninit_ptr());
-        return errors::Z_EINVAL;
+        errors::Z_EINVAL
     } else {
         let mut len = libc::strlen(name);
         let res = zc_keyexpr_from_slice_autocanonize(this, name, &mut len);
@@ -383,7 +382,7 @@ pub extern "C" fn z_keyexpr_as_bytes(ke: z_keyexpr_t) -> z_slice_t {
     }
 }
 
-impl<'a> From<&'static KeyExpr<'static>> for z_keyexpr_t {
+impl From<&'static KeyExpr<'static>> for z_keyexpr_t {
     fn from(key: &'static KeyExpr<'static>) -> Self {
         key.transmute_handle()
     }

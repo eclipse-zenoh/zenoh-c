@@ -23,7 +23,6 @@ use zenoh::prelude::{ConsolidationMode, Mode, QueryConsolidation, QueryTarget, R
 
 use crate::errors;
 use crate::transmute::Inplace;
-use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;

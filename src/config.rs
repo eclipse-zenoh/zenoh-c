@@ -179,7 +179,7 @@ pub unsafe extern "C" fn zc_config_from_str(
         let conf_str = CStr::from_ptr(s);
         let props: Option<Box<Config>> = json5::from_str(&conf_str.to_string_lossy())
             .ok()
-            .map(|v| Box::new(v));
+            .map(Box::new);
         if props.is_none() {
             res = Z_EPARSE;
         }
