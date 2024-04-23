@@ -69,7 +69,6 @@ class ZenohCPackageConan(ConanFile):
             raise ConanInvalidConfiguration("{}/{} target is not supported".format(self.settings.os, self.settings.arch))
         if self.settings.os == "Linux":
             libver = platform.libc_ver()
-            print(libver)
             if libver[0] == "glibc" and Version(libver[1]) < '2.29':
                 raise ConanInvalidConfiguration("This library requires glibc >= 2.29")
 
