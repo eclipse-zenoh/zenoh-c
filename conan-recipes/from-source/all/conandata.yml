@@ -4,5 +4,5 @@ sources:
     sha256: "9fb703eff79b7c1ef216f411dadcb7f0132c8ba665823b5a8252b467b4937438"
 patches:
   "0.10.1-rc":
-    - patch_file: patches/0001-cmakelists-patch-cargo-channel.patch
+    - patch_file: patches/0001-cmakelists-remove-cargo-channel.patch
     - patch_file: patches/0002-cmakelists-build-lib-only.patch
