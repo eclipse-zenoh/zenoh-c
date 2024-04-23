@@ -187,7 +187,7 @@ pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t
 pub unsafe extern "C" fn z_publisher_put(
     publisher: z_publisher_t,
     payload: &mut z_owned_bytes_t,
-    options: z_publisher_put_options_t,
+    options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
     let publisher = publisher.transmute_ref();
     let payload = match payload.transmute_mut().extract() {
@@ -199,14 +199,15 @@ pub unsafe extern "C" fn z_publisher_put(
     };
 
     let mut put = publisher.put(payload);
-
-    if !options.encoding.is_null() {
-        let encoding = unsafe { *options.encoding }.transmute_mut().extract();
-        put = put.encoding(encoding);
-    };
-    if !options.attachment.is_null() {
-        let attachment = unsafe { *options.attachment }.transmute_mut().extract();
-        put = put.attachment(attachment);
+    if let Some(options) = options {
+        if !options.encoding.is_null() {
+            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            put = put.encoding(encoding);
+        };
+        if !options.attachment.is_null() {
+            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            put = put.attachment(attachment);
+        }
     }
 
     if let Err(e) = put.res_sync() {

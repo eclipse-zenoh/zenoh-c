@@ -133,7 +133,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     session: z_session_t,
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
-    options: ze_querying_subscriber_options_t,
+    options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_sample_t::empty();
@@ -142,18 +142,20 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     let mut sub = session
         .declare_subscriber(key_expr.transmute_ref())
         .querying();
-    sub = sub
-        .reliability(options.reliability.into())
-        .allowed_origin(options.allowed_origin.into())
-        .query_target(options.query_target.into())
-        .query_consolidation(options.query_consolidation)
-        .query_accept_replies(options.query_accept_replies.into());
-    if !options.query_selector.is_null() {
-        let query_selector = unsafe { *options.query_selector }.transmute_ref().clone();
-        sub = sub.query_selector(query_selector)
-    }
-    if options.query_timeout_ms != 0 {
-        sub = sub.query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
+    if let Some(options) = options {
+        sub = sub
+            .reliability(options.reliability.into())
+            .allowed_origin(options.allowed_origin.into())
+            .query_target(options.query_target.into())
+            .query_consolidation(options.query_consolidation)
+            .query_accept_replies(options.query_accept_replies.into());
+        if !options.query_selector.is_null() {
+            let query_selector = unsafe { *options.query_selector }.transmute_ref().clone();
+            sub = sub.query_selector(query_selector)
+        }
+        if options.query_timeout_ms != 0 {
+            sub = sub.query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
+        }
     }
     let sub = sub.callback(move |sample| {
         let sample = sample.transmute_handle();

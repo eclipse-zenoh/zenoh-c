@@ -60,7 +60,7 @@ get_opaque_type_data!(Option<Sample>, zc_owned_sample_t);
 get_opaque_type_data!(&'static Sample, z_sample_t);
 
 /// A reader for payload data.
-get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_t_reader_t);
+get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
 get_opaque_type_data!(&'static ZBytesReader<'static>, z_bytes_reader_t);
 
 /// The encoding of a payload, in a MIME-like format.

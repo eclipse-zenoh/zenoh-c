@@ -141,11 +141,11 @@ pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
+    this: *mut MaybeUninit<z_owned_queryable_t>,
     session: z_session_t,
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
-    options: Option<&z_queryable_options_t>,
-    this: *mut MaybeUninit<z_owned_queryable_t>,
+    options: Option<&mut z_queryable_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_query_t::empty();
@@ -213,7 +213,7 @@ pub unsafe extern "C" fn z_query_reply(
     query: z_query_t,
     key_expr: z_keyexpr_t,
     payload: &mut z_owned_bytes_t,
-    options: z_query_reply_options_t,
+    options: Option<&mut z_query_reply_options_t>,
 ) -> errors::z_error_t {
     let query = query.transmute_ref();
     let key_expr = key_expr.transmute_ref();
@@ -227,14 +227,15 @@ pub unsafe extern "C" fn z_query_reply(
     };
 
     let mut reply = query.reply(key_expr, payload);
-
-    if !options.encoding.is_null() {
-        let encoding = unsafe { *options.encoding }.transmute_mut().extract();
-        reply = reply.encoding(encoding);
-    };
-    if !options.attachment.is_null() {
-        let attachment = unsafe { *options.attachment }.transmute_mut().extract();
-        reply = reply.attachment(attachment);
+    if let Some(options) = options {
+        if !options.encoding.is_null() {
+            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            reply = reply.encoding(encoding);
+        };
+        if !options.attachment.is_null() {
+            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            reply = reply.attachment(attachment);
+        }
     }
 
     if let Err(e) = reply.res_sync() {

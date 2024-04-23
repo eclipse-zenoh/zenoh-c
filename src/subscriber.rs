@@ -139,21 +139,22 @@ pub extern "C" fn z_declare_subscriber(
     session: z_session_t,
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
-    options: z_subscriber_options_t,
+    options: Option<&mut z_subscriber_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    let subscriber = session
+    let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.transmute_handle();
             z_closure_sample_call(&closure, sample)
         });
-
-    let subscriber = subscriber.reliability(options.reliability.into());
+    if let Some(options) = options {
+        subscriber = subscriber.reliability(options.reliability.into());
+    }
     match subscriber.res() {
         Ok(sub) => {
             Inplace::init(this, Some(sub));

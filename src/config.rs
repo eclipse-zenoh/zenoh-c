@@ -71,11 +71,11 @@ decl_transmute_owned!(Option<Box<Config>>, z_owned_config_t);
 
 /// Returns a :c:type:`z_config_t` loaned from `s`.
 #[no_mangle]
-pub extern "C" fn z_config_loan(s: &'static z_owned_config_t) -> z_config_t {
-    let s = s.transmute_ref();
-    let s = unwrap_ref_unchecked(s);
-    let s = s.as_ref();
-    s.transmute_handle()
+pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> z_config_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    let this = this.as_ref();
+    this.transmute_handle()
 }
 
 /// Return a new, zenoh-allocated, empty configuration.
@@ -89,7 +89,7 @@ pub extern "C" fn z_config_loan(s: &'static z_owned_config_t) -> z_config_t {
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[no_mangle]
-pub extern "C" fn z_config_new(this: *mut MaybeUninit<z_owned_config_t>) {
+pub extern "C" fn z_config_default(this: *mut MaybeUninit<z_owned_config_t>) {
     let this = this.transmute_uninit_ptr();
     let config: Box<Config> = Box::default();
     Inplace::init(this, Some(config));

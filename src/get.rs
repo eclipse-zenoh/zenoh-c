@@ -147,7 +147,7 @@ pub unsafe extern "C" fn z_get(
     key_expr: z_keyexpr_t,
     parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
-    options: z_get_options_t,
+    options: Option<&mut z_get_options_t>,
 ) -> errors::z_error_t {
     let mut closure = z_owned_closure_reply_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -160,24 +160,26 @@ pub unsafe extern "C" fn z_get(
     let key_expr = key_expr.transmute_ref();
 
     let mut get = session.get(key_expr.clone().with_parameters(p));
-    if !options.payload.is_null() {
-        if let Some(payload) = unsafe { *options.payload }.transmute_mut().extract() {
-            get = get.payload(payload);
+    if let Some(options) = options {
+        if !options.payload.is_null() {
+            if let Some(payload) = unsafe { *options.payload }.transmute_mut().extract() {
+                get = get.payload(payload);
+            }
         }
-    }
-    if !options.encoding.is_null() {
-        let encoding = unsafe { *options.encoding }.transmute_mut().extract();
-        get = get.encoding(encoding);
-    }
-    if !options.attachment.is_null() {
-        let attachment = unsafe { *options.payload }.transmute_mut().extract();
-        get = get.attachment(attachment);
-    }
+        if !options.encoding.is_null() {
+            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            get = get.encoding(encoding);
+        }
+        if !options.attachment.is_null() {
+            let attachment = unsafe { *options.payload }.transmute_mut().extract();
+            get = get.attachment(attachment);
+        }
 
-    get = get
-        .consolidation(options.consolidation)
-        .timeout(std::time::Duration::from_millis(options.timeout_ms))
-        .target(options.target.into());
+        get = get
+            .consolidation(options.consolidation)
+            .timeout(std::time::Duration::from_millis(options.timeout_ms))
+            .target(options.target.into());
+    }
     match get
         .callback(move |response| z_closure_reply_call(&closure, response.transmute_handle()))
         .res_sync()

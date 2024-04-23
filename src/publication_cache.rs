@@ -89,21 +89,23 @@ pub extern "C" fn ze_declare_publication_cache(
     this: *mut MaybeUninit<ze_owned_publication_cache_t>,
     session: z_session_t,
     key_expr: z_keyexpr_t,
-    options: ze_publication_cache_options_t,
+    options: Option<&mut ze_publication_cache_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     let mut p = session.declare_publication_cache(key_expr);
-    p = p.history(options.history);
-    p = p.queryable_allowed_origin(options.queryable_origin.into());
-    p = p.queryable_complete(options.queryable_complete);
-    if options.resources_limit != 0 {
-        p = p.resources_limit(options.resources_limit)
-    }
-    if !options.queryable_prefix.is_null() {
-        let queryable_prefix = unsafe { *options.queryable_prefix }.transmute_ref();
-        p = p.queryable_prefix(queryable_prefix.clone());
+    if let Some(options) = options {
+        p = p.history(options.history);
+        p = p.queryable_allowed_origin(options.queryable_origin.into());
+        p = p.queryable_complete(options.queryable_complete);
+        if options.resources_limit != 0 {
+            p = p.resources_limit(options.resources_limit)
+        }
+        if !options.queryable_prefix.is_null() {
+            let queryable_prefix = unsafe { *options.queryable_prefix }.transmute_ref();
+            p = p.queryable_prefix(queryable_prefix.clone());
+        }
     }
     match p.res_sync() {
         Ok(publication_cache) => {

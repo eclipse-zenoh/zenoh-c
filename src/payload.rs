@@ -180,8 +180,8 @@ pub unsafe extern "C" fn z_bytes_encode_from_string(
     z_bytes_encode_from_bytes(this, bytes);
 }
 
-pub use crate::opaque_types::z_owned_bytes_t_reader_t;
-decl_transmute_owned!(Option<ZBytesReader<'static>>, z_owned_bytes_t_reader_t);
+pub use crate::opaque_types::z_owned_bytes_reader_t;
+decl_transmute_owned!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
 
 pub use crate::opaque_types::z_bytes_reader_t;
 decl_transmute_handle!(ZBytesReader<'static>, z_bytes_reader_t);
@@ -193,7 +193,7 @@ decl_transmute_handle!(ZBytesReader<'static>, z_bytes_reader_t);
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_new(
     payload: z_bytes_t,
-    this: *mut MaybeUninit<z_owned_bytes_t_reader_t>,
+    this: *mut MaybeUninit<z_owned_bytes_reader_t>,
 ) {
     let this = this.transmute_uninit_ptr();
     let payload = payload.transmute_ref();
@@ -203,25 +203,25 @@ pub unsafe extern "C" fn z_bytes_reader_new(
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_null(this: *mut MaybeUninit<z_owned_bytes_t_reader_t>) {
+pub unsafe extern "C" fn z_bytes_reader_null(this: *mut MaybeUninit<z_owned_bytes_reader_t>) {
     let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_check(this: &z_owned_bytes_t_reader_t) -> bool {
+pub unsafe extern "C" fn z_bytes_reader_check(this: &z_owned_bytes_reader_t) -> bool {
     this.transmute_ref().is_some()
 }
 
 #[no_mangle]
-extern "C" fn z_bytes_reader_drop(this: &mut z_owned_bytes_t_reader_t) {
+extern "C" fn z_bytes_reader_drop(this: &mut z_owned_bytes_reader_t) {
     let reader = this.transmute_mut();
     Inplace::drop(reader);
 }
 
 #[no_mangle]
-extern "C" fn z_bytes_reader_loan(reader: &'static z_owned_bytes_t_reader_t) -> z_bytes_reader_t {
+extern "C" fn z_bytes_reader_loan(reader: &'static z_owned_bytes_reader_t) -> z_bytes_reader_t {
     let reader = reader.transmute_ref();
     let reader = unwrap_ref_unchecked(reader);
     reader.transmute_handle()

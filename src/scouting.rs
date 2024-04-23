@@ -14,7 +14,7 @@
 use crate::{
     errors::{self, Z_OK},
     transmute::{Inplace, TransmuteRef},
-    z_closure_hello_call, z_config_check, z_config_clone, z_config_drop, z_config_new,
+    z_closure_hello_call, z_config_check, z_config_clone, z_config_default, z_config_drop,
     z_config_null, z_config_t, z_id_t, z_owned_closure_hello_t, z_owned_config_t, zc_init_logger,
     CopyableToCArray,
 };
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn z_scouting_config_default(
     this: *mut MaybeUninit<z_owned_scouting_config_t>,
 ) {
     let mut _config = MaybeUninit::<z_owned_config_t>::uninit();
-    z_config_new(&mut _config as *mut MaybeUninit<z_owned_config_t>);
+    z_config_default(&mut _config as *mut MaybeUninit<z_owned_config_t>);
     let _config = _config.assume_init();
 
     let config = z_owned_scouting_config_t {

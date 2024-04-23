@@ -9,18 +9,17 @@
                   z_owned_config_t : z_config_loan,                            \
                   z_owned_publisher_t : z_publisher_loan,                      \
                   z_owned_subscriber_t : z_subscriber_loan,                    \
-                  z_owned_pull_subscriber_t : z_pull_subscriber_loan,          \
                   z_owned_encoding_t : z_encoding_loan,                        \
                   z_owned_hello_t : z_hello_loan,                              \
                   z_owned_str_t : z_str_loan,                                  \
                   z_owned_query_t : z_query_loan,                              \
-                  z_owned_slice_map_t : z_slice_map_loan                       \
+                  z_owned_slice_map_t : z_slice_map_loan,                      \
                   z_owned_slice_t : z_slice_loan,                              \
                   z_owned_bytes_t : z_bytes_loan,                              \
                   ze_owned_querying_subscriber_t : ze_querying_subscriber_loan,\
                   z_owned_mutex_t : z_mutex_loan,                              \
                   z_condvar_t : z_condvar_loan,                                \
-                  z_owned_bytes_reader_t : z_bytes_reader_loan,                \
+                  z_owned_bytes_reader_t : z_bytes_reader_loan                 \
             )(&x)
 
 #define z_drop(x) \
@@ -162,7 +161,6 @@ template<> inline z_keyexpr_t z_loan(const z_owned_keyexpr_t& x) { return z_keye
 template<> inline z_config_t z_loan(const z_owned_config_t& x) { return z_config_loan(&x); }
 template<> inline z_publisher_t z_loan(const z_owned_publisher_t& x) { return z_publisher_loan(&x); }
 template<> inline z_subscriber_t z_loan(const z_owned_subscriber_t& x) { return z_subscriber_loan(&x); }
-template<> inline z_pull_subscriber_t z_loan(const z_owned_pull_subscriber_t& x) { return z_pull_subscriber_loan(&x); }
 template<> inline z_encoding_t z_loan(const z_owned_encoding_t& x) { return z_encoding_loan(&x); }
 template<> inline z_hello_t z_loan(const z_owned_hello_t& x) { return z_hello_loan(&x); }
 template<> inline z_query_t z_loan(const z_owned_query_t& x) { return z_query_loan(&x); }

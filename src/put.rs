@@ -74,7 +74,7 @@ pub extern "C" fn z_put(
     session: z_session_t,
     key_expr: z_keyexpr_t,
     payload: &mut z_owned_bytes_t,
-    options: z_put_options_t,
+    options: Option<&mut z_put_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
@@ -87,14 +87,15 @@ pub extern "C" fn z_put(
     };
 
     let mut put = session.put(key_expr, payload);
-
-    if !options.encoding.is_null() {
-        let encoding = unsafe { *options.encoding }.transmute_mut().extract();
-        put = put.encoding(encoding);
-    };
-    if !options.attachment.is_null() {
-        let attachment = unsafe { *options.attachment }.transmute_mut().extract();
-        put = put.attachment(attachment);
+    if let Some(options) = options {
+        if !options.encoding.is_null() {
+            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            put = put.encoding(encoding);
+        };
+        if !options.attachment.is_null() {
+            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            put = put.attachment(attachment);
+        }
     }
 
     if let Err(e) = put.res_sync() {

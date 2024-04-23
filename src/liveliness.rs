@@ -70,7 +70,7 @@ pub extern "C" fn zc_liveliness_declare_token(
     this: *mut MaybeUninit<zc_owned_liveliness_token_t>,
     session: z_session_t,
     key_expr: z_keyexpr_t,
-    _options: zc_liveliness_declaration_options_t,
+    _options: Option<&mut zc_liveliness_declaration_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
@@ -135,7 +135,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     session: z_session_t,
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
-    _options: zc_liveliness_declare_subscriber_options_t,
+    _options: Option<&mut zc_liveliness_declare_subscriber_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
