@@ -133,10 +133,11 @@ impl ZSliceBuffer for z_slice_t {
     fn as_slice(&self) -> &[u8] {
         unsafe { slice::from_raw_parts(self.start, self.len) }
     }
-    fn as_mut_slice(&mut self) -> &mut [u8] {
-        unsafe { slice::from_raw_parts_mut(self.start as *mut u8, self.len) }
-    }
     fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
 }

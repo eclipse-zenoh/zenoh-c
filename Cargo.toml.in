@@ -41,7 +41,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 async-std = "=1.12.0"
 async-trait = "0.1.66"
-chrono = "0.4.34"
+chrono = "0.4.37"
 env_logger = "0.10.0"
 futures = "0.3.26"
 json5 = "0.4.1"
@@ -53,15 +53,10 @@ spin = "0.9.5"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 # shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
-#zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2", features = ["shared-memory", "unstable"], default-features = false }
-#zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2", features = ["shared-memory"] }
-#zenoh-util = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2" }
-#zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2", features = ["unstable"] }
-
-zenoh = { path="../zenoh/zenoh", features = ["shared-memory", "unstable"], default-features = false }
-zenoh-ext = { path = "../zenoh/zenoh-ext", features = ["unstable"]}
-zenoh-protocol = { path = "../zenoh/commons/zenoh-protocol", features = ["shared-memory"] }
-zenoh-util = { path = "../zenoh/commons/zenoh-util" }
+zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2", features = ["shared-memory", "unstable"], default-features = false }
+zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2", features = ["shared-memory"] }
+zenoh-util = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2" }
+zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "explicit_api2", features = ["unstable"] }
 
 
 [build-dependencies]

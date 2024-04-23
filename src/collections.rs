@@ -21,7 +21,8 @@ use zenoh::prelude::ZenohId;
 
 use crate::errors;
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, InplaceDefault, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+    unwrap_ref_unchecked, Inplace, InplaceDefault, TransmuteFromHandle, TransmuteIntoHandle,
+    TransmuteRef, TransmuteUninitPtr,
 };
 
 /// A contiguous view of bytes owned by some other entity.
@@ -338,7 +339,10 @@ decl_transmute_handle!(
 );
 
 pub use crate::opaque_types::z_owned_config_t;
-decl_transmute_owned!(Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>, z_owned_slice_map_t);
+decl_transmute_owned!(
+    Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>,
+    z_owned_slice_map_t
+);
 
 /// Constructs a new empty map.
 #[no_mangle]
@@ -372,7 +376,7 @@ pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) ->z_slice_map_t {
+pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> z_slice_map_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
