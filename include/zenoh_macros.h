@@ -47,11 +47,11 @@
                   ze_owned_publication_cache_t * : ze_undeclare_publication_cache,      \
                   ze_owned_querying_subscriber_t * : ze_undeclare_querying_subscriber   \
                   /*
-                   z_shared_memory_client_t : z_shared_memory_client_delete,             
-                   z_shared_memory_client_storage_t : z_shared_memory_client_storage_deref,
-                   zc_shared_memory_client_list_t : zc_shared_memory_client_list_delete, 
-                   z_alloc_layout_threadsafe_t : z_alloc_layout_threadsafe_delete, \
-                   z_alloc_layout_t : z_alloc_layout_delete, \
+                   z_owned_shared_memory_client_t : z_owned_shared_memory_client_delete,             
+                   z_owned_shared_memory_client_storage_t : z_owned_shared_memory_client_storage_deref,
+                   zc_owned_shared_memory_client_list_t : zc_shared_memory_client_list_delete, 
+                   z_owned_alloc_layout_threadsafe_t : z_owned_alloc_layout_threadsafe_delete, \
+                   z_owned_alloc_layout_t : z_owned_alloc_layout_delete, \
                    z_chunk_descriptor_t : z_chunk_descriptor_delete, \
                    z_allocated_chunk_t : z_allocated_chunk_delete, \
                    z_shared_memory_provider_threadsafe_t : z_shared_memory_provider_threadsafe_delete, \
@@ -59,8 +59,8 @@
                    z_alloc_alignment_t : z_alloc_alignment_delete, \
                    z_memory_layout_t : z_memory_layout_delete, \
                    z_chunk_alloc_result_t : z_chunk_alloc_result_delete, \
-                   z_buf_alloc_result_t : z_buf_alloc_result_delete, \
-                   z_slice_shm_t : z_slice_shm_delete \
+                   z_owned_buf_alloc_result_t : z_owned_buf_alloc_result_delete, \
+                   z_slice_shm_mut_t : z_slice_shm_delete \
                    */ \
             )(x)
 

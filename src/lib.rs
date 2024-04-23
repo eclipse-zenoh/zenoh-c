@@ -78,6 +78,59 @@ macro_rules! decl_rust_copy_type {
     };
 }
 
+#[macro_export]
+macro_rules! decl_rust_new_owned_type {
+    (zenoh:($zenoh_type:ty), c:($c_type:ty)) => {
+        impl_guarded_transmute!(noderefs $zenoh_type, $c_type);
+        impl_guarded_transmute!(noderefs $c_type, $zenoh_type);
+
+        impl $c_type {
+            pub fn check(&mut self) -> bool {
+                self.transmute_mut().is_some()
+            }
+
+            pub fn make_null(&mut self) {
+                *self.transmute_mut() = None;
+            }
+
+            pub fn delete(&mut self) {
+                let _ = self.transmute_mut().take();
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! prepare_memory_to_init {
+    ($owned_c_type:ident) => {{
+        let owned_zenoh_type = $owned_c_type.transmute_mut();
+        if owned_zenoh_type.is_some() {
+            return -1; // todo: error type E_DOUBLE_INIT
+        }
+        owned_zenoh_type
+    }};
+}
+
+#[macro_export]
+macro_rules! access_owned_memory {
+    ($owned_c_obj_mut:expr, $acess_expr:expr) => {
+        match $owned_c_obj_mut.transmute_mut() {
+            Some(val) => $acess_expr(val),
+            None => -2, // todo: error type E_ACCESS_NULL
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! move_owned_memory {
+    ($owned_c_obj_mut:expr, $acess_expr:expr) => {
+        match $owned_c_obj_mut.transmute_mut().take() {
+            Some(val) => $acess_expr(val),
+            None => -3, // todo: error type E_MOVE_NULL
+        }
+    };
+}
+
 /// For internal use only.
 ///
 /// This macro is used to establish the equivalence between a Rust type (first parameter) and a C layout (second parameter).

@@ -12,16 +12,25 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use std::sync::Arc;
+
 use zenoh::shm::{
     client::shared_memory_client::SharedMemoryClient,
     protocol_implementations::posix::posix_shared_memory_client::PosixSharedMemoryClient,
 };
 
-use crate::{client::shared_memory_client::z_shared_memory_client_t, GuardedTransmute};
+use crate::{
+    client::shared_memory_client::z_owned_shared_memory_client_t, prepare_memory_to_init,
+    GuardedTransmute,
+};
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_posix_shared_memory_client_new() -> z_shared_memory_client_t {
-    let client = Box::new(PosixSharedMemoryClient) as Box<dyn SharedMemoryClient>;
-    client.transmute()
+pub unsafe extern "C" fn z_posix_shared_memory_client_new(
+    out_client: &mut z_owned_shared_memory_client_t,
+) -> i32 {
+    let out_client = prepare_memory_to_init!(out_client);
+    let client = Arc::new(PosixSharedMemoryClient) as Arc<dyn SharedMemoryClient>;
+    *out_client = Some(client);
+    0
 }

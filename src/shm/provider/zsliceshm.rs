@@ -12,30 +12,30 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use zenoh::shm::provider::zsliceshm::ZSliceShm;
+use zenoh::shm::provider::zsliceshmmut::ZSliceShmMut;
 
 use crate::{decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute};
 
 // A ZSliceSHM
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
-pub struct z_slice_shm_t([u64; 10]);
+pub struct z_slice_shm_mut_t([u64; 10]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
-pub struct z_slice_shm_t([u64; 10]);
+pub struct z_slice_shm_mut_t([u64; 10]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_slice_shm_t([u64; 10]);
+pub struct z_slice_shm_mut_t([u64; 10]);
 
 decl_rust_copy_type!(
-    zenoh:(ZSliceShm),
-    c:(z_slice_shm_t)
+    zenoh:(ZSliceShmMut),
+    c:(z_slice_shm_mut_t)
 );
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_shm_delete(slice: z_slice_shm_t) {
+pub unsafe extern "C" fn z_slice_shm_mut_delete(slice: z_slice_shm_mut_t) {
     let _ = slice.transmute();
 }

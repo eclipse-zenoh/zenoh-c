@@ -19,9 +19,9 @@ use zenoh::shm::provider::types::{
 };
 use zenoh_util::core::zerror;
 
-use crate::{decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute};
+use crate::{decl_rust_new_owned_type, decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute};
 
-use super::{chunk::z_allocated_chunk_t, zsliceshm::z_slice_shm_t};
+use super::{chunk::z_allocated_chunk_t, zsliceshm::z_slice_shm_mut_t};
 
 /// Allocation errors
 ///
@@ -163,28 +163,34 @@ pub unsafe extern "C" fn z_chunk_alloc_result_delete(result: z_chunk_alloc_resul
     let _ = result.transmute();
 }
 
+/// A loaned BufAllocResult
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct z_buf_alloc_result_t<'a>(&'a z_owned_buf_alloc_result_t);
+
 // A BufAllocResult
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
-pub struct z_buf_alloc_result_t([u64; 10]);
+pub struct z_owned_buf_alloc_result_t([u64; 11]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
-pub struct z_buf_alloc_result_t([u64; 10]);
+pub struct z_owned_buf_alloc_result_t([u64; 12]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_buf_alloc_result_t([u64; 10]);
-decl_rust_copy_type!(
-    zenoh:(BufAllocResult),
-    c:(z_buf_alloc_result_t)
+pub struct z_owned_buf_alloc_result_t([u64; 11]);
+decl_rust_new_owned_type!(
+    zenoh:(Option<BufAllocResult>),
+    c:(z_owned_buf_alloc_result_t)
 );
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_buf_alloc_result_unwrap(
-    alloc_result: z_buf_alloc_result_t,
-    out_buf: &mut MaybeUninit<z_slice_shm_t>,
+pub unsafe extern "C" fn z_owned_buf_alloc_result_unwrap(
+    alloc_result: z_owned_buf_alloc_result_t,
+    out_buf: &mut MaybeUninit<z_slice_shm_mut_t>,
     out_error: &mut MaybeUninit<z_alloc_error_t>,
 ) -> bool {
     match alloc_result.transmute() {
@@ -201,6 +207,6 @@ pub unsafe extern "C" fn z_buf_alloc_result_unwrap(
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_buf_alloc_result_delete(result: z_buf_alloc_result_t) {
+pub unsafe extern "C" fn z_owned_buf_alloc_result_delete(result: z_owned_buf_alloc_result_t) {
     let _ = result.transmute();
 }

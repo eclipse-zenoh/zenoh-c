@@ -22,7 +22,7 @@ use crate::{DroppableContext, GuardedTransmute, ThreadsafeContext};
 
 use super::{
     shared_memory_provider_backend::DynamicSharedMemoryProviderBackend,
-    types::{z_alloc_alignment_t, z_buf_alloc_result_t},
+    types::{z_alloc_alignment_t, z_owned_buf_alloc_result_t},
 };
 
 #[allow(clippy::missing_safety_doc)]
@@ -30,7 +30,7 @@ pub(crate) unsafe fn alloc<Policy: AllocPolicy, TAnyProvider, TAnyContext>(
     provider: &TAnyProvider,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool
 where
     TAnyContext: DroppableContext,
@@ -62,7 +62,7 @@ pub(crate) async fn alloc_async<Policy: AsyncAllocPolicy, TThreadsafeProvider>(
     provider: &TThreadsafeProvider,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool
 where
     TThreadsafeProvider: GuardedTransmute<

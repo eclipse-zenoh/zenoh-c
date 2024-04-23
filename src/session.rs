@@ -126,7 +126,7 @@ pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
 #[cfg(feature = "shared-memory")]
 pub extern "C" fn z_open_with_shm_clients(
     config: &mut z_owned_config_t,
-    shm_clients: &z_shared_memory_client_storage_t,
+    shm_clients: z_shared_memory_client_storage_t,
 ) -> z_owned_session_t {
     use crate::GuardedTransmute;
 

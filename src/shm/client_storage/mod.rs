@@ -21,115 +21,181 @@ use zenoh::{
 };
 
 use crate::{
-    client::shared_memory_client::z_shared_memory_client_t, common::types::z_protocol_id_t,
-    decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute,
+    access_owned_memory, client::shared_memory_client::z_owned_shared_memory_client_t,
+    common::types::z_protocol_id_t, decl_rust_new_owned_type, impl_guarded_transmute,
+    move_owned_memory, prepare_memory_to_init, GuardedTransmute,
 };
-use std::{mem::MaybeUninit, sync::Arc};
+use std::sync::Arc;
 
-/// A list of SharedMemoryClients.
+/// A loaned list of SharedMemoryClients
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct zc_shared_memory_client_list_t<'a>(&'a zc_owned_shared_memory_client_list_t);
+
+/// An owned list of SharedMemoryClients
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
-pub struct zc_shared_memory_client_list_t([u64; 3]);
+pub struct zc_owned_shared_memory_client_list_t([u64; 3]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
-pub struct zc_shared_memory_client_list_t([u64; 4]);
+pub struct zc_owned_shared_memory_client_list_t([u64; 4]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct zc_shared_memory_client_list_t([u64; 3]);
+pub struct zc_owned_shared_memory_client_list_t([u64; 3]);
 
-decl_rust_copy_type!(
-    zenoh:(Vec<(ProtocolID, Box<dyn SharedMemoryClient>)>),
-    c:(zc_shared_memory_client_list_t)
+decl_rust_new_owned_type!(
+    zenoh:(Option<Vec<(ProtocolID, Arc<dyn SharedMemoryClient>)>>),
+    c:(zc_owned_shared_memory_client_list_t)
 );
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_shared_memory_client_list_new() -> zc_shared_memory_client_list_t {
-    let result = Vec::default();
-    result.transmute()
+pub unsafe extern "C" fn zc_shared_memory_client_list_new(
+    out: &mut zc_owned_shared_memory_client_list_t,
+) -> i32 {
+    let out = prepare_memory_to_init!(out);
+    *out = Some(Vec::default());
+    0
+}
+
+/// Initializes a null memory for safe-to-drop value of 'zc_owned_shared_memory_client_list_t' type
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zc_shared_memory_client_list_null(
+    out: &mut zc_owned_shared_memory_client_list_t,
+) {
+    out.make_null();
+}
+
+/// Returns ``true`` if `list` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zc_shared_memory_client_list_check(
+    list: &zc_owned_shared_memory_client_list_t,
+) -> bool {
+    list.check()
+}
+
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_shared_memory_client_list_delete(
+    out_client: &mut zc_owned_shared_memory_client_list_t,
+) {
+    out_client.delete();
+}
+
+/// Returns a :c:type:`zc_shared_memory_client_list_t` loaned from `list`.
+#[no_mangle]
+pub extern "C" fn zc_shared_memory_client_list_loan(
+    list: &zc_owned_shared_memory_client_list_t,
+) -> zc_shared_memory_client_list_t {
+    zc_shared_memory_client_list_t(list)
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_shared_memory_client_list_add_client(
     id: z_protocol_id_t,
-    client: z_shared_memory_client_t,
-    list: &mut zc_shared_memory_client_list_t,
-) {
-    list.transmute_mut().push((id, client.transmute()));
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_shared_memory_client_list_delete(list: zc_shared_memory_client_list_t) {
-    let _ = list.transmute();
+    client: &mut z_owned_shared_memory_client_t,
+    list: zc_shared_memory_client_list_t,
+) -> i32 {
+    access_owned_memory!(list.0, |list: &mut Vec<_>| {
+        move_owned_memory!(client, |client| {
+            list.push((id, client));
+            0
+        })
+    })
 }
 
 /// A SharedMemoryClientStorage.
 #[repr(C)]
-pub struct z_shared_memory_client_storage_t(usize);
+pub struct z_owned_shared_memory_client_storage_t(usize);
 
-decl_rust_copy_type!(
-    zenoh:(Arc<SharedMemoryClientStorage>),
-    c:(z_shared_memory_client_storage_t)
+decl_rust_new_owned_type!(
+    zenoh:(Option<Arc<SharedMemoryClientStorage>>),
+    c:(z_owned_shared_memory_client_storage_t)
 );
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_client_storage_global() -> z_shared_memory_client_storage_t
-{
-    let result = GLOBAL_CLIENT_STORAGE.clone();
-    result.transmute()
+pub unsafe extern "C" fn z_shared_memory_client_storage_global(
+    out: &mut z_owned_shared_memory_client_storage_t,
+) -> i32 {
+    let out = prepare_memory_to_init!(out);
+    *out = Some(GLOBAL_CLIENT_STORAGE.clone());
+    0
+}
+
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_owned_shared_memory_client_storage_new(
+    out: &mut z_owned_shared_memory_client_storage_t,
+    clients: zc_shared_memory_client_list_t,
+) -> i32 {
+    let out = prepare_memory_to_init!(out);
+    access_owned_memory!(clients.0, |list: &Vec<_>| {
+        if list.is_empty() {
+            return -5; // todo: E_ARGUMENT_INVALID
+        }
+        let builder = SharedMemoryClientStorage::builder().with_clients(list);
+        *out = Some(Arc::new(builder.build()));
+        0
+    })
+}
+
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_owned_shared_memory_client_storage_new_with_default_client_set(
+    out: &mut z_owned_shared_memory_client_storage_t,
+    clients: zc_shared_memory_client_list_t,
+) -> i32 {
+    let out = prepare_memory_to_init!(out);
+    access_owned_memory!(clients.0, |list: &Vec<_>| {
+        if list.is_empty() {
+            return -5; // todo: E_ARGUMENT_INVALID
+        }
+        let builder = SharedMemoryClientStorage::builder()
+            .with_default_client_set()
+            .with_clients(list);
+        *out = Some(Arc::new(builder.build()));
+        0
+    })
+}
+
+/// Initializes a null memory for safe-to-drop value of 'z_owned_shared_memory_client_storage_t' type
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_shared_memory_client_storage_null(
+    out: &mut z_owned_shared_memory_client_storage_t,
+) {
+    out.make_null();
+}
+
+/// Returns ``true`` if `storage` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_shared_memory_client_storage_check(
+    storage: &z_owned_shared_memory_client_storage_t,
+) -> bool {
+    storage.check()
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shared_memory_client_storage_deref(
-    storage: z_shared_memory_client_storage_t,
+    storage: &mut z_owned_shared_memory_client_storage_t,
 ) {
-    let _ = storage.transmute();
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_client_storage_new(
-    clients: zc_shared_memory_client_list_t,
-    out_storage: &mut MaybeUninit<z_shared_memory_client_storage_t>,
-) -> bool {
-    let mut clients = clients.transmute();
-
-    if let Some((id, client)) = clients.pop() {
-        let mut builder = SharedMemoryClientStorage::builder().with_client(id, client);
-
-        for (id, client) in clients.drain(0..) {
-            match builder.with_client(id, client) {
-                Ok(b) => builder = b,
-                Err(_) => return false,
-            }
-        }
-        out_storage.write(Arc::new(builder.build()).transmute());
-        return true;
-    }
-    false
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_client_storage_new_with_default_client_set(
-    clients: zc_shared_memory_client_list_t,
-    out_storage: &mut MaybeUninit<z_shared_memory_client_storage_t>,
-) -> bool {
-    let mut clients = clients.transmute();
-    let mut builder = SharedMemoryClientStorage::builder().with_default_client_set();
-
-    for (id, client) in clients.drain(0..) {
-        match builder.with_client(id, client) {
-            Ok(b) => builder = b,
-            Err(_) => return false,
-        }
-    }
-    out_storage.write(Arc::new(builder.build()).transmute());
-    true
+    storage.delete();
 }

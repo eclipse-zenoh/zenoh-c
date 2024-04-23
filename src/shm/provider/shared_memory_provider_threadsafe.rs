@@ -26,14 +26,14 @@ use crate::{
 };
 
 use super::{
-    alloc_layout_threadsafe::z_alloc_layout_threadsafe_t,
+    alloc_layout_threadsafe::z_owned_alloc_layout_threadsafe_t,
     chunk::z_allocated_chunk_t,
     shared_memory_provider_backend::{
         zc_shared_memory_provider_backend_callbacks_t, DynamicSharedMemoryProviderBackend,
     },
     shared_memory_provider_impl::{alloc, alloc_async},
-    types::{z_alloc_alignment_t, z_buf_alloc_result_t},
-    zsliceshm::z_slice_shm_t,
+    types::{z_alloc_alignment_t, z_owned_buf_alloc_result_t},
+    zsliceshm::z_slice_shm_mut_t,
 };
 
 /// A thread-safe SharedMemoryProvider specialization
@@ -80,11 +80,11 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_delete(
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc_layout(
-    provider: &'static z_shared_memory_provider_threadsafe_t,
+pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc_layout<'a>(
+    out_layout: &'a mut z_owned_alloc_layout_threadsafe_t,
+    provider: &'a z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_layout: &mut MaybeUninit<z_alloc_layout_threadsafe_t>,
 ) -> bool {
     let provider = provider.transmute_ref();
     match provider
@@ -110,7 +110,7 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc(
     provider: &z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool {
     alloc_inner::<JustAlloc>(provider, size, alignment, out_buffer)
 }
@@ -121,7 +121,7 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc_gc(
     provider: &z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool {
     alloc_inner::<GarbageCollect>(provider, size, alignment, out_buffer)
 }
@@ -132,7 +132,7 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc_gc_defrag(
     provider: &z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool {
     alloc_inner::<Defragment<GarbageCollect>>(provider, size, alignment, out_buffer)
 }
@@ -143,7 +143,7 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc_gc_defrag_dea
     provider: &z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool {
     alloc_inner::<Deallocate<100, Defragment<GarbageCollect>>>(
         provider, size, alignment, out_buffer,
@@ -156,7 +156,7 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc_gc_defrag_blo
     provider: &z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool {
     alloc_inner::<BlockOn<Defragment<GarbageCollect>>>(provider, size, alignment, out_buffer)
 }
@@ -167,12 +167,12 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_alloc_gc_defrag_asy
     provider: &z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
         bool,
-        &mut MaybeUninit<z_buf_alloc_result_t>,
+        &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     ),
 ) {
     let result_context = result_context.transmute();
@@ -192,7 +192,7 @@ unsafe fn alloc_inner<Policy: AllocPolicy>(
     provider: &z_shared_memory_provider_threadsafe_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-    out_buffer: &mut MaybeUninit<z_buf_alloc_result_t>,
+    out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool {
     alloc::<Policy, z_shared_memory_provider_threadsafe_t, ThreadsafeContext>(
         provider, size, alignment, out_buffer,
@@ -229,7 +229,7 @@ pub unsafe extern "C" fn z_shared_memory_provider_threadsafe_map(
     provider: &z_shared_memory_provider_threadsafe_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
-    out_buffer: &mut MaybeUninit<z_slice_shm_t>,
+    out_buffer: &mut MaybeUninit<z_slice_shm_mut_t>,
 ) -> bool {
     let provider = provider.transmute_ref();
     match provider.map(allocated_chunk.transmute(), len) {

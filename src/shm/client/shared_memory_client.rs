@@ -26,8 +26,9 @@ use zenoh::{
 use zenoh_util::core::bail;
 
 use crate::{
-    common::types::z_segment_id_t, decl_rust_copy_type, impl_guarded_transmute,
-    zc_threadsafe_context_t, DroppableContext, GuardedTransmute, ThreadsafeContext,
+    common::types::z_segment_id_t, decl_rust_new_owned_type, impl_guarded_transmute,
+    prepare_memory_to_init, zc_threadsafe_context_t, DroppableContext, GuardedTransmute,
+    ThreadsafeContext,
 };
 
 use super::shared_memory_segment::{z_shared_memory_segment_t, DynamicSharedMemorySegment};
@@ -43,22 +44,37 @@ pub struct zc_shared_memory_client_callbacks_t {
     ) -> bool,
 }
 
-/// A SharedMemoryClient
+/// A loaned SharedMemoryClient
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct z_shared_memory_client_t<'a>(&'a z_owned_shared_memory_client_t);
+
+/// An owned SharedMemoryClient
+///
+/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
-pub struct z_shared_memory_client_t([u64; 2]);
+pub struct z_owned_shared_memory_client_t([u64; 2]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
-pub struct z_shared_memory_client_t([u64; 2]);
+pub struct z_owned_shared_memory_client_t([u64; 2]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_shared_memory_client_t([u64; 2]);
+pub struct z_owned_shared_memory_client_t([u64; 2]);
 
-decl_rust_copy_type!(
-    zenoh:(Box<dyn SharedMemoryClient>),
-    c:(z_shared_memory_client_t)
+decl_rust_new_owned_type!(
+    zenoh:(Option<Arc<dyn SharedMemoryClient>>),
+    c:(z_owned_shared_memory_client_t)
 );
 
 #[derive(Debug)]
@@ -89,21 +105,52 @@ impl SharedMemoryClient for DynamicSharedMemoryClient {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_client_new(
+pub unsafe extern "C" fn z_owned_shared_memory_client_new(
+    out_client: &mut z_owned_shared_memory_client_t,
     context: zc_threadsafe_context_t,
     callbacks: zc_shared_memory_client_callbacks_t,
-    out_client: &mut MaybeUninit<z_shared_memory_client_t>,
-) {
-    let client = Box::new(DynamicSharedMemoryClient::new(
+) -> i32 {
+    let out_client = prepare_memory_to_init!(out_client);
+
+    let client = Arc::new(DynamicSharedMemoryClient::new(
         context.transmute(),
         callbacks,
-    )) as Box<dyn SharedMemoryClient>;
+    )) as Arc<dyn SharedMemoryClient>;
 
-    out_client.write(client.transmute());
+    *out_client = Some(client);
+    0
+}
+
+/// Initializes a null memory for safe-to-drop value of 'z_owned_shared_memory_client_t' type
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_owned_shared_memory_client_null(
+    out_client: &mut z_owned_shared_memory_client_t,
+) {
+    out_client.make_null();
+}
+
+/// Returns ``true`` if `client` is valid.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_owned_shared_memory_client_check(
+    client: &z_owned_shared_memory_client_t,
+) -> bool {
+    client.check()
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_client_delete(client: z_shared_memory_client_t) {
-    let _ = client.transmute();
+pub unsafe extern "C" fn z_owned_shared_memory_client_delete(
+    out_client: &mut z_owned_shared_memory_client_t,
+) {
+    out_client.delete();
+}
+
+/// Returns a :c:type:`z_shared_memory_client_t` loaned from `client`.
+#[no_mangle]
+pub extern "C" fn z_owned_shared_memory_client_loan(
+    client: &z_owned_shared_memory_client_t,
+) -> z_shared_memory_client_t {
+    z_shared_memory_client_t(client)
 }
