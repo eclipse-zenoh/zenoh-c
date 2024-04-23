@@ -18,7 +18,8 @@ use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
 use crate::errors::{ZCError, Z_EPARSE};
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+    TransmuteUninitPtr,
 };
 use crate::{errors, z_owned_str_t, z_str_null};
 

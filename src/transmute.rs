@@ -99,16 +99,30 @@ macro_rules! validate_equivalence {
             const ALIGN_B: usize = std::mem::align_of::<$type_b>();
             if ALIGN_A != ALIGN_B {
                 const ERR_MESSAGE: &str = concatcp!(
-                    "Alingment mismatch: type ", TYPE_NAME_A, " has alignment ", ALIGN_A,
-                " while type ", TYPE_NAME_B, " has alignment ", ALIGN_B);
+                    "Alingment mismatch: type ",
+                    TYPE_NAME_A,
+                    " has alignment ",
+                    ALIGN_A,
+                    " while type ",
+                    TYPE_NAME_B,
+                    " has alignment ",
+                    ALIGN_B
+                );
                 panic!("{}", ERR_MESSAGE);
             }
             const SIZE_A: usize = std::mem::size_of::<$type_a>();
             const SIZE_B: usize = std::mem::size_of::<$type_b>();
             if SIZE_A != SIZE_B {
                 const ERR_MESSAGE: &str = concatcp!(
-                    "Size mismatch: type ", TYPE_NAME_A, " has size ", SIZE_A,
-                " while type ", TYPE_NAME_B, " has size ", SIZE_B);
+                    "Size mismatch: type ",
+                    TYPE_NAME_A,
+                    " has size ",
+                    SIZE_A,
+                    " while type ",
+                    TYPE_NAME_B,
+                    " has size ",
+                    SIZE_B
+                );
                 panic!("{}", ERR_MESSAGE);
             }
         };
@@ -183,7 +197,6 @@ macro_rules! impl_transmute_uninit_ptr {
     };
 }
 
-
 macro_rules! impl_transmute_handle {
     ($c_type:ty, $zenoh_type:ty) => {
         impl $crate::transmute::TransmuteFromHandle<$zenoh_type> for $c_type {
@@ -195,8 +208,8 @@ macro_rules! impl_transmute_handle {
             }
         }
         impl $crate::transmute::TransmuteIntoHandle<$c_type> for $zenoh_type {
-            fn transmute_handle(& self) -> $c_type {
-                unsafe { std::mem::transmute::<& $zenoh_type, $c_type>(self) }
+            fn transmute_handle(&self) -> $c_type {
+                unsafe { std::mem::transmute::<&$zenoh_type, $c_type>(self) }
             }
         }
     };

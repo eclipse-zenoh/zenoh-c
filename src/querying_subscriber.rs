@@ -34,16 +34,22 @@ use crate::transmute::TransmuteUninitPtr;
 use crate::z_keyexpr_t;
 use crate::z_owned_closure_sample_t;
 use crate::z_reliability_t;
-use crate::{z_closure_sample_call, z_get_options_t,
-    z_query_consolidation_none, z_query_consolidation_t,
+use crate::{
+    z_closure_sample_call, z_get_options_t, z_query_consolidation_none, z_query_consolidation_t,
     z_query_target_default, z_query_target_t, z_session_t, zcu_locality_default, zcu_locality_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 
 use crate::opaque_types::ze_owned_querying_subscriber_t;
 use crate::opaque_types::ze_querying_subscriber_t;
-decl_transmute_owned!(Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>, ze_owned_querying_subscriber_t);
-decl_transmute_handle!((zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session), ze_querying_subscriber_t);
+decl_transmute_owned!(
+    Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
+    ze_owned_querying_subscriber_t
+);
+decl_transmute_handle!(
+    (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
+    ze_querying_subscriber_t
+);
 
 /// Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
 #[no_mangle]
@@ -137,7 +143,9 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
     let session = session.transmute_ref();
-    let mut sub = session.declare_subscriber(key_expr.transmute_ref()).querying();
+    let mut sub = session
+        .declare_subscriber(key_expr.transmute_ref())
+        .querying();
     sub = sub
         .reliability(options.reliability.into())
         .allowed_origin(options.allowed_origin.into())
@@ -149,16 +157,13 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
         sub = sub.query_selector(query_selector)
     }
     if options.query_timeout_ms != 0 {
-        sub = sub
-            .query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
+        sub = sub.query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
     }
-    let sub = sub
-    .callback(move |sample| {
+    let sub = sub.callback(move |sample| {
         let sample = sample.transmute_handle();
         z_closure_sample_call(&closure, sample);
     });
-    match sub.res()
-    {
+    match sub.res() {
         Ok(sub) => {
             Inplace::init(this, Some((sub, session)));
             errors::Z_OK
@@ -184,21 +189,22 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     let sub = sub.transmute_ref();
     let session = sub.1;
     let selector = selector.transmute_ref().clone();
-    if let Err(e) = sub.0
-    .fetch({
-        let selector = KeyExpr::try_from(selector).unwrap();
-        move |cb| match options {
-            Some(options) => session
-                .get(selector)
-                .target(options.target.into())
-                .consolidation(options.consolidation)
-                .timeout(std::time::Duration::from_millis(options.timeout_ms))
-                .callback(cb)
-                .res_sync(),
-            None => session.get(selector).callback(cb).res_sync(),
-        }
-    })
-    .res()
+    if let Err(e) = sub
+        .0
+        .fetch({
+            let selector = KeyExpr::try_from(selector).unwrap();
+            move |cb| match options {
+                Some(options) => session
+                    .get(selector)
+                    .target(options.target.into())
+                    .consolidation(options.consolidation)
+                    .timeout(std::time::Duration::from_millis(options.timeout_ms))
+                    .callback(cb)
+                    .res_sync(),
+                None => session.get(selector).callback(cb).res_sync(),
+            }
+        })
+        .res()
     {
         log::debug!("{}", e);
         return errors::Z_EGENERIC;
@@ -209,11 +215,13 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn ze_undeclare_querying_subscriber(this: &mut ze_owned_querying_subscriber_t) -> errors::ZCError {
+pub extern "C" fn ze_undeclare_querying_subscriber(
+    this: &mut ze_owned_querying_subscriber_t,
+) -> errors::ZCError {
     if let Some(s) = this.transmute_mut().extract().take() {
         if let Err(e) = s.0.close().res_sync() {
             log::error!("{}", e);
-            return errors::Z_EGENERIC
+            return errors::Z_EGENERIC;
         }
     }
     errors::Z_OK
@@ -228,7 +236,9 @@ pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscrib
 
 /// Returns a :c:type:`ze_querying_subscriber_loan` loaned from `this`.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_loan(this: &ze_owned_querying_subscriber_t,) -> ze_querying_subscriber_t {
+pub extern "C" fn ze_querying_subscriber_loan(
+    this: &ze_owned_querying_subscriber_t,
+) -> ze_querying_subscriber_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()

@@ -23,8 +23,8 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
-use crate::z_id_t;
 use crate::z_bytes_t;
+use crate::z_id_t;
 use crate::z_keyexpr_t;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
@@ -83,7 +83,6 @@ pub unsafe extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t
     timestamp.transmute_copy().get_id().to_le_bytes().into()
 }
 
-
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
@@ -119,10 +118,13 @@ pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
     sample.kind().into()
 }
 /// The samples timestamp
-/// 
+///
 /// Returns true if Sample contains timestamp, false otherwise. In the latter case the timestamp_out value is not altered.
 #[no_mangle]
-pub extern "C" fn z_sample_timestamp(sample: &z_sample_t, timestamp_out: &mut z_timestamp_t) -> bool {
+pub extern "C" fn z_sample_timestamp(
+    sample: &z_sample_t,
+    timestamp_out: &mut z_timestamp_t,
+) -> bool {
     let sample = sample.transmute_ref();
     if let Some(t) = sample.timestamp() {
         *timestamp_out = t.transmute_copy();
@@ -147,7 +149,10 @@ pub extern "C" fn z_sample_has_attachment(sample: z_sample_t) -> bool {
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(sample: z_sample_t) -> z_bytes_t {
     let sample = sample.transmute_ref();
-    sample.attachment().expect("Sample does not have an attachment").transmute_handle()
+    sample
+        .attachment()
+        .expect("Sample does not have an attachment")
+        .transmute_handle()
 }
 
 pub use crate::opaque_types::zc_owned_sample_t;
@@ -257,7 +262,6 @@ pub extern "C" fn z_encoding_loan(encoding: &'static z_owned_encoding_t) -> z_en
     encoding.transmute_ref().transmute_handle()
 }
 
-
 pub use crate::opaque_types::z_owned_value_t;
 decl_transmute_owned!(Value, z_owned_value_t);
 pub use crate::opaque_types::z_value_t;
@@ -325,7 +329,6 @@ impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
 pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }
-
 
 /// The Queryables that should be target of a :c:func:`z_get`.
 ///

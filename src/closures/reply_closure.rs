@@ -46,10 +46,7 @@ pub extern "C" fn z_closure_reply_null() -> z_owned_closure_reply_t {
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_reply_call(
-    closure: &z_owned_closure_reply_t,
-    reply: z_reply_t,
-) {
+pub extern "C" fn z_closure_reply_call(closure: &z_owned_closure_reply_t, reply: z_reply_t) {
     match closure.call {
         Some(call) => call(reply, closure.context),
         None => {
@@ -66,10 +63,7 @@ pub extern "C" fn z_closure_reply_drop(closure: &mut z_owned_closure_reply_t) {
 impl<F: Fn(z_reply_t)> From<F> for z_owned_closure_reply_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(z_reply_t)>(
-            response: z_reply_t,
-            this: *mut c_void,
-        ) {
+        extern "C" fn call<F: Fn(z_reply_t)>(response: z_reply_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
             this(response)
         }

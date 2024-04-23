@@ -11,19 +11,23 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr};
-use crate::{
-    errors, z_slice_t, z_closure_query_call, z_keyexpr_t,z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t, z_session_t, z_value_t, z_bytes_t
+use crate::transmute::{
+    unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
+    TransmuteRef, TransmuteUninitPtr,
 };
-use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
+use crate::{
+    errors, z_bytes_t, z_closure_query_call, z_keyexpr_t, z_owned_bytes_t, z_owned_closure_query_t,
+    z_owned_encoding_t, z_session_t, z_slice_t, z_value_t,
+};
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::{Query, Queryable};
 use zenoh::prelude::SyncResolve;
+use zenoh::prelude::{Query, Queryable};
+use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
 
 pub use crate::opaque_types::z_owned_queryable_t;
-decl_transmute_owned!(Option<Queryable<'static,()>>, z_owned_queryable_t);
+decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
 #[no_mangle]
@@ -141,7 +145,7 @@ pub extern "C" fn z_declare_queryable(
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
     options: Option<&z_queryable_options_t>,
-    this: *mut MaybeUninit<z_owned_queryable_t>
+    this: *mut MaybeUninit<z_owned_queryable_t>,
 ) -> errors::ZCError {
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_query_t::empty();
@@ -163,7 +167,7 @@ pub extern "C" fn z_declare_queryable(
         Err(e) => {
             log::error!("{}", e);
             errors::Z_EGENERIC
-        } 
+        }
     }
 }
 
@@ -201,7 +205,7 @@ pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
 ///     key_expr: The key of this reply.
 ///     payload: The value of this reply.
 ///     options: The options of this reply.
-/// 
+///
 /// The payload and all owned options fields are consumed upon function return.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -213,7 +217,7 @@ pub unsafe extern "C" fn z_query_reply(
 ) -> errors::ZCError {
     let query = query.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    
+
     let payload = match payload.transmute_mut().extract() {
         Some(p) => p,
         None => {
@@ -221,15 +225,15 @@ pub unsafe extern "C" fn z_query_reply(
             return errors::Z_EINVAL;
         }
     };
-    
+
     let mut reply = query.reply(key_expr, payload);
 
     if !options.encoding.is_null() {
-        let encoding = unsafe{ *options.encoding }.transmute_mut().extract();
+        let encoding = unsafe { *options.encoding }.transmute_mut().extract();
         reply = reply.encoding(encoding);
     };
     if !options.attachment.is_null() {
-        let attachment =  unsafe { *options.attachment }.transmute_mut().extract();
+        let attachment = unsafe { *options.attachment }.transmute_mut().extract();
         reply = reply.attachment(attachment);
     }
 
@@ -275,7 +279,11 @@ pub extern "C" fn z_query_has_attachment(query: z_query_t) -> bool {
 /// Before calling this funciton, the user must ensure that `z_query_has_value` returns true.
 #[no_mangle]
 pub extern "C" fn z_query_value(query: z_query_t) -> z_value_t {
-    query.transmute_ref().value().expect("Query does not contain a value").transmute_handle()
+    query
+        .transmute_ref()
+        .value()
+        .expect("Query does not contain a value")
+        .transmute_handle()
 }
 
 /// Gets the attachment to the query by aliasing.
@@ -283,5 +291,9 @@ pub extern "C" fn z_query_value(query: z_query_t) -> z_value_t {
 /// Before calling this funciton, the user must ensure that `z_query_has_attachment` returns true.
 #[no_mangle]
 pub extern "C" fn z_query_attachment(query: z_query_t) -> z_bytes_t {
-    query.transmute_ref().attachment().expect("Query does not contain an attachment").transmute_handle()
+    query
+        .transmute_ref()
+        .attachment()
+        .expect("Query does not contain an attachment")
+        .transmute_handle()
 }

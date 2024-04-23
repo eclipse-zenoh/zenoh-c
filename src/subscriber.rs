@@ -39,12 +39,12 @@ use zenoh::subscriber::Subscriber;
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_reliability_t {
-     BEST_EFFORT,
-     RELIABLE,
+    BEST_EFFORT,
+    RELIABLE,
 }
 
 impl From<Reliability> for z_reliability_t {
-#[inline]
+    #[inline]
     fn from(r: Reliability) -> Self {
         match r {
             Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
@@ -54,7 +54,7 @@ impl From<Reliability> for z_reliability_t {
 }
 
 impl From<z_reliability_t> for Reliability {
-#[inline]
+    #[inline]
     fn from(val: z_reliability_t) -> Self {
         match val {
             z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
@@ -98,7 +98,7 @@ pub struct z_subscriber_options_t {
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
     z_subscriber_options_t {
-        reliability: Reliability::DEFAULT.into()
+        reliability: Reliability::DEFAULT.into(),
     }
 }
 
@@ -147,18 +147,19 @@ pub extern "C" fn z_declare_subscriber(
     std::mem::swap(callback, &mut closure);
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    let subscriber 
-        = session.declare_subscriber(key_expr).callback(move |sample| {
+    let subscriber = session
+        .declare_subscriber(key_expr)
+        .callback(move |sample| {
             let sample = sample.transmute_handle();
             z_closure_sample_call(&closure, sample)
         });
-    
+
     let subscriber = subscriber.reliability(options.reliability.into());
     match subscriber.res() {
         Ok(sub) => {
             Inplace::init(this, Some(sub));
             errors::Z_OK
-        },
+        }
         Err(e) => {
             log::error!("{}", e);
             Inplace::empty(this);
@@ -182,7 +183,7 @@ pub extern "C" fn z_undeclare_subscriber(subscriber: &mut z_owned_subscriber_t) 
     if let Some(s) = subscriber.transmute_mut().extract().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::error!("{}", e);
-            return errors::Z_EGENERIC
+            return errors::Z_EGENERIC;
         }
     }
     errors::Z_OK
@@ -192,5 +193,5 @@ pub extern "C" fn z_undeclare_subscriber(subscriber: &mut z_owned_subscriber_t) 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_subscriber_check(subscriber: &z_owned_subscriber_t) -> bool {
-    subscriber.transmute_ref().is_some()    
+    subscriber.transmute_ref().is_some()
 }

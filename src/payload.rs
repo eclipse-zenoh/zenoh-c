@@ -1,8 +1,11 @@
 use crate::errors::{self, ZCError};
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+    TransmuteUninitPtr,
 };
-use crate::{z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, ZHashMap};
+use crate::{
+    z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, ZHashMap,
+};
 use core::slice;
 use std::any::Any;
 use std::io::{Read, Seek, SeekFrom};
@@ -72,7 +75,10 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
     let len = z_bytes_len(payload);
     let cstr = z_owned_str_t::preallocate(len);
     let payload = payload.transmute_ref();
-    if let Err(e) = payload.reader().read(from_raw_parts_mut(cstr._cstr as *mut u8, len)) {
+    if let Err(e) = payload
+        .reader()
+        .read(from_raw_parts_mut(cstr._cstr as *mut u8, len))
+    {
         log::error!("Failed to read the payload: {}", e);
         Inplace::empty(dst);
         errors::Z_EIO
@@ -243,17 +249,23 @@ pub unsafe extern "C" fn z_bytes_reader_read(
 /// Return ​0​ upon success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_seek(this: z_bytes_reader_t, offset: i64, origin: libc::c_int) -> ZCError {
+pub unsafe extern "C" fn z_bytes_reader_seek(
+    this: z_bytes_reader_t,
+    offset: i64,
+    origin: libc::c_int,
+) -> ZCError {
     let reader = this.transmute_mut();
     let pos = match origin {
         libc::SEEK_SET => offset.try_into().map(|r| SeekFrom::Start(r)),
         libc::SEEK_CUR => Ok(SeekFrom::Current(offset)),
         libc::SEEK_END => Ok(SeekFrom::End(offset)),
-        _ => { return errors::Z_EINVAL; }
+        _ => {
+            return errors::Z_EINVAL;
+        }
     };
     match pos.map(|p| reader.seek(p)) {
         Ok(_) => 0,
-        Err(_) => errors::Z_EINVAL
+        Err(_) => errors::Z_EINVAL,
     }
 }
 
@@ -265,4 +277,3 @@ pub unsafe extern "C" fn z_bytes_reader_tell(this: z_bytes_reader_t) -> i64 {
     let reader = this.transmute_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
-

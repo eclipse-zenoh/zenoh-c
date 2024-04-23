@@ -12,8 +12,8 @@ use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
 use crate::{errors, z_closure_zid_call, z_owned_closure_zid_t, z_session_t};
+use std::mem::MaybeUninit;
 use zenoh::config::ZenohId;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::SessionDeclarations;
@@ -21,8 +21,8 @@ use zenoh::session::SessionDeclarations;
 pub use crate::opaque_types::z_id_t;
 decl_transmute_copy!(ZenohId, z_id_t);
 
-impl From<[u8;16]> for z_id_t {
-    fn from(value: [u8;16]) -> Self {
+impl From<[u8; 16]> for z_id_t {
+    fn from(value: [u8; 16]) -> Self {
         unsafe { std::mem::transmute(value) }
     }
 }

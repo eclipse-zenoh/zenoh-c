@@ -1,6 +1,12 @@
-use crate::{z_closure_query_drop, z_owned_closure_query_t, z_owned_query_t, z_query_clone, z_query_null, z_query_t};
+use crate::{
+    z_closure_query_drop, z_owned_closure_query_t, z_owned_query_t, z_query_clone, z_query_null,
+    z_query_t,
+};
 use libc::c_void;
-use std::{mem::MaybeUninit, sync::mpsc::{Receiver, TryRecvError}};
+use std::{
+    mem::MaybeUninit,
+    sync::mpsc::{Receiver, TryRecvError},
+};
 
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 /// - `this` is a pointer to an arbitrary state.
@@ -70,7 +76,6 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver
     }
 }
 
-
 /// Creates a new blocking fifo channel, returned as a pair of closures.
 ///
 /// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
@@ -110,8 +115,8 @@ pub unsafe extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned
     let (send, rx) = get_send_recv_ends(bound);
     z_owned_query_channel_t {
         send,
-        recv: From::from(move |this: *mut MaybeUninit<z_owned_query_t>| {
-            match rx.try_recv() {
+        recv: From::from(
+            move |this: *mut MaybeUninit<z_owned_query_t>| match rx.try_recv() {
                 Ok(val) => {
                     (*this).write(val);
                     true
@@ -124,8 +129,8 @@ pub unsafe extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned
                     z_query_null(this);
                     false
                 }
-            }
-        }),
+            },
+        ),
     }
 }
 

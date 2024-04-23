@@ -24,15 +24,15 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
-use crate::z_slice_t;
 use crate::z_owned_str_t;
 use crate::z_session_t;
+use crate::z_slice_t;
 use libc::c_char;
+use std::error::Error;
 use zenoh::core::SyncResolve;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::KeyExpr;
-use std::error::Error;
 
 pub use crate::opaque_types::z_owned_keyexpr_t;
 decl_transmute_owned!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
@@ -44,7 +44,11 @@ pub extern "C" fn z_keyexpr_null(this: *mut MaybeUninit<z_owned_keyexpr_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
-fn keyexpr_create_inner(name: &'static mut str, should_auto_canonize: bool, should_copy: bool) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
+fn keyexpr_create_inner(
+    name: &'static mut str,
+    should_auto_canonize: bool,
+    should_copy: bool,
+) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
     if should_copy {
         let s = name.to_owned();
         match should_auto_canonize {
@@ -61,17 +65,17 @@ fn keyexpr_create_inner(name: &'static mut str, should_auto_canonize: bool, shou
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-unsafe fn keyexpr_create(name: &'static mut [u8], should_auto_canonize: bool, should_copy: bool) -> Result<KeyExpr<'static>, errors::ZCError> {
+unsafe fn keyexpr_create(
+    name: &'static mut [u8],
+    should_auto_canonize: bool,
+    should_copy: bool,
+) -> Result<KeyExpr<'static>, errors::ZCError> {
     match std::str::from_utf8_mut(name) {
-        Ok(name) => {
-            match keyexpr_create_inner(name, should_auto_canonize, should_copy) {
-                Ok(v) => {
-                    Ok(v)
-                }
-                Err(e) => {
-                    log::error!("Couldn't construct a keyexpr: {}", e);
-                    Err(errors::Z_EINVAL)
-                }
+        Ok(name) => match keyexpr_create_inner(name, should_auto_canonize, should_copy) {
+            Ok(v) => Ok(v),
+            Err(e) => {
+                log::error!("Couldn't construct a keyexpr: {}", e);
+                Err(errors::Z_EINVAL)
             }
         },
         Err(e) => {
@@ -80,8 +84,6 @@ unsafe fn keyexpr_create(name: &'static mut [u8], should_auto_canonize: bool, sh
         }
     }
 }
-   
-
 
 /// Constructs a :c:type:`z_owned_keyexpr_t` departing from a string, copying the passed string.
 #[allow(clippy::missing_safety_doc)]
@@ -99,7 +101,7 @@ pub unsafe extern "C" fn z_keyexpr_new(
         Ok(ke) => {
             Inplace::init(this, Some(ke));
             errors::Z_OK
-        },
+        }
         Err(e) => {
             Inplace::empty(this);
             e
@@ -123,7 +125,7 @@ pub unsafe extern "C" fn z_keyexpr_new_autocanonize(
         Ok(ke) => {
             Inplace::init(this, Some(ke));
             errors::Z_OK
-        },
+        }
         Err(e) => {
             Inplace::empty(this);
             e
@@ -219,7 +221,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
         Ok(ke) => {
             *len = ke.len();
             errors::Z_OK
-        },
+        }
         Err(e) => e,
     }
 }
@@ -227,19 +229,23 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
 /// Constructs a :c:type:`z_keyexpr_t` by aliasing a string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn zc_keyexpr_from_slice(this: *mut MaybeUninit<z_owned_keyexpr_t>, name: *const c_char, len: usize) -> ZCError {
+pub unsafe extern "C" fn zc_keyexpr_from_slice(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    name: *const c_char,
+    len: usize,
+) -> ZCError {
     let this = this.transmute_uninit_ptr();
     if name.is_null() {
         Inplace::empty(this);
         return errors::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(name as _, len);
-   
+
     match keyexpr_create(name, false, false) {
         Ok(ke) => {
             Inplace::init(this, Some(ke));
             errors::Z_OK
-        },
+        }
         Err(e) => {
             Inplace::empty(this);
             e
@@ -263,13 +269,13 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_autocanonize(
         return errors::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(name as _, libc::strlen(name));
-    
+
     match keyexpr_create(name, true, false) {
         Ok(ke) => {
             *len = ke.len();
             Inplace::init(this, Some(ke));
             errors::Z_OK
-        },
+        }
         Err(e) => {
             Inplace::empty(this);
             e
@@ -281,7 +287,10 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_autocanonize(
 /// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr(this: *mut MaybeUninit<z_owned_keyexpr_t>, name: *const c_char) -> ZCError {
+pub unsafe extern "C" fn z_keyexpr(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    name: *const c_char,
+) -> ZCError {
     if name.is_null() {
         Inplace::empty(this.transmute_uninit_ptr());
         return errors::Z_EINVAL;
@@ -296,7 +305,10 @@ pub unsafe extern "C" fn z_keyexpr(this: *mut MaybeUninit<z_owned_keyexpr_t>, na
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_autocanonize(this: *mut MaybeUninit<z_owned_keyexpr_t>, name: *mut c_char) -> ZCError {
+pub unsafe extern "C" fn z_keyexpr_autocanonize(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    name: *mut c_char,
+) -> ZCError {
     if name.is_null() {
         Inplace::empty(this.transmute_uninit_ptr());
         return errors::Z_EINVAL;
@@ -343,7 +355,10 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_unchecked(
 /// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_unchecked(this: *mut MaybeUninit<z_owned_keyexpr_t>, name: *const c_char) {
+pub unsafe extern "C" fn z_keyexpr_unchecked(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    name: *const c_char,
+) {
     zc_keyexpr_from_slice_unchecked(this, name, libc::strlen(name))
 }
 
@@ -364,7 +379,7 @@ pub extern "C" fn z_keyexpr_as_bytes(ke: z_keyexpr_t) -> z_slice_t {
     let ke = ke.transmute_ref();
     z_slice_t {
         start: ke.as_ptr(),
-        len: ke.len()
+        len: ke.len(),
     }
 }
 
@@ -465,7 +480,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
     left: z_keyexpr_t,
     right_start: *const c_char,
     right_len: usize,
-    this: *mut MaybeUninit<z_owned_keyexpr_t>
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
 ) -> errors::ZCError {
     let this = this.transmute_uninit_ptr();
     let left = left.transmute_ref();
@@ -500,7 +515,11 @@ pub unsafe extern "C" fn z_keyexpr_concat(
 #[no_mangle]
 /// Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
 /// In case of error, the return value will be set to its invalidated state.
-pub extern "C" fn z_keyexpr_join(left: z_keyexpr_t, right: z_keyexpr_t, this: *mut MaybeUninit<z_owned_keyexpr_t>) -> errors::ZCError {
+pub extern "C" fn z_keyexpr_join(
+    left: z_keyexpr_t,
+    right: z_keyexpr_t,
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+) -> errors::ZCError {
     let left = left.transmute_ref();
     let right = right.transmute_ref();
     let this = this.transmute_uninit_ptr();

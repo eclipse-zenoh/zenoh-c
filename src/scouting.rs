@@ -12,7 +12,11 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    errors::{self, Z_OK}, transmute::{Inplace, TransmuteRef}, z_closure_hello_call, z_config_check, z_config_clone, z_config_drop, z_config_new, z_config_null, z_config_t, z_id_t, z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, CopyableToCArray
+    errors::{self, Z_OK},
+    transmute::{Inplace, TransmuteRef},
+    z_closure_hello_call, z_config_check, z_config_clone, z_config_drop, z_config_new,
+    z_config_null, z_config_t, z_id_t, z_owned_closure_hello_t, z_owned_config_t, zc_init_logger,
+    CopyableToCArray,
 };
 use async_std::task;
 use libc::{c_char, c_uint, c_ulong, size_t};
@@ -203,7 +207,7 @@ pub extern "C" fn z_scouting_config_null(this: *mut MaybeUninit<z_owned_scouting
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_scouting_config_default(this: *mut MaybeUninit<z_owned_scouting_config_t>) {
-    let mut _config =  MaybeUninit::<z_owned_config_t>::uninit();
+    let mut _config = MaybeUninit::<z_owned_config_t>::uninit();
     z_config_new(&mut _config as *mut MaybeUninit<z_owned_config_t>);
     let _config = unsafe { _config.assume_init() };
 
@@ -217,7 +221,10 @@ pub extern "C" fn z_scouting_config_default(this: *mut MaybeUninit<z_owned_scout
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_from(config: z_config_t, this: *mut MaybeUninit<z_owned_scouting_config_t>) {
+pub extern "C" fn z_scouting_config_from(
+    config: z_config_t,
+    this: *mut MaybeUninit<z_owned_scouting_config_t>,
+) {
     let mut dst = MaybeUninit::uninit();
     z_config_clone(&config, &mut dst as *mut _);
     let _config = unsafe { dst.assume_init() };
@@ -264,7 +271,9 @@ pub extern "C" fn z_scout(
     let timeout = config.zc_timeout_ms as u64;
     let config = match config._config.transmute_mut().extract().take() {
         Some(c) => c,
-        None => { return errors::Z_EINVAL ;}
+        None => {
+            return errors::Z_EINVAL;
+        }
     };
     let mut closure = z_owned_closure_hello_t::empty();
     std::mem::swap(&mut closure, callback);

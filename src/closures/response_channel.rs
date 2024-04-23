@@ -1,6 +1,12 @@
-use crate::{ z_closure_reply_drop, z_owned_closure_reply_t, z_owned_reply_t, z_reply_clone, z_reply_null, z_reply_t};
+use crate::{
+    z_closure_reply_drop, z_owned_closure_reply_t, z_owned_reply_t, z_reply_clone, z_reply_null,
+    z_reply_t,
+};
 use libc::c_void;
-use std::{mem::MaybeUninit, sync::mpsc::{Receiver, TryRecvError}};
+use std::{
+    mem::MaybeUninit,
+    sync::mpsc::{Receiver, TryRecvError},
+};
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 /// - `this` is a pointer to an arbitrary state.
 /// - `call` is the typical callback function. `this` will be passed as its last argument.
@@ -107,8 +113,8 @@ pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned
     let (send, rx) = get_send_recv_ends(bound);
     z_owned_reply_channel_t {
         send,
-        recv: From::from(move |this: *mut MaybeUninit<z_owned_reply_t>| {
-            match rx.try_recv() {
+        recv: From::from(
+            move |this: *mut MaybeUninit<z_owned_reply_t>| match rx.try_recv() {
                 Ok(val) => {
                     (*this).write(val);
                     true
@@ -121,8 +127,8 @@ pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned
                     z_reply_null(this);
                     false
                 }
-            }
-        }),
+            },
+        ),
     }
 }
 

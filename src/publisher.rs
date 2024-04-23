@@ -31,18 +31,11 @@ use zenoh::publication::CongestionControl;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
-use zenoh::{
-    prelude::Priority,
-    publication::MatchingListener,
-    publication::Publisher,
-};
+use zenoh::{prelude::Priority, publication::MatchingListener, publication::Publisher};
 
 use zenoh::prelude::SyncResolve;
 
-use crate::{
-    z_congestion_control_t, z_keyexpr_t,
-    z_priority_t, z_session_t, z_owned_bytes_t
-};
+use crate::{z_congestion_control_t, z_keyexpr_t, z_owned_bytes_t, z_priority_t, z_session_t};
 
 /// Options passed to the :c:func:`z_declare_publisher` function.
 ///
@@ -205,11 +198,11 @@ pub unsafe extern "C" fn z_publisher_put(
             return errors::Z_EINVAL;
         }
     };
-    
+
     let mut put = publisher.put(payload);
 
     if !options.encoding.is_null() {
-        let encoding = unsafe{ *options.encoding }.transmute_mut().extract();
+        let encoding = unsafe { *options.encoding }.transmute_mut().extract();
         put = put.encoding(encoding);
     };
     if !options.attachment.is_null() {
@@ -252,7 +245,7 @@ pub extern "C" fn z_publisher_delete(
     _options: z_publisher_delete_options_t,
 ) -> errors::ZCError {
     let publisher = publisher.transmute_ref();
-    if let Err(e) =  publisher.delete().res_sync() {
+    if let Err(e) = publisher.delete().res_sync() {
         log::error!("{}", e);
         errors::Z_EGENERIC
     } else {
@@ -269,7 +262,10 @@ pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_keyexpr_t {
 }
 
 pub use crate::opaque_types::zcu_owned_matching_listener_t;
-decl_transmute_owned!(Option<MatchingListener<'static, DefaultHandler>>, zcu_owned_matching_listener_t);
+decl_transmute_owned!(
+    Option<MatchingListener<'static, DefaultHandler>>,
+    zcu_owned_matching_listener_t
+);
 
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 ///
@@ -287,7 +283,7 @@ pub struct zcu_matching_status_t {
 pub extern "C" fn zcu_publisher_matching_listener_callback(
     publisher: z_publisher_t,
     callback: &mut zcu_owned_closure_matching_status_t,
-    this: *mut MaybeUninit<zcu_owned_matching_listener_t>
+    this: *mut MaybeUninit<zcu_owned_matching_listener_t>,
 ) -> errors::ZCError {
     let this = this.transmute_uninit_ptr();
     let mut closure = zcu_owned_closure_matching_status_t::empty();
@@ -306,11 +302,11 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
         Ok(_) => {
             Inplace::empty(this);
             errors::Z_OK
-        },
+        }
         Err(e) => {
             log::error!("{}", e);
             errors::Z_EGENERIC
-        } 
+        }
     }
 }
 

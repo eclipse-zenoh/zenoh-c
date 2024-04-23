@@ -13,13 +13,13 @@
 //
 
 use libc::c_char;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::ValueBuilderTrait;
+use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
-use std::ffi::CStr;
+use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::ValueBuilderTrait;
 
-use zenoh::prelude::{ConsolidationMode, QueryTarget, Mode, QueryConsolidation, Reply};
+use zenoh::prelude::{ConsolidationMode, Mode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
 use crate::transmute::Inplace;
@@ -29,15 +29,12 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_consolidation_mode_t;
+use crate::z_owned_bytes_t;
 use crate::z_owned_encoding_t;
 use crate::z_query_target_t;
 use crate::z_sample_t;
-use crate::z_owned_bytes_t;
 use crate::z_value_t;
-use crate::{
-    z_closure_reply_call, z_keyexpr_t,
-    z_owned_closure_reply_t, z_session_t,
-};
+use crate::{z_closure_reply_call, z_keyexpr_t, z_owned_closure_reply_t, z_session_t};
 use zenoh::prelude::SyncResolve;
 
 pub use crate::opaque_types::z_owned_reply_t;
@@ -62,7 +59,10 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: z_reply_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(reply: z_reply_t) -> z_sample_t {
     let reply = reply.transmute_ref();
-    reply.result().expect("Reply does not contain a sample").transmute_handle()
+    reply
+        .result()
+        .expect("Reply does not contain a sample")
+        .transmute_handle()
 }
 
 /// Yields the contents of the reply by asserting it indicates a failure.
@@ -72,7 +72,10 @@ pub unsafe extern "C" fn z_reply_ok(reply: z_reply_t) -> z_sample_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_err(reply: z_reply_t) -> z_value_t {
     let reply = reply.transmute_ref();
-    reply.result().expect_err("Reply does not contain error").transmute_handle()
+    reply
+        .result()
+        .expect_err("Reply does not contain error")
+        .transmute_handle()
 }
 
 /// Returns an invalidated :c:type:`z_owned_reply_t`.
@@ -89,7 +92,10 @@ pub extern "C" fn z_reply_null(this: *mut MaybeUninit<z_owned_reply_t>) {
 
 #[no_mangle]
 pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: z_reply_t) {
-    Inplace::init(this.transmute_uninit_ptr(), Some(reply.transmute_ref().clone()));
+    Inplace::init(
+        this.transmute_uninit_ptr(),
+        Some(reply.transmute_ref().clone()),
+    );
 }
 
 /// Options passed to the :c:func:`z_get` function.
@@ -169,12 +175,12 @@ pub unsafe extern "C" fn z_get(
         get = get.attachment(attachment);
     }
 
-    get = get.consolidation(options.consolidation)
-            .timeout(std::time::Duration::from_millis(options.timeout_ms))
-            .target(options.target.into());
+    get = get
+        .consolidation(options.consolidation)
+        .timeout(std::time::Duration::from_millis(options.timeout_ms))
+        .target(options.target.into());
     match get
-        .callback(move |response| {
-            z_closure_reply_call(&closure, response.transmute_handle()) })
+        .callback(move |response| z_closure_reply_call(&closure, response.transmute_handle()))
         .res_sync()
     {
         Ok(()) => errors::Z_OK,

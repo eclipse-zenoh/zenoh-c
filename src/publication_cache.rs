@@ -13,15 +13,15 @@
 //
 
 use std::mem::MaybeUninit;
-use zenoh::prelude::SyncResolve;
 use std::ptr::null;
+use zenoh::prelude::SyncResolve;
 
 use zenoh_ext::SessionExt;
 
-use crate::transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
-use crate::{
-    errors, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t
+use crate::transmute::{
+    Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
 };
+use crate::{errors, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t};
 
 /// Options passed to the :c:func:`ze_declare_publication_cache` function.
 ///
@@ -55,7 +55,10 @@ pub extern "C" fn ze_publication_cache_options_default() -> ze_publication_cache
 
 pub use crate::opaque_types::ze_owned_publication_cache_t;
 pub use crate::opaque_types::ze_publication_cache_t;
-decl_transmute_owned!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
+decl_transmute_owned!(
+    Option<zenoh_ext::PublicationCache<'static>>,
+    ze_owned_publication_cache_t
+);
 decl_transmute_handle!(zenoh_ext::PublicationCache<'static>, ze_publication_cache_t);
 
 /// Declares a Publication Cache.

@@ -15,17 +15,24 @@
 use std::mem::MaybeUninit;
 use zenoh::prelude::SyncResolve;
 use zenoh::{
-    liveliness::{Liveliness, LivelinessToken}, prelude::SessionDeclarations
+    liveliness::{Liveliness, LivelinessToken},
+    prelude::SessionDeclarations,
 };
 
 use crate::transmute::TransmuteIntoHandle;
 use crate::{
-    errors, transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr}, z_closure_reply_call, z_closure_sample_call, z_keyexpr_t, z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t, z_session_t
+    errors,
+    transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr},
+    z_closure_reply_call, z_closure_sample_call, z_keyexpr_t, z_owned_closure_reply_t,
+    z_owned_closure_sample_t, z_owned_subscriber_t, z_session_t,
 };
 
-use crate::opaque_types::zc_owned_liveliness_token_t;
 use crate::opaque_types::zc_liveliness_token_t;
-decl_transmute_owned!(Option<LivelinessToken<'static>>, zc_owned_liveliness_token_t);
+use crate::opaque_types::zc_owned_liveliness_token_t;
+decl_transmute_owned!(
+    Option<LivelinessToken<'static>>,
+    zc_owned_liveliness_token_t
+);
 decl_transmute_handle!(LivelinessToken<'static>, zc_liveliness_token_t);
 
 /// The gravestone value for liveliness tokens.
@@ -47,8 +54,8 @@ pub struct zc_liveliness_declaration_options_t {
 }
 
 #[no_mangle]
-pub extern "C" fn zc_liveliness_declaration_options_default(
-) -> zc_liveliness_declaration_options_t {
+pub extern "C" fn zc_liveliness_declaration_options_default() -> zc_liveliness_declaration_options_t
+{
     zc_liveliness_declaration_options_t { _dummy: 0 }
 }
 
@@ -72,7 +79,7 @@ pub extern "C" fn zc_liveliness_declare_token(
         Ok(token) => {
             Inplace::init(this, Some(token));
             errors::Z_OK
-        },
+        }
         Err(e) => {
             log::error!("Failed to undeclare token: {e}");
             Inplace::empty(this);
@@ -83,7 +90,9 @@ pub extern "C" fn zc_liveliness_declare_token(
 
 /// Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_undeclare_token(this: &mut zc_owned_liveliness_token_t) -> errors::ZCError {
+pub extern "C" fn zc_liveliness_undeclare_token(
+    this: &mut zc_owned_liveliness_token_t,
+) -> errors::ZCError {
     let this = this.transmute_mut();
     if let Some(token) = this.extract().take() {
         if let Err(e) = token.undeclare().res() {

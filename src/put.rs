@@ -91,11 +91,11 @@ pub extern "C" fn z_put(
             return errors::Z_EINVAL;
         }
     };
-    
+
     let mut put = session.put(key_expr, payload);
 
     if !options.encoding.is_null() {
-        let encoding = unsafe{ *options.encoding }.transmute_mut().extract();
+        let encoding = unsafe { *options.encoding }.transmute_mut().extract();
         put = put.encoding(encoding);
     };
     if !options.attachment.is_null() {
@@ -146,11 +146,11 @@ pub extern "C" fn z_delete(
 ) -> errors::ZCError {
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    let del 
-        = session.delete(key_expr)
+    let del = session
+        .delete(key_expr)
         .congestion_control(opts.congestion_control.into())
         .priority(opts.priority.into());
- 
+
     match del.res_sync() {
         Err(e) => {
             log::error!("{}", e);

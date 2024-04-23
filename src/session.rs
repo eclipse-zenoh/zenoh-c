@@ -12,7 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr};
+use crate::transmute::{
+    unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteIntoHandle, TransmuteRef,
+    TransmuteUninitPtr,
+};
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;

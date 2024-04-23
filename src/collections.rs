@@ -20,7 +20,9 @@ use libc::{c_char, c_void, size_t};
 use zenoh::prelude::ZenohId;
 
 use crate::errors;
-use crate::transmute::{Inplace, InplaceDefault, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
+use crate::transmute::{
+    Inplace, InplaceDefault, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
+};
 
 /// A contiguous view of bytes owned by some other entity.
 ///
@@ -182,7 +184,7 @@ pub const extern "C" fn z_slice_loan(b: &z_owned_slice_t) -> z_slice_t {
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_clone(b: &z_slice_t, ) -> z_owned_slice_t {
+pub extern "C" fn z_slice_clone(b: &z_slice_t) -> z_owned_slice_t {
     if !z_slice_is_initialized(b) {
         z_slice_null()
     } else {
@@ -243,7 +245,6 @@ impl From<&[u8]> for z_slice_t {
 }
 
 impl InplaceDefault for z_owned_slice_t {}
-
 
 /// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
 /// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
@@ -331,7 +332,10 @@ pub use crate::opaque_types::z_slice_map_t;
 
 pub type ZHashMap = HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>;
 pub use crate::opaque_types::z_config_t;
-decl_transmute_handle!(HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>, z_slice_map_t);
+decl_transmute_handle!(
+    HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>,
+    z_slice_map_t
+);
 
 pub use crate::opaque_types::z_owned_config_t;
 decl_transmute_owned!(Option<ZHashMap>, z_owned_slice_map_t);
@@ -390,7 +394,11 @@ pub type z_slice_map_iter_body_t =
     extern "C" fn(key: z_slice_t, value: z_slice_t, context: *mut c_void) -> bool;
 
 #[no_mangle]
-pub extern "C" fn z_slice_map_iterate(this: &z_slice_map_t, body: z_slice_map_iter_body_t, context: *mut c_void) {
+pub extern "C" fn z_slice_map_iterate(
+    this: &z_slice_map_t,
+    body: z_slice_map_iter_body_t,
+    context: *mut c_void,
+) {
     let this = this.transmute_ref();
     for (key, value) in this {
         if !body(key.as_ref().into(), value.as_ref().into(), context) {
@@ -407,8 +415,10 @@ pub extern "C" fn z_slice_map_get(this: z_slice_map_t, key: z_slice_t) -> z_slic
         return z_slice_empty();
     }
     let m = this.transmute_mut();
-    let key =  key.as_slice().unwrap();
-    m.get(key).map(|s| s.as_ref().into()).unwrap_or( z_slice_empty())
+    let key = key.as_slice().unwrap();
+    m.get(key)
+        .map(|s| s.as_ref().into())
+        .unwrap_or(z_slice_empty())
 }
 
 /// Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
@@ -421,8 +431,7 @@ pub extern "C" fn z_slice_map_insert_by_copy(
     value: z_slice_t,
 ) -> errors::ZCError {
     let this = this.transmute_mut();
-    if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice())
-    {
+    if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice()) {
         this.insert(Cow::Owned(key.to_owned()), Cow::Owned(value.to_owned()));
         errors::Z_OK
     } else {
@@ -442,8 +451,7 @@ pub extern "C" fn z_slice_map_insert_by_alias(
     value: z_slice_t,
 ) -> errors::ZCError {
     let this = this.transmute_mut();
-    if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice())
-    {
+    if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice()) {
         this.insert(Cow::Borrowed(key), Cow::Borrowed(value));
         errors::Z_OK
     } else {

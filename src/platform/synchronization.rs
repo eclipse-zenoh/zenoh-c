@@ -1,16 +1,26 @@
 use std::{
-    mem::MaybeUninit, sync::{Condvar, Mutex, MutexGuard}, thread::{self, JoinHandle}
+    mem::MaybeUninit,
+    sync::{Condvar, Mutex, MutexGuard},
+    thread::{self, JoinHandle},
 };
 
 use libc::c_void;
 
-use crate::{errors, transmute::{unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr}};
-pub use crate::opaque_types::z_owned_mutex_t;
 pub use crate::opaque_types::z_mutex_t;
+pub use crate::opaque_types::z_owned_mutex_t;
+use crate::{
+    errors,
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
+    },
+};
 
-decl_transmute_owned!(Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>, z_owned_mutex_t);
+decl_transmute_owned!(
+    Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>,
+    z_owned_mutex_t
+);
 decl_transmute_handle!((Mutex<()>, Option<MutexGuard<'static, ()>>), z_mutex_t);
-
 
 #[no_mangle]
 pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> errors::ZCError {
@@ -36,7 +46,6 @@ pub extern "C" fn z_mutex_loan(this: &z_owned_mutex_t) -> z_mutex_t {
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
 }
-
 
 #[no_mangle]
 pub extern "C" fn z_mutex_lock(this: z_mutex_t) -> errors::ZCError {
@@ -81,9 +90,8 @@ pub unsafe extern "C" fn z_mutex_try_lock(this: z_mutex_t) -> errors::ZCError {
     errors::Z_OK
 }
 
-
-pub use crate::opaque_types::z_owned_condvar_t;
 pub use crate::opaque_types::z_condvar_t;
+pub use crate::opaque_types::z_owned_condvar_t;
 
 decl_transmute_owned!(Option<Condvar>, z_owned_condvar_t);
 decl_transmute_handle!(Condvar, z_condvar_t);
@@ -181,7 +189,6 @@ pub extern "C" fn z_task_check(this: &z_owned_task_t) -> bool {
     this.transmute_ref().is_some()
 }
 
-
 struct FunArgPair {
     fun: unsafe extern "C" fn(arg: *mut c_void),
     arg: *mut c_void,
@@ -209,7 +216,7 @@ pub unsafe extern "C" fn z_task_init(
     match thread::Builder::new().spawn(move || fun_arg_pair.call()) {
         Ok(join_handle) => {
             Inplace::init(this, Some(join_handle));
-        },
+        }
         Err(_) => return errors::Z_EAGAIN_MUTEX,
     }
     errors::Z_OK

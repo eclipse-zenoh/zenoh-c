@@ -59,8 +59,8 @@ pub use liveliness::*;
 mod publication_cache;
 pub use publication_cache::*;
 mod querying_subscriber;
-pub use querying_subscriber::*;
 pub use platform::*;
+pub use querying_subscriber::*;
 pub mod platform;
 // #[cfg(feature = "shared-memory")]
 // mod shm;
