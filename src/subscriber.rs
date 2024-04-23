@@ -98,7 +98,7 @@ pub struct z_subscriber_options_t {
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
     z_subscriber_options_t {
-        reliability: Reliability::BestEffort.into()
+        reliability: Reliability::DEFAULT.into()
     }
 }
 
@@ -145,7 +145,7 @@ pub extern "C" fn z_declare_subscriber(
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     let subscriber 
         = session.declare_subscriber(key_expr).callback(move |sample| {

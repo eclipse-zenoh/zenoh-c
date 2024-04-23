@@ -1,4 +1,4 @@
-use crate::transmute::TransmuteCopy;
+use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -35,7 +35,7 @@ impl From<[u8;16]> for z_id_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     session.info().zid().res_sync().transmute_copy()
 }
 
@@ -53,7 +53,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 ) -> errors::ZCError {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     for id in session.info().peers_zid().res_sync() {
         z_closure_zid_call(&closure, &id.transmute_copy());
     }
@@ -74,7 +74,7 @@ pub unsafe extern "C" fn z_info_routers_zid(
 ) -> errors::ZCError {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     for id in session.info().routers_zid().res_sync() {
         z_closure_zid_call(&closure, &id.transmute_copy());
     }

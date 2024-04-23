@@ -91,7 +91,7 @@ pub extern "C" fn ze_declare_publication_cache(
     options: ze_publication_cache_options_t,
 ) -> errors::ZCError {
     let this = this.transmute_uninit_ptr();
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     let mut p = session.declare_publication_cache(key_expr);
     p = p.history(options.history);

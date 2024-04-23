@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteRef, TransmuteUninitPtr};
+use crate::transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr};
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
@@ -25,7 +25,7 @@ decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
 
 /// A loaned zenoh session.
 use crate::opaque_types::z_session_t;
-decl_transmute_copy!(&'static Session, z_session_t);
+decl_transmute_handle!(Session, z_session_t);
 
 /// Returns a :c:type:`z_session_t` loaned from `s`.
 ///
@@ -36,18 +36,18 @@ decl_transmute_copy!(&'static Session, z_session_t);
 /// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
-pub extern "C" fn z_session_loan(s: &'static z_owned_session_t) -> z_session_t {
-    let s = s.transmute_ref();
-    let s = unwrap_ref_unchecked(s);
-    let s = s.as_ref();
-    s.transmute_copy()
+pub extern "C" fn z_session_loan(this: &'static z_owned_session_t) -> z_session_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    let this = this.as_ref();
+    this.transmute_handle()
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_session_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_session_null(s: *mut MaybeUninit<z_owned_session_t>) {
-    Inplace::empty(s.transmute_uninit_ptr());
+pub extern "C" fn z_session_null(this: *mut MaybeUninit<z_owned_session_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
 }
 
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
@@ -86,8 +86,8 @@ pub extern "C" fn z_open(
 /// Returns ``true`` if `session` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
-    session.transmute_ref().is_some()
+pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
+    this.transmute_ref().is_some()
 }
 
 /// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.

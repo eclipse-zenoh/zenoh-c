@@ -146,7 +146,7 @@ pub extern "C" fn z_declare_queryable(
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let keyexpr = key_expr.transmute_ref();
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
@@ -275,7 +275,7 @@ pub extern "C" fn z_query_has_attachment(query: z_query_t) -> bool {
 /// Before calling this funciton, the user must ensure that `z_query_has_value` returns true.
 #[no_mangle]
 pub extern "C" fn z_query_value(query: z_query_t) -> z_value_t {
-    query.transmute_ref().value().expect("Query does not contain a value").transmute_copy()
+    query.transmute_ref().value().expect("Query does not contain a value").transmute_handle()
 }
 
 /// Gets the attachment to the query by aliasing.

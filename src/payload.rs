@@ -72,9 +72,14 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
     let len = z_bytes_len(payload);
     let cstr = z_owned_str_t::preallocate(len);
     let payload = payload.transmute_ref();
-    payload.reader().read(from_raw_parts_mut(cstr._cstr as *mut u8, len));
-    Inplace::init(dst, cstr);
-    errors::Z_OK
+    if let Err(e) = payload.reader().read(from_raw_parts_mut(cstr._cstr as *mut u8, len)) {
+        log::error!("Failed to read the payload: {}", e);
+        Inplace::empty(dst);
+        errors::Z_EIO
+    } else {
+        Inplace::init(dst, cstr);
+        errors::Z_OK
+    }
 }
 
 /// Decodes payload into bytes map.
@@ -105,9 +110,14 @@ pub unsafe extern "C" fn z_bytes_decode_into_bytes(
     let len = z_bytes_len(payload);
     let b = z_owned_slice_t::preallocate(len);
     let payload = payload.transmute_ref();
-    payload.reader().read(from_raw_parts_mut(b.start, len));
-    Inplace::init(dst, b);
-    errors::Z_OK
+    if let Err(e) = payload.reader().read(from_raw_parts_mut(b.start, len)) {
+        log::error!("Failed to read the payload: {}", e);
+        Inplace::empty(dst);
+        errors::Z_EIO
+    } else {
+        Inplace::init(dst, b);
+        errors::Z_OK
+    }
 }
 
 unsafe impl Send for z_slice_t {}
@@ -194,9 +204,8 @@ pub unsafe extern "C" fn z_bytes_reader_null(this: *mut MaybeUninit<z_owned_byte
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_check(reader: &z_owned_bytes_t_reader_t) -> bool {
-    let reader = reader.transmute_ref();
-    reader.as_ref().is_some()
+pub unsafe extern "C" fn z_bytes_reader_check(this: &z_owned_bytes_t_reader_t) -> bool {
+    this.transmute_ref().is_some()
 }
 
 #[no_mangle]
@@ -219,11 +228,11 @@ extern "C" fn z_bytes_reader_loan(reader: &'static z_owned_bytes_t_reader_t) -> 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_read(
-    reader: z_bytes_reader_t,
+    this: z_bytes_reader_t,
     dest: *mut u8,
     len: usize,
 ) -> usize {
-    let reader = reader.transmute_mut();
+    let reader = this.transmute_mut();
     let buf = unsafe { from_raw_parts_mut(dest, len) };
     reader.read(buf).unwrap_or(0)
 }
@@ -234,8 +243,8 @@ pub unsafe extern "C" fn z_bytes_reader_read(
 /// Return ​0​ upon success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_seek(reader: z_bytes_reader_t, offset: i64, origin: libc::c_int) -> ZCError {
-    let reader = reader.transmute_mut();
+pub unsafe extern "C" fn z_bytes_reader_seek(this: z_bytes_reader_t, offset: i64, origin: libc::c_int) -> ZCError {
+    let reader = this.transmute_mut();
     let pos = match origin {
         libc::SEEK_SET => offset.try_into().map(|r| SeekFrom::Start(r)),
         libc::SEEK_CUR => Ok(SeekFrom::Current(offset)),
@@ -252,8 +261,8 @@ pub unsafe extern "C" fn z_bytes_reader_seek(reader: z_bytes_reader_t, offset: i
 /// Returns read position indicator on success or -1L if failure occurs.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_tell(reader: z_bytes_reader_t) -> i64 {
-    let reader = reader.transmute_mut();
+pub unsafe extern "C" fn z_bytes_reader_tell(this: z_bytes_reader_t) -> i64 {
+    let reader = this.transmute_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
 

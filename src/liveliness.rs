@@ -66,7 +66,7 @@ pub extern "C" fn zc_liveliness_declare_token(
     _options: zc_liveliness_declaration_options_t,
 ) -> errors::ZCError {
     let this = this.transmute_uninit_ptr();
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     match session.liveliness().declare_token(key_expr).res() {
         Ok(token) => {
@@ -129,7 +129,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     _options: zc_liveliness_declare_subscriber_options_t,
 ) -> errors::ZCError {
     let this = this.transmute_uninit_ptr();
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
     let key_expr = key_expr.transmute_ref();
     match session
@@ -177,7 +177,7 @@ pub extern "C" fn zc_liveliness_get(
     callback: &mut z_owned_closure_reply_t,
     options: zc_liveliness_get_options_t,
 ) -> errors::ZCError {
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
     let liveliness: Liveliness<'static> = session.liveliness();

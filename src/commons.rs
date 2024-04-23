@@ -102,7 +102,7 @@ pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
     let sample = sample.transmute_ref();
-    sample.encoding().transmute_copy()
+    sample.encoding().transmute_handle()
 }
 /// The sample's data, the return value aliases the sample.
 ///
@@ -192,7 +192,7 @@ pub extern "C" fn zc_sample_null(sample: *mut MaybeUninit<zc_owned_sample_t>) {
 }
 
 pub use crate::opaque_types::z_encoding_t;
-decl_transmute_copy!(&'static Encoding, z_encoding_t);
+decl_transmute_handle!(Encoding, z_encoding_t);
 
 /// An owned payload encoding.
 ///
@@ -233,7 +233,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    (&Encoding::ZENOH_BYTES).transmute_copy()
+    (&Encoding::ZENOH_BYTES).transmute_handle()
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.
@@ -254,14 +254,14 @@ pub extern "C" fn z_encoding_check(encoding: &'static z_owned_encoding_t) -> boo
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan(encoding: &'static z_owned_encoding_t) -> z_encoding_t {
-    encoding.transmute_ref().transmute_copy()
+    encoding.transmute_ref().transmute_handle()
 }
 
 
 pub use crate::opaque_types::z_owned_value_t;
 decl_transmute_owned!(Value, z_owned_value_t);
 pub use crate::opaque_types::z_value_t;
-decl_transmute_copy!(&'static Value, z_value_t);
+decl_transmute_handle!(Value, z_value_t);
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]

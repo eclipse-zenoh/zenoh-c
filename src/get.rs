@@ -72,7 +72,7 @@ pub unsafe extern "C" fn z_reply_ok(reply: z_reply_t) -> z_sample_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_err(reply: z_reply_t) -> z_value_t {
     let reply = reply.transmute_ref();
-    reply.result().expect_err("Reply does not contain error").transmute_copy()
+    reply.result().expect_err("Reply does not contain error").transmute_handle()
 }
 
 /// Returns an invalidated :c:type:`z_owned_reply_t`.
@@ -151,7 +151,7 @@ pub unsafe extern "C" fn z_get(
     } else {
         CStr::from_ptr(parameters).to_str().unwrap()
     };
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
 
     let mut get = session.get(key_expr.clone().with_parameters(p));

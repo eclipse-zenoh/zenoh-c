@@ -82,7 +82,7 @@ pub extern "C" fn z_put(
     payload: &mut z_owned_bytes_t,
     options: z_put_options_t,
 ) -> errors::ZCError {
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     let payload = match payload.transmute_mut().extract() {
         Some(p) => p,
@@ -144,7 +144,7 @@ pub extern "C" fn z_delete(
     key_expr: z_keyexpr_t,
     opts: z_delete_options_t,
 ) -> errors::ZCError {
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
     let del 
         = session.delete(key_expr)

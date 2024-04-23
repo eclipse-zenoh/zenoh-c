@@ -67,7 +67,7 @@ pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
 pub use crate::opaque_types::z_owned_publisher_t;
 decl_transmute_owned!(Option<Publisher<'static>>, z_owned_publisher_t);
 pub use crate::opaque_types::z_publisher_t;
-decl_transmute_copy!(&'static Publisher<'static>, z_publisher_t);
+decl_transmute_handle!(Publisher<'static>, z_publisher_t);
 
 /// Declares a publisher for the given key expression.
 ///
@@ -111,7 +111,7 @@ pub extern "C" fn z_declare_publisher(
     this: *mut MaybeUninit<z_owned_publisher_t>,
 ) -> errors::ZCError {
     let this = this.transmute_uninit_ptr();
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref().clone().into_owned();
     let mut p = session.declare_publisher(key_expr);
     if let Some(options) = options {
@@ -152,7 +152,7 @@ pub extern "C" fn z_publisher_check(pbl: &'static z_owned_publisher_t) -> bool {
 pub extern "C" fn z_publisher_loan(p: &'static z_owned_publisher_t) -> z_publisher_t {
     let p = p.transmute_ref();
     let p = unwrap_ref_unchecked(p);
-    p.transmute_copy()
+    p.transmute_handle()
 }
 
 /// Options passed to the :c:func:`z_publisher_put` function.
@@ -197,7 +197,7 @@ pub unsafe extern "C" fn z_publisher_put(
     payload: &mut z_owned_bytes_t,
     options: z_publisher_put_options_t,
 ) -> errors::ZCError {
-    let publisher = publisher.transmute_copy();
+    let publisher = publisher.transmute_ref();
     let payload = match payload.transmute_mut().extract() {
         Some(p) => p,
         None => {
@@ -251,8 +251,7 @@ pub extern "C" fn z_publisher_delete(
     publisher: z_publisher_t,
     _options: z_publisher_delete_options_t,
 ) -> errors::ZCError {
-    let publisher = publisher.transmute_copy();
-   
+    let publisher = publisher.transmute_ref();
     if let Err(e) =  publisher.delete().res_sync() {
         log::error!("{}", e);
         errors::Z_EGENERIC
@@ -265,7 +264,7 @@ pub extern "C" fn z_publisher_delete(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_keyexpr_t {
-    let publisher = publisher.transmute_copy();
+    let publisher = publisher.transmute_ref();
     publisher.key_expr().transmute_handle()
 }
 
@@ -293,7 +292,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     let this = this.transmute_uninit_ptr();
     let mut closure = zcu_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
-    let publisher = publisher.transmute_copy();
+    let publisher = publisher.transmute_ref();
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {

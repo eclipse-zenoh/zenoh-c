@@ -390,7 +390,7 @@ pub extern "C" fn z_declare_keyexpr(
 ) -> ZCError {
     let this = this.transmute_uninit_ptr();
     let key_expr = key_expr.transmute_ref();
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     match session.declare_keyexpr(key_expr).res_sync() {
         Ok(id) => {
             Inplace::init(this, Some(id.into_owned()));
@@ -413,7 +413,7 @@ pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_
         log::debug!("Attempted to undeclare dropped keyexpr");
         return i8::MIN;
     };
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     match session.undeclare(kexpr).res() {
         Ok(()) => errors::Z_OK,
         Err(e) => {

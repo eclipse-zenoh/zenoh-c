@@ -83,7 +83,7 @@ pub struct ze_querying_subscriber_options_t {
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscriber_options_t {
     ze_querying_subscriber_options_t {
-        reliability: Reliability::BestEffort.into(),
+        reliability: Reliability::DEFAULT.into(),
         allowed_origin: zcu_locality_default(),
         query_selector: null(),
         query_target: z_query_target_default(),
@@ -136,7 +136,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    let session = session.transmute_copy();
+    let session = session.transmute_ref();
     let mut sub = session.declare_subscriber(key_expr.transmute_ref()).querying();
     sub = sub
         .reliability(options.reliability.into())
