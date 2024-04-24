@@ -17,6 +17,7 @@
                   z_owned_slice_t : z_slice_loan,                              \
                   z_owned_bytes_t : z_bytes_loan,                              \
                   ze_owned_querying_subscriber_t : ze_querying_subscriber_loan,\
+                  z_owned_reply_t : z_owned_reply_t,                           \
                   z_owned_mutex_t : z_mutex_loan,                              \
                   z_condvar_t : z_condvar_loan,                                \
                   z_owned_bytes_reader_t : z_bytes_reader_loan                 \
@@ -93,11 +94,9 @@
     _Generic((x), z_owned_session_t : z_session_check,                          \
                   z_owned_publisher_t : z_publisher_check,                      \
                   z_owned_keyexpr_t : z_keyexpr_check,                          \
-                  z_keyexpr_t : z_keyexpr_is_initialized,                       \
                   z_owned_config_t : z_config_check,                            \
                   z_owned_scouting_config_t : z_scouting_config_check,          \
                   z_owned_subscriber_t : z_subscriber_check,                    \
-                  z_owned_pull_subscriber_t : z_pull_subscriber_check,          \
                   z_owned_queryable_t : z_queryable_check,                      \
                   z_owned_encoding_t : z_encoding_check,                        \
                   z_owned_reply_t : z_reply_check,                              \
@@ -109,9 +108,9 @@
                   z_owned_bytes_t : z_bytes_check,                              \
                   zc_owned_liveliness_token_t : zc_liveliness_token_check,      \
                   ze_owned_publication_cache_t : ze_publication_cache_check,    \
-                  ze_owned_querying_subscriber_t : ze_querying_subscriber_check \
+                  ze_owned_querying_subscriber_t : ze_querying_subscriber_check,\
                   z_owned_mutex_t : z_mutex_check,                              \
-                  z_owned_condvar_t : z_owned_condar_check,                     \
+                  z_owned_condvar_t : z_condvar_check,                          \
                   z_owned_task_t : z_task_check                                 \
             )(&x)
 
@@ -211,7 +210,6 @@ template<> inline int8_t z_drop(z_owned_publisher_t* v) { return z_undeclare_pub
 template<> inline void z_drop(z_owned_keyexpr_t* v) { z_keyexpr_drop(v); }
 template<> inline void z_drop(z_owned_config_t* v) { z_config_drop(v); }
 template<> inline void z_drop(z_owned_scouting_config_t* v) { z_scouting_config_drop(v); }
-template<> inline int8_t z_drop(z_owned_pull_subscriber_t* v) { return z_undeclare_pull_subscriber(v); }
 template<> inline int8_t z_drop(z_owned_subscriber_t* v) { return z_undeclare_subscriber(v); }
 template<> inline int8_t z_drop(z_owned_queryable_t* v) { return z_undeclare_queryable(v); }
 template<> inline void z_drop(z_owned_encoding_t* v) { z_encoding_drop(v); }
@@ -271,13 +269,11 @@ inline void z_null(z_owned_task_t& v) { v = z_task_null(); }
 inline bool z_check(const z_owned_session_t& v) { return z_session_check(&v); }
 inline bool z_check(const z_owned_publisher_t& v) { return z_publisher_check(&v); }
 inline bool z_check(const z_owned_keyexpr_t& v) { return z_keyexpr_check(&v); }
-inline bool z_check(const z_keyexpr_t& v) { return z_keyexpr_is_initialized(&v); }
 inline bool z_check(const z_owned_config_t& v) { return z_config_check(&v); }
 inline bool z_check(const z_owned_scouting_config_t& v) { return z_scouting_config_check(&v); }
 inline bool z_check(const z_owned_bytes_t& v) { return z_slice_check(&v); }
 inline bool z_check(const z_owned_bytes_reader_t& v) { return z_bytes_reader_check(&v); }
 inline bool z_check(const z_owned_subscriber_t& v) { return z_subscriber_check(&v); }
-inline bool z_check(const z_owned_pull_subscriber_t& v) { return z_pull_subscriber_check(&v); }
 inline bool z_check(const z_owned_queryable_t& v) { return z_queryable_check(&v); }
 inline bool z_check(const z_owned_encoding_t& v) { return z_encoding_check(&v); }
 inline bool z_check(const z_owned_reply_t& v) { return z_reply_check(&v); }

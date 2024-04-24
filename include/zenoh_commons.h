@@ -1218,14 +1218,14 @@ z_error_t z_declare_subscriber(struct z_owned_subscriber_t *this_,
  * Parameters:
  *     session: The zenoh session.
  *     key_expr: The key expression to delete.
- *     options: The put options.
+ *     options: The delete options.
  * Returns:
  *     ``0`` in case of success, negative values in case of failure.
  */
 ZENOHC_API
 z_error_t z_delete(struct z_session_t session,
                    struct z_keyexpr_t key_expr,
-                   struct z_delete_options_t opts);
+                   struct z_delete_options_t *options);
 /**
  * Constructs the default value for :c:type:`z_put_options_t`.
  */

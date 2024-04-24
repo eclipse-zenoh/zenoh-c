@@ -129,7 +129,7 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 /// Parameters:
 ///     session: The zenoh session.
 ///     key_expr: The key expression to delete.
-///     options: The put options.
+///     options: The delete options.
 /// Returns:
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
@@ -137,14 +137,16 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 pub extern "C" fn z_delete(
     session: z_session_t,
     key_expr: z_keyexpr_t,
-    opts: z_delete_options_t,
+    options: Option<&mut z_delete_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    let del = session
-        .delete(key_expr)
-        .congestion_control(opts.congestion_control.into())
-        .priority(opts.priority.into());
+    let mut del = session
+        .delete(key_expr);
+    if let Some(options) = options {
+        del = del.congestion_control(options.congestion_control.into())
+            .priority(options.priority.into());
+    }
 
     match del.res_sync() {
         Err(e) => {

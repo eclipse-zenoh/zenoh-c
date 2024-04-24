@@ -30,12 +30,13 @@ int main(int argc, char **argv) {
             // Do nothing
             break;
     }
-    z_keyexpr_t keyexpr = z_keyexpr(expr);
-    if (!z_check(keyexpr)) {
+    z_owned_keyexpr_t keyexpr;
+    if (z_keyexpr(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
     }
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
+    z_config_default(&config);
     if (argc > 3) {
         if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
@@ -47,8 +48,8 @@ int main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (!z_open(&s, z_move(config))) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -56,25 +57,28 @@ int main(int argc, char **argv) {
     printf("Sending Query '%s'...\n", expr);
     z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
     z_get_options_t opts = z_get_options_default();
+    z_owned_bytes_t payload;
     if (value != NULL) {
-        opts.payload = z_bytes_encode_from_string(value);
+        z_bytes_encode_from_string(&payload, value);
+        opts.payload = &payload;
     }
-    z_get(z_loan(s), keyexpr, "", z_move(channel.send),
+    z_get(z_loan(s), z_loan(keyexpr), "", z_move(channel.send),
           z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
-    z_owned_reply_t reply = z_reply_null();
-    z_owned_str_t payload_value = z_str_null();
+    z_owned_reply_t reply;
+    z_owned_str_t reply_str;
     for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
-        if (z_reply_is_ok(&reply)) {
-            z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
-            z_bytes_decode_into_string(z_sample_payload(&sample), &payload_value);
-            printf(">> Received ('%s': '%s')\n", z_loan(keystr), z_loan(payload_value));
-            z_drop(z_move(payload_value));
-            z_drop(z_move(keystr));
+        if (z_reply_is_ok(z_loan(reply))) {
+            z_sample_t sample = z_reply_ok(z_loan(reply));
+            z_owned_str_t key_str = z_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_bytes_decode_into_string(z_sample_payload(&sample), &reply_str);
+            printf(">> Received ('%s': '%s')\n", z_loan(key_str), z_loan(reply_str));
+            z_drop(z_move(reply_str));
+            z_drop(z_move(key_str));
         } else {
             printf("Received an error\n");
         }
     }
+    z_drop(z_move(keyexpr));
     z_drop(z_move(reply));
     z_drop(z_move(channel));
     z_close(z_move(s));
