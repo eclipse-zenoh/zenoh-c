@@ -17,7 +17,7 @@
                   z_owned_slice_t : z_slice_loan,                              \
                   z_owned_bytes_t : z_bytes_loan,                              \
                   ze_owned_querying_subscriber_t : ze_querying_subscriber_loan,\
-                  z_owned_reply_t : z_owned_reply_t,                           \
+                  z_owned_reply_t : z_reply_loan,                              \
                   z_owned_mutex_t : z_mutex_loan,                              \
                   z_condvar_t : z_condvar_loan,                                \
                   z_owned_bytes_reader_t : z_bytes_reader_loan                 \
@@ -54,8 +54,7 @@
                   z_owned_bytes_t * : z_bytes_drop,                                     \
                   z_owned_bytes_reader_t * : z_bytes_reader_drop,                       \
                   z_owned_mutex_t * : z_mutex_drop,                                     \
-                  z_owned_condvar_t * : z_condvar_drop,                                 \
-                  z_owned_bytes_reader_t * : z_bytes_reader_drop                        \
+                  z_owned_condvar_t * : z_condvar_drop                                  \
             )(x)
 
 #define z_null(x) (*x = \

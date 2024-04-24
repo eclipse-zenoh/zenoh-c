@@ -22,6 +22,7 @@ use zenoh::sample::ValueBuilderTrait;
 use zenoh::prelude::{ConsolidationMode, Mode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
+use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
@@ -194,15 +195,20 @@ pub unsafe extern "C" fn z_get(
 
 /// Frees `reply`, invalidating it for double-drop safety.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
+pub extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
     Inplace::drop(this.transmute_mut())
 }
 /// Returns ``true`` if `reply` is valid.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
+pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
     this.transmute_ref().is_some()
+}
+
+#[no_mangle]
+pub extern "C" fn z_reply_loan(this: &mut z_owned_reply_t) -> z_reply_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
 }
 
 /// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.

@@ -184,7 +184,7 @@ pub extern "C" fn zc_liveliness_get(
     session: z_session_t,
     key_expr: z_keyexpr_t,
     callback: &mut z_owned_closure_reply_t,
-    options: zc_liveliness_get_options_t,
+    options: Option<&mut zc_liveliness_get_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
@@ -193,7 +193,9 @@ pub extern "C" fn zc_liveliness_get(
     let mut builder = liveliness
         .get(key_expr)
         .callback(move |response| z_closure_reply_call(&callback, response.transmute_handle()));
-    builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
+    if let Some(options) = options {
+        builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
+    }
     match builder.res() {
         Ok(()) => errors::Z_OK,
         Err(e) => {

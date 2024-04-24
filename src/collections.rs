@@ -156,6 +156,7 @@ pub unsafe extern "C" fn z_slice_wrap(start: *const u8, len: usize) -> z_slice_t
 }
 
 /// Frees `b` and invalidates it for double-drop safety.
+#[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_slice_drop(b: &mut z_owned_slice_t) {
     if !b.start.is_null() {

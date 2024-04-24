@@ -1753,6 +1753,7 @@ struct z_value_t z_reply_err(struct z_reply_t reply);
  */
 ZENOHC_API
 bool z_reply_is_ok(struct z_reply_t reply);
+ZENOHC_API struct z_reply_t z_reply_loan(struct z_owned_reply_t *this_);
 /**
  * Returns an invalidated :c:type:`z_owned_reply_t`.
  *
@@ -1857,6 +1858,10 @@ ZENOHC_API int8_t z_sleep_us(size_t time);
  */
 ZENOHC_API bool z_slice_check(const struct z_owned_slice_t *b);
 ZENOHC_API struct z_owned_slice_t z_slice_clone(const struct z_slice_t *b);
+/**
+ * Frees `b` and invalidates it for double-drop safety.
+ */
+ZENOHC_API void z_slice_drop(struct z_owned_slice_t *b);
 /**
  * Returns the gravestone value for `z_slice_t`
  */
@@ -2167,7 +2172,7 @@ ZENOHC_API
 z_error_t zc_liveliness_get(struct z_session_t session,
                             struct z_keyexpr_t key_expr,
                             struct z_owned_closure_reply_t *callback,
-                            struct zc_liveliness_get_options_t options);
+                            struct zc_liveliness_get_options_t *options);
 /**
  * The gravestone value for `zc_liveliness_get_options_t`
  */
