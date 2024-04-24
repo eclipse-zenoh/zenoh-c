@@ -16,12 +16,12 @@ use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
-use crate::errors::{z_error_t, Z_EPARSE};
+use crate::errors::z_error_t;
 use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
-use crate::{errors, z_owned_str_t, z_str_null};
+use crate::{errors, z_owned_str_t};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -67,14 +67,13 @@ pub use crate::opaque_types::z_config_t;
 decl_transmute_handle!(Config, z_config_t);
 
 pub use crate::opaque_types::z_owned_config_t;
-decl_transmute_owned!(Option<Box<Config>>, z_owned_config_t);
+decl_transmute_owned!(Option<Config>, z_owned_config_t);
 
 /// Returns a :c:type:`z_config_t` loaned from `s`.
 #[no_mangle]
-pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> z_config_t {
+pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> &z_config_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
-    let this = this.as_ref();
     this.transmute_handle()
 }
 
@@ -91,7 +90,7 @@ pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> z_config_t {
 #[no_mangle]
 pub extern "C" fn z_config_default(this: *mut MaybeUninit<z_owned_config_t>) {
     let this = this.transmute_uninit_ptr();
-    let config: Box<Config> = Box::default();
+    let config = Config::default();
     Inplace::init(this, Some(config));
 }
 
@@ -106,7 +105,7 @@ pub extern "C" fn z_config_null(this: *mut MaybeUninit<z_owned_config_t>) {
 #[no_mangle]
 pub extern "C" fn z_config_clone(src: &z_config_t, dst: *mut MaybeUninit<z_owned_config_t>) {
     let src = src.transmute_ref();
-    let src = Box::new(src.clone());
+    let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
     Inplace::init(dst, Some(src));
 }
@@ -119,12 +118,12 @@ pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -
     let config = config.transmute_ref();
     let key = match CStr::from_ptr(key).to_str() {
         Ok(s) => s,
-        Err(_) => return z_str_null(),
+        Err(_) => return z_owned_str_t::null(),
     };
     let val = config.get_json(key).ok();
     match val {
         Some(val) => val.as_bytes().into(),
-        None => z_str_null(),
+        None => z_owned_str_t::null(),
     }
 }
 
@@ -134,16 +133,16 @@ pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 pub unsafe extern "C" fn zc_config_insert_json(
-    config: z_config_t,
+    config: &z_config_t,
     key: *const c_char,
     value: *const c_char,
-) -> i8 {
+) -> errors::z_error_t {
     let config = config.transmute_mut();
     let key = CStr::from_ptr(key);
     let value = CStr::from_ptr(value);
     match config.insert_json5(&key.to_string_lossy(), &value.to_string_lossy()) {
         Ok(_) => 0,
-        Err(_) => i8::MIN,
+        Err(_) => errors::Z_EGENERIC,
     }
 }
 
@@ -168,8 +167,8 @@ pub extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_config_from_str(
-    s: *const c_char,
     this: *mut MaybeUninit<z_owned_config_t>,
+    s: *const c_char,
 ) -> errors::z_error_t {
     let mut res = errors::Z_OK;
     if s.is_null() {
@@ -177,11 +176,10 @@ pub unsafe extern "C" fn zc_config_from_str(
         res = errors::Z_EINVAL;
     } else {
         let conf_str = CStr::from_ptr(s);
-        let props: Option<Box<Config>> = json5::from_str(&conf_str.to_string_lossy())
-            .ok()
-            .map(Box::new);
+        let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy())
+            .ok();
         if props.is_none() {
-            res = Z_EPARSE;
+            res = errors::Z_EPARSE;
         }
         Inplace::init(this.transmute_uninit_ptr(), props);
     }
@@ -191,11 +189,11 @@ pub unsafe extern "C" fn zc_config_from_str(
 /// Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_config_to_string(config: z_config_t) -> z_owned_str_t {
+pub extern "C" fn zc_config_to_string(config: &z_config_t) -> z_owned_str_t {
     let config: &Config = config.transmute_ref();
     match json5::to_string(config) {
         Ok(s) => s.as_bytes().into(),
-        Err(_) => z_str_null(),
+        Err(_) => z_owned_str_t::null(),
     }
 }
 
@@ -203,14 +201,14 @@ pub extern "C" fn zc_config_to_string(config: z_config_t) -> z_owned_str_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_config_from_file(
-    path: *const c_char,
     this: *mut MaybeUninit<z_owned_config_t>,
+    path: *const c_char,
 ) -> errors::z_error_t {
     let path_str = CStr::from_ptr(path);
     let mut res = errors::Z_OK;
     let config = match path_str.to_str() {
         Ok(path) => match zenoh::config::Config::from_file(path) {
-            Ok(c) => Some(Box::new(c)),
+            Ok(c) => Some(c),
             Err(e) => {
                 log::error!("Couldn't read config from {}: {}", path, e);
                 res = errors::Z_EPARSE;
@@ -233,7 +231,7 @@ pub unsafe extern "C" fn zc_config_from_file(
 pub extern "C" fn z_config_peer(this: *mut MaybeUninit<z_owned_config_t>) {
     Inplace::init(
         this.transmute_uninit_ptr(),
-        Some(Box::new(zenoh::config::peer())),
+        Some(zenoh::config::peer()),
     );
 }
 
@@ -242,9 +240,9 @@ pub extern "C" fn z_config_peer(this: *mut MaybeUninit<z_owned_config_t>) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_config_client(
+    this: *mut MaybeUninit<z_owned_config_t>,
     peers: *const *const c_char,
     n_peers: usize,
-    this: *mut MaybeUninit<z_owned_config_t>,
 ) -> z_error_t {
     let mut res = errors::Z_OK;
     let locators = if peers.is_null() {
@@ -274,7 +272,7 @@ pub unsafe extern "C" fn z_config_client(
     };
     Inplace::init(
         this.transmute_uninit_ptr(),
-        Some(Box::new(zenoh::config::client(locators))),
+        Some(zenoh::config::client(locators)),
     );
     res
 }

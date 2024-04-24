@@ -17,7 +17,7 @@ use libc::c_void;
 #[repr(C)]
 pub struct z_owned_closure_reply_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(z_reply_t, *mut c_void)>,
+    call: Option<extern "C" fn(*const z_reply_t, *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 
@@ -46,7 +46,7 @@ pub extern "C" fn z_closure_reply_null() -> z_owned_closure_reply_t {
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_reply_call(closure: &z_owned_closure_reply_t, reply: z_reply_t) {
+pub extern "C" fn z_closure_reply_call(closure: &z_owned_closure_reply_t, reply: &z_reply_t) {
     match closure.call {
         Some(call) => call(reply, closure.context),
         None => {
@@ -60,12 +60,12 @@ pub extern "C" fn z_closure_reply_drop(closure: &mut z_owned_closure_reply_t) {
     let mut empty_closure = z_owned_closure_reply_t::empty();
     std::mem::swap(&mut empty_closure, closure);
 }
-impl<F: Fn(z_reply_t)> From<F> for z_owned_closure_reply_t {
+impl<F: Fn(&z_reply_t)> From<F> for z_owned_closure_reply_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(z_reply_t)>(response: z_reply_t, this: *mut c_void) {
+        extern "C" fn call<F: Fn(&z_reply_t)>(response: *const z_reply_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
-            this(response)
+            unsafe { this(response.as_ref().unwrap()) }
         }
         extern "C" fn drop<F>(this: *mut c_void) {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })

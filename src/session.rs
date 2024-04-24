@@ -38,7 +38,7 @@ decl_transmute_handle!(Session, z_session_t);
 /// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
-pub extern "C" fn z_session_loan(this: &'static z_owned_session_t) -> z_session_t {
+pub extern "C" fn z_session_loan(this: & z_owned_session_t) -> &z_session_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     let this = this.as_ref();
@@ -64,7 +64,7 @@ pub extern "C" fn z_open(
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let config = match config.transmute_mut().take() {
+    let config = match config.transmute_mut().extract() {
         Some(c) => c,
         None => {
             log::error!("Config not provided");
@@ -72,7 +72,7 @@ pub extern "C" fn z_open(
             return errors::Z_EINVAL;
         }
     };
-    match zenoh::open(*config).res() {
+    match zenoh::open(config).res() {
         Ok(s) => {
             Inplace::init(this, Some(Arc::new(s)));
             errors::Z_OK
@@ -98,10 +98,10 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 /// Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
+pub extern "C" fn z_close(session: &mut z_owned_session_t) -> errors::z_error_t {
     let session = session.transmute_mut();
     let Some(s) = session.take() else {
-        return 0;
+        return errors::Z_OK;
     };
     let s = match Arc::try_unwrap(s) {
         Ok(s) => s,
@@ -111,22 +111,22 @@ pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
     };
     match s.close().res() {
         Err(e) => e.errno().get(),
-        Ok(_) => 0,
+        Ok(_) => errors::Z_OK,
     }
 }
 
 /// Increments the session's reference count, returning a new owning handle.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_session_rcinc(
+pub extern "C" fn zc_session_clone(
     dst: *mut MaybeUninit<z_owned_session_t>,
     src: &z_owned_session_t,
-) -> i8 {
+) -> errors::z_error_t {
     // session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
     let dst = dst.transmute_uninit_ptr();
     let Some(src) = src.transmute_ref() else {
-        return -1;
+        return errors::Z_EINVAL;
     };
     Inplace::init(dst, Some(src.clone()));
-    0
+    errors::Z_OK
 }

@@ -44,7 +44,7 @@ pub extern "C" fn z_keyexpr_null(this: *mut MaybeUninit<z_owned_keyexpr_t>) {
 }
 
 fn keyexpr_create_inner(
-    name: &'static mut str,
+    mut name: &'static mut str,
     should_auto_canonize: bool,
     should_copy: bool,
 ) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
@@ -56,8 +56,8 @@ fn keyexpr_create_inner(
         }
     } else {
         match should_auto_canonize {
-            true => KeyExpr::<'static>::autocanonize(name),
-            false => KeyExpr::<'static>::try_from(name),
+            true => keyexpr::autocanonize(&mut name).map(|k| k.into()),
+            false => keyexpr::new(name).map(|k| k.into())
         }
     }
 }
@@ -134,7 +134,7 @@ pub unsafe extern "C" fn z_keyexpr_new_autocanonize(
 
 /// Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_loan(key_expr: &'static z_owned_keyexpr_t) -> z_keyexpr_t {
+pub extern "C" fn z_keyexpr_loan(key_expr: &z_owned_keyexpr_t) -> &z_keyexpr_t {
     unwrap_ref_unchecked(key_expr.transmute_ref()).transmute_handle()
 }
 
@@ -164,15 +164,6 @@ pub extern "C" fn z_keyexpr_check(keyexpr: &z_owned_keyexpr_t) -> bool {
 /// both for local processing and network-wise.
 pub use crate::opaque_types::z_keyexpr_t;
 decl_transmute_handle!(KeyExpr<'static>, z_keyexpr_t);
-
-#[derive(Debug, Clone, Copy)]
-pub struct UninitializedKeyExprError;
-impl std::fmt::Display for UninitializedKeyExprError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("Uninitialized Key Expression detected, make sure you use `z_keyexpr_check` or `z_loaned_keyexpr_check` after constructing your key expressions")
-    }
-}
-impl std::error::Error for UninitializedKeyExprError {}
 
 /// Returns ``0`` if the passed string is a valid (and canon) key expression.
 /// Otherwise returns error value
@@ -229,42 +220,36 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_keyexpr_from_slice(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: *mut MaybeUninit<z_keyexpr_t>,
     name: *const c_char,
     len: usize,
 ) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
     if name.is_null() {
-        Inplace::empty(this);
         return errors::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(name as _, len);
-
     match keyexpr_create(name, false, false) {
         Ok(ke) => {
-            Inplace::init(this, Some(ke));
+            (*this).write(std::mem::transmute(ke));
             errors::Z_OK
         }
         Err(e) => {
-            Inplace::empty(this);
             e
         }
     }
 }
 
-/// Constructs a :c:type:`z_owned_keyexpr_t` by aliasing a string.
+/// Constructs a :c:type:`z_keyexpr_t` by aliasing a string.
 /// The string is canonized in-place before being passed to keyexpr.
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_keyexpr_from_slice_autocanonize(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: *mut MaybeUninit<z_keyexpr_t>,
     name: *mut c_char,
     len: &mut usize,
 ) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
     if name.is_null() {
-        Inplace::empty(this);
         return errors::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(name as _, libc::strlen(name));
@@ -272,11 +257,10 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_autocanonize(
     match keyexpr_create(name, true, false) {
         Ok(ke) => {
             *len = ke.len();
-            Inplace::init(this, Some(ke));
+            (*this).write(std::mem::transmute(ke));
             errors::Z_OK
         }
         Err(e) => {
-            Inplace::empty(this);
             e
         }
     }
@@ -287,11 +271,10 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_autocanonize(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: *mut MaybeUninit<z_keyexpr_t>,
     name: *const c_char,
 ) -> z_error_t {
     if name.is_null() {
-        Inplace::empty(this.transmute_uninit_ptr());
         errors::Z_EINVAL
     } else {
         let len = libc::strlen(name);
@@ -299,17 +282,16 @@ pub unsafe extern "C" fn z_keyexpr(
     }
 }
 
-/// Constructs a :c:type:`z_owned_keyexpr_t` by aliasing a string.
+/// Constructs a :c:type:`z_keyexpr_t` by aliasing a string.
 /// The string is canonized in-place before being passed to keyexpr.
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_autocanonize(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: *mut MaybeUninit<z_keyexpr_t>,
     name: *mut c_char,
 ) -> z_error_t {
     if name.is_null() {
-        Inplace::empty(this.transmute_uninit_ptr());
         errors::Z_EINVAL
     } else {
         let mut len = libc::strlen(name);
@@ -321,7 +303,7 @@ pub unsafe extern "C" fn z_keyexpr_autocanonize(
     }
 }
 
-/// Constructs a :c:type:`z_owned_eyexpr_t` by aliasing a string without checking any of `z_keyexpr_t`'s assertions:
+/// Constructs a :c:type:`z_eyexpr_t` by aliasing a string without checking any of `z_keyexpr_t`'s assertions:
 /// - `name` MUST be valid UTF8.
 /// - `name` MUST follow the Key Expression specification, ie:
 ///   - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
@@ -332,17 +314,17 @@ pub unsafe extern "C" fn z_keyexpr_autocanonize(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_keyexpr_from_slice_unchecked(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: *mut MaybeUninit<z_keyexpr_t>,
     start: *const c_char,
     len: usize,
 ) {
     let name = std::slice::from_raw_parts(start as _, len);
     let name = std::str::from_utf8_unchecked(name);
     let name: KeyExpr = keyexpr::from_str_unchecked(name).into();
-    Inplace::init(this.transmute_uninit_ptr(), Some(name));
+    (*this).write(std::mem::transmute(name));
 }
 
-/// Constructs a :c:type:`z_owned_keyexpr_t` by aliasing a string without checking any of `z_keyexpr_t`'s assertions:
+/// Constructs a :c:type:`z_keyexpr_t` by aliasing a string without checking any of `z_keyexpr_t`'s assertions:
 ///
 ///  - `name` MUST be valid UTF8.
 ///  - `name` MUST follow the Key Expression specification, ie:
@@ -355,7 +337,7 @@ pub unsafe extern "C" fn zc_keyexpr_from_slice_unchecked(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_unchecked(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: *mut MaybeUninit<z_keyexpr_t>,
     name: *const c_char,
 ) {
     zc_keyexpr_from_slice_unchecked(this, name, libc::strlen(name))
@@ -365,7 +347,7 @@ pub unsafe extern "C" fn z_keyexpr_unchecked(
 /// The user is responsible of droping the returned string using `z_drop`
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_to_string(ke: z_keyexpr_t) -> z_owned_str_t {
+pub unsafe extern "C" fn z_keyexpr_to_string(ke: &z_keyexpr_t) -> z_owned_str_t {
     ke.transmute_ref().as_bytes().into()
 }
 
@@ -374,17 +356,11 @@ pub unsafe extern "C" fn z_keyexpr_to_string(ke: z_keyexpr_t) -> z_owned_str_t {
 /// Currently exclusive to zenoh-c
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_keyexpr_as_bytes(ke: z_keyexpr_t) -> z_slice_t {
+pub extern "C" fn z_keyexpr_as_bytes(ke: &z_keyexpr_t) -> z_slice_t {
     let ke = ke.transmute_ref();
     z_slice_t {
         start: ke.as_ptr(),
         len: ke.len(),
-    }
-}
-
-impl From<&'static KeyExpr<'static>> for z_keyexpr_t {
-    fn from(key: &'static KeyExpr<'static>) -> Self {
-        key.transmute_handle()
     }
 }
 
@@ -399,8 +375,8 @@ impl From<&'static KeyExpr<'static>> for z_keyexpr_t {
 #[no_mangle]
 pub extern "C" fn z_declare_keyexpr(
     this: *mut MaybeUninit<z_owned_keyexpr_t>,
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
 ) -> z_error_t {
     let this = this.transmute_uninit_ptr();
     let key_expr = key_expr.transmute_ref();
@@ -422,10 +398,10 @@ pub extern "C" fn z_declare_keyexpr(
 /// The keyxpr is consumed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_keyexpr_t) -> i8 {
+pub extern "C" fn z_undeclare_keyexpr(session: &z_session_t, kexpr: &mut z_owned_keyexpr_t) -> errors::z_error_t {
     let Some(kexpr) = kexpr.transmute_mut().take() else {
         log::debug!("Attempted to undeclare dropped keyexpr");
-        return i8::MIN;
+        return errors::Z_EINVAL;
     };
     let session = session.transmute_ref();
     match session.undeclare(kexpr).res() {
@@ -440,7 +416,7 @@ pub extern "C" fn z_undeclare_keyexpr(session: z_session_t, kexpr: &mut z_owned_
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 /// Returns ``0`` if both ``left`` and ``right`` are equal.
-pub extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+pub extern "C" fn z_keyexpr_equals(left: &z_keyexpr_t, right: &z_keyexpr_t) -> bool {
     let l = left.transmute_ref();
     let r = right.transmute_ref();
     *l == *r
@@ -450,7 +426,7 @@ pub extern "C" fn z_keyexpr_equals(left: z_keyexpr_t, right: z_keyexpr_t) -> boo
 #[no_mangle]
 /// Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
 /// sets defined by ``left`` and ``right``.
-pub extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+pub extern "C" fn z_keyexpr_intersects(left: &z_keyexpr_t, right: &z_keyexpr_t) -> bool {
     let l = left.transmute_ref();
     let r = right.transmute_ref();
     l.intersects(r)
@@ -460,7 +436,7 @@ pub extern "C" fn z_keyexpr_intersects(left: z_keyexpr_t, right: z_keyexpr_t) ->
 #[no_mangle]
 /// Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
 /// defined by ``right``.
-pub extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> bool {
+pub extern "C" fn z_keyexpr_includes(left: &z_keyexpr_t, right: &z_keyexpr_t) -> bool {
     let l = left.transmute_ref();
     let r = right.transmute_ref();
     l.includes(r)
@@ -476,10 +452,10 @@ pub extern "C" fn z_keyexpr_includes(left: z_keyexpr_t, right: z_keyexpr_t) -> b
 /// To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
 /// as this would extremely likely cause bugs.
 pub unsafe extern "C" fn z_keyexpr_concat(
-    left: z_keyexpr_t,
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    left: &z_keyexpr_t,
     right_start: *const c_char,
     right_len: usize,
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let left = left.transmute_ref();
@@ -515,9 +491,9 @@ pub unsafe extern "C" fn z_keyexpr_concat(
 /// Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
 /// In case of error, the return value will be set to its invalidated state.
 pub extern "C" fn z_keyexpr_join(
-    left: z_keyexpr_t,
-    right: z_keyexpr_t,
     this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    left: &z_keyexpr_t,
+    right: &z_keyexpr_t,
 ) -> errors::z_error_t {
     let left = left.transmute_ref();
     let right = right.transmute_ref();
@@ -566,8 +542,8 @@ impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
 ///
 /// Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
 pub extern "C" fn z_keyexpr_relation_to(
-    left: z_keyexpr_t,
-    right: z_keyexpr_t,
+    left: &z_keyexpr_t,
+    right: &z_keyexpr_t,
 ) -> z_keyexpr_intersection_level_t {
     let l = left.transmute_ref();
     let r = right.transmute_ref();

@@ -54,9 +54,9 @@ pub struct zc_liveliness_declaration_options_t {
 }
 
 #[no_mangle]
-pub extern "C" fn zc_liveliness_declaration_options_default() -> zc_liveliness_declaration_options_t
+pub extern "C" fn zc_liveliness_declaration_options_default(this: &mut zc_liveliness_declaration_options_t)
 {
-    zc_liveliness_declaration_options_t { _dummy: 0 }
+    *this = zc_liveliness_declaration_options_t { _dummy: 0 };
 }
 
 /// Constructs and declares a liveliness token on the network.
@@ -68,8 +68,8 @@ pub extern "C" fn zc_liveliness_declaration_options_default() -> zc_liveliness_d
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
     this: *mut MaybeUninit<zc_owned_liveliness_token_t>,
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     _options: Option<&mut zc_liveliness_declaration_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
@@ -110,9 +110,8 @@ pub struct zc_liveliness_declare_subscriber_options_t {
 }
 
 #[no_mangle]
-pub extern "C" fn zc_liveliness_subscriber_options_default(
-) -> zc_liveliness_declare_subscriber_options_t {
-    zc_liveliness_declare_subscriber_options_t { _dummy: 0 }
+pub extern "C" fn zc_liveliness_subscriber_options_default(this: &mut zc_liveliness_declare_subscriber_options_t) {
+    *this = zc_liveliness_declare_subscriber_options_t { _dummy: 0 };
 }
 
 /// Declares a subscriber on liveliness tokens that intersect `key`.
@@ -132,8 +131,8 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
     this: *mut MaybeUninit<z_owned_subscriber_t>,
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     _options: Option<&mut zc_liveliness_declare_subscriber_options_t>,
 ) -> errors::z_error_t {
@@ -170,8 +169,8 @@ pub struct zc_liveliness_get_options_t {
 
 /// The gravestone value for `zc_liveliness_get_options_t`
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_default() -> zc_liveliness_get_options_t {
-    zc_liveliness_get_options_t { timeout_ms: 10000 }
+pub extern "C" fn zc_liveliness_get_options_default(this: &mut zc_liveliness_get_options_t) {
+    *this = zc_liveliness_get_options_t { timeout_ms: 10000 };
 }
 
 /// Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
@@ -181,8 +180,8 @@ pub extern "C" fn zc_liveliness_get_options_default() -> zc_liveliness_get_optio
 /// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get(
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut zc_liveliness_get_options_t>,
 ) -> errors::z_error_t {

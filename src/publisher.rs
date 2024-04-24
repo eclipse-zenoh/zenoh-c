@@ -49,11 +49,11 @@ pub struct z_publisher_options_t {
 
 /// Constructs the default value for :c:type:`z_publisher_options_t`.
 #[no_mangle]
-pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
-    z_publisher_options_t {
+pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) {
+    *this = z_publisher_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
-    }
+    };
 }
 
 pub use crate::opaque_types::z_owned_publisher_t;
@@ -97,10 +97,10 @@ decl_transmute_handle!(Publisher<'static>, z_publisher_t);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_publisher(
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
-    options: Option<&z_publisher_options_t>,
     this: *mut MaybeUninit<z_owned_publisher_t>,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
+    options: Option<&z_publisher_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
@@ -135,16 +135,16 @@ pub extern "C" fn z_publisher_null(this: *mut MaybeUninit<z_owned_publisher_t>) 
 /// Returns ``true`` if `pub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_publisher_check(pbl: &'static z_owned_publisher_t) -> bool {
-    pbl.transmute_ref().is_some()
+pub extern "C" fn z_publisher_check(this: &z_owned_publisher_t) -> bool {
+    this.transmute_ref().is_some()
 }
 
 /// Returns a :c:type:`z_publisher_t` loaned from `p`.
 #[no_mangle]
-pub extern "C" fn z_publisher_loan(p: &'static z_owned_publisher_t) -> z_publisher_t {
-    let p = p.transmute_ref();
-    let p = unwrap_ref_unchecked(p);
-    p.transmute_handle()
+pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_publisher_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
 }
 
 /// Options passed to the :c:func:`z_publisher_put` function.
@@ -161,8 +161,8 @@ pub struct z_publisher_put_options_t {
 /// Constructs the default value for :c:type:`z_publisher_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t {
-    z_publisher_put_options_t {
+pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_options_t) {
+    *this = z_publisher_put_options_t {
         encoding: ptr::null_mut(),
         attachment: ptr::null_mut(),
     }
@@ -185,7 +185,7 @@ pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
-    publisher: z_publisher_t,
+    publisher: &z_publisher_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
@@ -231,8 +231,8 @@ pub struct z_publisher_delete_options_t {
 ///   Returns the constructed :c:type:`z_publisher_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_options_t {
-    z_publisher_delete_options_t { __dummy: 0 }
+pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_delete_options_t) {
+    *this = z_publisher_delete_options_t { __dummy: 0 }
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
@@ -241,7 +241,7 @@ pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_opt
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete(
-    publisher: z_publisher_t,
+    publisher: &z_publisher_t,
     _options: z_publisher_delete_options_t,
 ) -> errors::z_error_t {
     let publisher = publisher.transmute_ref();
@@ -256,7 +256,7 @@ pub extern "C" fn z_publisher_delete(
 /// Returns the key expression of the publisher
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_keyexpr_t {
+pub extern "C" fn z_publisher_keyexpr(publisher: &z_publisher_t) -> &z_keyexpr_t {
     let publisher = publisher.transmute_ref();
     publisher.key_expr().transmute_handle()
 }
@@ -281,9 +281,9 @@ pub struct zcu_matching_status_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_callback(
-    publisher: z_publisher_t,
-    callback: &mut zcu_owned_closure_matching_status_t,
     this: *mut MaybeUninit<zcu_owned_matching_listener_t>,
+    publisher: &z_publisher_t,
+    callback: &mut zcu_owned_closure_matching_status_t,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let mut closure = zcu_owned_closure_matching_status_t::empty();
@@ -313,8 +313,8 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 /// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> errors::z_error_t {
-    if let Some(p) = publisher.transmute_mut().extract().take() {
+pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
+    if let Some(p) = this.transmute_mut().extract().take() {
         if let Err(e) = p.undeclare().res_sync() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

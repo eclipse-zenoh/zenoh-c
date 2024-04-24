@@ -77,7 +77,7 @@ pub extern "C" fn z_subscriber_null(this: *mut MaybeUninit<z_owned_subscriber_t>
 
 /// Returns a :c:type:`z_subscriber_t` loaned from `this`.
 #[no_mangle]
-pub extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> z_subscriber_t {
+pub extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_subscriber_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
@@ -95,8 +95,8 @@ pub struct z_subscriber_options_t {
 
 /// Constructs the default value for :c:type:`z_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
-    z_subscriber_options_t {
+pub extern "C" fn z_subscriber_options_default(this: &mut z_subscriber_options_t) {
+    *this = z_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
     }
 }
@@ -136,8 +136,8 @@ pub extern "C" fn z_subscriber_options_default() -> z_subscriber_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_subscriber(
     this: *mut MaybeUninit<z_owned_subscriber_t>,
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
 ) -> errors::z_error_t {
@@ -171,7 +171,7 @@ pub extern "C" fn z_declare_subscriber(
 /// Returns the key expression of the subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_subscriber_keyexpr(subscriber: z_subscriber_t) -> z_keyexpr_t {
+pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_subscriber_t) -> &z_keyexpr_t {
     let subscriber = subscriber.transmute_ref();
     subscriber.key_expr().transmute_handle()
 }

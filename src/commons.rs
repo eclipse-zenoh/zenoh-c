@@ -14,6 +14,7 @@
 
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
+use std::ptr::null;
 use std::str::FromStr;
 
 use crate::transmute::unwrap_ref_unchecked;
@@ -93,20 +94,20 @@ decl_transmute_handle!(Sample, z_sample_t);
 ///
 /// `sample` is aliased by its return value.
 #[no_mangle]
-pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> z_keyexpr_t {
+pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> &z_keyexpr_t {
     let sample = sample.transmute_ref();
-    sample.key_expr().into()
+    sample.key_expr().transmute_handle()
 }
 /// The encoding of the payload.
 #[no_mangle]
-pub extern "C" fn z_sample_encoding(sample: z_sample_t) -> z_encoding_t {
+pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> &z_encoding_t {
     let sample = sample.transmute_ref();
     sample.encoding().transmute_handle()
 }
 /// The sample's data, the return value aliases the sample.
 ///
 #[no_mangle]
-pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> z_bytes_t {
+pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> &z_bytes_t {
     let sample = sample.transmute_ref();
     sample.payload().transmute_handle()
 }
@@ -136,23 +137,18 @@ pub extern "C" fn z_sample_timestamp(
 /// The qos with which the sample was received.
 /// TODO: split to methods (priority, congestion_control, express)
 
-/// Checks if sample contains an attachment.
-#[no_mangle]
-pub extern "C" fn z_sample_has_attachment(sample: z_sample_t) -> bool {
-    let sample = sample.transmute_ref();
-    sample.attachment().is_some()
-}
 
 /// Gets sample's attachment.
 ///
-/// Before calling this function, ensure that `zc_sample_has_attachment` returns true
+/// Returns NULL if sample does not contain an attachement.
 #[no_mangle]
-pub extern "C" fn z_sample_attachment(sample: z_sample_t) -> z_bytes_t {
+pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> *const z_bytes_t {
     let sample = sample.transmute_ref();
-    sample
-        .attachment()
-        .expect("Sample does not have an attachment")
-        .transmute_handle()
+    match sample.attachment() {
+        Some(attachment) => attachment.transmute_handle() as *const _,
+        None => null(),
+    }
+
 }
 
 pub use crate::opaque_types::zc_owned_sample_t;
@@ -160,11 +156,30 @@ decl_transmute_owned!(Option<Sample>, zc_owned_sample_t);
 
 /// Clone a sample in the cheapest way available.
 #[no_mangle]
-pub extern "C" fn zc_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owned_sample_t>) {
+pub extern "C" fn z_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owned_sample_t>) {
     let src = src.transmute_ref();
     let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
     Inplace::init(dst, Some(src));
+}
+
+
+#[no_mangle]
+pub extern "C" fn z_sample_priority(sample: &z_sample_t) -> z_priority_t {
+    let sample = sample.transmute_ref();
+    sample.priority().into()
+}
+
+#[no_mangle]
+pub extern "C" fn z_sample_express(sample: &z_sample_t) -> bool {
+    let sample = sample.transmute_ref();
+    sample.express()
+}
+
+#[no_mangle]
+pub extern "C" fn z_sample_congestion_control(sample: &z_sample_t) -> z_congestion_control_t {
+    let sample = sample.transmute_ref();
+    sample.congestion_control().into()
 }
 
 /// Returns `true` if `sample` is valid.
@@ -172,7 +187,7 @@ pub extern "C" fn zc_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_own
 /// Note that there exist no fallinle constructors for `zc_owned_sample_t`, so validity is always guaranteed
 /// unless the value has been dropped already.
 #[no_mangle]
-pub extern "C" fn zc_sample_check(sample: &zc_owned_sample_t) -> bool {
+pub extern "C" fn z_sample_check(sample: &zc_owned_sample_t) -> bool {
     let sample = sample.transmute_ref();
     sample.is_some()
 }
@@ -181,7 +196,7 @@ pub extern "C" fn zc_sample_check(sample: &zc_owned_sample_t) -> bool {
 ///
 /// Calling this function using a dropped sample is undefined behaviour.
 #[no_mangle]
-pub extern "C" fn zc_sample_loan(sample: &'static zc_owned_sample_t) -> z_sample_t {
+pub extern "C" fn zc_sample_loan(sample: & zc_owned_sample_t) -> &z_sample_t {
     unwrap_ref_unchecked(sample.transmute_ref()).transmute_handle()
 }
 
@@ -237,7 +252,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
 /// Constructs a default :c:type:`z_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_default() -> z_encoding_t {
+pub extern "C" fn z_encoding_default() -> &'static z_encoding_t {
     Encoding::ZENOH_BYTES.transmute_handle()
 }
 
@@ -258,7 +273,7 @@ pub extern "C" fn z_encoding_check(encoding: &'static z_owned_encoding_t) -> boo
 /// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_loan(encoding: &'static z_owned_encoding_t) -> z_encoding_t {
+pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> &z_encoding_t {
     encoding.transmute_ref().transmute_handle()
 }
 

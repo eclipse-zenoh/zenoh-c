@@ -42,9 +42,9 @@ pub struct z_owned_str_array_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
-    let locators = Vec::from_raw_parts(strs.val as *mut *const c_char, strs.len, strs.len);
-    for locator in locators {
-        std::mem::drop(CString::from_raw(locator as *mut c_char));
+    let vals = Vec::from_raw_parts(strs.val as *mut *const c_char, strs.len, strs.len);
+    for val in vals {
+        std::mem::drop(CString::from_raw(val as *mut c_char));
     }
     strs.val = std::ptr::null_mut();
     strs.len = 0;
@@ -67,11 +67,8 @@ pub struct z_str_array_t {
 /// Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
-    z_str_array_t {
-        val: strs.val as *const _,
-        len: strs.len,
-    }
+pub unsafe extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> &z_str_array_t {
+    std::mem::transmute(strs)
 }
 /// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
 ///
@@ -146,26 +143,23 @@ pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
 /// Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
-    z_hello_t {
-        whatami: hello._whatami,
-        pid: hello._pid,
-        locators: z_str_array_loan(&hello._locators),
-    }
+pub unsafe extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> &z_hello_t {
+    std::mem::transmute(hello)
 }
 
 /// Constructs a gravestone value for hello, useful to steal one from a callback
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_hello_null() -> z_owned_hello_t {
-    z_owned_hello_t {
+pub unsafe extern "C" fn z_hello_null(this: *mut MaybeUninit<z_owned_hello_t>) {
+    let h = z_owned_hello_t {
         _whatami: 0,
         _pid: [0; 16].into(),
         _locators: z_owned_str_array_t {
             val: std::ptr::null_mut(),
             len: 0,
         },
-    }
+    };
+    (*this).write(h);
 }
 impl Drop for z_owned_hello_t {
     fn drop(&mut self) {
@@ -224,8 +218,8 @@ pub unsafe extern "C" fn z_scouting_config_default(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_scouting_config_from(
-    config: z_config_t,
     this: *mut MaybeUninit<z_owned_scouting_config_t>,
+    config: &z_config_t,
 ) {
     let mut dst = MaybeUninit::uninit();
     z_config_clone(&config, &mut dst as *mut _);
@@ -281,7 +275,7 @@ pub extern "C" fn z_scout(
     std::mem::swap(&mut closure, callback);
 
     task::block_on(async move {
-        let scout = zenoh::scout(what, *config)
+        let scout = zenoh::scout(what, config)
             .callback(move |h| {
                 let mut hello = h.into();
                 z_closure_hello_call(&closure, &mut hello)
@@ -307,10 +301,10 @@ pub extern "C" fn z_scout(
 #[no_mangle]
 pub extern "C" fn z_whatami_to_str(whatami: u8, buf: *mut c_char, len: usize) -> i8 {
     if buf.is_null() || len == 0 {
-        return -1;
+        return errors::Z_EINVAL;
     }
     match WhatAmIMatcher::try_from(whatami) {
-        Err(_) => -1,
+        Err(_) => errors::Z_EINVAL,
         Ok(w) => {
             let s = w.to_str();
             let res = s.copy_to_c_array(buf as *mut c_void, len - 1);

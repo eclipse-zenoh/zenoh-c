@@ -83,8 +83,8 @@ pub struct ze_querying_subscriber_options_t {
 
 /// Constructs the default value for :c:type:`ze_querying_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscriber_options_t {
-    ze_querying_subscriber_options_t {
+pub extern "C" fn ze_querying_subscriber_options_default(this: &mut ze_querying_subscriber_options_t) {
+    *this = ze_querying_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
         allowed_origin: zcu_locality_default(),
         query_selector: null(),
@@ -92,7 +92,7 @@ pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscr
         query_consolidation: z_query_consolidation_none(),
         query_accept_replies: zcu_reply_keyexpr_default(),
         query_timeout_ms: 0,
-    }
+    };
 }
 
 /// Declares a Querying Subscriber for a given key expression.
@@ -130,8 +130,8 @@ pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscr
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: *mut MaybeUninit<ze_owned_querying_subscriber_t>,
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> errors::z_error_t {
@@ -179,8 +179,8 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn ze_querying_subscriber_get(
-    sub: ze_querying_subscriber_t,
-    selector: z_keyexpr_t,
+    sub: &ze_querying_subscriber_t,
+    selector: &z_keyexpr_t,
     options: Option<&z_get_options_t>,
 ) -> errors::z_error_t {
     unsafe impl Sync for z_get_options_t {}
@@ -235,7 +235,7 @@ pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscrib
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_loan(
     this: &ze_owned_querying_subscriber_t,
-) -> ze_querying_subscriber_t {
+) -> &ze_querying_subscriber_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()

@@ -50,9 +50,9 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver
     if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
         (
-            From::from(move |query: z_query_t| {
+            From::from(move |query: &z_query_t| {
                 let mut this = MaybeUninit::<z_owned_query_t>::uninit();
-                z_query_clone(&mut this as *mut MaybeUninit<z_owned_query_t>, query);
+                z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
                 let this = this.assume_init();
                 if let Err(e) = tx.send(this) {
                     log::error!("Attempted to push onto a closed reply_fifo: {}", e);
@@ -63,9 +63,9 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver
     } else {
         let (tx, rx) = std::sync::mpsc::sync_channel(bound);
         (
-            From::from(move |query: z_query_t| {
+            From::from(move |query: &z_query_t| {
                 let mut this = MaybeUninit::<z_owned_query_t>::uninit();
-                z_query_clone(&mut this as *mut MaybeUninit<z_owned_query_t>, query);
+                z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
                 let this = this.assume_init();
                 if let Err(e) = tx.send(this) {
                     log::error!("Attempted to push onto a closed reply_fifo: {}", e);

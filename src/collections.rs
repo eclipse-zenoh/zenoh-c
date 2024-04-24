@@ -15,6 +15,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::mem::MaybeUninit;
+use std::ptr::{null, null_mut};
 
 use libc::{c_char, c_void, size_t};
 use zenoh::prelude::ZenohId;
@@ -45,7 +46,7 @@ impl z_slice_t {
     }
     pub fn empty() -> Self {
         z_slice_t {
-            start: std::ptr::null(),
+            start: std::ptr::null_mut(),
             len: 0,
         }
     }
@@ -60,7 +61,7 @@ impl Default for z_slice_t {
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct z_owned_slice_t {
-    pub start: *mut u8,
+    pub start: *const u8,
     pub len: size_t,
 }
 
@@ -71,9 +72,15 @@ impl Drop for z_owned_slice_t {
 }
 
 impl z_owned_slice_t {
+    pub fn null() -> z_owned_slice_t {
+        z_owned_slice_t {
+            start: null(),
+            len: 0
+        }
+    }
     pub fn new(data: &[u8]) -> z_owned_slice_t {
         if data.is_empty() {
-            return z_slice_null();
+            return Self::null();
         }
         let data = data.to_vec().into_boxed_slice();
         z_owned_slice_t {
@@ -92,29 +99,26 @@ impl z_owned_slice_t {
 
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn insert_unchecked(&mut self, start: usize, value: &[u8]) {
-        std::ptr::copy_nonoverlapping(value.as_ptr(), self.start.add(start), value.len());
+        std::ptr::copy_nonoverlapping(value.as_ptr(), self.start.add(start) as *mut u8, value.len());
     }
 }
 
 impl Default for z_owned_slice_t {
     fn default() -> Self {
-        z_slice_null()
+        Self::null()
     }
 }
 
 /// Returns ``true`` if `b` is initialized.
 #[no_mangle]
-pub extern "C" fn z_slice_is_initialized(b: &z_slice_t) -> bool {
-    !b.start.is_null()
+pub extern "C" fn z_slice_is_initialized(this: &z_slice_t) -> bool {
+    !this.start.is_null()
 }
 
 /// Returns the gravestone value for `z_slice_t`
 #[no_mangle]
 pub const extern "C" fn z_slice_empty() -> z_slice_t {
-    z_slice_t {
-        len: 0,
-        start: core::ptr::null(),
-    }
+    z_slice_t::empty()
 }
 
 /// Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
@@ -129,25 +133,15 @@ pub unsafe extern "C" fn z_slice_from_str(str: *const c_char) -> z_slice_t {
         let len = unsafe { libc::strlen(str) };
         z_slice_t {
             len,
-            start: str.cast(),
+            start: str.cast_mut() as *mut u8,
         }
     }
-}
-
-#[deprecated = "Renamed to z_slice_from_str"]
-/// Deprecated in favor of `z_slice_from_str`: Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
-///
-/// `str == NULL` will cause this to return `z_slice_empty()`
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_new(str: *const c_char) -> z_slice_t {
-    z_slice_from_str(str)
 }
 
 /// Constructs a `len` bytes long view starting at `start`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_wrap(start: *const u8, len: usize) -> z_slice_t {
+pub unsafe extern "C" fn z_slice_wrap(start: *mut u8, len: usize) -> z_slice_t {
     if start.is_null() {
         z_slice_empty()
     } else {
@@ -155,26 +149,26 @@ pub unsafe extern "C" fn z_slice_wrap(start: *const u8, len: usize) -> z_slice_t
     }
 }
 
-/// Frees `b` and invalidates it for double-drop safety.
+/// Frees `this` and invalidates it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_drop(b: &mut z_owned_slice_t) {
-    if !b.start.is_null() {
+pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
+    if !this.start.is_null() {
         std::mem::drop(Box::from_raw(
-            core::ptr::slice_from_raw_parts(b.start, b.len).cast_mut(),
+            core::ptr::slice_from_raw_parts(this.start, this.len).cast_mut(),
         ));
-        b.start = std::ptr::null_mut();
-        b.len = 0;
+        this.start = std::ptr::null_mut();
+        this.len = 0;
     }
 }
 
 /// Returns the gravestone value for `z_owned_slice_t`
 #[no_mangle]
-pub const extern "C" fn z_slice_null() -> z_owned_slice_t {
-    z_owned_slice_t {
+pub unsafe extern "C" fn z_slice_null(this: *mut MaybeUninit<z_owned_slice_t>) {
+    (*this).as_mut_ptr().write(z_owned_slice_t {
         len: 0,
         start: core::ptr::null_mut(),
-    }
+    });
 }
 
 #[no_mangle]
@@ -186,11 +180,11 @@ pub const extern "C" fn z_slice_loan(b: &z_owned_slice_t) -> z_slice_t {
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_clone(b: &z_slice_t) -> z_owned_slice_t {
-    if !z_slice_is_initialized(b) {
-        z_slice_null()
+pub unsafe extern "C" fn z_slice_clone(this: *mut MaybeUninit<z_owned_slice_t>, s: &z_slice_t)  {
+    if !z_slice_is_initialized(s) {
+        z_slice_null(this);
     } else {
-        z_owned_slice_t::new(unsafe { std::slice::from_raw_parts(b.start, b.len) })
+        (*this).as_mut_ptr().write(z_owned_slice_t::new(unsafe { std::slice::from_raw_parts(s.start, s.len) }));
     }
 }
 
@@ -257,6 +251,11 @@ pub struct z_owned_str_t {
 }
 
 impl z_owned_str_t {
+    pub fn null() -> z_owned_str_t {
+        z_owned_str_t {
+            _cstr: null_mut()
+        }
+    }
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn preallocate(len: usize) -> z_owned_str_t {
         let cstr = libc::malloc(len + 1) as *mut libc::c_char;
@@ -292,7 +291,7 @@ impl Drop for z_owned_str_t {
 
 impl Default for z_owned_str_t {
     fn default() -> Self {
-        z_str_null()
+        Self::null()
     }
 }
 
@@ -315,10 +314,12 @@ pub extern "C" fn z_str_check(s: &z_owned_str_t) -> bool {
 
 /// Returns undefined `z_owned_str_t`
 #[no_mangle]
-pub extern "C" fn z_str_null() -> z_owned_str_t {
-    z_owned_str_t {
-        _cstr: std::ptr::null_mut(),
-    }
+pub unsafe extern "C" fn z_str_null(this: *mut MaybeUninit<z_owned_str_t>) {
+    (*this).as_mut_ptr().write(
+        z_owned_str_t {
+            _cstr: std::ptr::null_mut(),
+        }
+    );
 }
 
 /// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
@@ -377,21 +378,28 @@ pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> z_slice_map_t {
+pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_slice_map_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
 }
 
+#[no_mangle]
+pub extern "C" fn z_slice_map_loan_mut(this: &mut z_owned_slice_map_t) -> &mut z_slice_map_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle_mut()
+}
+
 /// Returns number of key-value pairs in the map.
 #[no_mangle]
-pub extern "C" fn z_slice_map_len(this: z_slice_map_t) -> usize {
+pub extern "C" fn z_slice_map_len(this: &z_slice_map_t) -> usize {
     this.transmute_ref().len()
 }
 
 /// Returns true if the map is empty, false otherwise.
 #[no_mangle]
-pub extern "C" fn z_slice_map_is_empty(this: z_slice_map_t) -> bool {
+pub extern "C" fn z_slice_map_is_empty(this: &z_slice_map_t) -> bool {
     z_slice_map_len(this) == 0
 }
 
@@ -403,7 +411,7 @@ pub extern "C" fn z_slice_map_is_empty(this: z_slice_map_t) -> bool {
 /// Returning `true` is treated as `continue`.
 #[allow(non_camel_case_types)]
 pub type z_slice_map_iter_body_t =
-    extern "C" fn(key: z_slice_t, value: z_slice_t, context: *mut c_void) -> bool;
+    extern "C" fn(key: &z_slice_t, value: &z_slice_t, context: *mut c_void) -> bool;
 
 #[no_mangle]
 pub extern "C" fn z_slice_map_iterate(
@@ -413,7 +421,9 @@ pub extern "C" fn z_slice_map_iterate(
 ) {
     let this = this.transmute_ref();
     for (key, value) in this {
-        if !body(key.as_ref().into(), value.as_ref().into(), context) {
+        let key_slice = key.as_ref().into();
+        let value_slice = value.as_ref().into();
+        if !body(&key_slice, &value_slice, context) {
             break;
         }
     }
@@ -422,11 +432,11 @@ pub extern "C" fn z_slice_map_iterate(
 /// Returns the value associated with `key`, returning a gravestone value if:
 /// - `key` is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_slice_map_get(this: z_slice_map_t, key: z_slice_t) -> z_slice_t {
+pub extern "C" fn z_slice_map_get(this: &z_slice_map_t, key: &z_slice_t) -> z_slice_t {
     if !z_slice_is_initialized(&key) {
         return z_slice_empty();
     }
-    let m = this.transmute_mut();
+    let m = this.transmute_ref();
     let key = key.as_slice().unwrap();
     m.get(key)
         .map(|s| s.as_ref().into())
@@ -438,9 +448,9 @@ pub extern "C" fn z_slice_map_get(this: z_slice_map_t, key: z_slice_t) -> z_slic
 /// Returns 0 in case of success, -1 if one of the arguments were in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_slice_map_insert_by_copy(
-    this: z_slice_map_t,
-    key: z_slice_t,
-    value: z_slice_t,
+    this: &mut z_slice_map_t,
+    key: &z_slice_t,
+    value: &z_slice_t,
 ) -> errors::z_error_t {
     let this = this.transmute_mut();
     if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice()) {
@@ -458,9 +468,9 @@ pub extern "C" fn z_slice_map_insert_by_copy(
 /// Returns 0 in case of success, -1 if one of the arguments were in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_slice_map_insert_by_alias(
-    this: z_slice_map_t,
-    key: z_slice_t,
-    value: z_slice_t,
+    this: &mut z_slice_map_t,
+    key: &z_slice_t,
+    value: &z_slice_t,
 ) -> errors::z_error_t {
     let this = this.transmute_mut();
     if let (Some(key), Some(value)) = (key.as_slice(), value.as_slice()) {

@@ -44,29 +44,29 @@ macro_rules! get_opaque_type_data {
 /// To minimize copies and reallocations, Zenoh may provide you data in split buffers.
 get_opaque_type_data!(Option<ZBytes>, z_owned_bytes_t);
 /// A loaned payload.
-get_opaque_type_data!(&'static ZBytes, z_bytes_t);
+get_opaque_type_data!(ZBytes, z_bytes_t);
 
 /// A map of maybe-owned vector of bytes to maybe-owned vector of bytes.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
 get_opaque_type_data!(Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>, z_owned_slice_map_t);
-get_opaque_type_data!(&'static HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>, z_slice_map_t);
+get_opaque_type_data!(HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>, z_slice_map_t);
 
 /// An owned sample.
 ///
 /// This is a read only type that can only be constructed by cloning a `z_sample_t`.
 /// Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
 get_opaque_type_data!(Option<Sample>, zc_owned_sample_t);
-get_opaque_type_data!(&'static Sample, z_sample_t);
+get_opaque_type_data!(Sample, z_sample_t);
 
 /// A reader for payload data.
 get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
-get_opaque_type_data!(&'static ZBytesReader<'static>, z_bytes_reader_t);
+get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
 
 /// The encoding of a payload, in a MIME-like format.
 ///
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
-get_opaque_type_data!(&'static Encoding, z_encoding_t);
+get_opaque_type_data!(Encoding, z_encoding_t);
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
 
 /// An owned reply to a :c:func:`z_get`.
@@ -77,18 +77,18 @@ get_opaque_type_data!(Encoding, z_owned_encoding_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<Reply>, z_owned_reply_t);
-get_opaque_type_data!(&'static Reply, z_reply_t);
+get_opaque_type_data!(Reply, z_reply_t);
 
 /// A zenoh value.
 get_opaque_type_data!(Value, z_owned_value_t);
-get_opaque_type_data!(&'static Value, z_value_t);
+get_opaque_type_data!(Value, z_value_t);
 
 // Loaned variant of a Query received by a Queryable.
 ///
 /// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
 /// `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
 get_opaque_type_data!(Option<Query>, z_owned_query_t);
-get_opaque_type_data!(&'static Query, z_query_t);
+get_opaque_type_data!(Query, z_query_t);
 
 /// An owned zenoh queryable.
 ///
@@ -101,7 +101,7 @@ get_opaque_type_data!(&'static Query, z_query_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
-get_opaque_type_data!(&'static Queryable<'static, ()>, z_queryable_t);
+get_opaque_type_data!(Queryable<'static, ()>, z_queryable_t);
 
 /// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
 ///
@@ -114,7 +114,7 @@ get_opaque_type_data!(&'static Queryable<'static, ()>, z_queryable_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>, ze_owned_querying_subscriber_t);
-get_opaque_type_data!(&'static (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session), ze_querying_subscriber_t);
+get_opaque_type_data!((zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session), ze_querying_subscriber_t);
 
 /// A zenoh-allocated key expression.
 ///
@@ -151,7 +151,7 @@ get_opaque_type_data!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
 ///
 /// Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
 /// both for local processing and network-wise.
-get_opaque_type_data!(&'static KeyExpr<'_>, z_keyexpr_t);
+get_opaque_type_data!(KeyExpr<'_>, z_keyexpr_t);
 
 /// An owned zenoh session.
 ///
@@ -164,7 +164,7 @@ get_opaque_type_data!(&'static KeyExpr<'_>, z_keyexpr_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<Arc<Session>>, z_owned_session_t);
-get_opaque_type_data!(&'static Session, z_session_t);
+get_opaque_type_data!(Session, z_session_t);
 
 /// An owned zenoh configuration.
 ///
@@ -176,9 +176,9 @@ get_opaque_type_data!(&'static Session, z_session_t);
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-get_opaque_type_data!(Option<Box<Config>>, z_owned_config_t);
+get_opaque_type_data!(Option<Config>, z_owned_config_t);
 /// A loaned zenoh configuration.
-get_opaque_type_data!(&'static Config, z_config_t);
+get_opaque_type_data!(Config, z_config_t);
 
 /// Represents a Zenoh ID.
 ///
@@ -198,7 +198,7 @@ get_opaque_type_data!(Timestamp, z_timestamp_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<Publisher<'static>>, z_owned_publisher_t);
-get_opaque_type_data!(&'static Publisher<'static>, z_publisher_t);
+get_opaque_type_data!(Publisher<'static>, z_publisher_t);
 
 /// An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
 ///
@@ -224,7 +224,7 @@ get_opaque_type_data!(Option<MatchingListener<'static, DefaultHandler>>, zcu_own
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
-get_opaque_type_data!(&'static Subscriber<'static, ()>, z_subscriber_t);
+get_opaque_type_data!(Subscriber<'static, ()>, z_subscriber_t);
 
 /// A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
@@ -232,7 +232,7 @@ get_opaque_type_data!(&'static Subscriber<'static, ()>, z_subscriber_t);
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
 get_opaque_type_data!(Option<LivelinessToken<'static>>, zc_owned_liveliness_token_t);
-get_opaque_type_data!(&'static LivelinessToken<'static>, zc_liveliness_token_t);
+get_opaque_type_data!(LivelinessToken<'static>, zc_liveliness_token_t);
 
 
 /// An owned zenoh publication_cache.

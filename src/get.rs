@@ -15,6 +15,7 @@
 use libc::c_char;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
+use std::ptr::null;
 use std::ptr::null_mut;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
@@ -47,35 +48,35 @@ decl_transmute_handle!(Reply, z_reply_t);
 /// If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_is_ok(reply: z_reply_t) -> bool {
+pub unsafe extern "C" fn z_reply_is_ok(reply: &z_reply_t) -> bool {
     let reply = reply.transmute_ref();
     reply.result().is_ok()
 }
 
 /// Yields the contents of the reply by asserting it indicates a success.
 ///
-/// You should always make sure that :c:func:`z_reply_is_ok` returns ``true`` before calling this function.
+/// Returns null if reply does not contains a sample (i. e. if :c:func:`z_reply_is_ok` returns ``false``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok(reply: z_reply_t) -> z_sample_t {
+pub unsafe extern "C" fn z_reply_ok(reply: &z_reply_t) -> *const z_sample_t {
     let reply = reply.transmute_ref();
-    reply
-        .result()
-        .expect("Reply does not contain a sample")
-        .transmute_handle()
+    match reply.result() {
+        Ok(sample) => sample.transmute_handle(),
+        Err(_) => null(),
+    }
 }
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
-/// You should always make sure that :c:func:`z_reply_is_ok` returns ``false`` before calling this function.
+/// Returns null if reply does not contain a error  (i. e. if :c:func:`z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(reply: z_reply_t) -> z_value_t {
+pub unsafe extern "C" fn z_reply_err(reply: &z_reply_t) -> *const z_value_t{
     let reply = reply.transmute_ref();
-    reply
-        .result()
-        .expect_err("Reply does not contain error")
-        .transmute_handle()
+    match reply.result() {
+        Ok(_) => null(),
+        Err(v) => v.transmute_handle(),
+    }
 }
 
 /// Returns an invalidated :c:type:`z_owned_reply_t`.
@@ -91,7 +92,7 @@ pub extern "C" fn z_reply_null(this: *mut MaybeUninit<z_owned_reply_t>) {
 }
 
 #[no_mangle]
-pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: z_reply_t) {
+pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: &z_reply_t) {
     Inplace::init(
         this.transmute_uninit_ptr(),
         Some(reply.transmute_ref().clone()),
@@ -116,15 +117,15 @@ pub struct z_get_options_t {
     pub timeout_ms: u64,
 }
 #[no_mangle]
-pub extern "C" fn z_get_options_default() -> z_get_options_t {
-    z_get_options_t {
+pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
+    *this = z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         timeout_ms: 0,
         payload: null_mut(),
         encoding: null_mut(),
         attachment: null_mut(),
-    }
+    };
 }
 
 /// Query data from the matching queryables in the system.
@@ -144,8 +145,8 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_get(
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut z_get_options_t>,
@@ -205,7 +206,7 @@ pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn z_reply_loan(this: &mut z_owned_reply_t) -> z_reply_t {
+pub extern "C" fn z_reply_loan(this: &mut z_owned_reply_t) -> &z_reply_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()

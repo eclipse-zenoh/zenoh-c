@@ -37,10 +37,10 @@ typedef struct ALIGN(8) z_owned_session_t {
   uint8_t _0[8];
 } z_owned_session_t;
 typedef struct ALIGN(8) z_query_t {
-  uint8_t _0[8];
+  uint8_t _0[16];
 } z_query_t;
 typedef struct ALIGN(8) z_session_t {
-  uint8_t _0[8];
+  uint8_t _0[40];
 } z_session_t;
 /**
  * An owned zenoh queryable.
@@ -77,6 +77,7 @@ typedef struct ALIGN(8) z_owned_subscriber_t {
 #define Z_EPARSE -2
 #define Z_EIO -3
 #define Z_ENETWORK -4
+#define Z_ENULL -5
 #define Z_EBUSY_MUTEX -16
 #define Z_EINVAL_MUTEX -22
 #define Z_EAGAIN_MUTEX -11

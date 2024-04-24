@@ -85,6 +85,9 @@ fn produce_opaque_types_data() -> PathBuf {
 }
 
 fn generate_opaque_types() {
+    let type_to_inner_field_name = HashMap::from([
+        ("z_id_t", "id"),
+    ]);
     let current_folder = get_build_rs_path();
     let path_in = produce_opaque_types_data();
     let path_out = current_folder.join("./src/opaque_types/mod.rs");
@@ -98,11 +101,12 @@ fn generate_opaque_types() {
 
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
+        let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let s = format!(
             "#[derive(Copy, Clone)]
 #[repr(C, align({align}))]
 pub struct {type_name} {{
-    _0: [u8; {size}],
+    {inner_field_name}: [u8; {size}],
 }}
 "
         );

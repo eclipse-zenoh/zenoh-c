@@ -46,13 +46,13 @@ pub struct z_put_options_t {
 /// Constructs the default value for :c:type:`z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put_options_default() -> z_put_options_t {
-    z_put_options_t {
+pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
+    *this = z_put_options_t {
         encoding: null_mut(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         attachment: null_mut(),
-    }
+    };
 }
 
 /// Put data, transfering its ownership.
@@ -71,8 +71,8 @@ pub extern "C" fn z_put_options_default() -> z_put_options_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put(
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_put_options_t>,
 ) -> errors::z_error_t {
@@ -117,11 +117,11 @@ pub struct z_delete_options_t {
 /// Constructs the default value for :c:type:`z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
-    z_delete_options_t {
+pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t) {
+    *this = z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
-    }
+    };
 }
 
 /// Delete data.
@@ -135,8 +135,8 @@ pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_delete(
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     options: Option<&mut z_delete_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();

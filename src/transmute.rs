@@ -23,18 +23,24 @@ pub fn unwrap_ref_unchecked<T>(value: &Option<T>) -> &T {
     unsafe { value.as_ref().unwrap_unchecked() }
 }
 
+pub fn unwrap_ref_unchecked_mut<T>(value: &mut Option<T>) -> &mut T {
+    debug_assert!(value.is_some());
+    unsafe { value.as_mut().unwrap_unchecked() }
+}
+
 pub(crate) trait TransmuteRef<T: Sized>: Sized {
     fn transmute_ref(&self) -> &T;
     fn transmute_mut(&mut self) -> &mut T;
 }
 
 pub(crate) trait TransmuteFromHandle<T: Sized>: Sized {
-    fn transmute_ref(self) -> &'static T;
-    fn transmute_mut(self) -> &'static mut T;
+    fn transmute_ref(&self) -> &'static T;
+    fn transmute_mut(&mut self) -> &'static mut T;
 }
 
 pub(crate) trait TransmuteIntoHandle<T: Sized>: Sized {
-    fn transmute_handle(&self) -> T;
+    fn transmute_handle(&self) -> &'static T;
+    fn transmute_handle_mut(&mut self) -> &'static mut T;
 }
 
 pub(crate) trait TransmuteCopy<T: Copy> {
@@ -200,16 +206,19 @@ macro_rules! impl_transmute_uninit_ptr {
 macro_rules! impl_transmute_handle {
     ($c_type:ty, $zenoh_type:ty) => {
         impl $crate::transmute::TransmuteFromHandle<$zenoh_type> for $c_type {
-            fn transmute_ref(self) -> &'static $zenoh_type {
-                unsafe { std::mem::transmute::<$c_type, &'static $zenoh_type>(self) }
+            fn transmute_ref(&self) -> &'static $zenoh_type {
+                unsafe { std::mem::transmute::<& $c_type, &'static $zenoh_type>(self) }
             }
-            fn transmute_mut(self) -> &'static mut $zenoh_type {
-                unsafe { std::mem::transmute::<$c_type, &'static mut $zenoh_type>(self) }
+            fn transmute_mut(&mut self) -> &'static mut $zenoh_type {
+                unsafe { std::mem::transmute::<&mut $c_type, &'static mut $zenoh_type>(self) }
             }
         }
         impl $crate::transmute::TransmuteIntoHandle<$c_type> for $zenoh_type {
-            fn transmute_handle(&self) -> $c_type {
-                unsafe { std::mem::transmute::<&$zenoh_type, $c_type>(self) }
+            fn transmute_handle(&self) -> &'static $c_type {
+                unsafe { std::mem::transmute::<&$zenoh_type, &'static $c_type>(self) }
+            }
+            fn transmute_handle_mut(&mut self) -> &'static mut $c_type {
+                unsafe { std::mem::transmute::<&mut $zenoh_type, &'static mut $c_type>(self) }
             }
         }
     };

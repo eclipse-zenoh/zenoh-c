@@ -41,7 +41,7 @@ extern "C" fn z_bytes_check(payload: &z_owned_bytes_t) -> bool {
 
 /// Loans the payload, allowing you to call functions that only need a loan of it.
 #[no_mangle]
-extern "C" fn z_bytes_loan(payload: &'static z_owned_bytes_t) -> z_bytes_t {
+extern "C" fn z_bytes_loan(payload: & z_owned_bytes_t) -> &z_bytes_t {
     let payload = payload.transmute_ref();
     let payload = unwrap_ref_unchecked(payload);
     payload.transmute_handle()
@@ -52,16 +52,16 @@ decl_transmute_handle!(ZBytes, z_bytes_t);
 
 /// Increments the payload's reference count, returning an owned version of it.
 #[no_mangle]
-extern "C" fn z_bytes_clone(src: &z_owned_bytes_t, dst: *mut MaybeUninit<z_owned_bytes_t>) {
+extern "C" fn z_bytes_clone(src: &z_bytes_t, dst: *mut MaybeUninit<z_owned_bytes_t>) {
     let dst = dst.transmute_uninit_ptr();
     let src = src.transmute_ref();
-    let src = src.as_ref().map(Clone::clone);
+    let src = Some(src.clone());
     Inplace::init(dst, src);
 }
 
 /// Returns total number bytes in the payload.
 #[no_mangle]
-extern "C" fn z_bytes_len(payload: z_bytes_t) -> usize {
+extern "C" fn z_bytes_len(payload: &z_bytes_t) -> usize {
     payload.transmute_ref().len()
 }
 
@@ -69,7 +69,7 @@ extern "C" fn z_bytes_len(payload: z_bytes_t) -> usize {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_decode_into_string(
-    payload: z_bytes_t,
+    payload: &z_bytes_t,
     dst: *mut MaybeUninit<z_owned_str_t>,
 ) -> z_error_t {
     let len = z_bytes_len(payload);
@@ -110,13 +110,13 @@ pub unsafe extern "C" fn z_bytes_decode_into_bytes_map(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_decode_into_bytes(
-    payload: z_bytes_t,
+    payload: &z_bytes_t,
     dst: *mut MaybeUninit<z_owned_slice_t>,
 ) -> z_error_t {
     let len = z_bytes_len(payload);
     let b = z_owned_slice_t::preallocate(len);
     let payload = payload.transmute_ref();
-    if let Err(e) = payload.reader().read(from_raw_parts_mut(b.start, len)) {
+    if let Err(e) = payload.reader().read(from_raw_parts_mut(b.start as *mut _, len)) {
         log::error!("Failed to read the payload: {}", e);
         Inplace::empty(dst);
         errors::Z_EIO
@@ -147,10 +147,10 @@ impl ZSliceBuffer for z_slice_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_bytes(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    bytes: z_slice_t,
+    bytes: &z_slice_t,
 ) {
     let this = this.transmute_uninit_ptr();
-    let payload = ZBytes::from(ZSlice::from(bytes));
+    let payload = ZBytes::from(ZSlice::from(bytes.clone()));
     Inplace::init(this, Some(payload));
 }
 
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_bytes(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_bytes_map(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    bytes_map: z_slice_map_t,
+    bytes_map: &z_slice_map_t,
 ) {
     let dst = this.transmute_uninit_ptr();
     let hm = bytes_map.transmute_ref();
@@ -178,7 +178,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_string(
         start: cstr as *const u8,
         len: libc::strlen(cstr),
     };
-    z_bytes_encode_from_bytes(this, bytes);
+    z_bytes_encode_from_bytes(this, &bytes);
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;
@@ -222,7 +222,7 @@ extern "C" fn z_bytes_reader_drop(this: &mut z_owned_bytes_reader_t) {
 }
 
 #[no_mangle]
-extern "C" fn z_bytes_reader_loan(reader: &'static z_owned_bytes_reader_t) -> z_bytes_reader_t {
+extern "C" fn z_bytes_reader_loan(reader: &z_owned_bytes_reader_t) -> &z_bytes_reader_t {
     let reader = reader.transmute_ref();
     let reader = unwrap_ref_unchecked(reader);
     reader.transmute_handle()
@@ -235,7 +235,7 @@ extern "C" fn z_bytes_reader_loan(reader: &'static z_owned_bytes_reader_t) -> z_
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_read(
-    this: z_bytes_reader_t,
+    this: &z_bytes_reader_t,
     dest: *mut u8,
     len: usize,
 ) -> usize {
@@ -251,7 +251,7 @@ pub unsafe extern "C" fn z_bytes_reader_read(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_seek(
-    this: z_bytes_reader_t,
+    this: &z_bytes_reader_t,
     offset: i64,
     origin: libc::c_int,
 ) -> z_error_t {
@@ -274,7 +274,7 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 /// Returns read position indicator on success or -1L if failure occurs.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_tell(this: z_bytes_reader_t) -> i64 {
+pub unsafe extern "C" fn z_bytes_reader_tell(this: &z_bytes_reader_t) -> i64 {
     let reader = this.transmute_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }

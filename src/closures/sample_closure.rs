@@ -17,7 +17,7 @@ use libc::c_void;
 #[repr(C)]
 pub struct z_owned_closure_sample_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(z_sample_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(*const z_sample_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 impl z_owned_closure_sample_t {
@@ -47,7 +47,7 @@ pub extern "C" fn z_closure_sample_null() -> z_owned_closure_sample_t {
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_sample_call(closure: &z_owned_closure_sample_t, sample: z_sample_t) {
+pub extern "C" fn z_closure_sample_call(closure: &z_owned_closure_sample_t, sample: &z_sample_t) {
     match closure.call {
         Some(call) => call(sample, closure.context),
         None => log::error!("Attempted to call an uninitialized closure!"),
@@ -60,12 +60,12 @@ pub extern "C" fn z_closure_sample_drop(closure: &mut z_owned_closure_sample_t) 
     let mut empty_closure = z_owned_closure_sample_t::empty();
     std::mem::swap(&mut empty_closure, closure);
 }
-impl<F: Fn(z_sample_t)> From<F> for z_owned_closure_sample_t {
+impl<F: Fn(&z_sample_t)> From<F> for z_owned_closure_sample_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(z_sample_t)>(sample: z_sample_t, this: *mut c_void) {
+        extern "C" fn call<F: Fn(&z_sample_t)>(sample: *const z_sample_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
-            this(sample)
+            unsafe { this(sample.as_ref().unwrap()) }
         }
         extern "C" fn drop<F>(this: *mut c_void) {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })

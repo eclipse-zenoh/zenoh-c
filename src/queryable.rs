@@ -20,7 +20,7 @@ use crate::{
     z_owned_encoding_t, z_session_t, z_slice_t, z_value_t,
 };
 use std::mem::MaybeUninit;
-use std::ptr::null_mut;
+use std::ptr::{null, null_mut};
 use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::SyncResolve;
 use zenoh::prelude::{Query, Queryable};
@@ -66,7 +66,7 @@ pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> z_query_t {
+pub extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_query_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
@@ -82,11 +82,11 @@ pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
-pub extern "C" fn z_query_clone(this: *mut MaybeUninit<z_owned_query_t>, query: z_query_t) {
-    let query = query.transmute_ref();
-    let query = query.clone();
-    let this = this.transmute_uninit_ptr();
-    Inplace::init(this, Some(query));
+pub extern "C" fn z_query_clone(this: &z_query_t, dst: *mut MaybeUninit<z_owned_query_t>) {
+    let this = this.transmute_ref();
+    let this = this.clone();
+    let dst = dst.transmute_uninit_ptr();
+    Inplace::init(dst, Some(this));
 }
 
 /// Options passed to the :c:func:`z_declare_queryable` function.
@@ -101,8 +101,8 @@ pub struct z_queryable_options_t {
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
-    z_queryable_options_t { complete: false }
+pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) {
+    *this = z_queryable_options_t { complete: false };
 }
 
 /// Represents the set of options that can be applied to a query reply,
@@ -121,11 +121,11 @@ pub struct z_query_reply_options_t {
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
-    z_query_reply_options_t {
+pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
+    *this = z_query_reply_options_t {
         encoding: null_mut(),
         attachment: null_mut(),
-    }
+    };
 }
 
 /// Creates a Queryable for the given key expression.
@@ -142,8 +142,8 @@ pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
     this: *mut MaybeUninit<z_owned_queryable_t>,
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> errors::z_error_t {
@@ -248,14 +248,14 @@ pub unsafe extern "C" fn z_query_reply(
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_keyexpr(query: z_query_t) -> z_keyexpr_t {
+pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> &z_keyexpr_t {
     query.transmute_ref().key_expr().transmute_handle()
 }
 
 /// Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_parameters(query: z_query_t) -> z_slice_t {
+pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_slice_t {
     let query = query.transmute_ref();
     let params = query.parameters().as_str();
     z_slice_t {
@@ -265,13 +265,9 @@ pub extern "C" fn z_query_parameters(query: z_query_t) -> z_slice_t {
 }
 
 /// Checks if query contains a payload value.
-pub extern "C" fn z_query_has_value(query: z_query_t) -> bool {
+#[no_mangle]
+pub extern "C" fn z_query_has_value(query: &z_query_t) -> bool {
     query.transmute_ref().value().is_some()
-}
-
-/// Checks if query contains an attachment.
-pub extern "C" fn z_query_has_attachment(query: z_query_t) -> bool {
-    query.transmute_ref().attachment().is_some()
 }
 
 /// Gets a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
@@ -279,7 +275,7 @@ pub extern "C" fn z_query_has_attachment(query: z_query_t) -> bool {
 /// **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
 /// Before calling this funciton, the user must ensure that `z_query_has_value` returns true.
 #[no_mangle]
-pub extern "C" fn z_query_value(query: z_query_t) -> z_value_t {
+pub extern "C" fn z_query_value(query: &z_query_t) -> &z_value_t {
     query
         .transmute_ref()
         .value()
@@ -289,12 +285,11 @@ pub extern "C" fn z_query_value(query: z_query_t) -> z_value_t {
 
 /// Gets the attachment to the query by aliasing.
 ///
-/// Before calling this funciton, the user must ensure that `z_query_has_attachment` returns true.
+/// Returns NULL if query does not contain an attachment.
 #[no_mangle]
-pub extern "C" fn z_query_attachment(query: z_query_t) -> z_bytes_t {
-    query
-        .transmute_ref()
-        .attachment()
-        .expect("Query does not contain an attachment")
-        .transmute_handle()
+pub extern "C" fn z_query_attachment(query: &z_query_t) -> *const z_bytes_t {
+    match query.transmute_ref().attachment() {
+        Some(attachment) => attachment.transmute_handle() as *const _,
+        None => null(),
+    }
 }
