@@ -240,6 +240,17 @@ If all goes right the building files will be located at:
 and release files will be located at
 `/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
 
+## Rust Version
+
+The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.72.0`.
+There might be some memory mapping issue if you use the later version.
+
+You can also specify the Rust version.
+
+```bash
+cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.72.0"
+```
+
 ## Zenoh features support (enabling/disabling protocols, etc)
 
 It's necessary sometimes to build zenoh-c library with set of features different from default. For example: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake peculiarities)
