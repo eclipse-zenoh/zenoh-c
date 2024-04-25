@@ -21,7 +21,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
-use crate::{errors, z_owned_str_t};
+use crate::{errors, z_owned_str_t, z_str_from_substring, z_str_null};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -114,16 +114,25 @@ pub extern "C" fn z_config_clone(src: &z_config_t, dst: *mut MaybeUninit<z_owned
 /// Use `z_drop` to safely deallocate this string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -> z_owned_str_t {
+pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char, value_string: *mut MaybeUninit<z_owned_str_t>) -> errors::z_error_t {
     let config = config.transmute_ref();
     let key = match CStr::from_ptr(key).to_str() {
         Ok(s) => s,
-        Err(_) => return z_owned_str_t::null(),
+        Err(_) => {
+            z_str_null(value_string);
+            return errors::Z_EINVAL;
+        }
     };
     let val = config.get_json(key).ok();
     match val {
-        Some(val) => val.as_bytes().into(),
-        None => z_owned_str_t::null(),
+        Some(val) => {
+            z_str_from_substring(value_string, val.as_ptr() as *const libc::c_char, val.len());
+            errors::Z_OK
+        }
+        None => {
+            z_str_null(value_string);
+            errors::Z_EUNAVAILABLE
+        }
     }
 }
 
@@ -189,11 +198,17 @@ pub unsafe extern "C" fn zc_config_from_str(
 /// Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_config_to_string(config: &z_config_t) -> z_owned_str_t {
+pub extern "C" fn zc_config_to_string(config: &z_config_t, config_string: *mut MaybeUninit<z_owned_str_t>) -> errors::z_error_t {
     let config: &Config = config.transmute_ref();
     match json5::to_string(config) {
-        Ok(s) => s.as_bytes().into(),
-        Err(_) => z_owned_str_t::null(),
+        Ok(s) => {
+            unsafe { z_str_from_substring(config_string, s.as_ptr() as *const libc::c_char, s.len()) };
+            errors::Z_OK
+        }
+        Err(_) => {
+            z_str_null(config_string);
+            errors::Z_EPARSE
+        },
     }
 }
 

@@ -46,6 +46,21 @@ get_opaque_type_data!(Option<ZBytes>, z_owned_bytes_t);
 /// A loaned payload.
 get_opaque_type_data!(ZBytes, z_bytes_t);
 
+/// A contiguous view of bytes owned by some other entity.
+///
+/// `start` being `null` is considered a gravestone value,
+/// and empty slices are represented using a possibly dangling pointer for `start`.
+get_opaque_type_data!(Option<Box<[u8]>>, z_owned_slice_t);
+get_opaque_type_data!(Option<&'static [u8]>, z_view_slice_t);
+get_opaque_type_data!(&'static [u8], z_slice_t);
+
+/// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
+/// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
+/// `z_check` and `z_str_check` correspondently
+get_opaque_type_data!(Option<Box<[u8]>>, z_owned_str_t);
+get_opaque_type_data!(Option<&'static [u8]>, z_view_str_t);
+get_opaque_type_data!(&'static [u8], z_str_t);
+
 /// A map of maybe-owned vector of bytes to maybe-owned vector of bytes.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
@@ -141,6 +156,8 @@ get_opaque_type_data!((zenoh_ext::FetchingSubscriber<'static, ()>, &'static Sess
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
+get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
+
 /// A loaned key expression.
 ///
 /// Key expressions can identify a single key or a set of keys.

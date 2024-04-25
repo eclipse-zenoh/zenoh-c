@@ -78,6 +78,7 @@ typedef struct ALIGN(8) z_owned_subscriber_t {
 #define Z_EIO -3
 #define Z_ENETWORK -4
 #define Z_ENULL -5
+#define Z_EUNAVAILABLE -6
 #define Z_EBUSY_MUTEX -16
 #define Z_EINVAL_MUTEX -22
 #define Z_EAGAIN_MUTEX -11

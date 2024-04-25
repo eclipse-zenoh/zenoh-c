@@ -4,9 +4,9 @@ use crate::transmute::{
     TransmuteUninitPtr,
 };
 use crate::{
-    z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, ZHashMap,
+    z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, z_str_t, ZHashMap
 };
-use core::slice;
+use core::{fmt, slice};
 use std::any::Any;
 use std::io::{Read, Seek, SeekFrom};
 use std::mem::MaybeUninit;
@@ -73,18 +73,25 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
     dst: *mut MaybeUninit<z_owned_str_t>,
 ) -> z_error_t {
     let len = z_bytes_len(payload);
-    let cstr = z_owned_str_t::preallocate(len);
     let payload = payload.transmute_ref();
+    let mut out = vec![0u8; len + 1];
     if let Err(e) = payload
         .reader()
-        .read(from_raw_parts_mut(cstr._cstr as *mut u8, len))
+        .read(out.as_mut_slice())
     {
         log::error!("Failed to read the payload: {}", e);
-        Inplace::empty(dst);
+        Inplace::empty(dst.transmute_uninit_ptr());
         errors::Z_EIO
     } else {
-        Inplace::init(dst, cstr);
-        errors::Z_OK
+        if let Err(e) = std::str::from_utf8(out.as_slice()) {
+            log::error!("Payload is not a valid utf-8 string: {}", e);
+            Inplace::empty(dst.transmute_uninit_ptr());
+            errors::Z_EPARSE
+        } else {
+            let b = out.into_boxed_slice();
+            Inplace::init(dst.transmute_uninit_ptr(), Some(b));
+            errors::Z_OK
+        }
     }
 }
 
@@ -113,25 +120,34 @@ pub unsafe extern "C" fn z_bytes_decode_into_bytes(
     payload: &z_bytes_t,
     dst: *mut MaybeUninit<z_owned_slice_t>,
 ) -> z_error_t {
-    let len = z_bytes_len(payload);
-    let b = z_owned_slice_t::preallocate(len);
     let payload = payload.transmute_ref();
-    if let Err(e) = payload.reader().read(from_raw_parts_mut(b.start as *mut _, len)) {
-        log::error!("Failed to read the payload: {}", e);
-        Inplace::empty(dst);
-        errors::Z_EIO
-    } else {
-        Inplace::init(dst, b);
-        errors::Z_OK
+    match payload.deserialize::<Vec<u8>>() {
+        Ok(v) => {
+            let b = v.into_boxed_slice();
+            Inplace::init(dst.transmute_uninit_ptr(), Some(b));
+            errors::Z_OK
+        },
+        Err(e) => {
+            log::error!("Failed to read the payload: {}", e);
+            Inplace::empty(dst.transmute_uninit_ptr());
+            errors::Z_EIO
+        }
     }
 }
 
 unsafe impl Send for z_slice_t {}
 unsafe impl Sync for z_slice_t {}
 
+impl fmt::Debug for z_slice_t {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = self.transmute_ref();
+        f.debug_struct("z_slice_t").field("_0", s).finish()
+    }
+}
+
 impl ZSliceBuffer for z_slice_t {
     fn as_slice(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.start, self.len) }
+        self.transmute_ref()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -172,13 +188,12 @@ pub unsafe extern "C" fn z_bytes_encode_from_bytes_map(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_string(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    cstr: *const libc::c_char,
+    s: &z_str_t,
 ) {
-    let bytes = z_slice_t {
-        start: cstr as *const u8,
-        len: libc::strlen(cstr),
-    };
-    z_bytes_encode_from_bytes(this, &bytes);
+    let s = s.transmute_ref();
+    let ss = &s[0..s.len() - 1];
+    let b = ss.transmute_handle();
+    z_bytes_encode_from_bytes(this, &b);
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;

@@ -17,7 +17,7 @@ use crate::transmute::{
 };
 use crate::{
     errors, z_bytes_t, z_closure_query_call, z_keyexpr_t, z_owned_bytes_t, z_owned_closure_query_t,
-    z_owned_encoding_t, z_session_t, z_slice_t, z_value_t,
+    z_owned_encoding_t, z_session_t, z_slice_t, z_value_t, z_view_slice_t, z_view_slice_wrap,
 };
 use std::mem::MaybeUninit;
 use std::ptr::{null, null_mut};
@@ -255,13 +255,10 @@ pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> &z_keyexpr_t {
 /// Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_slice_t {
+pub extern "C" fn z_query_parameters(query: &z_query_t, parameters: *mut MaybeUninit<z_view_slice_t>) {
     let query = query.transmute_ref();
     let params = query.parameters().as_str();
-    z_slice_t {
-        start: params.as_ptr(),
-        len: params.len(),
-    }
+    unsafe { z_view_slice_wrap(parameters, params.as_ptr(), params.len()) };
 }
 
 /// Checks if query contains a payload value.
