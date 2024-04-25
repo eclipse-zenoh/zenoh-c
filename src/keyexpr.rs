@@ -55,19 +55,25 @@ pub extern "C" fn z_view_keyexpr_null(this: *mut MaybeUninit<z_view_keyexpr_t>) 
 }
 
 fn keyexpr_create_inner(
-    mut name: &'static mut str,
+    name: &'static mut str,
     should_auto_canonize: bool,
     should_copy: bool,
 ) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
     if should_copy {
-        let s = name.to_owned();
+        let s = name.to_string();
         match should_auto_canonize {
             true => KeyExpr::<'static>::autocanonize(s),
             false => KeyExpr::<'static>::try_from(s),
         }
     } else {
         match should_auto_canonize {
-            true => keyexpr::autocanonize(&mut name).map(|k| k.into()),
+            true => {
+                // hack to fix issue with autocanonize requiring &&str instead of &str
+                // to be removed after this issue is resolved on zenoh-rust side
+                let n = &name as *const &'static mut str as *mut &'static mut str;
+                let n = unsafe { &mut *n };
+                keyexpr::autocanonize(n).map(|k| k.into())
+            },
             false => keyexpr::new(name).map(|k| k.into())
         }
     }

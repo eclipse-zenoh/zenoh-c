@@ -18,8 +18,7 @@ use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
 use crate::errors::z_error_t;
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
+    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
 };
 use crate::{errors, z_owned_str_t, z_str_from_substring, z_str_null};
 
@@ -77,6 +76,14 @@ pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> &z_config_t 
     this.transmute_handle()
 }
 
+/// Returns a :c:type:`z_config_t` loaned from `s`.
+#[no_mangle]
+pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_config_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
+}
+
 /// Return a new, zenoh-allocated, empty configuration.
 ///
 /// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
@@ -114,7 +121,7 @@ pub extern "C" fn z_config_clone(src: &z_config_t, dst: *mut MaybeUninit<z_owned
 /// Use `z_drop` to safely deallocate this string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char, value_string: *mut MaybeUninit<z_owned_str_t>) -> errors::z_error_t {
+pub unsafe extern "C" fn zc_config_get(config: &z_config_t, key: *const c_char, value_string: *mut MaybeUninit<z_owned_str_t>) -> errors::z_error_t {
     let config = config.transmute_ref();
     let key = match CStr::from_ptr(key).to_str() {
         Ok(s) => s,
@@ -142,7 +149,7 @@ pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char, v
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 pub unsafe extern "C" fn zc_config_insert_json(
-    config: &z_config_t,
+    config: &mut z_config_t,
     key: *const c_char,
     value: *const c_char,
 ) -> errors::z_error_t {

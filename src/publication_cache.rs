@@ -41,14 +41,14 @@ pub struct ze_publication_cache_options_t {
 
 /// Constructs the default value for :c:type:`ze_publication_cache_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_publication_cache_options_default() -> ze_publication_cache_options_t {
-    ze_publication_cache_options_t {
+pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication_cache_options_t) {
+    *this = ze_publication_cache_options_t {
         queryable_prefix: null(),
         queryable_origin: zcu_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,
-    }
+    };
 }
 
 pub use crate::opaque_types::ze_owned_publication_cache_t;
@@ -87,8 +87,8 @@ decl_transmute_handle!(zenoh_ext::PublicationCache<'static>, ze_publication_cach
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_declare_publication_cache(
     this: *mut MaybeUninit<ze_owned_publication_cache_t>,
-    session: z_session_t,
-    key_expr: z_keyexpr_t,
+    session: &z_session_t,
+    key_expr: &z_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();

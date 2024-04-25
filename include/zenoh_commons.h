@@ -364,10 +364,10 @@ typedef struct ALIGN(8) z_owned_condvar_t {
   uint8_t _0[24];
 } z_owned_condvar_t;
 typedef struct ALIGN(8) z_condvar_t {
-  uint8_t _0[8];
+  uint8_t _0[16];
 } z_condvar_t;
 typedef struct ALIGN(8) z_mutex_t {
-  uint8_t _0[8];
+  uint8_t _0[32];
 } z_mutex_t;
 /**
  * An owned zenoh configuration.
@@ -940,6 +940,7 @@ ZENOHC_API bool z_bytes_reader_check(const struct z_owned_bytes_reader_t *this_)
 ZENOHC_API void z_bytes_reader_drop(struct z_owned_bytes_reader_t *this_);
 ZENOHC_API
 const struct z_bytes_reader_t *z_bytes_reader_loan(const struct z_owned_bytes_reader_t *reader);
+ZENOHC_API struct z_bytes_reader_t *z_bytes_reader_loan_mut(struct z_owned_bytes_reader_t *reader);
 /**
  * Creates a reader for the specified `payload`.
  *
@@ -954,7 +955,7 @@ ZENOHC_API void z_bytes_reader_null(struct z_owned_bytes_reader_t *this_);
  * Returns number of bytes read. If return value is smaller than `len`, it means that end of the payload was reached.
  */
 ZENOHC_API
-size_t z_bytes_reader_read(const struct z_bytes_reader_t *this_,
+size_t z_bytes_reader_read(struct z_bytes_reader_t *this_,
                            uint8_t *dest,
                            size_t len);
 /**
@@ -964,14 +965,14 @@ size_t z_bytes_reader_read(const struct z_bytes_reader_t *this_,
  * Return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_bytes_reader_seek(const struct z_bytes_reader_t *this_,
+z_error_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
                               int64_t offset,
                               int origin);
 /**
  * Returns the read position indicator.
  * Returns read position indicator on success or -1L if failure occurs.
  */
-ZENOHC_API int64_t z_bytes_reader_tell(const struct z_bytes_reader_t *this_);
+ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
 ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);
 ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
 ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
@@ -1070,10 +1071,11 @@ ZENOHC_API struct z_owned_closure_zid_t z_closure_zid_null(void);
 ZENOHC_API bool z_condvar_check(const struct z_owned_condvar_t *this_);
 ZENOHC_API void z_condvar_drop(struct z_owned_condvar_t *this_);
 ZENOHC_API void z_condvar_init(struct z_owned_condvar_t *this_);
-ZENOHC_API struct z_condvar_t z_condvar_loan(const struct z_owned_condvar_t *this_);
+ZENOHC_API const struct z_condvar_t *z_condvar_loan(const struct z_owned_condvar_t *this_);
+ZENOHC_API struct z_condvar_t *z_condvar_loan_mut(struct z_owned_condvar_t *this_);
 ZENOHC_API void z_condvar_null(struct z_owned_condvar_t *this_);
-ZENOHC_API z_error_t z_condvar_signal(struct z_condvar_t this_);
-ZENOHC_API z_error_t z_condvar_wait(struct z_condvar_t this_, struct z_mutex_t m);
+ZENOHC_API z_error_t z_condvar_signal(const struct z_condvar_t *this_);
+ZENOHC_API z_error_t z_condvar_wait(const struct z_condvar_t *this_, struct z_mutex_t *m);
 /**
  * Returns ``true`` if `config` is valid.
  */
@@ -1112,6 +1114,10 @@ ZENOHC_API void z_config_drop(struct z_owned_config_t *config);
  * Returns a :c:type:`z_config_t` loaned from `s`.
  */
 ZENOHC_API const struct z_config_t *z_config_loan(const struct z_owned_config_t *this_);
+/**
+ * Returns a :c:type:`z_config_t` loaned from `s`.
+ */
+ZENOHC_API struct z_config_t *z_config_loan_mut(struct z_owned_config_t *this_);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_config_t' type
  */
@@ -1469,11 +1475,11 @@ void z_keyexpr_unchecked(struct z_view_keyexpr_t *this_,
 ZENOHC_API bool z_mutex_check(const struct z_owned_mutex_t *this_);
 ZENOHC_API void z_mutex_drop(struct z_owned_mutex_t *this_);
 ZENOHC_API z_error_t z_mutex_init(struct z_owned_mutex_t *this_);
-ZENOHC_API struct z_mutex_t z_mutex_loan(const struct z_owned_mutex_t *this_);
-ZENOHC_API z_error_t z_mutex_lock(struct z_mutex_t this_);
+ZENOHC_API struct z_mutex_t *z_mutex_loan_mut(struct z_owned_mutex_t *this_);
+ZENOHC_API z_error_t z_mutex_lock(struct z_mutex_t *this_);
 ZENOHC_API void z_mutex_null(struct z_owned_mutex_t *this_);
-ZENOHC_API z_error_t z_mutex_try_lock(struct z_mutex_t this_);
-ZENOHC_API z_error_t z_mutex_unlock(struct z_mutex_t this_);
+ZENOHC_API z_error_t z_mutex_try_lock(struct z_mutex_t *this_);
+ZENOHC_API z_error_t z_mutex_unlock(struct z_mutex_t *this_);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
  * Config value is always consumed upon function return.
@@ -2190,7 +2196,7 @@ z_error_t zc_config_from_str(struct z_owned_config_t *this_,
  * Use `z_drop` to safely deallocate this string
  */
 ZENOHC_API
-z_error_t zc_config_get(struct z_config_t config,
+z_error_t zc_config_get(const struct z_config_t *config,
                         const char *key,
                         struct z_owned_str_t *value_string);
 /**
@@ -2199,7 +2205,7 @@ z_error_t zc_config_get(struct z_config_t config,
  * Returns 0 if successful, a negative value otherwise.
  */
 ZENOHC_API
-z_error_t zc_config_insert_json(const struct z_config_t *config,
+z_error_t zc_config_insert_json(struct z_config_t *config,
                                 const char *key,
                                 const char *value);
 /**
@@ -2403,8 +2409,8 @@ ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
  */
 ZENOHC_API
 z_error_t ze_declare_publication_cache(struct ze_owned_publication_cache_t *this_,
-                                       struct z_session_t session,
-                                       struct z_keyexpr_t key_expr,
+                                       const struct z_session_t *session,
+                                       const struct z_keyexpr_t *key_expr,
                                        struct ze_publication_cache_options_t *options);
 /**
  * Declares a Querying Subscriber for a given key expression.
@@ -2456,7 +2462,7 @@ ZENOHC_API void ze_publication_cache_null(struct ze_owned_publication_cache_t *t
 /**
  * Constructs the default value for :c:type:`ze_publication_cache_options_t`.
  */
-ZENOHC_API struct ze_publication_cache_options_t ze_publication_cache_options_default(void);
+ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
 /**
  * Returns ``true`` if `this` is valid.
  */

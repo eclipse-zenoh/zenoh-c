@@ -23,8 +23,7 @@ use zenoh::prelude::ZenohId;
 
 use crate::{errors, transmute, z_owned_bytes_t};
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, InplaceDefault, TransmuteFromHandle, TransmuteIntoHandle,
-    TransmuteRef, TransmuteUninitPtr,
+    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, InplaceDefault, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
 };
 
 pub use crate::opaque_types::z_owned_slice_t;
@@ -75,7 +74,7 @@ pub unsafe extern "C" fn z_view_slice_wrap(this: *mut MaybeUninit<z_view_slice_t
 }
 
 #[no_mangle]
-pub const extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> *const z_slice_t {
+pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> *const z_slice_t {
     match this.transmute_ref() {
         Some(s) => s.transmute_handle(),
         None => null(),
@@ -130,7 +129,7 @@ pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
 }
 
 #[no_mangle]
-pub const extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> *const z_slice_t {
+pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> *const z_slice_t {
     match this.transmute_ref() {
         Some(s) => (&&*s.as_ref()) as *const &[u8] as *const z_slice_t,
         None => null(),
@@ -323,7 +322,7 @@ pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_slice_map_t
 #[no_mangle]
 pub extern "C" fn z_slice_map_loan_mut(this: &mut z_owned_slice_map_t) -> &mut z_slice_map_t {
     let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked(this);
+    let this = unwrap_ref_unchecked_mut(this);
     this.transmute_handle_mut()
 }
 

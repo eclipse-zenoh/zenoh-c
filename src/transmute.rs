@@ -165,7 +165,7 @@ macro_rules! decl_transmute_copy {
 #[macro_export]
 macro_rules! decl_transmute_handle {
     ($zenoh_type:ty, $c_type:ty) => {
-        validate_equivalence!(&'static $zenoh_type, $c_type);
+        validate_equivalence!($zenoh_type, $c_type);
         impl_transmute_handle!($c_type, $zenoh_type);
     };
 }

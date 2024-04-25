@@ -263,13 +263,13 @@ get_opaque_type_data!(LivelinessToken<'static>, zc_liveliness_token_t);
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
-get_opaque_type_data!(&'static zenoh_ext::PublicationCache<'static>, ze_publication_cache_t);
+get_opaque_type_data!(zenoh_ext::PublicationCache<'static>, ze_publication_cache_t);
 
 
 get_opaque_type_data!(Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>, z_owned_mutex_t);
-get_opaque_type_data!(&'static (Mutex<()>, Option<MutexGuard<'static, ()>>), z_mutex_t);
+get_opaque_type_data!((Mutex<()>, Option<MutexGuard<'static, ()>>), z_mutex_t);
 
 get_opaque_type_data!(Option<Condvar>, z_owned_condvar_t);
-get_opaque_type_data!(&'static Condvar, z_condvar_t);
+get_opaque_type_data!(Condvar, z_condvar_t);
 
 get_opaque_type_data!(Option<JoinHandle<()>>, z_owned_task_t);

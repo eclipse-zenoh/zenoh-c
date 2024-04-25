@@ -1,7 +1,6 @@
 use crate::errors::{self, z_error_t};
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
+    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
 };
 use crate::{
     z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, z_str_t, ZHashMap
@@ -243,6 +242,13 @@ extern "C" fn z_bytes_reader_loan(reader: &z_owned_bytes_reader_t) -> &z_bytes_r
     reader.transmute_handle()
 }
 
+#[no_mangle]
+extern "C" fn z_bytes_reader_loan_mut(reader: &mut z_owned_bytes_reader_t) -> &mut z_bytes_reader_t {
+    let reader = reader.transmute_mut();
+    let reader = unwrap_ref_unchecked_mut(reader);
+    reader.transmute_handle_mut()
+}
+
 /// Reads data into specified destination.
 ///
 /// Will read at most `len` bytes.
@@ -250,7 +256,7 @@ extern "C" fn z_bytes_reader_loan(reader: &z_owned_bytes_reader_t) -> &z_bytes_r
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_read(
-    this: &z_bytes_reader_t,
+    this: &mut z_bytes_reader_t,
     dest: *mut u8,
     len: usize,
 ) -> usize {
@@ -266,7 +272,7 @@ pub unsafe extern "C" fn z_bytes_reader_read(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_seek(
-    this: &z_bytes_reader_t,
+    this: &mut z_bytes_reader_t,
     offset: i64,
     origin: libc::c_int,
 ) -> z_error_t {
@@ -289,7 +295,7 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 /// Returns read position indicator on success or -1L if failure occurs.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_tell(this: &z_bytes_reader_t) -> i64 {
+pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64 {
     let reader = this.transmute_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
