@@ -23,12 +23,9 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
-use crate::z_owned_slice_t;
 use crate::z_owned_str_t;
 use crate::z_session_t;
-use crate::z_slice_t;
 use crate::z_str_from_substring;
-use crate::z_view_slice_from_str;
 use crate::z_view_slice_t;
 use crate::z_view_slice_wrap;
 use libc::c_char;
@@ -37,6 +34,7 @@ use zenoh::core::SyncResolve;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::KeyExpr;
+use zenoh_protocol::core::key_expr::canon::Canonizable;
 
 pub use crate::opaque_types::z_owned_keyexpr_t;
 pub use crate::opaque_types::z_view_keyexpr_t;
@@ -55,7 +53,7 @@ pub extern "C" fn z_view_keyexpr_null(this: *mut MaybeUninit<z_view_keyexpr_t>) 
 }
 
 fn keyexpr_create_inner(
-    name: &'static mut str,
+    mut name: &'static mut str,
     should_auto_canonize: bool,
     should_copy: bool,
 ) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
@@ -66,16 +64,10 @@ fn keyexpr_create_inner(
             false => KeyExpr::<'static>::try_from(s),
         }
     } else {
-        match should_auto_canonize {
-            true => {
-                // hack to fix issue with autocanonize requiring &&str instead of &str
-                // to be removed after this issue is resolved on zenoh-rust side
-                let n = &name as *const &'static mut str as *mut &'static mut str;
-                let n = unsafe { &mut *n };
-                keyexpr::autocanonize(n).map(|k| k.into())
-            },
-            false => keyexpr::new(name).map(|k| k.into())
+        if should_auto_canonize {
+            name.canonize();
         }
+        return keyexpr::new(name).map(|k| k.into());
     }
 }
 
@@ -384,9 +376,9 @@ pub unsafe extern "C" fn z_keyexpr_unchecked(
 /// The user is responsible of droping the returned string using `z_drop`
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_keyexpr_to_string(ke: &z_keyexpr_t, s: *mut MaybeUninit<z_owned_str_t>) {
+pub unsafe extern "C" fn z_keyexpr_to_string(ke: &z_keyexpr_t, s: *mut MaybeUninit<z_owned_str_t>) {
     let ke = ke.transmute_ref();
-    unsafe { z_str_from_substring(s, ke.as_bytes().as_ptr() as *const _, ke.as_bytes().len()) } ;
+    unsafe { z_str_from_substring(s, ke.as_bytes().as_ptr() as *const _, ke.as_bytes().len()) };
 }
 
 /// Returns the key expression's internal string by aliasing it.
@@ -394,9 +386,9 @@ pub extern "C" fn z_keyexpr_to_string(ke: &z_keyexpr_t, s: *mut MaybeUninit<z_ow
 /// Currently exclusive to zenoh-c
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_keyexpr_as_bytes(ke: &z_keyexpr_t, b: *mut MaybeUninit<z_view_slice_t>) {
+pub unsafe extern "C" fn z_keyexpr_as_bytes(ke: &z_keyexpr_t, b: *mut MaybeUninit<z_view_slice_t>) {
     let ke = ke.transmute_ref();
-    unsafe { z_view_slice_wrap(b, ke.as_bytes().as_ptr() as *const _, ke.as_bytes().len()) } ;
+    unsafe { z_view_slice_wrap(b, ke.as_bytes().as_ptr() as *const _, ke.as_bytes().len()) };
 }
 
 /**************************************/
@@ -433,7 +425,10 @@ pub extern "C" fn z_declare_keyexpr(
 /// The keyxpr is consumed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_keyexpr(session: &z_session_t, kexpr: &mut z_owned_keyexpr_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_keyexpr(
+    session: &z_session_t,
+    kexpr: &mut z_owned_keyexpr_t,
+) -> errors::z_error_t {
     let Some(kexpr) = kexpr.transmute_mut().take() else {
         log::debug!("Attempted to undeclare dropped keyexpr");
         return errors::Z_EINVAL;

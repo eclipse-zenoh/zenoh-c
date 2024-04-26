@@ -18,7 +18,8 @@ use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
 use crate::errors::z_error_t;
 use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{errors, z_owned_str_t, z_str_from_substring, z_str_null};
 
@@ -121,7 +122,11 @@ pub extern "C" fn z_config_clone(src: &z_config_t, dst: *mut MaybeUninit<z_owned
 /// Use `z_drop` to safely deallocate this string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get(config: &z_config_t, key: *const c_char, value_string: *mut MaybeUninit<z_owned_str_t>) -> errors::z_error_t {
+pub unsafe extern "C" fn zc_config_get(
+    config: &z_config_t,
+    key: *const c_char,
+    value_string: *mut MaybeUninit<z_owned_str_t>,
+) -> errors::z_error_t {
     let config = config.transmute_ref();
     let key = match CStr::from_ptr(key).to_str() {
         Ok(s) => s,
@@ -192,8 +197,7 @@ pub unsafe extern "C" fn zc_config_from_str(
         res = errors::Z_EINVAL;
     } else {
         let conf_str = CStr::from_ptr(s);
-        let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy())
-            .ok();
+        let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();
         if props.is_none() {
             res = errors::Z_EPARSE;
         }
@@ -205,17 +209,22 @@ pub unsafe extern "C" fn zc_config_from_str(
 /// Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_config_to_string(config: &z_config_t, config_string: *mut MaybeUninit<z_owned_str_t>) -> errors::z_error_t {
+pub unsafe extern "C" fn zc_config_to_string(
+    config: &z_config_t,
+    config_string: *mut MaybeUninit<z_owned_str_t>,
+) -> errors::z_error_t {
     let config: &Config = config.transmute_ref();
     match json5::to_string(config) {
         Ok(s) => {
-            unsafe { z_str_from_substring(config_string, s.as_ptr() as *const libc::c_char, s.len()) };
+            unsafe {
+                z_str_from_substring(config_string, s.as_ptr() as *const libc::c_char, s.len())
+            };
             errors::Z_OK
         }
         Err(_) => {
             z_str_null(config_string);
             errors::Z_EPARSE
-        },
+        }
     }
 }
 
@@ -251,10 +260,7 @@ pub unsafe extern "C" fn zc_config_from_file(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_peer(this: *mut MaybeUninit<z_owned_config_t>) {
-    Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(zenoh::config::peer()),
-    );
+    Inplace::init(this.transmute_uninit_ptr(), Some(zenoh::config::peer()));
 }
 
 /// Constructs a default, zenoh-allocated, client mode configuration.

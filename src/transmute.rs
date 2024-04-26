@@ -207,7 +207,7 @@ macro_rules! impl_transmute_handle {
     ($c_type:ty, $zenoh_type:ty) => {
         impl $crate::transmute::TransmuteFromHandle<$zenoh_type> for $c_type {
             fn transmute_ref(&self) -> &'static $zenoh_type {
-                unsafe { std::mem::transmute::<& $c_type, &'static $zenoh_type>(self) }
+                unsafe { std::mem::transmute::<&$c_type, &'static $zenoh_type>(self) }
             }
             fn transmute_mut(&mut self) -> &'static mut $zenoh_type {
                 unsafe { std::mem::transmute::<&mut $c_type, &'static mut $zenoh_type>(self) }

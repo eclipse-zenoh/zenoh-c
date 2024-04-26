@@ -15,20 +15,20 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::mem::MaybeUninit;
-use std::ptr::{null, null_mut};
+use std::ptr::null;
 use std::slice::from_raw_parts;
 
-use libc::{c_char, c_void, size_t, strlen};
-use zenoh::prelude::ZenohId;
+use libc::{c_char, c_void, strlen};
 
-use crate::{errors, transmute, z_owned_bytes_t};
+use crate::errors;
 use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, InplaceDefault, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 
 pub use crate::opaque_types::z_owned_slice_t;
-pub use crate::opaque_types::z_view_slice_t;
 pub use crate::opaque_types::z_slice_t;
+pub use crate::opaque_types::z_view_slice_t;
 
 decl_transmute_owned!(Option<Box<[u8]>>, z_owned_slice_t);
 decl_transmute_owned!(Option<&'static [u8]>, z_view_slice_t);
@@ -36,13 +36,13 @@ decl_transmute_handle!(&'static [u8], z_slice_t);
 
 /// Returns an empty `z_view_slice_t`
 #[no_mangle]
-pub unsafe extern "C" fn z_view_slice_empty(this: *mut MaybeUninit<z_view_slice_t>) {
+pub extern "C" fn z_view_slice_empty(this: *mut MaybeUninit<z_view_slice_t>) {
     let slice: &'static [u8] = &[];
     Inplace::init(this.transmute_uninit_ptr(), Some(slice))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn z_view_slice_null(this: *mut MaybeUninit<z_view_slice_t>) {
+pub extern "C" fn z_view_slice_null(this: *mut MaybeUninit<z_view_slice_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
@@ -51,7 +51,10 @@ pub unsafe extern "C" fn z_view_slice_null(this: *mut MaybeUninit<z_view_slice_t
 /// Calling this with `str == NULL` is equivalent to `z_view_slice_null`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_slice_from_str(this: *mut MaybeUninit<z_view_slice_t>, str: *const c_char) {
+pub unsafe extern "C" fn z_view_slice_from_str(
+    this: *mut MaybeUninit<z_view_slice_t>,
+    str: *const c_char,
+) {
     if str.is_null() {
         z_view_slice_null(this)
     } else {
@@ -62,13 +65,17 @@ pub unsafe extern "C" fn z_view_slice_from_str(this: *mut MaybeUninit<z_view_sli
 /// Constructs a `len` bytes long view starting at `start`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_slice_wrap(this: *mut MaybeUninit<z_view_slice_t>, start: *const u8, len: usize) {
+pub unsafe extern "C" fn z_view_slice_wrap(
+    this: *mut MaybeUninit<z_view_slice_t>,
+    start: *const u8,
+    len: usize,
+) {
     if len == 0 {
         z_view_slice_empty(this)
     } else if start.is_null() {
         z_view_slice_null(this)
     } else {
-        let slice: &'static [u8] = from_raw_parts(start, len).into();
+        let slice: &'static [u8] = from_raw_parts(start, len);
         Inplace::init(this.transmute_uninit_ptr(), Some(slice))
     }
 }
@@ -83,7 +90,7 @@ pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> *const z_slice_t {
 
 /// Returns an empty `z_owned_slice_t`
 #[no_mangle]
-pub unsafe extern "C" fn z_slice_empty(this: *mut MaybeUninit<z_owned_slice_t>) {
+pub extern "C" fn z_slice_empty(this: *mut MaybeUninit<z_owned_slice_t>) {
     let slice = Box::new([]);
     Inplace::init(this.transmute_uninit_ptr(), Some(slice))
 }
@@ -98,7 +105,10 @@ pub extern "C" fn z_slice_null(this: *mut MaybeUninit<z_owned_slice_t>) {
 /// Calling this with `str == NULL` is equivalent to `z_slice_null`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_from_str(this: *mut MaybeUninit<z_owned_slice_t>, str: *const c_char) {
+pub unsafe extern "C" fn z_slice_from_str(
+    this: *mut MaybeUninit<z_owned_slice_t>,
+    str: *const c_char,
+) {
     if str.is_null() {
         z_slice_null(this)
     } else {
@@ -109,7 +119,11 @@ pub unsafe extern "C" fn z_slice_from_str(this: *mut MaybeUninit<z_owned_slice_t
 /// Constructs a `len` bytes long view starting at `start`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_wrap(this: *mut MaybeUninit<z_owned_slice_t>, start: *const u8, len: usize) {
+pub unsafe extern "C" fn z_slice_wrap(
+    this: *mut MaybeUninit<z_owned_slice_t>,
+    start: *const u8,
+    len: usize,
+) {
     if len == 0 {
         z_slice_empty(this)
     } else if start.is_null() {
@@ -131,14 +145,14 @@ pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
 #[no_mangle]
 pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> *const z_slice_t {
     match this.transmute_ref() {
-        Some(s) => (&&*s.as_ref()) as *const &[u8] as *const z_slice_t,
+        Some(s) => (&s.as_ref()) as *const &[u8] as *const z_slice_t,
         None => null(),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn z_slice_clone(this: &z_slice_t, dst: *mut MaybeUninit<z_owned_slice_t>)  {
-    let slice =  this.transmute_ref().to_vec().into_boxed_slice();
+pub extern "C" fn z_slice_clone(this: &z_slice_t, dst: *mut MaybeUninit<z_owned_slice_t>) {
+    let slice = this.transmute_ref().to_vec().into_boxed_slice();
     Inplace::init(dst.transmute_uninit_ptr(), Some(slice));
 }
 
@@ -164,15 +178,13 @@ pub extern "C" fn z_slice_data(this: &z_slice_t) -> *const u8 {
     this.transmute_ref().as_ptr()
 }
 
-
 pub use crate::opaque_types::z_owned_str_t;
-pub use crate::opaque_types::z_view_str_t;
 pub use crate::opaque_types::z_str_t;
+pub use crate::opaque_types::z_view_str_t;
 
 decl_transmute_owned!(custom_inplace_init Option<Box<[u8]>>, z_owned_str_t);
 decl_transmute_owned!(custom_inplace_init Option<&'static [u8]>, z_view_str_t);
 decl_transmute_handle!(&'static [u8], z_str_t);
-
 
 /// Frees `z_owned_str_t`, invalidating it for double-drop safety.
 #[no_mangle]
@@ -200,11 +212,13 @@ pub extern "C" fn z_view_str_null(this: *mut MaybeUninit<z_view_str_t>) {
 }
 
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_empty(this: *mut MaybeUninit<z_owned_str_t>) {
     z_slice_wrap(this as *mut _, [0u8].as_ptr(), 1)
 }
 
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_str_empty(this: *mut MaybeUninit<z_view_str_t>) {
     z_view_slice_wrap(this as *mut _, [0u8].as_ptr(), 1)
 }
@@ -221,20 +235,28 @@ pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> *const z_str_t {
     z_view_slice_loan(this.transmute_ref().transmute_ref()) as _
 }
 
-
 /// Copies a string into `z_owned_str_t` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
 /// Calling this with `str == NULL` is equivalent to `z_str_null`.
 #[no_mangle]
-pub unsafe extern "C" fn z_str_wrap(this: *mut MaybeUninit<z_owned_slice_t>, str: *const libc::c_char) {
-   z_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_str_wrap(
+    this: *mut MaybeUninit<z_owned_slice_t>,
+    str: *const libc::c_char,
+) {
+    z_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
 }
 
 /// Copies a a substring of length `len`into `z_owned_str_t`.
 ///
 /// Calling this with `str == NULL` is equivalent to `z_str_null`.
 #[no_mangle]
-pub unsafe extern "C" fn z_str_from_substring(this: *mut MaybeUninit<z_owned_str_t>, str: *const libc::c_char, len: usize) {
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_str_from_substring(
+    this: *mut MaybeUninit<z_owned_str_t>,
+    str: *const libc::c_char,
+    len: usize,
+) {
     let mut v = vec![0u8; len + 1];
     v[0..len].copy_from_slice(from_raw_parts(str as *const u8, len));
     let b = v.into_boxed_slice();
@@ -245,8 +267,12 @@ pub unsafe extern "C" fn z_str_from_substring(this: *mut MaybeUninit<z_owned_str
 ///
 /// Calling this with `str == NULL` is equivalent to `z_view_str_null`.
 #[no_mangle]
-pub unsafe extern "C" fn z_view_str_wrap(this: *mut MaybeUninit<z_view_slice_t>, str: *const libc::c_char) {
-   z_view_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_view_str_wrap(
+    this: *mut MaybeUninit<z_view_slice_t>,
+    str: *const libc::c_char,
+) {
+    z_view_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
 }
 
 #[no_mangle]
@@ -255,8 +281,9 @@ pub extern "C" fn z_view_str_len(this: &z_str_t) -> usize {
 }
 
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_view_str_data(this: &z_str_t) -> *const libc::c_char {
-    z_slice_data(&this.transmute_ref().transmute_handle()) as _
+    z_slice_data(this.transmute_ref().transmute_handle()) as _
 }
 
 #[no_mangle]
@@ -358,14 +385,18 @@ pub extern "C" fn z_slice_map_iterate(
     for (key, value) in this {
         let key_slice = key.as_ref();
         let value_slice = value.as_ref();
-        if !body(key_slice.transmute_handle(), value_slice.transmute_handle(), context) {
+        if !body(
+            key_slice.transmute_handle(),
+            value_slice.transmute_handle(),
+            context,
+        ) {
             break;
         }
     }
 }
 
-/// Returns the value associated with `key`. 
-/// 
+/// Returns the value associated with `key`.
+///
 /// Will return NULL if the key is not present in the map.
 #[no_mangle]
 pub extern "C" fn z_slice_map_get(this: &z_slice_map_t, key: &z_slice_t) -> *const z_slice_t {
@@ -378,7 +409,7 @@ pub extern "C" fn z_slice_map_get(this: &z_slice_map_t, key: &z_slice_t) -> *con
 }
 
 /// Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
-/// 
+///
 /// Returns 1 if there was already an entry associated with the key, 0 otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_insert_by_copy(

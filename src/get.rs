@@ -71,7 +71,7 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_reply_t) -> *const z_sample_t {
 /// Returns null if reply does not contain a error  (i. e. if :c:func:`z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(reply: &z_reply_t) -> *const z_value_t{
+pub unsafe extern "C" fn z_reply_err(reply: &z_reply_t) -> *const z_value_t {
     let reply = reply.transmute_ref();
     match reply.result() {
         Ok(_) => null(),

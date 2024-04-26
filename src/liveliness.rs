@@ -54,8 +54,9 @@ pub struct zc_liveliness_declaration_options_t {
 }
 
 #[no_mangle]
-pub extern "C" fn zc_liveliness_declaration_options_default(this: &mut zc_liveliness_declaration_options_t)
-{
+pub extern "C" fn zc_liveliness_declaration_options_default(
+    this: &mut zc_liveliness_declaration_options_t,
+) {
     *this = zc_liveliness_declaration_options_t { _dummy: 0 };
 }
 
@@ -110,7 +111,9 @@ pub struct zc_liveliness_declare_subscriber_options_t {
 }
 
 #[no_mangle]
-pub extern "C" fn zc_liveliness_subscriber_options_default(this: &mut zc_liveliness_declare_subscriber_options_t) {
+pub extern "C" fn zc_liveliness_subscriber_options_default(
+    this: &mut zc_liveliness_declare_subscriber_options_t,
+) {
     *this = zc_liveliness_declare_subscriber_options_t { _dummy: 0 };
 }
 

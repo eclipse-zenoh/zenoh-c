@@ -222,7 +222,7 @@ pub unsafe extern "C" fn z_scouting_config_from(
     config: &z_config_t,
 ) {
     let mut dst = MaybeUninit::uninit();
-    z_config_clone(&config, &mut dst as *mut _);
+    z_config_clone(config, &mut dst as *mut _);
     let _config = dst.assume_init();
 
     let config = z_owned_scouting_config_t {

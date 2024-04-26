@@ -85,9 +85,7 @@ fn produce_opaque_types_data() -> PathBuf {
 }
 
 fn generate_opaque_types() {
-    let type_to_inner_field_name = HashMap::from([
-        ("z_id_t", "id"),
-    ]);
+    let type_to_inner_field_name = HashMap::from([("z_id_t", "id")]);
     let current_folder = get_build_rs_path();
     let path_in = produce_opaque_types_data();
     let path_out = current_folder.join("./src/opaque_types/mod.rs");

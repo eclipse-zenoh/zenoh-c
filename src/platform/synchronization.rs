@@ -11,7 +11,8 @@ pub use crate::opaque_types::z_owned_mutex_t;
 use crate::{
     errors,
     transmute::{
-        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
 };
 
@@ -145,7 +146,10 @@ pub extern "C" fn z_condvar_signal(this: &z_condvar_t) -> errors::z_error_t {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_wait(this: &z_condvar_t, m: &mut z_mutex_t) -> errors::z_error_t {
+pub unsafe extern "C" fn z_condvar_wait(
+    this: &z_condvar_t,
+    m: &mut z_mutex_t,
+) -> errors::z_error_t {
     let this = this.transmute_ref();
     let m = m.transmute_mut();
     if m.1.is_none() {

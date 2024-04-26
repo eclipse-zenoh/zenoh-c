@@ -141,10 +141,10 @@ pub extern "C" fn z_delete(
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    let mut del = session
-        .delete(key_expr);
+    let mut del = session.delete(key_expr);
     if let Some(options) = options {
-        del = del.congestion_control(options.congestion_control.into())
+        del = del
+            .congestion_control(options.congestion_control.into())
             .priority(options.priority.into());
     }
 

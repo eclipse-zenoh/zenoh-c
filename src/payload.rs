@@ -1,11 +1,13 @@
 use crate::errors::{self, z_error_t};
 use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{
-    z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, z_str_t, ZHashMap
+    z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, z_slice_map_t, z_slice_t, z_str_t,
+    ZHashMap,
 };
-use core::{fmt, slice};
+use core::fmt;
 use std::any::Any;
 use std::io::{Read, Seek, SeekFrom};
 use std::mem::MaybeUninit;
@@ -40,7 +42,7 @@ extern "C" fn z_bytes_check(payload: &z_owned_bytes_t) -> bool {
 
 /// Loans the payload, allowing you to call functions that only need a loan of it.
 #[no_mangle]
-extern "C" fn z_bytes_loan(payload: & z_owned_bytes_t) -> &z_bytes_t {
+extern "C" fn z_bytes_loan(payload: &z_owned_bytes_t) -> &z_bytes_t {
     let payload = payload.transmute_ref();
     let payload = unwrap_ref_unchecked(payload);
     payload.transmute_handle()
@@ -74,23 +76,18 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
     let len = z_bytes_len(payload);
     let payload = payload.transmute_ref();
     let mut out = vec![0u8; len + 1];
-    if let Err(e) = payload
-        .reader()
-        .read(out.as_mut_slice())
-    {
+    if let Err(e) = payload.reader().read(out.as_mut_slice()) {
         log::error!("Failed to read the payload: {}", e);
         Inplace::empty(dst.transmute_uninit_ptr());
         errors::Z_EIO
+    } else if let Err(e) = std::str::from_utf8(out.as_slice()) {
+        log::error!("Payload is not a valid utf-8 string: {}", e);
+        Inplace::empty(dst.transmute_uninit_ptr());
+        errors::Z_EPARSE
     } else {
-        if let Err(e) = std::str::from_utf8(out.as_slice()) {
-            log::error!("Payload is not a valid utf-8 string: {}", e);
-            Inplace::empty(dst.transmute_uninit_ptr());
-            errors::Z_EPARSE
-        } else {
-            let b = out.into_boxed_slice();
-            Inplace::init(dst.transmute_uninit_ptr(), Some(b));
-            errors::Z_OK
-        }
+        let b = out.into_boxed_slice();
+        Inplace::init(dst.transmute_uninit_ptr(), Some(b));
+        errors::Z_OK
     }
 }
 
@@ -125,7 +122,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_bytes(
             let b = v.into_boxed_slice();
             Inplace::init(dst.transmute_uninit_ptr(), Some(b));
             errors::Z_OK
-        },
+        }
         Err(e) => {
             log::error!("Failed to read the payload: {}", e);
             Inplace::empty(dst.transmute_uninit_ptr());
@@ -165,7 +162,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_bytes(
     bytes: &z_slice_t,
 ) {
     let this = this.transmute_uninit_ptr();
-    let payload = ZBytes::from(ZSlice::from(bytes.clone()));
+    let payload = ZBytes::from(ZSlice::from(*bytes));
     Inplace::init(this, Some(payload));
 }
 
@@ -192,7 +189,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_string(
     let s = s.transmute_ref();
     let ss = &s[0..s.len() - 1];
     let b = ss.transmute_handle();
-    z_bytes_encode_from_bytes(this, &b);
+    z_bytes_encode_from_bytes(this, b);
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;
@@ -243,7 +240,9 @@ extern "C" fn z_bytes_reader_loan(reader: &z_owned_bytes_reader_t) -> &z_bytes_r
 }
 
 #[no_mangle]
-extern "C" fn z_bytes_reader_loan_mut(reader: &mut z_owned_bytes_reader_t) -> &mut z_bytes_reader_t {
+extern "C" fn z_bytes_reader_loan_mut(
+    reader: &mut z_owned_bytes_reader_t,
+) -> &mut z_bytes_reader_t {
     let reader = reader.transmute_mut();
     let reader = unwrap_ref_unchecked_mut(reader);
     reader.transmute_handle_mut()

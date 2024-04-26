@@ -137,7 +137,6 @@ pub extern "C" fn z_sample_timestamp(
 /// The qos with which the sample was received.
 /// TODO: split to methods (priority, congestion_control, express)
 
-
 /// Gets sample's attachment.
 ///
 /// Returns NULL if sample does not contain an attachement.
@@ -148,7 +147,6 @@ pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> *const z_bytes_t {
         Some(attachment) => attachment.transmute_handle() as *const _,
         None => null(),
     }
-
 }
 
 pub use crate::opaque_types::zc_owned_sample_t;
@@ -162,7 +160,6 @@ pub extern "C" fn z_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owne
     let dst = dst.transmute_uninit_ptr();
     Inplace::init(dst, Some(src));
 }
-
 
 #[no_mangle]
 pub extern "C" fn z_sample_priority(sample: &z_sample_t) -> z_priority_t {
@@ -196,7 +193,7 @@ pub extern "C" fn z_sample_check(sample: &zc_owned_sample_t) -> bool {
 ///
 /// Calling this function using a dropped sample is undefined behaviour.
 #[no_mangle]
-pub extern "C" fn zc_sample_loan(sample: & zc_owned_sample_t) -> &z_sample_t {
+pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> &z_sample_t {
     unwrap_ref_unchecked(sample.transmute_ref()).transmute_handle()
 }
 

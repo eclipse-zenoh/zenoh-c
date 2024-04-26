@@ -38,7 +38,7 @@ decl_transmute_handle!(Session, z_session_t);
 /// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
-pub extern "C" fn z_session_loan(this: & z_owned_session_t) -> &z_session_t {
+pub extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_session_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     let this = this.as_ref();

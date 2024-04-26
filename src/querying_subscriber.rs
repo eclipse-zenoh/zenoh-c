@@ -83,7 +83,9 @@ pub struct ze_querying_subscriber_options_t {
 
 /// Constructs the default value for :c:type:`ze_querying_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_options_default(this: &mut ze_querying_subscriber_options_t) {
+pub extern "C" fn ze_querying_subscriber_options_default(
+    this: &mut ze_querying_subscriber_options_t,
+) {
     *this = ze_querying_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
         allowed_origin: zcu_locality_default(),
