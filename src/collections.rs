@@ -26,13 +26,13 @@ use crate::transmute::{
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 
+pub use crate::opaque_types::z_loaned_slice_t;
 pub use crate::opaque_types::z_owned_slice_t;
-pub use crate::opaque_types::z_slice_t;
 pub use crate::opaque_types::z_view_slice_t;
 
 decl_transmute_owned!(Option<Box<[u8]>>, z_owned_slice_t);
 decl_transmute_owned!(Option<&'static [u8]>, z_view_slice_t);
-decl_transmute_handle!(&'static [u8], z_slice_t);
+decl_transmute_handle!(&'static [u8], z_loaned_slice_t);
 
 /// Returns an empty `z_view_slice_t`
 #[no_mangle]
@@ -81,7 +81,7 @@ pub unsafe extern "C" fn z_view_slice_wrap(
 }
 
 #[no_mangle]
-pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> *const z_slice_t {
+pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> *const z_loaned_slice_t {
     match this.transmute_ref() {
         Some(s) => s.transmute_handle(),
         None => null(),
@@ -143,15 +143,15 @@ pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> *const z_slice_t {
+pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> *const z_loaned_slice_t {
     match this.transmute_ref() {
-        Some(s) => (&s.as_ref()) as *const &[u8] as *const z_slice_t,
+        Some(s) => (&s.as_ref()) as *const &[u8] as *const z_loaned_slice_t,
         None => null(),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_clone(this: &z_slice_t, dst: *mut MaybeUninit<z_owned_slice_t>) {
+pub extern "C" fn z_slice_clone(this: &z_loaned_slice_t, dst: *mut MaybeUninit<z_owned_slice_t>) {
     let slice = this.transmute_ref().to_vec().into_boxed_slice();
     Inplace::init(dst.transmute_uninit_ptr(), Some(slice));
 }
@@ -169,22 +169,22 @@ pub extern "C" fn z_view_slice_check(this: &z_view_slice_t) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_len(this: &z_slice_t) -> usize {
+pub extern "C" fn z_slice_len(this: &z_loaned_slice_t) -> usize {
     this.transmute_ref().len()
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_data(this: &z_slice_t) -> *const u8 {
+pub extern "C" fn z_slice_data(this: &z_loaned_slice_t) -> *const u8 {
     this.transmute_ref().as_ptr()
 }
 
+pub use crate::opaque_types::z_loaned_str_t;
 pub use crate::opaque_types::z_owned_str_t;
-pub use crate::opaque_types::z_str_t;
 pub use crate::opaque_types::z_view_str_t;
 
 decl_transmute_owned!(custom_inplace_init Option<Box<[u8]>>, z_owned_str_t);
 decl_transmute_owned!(custom_inplace_init Option<&'static [u8]>, z_view_str_t);
-decl_transmute_handle!(&'static [u8], z_str_t);
+decl_transmute_handle!(&'static [u8], z_loaned_str_t);
 
 /// Frees `z_owned_str_t`, invalidating it for double-drop safety.
 #[no_mangle]
@@ -223,15 +223,15 @@ pub unsafe extern "C" fn z_view_str_empty(this: *mut MaybeUninit<z_view_str_t>) 
     z_view_slice_wrap(this as *mut _, [0u8].as_ptr(), 1)
 }
 
-/// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
+/// Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_owned_str_t`.
 #[no_mangle]
-pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> *const z_str_t {
+pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> *const z_loaned_str_t {
     z_slice_loan(this.transmute_ref().transmute_ref()) as _
 }
 
-/// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_view_str_t`.
+/// Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_view_str_t`.
 #[no_mangle]
-pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> *const z_str_t {
+pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> *const z_loaned_str_t {
     z_view_slice_loan(this.transmute_ref().transmute_ref()) as _
 }
 
@@ -276,30 +276,30 @@ pub unsafe extern "C" fn z_view_str_wrap(
 }
 
 #[no_mangle]
-pub extern "C" fn z_view_str_len(this: &z_str_t) -> usize {
+pub extern "C" fn z_view_str_len(this: &z_loaned_str_t) -> usize {
     z_slice_len(this.transmute_ref().transmute_handle()) - 1
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_view_str_data(this: &z_str_t) -> *const libc::c_char {
+pub extern "C" fn z_view_str_data(this: &z_loaned_str_t) -> *const libc::c_char {
     z_slice_data(this.transmute_ref().transmute_handle()) as _
 }
 
 #[no_mangle]
-pub extern "C" fn z_str_clone(this: &z_str_t, dst: *mut MaybeUninit<z_owned_str_t>) {
+pub extern "C" fn z_str_clone(this: &z_loaned_str_t, dst: *mut MaybeUninit<z_owned_str_t>) {
     let slice = this.transmute_ref().to_vec().into_boxed_slice();
     Inplace::init(dst.transmute_uninit_ptr(), Some(slice));
 }
 
+pub use crate::opaque_types::z_loaned_slice_map_t;
 pub use crate::opaque_types::z_owned_slice_map_t;
-pub use crate::opaque_types::z_slice_map_t;
 
 pub type ZHashMap = HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>;
-pub use crate::opaque_types::z_config_t;
+pub use crate::opaque_types::z_loaned_config_t;
 decl_transmute_handle!(
     HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>,
-    z_slice_map_t
+    z_loaned_slice_map_t
 );
 
 pub use crate::opaque_types::z_owned_config_t;
@@ -340,14 +340,16 @@ pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_slice_map_t {
+pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loaned_slice_map_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
 }
 
 #[no_mangle]
-pub extern "C" fn z_slice_map_loan_mut(this: &mut z_owned_slice_map_t) -> &mut z_slice_map_t {
+pub extern "C" fn z_slice_map_loan_mut(
+    this: &mut z_owned_slice_map_t,
+) -> &mut z_loaned_slice_map_t {
     let this = this.transmute_mut();
     let this = unwrap_ref_unchecked_mut(this);
     this.transmute_handle_mut()
@@ -355,13 +357,13 @@ pub extern "C" fn z_slice_map_loan_mut(this: &mut z_owned_slice_map_t) -> &mut z
 
 /// Returns number of key-value pairs in the map.
 #[no_mangle]
-pub extern "C" fn z_slice_map_len(this: &z_slice_map_t) -> usize {
+pub extern "C" fn z_slice_map_len(this: &z_loaned_slice_map_t) -> usize {
     this.transmute_ref().len()
 }
 
 /// Returns true if the map is empty, false otherwise.
 #[no_mangle]
-pub extern "C" fn z_slice_map_is_empty(this: &z_slice_map_t) -> bool {
+pub extern "C" fn z_slice_map_is_empty(this: &z_loaned_slice_map_t) -> bool {
     z_slice_map_len(this) == 0
 }
 
@@ -373,11 +375,11 @@ pub extern "C" fn z_slice_map_is_empty(this: &z_slice_map_t) -> bool {
 /// Returning `true` is treated as `continue`.
 #[allow(non_camel_case_types)]
 pub type z_slice_map_iter_body_t =
-    extern "C" fn(key: &z_slice_t, value: &z_slice_t, context: *mut c_void) -> bool;
+    extern "C" fn(key: &z_loaned_slice_t, value: &z_loaned_slice_t, context: *mut c_void) -> bool;
 
 #[no_mangle]
 pub extern "C" fn z_slice_map_iterate(
-    this: &z_slice_map_t,
+    this: &z_loaned_slice_map_t,
     body: z_slice_map_iter_body_t,
     context: *mut c_void,
 ) {
@@ -399,7 +401,10 @@ pub extern "C" fn z_slice_map_iterate(
 ///
 /// Will return NULL if the key is not present in the map.
 #[no_mangle]
-pub extern "C" fn z_slice_map_get(this: &z_slice_map_t, key: &z_slice_t) -> *const z_slice_t {
+pub extern "C" fn z_slice_map_get(
+    this: &z_loaned_slice_map_t,
+    key: &z_loaned_slice_t,
+) -> *const z_loaned_slice_t {
     let m = this.transmute_ref();
     let key = *key.transmute_ref();
     let k = Cow::Borrowed(key);
@@ -413,9 +418,9 @@ pub extern "C" fn z_slice_map_get(this: &z_slice_map_t, key: &z_slice_t) -> *con
 /// Returns 1 if there was already an entry associated with the key, 0 otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_insert_by_copy(
-    this: &mut z_slice_map_t,
-    key: &z_slice_t,
-    value: &z_slice_t,
+    this: &mut z_loaned_slice_map_t,
+    key: &z_loaned_slice_t,
+    value: &z_loaned_slice_t,
 ) -> u8 {
     let this = this.transmute_mut();
     let key = *key.transmute_ref();
@@ -433,9 +438,9 @@ pub extern "C" fn z_slice_map_insert_by_copy(
 /// Returns 1 if there was already an entry associated with the key, 0 otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_insert_by_alias(
-    this: &mut z_slice_map_t,
-    key: &z_slice_t,
-    value: &z_slice_t,
+    this: &mut z_loaned_slice_map_t,
+    key: &z_loaned_slice_t,
+    value: &z_loaned_slice_t,
 ) -> errors::z_error_t {
     let this = this.transmute_mut();
     let key = key.transmute_ref();

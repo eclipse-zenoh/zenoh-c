@@ -24,9 +24,9 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
-use crate::z_bytes_t;
 use crate::z_id_t;
-use crate::z_keyexpr_t;
+use crate::z_loaned_bytes_t;
+use crate::z_loaned_keyexpr_t;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::encoding::Encoding;
@@ -87,34 +87,34 @@ pub extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t {
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
-use crate::opaque_types::z_sample_t;
-decl_transmute_handle!(Sample, z_sample_t);
+use crate::opaque_types::z_loaned_sample_t;
+decl_transmute_handle!(Sample, z_loaned_sample_t);
 
 /// The Key Expression of the sample.
 ///
 /// `sample` is aliased by its return value.
 #[no_mangle]
-pub extern "C" fn z_sample_keyexpr(sample: &z_sample_t) -> &z_keyexpr_t {
+pub extern "C" fn z_sample_keyexpr(sample: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
     let sample = sample.transmute_ref();
     sample.key_expr().transmute_handle()
 }
 /// The encoding of the payload.
 #[no_mangle]
-pub extern "C" fn z_sample_encoding(sample: &z_sample_t) -> &z_encoding_t {
+pub extern "C" fn z_sample_encoding(sample: &z_loaned_sample_t) -> &z_loaned_encoding_t {
     let sample = sample.transmute_ref();
     sample.encoding().transmute_handle()
 }
 /// The sample's data, the return value aliases the sample.
 ///
 #[no_mangle]
-pub extern "C" fn z_sample_payload(sample: &z_sample_t) -> &z_bytes_t {
+pub extern "C" fn z_sample_payload(sample: &z_loaned_sample_t) -> &z_loaned_bytes_t {
     let sample = sample.transmute_ref();
     sample.payload().transmute_handle()
 }
 
 /// The sample's kind (put or delete).
 #[no_mangle]
-pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
+pub extern "C" fn z_sample_kind(sample: &z_loaned_sample_t) -> z_sample_kind_t {
     let sample = sample.transmute_ref();
     sample.kind().into()
 }
@@ -122,8 +122,8 @@ pub extern "C" fn z_sample_kind(sample: &z_sample_t) -> z_sample_kind_t {
 ///
 /// Returns true if Sample contains timestamp, false otherwise. In the latter case the timestamp_out value is not altered.
 #[no_mangle]
-pub extern "C" fn z_sample_timestamp(
-    sample: &z_sample_t,
+pub extern "C" fn z_loaned_sample_timestamp(
+    sample: &z_loaned_sample_t,
     timestamp_out: &mut z_timestamp_t,
 ) -> bool {
     let sample = sample.transmute_ref();
@@ -141,7 +141,7 @@ pub extern "C" fn z_sample_timestamp(
 ///
 /// Returns NULL if sample does not contain an attachement.
 #[no_mangle]
-pub extern "C" fn z_sample_attachment(sample: &z_sample_t) -> *const z_bytes_t {
+pub extern "C" fn z_sample_attachment(sample: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
     let sample = sample.transmute_ref();
     match sample.attachment() {
         Some(attachment) => attachment.transmute_handle() as *const _,
@@ -154,7 +154,10 @@ decl_transmute_owned!(Option<Sample>, zc_owned_sample_t);
 
 /// Clone a sample in the cheapest way available.
 #[no_mangle]
-pub extern "C" fn z_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owned_sample_t>) {
+pub extern "C" fn z_sample_clone(
+    src: &z_loaned_sample_t,
+    dst: *mut MaybeUninit<zc_owned_sample_t>,
+) {
     let src = src.transmute_ref();
     let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
@@ -162,19 +165,21 @@ pub extern "C" fn z_sample_clone(src: &z_sample_t, dst: *mut MaybeUninit<zc_owne
 }
 
 #[no_mangle]
-pub extern "C" fn z_sample_priority(sample: &z_sample_t) -> z_priority_t {
+pub extern "C" fn z_sample_priority(sample: &z_loaned_sample_t) -> z_priority_t {
     let sample = sample.transmute_ref();
     sample.priority().into()
 }
 
 #[no_mangle]
-pub extern "C" fn z_sample_express(sample: &z_sample_t) -> bool {
+pub extern "C" fn z_sample_express(sample: &z_loaned_sample_t) -> bool {
     let sample = sample.transmute_ref();
     sample.express()
 }
 
 #[no_mangle]
-pub extern "C" fn z_sample_congestion_control(sample: &z_sample_t) -> z_congestion_control_t {
+pub extern "C" fn z_sample_congestion_control(
+    sample: &z_loaned_sample_t,
+) -> z_congestion_control_t {
     let sample = sample.transmute_ref();
     sample.congestion_control().into()
 }
@@ -193,7 +198,7 @@ pub extern "C" fn z_sample_check(sample: &zc_owned_sample_t) -> bool {
 ///
 /// Calling this function using a dropped sample is undefined behaviour.
 #[no_mangle]
-pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> &z_sample_t {
+pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> &z_loaned_sample_t {
     unwrap_ref_unchecked(sample.transmute_ref()).transmute_handle()
 }
 
@@ -208,8 +213,8 @@ pub extern "C" fn zc_sample_null(sample: *mut MaybeUninit<zc_owned_sample_t>) {
     Inplace::empty(sample.transmute_uninit_ptr());
 }
 
-pub use crate::opaque_types::z_encoding_t;
-decl_transmute_handle!(Encoding, z_encoding_t);
+pub use crate::opaque_types::z_loaned_encoding_t;
+decl_transmute_handle!(Encoding, z_loaned_encoding_t);
 
 /// An owned payload encoding.
 ///
@@ -227,7 +232,7 @@ pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>
     Inplace::empty(encoding.transmute_uninit_ptr());
 }
 
-/// Constructs a specific :c:type:`z_encoding_t`.
+/// Constructs a specific :c:type:`z_loaned_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_str(
@@ -246,10 +251,10 @@ pub unsafe extern "C" fn z_encoding_from_str(
     }
 }
 
-/// Constructs a default :c:type:`z_encoding_t`.
+/// Constructs a default :c:type:`z_loaned_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_default() -> &'static z_encoding_t {
+pub extern "C" fn z_encoding_default() -> &'static z_loaned_encoding_t {
     Encoding::ZENOH_BYTES.transmute_handle()
 }
 
@@ -267,17 +272,17 @@ pub extern "C" fn z_encoding_check(encoding: &'static z_owned_encoding_t) -> boo
     *encoding.transmute_ref() != Encoding::default()
 }
 
-/// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
+/// Returns a :c:type:`z_loaned_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> &z_encoding_t {
+pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> &z_loaned_encoding_t {
     encoding.transmute_ref().transmute_handle()
 }
 
 pub use crate::opaque_types::z_owned_value_t;
 decl_transmute_owned!(Value, z_owned_value_t);
-pub use crate::opaque_types::z_value_t;
-decl_transmute_handle!(Value, z_value_t);
+pub use crate::opaque_types::z_loaned_value_t;
+decl_transmute_handle!(Value, z_loaned_value_t);
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -350,37 +355,37 @@ pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum z_query_target_t {
+pub enum z_loaned_query_target_t {
     BEST_MATCHING,
     ALL,
     ALL_COMPLETE,
 }
 
-impl From<QueryTarget> for z_query_target_t {
+impl From<QueryTarget> for z_loaned_query_target_t {
     #[inline]
     fn from(t: QueryTarget) -> Self {
         match t {
-            QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
-            QueryTarget::All => z_query_target_t::ALL,
-            QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
+            QueryTarget::BestMatching => z_loaned_query_target_t::BEST_MATCHING,
+            QueryTarget::All => z_loaned_query_target_t::ALL,
+            QueryTarget::AllComplete => z_loaned_query_target_t::ALL_COMPLETE,
         }
     }
 }
 
-impl From<z_query_target_t> for QueryTarget {
+impl From<z_loaned_query_target_t> for QueryTarget {
     #[inline]
-    fn from(val: z_query_target_t) -> Self {
+    fn from(val: z_loaned_query_target_t) -> Self {
         match val {
-            z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
-            z_query_target_t::ALL => QueryTarget::All,
-            z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
+            z_loaned_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
+            z_loaned_query_target_t::ALL => QueryTarget::All,
+            z_loaned_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
         }
     }
 }
 
-/// Create a default :c:type:`z_query_target_t`.
+/// Create a default :c:type:`z_loaned_query_target_t`.
 #[no_mangle]
-pub extern "C" fn z_query_target_default() -> z_query_target_t {
+pub extern "C" fn z_loaned_query_target_default() -> z_loaned_query_target_t {
     QueryTarget::default().into()
 }
 

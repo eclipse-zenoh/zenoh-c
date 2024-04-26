@@ -26,19 +26,19 @@ use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
 
 /// A loaned zenoh session.
-use crate::opaque_types::z_session_t;
-decl_transmute_handle!(Session, z_session_t);
+use crate::opaque_types::z_loaned_session_t;
+decl_transmute_handle!(Session, z_loaned_session_t);
 
-/// Returns a :c:type:`z_session_t` loaned from `s`.
+/// Returns a :c:type:`z_loaned_session_t` loaned from `s`.
 ///
 /// This handle doesn't increase the refcount of the session, but does allow to do so with `zc_session_rcinc`.
 ///
 /// # Safety
-/// The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
+/// The returned `z_loaned_session_t` aliases `z_owned_session_t`'s internal allocation,
 /// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
 /// have been destroyed is UB (likely SEGFAULT)
 #[no_mangle]
-pub extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_session_t {
+pub extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_loaned_session_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     let this = this.as_ref();

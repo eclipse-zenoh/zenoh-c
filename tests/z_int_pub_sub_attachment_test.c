@@ -65,9 +65,9 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(const z_sample_t *sample, void *arg) {
+void data_handler(const z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(sample));
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(sample));
     if (strcmp(keyexpr, z_loan(keystr))) {
         perror("Unexpected key received");
         exit(-1);
@@ -83,10 +83,10 @@ void data_handler(const z_sample_t *sample, void *arg) {
     }
     z_drop(z_move(payload_value));
 
-    z_slice_t v_const = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_CONST));
+    z_loaned_slice_t v_const = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_CONST));
     ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
-    z_slice_t v_var = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_VAR));
+    z_loaned_slice_t v_var = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_VAR));
     ASSERT_STR_BYTES_EQUAL(values[val_num], v_var);
 
     if (++val_num == values_count) {

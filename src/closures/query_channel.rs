@@ -1,6 +1,6 @@
 use crate::{
-    z_closure_query_drop, z_owned_closure_query_t, z_owned_query_t, z_query_clone, z_query_null,
-    z_query_t,
+    z_closure_query_drop, z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
+    z_query_clone, z_query_null,
 };
 use libc::c_void;
 use std::{
@@ -50,7 +50,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver
     if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
         (
-            From::from(move |query: &z_query_t| {
+            From::from(move |query: &z_loaned_query_t| {
                 let mut this = MaybeUninit::<z_owned_query_t>::uninit();
                 z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
                 let this = this.assume_init();
@@ -63,7 +63,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver
     } else {
         let (tx, rx) = std::sync::mpsc::sync_channel(bound);
         (
-            From::from(move |query: &z_query_t| {
+            From::from(move |query: &z_loaned_query_t| {
                 let mut this = MaybeUninit::<z_owned_query_t>::uninit();
                 z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
                 let this = this.assume_init();

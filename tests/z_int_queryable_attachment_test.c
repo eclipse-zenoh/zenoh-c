@@ -29,19 +29,19 @@ const char *const K_VAR = "k_var";
 const char *const K_CONST = "k_const";
 const char *const V_CONST = "v const";
 
-void query_handler(const z_query_t *query, void *context) {
+void query_handler(const z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
-    z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(query));
-    z_slice_t pred = z_query_parameters(query);
-    z_value_t payload_value = z_query_value(query);
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_query_keyexpr(query));
+    z_loaned_slice_t pred = z_query_parameters(query);
+    z_loaned_value_t payload_value = z_query_value(query);
 
-   z_bytes_t attachment = z_query_attachment(query);
+   z_loaned_bytes_t attachment = z_query_attachment(query);
 
-    z_slice_t v_const = z_attachment_get(attachment, z_slice_from_str(K_CONST));
+    z_loaned_slice_t v_const = z_attachment_get(attachment, z_slice_from_str(K_CONST));
     ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
-    z_slice_t v_var = z_attachment_get(attachment, z_slice_from_str(K_VAR));
+    z_loaned_slice_t v_var = z_attachment_get(attachment, z_slice_from_str(K_VAR));
     ASSERT_STR_BYTES_EQUAL(values[value_num], v_var);
 
     z_owned_bytes_map_t map = z_slice_map_new();
@@ -108,8 +108,8 @@ int run_get() {
         for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
             assert(z_reply_is_ok(&reply));
 
-            z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_loaned_sample_t sample = z_reply_ok(&reply);
+            z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(&sample));
             z_owned_str_t payload_value = z_str_null();
             z_bytes_decode_into_string(z_sample_payload(&sample), &payload_value);
             if (strcmp(values[val_num], z_loan(payload_value))) {
@@ -118,7 +118,7 @@ int run_get() {
                 exit(-1);
             }
 
-            z_slice_t v_const = z_attachment_get(z_sample_attachment(&sample), z_slice_from_str(K_CONST));
+            z_loaned_slice_t v_const = z_attachment_get(z_sample_attachment(&sample), z_slice_from_str(K_CONST));
             ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
             z_drop(z_move(keystr));

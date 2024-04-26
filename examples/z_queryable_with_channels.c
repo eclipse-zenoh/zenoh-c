@@ -18,9 +18,9 @@
 
 const char *expr = "demo/example/zenoh-c-queryable";
 const char *value = "Queryable from C!";
-z_keyexpr_t keyexpr;
+z_loaned_keyexpr_t keyexpr;
 
-void query_handler(const z_query_t *query, void *context) {
+void query_handler(const z_loaned_query_t *query, void *context) {
     z_owned_closure_owned_query_t *channel = (z_owned_closure_owned_query_t *)context;
     z_owned_query_t oquery = z_query_clone(query);
     z_call(*channel, &oquery);
@@ -65,10 +65,10 @@ int main(int argc, char **argv) {
     printf("^C to quit...\n");
     z_owned_query_t oquery = z_query_null();
     for (z_call(channel.recv, &oquery); z_check(oquery); z_call(channel.recv, &oquery)) {
-        z_query_t query = z_loan(oquery);
-        z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(&query));
-        z_slice_t pred = z_query_parameters(&query);
-        z_bytes_t payload = z_query_value(&query).payload;
+        z_loaned_query_t query = z_loan(oquery);
+        z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_query_keyexpr(&query));
+        z_loaned_slice_t pred = z_query_parameters(&query);
+        z_loaned_bytes_t payload = z_query_value(&query).payload;
         if (z_bytes_len(payload) > 0) {
             z_owned_str_t payload_value = z_str_null();
             z_bytes_decode_into_string(payload, &payload_value);

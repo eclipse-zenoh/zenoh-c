@@ -16,8 +16,9 @@ use crate::transmute::{
     TransmuteUninitPtr,
 };
 use crate::{
-    errors, z_bytes_t, z_closure_query_call, z_keyexpr_t, z_owned_bytes_t, z_owned_closure_query_t,
-    z_owned_encoding_t, z_session_t, z_value_t, z_view_slice_t, z_view_slice_wrap,
+    errors, z_closure_query_call, z_loaned_bytes_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t, z_view_slice_t,
+    z_view_slice_wrap,
 };
 use std::mem::MaybeUninit;
 use std::ptr::{null, null_mut};
@@ -36,8 +37,8 @@ pub extern "C" fn z_queryable_null(this: *mut MaybeUninit<z_owned_queryable_t>) 
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
-pub use crate::opaque_types::z_query_t;
-decl_transmute_handle!(Query, z_query_t);
+pub use crate::opaque_types::z_loaned_query_t;
+decl_transmute_handle!(Query, z_loaned_query_t);
 
 /// Owned variant of a Query received by a Queryable.
 ///
@@ -66,7 +67,7 @@ pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_query_t {
+pub extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loaned_query_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
@@ -82,7 +83,7 @@ pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
-pub extern "C" fn z_query_clone(this: &z_query_t, dst: *mut MaybeUninit<z_owned_query_t>) {
+pub extern "C" fn z_query_clone(this: &z_loaned_query_t, dst: *mut MaybeUninit<z_owned_query_t>) {
     let this = this.transmute_ref();
     let this = this.clone();
     let dst = dst.transmute_uninit_ptr();
@@ -142,8 +143,8 @@ pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
     this: *mut MaybeUninit<z_owned_queryable_t>,
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> errors::z_error_t {
@@ -210,8 +211,8 @@ pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply(
-    query: z_query_t,
-    key_expr: z_keyexpr_t,
+    query: z_loaned_query_t,
+    key_expr: z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_options_t>,
 ) -> errors::z_error_t {
@@ -248,7 +249,7 @@ pub unsafe extern "C" fn z_query_reply(
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> &z_keyexpr_t {
+pub extern "C" fn z_query_keyexpr(query: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
     query.transmute_ref().key_expr().transmute_handle()
 }
 
@@ -256,7 +257,7 @@ pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> &z_keyexpr_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_parameters(
-    query: &z_query_t,
+    query: &z_loaned_query_t,
     parameters: *mut MaybeUninit<z_view_slice_t>,
 ) {
     let query = query.transmute_ref();
@@ -266,7 +267,7 @@ pub unsafe extern "C" fn z_query_parameters(
 
 /// Checks if query contains a payload value.
 #[no_mangle]
-pub extern "C" fn z_query_has_value(query: &z_query_t) -> bool {
+pub extern "C" fn z_query_has_value(query: &z_loaned_query_t) -> bool {
     query.transmute_ref().value().is_some()
 }
 
@@ -275,7 +276,7 @@ pub extern "C" fn z_query_has_value(query: &z_query_t) -> bool {
 /// **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
 /// Before calling this funciton, the user must ensure that `z_query_has_value` returns true.
 #[no_mangle]
-pub extern "C" fn z_query_value(query: &z_query_t) -> &z_value_t {
+pub extern "C" fn z_query_value(query: &z_loaned_query_t) -> &z_loaned_value_t {
     query
         .transmute_ref()
         .value()
@@ -287,7 +288,7 @@ pub extern "C" fn z_query_value(query: &z_query_t) -> &z_value_t {
 ///
 /// Returns NULL if query does not contain an attachment.
 #[no_mangle]
-pub extern "C" fn z_query_attachment(query: &z_query_t) -> *const z_bytes_t {
+pub extern "C" fn z_query_attachment(query: &z_loaned_query_t) -> *const z_loaned_bytes_t {
     match query.transmute_ref().attachment() {
         Some(attachment) => attachment.transmute_handle() as *const _,
         None => null(),

@@ -12,7 +12,7 @@ use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{errors, z_closure_zid_call, z_owned_closure_zid_t, z_session_t};
+use crate::{errors, z_closure_zid_call, z_loaned_session_t, z_owned_closure_zid_t};
 use std::mem::MaybeUninit;
 use zenoh::config::ZenohId;
 use zenoh::prelude::sync::SyncResolve;
@@ -34,7 +34,7 @@ impl From<[u8; 16]> for z_id_t {
 /// to pass it a valid session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
+pub unsafe extern "C" fn z_info_zid(session: z_loaned_session_t) -> z_id_t {
     let session = session.transmute_ref();
     session.info().zid().res_sync().transmute_copy()
 }
@@ -48,7 +48,7 @@ pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_peers_zid(
-    session: z_session_t,
+    session: z_loaned_session_t,
     callback: &mut z_owned_closure_zid_t,
 ) -> errors::z_error_t {
     let mut closure = z_owned_closure_zid_t::empty();
@@ -69,7 +69,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_routers_zid(
-    session: z_session_t,
+    session: z_loaned_session_t,
     callback: &mut z_owned_closure_zid_t,
 ) -> errors::z_error_t {
     let mut closure = z_owned_closure_zid_t::empty();

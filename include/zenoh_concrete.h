@@ -36,12 +36,12 @@
 typedef struct ALIGN(8) z_owned_session_t {
   uint8_t _0[8];
 } z_owned_session_t;
-typedef struct ALIGN(8) z_query_t {
+typedef struct ALIGN(8) z_loaned_query_t {
   uint8_t _0[16];
-} z_query_t;
-typedef struct ALIGN(8) z_session_t {
+} z_loaned_query_t;
+typedef struct ALIGN(8) z_loaned_session_t {
   uint8_t _0[40];
-} z_session_t;
+} z_loaned_session_t;
 /**
  * An owned zenoh queryable.
  *

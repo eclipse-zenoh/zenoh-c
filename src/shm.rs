@@ -23,7 +23,7 @@ use zenoh::{
     shm::{SharedMemoryBuf, SharedMemoryManager},
 };
 
-use crate::{z_session_t, z_owned_bytes_t, z_bytes_null};
+use crate::{z_loaned_session_t, z_owned_bytes_t, z_bytes_null};
 
 #[repr(C)]
 pub struct zc_owned_shm_manager_t(usize);
@@ -51,7 +51,7 @@ impl zc_owned_shm_manager_t {
 
 #[no_mangle]
 pub extern "C" fn zc_shm_manager_new(
-    session: z_session_t,
+    session: z_loaned_session_t,
     id: *const c_char,
     size: usize,
 ) -> zc_owned_shm_manager_t {

@@ -24,7 +24,7 @@
 void test_reader() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     uint8_t data_out[10] = {0};
-    z_slice_t bytes = {.start = data, .len = 10 };
+    z_loaned_slice_t bytes = {.start = data, .len = 10 };
 
     z_owned_bytes_t payload = z_bytes_encode_from_bytes(bytes);
     z_bytes_reader reader;

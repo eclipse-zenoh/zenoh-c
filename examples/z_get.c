@@ -68,8 +68,8 @@ int main(int argc, char **argv) {
     z_owned_str_t reply_str;
     for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {
-            z_sample_t sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t key_str = z_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_loaned_sample_t sample = z_reply_ok(z_loan(reply));
+            z_owned_str_t key_str = z_loaned_keyexpr_to_string(z_sample_keyexpr(&sample));
             z_bytes_decode_into_string(z_sample_payload(&sample), &reply_str);
             printf(">> Received ('%s': '%s')\n", z_loan(key_str), z_loan(reply_str));
             z_drop(z_move(reply_str));

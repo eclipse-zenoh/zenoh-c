@@ -85,9 +85,9 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(const z_sample_t *sample, void *arg) {
+void data_handler(const z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(sample));
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(sample));
     if (strcmp(keyexpr, z_loan(keystr))) {
         perror("Unexpected key received");
         exit(-1);

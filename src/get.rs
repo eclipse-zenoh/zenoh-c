@@ -30,25 +30,27 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_consolidation_mode_t;
+use crate::z_loaned_query_target_t;
+use crate::z_loaned_sample_t;
+use crate::z_loaned_value_t;
 use crate::z_owned_bytes_t;
 use crate::z_owned_encoding_t;
-use crate::z_query_target_t;
-use crate::z_sample_t;
-use crate::z_value_t;
-use crate::{z_closure_reply_call, z_keyexpr_t, z_owned_closure_reply_t, z_session_t};
+use crate::{
+    z_closure_reply_call, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t,
+};
 use zenoh::prelude::SyncResolve;
 
 pub use crate::opaque_types::z_owned_reply_t;
 decl_transmute_owned!(Option<Reply>, z_owned_reply_t);
-pub use crate::opaque_types::z_reply_t;
-decl_transmute_handle!(Reply, z_reply_t);
+pub use crate::opaque_types::z_loaned_reply_t;
+decl_transmute_handle!(Reply, z_loaned_reply_t);
 
 /// Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
 ///
 /// If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_is_ok(reply: &z_reply_t) -> bool {
+pub unsafe extern "C" fn z_reply_is_ok(reply: &z_loaned_reply_t) -> bool {
     let reply = reply.transmute_ref();
     reply.result().is_ok()
 }
@@ -58,7 +60,7 @@ pub unsafe extern "C" fn z_reply_is_ok(reply: &z_reply_t) -> bool {
 /// Returns null if reply does not contains a sample (i. e. if :c:func:`z_reply_is_ok` returns ``false``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok(reply: &z_reply_t) -> *const z_sample_t {
+pub unsafe extern "C" fn z_reply_ok(reply: &z_loaned_reply_t) -> *const z_loaned_sample_t {
     let reply = reply.transmute_ref();
     match reply.result() {
         Ok(sample) => sample.transmute_handle(),
@@ -71,7 +73,7 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_reply_t) -> *const z_sample_t {
 /// Returns null if reply does not contain a error  (i. e. if :c:func:`z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(reply: &z_reply_t) -> *const z_value_t {
+pub unsafe extern "C" fn z_reply_err(reply: &z_loaned_reply_t) -> *const z_loaned_value_t {
     let reply = reply.transmute_ref();
     match reply.result() {
         Ok(_) => null(),
@@ -92,7 +94,7 @@ pub extern "C" fn z_reply_null(this: *mut MaybeUninit<z_owned_reply_t>) {
 }
 
 #[no_mangle]
-pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: &z_reply_t) {
+pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: &z_loaned_reply_t) {
     Inplace::init(
         this.transmute_uninit_ptr(),
         Some(reply.transmute_ref().clone()),
@@ -102,14 +104,14 @@ pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: 
 /// Options passed to the :c:func:`z_get` function.
 ///
 /// Members:
-///     z_query_target_t target: The Queryables that should be target of the query.
+///     z_loaned_query_target_t target: The Queryables that should be target of the query.
 ///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
-///     z_value_t value: An optional value to attach to the query.
-///    z_bytes_t attachment: The attachment to attach to the query.
+///     z_loaned_value_t value: An optional value to attach to the query.
+///    z_loaned_bytes_t attachment: The attachment to attach to the query.
 ///     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
 #[repr(C)]
 pub struct z_get_options_t {
-    pub target: z_query_target_t,
+    pub target: z_loaned_query_target_t,
     pub consolidation: z_query_consolidation_t,
     pub payload: *mut z_owned_bytes_t,
     pub encoding: *mut z_owned_encoding_t,
@@ -145,8 +147,8 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_get(
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut z_get_options_t>,
@@ -206,7 +208,7 @@ pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn z_reply_loan(this: &mut z_owned_reply_t) -> &z_reply_t {
+pub extern "C" fn z_reply_loan(this: &mut z_owned_reply_t) -> &z_loaned_reply_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()

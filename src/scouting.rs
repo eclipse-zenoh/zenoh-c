@@ -15,8 +15,8 @@ use crate::{
     errors::{self, Z_OK},
     transmute::{Inplace, TransmuteRef},
     z_closure_hello_call, z_config_check, z_config_clone, z_config_default, z_config_drop,
-    z_config_null, z_config_t, z_id_t, z_owned_closure_hello_t, z_owned_config_t, zc_init_logger,
-    CopyableToCArray,
+    z_config_null, z_id_t, z_loaned_config_t, z_owned_closure_hello_t, z_owned_config_t,
+    zc_init_logger, CopyableToCArray,
 };
 use async_std::task;
 use libc::{c_char, c_uint, c_ulong, size_t};
@@ -219,7 +219,7 @@ pub unsafe extern "C" fn z_scouting_config_default(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_scouting_config_from(
     this: *mut MaybeUninit<z_owned_scouting_config_t>,
-    config: &z_config_t,
+    config: &z_loaned_config_t,
 ) {
     let mut dst = MaybeUninit::uninit();
     z_config_clone(config, &mut dst as *mut _);

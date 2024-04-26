@@ -22,13 +22,13 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
-use crate::z_keyexpr_t;
+use crate::z_loaned_keyexpr_t;
 use crate::z_owned_closure_sample_t;
 use crate::z_reliability_t;
 use crate::{
-    z_closure_sample_call, z_get_options_t, z_query_consolidation_none, z_query_consolidation_t,
-    z_query_target_default, z_query_target_t, z_session_t, zcu_locality_default, zcu_locality_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
+    z_closure_sample_call, z_get_options_t, z_loaned_query_target_default, z_loaned_query_target_t,
+    z_loaned_session_t, z_query_consolidation_none, z_query_consolidation_t, zcu_locality_default,
+    zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
@@ -36,15 +36,15 @@ use zenoh::session::Session;
 use zenoh::subscriber::Reliability;
 use zenoh_ext::*;
 
+use crate::opaque_types::ze_loaned_querying_subscriber_t;
 use crate::opaque_types::ze_owned_querying_subscriber_t;
-use crate::opaque_types::ze_querying_subscriber_t;
 decl_transmute_owned!(
     Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
     ze_owned_querying_subscriber_t
 );
 decl_transmute_handle!(
     (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
-    ze_querying_subscriber_t
+    ze_loaned_querying_subscriber_t
 );
 
 /// Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
@@ -64,8 +64,8 @@ pub extern "C" fn ze_querying_subscriber_null(
 ///   z_reliability_t reliability: The subscription reliability.
 ///   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
 ///                                  receive by this subscriber.
-///   z_keyexpr_t query_selector: The selector to be used for queries.
-///   z_query_target_t query_target: The target to be used for queries.
+///   z_loaned_keyexpr_t query_selector: The selector to be used for queries.
+///   z_loaned_query_target_t query_target: The target to be used for queries.
 ///   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
 ///   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
 ///   uint64_t query_timeout_ms: The timeout to be used for queries.
@@ -74,8 +74,8 @@ pub extern "C" fn ze_querying_subscriber_null(
 pub struct ze_querying_subscriber_options_t {
     reliability: z_reliability_t,
     allowed_origin: zcu_locality_t,
-    query_selector: *const z_keyexpr_t,
-    query_target: z_query_target_t,
+    query_selector: *const z_loaned_keyexpr_t,
+    query_target: z_loaned_query_target_t,
     query_consolidation: z_query_consolidation_t,
     query_accept_replies: zcu_reply_keyexpr_t,
     query_timeout_ms: u64,
@@ -90,7 +90,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
         reliability: Reliability::DEFAULT.into(),
         allowed_origin: zcu_locality_default(),
         query_selector: null(),
-        query_target: z_query_target_default(),
+        query_target: z_loaned_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
         query_accept_replies: zcu_reply_keyexpr_default(),
         query_timeout_ms: 0,
@@ -100,8 +100,8 @@ pub extern "C" fn ze_querying_subscriber_options_default(
 /// Declares a Querying Subscriber for a given key expression.
 ///
 /// Parameters:
-///     z_session_t session: The zenoh session.
-///     z_keyexpr_t keyexpr: The key expression to subscribe.
+///     z_loaned_session_t session: The zenoh session.
+///     z_loaned_keyexpr_t keyexpr: The key expression to subscribe.
 ///     z_owned_closure_sample_t callback: The callback function that will be called each time a data matching the subscribed expression is received.
 ///     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
 ///
@@ -132,8 +132,8 @@ pub extern "C" fn ze_querying_subscriber_options_default(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: *mut MaybeUninit<ze_owned_querying_subscriber_t>,
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> errors::z_error_t {
@@ -181,8 +181,8 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn ze_querying_subscriber_get(
-    sub: &ze_querying_subscriber_t,
-    selector: &z_keyexpr_t,
+    sub: &ze_loaned_querying_subscriber_t,
+    selector: &z_loaned_keyexpr_t,
     options: Option<&z_get_options_t>,
 ) -> errors::z_error_t {
     unsafe impl Sync for z_get_options_t {}
@@ -237,7 +237,7 @@ pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscrib
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_loan(
     this: &ze_owned_querying_subscriber_t,
-) -> &ze_querying_subscriber_t {
+) -> &ze_loaned_querying_subscriber_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()

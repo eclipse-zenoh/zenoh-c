@@ -6,7 +6,7 @@ use std::{
 
 use libc::c_void;
 
-pub use crate::opaque_types::z_mutex_t;
+pub use crate::opaque_types::z_loaned_mutex_t;
 pub use crate::opaque_types::z_owned_mutex_t;
 use crate::{
     errors,
@@ -20,7 +20,10 @@ decl_transmute_owned!(
     Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>,
     z_owned_mutex_t
 );
-decl_transmute_handle!((Mutex<()>, Option<MutexGuard<'static, ()>>), z_mutex_t);
+decl_transmute_handle!(
+    (Mutex<()>, Option<MutexGuard<'static, ()>>),
+    z_loaned_mutex_t
+);
 
 #[no_mangle]
 pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> errors::z_error_t {
@@ -46,14 +49,14 @@ pub extern "C" fn z_mutex_null(this: *mut MaybeUninit<z_owned_mutex_t>) {
 }
 
 #[no_mangle]
-pub extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_mutex_t {
+pub extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
     let this = this.transmute_mut();
     let this = unwrap_ref_unchecked_mut(this);
     this.transmute_handle_mut()
 }
 
 #[no_mangle]
-pub extern "C" fn z_mutex_lock(this: &mut z_mutex_t) -> errors::z_error_t {
+pub extern "C" fn z_mutex_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
 
     match this.0.lock() {
@@ -69,7 +72,7 @@ pub extern "C" fn z_mutex_lock(this: &mut z_mutex_t) -> errors::z_error_t {
 }
 
 #[no_mangle]
-pub extern "C" fn z_mutex_unlock(this: &mut z_mutex_t) -> errors::z_error_t {
+pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
     if this.1.is_none() {
         return errors::Z_EINVAL_MUTEX;
@@ -81,7 +84,7 @@ pub extern "C" fn z_mutex_unlock(this: &mut z_mutex_t) -> errors::z_error_t {
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_try_lock(this: &mut z_mutex_t) -> errors::z_error_t {
+pub unsafe extern "C" fn z_loaned_mutex_try_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
     match this.0.try_lock() {
         Ok(new_lock) => {
@@ -95,11 +98,11 @@ pub unsafe extern "C" fn z_mutex_try_lock(this: &mut z_mutex_t) -> errors::z_err
     errors::Z_OK
 }
 
-pub use crate::opaque_types::z_condvar_t;
+pub use crate::opaque_types::z_loaned_condvar_t;
 pub use crate::opaque_types::z_owned_condvar_t;
 
 decl_transmute_owned!(Option<Condvar>, z_owned_condvar_t);
-decl_transmute_handle!(Condvar, z_condvar_t);
+decl_transmute_handle!(Condvar, z_loaned_condvar_t);
 
 #[no_mangle]
 pub extern "C" fn z_condvar_init(this: *mut MaybeUninit<z_owned_condvar_t>) {
@@ -124,21 +127,21 @@ pub extern "C" fn z_condvar_check(this: &z_owned_condvar_t) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_condvar_t {
+pub extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_loaned_condvar_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
 }
 
 #[no_mangle]
-pub extern "C" fn z_condvar_loan_mut(this: &mut z_owned_condvar_t) -> &mut z_condvar_t {
+pub extern "C" fn z_condvar_loan_mut(this: &mut z_owned_condvar_t) -> &mut z_loaned_condvar_t {
     let this = this.transmute_mut();
     let this = unwrap_ref_unchecked_mut(this);
     this.transmute_handle_mut()
 }
 
 #[no_mangle]
-pub extern "C" fn z_condvar_signal(this: &z_condvar_t) -> errors::z_error_t {
+pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_error_t {
     let this = this.transmute_ref();
     this.notify_one();
     errors::Z_OK
@@ -147,8 +150,8 @@ pub extern "C" fn z_condvar_signal(this: &z_condvar_t) -> errors::z_error_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_condvar_wait(
-    this: &z_condvar_t,
-    m: &mut z_mutex_t,
+    this: &z_loaned_condvar_t,
+    m: &mut z_loaned_mutex_t,
 ) -> errors::z_error_t {
     let this = this.transmute_ref();
     let m = m.transmute_mut();

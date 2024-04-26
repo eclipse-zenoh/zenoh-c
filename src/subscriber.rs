@@ -23,8 +23,8 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_closure_sample_call;
+use crate::z_loaned_session_t;
 use crate::z_owned_closure_sample_t;
-use crate::z_session_t;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::subscriber::Reliability;
@@ -62,11 +62,11 @@ impl From<z_reliability_t> for Reliability {
     }
 }
 
+pub use crate::opaque_types::z_loaned_subscriber_t;
 pub use crate::opaque_types::z_owned_subscriber_t;
-pub use crate::opaque_types::z_subscriber_t;
 
 decl_transmute_owned!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
-decl_transmute_handle!(Subscriber<'static, ()>, z_subscriber_t);
+decl_transmute_handle!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
 #[no_mangle]
@@ -75,9 +75,9 @@ pub extern "C" fn z_subscriber_null(this: *mut MaybeUninit<z_owned_subscriber_t>
     Inplace::empty(this);
 }
 
-/// Returns a :c:type:`z_subscriber_t` loaned from `this`.
+/// Returns a :c:type:`z_loaned_subscriber_t` loaned from `this`.
 #[no_mangle]
-pub extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_subscriber_t {
+pub extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
@@ -136,8 +136,8 @@ pub extern "C" fn z_subscriber_options_default(this: &mut z_subscriber_options_t
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_subscriber(
     this: *mut MaybeUninit<z_owned_subscriber_t>,
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
 ) -> errors::z_error_t {
@@ -171,7 +171,7 @@ pub extern "C" fn z_declare_subscriber(
 /// Returns the key expression of the subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_subscriber_t) -> &z_keyexpr_t {
+pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z_loaned_keyexpr_t {
     let subscriber = subscriber.transmute_ref();
     subscriber.key_expr().transmute_handle()
 }

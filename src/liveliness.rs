@@ -23,17 +23,17 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::{
     errors,
     transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr},
-    z_closure_reply_call, z_closure_sample_call, z_keyexpr_t, z_owned_closure_reply_t,
-    z_owned_closure_sample_t, z_owned_subscriber_t, z_session_t,
+    z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
 
-use crate::opaque_types::zc_liveliness_token_t;
+use crate::opaque_types::zc_loaned_liveliness_token_t;
 use crate::opaque_types::zc_owned_liveliness_token_t;
 decl_transmute_owned!(
     Option<LivelinessToken<'static>>,
     zc_owned_liveliness_token_t
 );
-decl_transmute_handle!(LivelinessToken<'static>, zc_liveliness_token_t);
+decl_transmute_handle!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 
 /// The gravestone value for liveliness tokens.
 #[no_mangle]
@@ -69,8 +69,8 @@ pub extern "C" fn zc_liveliness_declaration_options_default(
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
     this: *mut MaybeUninit<zc_owned_liveliness_token_t>,
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     _options: Option<&mut zc_liveliness_declaration_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
@@ -120,8 +120,8 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 /// Declares a subscriber on liveliness tokens that intersect `key`.
 ///
 /// Parameters:
-///     z_session_t session: The zenoh session.
-///     z_keyexpr_t key_expr: The key expression to subscribe.
+///     z_loaned_session_t session: The zenoh session.
+///     z_loaned_keyexpr_t key_expr: The key expression to subscribe.
 ///     z_owned_closure_sample_t callback: The callback function that will be called each time a
 ///                                        liveliness token status changed.
 ///     zc_owned_liveliness_declare_subscriber_options_t _options: The options to be passed to describe the options to be passed to the liveliness subscriber declaration.
@@ -134,8 +134,8 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
     this: *mut MaybeUninit<z_owned_subscriber_t>,
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     _options: Option<&mut zc_liveliness_declare_subscriber_options_t>,
 ) -> errors::z_error_t {
@@ -183,8 +183,8 @@ pub extern "C" fn zc_liveliness_get_options_default(this: &mut zc_liveliness_get
 /// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get(
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut zc_liveliness_get_options_t>,
 ) -> errors::z_error_t {

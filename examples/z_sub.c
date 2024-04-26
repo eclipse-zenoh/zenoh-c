@@ -16,8 +16,8 @@
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-void data_handler(const z_sample_t *sample, void *arg) {
-    z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(sample));
+void data_handler(const z_loaned_sample_t *sample, void *arg) {
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(sample));
     z_owned_str_t payload_value = z_str_null();
     z_bytes_decode_into_string(z_sample_payload(sample), &payload_value);
     printf(">> [Subscriber] Received %s ('%s': '%s')\n", kind_to_str(z_sample_kind(sample)), z_loan(keystr),

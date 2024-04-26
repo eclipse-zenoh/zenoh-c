@@ -19,12 +19,12 @@ use zenoh::prelude::SyncResolve;
 use zenoh_ext::SessionExt;
 
 use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
-use crate::{errors, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t};
+use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t, zcu_locality_default, zcu_locality_t};
 
 /// Options passed to the :c:func:`ze_declare_publication_cache` function.
 ///
 /// Members:
-///     z_keyexpr_t queryable_prefix: The prefix used for queryable
+///     z_loaned_keyexpr_t queryable_prefix: The prefix used for queryable
 ///     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
 ///                       publication cache
 ///     bool queryable_complete: the `complete` option for the queryable
@@ -32,7 +32,7 @@ use crate::{errors, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality
 ///     size_t resources_limit: The limit number of cached resources
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
-    pub queryable_prefix: *const z_keyexpr_t,
+    pub queryable_prefix: *const z_loaned_keyexpr_t,
     pub queryable_origin: zcu_locality_t,
     pub queryable_complete: bool,
     pub history: usize,
@@ -51,19 +51,22 @@ pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication
     };
 }
 
+pub use crate::opaque_types::ze_loaned_publication_cache_t;
 pub use crate::opaque_types::ze_owned_publication_cache_t;
-pub use crate::opaque_types::ze_publication_cache_t;
 decl_transmute_owned!(
     Option<zenoh_ext::PublicationCache<'static>>,
     ze_owned_publication_cache_t
 );
-decl_transmute_handle!(zenoh_ext::PublicationCache<'static>, ze_publication_cache_t);
+decl_transmute_handle!(
+    zenoh_ext::PublicationCache<'static>,
+    ze_loaned_publication_cache_t
+);
 
 /// Declares a Publication Cache.
 ///
 /// Parameters:
-///     z_session_t session: The zenoh session.
-///     z_keyexpr_t key_expr: The key expression to publish.
+///     z_loaned_session_t session: The zenoh session.
+///     z_loaned_keyexpr_t key_expr: The key expression to publish.
 ///     ze_publication_cache_options_t options: Additional options for the publication_cache.
 ///
 /// Returns:
@@ -87,8 +90,8 @@ decl_transmute_handle!(zenoh_ext::PublicationCache<'static>, ze_publication_cach
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_declare_publication_cache(
     this: *mut MaybeUninit<ze_owned_publication_cache_t>,
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();

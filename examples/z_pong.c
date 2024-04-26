@@ -3,8 +3,8 @@
 
 #include "zenoh.h"
 
-void callback(const z_sample_t* sample, void* context) {
-    z_publisher_t pub = z_loan(*(z_owned_publisher_t*)context);
+void callback(const z_loaned_sample_t* sample, void* context) {
+    z_loaned_publisher_t pub = z_loan(*(z_owned_publisher_t*)context);
 #ifdef ZENOH_C  // The z_owned_bytes_t API is exclusive to zenoh-c, but allows avoiding some copies.
     z_owned_bytes_t payload = z_sample_owned_payload(sample);
     z_publisher_put(pub, z_move(payload), NULL);
@@ -34,8 +34,8 @@ int main(int argc, char** argv) {
     }
     z_owned_config_t config = args.config_path ? zc_config_from_file(args.config_path) : z_config_default();
     z_owned_session_t session = z_open(z_move(config));
-    z_keyexpr_t ping = z_keyexpr_unchecked("test/ping");
-    z_keyexpr_t pong = z_keyexpr_unchecked("test/pong");
+    z_loaned_keyexpr_t ping = z_keyexpr_unchecked("test/ping");
+    z_loaned_keyexpr_t pong = z_keyexpr_unchecked("test/pong");
     z_owned_publisher_t pub = z_declare_publisher(z_loan(session), pong, NULL);
     z_owned_closure_sample_t respond = z_closure(callback, drop, (void*)z_move(pub));
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(session), ping, z_move(respond), NULL);

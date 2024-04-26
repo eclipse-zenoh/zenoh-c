@@ -1,6 +1,6 @@
 use crate::{
-    z_closure_reply_drop, z_owned_closure_reply_t, z_owned_reply_t, z_reply_clone, z_reply_null,
-    z_reply_t,
+    z_closure_reply_drop, z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
+    z_reply_clone, z_reply_null,
 };
 use libc::c_void;
 use std::{
@@ -49,7 +49,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
     if bound == 0 {
         let (tx, rx) = std::sync::mpsc::channel();
         (
-            From::from(move |reply: &z_reply_t| {
+            From::from(move |reply: &z_loaned_reply_t| {
                 let mut this = MaybeUninit::<z_owned_reply_t>::uninit();
                 z_reply_clone(&mut this as *mut MaybeUninit<z_owned_reply_t>, reply);
                 let this = this.assume_init();
@@ -62,7 +62,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
     } else {
         let (tx, rx) = std::sync::mpsc::sync_channel(bound);
         (
-            From::from(move |reply: &z_reply_t| {
+            From::from(move |reply: &z_loaned_reply_t| {
                 let mut this = MaybeUninit::<z_owned_reply_t>::uninit();
                 z_reply_clone(&mut this as *mut MaybeUninit<z_owned_reply_t>, reply);
                 let this = this.assume_init();

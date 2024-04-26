@@ -19,8 +19,8 @@ use crate::keyexpr::*;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteRef;
+use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
-use crate::z_session_t;
 use zenoh::prelude::{sync::SyncResolve, Priority};
 use zenoh::publication::CongestionControl;
 use zenoh::sample::QoSBuilderTrait;
@@ -30,10 +30,10 @@ use zenoh::sample::ValueBuilderTrait;
 /// Options passed to the :c:func:`z_put` function.
 ///
 /// Members:
-///     z_encoding_t encoding: The encoding of the payload.
+///     z_loaned_encoding_t encoding: The encoding of the payload.
 ///     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
 ///     z_priority_t priority: The priority of this message.
-///    z_bytes_t attachment: The attachment to this message.
+///    z_loaned_bytes_t attachment: The attachment to this message.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
@@ -71,8 +71,8 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put(
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_put_options_t>,
 ) -> errors::z_error_t {
@@ -135,8 +135,8 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_delete(
-    session: &z_session_t,
-    key_expr: &z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();

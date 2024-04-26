@@ -22,7 +22,7 @@ Generic types
 Bytes
 -----
 
-.. autocstruct:: zenoh_commons.h::z_slice_t
+.. autocstruct:: zenoh_commons.h::z_loaned_slice_t
 
 .. autocfunction:: zenoh_commons.h::z_slice_new
 .. autocfunction:: zenoh_commons.h::z_slice_check
@@ -56,7 +56,7 @@ Session configuration
 ---------------------
 
 
-.. autocstruct:: zenoh_commons.h::z_config_t
+.. autocstruct:: zenoh_commons.h::z_loaned_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_scouting_config_t
 
@@ -79,7 +79,7 @@ Session management
 Types
 ^^^^^
 
-.. autocstruct:: zenoh_concrete.h::z_session_t
+.. autocstruct:: zenoh_concrete.h::z_loaned_session_t
 .. autocstruct:: zenoh_concrete.h::z_owned_session_t
 
 .. autocstruct:: zenoh_commons.h::z_owned_closure_zid_t
@@ -104,13 +104,13 @@ Functions
 Key expression
 ==============
 
-.. autocstruct:: zenoh_commons.h::z_keyexpr_t
+.. autocstruct:: zenoh_commons.h::z_loaned_keyexpr_t
 .. autocstruct:: zenoh_commons.h::z_owned_keyexpr_t
 
 .. autocfunction:: zenoh_commons.h::z_keyexpr
 .. autocfunction:: zenoh_commons.h::z_keyexpr_autocanonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_unchecked
-.. autocfunction:: zenoh_commons.h::z_keyexpr_to_string
+.. autocfunction:: zenoh_commons.h::z_loaned_keyexpr_to_string
 .. autocfunction:: zenoh_commons.h::z_keyexpr_as_bytes
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize_null_terminated
@@ -133,7 +133,7 @@ Key expression
 Encoding
 ========
 
-.. autocstruct:: zenoh_commons.h::z_encoding_t
+.. autocstruct:: zenoh_commons.h::z_loaned_encoding_t
 .. autocstruct:: zenoh_commons.h::z_owned_encoding_t
 
 .. autocfunction:: zenoh_commons.h::z_encoding_default
@@ -147,12 +147,12 @@ Encoding
 Value
 =====
 
-.. autocstruct:: zenoh_commons.h::z_value_t
+.. autocstruct:: zenoh_commons.h::z_loaned_value_t
 
 Sample
 ======
 
-.. autocstruct:: zenoh_commons.h::z_sample_t
+.. autocstruct:: zenoh_commons.h::z_loaned_sample_t
 
 Attachment
 ==========
@@ -237,7 +237,7 @@ Types
 
 .. autocstruct:: zenoh_commons.h::z_get_options_t
 
-.. autocenum:: zenoh_commons.h::z_query_target_t
+.. autocenum:: zenoh_commons.h::z_loaned_query_target_t
 
 .. autocenum:: zenoh_commons.h::z_consolidation_mode_t
 

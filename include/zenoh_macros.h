@@ -19,7 +19,7 @@
                   ze_owned_querying_subscriber_t : ze_querying_subscriber_loan,\
                   z_owned_reply_t : z_reply_loan,                              \
                   z_owned_mutex_t : z_mutex_loan,                              \
-                  z_condvar_t : z_condvar_loan,                                \
+                  z_loaned_condvar_t : z_condvar_loan,                                \
                   z_owned_bytes_reader_t : z_bytes_reader_loan                 \
             )(&x)
 
@@ -137,39 +137,39 @@
 template<class T> struct zenoh_loan_type { typedef T type; };
 template<class T> inline typename zenoh_loan_type<T>::type z_loan(const T&);
 
-template<> struct zenoh_loan_type<z_owned_session_t>{ typedef z_session_t type; };
-template<> struct zenoh_loan_type<z_owned_keyexpr_t>{ typedef z_keyexpr_t type; };
-template<> struct zenoh_loan_type<z_owned_config_t>{ typedef z_config_t type; };
-template<> struct zenoh_loan_type<z_owned_publisher_t>{ typedef z_publisher_t type; };
-template<> struct zenoh_loan_type<z_owned_subscriber_t>{ typedef z_subscriber_t type; };
-template<> struct zenoh_loan_type<z_owned_query_t>{ typedef z_query_t type; };
-template<> struct zenoh_loan_type<z_owned_encoding_t>{ typedef z_encoding_t type; };
+template<> struct zenoh_loan_type<z_owned_session_t>{ typedef z_loaned_session_t type; };
+template<> struct zenoh_loan_type<z_owned_keyexpr_t>{ typedef z_loaned_keyexpr_t type; };
+template<> struct zenoh_loan_type<z_owned_config_t>{ typedef z_loaned_config_t type; };
+template<> struct zenoh_loan_type<z_owned_publisher_t>{ typedef z_loaned_publisher_t type; };
+template<> struct zenoh_loan_type<z_owned_subscriber_t>{ typedef z_loaned_subscriber_t type; };
+template<> struct zenoh_loan_type<z_owned_query_t>{ typedef z_loaned_query_t type; };
+template<> struct zenoh_loan_type<z_owned_encoding_t>{ typedef z_loaned_encoding_t type; };
 template<> struct zenoh_loan_type<z_owned_hello_t>{ typedef z_hello_t type; };
 template<> struct zenoh_loan_type<z_owned_str_t>{ typedef const char* type; };
-template<> struct zenoh_loan_type<z_owned_bytes_t>{ typedef z_bytes_t type; };
-template<> struct zenoh_loan_type<z_owned_bytes_reader_t>{ typedef z_bytes_reader_t type; };
-template<> struct zenoh_loan_type<ze_owned_querying_subscriber_t>{ typedef ze_querying_subscriber_t type; };
-template<> struct zenoh_loan_type<z_owned_slice_t>{ typedef z_slice_t type; };
-template<> struct zenoh_loan_type<z_owned_slice_map_t>{ typedef z_slice_map_t type; };
-template<> struct zenoh_loan_type<z_owned_mutex_t>{ typedef z_mutex_t type; };
-template<> struct zenoh_loan_type<z_owned_condvar_t>{ typedef z_condvar_t type; };
+template<> struct zenoh_loan_type<z_owned_bytes_t>{ typedef z_loaned_bytes_t type; };
+template<> struct zenoh_loan_type<z_owned_bytes_reader_t>{ typedef z_loaned_bytes_reader_t type; };
+template<> struct zenoh_loan_type<ze_owned_querying_subscriber_t>{ typedef ze_loaned_querying_subscriber_t type; };
+template<> struct zenoh_loan_type<z_owned_slice_t>{ typedef z_loaned_slice_t type; };
+template<> struct zenoh_loan_type<z_owned_slice_map_t>{ typedef z_loaned_slice_map_t type; };
+template<> struct zenoh_loan_type<z_owned_mutex_t>{ typedef z_loaned_mutex_t type; };
+template<> struct zenoh_loan_type<z_owned_condvar_t>{ typedef z_loaned_condvar_t type; };
 
-template<> inline z_session_t z_loan(const z_owned_session_t& x) { return z_session_loan(&x); }
-template<> inline z_keyexpr_t z_loan(const z_owned_keyexpr_t& x) { return z_keyexpr_loan(&x); }
-template<> inline z_config_t z_loan(const z_owned_config_t& x) { return z_config_loan(&x); }
-template<> inline z_publisher_t z_loan(const z_owned_publisher_t& x) { return z_publisher_loan(&x); }
-template<> inline z_subscriber_t z_loan(const z_owned_subscriber_t& x) { return z_subscriber_loan(&x); }
-template<> inline z_encoding_t z_loan(const z_owned_encoding_t& x) { return z_encoding_loan(&x); }
+template<> inline z_loaned_session_t z_loan(const z_owned_session_t& x) { return z_session_loan(&x); }
+template<> inline z_loaned_keyexpr_t z_loan(const z_owned_keyexpr_t& x) { return z_keyexpr_loan(&x); }
+template<> inline z_loaned_config_t z_loan(const z_owned_config_t& x) { return z_config_loan(&x); }
+template<> inline z_loaned_publisher_t z_loan(const z_owned_publisher_t& x) { return z_publisher_loan(&x); }
+template<> inline z_loaned_subscriber_t z_loan(const z_owned_subscriber_t& x) { return z_subscriber_loan(&x); }
+template<> inline z_loaned_encoding_t z_loan(const z_owned_encoding_t& x) { return z_encoding_loan(&x); }
 template<> inline z_hello_t z_loan(const z_owned_hello_t& x) { return z_hello_loan(&x); }
-template<> inline z_query_t z_loan(const z_owned_query_t& x) { return z_query_loan(&x); }
+template<> inline z_loaned_query_t z_loan(const z_owned_query_t& x) { return z_query_loan(&x); }
 template<> inline const char* z_loan(const z_owned_str_t& x) { return z_str_loan(&x); }
-template<> inline z_bytes_t z_loan(const z_owned_bytes_t& x) { return z_bytes_loan(&x); }
-template<> inline z_bytes_reader_t z_loan(const z_owned_bytes_reader_t& x) { return z_bytes_reader_loan(&x); }
-template<> inline ze_querying_subscriber_t z_loan(const ze_owned_querying_subscriber_t& x) { return ze_querying_subscriber_loan(&x); }
-template<> inline z_slice_t z_loan(const z_owned_slice_t& x) { return z_slice_loan(&x); }
-template<> inline z_slice_map_t z_loan(const z_owned_slice_map_t& x) { return z_slice_map_loan(&x); }
-template<> inline z_mutex_t z_loan(const z_owned_mutex_t& x) { return z_mutex_loan(&x); }
-template<> inline z_condvar_t z_loan(const z_owned_condvar_t& x) { return z_condvar_loan(&x); }
+template<> inline z_loaned_bytes_t z_loan(const z_owned_bytes_t& x) { return z_bytes_loan(&x); }
+template<> inline z_loaned_bytes_reader_t z_loan(const z_owned_bytes_reader_t& x) { return z_bytes_reader_loan(&x); }
+template<> inline ze_loaned_querying_subscriber_t z_loan(const ze_owned_querying_subscriber_t& x) { return ze_querying_subscriber_loan(&x); }
+template<> inline z_loaned_slice_t z_loan(const z_owned_slice_t& x) { return z_slice_loan(&x); }
+template<> inline z_loaned_slice_map_t z_loan(const z_owned_slice_map_t& x) { return z_slice_map_loan(&x); }
+template<> inline z_loaned_mutex_t z_loan(const z_owned_mutex_t& x) { return z_mutex_loan(&x); }
+template<> inline z_loaned_condvar_t z_loan(const z_owned_condvar_t& x) { return z_condvar_loan(&x); }
 
 template<class T> struct zenoh_drop_type { typedef T type; };
 template<class T> inline typename zenoh_drop_type<T>::type z_drop(T*);
@@ -288,9 +288,9 @@ inline bool z_check(const z_owned_mutex_t& v) { return z_mutex_check(&v); }
 inline bool z_check(const z_owned_condvar_t& v) { return z_condvar_check(&v); }
 inline bool z_check(const z_owned_task_t& v) { return z_task_check(&v); }
 
-inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_sample_t *sample)
+inline void z_call(const struct z_owned_closure_sample_t &closure, const struct z_loaned_sample_t *sample)
     { z_closure_sample_call(&closure, sample); }
-inline void z_call(const struct z_owned_closure_query_t &closure, const struct z_query_t *query)
+inline void z_call(const struct z_owned_closure_query_t &closure, const struct z_loaned_query_t *query)
     { z_closure_query_call(&closure, query); }
 inline void z_call(const struct z_owned_closure_reply_t &closure, struct z_owned_reply_t *sample)
     { z_closure_reply_call(&closure, sample); }

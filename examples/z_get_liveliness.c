@@ -53,8 +53,8 @@ int main(int argc, char **argv) {
     z_owned_reply_t reply;
     for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {
-            z_sample_t sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t key_str = z_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_loaned_sample_t sample = z_reply_ok(z_loan(reply));
+            z_owned_str_t key_str = z_loaned_keyexpr_to_string(z_sample_keyexpr(&sample));
             printf(">> Alive token ('%s')\n", z_loan(key_str));
             z_drop(z_move(key_str));
         } else {

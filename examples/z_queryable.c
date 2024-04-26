@@ -17,12 +17,12 @@
 
 const char *expr = "demo/example/zenoh-c-queryable";
 const char *value = "Queryable from C!";
-z_keyexpr_t keyexpr;
+z_loaned_keyexpr_t keyexpr;
 
-void query_handler(const z_query_t *query, void *context) {
-    z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(query));
-    z_slice_t pred = z_query_parameters(query);
-    z_bytes_t payload = z_query_value(query).payload;
+void query_handler(const z_loaned_query_t *query, void *context) {
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_query_keyexpr(query));
+    z_loaned_slice_t pred = z_query_parameters(query);
+    z_loaned_bytes_t payload = z_query_value(query).payload;
     if (z_bytes_len(payload) > 0) {
         z_owned_str_t payload_value = z_str_null();
         z_bytes_decode_into_string(payload, &payload_value);

@@ -63,23 +63,23 @@ pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
 pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"timestamping/enabled\0".as_ptr() as *const c_char) };
 
-pub use crate::opaque_types::z_config_t;
-decl_transmute_handle!(Config, z_config_t);
+pub use crate::opaque_types::z_loaned_config_t;
+decl_transmute_handle!(Config, z_loaned_config_t);
 
 pub use crate::opaque_types::z_owned_config_t;
 decl_transmute_owned!(Option<Config>, z_owned_config_t);
 
-/// Returns a :c:type:`z_config_t` loaned from `s`.
+/// Returns a :c:type:`z_loaned_config_t` loaned from `s`.
 #[no_mangle]
-pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> &z_config_t {
+pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> &z_loaned_config_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
 }
 
-/// Returns a :c:type:`z_config_t` loaned from `s`.
+/// Returns a :c:type:`z_loaned_config_t` loaned from `s`.
 #[no_mangle]
-pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_config_t {
+pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_loaned_config_t {
     let this = this.transmute_mut();
     let this = unwrap_ref_unchecked_mut(this);
     this.transmute_handle_mut()
@@ -111,7 +111,7 @@ pub extern "C" fn z_config_null(this: *mut MaybeUninit<z_owned_config_t>) {
 
 /// Clones the config.
 #[no_mangle]
-pub extern "C" fn z_config_clone(src: &z_config_t, dst: *mut MaybeUninit<z_owned_config_t>) {
+pub extern "C" fn z_config_clone(src: &z_loaned_config_t, dst: *mut MaybeUninit<z_owned_config_t>) {
     let src = src.transmute_ref();
     let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
@@ -123,7 +123,7 @@ pub extern "C" fn z_config_clone(src: &z_config_t, dst: *mut MaybeUninit<z_owned
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_config_get(
-    config: &z_config_t,
+    config: &z_loaned_config_t,
     key: *const c_char,
     value_string: *mut MaybeUninit<z_owned_str_t>,
 ) -> errors::z_error_t {
@@ -154,7 +154,7 @@ pub unsafe extern "C" fn zc_config_get(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
 pub unsafe extern "C" fn zc_config_insert_json(
-    config: &mut z_config_t,
+    config: &mut z_loaned_config_t,
     key: *const c_char,
     value: *const c_char,
 ) -> errors::z_error_t {
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn zc_config_from_str(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_config_to_string(
-    config: &z_config_t,
+    config: &z_loaned_config_t,
     config_string: *mut MaybeUninit<z_owned_str_t>,
 ) -> errors::z_error_t {
     let config: &Config = config.transmute_ref();
