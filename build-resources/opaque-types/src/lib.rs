@@ -70,8 +70,8 @@ get_opaque_type_data!(HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>, z_loaned_
 /// An owned sample.
 ///
 /// This is a read only type that can only be constructed by cloning a `z_loaned_sample_t`.
-/// Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
-get_opaque_type_data!(Option<Sample>, zc_owned_sample_t);
+/// Like all owned types, its memory must be freed by passing a mutable reference to it to `z_sample_drop`.
+get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
 get_opaque_type_data!(Sample, z_loaned_sample_t);
 
 /// A reader for payload data.

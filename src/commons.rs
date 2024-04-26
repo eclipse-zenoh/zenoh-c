@@ -149,15 +149,12 @@ pub extern "C" fn z_sample_attachment(sample: &z_loaned_sample_t) -> *const z_lo
     }
 }
 
-pub use crate::opaque_types::zc_owned_sample_t;
-decl_transmute_owned!(Option<Sample>, zc_owned_sample_t);
+pub use crate::opaque_types::z_owned_sample_t;
+decl_transmute_owned!(Option<Sample>, z_owned_sample_t);
 
 /// Clone a sample in the cheapest way available.
 #[no_mangle]
-pub extern "C" fn z_sample_clone(
-    src: &z_loaned_sample_t,
-    dst: *mut MaybeUninit<zc_owned_sample_t>,
-) {
+pub extern "C" fn z_sample_clone(src: &z_loaned_sample_t, dst: *mut MaybeUninit<z_owned_sample_t>) {
     let src = src.transmute_ref();
     let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
@@ -186,10 +183,10 @@ pub extern "C" fn z_sample_congestion_control(
 
 /// Returns `true` if `sample` is valid.
 ///
-/// Note that there exist no fallinle constructors for `zc_owned_sample_t`, so validity is always guaranteed
+/// Note that there exist no fallinle constructors for `z_owned_sample_t`, so validity is always guaranteed
 /// unless the value has been dropped already.
 #[no_mangle]
-pub extern "C" fn z_sample_check(sample: &zc_owned_sample_t) -> bool {
+pub extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
     let sample = sample.transmute_ref();
     sample.is_some()
 }
@@ -198,18 +195,18 @@ pub extern "C" fn z_sample_check(sample: &zc_owned_sample_t) -> bool {
 ///
 /// Calling this function using a dropped sample is undefined behaviour.
 #[no_mangle]
-pub extern "C" fn zc_sample_loan(sample: &zc_owned_sample_t) -> &z_loaned_sample_t {
+pub extern "C" fn z_sample_loan(sample: &z_owned_sample_t) -> &z_loaned_sample_t {
     unwrap_ref_unchecked(sample.transmute_ref()).transmute_handle()
 }
 
 /// Destroy the sample.
 #[no_mangle]
-pub extern "C" fn zc_sample_drop(sample: &mut zc_owned_sample_t) {
+pub extern "C" fn z_sample_drop(sample: &mut z_owned_sample_t) {
     Inplace::drop(sample.transmute_mut());
 }
 
 #[no_mangle]
-pub extern "C" fn zc_sample_null(sample: *mut MaybeUninit<zc_owned_sample_t>) {
+pub extern "C" fn z_sample_null(sample: *mut MaybeUninit<z_owned_sample_t>) {
     Inplace::empty(sample.transmute_uninit_ptr());
 }
 

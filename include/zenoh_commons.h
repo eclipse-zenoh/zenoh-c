@@ -675,11 +675,11 @@ typedef struct z_owned_reply_channel_t {
  * An owned sample.
  *
  * This is a read only type that can only be constructed by cloning a `z_loaned_sample_t`.
- * Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
+ * Like all owned types, its memory must be freed by passing a mutable reference to it to `z_sample_drop`.
  */
-typedef struct ALIGN(8) zc_owned_sample_t {
+typedef struct ALIGN(8) z_owned_sample_t {
   uint8_t _0[240];
-} zc_owned_sample_t;
+} z_owned_sample_t;
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
   unsigned long zc_timeout_ms;
@@ -1558,7 +1558,7 @@ ZENOHC_API void z_publisher_options_default(struct z_publisher_options_t *this_)
  * Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
  *
  * This is avoids copies when transfering data that was either:
- * - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+ * - `z_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
  * - constructed from a `zc_owned_shmbuf_t`
  *
  * The payload and all owned options fields are consumed upon function return.
@@ -1823,17 +1823,21 @@ const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_
 /**
  * Returns `true` if `sample` is valid.
  *
- * Note that there exist no fallinle constructors for `zc_owned_sample_t`, so validity is always guaranteed
+ * Note that there exist no fallinle constructors for `z_owned_sample_t`, so validity is always guaranteed
  * unless the value has been dropped already.
  */
 ZENOHC_API
-bool z_sample_check(const struct zc_owned_sample_t *sample);
+bool z_sample_check(const struct z_owned_sample_t *sample);
 /**
  * Clone a sample in the cheapest way available.
  */
-ZENOHC_API void z_sample_clone(const struct z_loaned_sample_t *src, struct zc_owned_sample_t *dst);
+ZENOHC_API void z_sample_clone(const struct z_loaned_sample_t *src, struct z_owned_sample_t *dst);
 ZENOHC_API
 enum z_congestion_control_t z_sample_congestion_control(const struct z_loaned_sample_t *sample);
+/**
+ * Destroy the sample.
+ */
+ZENOHC_API void z_sample_drop(struct z_owned_sample_t *sample);
 /**
  * The encoding of the payload.
  */
@@ -1851,6 +1855,13 @@ const struct z_loaned_keyexpr_t *z_sample_keyexpr(const struct z_loaned_sample_t
  * The sample's kind (put or delete).
  */
 ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_loaned_sample_t *sample);
+/**
+ * Borrow the sample, allowing calling its accessor methods.
+ *
+ * Calling this function using a dropped sample is undefined behaviour.
+ */
+ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sample_t *sample);
+ZENOHC_API void z_sample_null(struct z_owned_sample_t *sample);
 /**
  * The sample's data, the return value aliases the sample.
  *
@@ -2363,17 +2374,6 @@ struct z_owned_reply_channel_t zc_reply_fifo_new(size_t bound);
  */
 ZENOHC_API
 struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
-/**
- * Destroy the sample.
- */
-ZENOHC_API void zc_sample_drop(struct zc_owned_sample_t *sample);
-/**
- * Borrow the sample, allowing calling its accessor methods.
- *
- * Calling this function using a dropped sample is undefined behaviour.
- */
-ZENOHC_API const struct z_loaned_sample_t *zc_sample_loan(const struct zc_owned_sample_t *sample);
-ZENOHC_API void zc_sample_null(struct zc_owned_sample_t *sample);
 /**
  * Increments the session's reference count, returning a new owning handle.
  */

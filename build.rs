@@ -37,6 +37,7 @@ fn main() {
         .expect("Unable to generate bindings")
         .write_to_file(GENERATION_PATH);
 
+    create_generics_header(GENERATION_PATH, "include/zenoh_macros.h");
     configure();
     let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
     split_bindings(&split_guide).unwrap();
@@ -731,4 +732,459 @@ impl<'a> Iterator for Tokenizer<'a> {
             result
         }
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct FuncArg {
+    typename: String,
+    cv: String,
+    name: String,
+}
+
+impl FuncArg {
+    pub fn new(typename: &str, cv: &str, name: &str) -> Self {
+        FuncArg {
+            typename: typename.to_owned(),
+            cv: cv.to_owned(),
+            name: name.to_owned(),
+        }
+    }
+}
+#[derive(Clone, Debug)]
+pub struct FunctionSignature {
+    return_type: String,
+    func_name: String,
+    arg_type_and_name: Vec<FuncArg>,
+}
+
+pub fn create_generics_header(path_in: &str, path_out: &str) {
+    let mut file_out = std::fs::File::options()
+        .read(false)
+        .create(false)
+        .write(true)
+        .truncate(true)
+        .open(path_out)
+        .unwrap();
+
+    let header = "#pragma once
+// clang-format off
+#ifndef __cplusplus
+
+";
+    file_out.write(header.as_bytes()).unwrap();
+
+    let type_name_to_loan_func = find_loan_functions(path_in);
+    let out = generate_generic_loan_c(&type_name_to_loan_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let type_name_to_loan_mut_func = find_loan_mut_functions(path_in);
+    let out = generate_generic_loan_mut_c(&type_name_to_loan_mut_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let type_name_to_drop_func = find_drop_functions(path_in);
+    let out = generate_generic_drop_c(&type_name_to_drop_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let type_name_to_null_func = find_null_functions(path_in);
+    let out = generate_generic_null_c(&type_name_to_null_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let type_name_to_check_func = find_check_functions(path_in);
+    let out = generate_generic_check_c(&type_name_to_check_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let type_name_to_call_func = find_call_functions(path_in);
+    let out = generate_generic_call_c(&type_name_to_call_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_closure_c(&type_name_to_call_func);
+    file_out.write(out.as_bytes()).unwrap();
+
+    file_out
+        .write("\n#else  // #ifndef __cplusplus\n".as_bytes())
+        .unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_loan_cpp(&type_name_to_loan_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_loan_mut_cpp(&type_name_to_loan_mut_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_drop_cpp(&type_name_to_drop_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_null_cpp(&type_name_to_null_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_check_cpp(&type_name_to_check_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_call_cpp(&type_name_to_call_func);
+    file_out.write(out.as_bytes()).unwrap();
+    file_out.write("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_closure_cpp(&type_name_to_call_func);
+    file_out.write(out.as_bytes()).unwrap();
+
+    file_out
+        .write("\n#endif  // #ifndef __cplusplus".as_bytes())
+        .unwrap();
+}
+
+pub fn find_loan_functions(path_in: &str) -> HashMap<String, FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(r"const struct (\w+) \*(\w+)_loan\(const struct (\w+) \*(\w+)\);").unwrap();
+    let mut res = HashMap::<String, FunctionSignature>::new();
+
+    for (_, [return_type, func_name, arg_type, arg_name]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
+    {
+        let f = FunctionSignature {
+            return_type: return_type.to_string(),
+            func_name: func_name.to_string() + "_loan",
+            arg_type_and_name: [FuncArg::new(arg_type, "const", arg_name)].to_vec(),
+        };
+        res.insert(arg_type.to_string(), f);
+    }
+    res
+}
+
+pub fn find_loan_mut_functions(path_in: &str) -> HashMap<String, FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(r"struct (\w+) \*(\w+)_loan_mut\(struct (\w+) \*(\w+)\);").unwrap();
+    let mut res = HashMap::<String, FunctionSignature>::new();
+
+    for (_, [return_type, func_name, arg_type, arg_name]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
+    {
+        let f = FunctionSignature {
+            return_type: return_type.to_string(),
+            func_name: func_name.to_string() + "_loan_mut",
+            arg_type_and_name: [FuncArg::new(arg_type, "", arg_name)].to_vec(),
+        };
+        res.insert(arg_type.to_string(), f);
+    }
+    res
+}
+
+pub fn find_drop_functions(path_in: &str) -> HashMap<String, FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(r"(\w+)_drop\(struct (\w+) \*(\w+)\);").unwrap();
+    let mut res = HashMap::<String, FunctionSignature>::new();
+
+    for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
+        let f = FunctionSignature {
+            return_type: "void".to_string(),
+            func_name: func_name.to_string() + "_drop",
+            arg_type_and_name: [FuncArg::new(arg_type, "const", arg_name)].to_vec(),
+        };
+        res.insert(arg_type.to_string(), f);
+    }
+    res
+}
+
+pub fn find_null_functions(path_in: &str) -> HashMap<String, FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(r"(\w+)_null\(struct (\w+) \*(\w+)\);").unwrap();
+    let mut res = HashMap::<String, FunctionSignature>::new();
+
+    for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
+        let f = FunctionSignature {
+            return_type: "void".to_string(),
+            func_name: func_name.to_string() + "_null",
+            arg_type_and_name: [FuncArg::new(arg_type, "", arg_name)].to_vec(),
+        };
+        res.insert(arg_type.to_string(), f);
+    }
+    res
+}
+
+pub fn find_check_functions(path_in: &str) -> HashMap<String, FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(r"bool (\w+)_check\(const struct (\w+) \*(\w+)\);").unwrap();
+    let mut res = HashMap::<String, FunctionSignature>::new();
+
+    for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
+        let f = FunctionSignature {
+            return_type: "bool".to_string(),
+            func_name: func_name.to_string() + "_check",
+            arg_type_and_name: [FuncArg::new(arg_type, "const", arg_name)].to_vec(),
+        };
+        res.insert(arg_type.to_string(), f);
+    }
+    res
+}
+
+pub fn find_call_functions(path_in: &str) -> HashMap<String, FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(
+        r"(\w+) (\w+)_call\(const struct (\w+) \*(\w+),\s+(\w*)\s*struct (\w+) \*(\w+)\);",
+    )
+    .unwrap();
+    let mut res = HashMap::<String, FunctionSignature>::new();
+
+    for (_, [return_type, func_name, closure_type, closure_name, arg_cv, arg_type, arg_name]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
+    {
+        let f = FunctionSignature {
+            return_type: return_type.to_string(),
+            func_name: func_name.to_string() + "_call",
+            arg_type_and_name: [
+                FuncArg::new(closure_type, "const", closure_name),
+                FuncArg::new(arg_type, arg_cv, arg_name),
+            ]
+            .to_vec(),
+        };
+        res.insert(closure_type.to_string(), f);
+    }
+    res
+}
+
+pub fn generate_generic_loan_c(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "#define z_loan(x) \\
+    _Generic((x)"
+        .to_owned();
+
+    for (owned_type, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        out += ", \\\n";
+        out += &format!("        {owned_type} : {func_name}");
+    }
+    out += " \\\n";
+    out += "    )(&x)";
+    out
+}
+
+pub fn generate_generic_loan_mut_c(
+    owned_type_to_fun: &HashMap<String, FunctionSignature>,
+) -> String {
+    let mut out = "#define z_loan_mut(x) \\
+    _Generic((x)"
+        .to_owned();
+
+    for (owned_type, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        out += ", \\\n";
+        out += &format!("        {owned_type} : {func_name}");
+    }
+    out += " \\\n";
+    out += "    )(&x)";
+    out
+}
+
+pub fn generate_generic_drop_c(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "#define z_drop(x) \\
+    _Generic((x)"
+        .to_owned();
+
+    for (owned_type, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        out += ",\\\n";
+        out += &format!("        {owned_type} * : {func_name}");
+    }
+    out += " \\\n";
+    out += "    )(x)";
+    out
+}
+
+pub fn generate_generic_null_c(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "#define z_null(x) \\
+    _Generic((x)"
+        .to_owned();
+
+    for (owned_type, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        out += ", \\\n";
+        out += &format!("        {owned_type} * : {func_name}");
+    }
+    out += " \\\n";
+    out += "    )(x)";
+    out
+}
+
+pub fn generate_generic_check_c(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "#define z_check(x) \\
+    _Generic((x)"
+        .to_owned();
+
+    for (owned_type, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        out += ", \\\n";
+        out += &format!("        {owned_type} : {func_name}");
+    }
+    out += " \\\n";
+    out += "    )(&x)";
+    out
+}
+
+pub fn generate_generic_call_c(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "#define z_call(x, ...) \\
+     _Generic((x)"
+        .to_owned();
+
+    for (owned_type, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        out += ", \\\n";
+        out += &format!("        {owned_type} : {func_name}");
+    }
+    out += " \\\n";
+    out += "    )(&x, __VA_ARGS__)";
+
+    out
+}
+
+pub fn generate_generic_closure_c(
+    owned_type_to_fun: &HashMap<String, FunctionSignature>,
+) -> String {
+    let mut out = "#define z_closure(x, callback, dropper, ctx) \\
+     _Generic((x)"
+        .to_owned();
+
+    for (owned_type, _func) in owned_type_to_fun {
+        out += ", \\\n";
+        out += &format!(
+"        {owned_type} * : {{ x->context = (void*)ctx; x->call = callback; x->drop = droper; }}");
+    }
+    out += " \\\n";
+    out += "    )";
+
+    out
+}
+
+pub fn generate_generic_loan_cpp(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "".to_owned();
+
+    for (_, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        let return_type = &func.return_type;
+        let cv = &func.arg_type_and_name[0].cv;
+        let arg_name = &func.arg_type_and_name[0].name;
+        let arg_type = &func.arg_type_and_name[0].typename;
+        out += "\n";
+        out += &format!("inline const {return_type}* z_loan({cv} {arg_type}* {arg_name}) {{ return {func_name}({arg_name}); }};");
+    }
+    out
+}
+
+pub fn generate_generic_loan_mut_cpp(
+    owned_type_to_fun: &HashMap<String, FunctionSignature>,
+) -> String {
+    let mut out = "".to_owned();
+
+    for (_, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        let return_type = &func.return_type;
+        let cv = &func.arg_type_and_name[0].cv;
+        let arg_name = &func.arg_type_and_name[0].name;
+        let arg_type = &func.arg_type_and_name[0].typename;
+        out += "\n";
+        out += &format!("inline {return_type}* z_loan_mut({cv} {arg_type}& {arg_name}) {{ return {func_name}(&{arg_name}); }};");
+    }
+    out
+}
+
+pub fn generate_generic_drop_cpp(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "".to_owned();
+
+    for (_, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        let return_type = &func.return_type;
+        let cv = &func.arg_type_and_name[0].cv;
+        let arg_name = &func.arg_type_and_name[0].name;
+        let arg_type = &func.arg_type_and_name[0].typename;
+        out += "\n";
+        out += &format!("inline {return_type} z_drop({cv} {arg_type}* {arg_name}) {{ return {func_name}({arg_name}); }};");
+    }
+    out
+}
+
+pub fn generate_generic_null_cpp(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "".to_owned();
+
+    for (_, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        let return_type = &func.return_type;
+        let cv = &func.arg_type_and_name[0].cv;
+        let arg_name = &func.arg_type_and_name[0].name;
+        let arg_type = &func.arg_type_and_name[0].typename;
+        out += "\n";
+        out += &format!("inline {return_type} z_null({cv} {arg_type}* {arg_name}) {{ return {func_name}({arg_name}); }};");
+    }
+    out
+}
+
+pub fn generate_generic_check_cpp(
+    owned_type_to_fun: &HashMap<String, FunctionSignature>,
+) -> String {
+    let mut out = "".to_owned();
+
+    for (_, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        let return_type = &func.return_type;
+        let cv = &func.arg_type_and_name[0].cv;
+        let arg_name = &func.arg_type_and_name[0].name;
+        let arg_type = &func.arg_type_and_name[0].typename;
+        out += "\n";
+        out += &format!("inline {return_type} z_check({cv} {arg_type}& {arg_name}) {{ return {func_name}(&{arg_name}); }};");
+    }
+    out
+}
+
+pub fn generate_generic_call_cpp(owned_type_to_fun: &HashMap<String, FunctionSignature>) -> String {
+    let mut out = "".to_owned();
+
+    for (_, func) in owned_type_to_fun {
+        let func_name = &func.func_name;
+        let return_type = &func.return_type;
+        let closure_cv = &func.arg_type_and_name[0].cv;
+        let closure_name = &func.arg_type_and_name[0].name;
+        let closure_type = &func.arg_type_and_name[0].typename;
+        let arg_cv = &func.arg_type_and_name[1].cv;
+        let arg_name = &func.arg_type_and_name[1].name;
+        let arg_type = &func.arg_type_and_name[1].typename;
+        out += "\n";
+        out += &format!("inline {return_type} z_call({closure_cv} {closure_type}& {closure_name}, {arg_cv} {arg_type}* {arg_name}) {{
+    return {func_name}(&{closure_name}, {arg_name}); 
+}};");
+    }
+    out
+}
+
+pub fn generate_generic_closure_cpp(
+    owned_type_to_fun: &HashMap<String, FunctionSignature>,
+) -> String {
+    let mut out = "".to_owned();
+
+    for (_, func) in owned_type_to_fun {
+        let return_type = &func.return_type;
+        let closure_name = &func.arg_type_and_name[0].name;
+        let closure_type = &func.arg_type_and_name[0].typename;
+        let arg_cv = &func.arg_type_and_name[1].cv;
+        let arg_type = &func.arg_type_and_name[1].typename;
+        out += "\n";
+        out += &format!(
+            "inline void z_closure(
+    {closure_type}* {closure_name},
+    {return_type} (*call)({arg_cv} {arg_type}*, void*),
+    void (*drop)(void*),
+    void *context) {{
+    {closure_name}->context = context;
+    {closure_name}->drop = drop;
+    {closure_name}->call = call;
+}};"
+        );
+    }
+    out
 }

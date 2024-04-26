@@ -173,7 +173,7 @@ pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_opt
 /// Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
 ///
 /// This is avoids copies when transfering data that was either:
-/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+/// - `z_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
 /// - constructed from a `zc_owned_shmbuf_t`
 ///
 /// The payload and all owned options fields are consumed upon function return.
