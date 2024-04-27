@@ -12,16 +12,14 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-#[cfg(feature = "shared-memory")]
+#[cfg(all(feature = "unstable", feature = "shared-memory"))]
 use crate::client_storage::z_shared_memory_client_storage_t;
 use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
-use crate::{config::*, impl_guarded_transmute, zc_init_logger};
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
-use std::sync::{Arc, Weak};
 use zenoh::core::ErrNo;
 use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::Session;
@@ -92,7 +90,7 @@ pub extern "C" fn z_open(
 /// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-#[cfg(feature = "shared-memory")]
+#[cfg(all(feature = "unstable", feature = "shared-memory"))]
 pub extern "C" fn z_open_with_shm_clients(
     config: &mut z_owned_config_t,
     shm_clients: z_shared_memory_client_storage_t,

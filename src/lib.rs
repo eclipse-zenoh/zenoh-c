@@ -62,9 +62,9 @@ mod querying_subscriber;
 pub use platform::*;
 pub use querying_subscriber::*;
 pub mod platform;
-#[cfg(feature = "shared-memory")]
+#[cfg(all(feature = "unstable", feature = "shared-memory"))]
 pub mod shm;
-#[cfg(feature = "shared-memory")]
+#[cfg(all(feature = "unstable", feature = "shared-memory"))]
 pub use crate::shm::*;
 
 /// Initialises the zenoh runtime logger.
