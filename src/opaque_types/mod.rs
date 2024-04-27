@@ -11,8 +11,45 @@ pub struct z_owned_bytes_t {
 /// A loaned payload.
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_bytes_t {
-    _0: [u8; 8],
+pub struct z_loaned_bytes_t {
+    _0: [u8; 40],
+}
+/// A contiguous view of bytes owned by some other entity.
+///
+/// `start` being `null` is considered a gravestone value,
+/// and empty slices are represented using a possibly dangling pointer for `start`.
+#[derive(Copy, Clone)]
+#[repr(C, align(8))]
+pub struct z_owned_slice_t {
+    _0: [u8; 16],
+}
+#[derive(Copy, Clone)]
+#[repr(C, align(8))]
+pub struct z_view_slice_t {
+    _0: [u8; 16],
+}
+#[derive(Copy, Clone)]
+#[repr(C, align(8))]
+pub struct z_loaned_slice_t {
+    _0: [u8; 16],
+}
+/// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
+/// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
+/// `z_check` and `z_str_check` correspondently
+#[derive(Copy, Clone)]
+#[repr(C, align(8))]
+pub struct z_owned_str_t {
+    _0: [u8; 16],
+}
+#[derive(Copy, Clone)]
+#[repr(C, align(8))]
+pub struct z_view_str_t {
+    _0: [u8; 16],
+}
+#[derive(Copy, Clone)]
+#[repr(C, align(8))]
+pub struct z_loaned_str_t {
+    _0: [u8; 16],
 }
 /// A map of maybe-owned vector of bytes to maybe-owned vector of bytes.
 ///
@@ -24,22 +61,22 @@ pub struct z_owned_slice_map_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_slice_map_t {
-    _0: [u8; 8],
+pub struct z_loaned_slice_map_t {
+    _0: [u8; 48],
 }
 /// An owned sample.
 ///
-/// This is a read only type that can only be constructed by cloning a `z_sample_t`.
-/// Like all owned types, its memory must be freed by passing a mutable reference to it to `zc_sample_drop`.
+/// This is a read only type that can only be constructed by cloning a `z_loaned_sample_t`.
+/// Like all owned types, its memory must be freed by passing a mutable reference to it to `z_sample_drop`.
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct zc_owned_sample_t {
+pub struct z_owned_sample_t {
     _0: [u8; 240],
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_sample_t {
-    _0: [u8; 8],
+pub struct z_loaned_sample_t {
+    _0: [u8; 240],
 }
 /// A reader for payload data.
 #[derive(Copy, Clone)]
@@ -49,16 +86,16 @@ pub struct z_owned_bytes_reader_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_bytes_reader_t {
-    _0: [u8; 8],
+pub struct z_loaned_bytes_reader_t {
+    _0: [u8; 24],
 }
 /// The encoding of a payload, in a MIME-like format.
 ///
 /// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_encoding_t {
-    _0: [u8; 8],
+pub struct z_loaned_encoding_t {
+    _0: [u8; 48],
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
@@ -79,8 +116,8 @@ pub struct z_owned_reply_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_reply_t {
-    _0: [u8; 8],
+pub struct z_loaned_reply_t {
+    _0: [u8; 256],
 }
 /// A zenoh value.
 #[derive(Copy, Clone)]
@@ -90,12 +127,12 @@ pub struct z_owned_value_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_value_t {
-    _0: [u8; 8],
+pub struct z_loaned_value_t {
+    _0: [u8; 88],
 }
 ///
 /// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
-/// `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
+/// `z_loaned_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
 pub struct z_owned_query_t {
@@ -103,8 +140,8 @@ pub struct z_owned_query_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_query_t {
-    _0: [u8; 8],
+pub struct z_loaned_query_t {
+    _0: [u8; 16],
 }
 /// An owned zenoh queryable.
 ///
@@ -123,8 +160,8 @@ pub struct z_owned_queryable_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_queryable_t {
-    _0: [u8; 8],
+pub struct z_loaned_queryable_t {
+    _0: [u8; 32],
 }
 /// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
 ///
@@ -143,8 +180,8 @@ pub struct ze_owned_querying_subscriber_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct ze_querying_subscriber_t {
-    _0: [u8; 8],
+pub struct ze_loaned_querying_subscriber_t {
+    _0: [u8; 64],
 }
 /// A zenoh-allocated key expression.
 ///
@@ -175,6 +212,11 @@ pub struct ze_querying_subscriber_t {
 pub struct z_owned_keyexpr_t {
     _0: [u8; 32],
 }
+#[derive(Copy, Clone)]
+#[repr(C, align(8))]
+pub struct z_view_keyexpr_t {
+    _0: [u8; 32],
+}
 /// A loaned key expression.
 ///
 /// Key expressions can identify a single key or a set of keys.
@@ -187,8 +229,8 @@ pub struct z_owned_keyexpr_t {
 /// both for local processing and network-wise.
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_keyexpr_t {
-    _0: [u8; 8],
+pub struct z_loaned_keyexpr_t {
+    _0: [u8; 32],
 }
 /// An owned zenoh session.
 ///
@@ -207,8 +249,8 @@ pub struct z_owned_session_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_session_t {
-    _0: [u8; 8],
+pub struct z_loaned_session_t {
+    _0: [u8; 40],
 }
 /// An owned zenoh configuration.
 ///
@@ -223,13 +265,13 @@ pub struct z_session_t {
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
 pub struct z_owned_config_t {
-    _0: [u8; 8],
+    _0: [u8; 1544],
 }
 /// A loaned zenoh configuration.
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_config_t {
-    _0: [u8; 8],
+pub struct z_loaned_config_t {
+    _0: [u8; 1544],
 }
 /// Represents a Zenoh ID.
 ///
@@ -237,7 +279,7 @@ pub struct z_config_t {
 #[derive(Copy, Clone)]
 #[repr(C, align(1))]
 pub struct z_id_t {
-    _0: [u8; 16],
+    id: [u8; 16],
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
@@ -261,8 +303,8 @@ pub struct z_owned_publisher_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_publisher_t {
-    _0: [u8; 8],
+pub struct z_loaned_publisher_t {
+    _0: [u8; 56],
 }
 /// An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
 ///
@@ -296,8 +338,8 @@ pub struct z_owned_subscriber_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_subscriber_t {
-    _0: [u8; 8],
+pub struct z_loaned_subscriber_t {
+    _0: [u8; 32],
 }
 /// A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
@@ -311,8 +353,8 @@ pub struct zc_owned_liveliness_token_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct zc_liveliness_token_t {
-    _0: [u8; 8],
+pub struct zc_loaned_liveliness_token_t {
+    _0: [u8; 32],
 }
 /// An owned zenoh publication_cache.
 ///
@@ -331,8 +373,8 @@ pub struct ze_owned_publication_cache_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct ze_publication_cache_t {
-    _0: [u8; 8],
+pub struct ze_loaned_publication_cache_t {
+    _0: [u8; 96],
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
@@ -341,8 +383,8 @@ pub struct z_owned_mutex_t {
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]
-pub struct z_mutex_t {
-    _0: [u8; 8],
+pub struct z_loaned_mutex_t {
+    _0: [u8; 24],
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(4))]
@@ -350,9 +392,9 @@ pub struct z_owned_condvar_t {
     _0: [u8; 8],
 }
 #[derive(Copy, Clone)]
-#[repr(C, align(8))]
-pub struct z_condvar_t {
-    _0: [u8; 8],
+#[repr(C, align(4))]
+pub struct z_loaned_condvar_t {
+    _0: [u8; 4],
 }
 #[derive(Copy, Clone)]
 #[repr(C, align(8))]

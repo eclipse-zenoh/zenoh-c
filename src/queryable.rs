@@ -11,82 +11,34 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::attachment::{
-    attachment_iteration_driver, insert_in_attachment_builder, z_attachment_check,
-    z_attachment_iterate, z_attachment_null, z_attachment_t,
+use crate::transmute::{
+    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+    TransmuteUninitPtr,
 };
 use crate::{
-    impl_guarded_transmute, z_bytes_t, z_closure_query_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_query_t, z_session_t, z_value_t, LOG_INVALID_SESSION,
+    errors, z_closure_query_call, z_loaned_bytes_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t, z_view_slice_t,
+    z_view_slice_wrap,
 };
-use libc::c_void;
-use std::ops::{Deref, DerefMut};
+use std::mem::MaybeUninit;
+use std::ptr::{null, null_mut};
 use zenoh::prelude::SessionDeclarations;
-use zenoh::{
-    prelude::{Sample, SplitBuffer},
-    queryable::{Query, Queryable as CallbackQueryable},
-    sample::AttachmentBuilder,
-    value::Value,
-};
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
+use zenoh::prelude::SyncResolve;
+use zenoh::prelude::{Query, Queryable};
+use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
 
-type Queryable = Option<CallbackQueryable<'static, ()>>;
-/// An owned zenoh queryable.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_queryable_t([u64; 4]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_owned_queryable_t([u32; 4]);
-
-impl_guarded_transmute!(Queryable, z_owned_queryable_t);
-
-impl z_owned_queryable_t {
-    pub fn null() -> Self {
-        None.into()
-    }
-}
+pub use crate::opaque_types::z_owned_queryable_t;
+decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_queryable_null() -> z_owned_queryable_t {
-    z_owned_queryable_t::null()
+pub extern "C" fn z_queryable_null(this: *mut MaybeUninit<z_owned_queryable_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
 }
 
-/// Loaned variant of a Query received by a Queryable.
-///
-/// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
-/// `z_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
-#[allow(non_camel_case_types)]
-#[repr(C)]
-pub struct z_query_t(*mut c_void);
-impl From<&Query> for z_query_t {
-    fn from(value: &Query) -> Self {
-        z_query_t(value as *const _ as *mut _)
-    }
-}
-impl From<Option<&Query>> for z_query_t {
-    fn from(value: Option<&Query>) -> Self {
-        value.map_or(Self(core::ptr::null_mut()), Into::into)
-    }
-}
-impl Deref for z_query_t {
-    type Target = Option<&'static Query>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
+pub use crate::opaque_types::z_loaned_query_t;
+decl_transmute_handle!(Query, z_loaned_query_t);
 
 /// Owned variant of a Query received by a Queryable.
 ///
@@ -96,68 +48,46 @@ impl Deref for z_query_t {
 ///
 /// Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
 /// to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
-#[allow(non_camel_case_types)]
-#[repr(C)]
-pub struct z_owned_query_t(*mut c_void);
+pub use crate::opaque_types::z_owned_query_t;
+decl_transmute_owned!(Option<Query>, z_owned_query_t);
 
-impl From<Option<Query>> for z_owned_query_t {
-    fn from(value: Option<Query>) -> Self {
-        unsafe { core::mem::transmute(value) }
-    }
-}
-impl From<Query> for z_owned_query_t {
-    fn from(value: Query) -> Self {
-        Some(value).into()
-    }
-}
-impl Deref for z_owned_query_t {
-    type Target = Option<Query>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
-impl DerefMut for z_owned_query_t {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { core::mem::transmute(self) }
-    }
-}
-impl Drop for z_owned_query_t {
-    fn drop(&mut self) {
-        let _: Option<Query> = self.take();
-    }
-}
 /// The gravestone value of `z_owned_query_t`.
 #[no_mangle]
-pub extern "C" fn z_query_null() -> z_owned_query_t {
-    unsafe { core::mem::transmute(None::<Query>) }
+pub extern "C" fn z_query_null(this: *mut MaybeUninit<z_owned_query_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_check(this: &z_owned_query_t) -> bool {
-    this.is_some()
+pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
+    query.transmute_ref().is_some()
 }
 /// Aliases the query.
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_loan(this: &z_owned_query_t) -> z_query_t {
-    this.as_ref().into()
+pub extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loaned_query_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
 }
 /// Destroys the query, setting `this` to its gravestone value to prevent double-frees.
 ///
 /// This function may not be called with the null pointer, but can be called with the gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
-    let _: Option<Query> = this.take();
+    Inplace::drop(this.transmute_mut())
 }
 /// Clones the query, allowing to keep it in an "open" state past the callback's return.
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
-pub extern "C" fn z_query_clone(query: Option<&z_query_t>) -> z_owned_query_t {
-    query.and_then(|q| q.cloned()).into()
+pub extern "C" fn z_query_clone(this: &z_loaned_query_t, dst: *mut MaybeUninit<z_owned_query_t>) {
+    let this = this.transmute_ref();
+    let this = this.clone();
+    let dst = dst.transmute_uninit_ptr();
+    Inplace::init(dst, Some(this));
 }
 
 /// Options passed to the :c:func:`z_declare_queryable` function.
@@ -172,38 +102,38 @@ pub struct z_queryable_options_t {
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_queryable_options_default() -> z_queryable_options_t {
-    z_queryable_options_t { complete: false }
+pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) {
+    *this = z_queryable_options_t { complete: false };
 }
 
 /// Represents the set of options that can be applied to a query reply,
 /// sent via :c:func:`z_query_reply`.
 ///
 /// Members:
-///   z_encoding_t encoding: The encoding of the payload.
-///   z_attachment_t attachment: The attachment to this reply.
+///   z_owned_encoding_t encoding: The encoding of the payload.
+///  z_owned_bytes_t attachment: The attachment to this reply.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_reply_options_t {
-    pub encoding: z_encoding_t,
-    pub attachment: z_attachment_t,
+    pub encoding: *mut z_owned_encoding_t,
+    pub attachment: *mut z_owned_bytes_t,
 }
 
 /// Constructs the default value for :c:type:`z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
-    z_query_reply_options_t {
-        encoding: z_encoding_default(),
-        attachment: z_attachment_null(),
-    }
+pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
+    *this = z_query_reply_options_t {
+        encoding: null_mut(),
+        attachment: null_mut(),
+    };
 }
 
 /// Creates a Queryable for the given key expression.
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     keyexpr: The key expression the Queryable will reply to.
+///     key_expr: The key expression the Queryable will reply to.
 ///     callback: The callback function that will be called each time a matching query is received.
 ///     options: Options for the queryable.
 ///
@@ -212,31 +142,34 @@ pub extern "C" fn z_query_reply_options_default() -> z_query_reply_options_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
+    this: *mut MaybeUninit<z_owned_queryable_t>,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
-    options: Option<&z_queryable_options_t>,
-) -> z_owned_queryable_t {
+    options: Option<&mut z_queryable_options_t>,
+) -> errors::z_error_t {
+    let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
-
-    let session = match session.upgrade() {
-        Some(s) => s,
-        None => {
-            log::error!("{}", LOG_INVALID_SESSION);
-            return None.into();
-        }
-    };
+    let session = session.transmute_ref();
+    let keyexpr = key_expr.transmute_ref();
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
         builder = builder.complete(options.complete);
     }
-    builder
-        .callback(move |query| z_closure_query_call(&closure, &z_query_t::from(&query)))
-        .res_sync()
-        .map_err(|e| log::error!("{}", e))
-        .ok()
-        .into()
+    let queryable = builder
+        .callback(move |query| z_closure_query_call(&closure, query.transmute_handle()))
+        .res_sync();
+    match queryable {
+        Ok(q) => {
+            Inplace::init(this, Some(q));
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("{}", e);
+            errors::Z_EGENERIC
+        }
+    }
 }
 
 /// Undeclares a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
@@ -245,21 +178,20 @@ pub extern "C" fn z_declare_queryable(
 ///     qable: The :c:type:`z_owned_queryable_t` to undeclare.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> i8 {
-    if let Some(qable) = qable.take() {
+pub extern "C" fn z_undeclare_queryable(qable: &mut z_owned_queryable_t) -> errors::z_error_t {
+    if let Some(qable) = qable.transmute_mut().extract().take() {
         if let Err(e) = qable.undeclare().res_sync() {
             log::error!("{}", e);
-            return e.errno().get();
+            return errors::Z_EGENERIC;
         }
     }
-    0
+    errors::Z_OK
 }
 
 /// Returns ``true`` if `qable` is valid.
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
-    qable.as_ref().is_some()
+    qable.transmute_ref().is_some()
 }
 
 /// Send a reply to a query.
@@ -271,103 +203,94 @@ pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
 ///
 /// Parameters:
 ///     query: The query to reply to.
-///     key: The key of this reply.
+///     key_expr: The key of this reply.
 ///     payload: The value of this reply.
-///     len: The length of the value of this reply.
 ///     options: The options of this reply.
+///
+/// The payload and all owned options fields are consumed upon function return.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply(
-    query: &z_query_t,
-    key: z_keyexpr_t,
-    payload: *const u8,
-    len: usize,
-    options: Option<&z_query_reply_options_t>,
-) -> i8 {
-    let Some(query) = query.as_ref() else {
-        log::error!("Called `z_query_reply` with invalidated `query`");
-        return i8::MIN;
+    query: z_loaned_query_t,
+    key_expr: z_loaned_keyexpr_t,
+    payload: &mut z_owned_bytes_t,
+    options: Option<&mut z_query_reply_options_t>,
+) -> errors::z_error_t {
+    let query = query.transmute_ref();
+    let key_expr = key_expr.transmute_ref();
+
+    let payload = match payload.transmute_mut().extract() {
+        Some(p) => p,
+        None => {
+            log::debug!("Attempted to reply with a null payload");
+            return errors::Z_EINVAL;
+        }
     };
-    if let Some(key) = &*key {
-        let mut s = Sample::new(
-            key.clone().into_owned(),
-            std::slice::from_raw_parts(payload, len),
-        );
-        if let Some(o) = options {
-            s.encoding = o.encoding.into();
-            if z_attachment_check(&o.attachment) {
-                let mut attachment_builder = AttachmentBuilder::new();
-                z_attachment_iterate(
-                    o.attachment,
-                    insert_in_attachment_builder,
-                    &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-                );
-                s = s.with_attachment(attachment_builder.build());
-            };
+
+    let mut reply = query.reply(key_expr, payload);
+    if let Some(options) = options {
+        if !options.encoding.is_null() {
+            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            reply = reply.encoding(encoding);
+        };
+        if !options.attachment.is_null() {
+            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            reply = reply.attachment(attachment);
         }
-        if let Err(e) = query.reply(Ok(s)).res_sync() {
-            log::error!("{}", e);
-            return e.errno().get();
-        }
-        0
-    } else {
-        i8::MIN
     }
+
+    if let Err(e) = reply.res_sync() {
+        log::error!("{}", e);
+        return errors::Z_EGENERIC;
+    }
+    errors::Z_OK
 }
 
 /// Get a query's key by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_keyexpr(query: &z_query_t) -> z_keyexpr_t {
-    let Some(query) = query.as_ref() else {
-        return z_keyexpr_t::null();
-    };
-    query.key_expr().borrowing_clone().into()
+pub extern "C" fn z_query_keyexpr(query: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
+    query.transmute_ref().key_expr().transmute_handle()
 }
 
 /// Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_parameters(query: &z_query_t) -> z_bytes_t {
-    let Some(query) = query.as_ref() else {
-        return z_bytes_t::empty();
-    };
-    let complement = query.parameters();
-    z_bytes_t {
-        start: complement.as_ptr(),
-        len: complement.len(),
-    }
+pub unsafe extern "C" fn z_query_parameters(
+    query: &z_loaned_query_t,
+    parameters: *mut MaybeUninit<z_view_slice_t>,
+) {
+    let query = query.transmute_ref();
+    let params = query.parameters().as_str();
+    unsafe { z_view_slice_wrap(parameters, params.as_ptr(), params.len()) };
 }
 
-/// Get a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
+/// Checks if query contains a payload value.
+#[no_mangle]
+pub extern "C" fn z_query_has_value(query: &z_loaned_query_t) -> bool {
+    query.transmute_ref().value().is_some()
+}
+
+/// Gets a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
 ///
 /// **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
-#[allow(clippy::missing_safety_doc)]
+/// Before calling this funciton, the user must ensure that `z_query_has_value` returns true.
 #[no_mangle]
-pub unsafe extern "C" fn z_query_value(query: &z_query_t) -> z_value_t {
-    match query.as_ref().and_then(|q| q.value()) {
-        Some(value) => {
-            #[allow(mutable_transmutes)]
-            if let std::borrow::Cow::Owned(payload) = value.payload.contiguous() {
-                unsafe { std::mem::transmute::<_, &mut Value>(value).payload = payload.into() }
-            }
-            value.into()
-        }
-        None => (&Value::empty()).into(),
-    }
+pub extern "C" fn z_query_value(query: &z_loaned_query_t) -> &z_loaned_value_t {
+    query
+        .transmute_ref()
+        .value()
+        .expect("Query does not contain a value")
+        .transmute_handle()
 }
 
-/// Returns the attachment to the query by aliasing.
+/// Gets the attachment to the query by aliasing.
 ///
-/// `z_check(return_value) == false` if there was no attachment to the query.
-#[allow(clippy::missing_safety_doc)]
+/// Returns NULL if query does not contain an attachment.
 #[no_mangle]
-pub unsafe extern "C" fn z_query_attachment(query: &z_query_t) -> z_attachment_t {
-    match query.as_ref().and_then(|q| q.attachment()) {
-        Some(attachment) => z_attachment_t {
-            data: attachment as *const _ as *mut c_void,
-            iteration_driver: Some(attachment_iteration_driver),
-        },
-        None => z_attachment_null(),
+pub extern "C" fn z_query_attachment(query: &z_loaned_query_t) -> *const z_loaned_bytes_t {
+    match query.transmute_ref().attachment() {
+        Some(attachment) => attachment.transmute_handle() as *const _,
+        None => null(),
     }
 }

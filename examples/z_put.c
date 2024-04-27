@@ -23,8 +23,8 @@ int main(int argc, char **argv) {
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
 
-    z_owned_bytes_map_t attachment = z_bytes_map_new();
-    z_bytes_map_insert_by_alias(&attachment, z_bytes_from_str("hello"), z_bytes_from_str("there"));
+    z_owned_bytes_map_t attachment = z_slice_map_new();
+    z_slice_map_insert_by_alias(&attachment, z_slice_from_str("hello"), z_slice_from_str("there"));
 
     z_owned_config_t config = z_config_default();
     if (argc > 3) {
@@ -47,8 +47,9 @@ int main(int argc, char **argv) {
     printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
     z_put_options_t options = z_put_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    options.attachment = z_bytes_map_as_attachment(&attachment);
-    int res = z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)value, strlen(value), &options);
+    options.attachment = z_slice_map_as_attachment(&attachment);
+    z_owned_bytes_t payload = z_bytes_encode_from_string(value);
+    int res = z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), &options);
     if (res < 0) {
         printf("Put failed...\n");
     }

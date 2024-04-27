@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
         expr = argv[1];
     }
 
-    z_keyexpr_t keyexpr = z_keyexpr(expr);
+    z_loaned_keyexpr_t keyexpr = z_keyexpr(expr);
     if (!z_check(keyexpr)) {
         printf("%s is not a valid key expression\n", expr);
         exit(-1);

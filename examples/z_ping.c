@@ -13,10 +13,10 @@
 #define handle_error_en(en, msg) \
     do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
-z_condvar_t cond;
-z_mutex_t mutex;
+z_loaned_condvar_t cond;
+z_loaned_mutex_t mutex;
 
-void callback(const z_sample_t* sample, void* context) { z_condvar_signal(&cond); }
+void callback(const z_loaned_sample_t* sample, void* context) { z_condvar_signal(&cond); }
 void drop(void* context) { z_condvar_free(&cond); }
 
 struct args_t {
@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
     z_condvar_init(&cond);
     z_owned_config_t config = args.config_path ? zc_config_from_file(args.config_path) : z_config_default();
     z_owned_session_t session = z_open(z_move(config));
-    z_keyexpr_t ping = z_keyexpr_unchecked("test/ping");
-    z_keyexpr_t pong = z_keyexpr_unchecked("test/pong");
+    z_loaned_keyexpr_t ping = z_keyexpr_unchecked("test/ping");
+    z_loaned_keyexpr_t pong = z_keyexpr_unchecked("test/pong");
     z_owned_publisher_t pub = z_declare_publisher(z_loan(session), ping, NULL);
     z_owned_closure_sample_t respond = z_closure(callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub = z_declare_subscriber(z_loan(session), pong, z_move(respond), NULL);
@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
+    z_owned_bytes_t payload = z_bytes_encode_from_bytes((z_loaned_slice_t){.start = data, .len = args.size});
     z_mutex_lock(&mutex);
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
@@ -61,7 +62,7 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_publisher_put(z_loan(pub), data, args.size, NULL);
+            z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(&cond, &mutex);
             if (s != 0) {
                 handle_error_en(s, "z_condvar_wait");
@@ -72,7 +73,7 @@ int main(int argc, char** argv) {
     unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
         z_clock_t measure_start = z_clock_now();
-        z_publisher_put(z_loan(pub), data, args.size, NULL);
+        z_publisher_put(z_loan(pub), z_move(payload), NULL);
         int s = z_condvar_wait(&cond, &mutex);
         if (s != 0) {
             handle_error_en(s, "z_condvar_wait");

@@ -61,7 +61,8 @@ int run_publisher() {
 
     // values for cache
     for (int i = 0; i < values_count / 2; ++i) {
-        z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)values[i], strlen(values[i]), NULL);
+        z_owned_bytes_t payload = z_bytes_encode_from_string(values[i]);
+        z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), NULL);
     }
 
     SEM_POST(sem_pub);
@@ -70,7 +71,8 @@ int run_publisher() {
 
     // values for subscribe
     for (int i = values_count / 2; i < values_count; ++i) {
-        z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)values[i], strlen(values[i]), NULL);
+        z_owned_bytes_t payload = z_bytes_encode_from_string(values[i]);
+        z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), NULL);
     }
 
     printf("wait: sem_sub\n");
@@ -83,16 +85,22 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(const z_sample_t *sample, void *arg) {
+void data_handler(const z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(sample));
     if (strcmp(keyexpr, z_loan(keystr))) {
         perror("Unexpected key received");
         exit(-1);
     }
     z_drop(z_move(keystr));
-
-    ASSERT_STR_BYTES_EQUAL(values[val_num], sample->payload);
+    z_owned_str_t payload_value = z_str_null();
+    z_bytes_decode_into_string(z_sample_payload(sample), &payload_value);
+    if (strcmp(values[val_num], z_loan(payload_value))) {
+        perror("Unexpected value received");
+        z_drop(z_move(payload_value));
+        exit(-1);
+    }
+    z_drop(z_move(payload_value));
 
     printf("data_handler: %i\n", val_num);
     if (++val_num == values_count) {

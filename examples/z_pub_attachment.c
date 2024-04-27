@@ -52,13 +52,13 @@ int main(int argc, char **argv) {
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
 
     // allocate attachment map
-    z_owned_bytes_map_t map = z_bytes_map_new();
+    z_owned_bytes_map_t map = z_slice_map_new();
 
     // set it as an attachment
-    options.attachment = z_bytes_map_as_attachment(&map);
+    options.attachment = z_slice_map_as_attachment(&map);
 
     // add some value
-    z_bytes_map_insert_by_alias(&map, z_bytes_from_str("source"), z_bytes_from_str("C"));
+    z_slice_map_insert_by_alias(&map, z_slice_from_str("source"), z_slice_from_str("C"));
 
     char buf[256];
     char buf_ind[16];
@@ -67,11 +67,12 @@ int main(int argc, char **argv) {
 
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
-        z_bytes_map_insert_by_alias(&map, z_bytes_from_str("index"), z_bytes_from_str(buf_ind));
+        z_slice_map_insert_by_alias(&map, z_slice_from_str("index"), z_slice_from_str(buf_ind));
 
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-        z_publisher_put(z_loan(pub), (const uint8_t *)buf, strlen(buf), &options);
+        z_owned_bytes_t payload = z_bytes_encode_from_string(buf);
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));

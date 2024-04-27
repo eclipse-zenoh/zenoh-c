@@ -1,6 +1,12 @@
-use crate::{z_closure_owned_query_drop, z_owned_closure_owned_query_t, z_owned_query_t};
+use crate::{
+    z_closure_query_drop, z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
+    z_query_clone, z_query_null,
+};
 use libc::c_void;
-use std::sync::mpsc::TryRecvError;
+use std::{
+    mem::MaybeUninit,
+    sync::mpsc::{Receiver, TryRecvError},
+};
 
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 /// - `this` is a pointer to an arbitrary state.
@@ -16,27 +22,57 @@ use std::sync::mpsc::TryRecvError;
 #[repr(C)]
 pub struct z_owned_query_channel_closure_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(&mut z_owned_query_t, *mut c_void) -> bool>,
+    call: Option<extern "C" fn(*mut MaybeUninit<z_owned_query_t>, *mut c_void) -> bool>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 
 /// A pair of closures
 #[repr(C)]
 pub struct z_owned_query_channel_t {
-    pub send: z_owned_closure_owned_query_t,
+    pub send: z_owned_closure_query_t,
     pub recv: z_owned_query_channel_closure_t,
 }
 #[no_mangle]
 pub extern "C" fn z_query_channel_drop(channel: &mut z_owned_query_channel_t) {
-    z_closure_owned_query_drop(&mut channel.send);
+    z_closure_query_drop(&mut channel.send);
     z_query_channel_closure_drop(&mut channel.recv);
 }
 /// Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
 #[no_mangle]
 pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
     z_owned_query_channel_t {
-        send: z_owned_closure_owned_query_t::empty(),
+        send: z_owned_closure_query_t::empty(),
         recv: z_owned_query_channel_closure_t::empty(),
+    }
+}
+
+unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver<z_owned_query_t>) {
+    if bound == 0 {
+        let (tx, rx) = std::sync::mpsc::channel();
+        (
+            From::from(move |query: &z_loaned_query_t| {
+                let mut this = MaybeUninit::<z_owned_query_t>::uninit();
+                z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
+                let this = this.assume_init();
+                if let Err(e) = tx.send(this) {
+                    log::error!("Attempted to push onto a closed reply_fifo: {}", e);
+                }
+            }),
+            rx,
+        )
+    } else {
+        let (tx, rx) = std::sync::mpsc::sync_channel(bound);
+        (
+            From::from(move |query: &z_loaned_query_t| {
+                let mut this = MaybeUninit::<z_owned_query_t>::uninit();
+                z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
+                let this = this.assume_init();
+                if let Err(e) = tx.send(this) {
+                    log::error!("Attempted to push onto a closed reply_fifo: {}", e);
+                }
+            }),
+            rx,
+        )
     }
 }
 
@@ -50,39 +86,17 @@ pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
-pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
-    let (send, rx) = if bound == 0 {
-        let (tx, rx) = std::sync::mpsc::channel();
-        (
-            From::from(move |query: &mut z_owned_query_t| {
-                if let Some(query) = query.take() {
-                    if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
-                    }
-                }
-            }),
-            rx,
-        )
-    } else {
-        let (tx, rx) = std::sync::mpsc::sync_channel(bound);
-        (
-            From::from(move |query: &mut z_owned_query_t| {
-                if let Some(query) = query.take() {
-                    if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
-                    }
-                }
-            }),
-            rx,
-        )
-    };
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
+    let (send, rx) = get_send_recv_ends(bound);
     z_owned_query_channel_t {
         send,
-        recv: From::from(move |receptacle: &mut z_owned_query_t| {
-            *receptacle = match rx.recv() {
-                Ok(val) => val.into(),
-                Err(_) => None.into(),
-            };
+        recv: From::from(move |this: *mut MaybeUninit<z_owned_query_t>| {
+            if let Ok(val) = rx.recv() {
+                (*this).write(val);
+            } else {
+                z_query_null(this);
+            }
             true
         }),
     }
@@ -98,47 +112,23 @@ pub extern "C" fn zc_query_fifo_new(bound: usize) -> z_owned_query_channel_t {
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
 /// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
 #[no_mangle]
-pub extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_channel_t {
-    let (send, rx) = if bound == 0 {
-        let (tx, rx) = std::sync::mpsc::channel();
-        (
-            From::from(move |query: &mut z_owned_query_t| {
-                if let Some(query) = query.take() {
-                    if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
-                    }
-                }
-            }),
-            rx,
-        )
-    } else {
-        let (tx, rx) = std::sync::mpsc::sync_channel(bound);
-        (
-            From::from(move |query: &mut z_owned_query_t| {
-                if let Some(query) = query.take() {
-                    if let Err(e) = tx.send(query) {
-                        log::error!("Attempted to push onto a closed query_fifo: {}", e)
-                    }
-                }
-            }),
-            rx,
-        )
-    };
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_query_non_blocking_fifo_new(bound: usize) -> z_owned_query_channel_t {
+    let (send, rx) = get_send_recv_ends(bound);
     z_owned_query_channel_t {
         send,
         recv: From::from(
-            move |receptacle: &mut z_owned_query_t| match rx.try_recv() {
+            move |this: *mut MaybeUninit<z_owned_query_t>| match rx.try_recv() {
                 Ok(val) => {
-                    let mut tmp = z_owned_query_t::from(val);
-                    std::mem::swap(&mut tmp, receptacle);
+                    (*this).write(val);
                     true
                 }
                 Err(TryRecvError::Disconnected) => {
-                    receptacle.take();
+                    z_query_null(this);
                     true
                 }
                 Err(TryRecvError::Empty) => {
-                    receptacle.take();
+                    z_query_null(this);
                     false
                 }
             },
@@ -175,10 +165,10 @@ pub extern "C" fn z_query_channel_closure_null() -> z_owned_query_channel_closur
 #[no_mangle]
 pub extern "C" fn z_query_channel_closure_call(
     closure: &z_owned_query_channel_closure_t,
-    sample: &mut z_owned_query_t,
+    query: *mut MaybeUninit<z_owned_query_t>,
 ) -> bool {
     match closure.call {
-        Some(call) => call(sample, closure.context),
+        Some(call) => call(query, closure.context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
             true
@@ -191,11 +181,11 @@ pub extern "C" fn z_query_channel_closure_drop(closure: &mut z_owned_query_chann
     let mut empty_closure = z_owned_query_channel_closure_t::empty();
     std::mem::swap(&mut empty_closure, closure);
 }
-impl<F: Fn(&mut z_owned_query_t) -> bool> From<F> for z_owned_query_channel_closure_t {
+impl<F: Fn(*mut MaybeUninit<z_owned_query_t>) -> bool> From<F> for z_owned_query_channel_closure_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&mut z_owned_query_t) -> bool>(
-            query: &mut z_owned_query_t,
+        extern "C" fn call<F: Fn(*mut MaybeUninit<z_owned_query_t>) -> bool>(
+            query: *mut MaybeUninit<z_owned_query_t>,
             this: *mut c_void,
         ) -> bool {
             let this = unsafe { &*(this as *const F) };

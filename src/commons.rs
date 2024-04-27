@@ -12,24 +12,35 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::collections::*;
-use crate::keyexpr::*;
-use crate::z_congestion_control_t;
+use std::ffi::CStr;
+use std::mem::MaybeUninit;
+use std::ptr::null;
+use std::str::FromStr;
+
+use crate::transmute::unwrap_ref_unchecked;
+use crate::transmute::Inplace;
+use crate::transmute::TransmuteCopy;
+use crate::transmute::TransmuteFromHandle;
+use crate::transmute::TransmuteIntoHandle;
+use crate::transmute::TransmuteRef;
+use crate::transmute::TransmuteUninitPtr;
 use crate::z_id_t;
-use crate::z_priority_t;
-use crate::{impl_guarded_transmute, GuardedTransmute};
-use libc::c_void;
+use crate::z_loaned_bytes_t;
+use crate::z_loaned_keyexpr_t;
 use libc::{c_char, c_ulong};
-use zenoh::buffers::ZBuf;
+use unwrap_infallible::UnwrapInfallible;
+use zenoh::encoding::Encoding;
 use zenoh::prelude::SampleKind;
-use zenoh::prelude::SplitBuffer;
+use zenoh::publication::CongestionControl;
+use zenoh::publication::Priority;
+use zenoh::query::ConsolidationMode;
+use zenoh::query::Mode;
+use zenoh::query::QueryTarget;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
-use zenoh::sample::QoS;
 use zenoh::sample::Sample;
-use zenoh_protocol::core::Timestamp;
-
-use crate::attachment::{attachment_iteration_driver, z_attachment_null, z_attachment_t};
+use zenoh::time::Timestamp;
+use zenoh::value::Value;
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -60,546 +71,215 @@ impl From<z_sample_kind_t> for SampleKind {
         }
     }
 }
+use crate::opaque_types::z_timestamp_t;
+decl_transmute_copy!(Timestamp, z_timestamp_t);
 
-#[repr(C)]
-pub struct z_timestamp_t {
-    time: u64,
-    id: z_id_t,
-}
-
-/// Returns ``true`` if `ts` is a valid timestamp
 #[no_mangle]
-pub extern "C" fn z_timestamp_check(ts: z_timestamp_t) -> bool {
-    ts.id.id.iter().any(|byte| *byte != 0)
-}
-impl From<Option<&Timestamp>> for z_timestamp_t {
-    fn from(ts: Option<&Timestamp>) -> Self {
-        if let Some(ts) = ts {
-            z_timestamp_t {
-                time: ts.get_time().as_u64(),
-                id: z_id_t {
-                    id: ts.get_id().to_le_bytes(),
-                },
-            }
-        } else {
-            z_timestamp_t {
-                time: 0,
-                id: z_id_t { id: [0u8; 16] },
-            }
-        }
-    }
+pub extern "C" fn z_timestamp_npt64_time(timestamp: &z_timestamp_t) -> u64 {
+    timestamp.transmute_copy().get_time().0
 }
 
-/// An owned payload, backed by a reference counted owner.
-///
-/// The `payload` field may be modified, and Zenoh will take the new values into account,
-/// however, assuming `ostart` and `olen` are the respective values of `payload.start` and
-/// `payload.len` when constructing the `zc_owned_payload_t payload` value was created,
-/// then `payload.start` MUST remain within the `[ostart, ostart + olen[` interval, and
-/// `payload.len` must remain within `[0, olen -(payload.start - ostart)]`.
-///
-/// Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
-/// functions, then the operation will fail (but the passed value will still be consumed).
-#[allow(non_camel_case_types)]
-#[repr(C)]
-pub struct zc_owned_payload_t {
-    pub payload: z_bytes_t,
-    pub _owner: [usize; 5],
-}
-impl Default for zc_owned_payload_t {
-    fn default() -> Self {
-        zc_payload_null()
-    }
-}
-impl TryFrom<ZBuf> for zc_owned_payload_t {
-    type Error = ();
-    fn try_from(buf: ZBuf) -> Result<Self, Self::Error> {
-        let std::borrow::Cow::Borrowed(payload) = buf.contiguous() else {
-            return Err(());
-        };
-        Ok(Self {
-            payload: payload.into(),
-            _owner: unsafe { std::mem::transmute(buf) },
-        })
-    }
-}
-impl zc_owned_payload_t {
-    pub fn take(&mut self) -> Option<ZBuf> {
-        if !z_bytes_check(&self.payload) {
-            return None;
-        }
-        let start = std::mem::replace(&mut self.payload.start, std::ptr::null());
-        let len = std::mem::replace(&mut self.payload.len, 0);
-        let mut buf: ZBuf = unsafe { std::mem::transmute(self._owner) };
-        {
-            let mut slices = buf.zslices_mut();
-            let slice = slices.next().unwrap();
-            assert!(
-                slices.next().is_none(),
-                "A multi-slice buffer reached zenoh-c, which is definitely a bug, please report it."
-            );
-            let start_offset = unsafe { start.offset_from(slice.as_slice().as_ptr()) };
-            let Ok(start_offset) = start_offset.try_into() else {
-                return None;
-            };
-            *slice = match slice.subslice(start_offset, start_offset + len) {
-                Some(s) => s,
-                None => return None,
-            };
-        }
-        Some(buf)
-    }
-    fn owner(&self) -> Option<&ZBuf> {
-        if !z_bytes_check(&self.payload) {
-            return None;
-        }
-        unsafe { std::mem::transmute(&self._owner) }
-    }
-}
-impl Drop for zc_owned_payload_t {
-    fn drop(&mut self) {
-        self.take();
-    }
-}
-
-/// Clones the `payload` by incrementing its reference counter.
 #[no_mangle]
-pub extern "C" fn zc_payload_rcinc(payload: &zc_owned_payload_t) -> zc_owned_payload_t {
-    match payload.owner() {
-        None => Default::default(),
-        Some(payload) => payload.clone().try_into().unwrap_or_default(),
-    }
-}
-/// Returns `false` if `payload` is the gravestone value.
-#[no_mangle]
-pub extern "C" fn zc_payload_check(payload: &zc_owned_payload_t) -> bool {
-    !payload.payload.start.is_null()
-}
-/// Decrements `payload`'s backing refcount, releasing the memory if appropriate.
-#[no_mangle]
-pub extern "C" fn zc_payload_drop(payload: &mut zc_owned_payload_t) {
-    unsafe { std::ptr::replace(payload, zc_payload_null()) };
-}
-/// Constructs `zc_owned_payload_t`'s gravestone value.
-#[no_mangle]
-pub extern "C" fn zc_payload_null() -> zc_owned_payload_t {
-    zc_owned_payload_t {
-        payload: z_bytes_t {
-            len: 0,
-            start: std::ptr::null(),
-        },
-        _owner: unsafe { core::mem::MaybeUninit::zeroed().assume_init() },
-    }
-}
-
-/// QoS settings of zenoh message.
-///
-#[repr(C)]
-pub struct z_qos_t(u8);
-
-impl_guarded_transmute!(QoS, z_qos_t);
-/// Returns message priority.
-#[no_mangle]
-pub extern "C" fn z_qos_get_priority(qos: z_qos_t) -> z_priority_t {
-    qos.transmute().priority().into()
-}
-/// Returns message congestion control.
-#[no_mangle]
-pub extern "C" fn z_qos_get_congestion_control(qos: z_qos_t) -> z_congestion_control_t {
-    qos.transmute().congestion_control().into()
-}
-/// Returns message express flag. If set to true, the message is not batched to reduce the latency.
-#[no_mangle]
-pub extern "C" fn z_qos_get_express(qos: z_qos_t) -> bool {
-    qos.transmute().express()
-}
-/// Returns default qos settings.
-#[no_mangle]
-pub extern "C" fn z_qos_default() -> z_qos_t {
-    QoS::default().transmute()
+pub extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t {
+    timestamp.transmute_copy().get_id().to_le_bytes().into()
 }
 
 /// A data sample.
 ///
 /// A sample is the value associated to a given resource at a given point in time.
+use crate::opaque_types::z_loaned_sample_t;
+decl_transmute_handle!(Sample, z_loaned_sample_t);
+
+/// The Key Expression of the sample.
 ///
-/// Members:
-///   z_keyexpr_t keyexpr: The resource key of this data sample.
-///   z_bytes_t payload: The value of this data sample.
-///   z_encoding_t encoding: The encoding of the value of this data sample.
-///   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
-///   z_timestamp_t timestamp: The timestamp of this data sample.
-///   z_attachment_t attachment: The attachment of this data sample.
-#[repr(C)]
-pub struct z_sample_t<'a> {
-    pub keyexpr: z_keyexpr_t,
-    pub payload: z_bytes_t,
-    pub encoding: z_encoding_t,
-    pub _zc_buf: &'a c_void,
-    pub kind: z_sample_kind_t,
-    pub timestamp: z_timestamp_t,
-    pub qos: z_qos_t,
-    pub attachment: z_attachment_t,
-}
-
-impl<'a> z_sample_t<'a> {
-    pub fn new(sample: &'a Sample, owner: &'a ZBuf) -> Self {
-        let std::borrow::Cow::Borrowed(payload) = owner.contiguous() else {
-            panic!("Attempted to construct z_sample_t from discontiguous buffer, this is definitely a bug in zenoh-c, please report it.")
-        };
-        z_sample_t {
-            keyexpr: (&sample.key_expr).into(),
-            payload: z_bytes_t::from(payload),
-            encoding: (&sample.encoding).into(),
-            _zc_buf: unsafe { std::mem::transmute(owner) },
-            kind: sample.kind.into(),
-            timestamp: sample.timestamp.as_ref().into(),
-            qos: sample.qos.into(),
-            attachment: match &sample.attachment {
-                Some(attachment) => z_attachment_t {
-                    data: attachment as *const _ as *mut c_void,
-                    iteration_driver: Some(attachment_iteration_driver),
-                },
-                None => z_attachment_null(),
-            },
-        }
-    }
-}
-
-/// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+/// `sample` is aliased by its return value.
 #[no_mangle]
-pub extern "C" fn zc_sample_payload_rcinc(sample: Option<&z_sample_t>) -> zc_owned_payload_t {
-    let Some(sample) = sample else {
-        return zc_payload_null();
-    };
-    let buf = unsafe { std::mem::transmute::<_, &ZBuf>(sample._zc_buf).clone() };
-    zc_owned_payload_t {
-        payload: sample.payload,
-        _owner: unsafe { std::mem::transmute(buf) },
-    }
+pub extern "C" fn z_sample_keyexpr(sample: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
+    let sample = sample.transmute_ref();
+    sample.key_expr().transmute_handle()
 }
-
-/// A :c:type:`z_encoding_t` integer `prefix`.
+/// The encoding of the payload.
+#[no_mangle]
+pub extern "C" fn z_sample_encoding(sample: &z_loaned_sample_t) -> &z_loaned_encoding_t {
+    let sample = sample.transmute_ref();
+    sample.encoding().transmute_handle()
+}
+/// The sample's data, the return value aliases the sample.
 ///
-///     - **Z_ENCODING_PREFIX_EMPTY**
-///     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
-///     - **Z_ENCODING_PREFIX_APP_CUSTOM**
-///     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
-///     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
-///     - **Z_ENCODING_PREFIX_APP_JSON**
-///     - **Z_ENCODING_PREFIX_APP_SQL**
-///     - **Z_ENCODING_PREFIX_APP_INTEGER**
-///     - **Z_ENCODING_PREFIX_APP_FLOAT**
-///     - **Z_ENCODING_PREFIX_APP_XML**
-///     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
-///     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
-///     - **Z_ENCODING_PREFIX_TEXT_JSON**
-///     - **Z_ENCODING_PREFIX_TEXT_HTML**
-///     - **Z_ENCODING_PREFIX_TEXT_XML**
-///     - **Z_ENCODING_PREFIX_TEXT_CSS**
-///     - **Z_ENCODING_PREFIX_TEXT_CSV**
-///     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
-///     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
-///     - **Z_ENCODING_PREFIX_IMAGE_PNG**
-///     - **Z_ENCODING_PREFIX_IMAGE_GIF**
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub enum z_encoding_prefix_t {
-    Empty = 0,
-    AppOctetStream = 1,
-    AppCustom = 2,
-    TextPlain = 3,
-    AppProperties = 4,
-    AppJson = 5,
-    AppSql = 6,
-    AppInteger = 7,
-    AppFloat = 8,
-    AppXml = 9,
-    AppXhtmlXml = 10,
-    AppXWwwFormUrlencoded = 11,
-    TextJson = 12,
-    TextHtml = 13,
-    TextXml = 14,
-    TextCss = 15,
-    TextCsv = 16,
-    TextJavascript = 17,
-    ImageJpeg = 18,
-    ImagePng = 19,
-    ImageGif = 20,
+#[no_mangle]
+pub extern "C" fn z_sample_payload(sample: &z_loaned_sample_t) -> &z_loaned_bytes_t {
+    let sample = sample.transmute_ref();
+    sample.payload().transmute_handle()
 }
 
-impl From<z_encoding_prefix_t> for zenoh_protocol::core::KnownEncoding {
-    fn from(val: z_encoding_prefix_t) -> Self {
-        if cfg!(debug_assertions) {
-            match val {
-                z_encoding_prefix_t::Empty => zenoh_protocol::core::KnownEncoding::Empty,
-                z_encoding_prefix_t::AppOctetStream => {
-                    zenoh_protocol::core::KnownEncoding::AppOctetStream
-                }
-                z_encoding_prefix_t::AppCustom => zenoh_protocol::core::KnownEncoding::AppCustom,
-                z_encoding_prefix_t::TextPlain => zenoh_protocol::core::KnownEncoding::TextPlain,
-                z_encoding_prefix_t::AppProperties => {
-                    zenoh_protocol::core::KnownEncoding::AppProperties
-                }
-                z_encoding_prefix_t::AppJson => zenoh_protocol::core::KnownEncoding::AppJson,
-                z_encoding_prefix_t::AppSql => zenoh_protocol::core::KnownEncoding::AppSql,
-                z_encoding_prefix_t::AppInteger => zenoh_protocol::core::KnownEncoding::AppInteger,
-                z_encoding_prefix_t::AppFloat => zenoh_protocol::core::KnownEncoding::AppFloat,
-                z_encoding_prefix_t::AppXml => zenoh_protocol::core::KnownEncoding::AppXml,
-                z_encoding_prefix_t::AppXhtmlXml => {
-                    zenoh_protocol::core::KnownEncoding::AppXhtmlXml
-                }
-                z_encoding_prefix_t::AppXWwwFormUrlencoded => {
-                    zenoh_protocol::core::KnownEncoding::AppXWwwFormUrlencoded
-                }
-                z_encoding_prefix_t::TextJson => zenoh_protocol::core::KnownEncoding::TextJson,
-                z_encoding_prefix_t::TextHtml => zenoh_protocol::core::KnownEncoding::TextHtml,
-                z_encoding_prefix_t::TextXml => zenoh_protocol::core::KnownEncoding::TextXml,
-                z_encoding_prefix_t::TextCss => zenoh_protocol::core::KnownEncoding::TextCss,
-                z_encoding_prefix_t::TextCsv => zenoh_protocol::core::KnownEncoding::TextCsv,
-                z_encoding_prefix_t::TextJavascript => {
-                    zenoh_protocol::core::KnownEncoding::TextJavascript
-                }
-                z_encoding_prefix_t::ImageJpeg => zenoh_protocol::core::KnownEncoding::ImageJpeg,
-                z_encoding_prefix_t::ImagePng => zenoh_protocol::core::KnownEncoding::ImagePng,
-                z_encoding_prefix_t::ImageGif => zenoh_protocol::core::KnownEncoding::ImageGif,
-            }
-        } else {
-            unsafe { std::mem::transmute(val as u8) }
-        }
-    }
+/// The sample's kind (put or delete).
+#[no_mangle]
+pub extern "C" fn z_sample_kind(sample: &z_loaned_sample_t) -> z_sample_kind_t {
+    let sample = sample.transmute_ref();
+    sample.kind().into()
 }
-
-impl From<zenoh_protocol::core::KnownEncoding> for z_encoding_prefix_t {
-    fn from(val: zenoh_protocol::core::KnownEncoding) -> Self {
-        if cfg!(debug_assertions) {
-            match val {
-                zenoh_protocol::core::KnownEncoding::Empty => z_encoding_prefix_t::Empty,
-                zenoh_protocol::core::KnownEncoding::AppOctetStream => {
-                    z_encoding_prefix_t::AppOctetStream
-                }
-                zenoh_protocol::core::KnownEncoding::AppCustom => z_encoding_prefix_t::AppCustom,
-                zenoh_protocol::core::KnownEncoding::TextPlain => z_encoding_prefix_t::TextPlain,
-                zenoh_protocol::core::KnownEncoding::AppProperties => {
-                    z_encoding_prefix_t::AppProperties
-                }
-                zenoh_protocol::core::KnownEncoding::AppJson => z_encoding_prefix_t::AppJson,
-                zenoh_protocol::core::KnownEncoding::AppSql => z_encoding_prefix_t::AppSql,
-                zenoh_protocol::core::KnownEncoding::AppInteger => z_encoding_prefix_t::AppInteger,
-                zenoh_protocol::core::KnownEncoding::AppFloat => z_encoding_prefix_t::AppFloat,
-                zenoh_protocol::core::KnownEncoding::AppXml => z_encoding_prefix_t::AppXml,
-                zenoh_protocol::core::KnownEncoding::AppXhtmlXml => {
-                    z_encoding_prefix_t::AppXhtmlXml
-                }
-                zenoh_protocol::core::KnownEncoding::AppXWwwFormUrlencoded => {
-                    z_encoding_prefix_t::AppXWwwFormUrlencoded
-                }
-                zenoh_protocol::core::KnownEncoding::TextJson => z_encoding_prefix_t::TextJson,
-                zenoh_protocol::core::KnownEncoding::TextHtml => z_encoding_prefix_t::TextHtml,
-                zenoh_protocol::core::KnownEncoding::TextXml => z_encoding_prefix_t::TextXml,
-                zenoh_protocol::core::KnownEncoding::TextCss => z_encoding_prefix_t::TextCss,
-                zenoh_protocol::core::KnownEncoding::TextCsv => z_encoding_prefix_t::TextCsv,
-                zenoh_protocol::core::KnownEncoding::TextJavascript => {
-                    z_encoding_prefix_t::TextJavascript
-                }
-                zenoh_protocol::core::KnownEncoding::ImageJpeg => z_encoding_prefix_t::ImageJpeg,
-                zenoh_protocol::core::KnownEncoding::ImagePng => z_encoding_prefix_t::ImagePng,
-                zenoh_protocol::core::KnownEncoding::ImageGif => z_encoding_prefix_t::ImageGif,
-            }
-        } else {
-            unsafe { std::mem::transmute(val as u32) }
-        }
-    }
-}
-
-/// The encoding of a payload, in a MIME-like format.
+/// The samples timestamp
 ///
-/// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
+/// Returns true if Sample contains timestamp, false otherwise. In the latter case the timestamp_out value is not altered.
+#[no_mangle]
+pub extern "C" fn z_loaned_sample_timestamp(
+    sample: &z_loaned_sample_t,
+    timestamp_out: &mut z_timestamp_t,
+) -> bool {
+    let sample = sample.transmute_ref();
+    if let Some(t) = sample.timestamp() {
+        *timestamp_out = t.transmute_copy();
+        true
+    } else {
+        false
+    }
+}
+/// The qos with which the sample was received.
+/// TODO: split to methods (priority, congestion_control, express)
+
+/// Gets sample's attachment.
 ///
-/// Members:
-///   z_encoding_prefix_t prefix: The integer prefix of this encoding.
-///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub struct z_encoding_t {
-    pub prefix: z_encoding_prefix_t,
-    pub suffix: z_bytes_t,
-}
-
-impl From<z_encoding_t> for zenoh_protocol::core::Encoding {
-    fn from(enc: z_encoding_t) -> Self {
-        if enc.suffix.len == 0 {
-            zenoh_protocol::core::Encoding::Exact(enc.prefix.into())
-        } else {
-            let suffix = unsafe {
-                let slice: &'static [u8] =
-                    std::slice::from_raw_parts(enc.suffix.start, enc.suffix.len);
-                std::str::from_utf8_unchecked(slice)
-            };
-            zenoh_protocol::core::Encoding::WithSuffix(enc.prefix.into(), suffix.into())
-        }
+/// Returns NULL if sample does not contain an attachement.
+#[no_mangle]
+pub extern "C" fn z_sample_attachment(sample: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
+    let sample = sample.transmute_ref();
+    match sample.attachment() {
+        Some(attachment) => attachment.transmute_handle() as *const _,
+        None => null(),
     }
 }
 
-impl From<&zenoh_protocol::core::Encoding> for z_encoding_t {
-    fn from(val: &zenoh_protocol::core::Encoding) -> Self {
-        let suffix = val.suffix();
-        z_encoding_t {
-            prefix: (*val.prefix()).into(),
-            suffix: z_bytes_t {
-                start: suffix.as_ptr(),
-                len: suffix.len(),
-            },
-        }
-    }
+pub use crate::opaque_types::z_owned_sample_t;
+decl_transmute_owned!(Option<Sample>, z_owned_sample_t);
+
+/// Clone a sample in the cheapest way available.
+#[no_mangle]
+pub extern "C" fn z_sample_clone(src: &z_loaned_sample_t, dst: *mut MaybeUninit<z_owned_sample_t>) {
+    let src = src.transmute_ref();
+    let src = src.clone();
+    let dst = dst.transmute_uninit_ptr();
+    Inplace::init(dst, Some(src));
 }
+
+#[no_mangle]
+pub extern "C" fn z_sample_priority(sample: &z_loaned_sample_t) -> z_priority_t {
+    let sample = sample.transmute_ref();
+    sample.priority().into()
+}
+
+#[no_mangle]
+pub extern "C" fn z_sample_express(sample: &z_loaned_sample_t) -> bool {
+    let sample = sample.transmute_ref();
+    sample.express()
+}
+
+#[no_mangle]
+pub extern "C" fn z_sample_congestion_control(
+    sample: &z_loaned_sample_t,
+) -> z_congestion_control_t {
+    let sample = sample.transmute_ref();
+    sample.congestion_control().into()
+}
+
+/// Returns `true` if `sample` is valid.
+///
+/// Note that there exist no fallinle constructors for `z_owned_sample_t`, so validity is always guaranteed
+/// unless the value has been dropped already.
+#[no_mangle]
+pub extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
+    let sample = sample.transmute_ref();
+    sample.is_some()
+}
+
+/// Borrow the sample, allowing calling its accessor methods.
+///
+/// Calling this function using a dropped sample is undefined behaviour.
+#[no_mangle]
+pub extern "C" fn z_sample_loan(sample: &z_owned_sample_t) -> &z_loaned_sample_t {
+    unwrap_ref_unchecked(sample.transmute_ref()).transmute_handle()
+}
+
+/// Destroy the sample.
+#[no_mangle]
+pub extern "C" fn z_sample_drop(sample: &mut z_owned_sample_t) {
+    Inplace::drop(sample.transmute_mut());
+}
+
+#[no_mangle]
+pub extern "C" fn z_sample_null(sample: *mut MaybeUninit<z_owned_sample_t>) {
+    Inplace::empty(sample.transmute_uninit_ptr());
+}
+
+pub use crate::opaque_types::z_loaned_encoding_t;
+decl_transmute_handle!(Encoding, z_loaned_encoding_t);
 
 /// An owned payload encoding.
-///
-/// Members:
-///   z_encoding_prefix_t prefix: The integer prefix of this encoding.
-///   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
 ///
 /// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
 /// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_encoding_t {
-    pub prefix: z_encoding_prefix_t,
-    pub suffix: z_bytes_t,
-    pub _dropped: bool,
-}
-
-impl z_owned_encoding_t {
-    pub fn null() -> Self {
-        z_owned_encoding_t {
-            prefix: z_encoding_prefix_t::Empty,
-            suffix: z_bytes_t::default(),
-            _dropped: true,
-        }
-    }
-}
+pub use crate::opaque_types::z_owned_encoding_t;
+decl_transmute_owned!(Encoding, z_owned_encoding_t);
 
 /// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
 #[no_mangle]
-pub extern "C" fn z_encoding_null() -> z_owned_encoding_t {
-    z_owned_encoding_t::null()
+pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>) {
+    Inplace::empty(encoding.transmute_uninit_ptr());
 }
 
-/// Constructs a specific :c:type:`z_encoding_t`.
+/// Constructs a specific :c:type:`z_loaned_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding(
-    prefix: z_encoding_prefix_t,
-    suffix: *const c_char,
-) -> z_encoding_t {
-    let suffix = if suffix.is_null() {
-        z_bytes_t::empty()
+pub unsafe extern "C" fn z_encoding_from_str(
+    encoding: *mut MaybeUninit<z_owned_encoding_t>,
+    s: *const c_char,
+) -> i8 {
+    let encoding = encoding.transmute_uninit_ptr();
+    if s.is_null() {
+        Inplace::empty(encoding);
+        0
     } else {
-        z_bytes_t {
-            start: suffix as *const u8,
-            len: libc::strlen(suffix),
-        }
-    };
-    z_encoding_t { prefix, suffix }
+        let s = CStr::from_ptr(s).to_string_lossy();
+        let value = Encoding::from_str(s.as_ref()).unwrap_infallible();
+        Inplace::init(encoding, value);
+        0
+    }
 }
 
-/// Constructs a default :c:type:`z_encoding_t`.
+/// Constructs a default :c:type:`z_loaned_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_default() -> z_encoding_t {
-    (&zenoh_protocol::core::Encoding::default()).into()
+pub extern "C" fn z_encoding_default() -> &'static z_loaned_encoding_t {
+    Encoding::ZENOH_BYTES.transmute_handle()
 }
 
 /// Frees `encoding`, invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
-    z_bytes_drop(&mut encoding.suffix);
-    encoding._dropped = true
+    Inplace::drop(encoding.transmute_mut());
 }
 
 /// Returns ``true`` if `encoding` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_check(encoding: &z_owned_encoding_t) -> bool {
-    !encoding._dropped
+pub extern "C" fn z_encoding_check(encoding: &'static z_owned_encoding_t) -> bool {
+    *encoding.transmute_ref() != Encoding::default()
 }
 
-/// Returns a :c:type:`z_encoding_t` loaned from `encoding`.
+/// Returns a :c:type:`z_loaned_encoding_t` loaned from `encoding`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> z_encoding_t {
-    z_encoding_t {
-        prefix: encoding.prefix,
-        suffix: encoding.suffix,
-    }
+pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> &z_loaned_encoding_t {
+    encoding.transmute_ref().transmute_handle()
 }
 
-impl From<z_encoding_t> for z_owned_encoding_t {
-    fn from(val: z_encoding_t) -> Self {
-        z_owned_encoding_t {
-            prefix: val.prefix,
-            suffix: val.suffix,
-            _dropped: false,
-        }
-    }
-}
-
-/// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
-/// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
-/// `z_check` and `z_str_check` correspondently
-#[repr(C)]
-pub struct z_owned_str_t {
-    pub _cstr: *mut libc::c_char,
-}
-
-impl From<&[u8]> for z_owned_str_t {
-    fn from(value: &[u8]) -> Self {
-        unsafe {
-            let cstr = libc::malloc(value.len() + 1) as *mut libc::c_char;
-            std::ptr::copy_nonoverlapping(value.as_ptr(), cstr as _, value.len());
-            *cstr.add(value.len()) = 0;
-            z_owned_str_t { _cstr: cstr }
-        }
-    }
-}
-
-impl Drop for z_owned_str_t {
-    fn drop(&mut self) {
-        unsafe { z_str_drop(self) }
-    }
-}
-
-/// Frees `z_owned_str_t`, invalidating it for double-drop safety.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_str_drop(s: &mut z_owned_str_t) {
-    libc::free(std::mem::transmute(s._cstr));
-    s._cstr = std::ptr::null_mut();
-}
-
-/// Returns ``true`` if `s` is a valid string
-#[no_mangle]
-pub extern "C" fn z_str_check(s: &z_owned_str_t) -> bool {
-    !s._cstr.is_null()
-}
-
-/// Returns undefined `z_owned_str_t`
-#[no_mangle]
-pub extern "C" fn z_str_null() -> z_owned_str_t {
-    z_owned_str_t {
-        _cstr: std::ptr::null_mut(),
-    }
-}
-
-/// Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
-#[no_mangle]
-pub extern "C" fn z_str_loan(s: &z_owned_str_t) -> *const libc::c_char {
-    s._cstr
-}
+pub use crate::opaque_types::z_owned_value_t;
+decl_transmute_owned!(Value, z_owned_value_t);
+pub use crate::opaque_types::z_loaned_value_t;
+decl_transmute_handle!(Value, z_loaned_value_t);
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -662,4 +342,182 @@ impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
 #[no_mangle]
 pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
+}
+
+/// The Queryables that should be target of a :c:func:`z_get`.
+///
+///     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+///     - **ALL_COMPLETE**: All complete queryables.
+///     - **ALL**: All matching queryables.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_loaned_query_target_t {
+    BEST_MATCHING,
+    ALL,
+    ALL_COMPLETE,
+}
+
+impl From<QueryTarget> for z_loaned_query_target_t {
+    #[inline]
+    fn from(t: QueryTarget) -> Self {
+        match t {
+            QueryTarget::BestMatching => z_loaned_query_target_t::BEST_MATCHING,
+            QueryTarget::All => z_loaned_query_target_t::ALL,
+            QueryTarget::AllComplete => z_loaned_query_target_t::ALL_COMPLETE,
+        }
+    }
+}
+
+impl From<z_loaned_query_target_t> for QueryTarget {
+    #[inline]
+    fn from(val: z_loaned_query_target_t) -> Self {
+        match val {
+            z_loaned_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
+            z_loaned_query_target_t::ALL => QueryTarget::All,
+            z_loaned_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
+        }
+    }
+}
+
+/// Create a default :c:type:`z_loaned_query_target_t`.
+#[no_mangle]
+pub extern "C" fn z_loaned_query_target_default() -> z_loaned_query_target_t {
+    QueryTarget::default().into()
+}
+
+/// Consolidation mode values.
+///
+///     - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
+///       If the selector contains time range properties, consolidation mode `NONE` is used.
+///       Otherwise the `LATEST` consolidation mode is used.
+///     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
+///     - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
+///       w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+///       replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+///       ts2 > ts1. It optimizes latency.
+///     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
+///       It optimizes bandwidth.
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub enum z_consolidation_mode_t {
+    AUTO = -1,
+    #[default]
+    NONE = 0,
+    MONOTONIC = 1,
+    LATEST = 2,
+}
+
+impl From<Mode<ConsolidationMode>> for z_consolidation_mode_t {
+    #[inline]
+    fn from(cm: Mode<ConsolidationMode>) -> Self {
+        match cm {
+            Mode::Manual(cm) => Self::from(cm),
+            Mode::Auto => z_consolidation_mode_t::AUTO,
+        }
+    }
+}
+
+impl From<ConsolidationMode> for z_consolidation_mode_t {
+    #[inline]
+    fn from(cm: ConsolidationMode) -> Self {
+        match cm {
+            ConsolidationMode::Auto => z_consolidation_mode_t::AUTO,
+            ConsolidationMode::None => z_consolidation_mode_t::NONE,
+            ConsolidationMode::Monotonic => z_consolidation_mode_t::MONOTONIC,
+            ConsolidationMode::Latest => z_consolidation_mode_t::LATEST,
+        }
+    }
+}
+
+impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
+    #[inline]
+    fn from(val: z_consolidation_mode_t) -> Self {
+        match val {
+            z_consolidation_mode_t::AUTO => Mode::Auto,
+            z_consolidation_mode_t::NONE => Mode::Manual(ConsolidationMode::None),
+            z_consolidation_mode_t::MONOTONIC => Mode::Manual(ConsolidationMode::Monotonic),
+            z_consolidation_mode_t::LATEST => Mode::Manual(ConsolidationMode::Latest),
+        }
+    }
+}
+
+/// The priority of zenoh messages.
+///
+///     - **REAL_TIME**
+///     - **INTERACTIVE_HIGH**
+///     - **INTERACTIVE_LOW**
+///     - **DATA_HIGH**
+///     - **DATA**
+///     - **DATA_LOW**
+///     - **BACKGROUND**
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_priority_t {
+    REAL_TIME = 1,
+    INTERACTIVE_HIGH = 2,
+    INTERACTIVE_LOW = 3,
+    DATA_HIGH = 4,
+    DATA = 5,
+    DATA_LOW = 6,
+    BACKGROUND = 7,
+}
+
+impl From<Priority> for z_priority_t {
+    fn from(p: Priority) -> Self {
+        match p {
+            Priority::RealTime => z_priority_t::REAL_TIME,
+            Priority::InteractiveHigh => z_priority_t::INTERACTIVE_HIGH,
+            Priority::InteractiveLow => z_priority_t::INTERACTIVE_LOW,
+            Priority::DataHigh => z_priority_t::DATA_HIGH,
+            Priority::Data => z_priority_t::DATA,
+            Priority::DataLow => z_priority_t::DATA_LOW,
+            Priority::Background => z_priority_t::BACKGROUND,
+        }
+    }
+}
+
+impl From<z_priority_t> for Priority {
+    fn from(p: z_priority_t) -> Self {
+        match p {
+            z_priority_t::REAL_TIME => Priority::RealTime,
+            z_priority_t::INTERACTIVE_HIGH => Priority::InteractiveHigh,
+            z_priority_t::INTERACTIVE_LOW => Priority::InteractiveLow,
+            z_priority_t::DATA_HIGH => Priority::DataHigh,
+            z_priority_t::DATA => Priority::Data,
+            z_priority_t::DATA_LOW => Priority::DataLow,
+            z_priority_t::BACKGROUND => Priority::Background,
+        }
+    }
+}
+
+/// The kind of congestion control.
+///
+///     - **BLOCK**
+///     - **DROP**
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_congestion_control_t {
+    BLOCK,
+    DROP,
+}
+
+impl From<CongestionControl> for z_congestion_control_t {
+    fn from(cc: CongestionControl) -> Self {
+        match cc {
+            CongestionControl::Block => z_congestion_control_t::BLOCK,
+            CongestionControl::Drop => z_congestion_control_t::DROP,
+        }
+    }
+}
+
+impl From<z_congestion_control_t> for CongestionControl {
+    fn from(cc: z_congestion_control_t) -> Self {
+        match cc {
+            z_congestion_control_t::BLOCK => CongestionControl::Block,
+            z_congestion_control_t::DROP => CongestionControl::Drop,
+        }
+    }
 }

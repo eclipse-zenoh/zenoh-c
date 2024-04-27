@@ -17,27 +17,31 @@
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-int8_t attachment_reader(z_bytes_t key, z_bytes_t val, void *ctx) {
+int8_t attachment_reader(z_loaned_slice_t key, z_loaned_slice_t val, void *ctx) {
     printf("   attachment: %.*s: '%.*s'\n", (int)key.len, key.start, (int)val.len, val.start);
     return 0;
 }
 
-void data_handler(const z_sample_t *sample, void *arg) {
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
-    printf(">> [Subscriber] Received %s ('%s': '%.*s')\n", kind_to_str(sample->kind), z_loan(keystr),
-           (int)sample->payload.len, sample->payload.start);
+void data_handler(const z_loaned_sample_t *sample, void *arg) {
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(sample));
+    z_owned_str_t payload_value = z_str_null();
+    z_bytes_decode_into_string(z_sample_payload(sample), &payload_value);
+    printf(">> [Subscriber] Received %s ('%s': '%s')\n", kind_to_str(z_sample_kind(sample)), z_loan(keystr),
+        z_loan(payload_value));
 
+   z_loaned_bytes_t attachment = z_sample_attachment(sample);
     // checks if attachment exists
-    if (z_check(sample->attachment)) {
+    if (z_check(attachment)) {
         // reads full attachment
-        z_attachment_iterate(sample->attachment, attachment_reader, NULL);
+        z_attachment_iterate(attachment, attachment_reader, NULL);
 
         // reads particular attachment item
-        z_bytes_t index = z_attachment_get(sample->attachment, z_bytes_from_str("index"));
-        if (z_check(index)) {
+        z_loaned_slice_t index = z_attachment_get(attachment, z_slice_from_str("index"));
+        if (z_slice_is_initialized(&index)) {
             printf("   message number: %.*s\n", (int)index.len, index.start);
         }
     }
+    z_drop(z_move(payload_value));
     z_drop(z_move(keystr));
 }
 

@@ -47,15 +47,16 @@ int run_publisher() {
         return -1;
     }
 
-    z_owned_bytes_map_t map = z_bytes_map_new();
-    z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_CONST), z_bytes_from_str(V_CONST));
+    z_owned_bytes_map_t map = z_slice_map_new();
+    z_slice_map_insert_by_copy(&map, z_slice_from_str(K_CONST), z_slice_from_str(V_CONST));
 
     z_publisher_put_options_t options = z_publisher_put_options_default();
     options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    options.attachment = z_bytes_map_as_attachment(&map);
+    options.attachment = z_slice_map_as_attachment(&map);
     for (int i = 0; i < values_count; ++i) {
-        z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_VAR), z_bytes_from_str(values[i]));
-        z_publisher_put(z_loan(pub), (const uint8_t *)values[i], strlen(values[i]), &options);
+        z_slice_map_insert_by_copy(&map, z_slice_from_str(K_VAR), z_slice_from_str(values[i]));
+        z_owned_bytes_t payload = z_bytes_encode_from_string(values[i]);
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));
@@ -64,24 +65,28 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(const z_sample_t *sample, void *arg) {
+void data_handler(const z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
+    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(sample));
     if (strcmp(keyexpr, z_loan(keystr))) {
         perror("Unexpected key received");
         exit(-1);
     }
     z_drop(z_move(keystr));
 
-    if (strncmp(values[val_num], (const char *)sample->payload.start, (int)sample->payload.len)) {
+    z_owned_str_t payload_value = z_str_null();
+    z_bytes_decode_into_string(z_sample_payload(sample), &payload_value);
+    if (strcmp(values[val_num], z_loan(payload_value))) {
         perror("Unexpected value received");
+        z_drop(z_move(payload_value));
         exit(-1);
     }
+    z_drop(z_move(payload_value));
 
-    z_bytes_t v_const = z_attachment_get(sample->attachment, z_bytes_from_str(K_CONST));
+    z_loaned_slice_t v_const = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_CONST));
     ASSERT_STR_BYTES_EQUAL(V_CONST, v_const);
 
-    z_bytes_t v_var = z_attachment_get(sample->attachment, z_bytes_from_str(K_VAR));
+    z_loaned_slice_t v_var = z_attachment_get(z_sample_attachment(sample), z_slice_from_str(K_VAR));
     ASSERT_STR_BYTES_EQUAL(values[val_num], v_var);
 
     if (++val_num == values_count) {

@@ -63,7 +63,8 @@ int main(int argc, char **argv) {
         z_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-        z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)buf, strlen(buf), NULL);
+        z_owned_bytes_t payload = z_bytes_encode_from_string(buf);
+        z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), NULL);
     }
 
     z_drop(z_move(pub_cache));

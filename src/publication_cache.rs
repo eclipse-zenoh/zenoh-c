@@ -12,21 +12,19 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::ops::Deref;
+use std::mem::MaybeUninit;
+use std::ptr::null;
+use zenoh::prelude::SyncResolve;
 
 use zenoh_ext::SessionExt;
-use zenoh_util::core::zresult::ErrNo;
-use zenoh_util::core::SyncResolve;
 
-use crate::{
-    impl_guarded_transmute, z_keyexpr_t, z_session_t, zcu_locality_default, zcu_locality_t,
-    UninitializedKeyExprError,
-};
+use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
+use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t, zcu_locality_default, zcu_locality_t};
 
 /// Options passed to the :c:func:`ze_declare_publication_cache` function.
 ///
 /// Members:
-///     z_keyexpr_t queryable_prefix: The prefix used for queryable
+///     z_loaned_keyexpr_t queryable_prefix: The prefix used for queryable
 ///     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
 ///                       publication cache
 ///     bool queryable_complete: the `complete` option for the queryable
@@ -34,7 +32,7 @@ use crate::{
 ///     size_t resources_limit: The limit number of cached resources
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
-    pub queryable_prefix: z_keyexpr_t,
+    pub queryable_prefix: *const z_loaned_keyexpr_t,
     pub queryable_origin: zcu_locality_t,
     pub queryable_complete: bool,
     pub history: usize,
@@ -43,47 +41,32 @@ pub struct ze_publication_cache_options_t {
 
 /// Constructs the default value for :c:type:`ze_publication_cache_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_publication_cache_options_default() -> ze_publication_cache_options_t {
-    ze_publication_cache_options_t {
-        queryable_prefix: z_keyexpr_t::null(),
+pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication_cache_options_t) {
+    *this = ze_publication_cache_options_t {
+        queryable_prefix: null(),
         queryable_origin: zcu_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,
-    }
+    };
 }
 
-type PublicationCache = Option<Box<zenoh_ext::PublicationCache<'static>>>;
-
-/// An owned zenoh publication_cache.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct ze_owned_publication_cache_t([usize; 1]);
-
-impl_guarded_transmute!(PublicationCache, ze_owned_publication_cache_t);
-
-impl ze_owned_publication_cache_t {
-    pub fn new(pub_cache: zenoh_ext::PublicationCache<'static>) -> Self {
-        Some(Box::new(pub_cache)).into()
-    }
-    pub fn null() -> Self {
-        None.into()
-    }
-}
+pub use crate::opaque_types::ze_loaned_publication_cache_t;
+pub use crate::opaque_types::ze_owned_publication_cache_t;
+decl_transmute_owned!(
+    Option<zenoh_ext::PublicationCache<'static>>,
+    ze_owned_publication_cache_t
+);
+decl_transmute_handle!(
+    zenoh_ext::PublicationCache<'static>,
+    ze_loaned_publication_cache_t
+);
 
 /// Declares a Publication Cache.
 ///
 /// Parameters:
-///     z_session_t session: The zenoh session.
-///     z_keyexpr_t keyexpr: The key expression to publish.
+///     z_loaned_session_t session: The zenoh session.
+///     z_loaned_keyexpr_t key_expr: The key expression to publish.
 ///     ze_publication_cache_options_t options: Additional options for the publication_cache.
 ///
 /// Returns:
@@ -106,74 +89,66 @@ impl ze_owned_publication_cache_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_declare_publication_cache(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    options: Option<&ze_publication_cache_options_t>,
-) -> ze_owned_publication_cache_t {
-    match session.upgrade() {
-        Some(s) => {
-            let keyexpr = keyexpr.deref().as_ref().map(|s| s.clone().into_owned());
-            if let Some(key_expr) = keyexpr {
-                let mut p = s.declare_publication_cache(key_expr);
-                if let Some(options) = options {
-                    p = p.history(options.history);
-                    p = p.queryable_allowed_origin(options.queryable_origin.into());
-                    p = p.queryable_complete(options.queryable_complete);
-                    if options.resources_limit != 0 {
-                        p = p.resources_limit(options.resources_limit)
-                    }
-                    if options.queryable_prefix.deref().is_some() {
-                        let queryable_prefix = options
-                            .queryable_prefix
-                            .deref()
-                            .as_ref()
-                            .map(|s| s.clone().into_owned());
-                        if let Some(queryable_prefix) = queryable_prefix {
-                            p = p.queryable_prefix(queryable_prefix)
-                        }
-                    }
-                }
-                match p.res_sync() {
-                    Ok(publication_cache) => ze_owned_publication_cache_t::new(publication_cache),
-                    Err(e) => {
-                        log::error!("{}", e);
-                        ze_owned_publication_cache_t::null()
-                    }
-                }
-            } else {
-                log::error!("{}", UninitializedKeyExprError);
-                ze_owned_publication_cache_t::null()
-            }
+    this: *mut MaybeUninit<ze_owned_publication_cache_t>,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    options: Option<&mut ze_publication_cache_options_t>,
+) -> errors::z_error_t {
+    let this = this.transmute_uninit_ptr();
+    let session = session.transmute_ref();
+    let key_expr = key_expr.transmute_ref();
+    let mut p = session.declare_publication_cache(key_expr);
+    if let Some(options) = options {
+        p = p.history(options.history);
+        p = p.queryable_allowed_origin(options.queryable_origin.into());
+        p = p.queryable_complete(options.queryable_complete);
+        if options.resources_limit != 0 {
+            p = p.resources_limit(options.resources_limit)
         }
-        None => ze_owned_publication_cache_t::null(),
+        if !options.queryable_prefix.is_null() {
+            let queryable_prefix = unsafe { *options.queryable_prefix }.transmute_ref();
+            p = p.queryable_prefix(queryable_prefix.clone());
+        }
+    }
+    match p.res_sync() {
+        Ok(publication_cache) => {
+            Inplace::init(this, Some(publication_cache));
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("{}", e);
+            Inplace::empty(this);
+            errors::Z_EGENERIC
+        }
     }
 }
 
 /// Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_null() -> ze_owned_publication_cache_t {
-    ze_owned_publication_cache_t::null()
+pub extern "C" fn ze_publication_cache_null(this: *mut MaybeUninit<ze_owned_publication_cache_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::empty(this);
 }
 
 /// Returns ``true`` if `pub_cache` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_check(pub_cache: &ze_owned_publication_cache_t) -> bool {
-    pub_cache.as_ref().is_some()
+pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t) -> bool {
+    this.transmute_ref().is_some()
 }
 
 /// Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
-    pub_cache: &mut ze_owned_publication_cache_t,
-) -> i8 {
-    if let Some(p) = pub_cache.take() {
+    this: &mut ze_owned_publication_cache_t,
+) -> errors::z_error_t {
+    if let Some(p) = this.transmute_mut().extract().take() {
         if let Err(e) = p.close().res_sync() {
             log::error!("{}", e);
-            return e.errno().get();
+            return errors::Z_EGENERIC;
         }
     }
-    0
+    errors::Z_OK
 }

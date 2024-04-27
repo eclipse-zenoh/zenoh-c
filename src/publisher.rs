@@ -12,29 +12,30 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use crate::errors;
+use crate::transmute::unwrap_ref_unchecked;
+use crate::transmute::Inplace;
+use crate::transmute::TransmuteFromHandle;
+use crate::transmute::TransmuteIntoHandle;
+use crate::transmute::TransmuteRef;
+use crate::transmute::TransmuteUninitPtr;
+use crate::z_owned_encoding_t;
 use crate::zcu_closure_matching_status_call;
 use crate::zcu_owned_closure_matching_status_t;
-use std::ops::{Deref, DerefMut};
+use std::mem::MaybeUninit;
+use std::ptr;
+use zenoh::handlers::DefaultHandler;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::{
-    prelude::{Priority, Value},
-    publication::MatchingListener,
-    publication::Publisher,
-    sample::AttachmentBuilder,
-};
-use zenoh_protocol::core::CongestionControl;
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
+use zenoh::publication::CongestionControl;
+use zenoh::sample::QoSBuilderTrait;
+use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::ValueBuilderTrait;
+use zenoh::{prelude::Priority, publication::MatchingListener, publication::Publisher};
 
-use crate::attachment::{
-    insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
-    z_attachment_t,
-};
-use libc::c_void;
+use zenoh::prelude::SyncResolve;
 
 use crate::{
-    impl_guarded_transmute, z_congestion_control_t, z_encoding_default, z_encoding_t, z_keyexpr_t,
-    z_owned_keyexpr_t, z_priority_t, z_session_t, zc_owned_payload_t, GuardedTransmute,
-    UninitializedKeyExprError, LOG_INVALID_SESSION,
+    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t, z_priority_t,
 };
 
 /// Options passed to the :c:func:`z_declare_publisher` function.
@@ -50,54 +51,17 @@ pub struct z_publisher_options_t {
 
 /// Constructs the default value for :c:type:`z_publisher_options_t`.
 #[no_mangle]
-pub extern "C" fn z_publisher_options_default() -> z_publisher_options_t {
-    z_publisher_options_t {
+pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) {
+    *this = z_publisher_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
-    }
+    };
 }
 
-/// An owned zenoh publisher.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_publisher_t([u64; 7]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(4))]
-pub struct z_owned_publisher_t([u32; 8]);
-
-impl_guarded_transmute!(noderefs Option<Publisher<'_>>, z_owned_publisher_t);
-
-impl<'a> From<Option<Publisher<'a>>> for z_owned_publisher_t {
-    fn from(val: Option<Publisher>) -> Self {
-        val.transmute()
-    }
-}
-impl Deref for z_owned_publisher_t {
-    type Target = Option<Publisher<'static>>;
-    fn deref(&self) -> &Self::Target {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl DerefMut for z_owned_publisher_t {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl z_owned_publisher_t {
-    pub fn null() -> Self {
-        None.into()
-    }
-}
+pub use crate::opaque_types::z_owned_publisher_t;
+decl_transmute_owned!(Option<Publisher<'static>>, z_owned_publisher_t);
+pub use crate::opaque_types::z_loaned_publisher_t;
+decl_transmute_handle!(Publisher<'static>, z_loaned_publisher_t);
 
 /// Declares a publisher for the given key expression.
 ///
@@ -106,7 +70,7 @@ impl z_owned_publisher_t {
 ///
 /// Parameters:
 ///     session: The zenoh session.
-///     keyexpr: The key expression to publish.
+///     key_expr: The key expression to publish.
 ///     options: additional options for the publisher.
 ///
 /// Returns:
@@ -135,193 +99,124 @@ impl z_owned_publisher_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_publisher(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
+    this: *mut MaybeUninit<z_owned_publisher_t>,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     options: Option<&z_publisher_options_t>,
-) -> z_owned_publisher_t {
-    match session.upgrade() {
-        Some(s) => {
-            let keyexpr = keyexpr.deref().as_ref().map(|s| s.clone().into_owned());
-            if let Some(key_expr) = keyexpr {
-                let mut p = s.declare_publisher(key_expr);
-                if let Some(options) = options {
-                    p = p
-                        .congestion_control(options.congestion_control.into())
-                        .priority(options.priority.into());
-                }
-                match p.res_sync() {
-                    Err(e) => {
-                        log::error!("{}", e);
-                        None
-                    }
-                    Ok(publisher) => Some(publisher),
-                }
-            } else {
-                log::error!("{}", UninitializedKeyExprError);
-                None
-            }
+) -> errors::z_error_t {
+    let this = this.transmute_uninit_ptr();
+    let session = session.transmute_ref();
+    let key_expr = key_expr.transmute_ref().clone().into_owned();
+    let mut p = session.declare_publisher(key_expr);
+    if let Some(options) = options {
+        p = p
+            .congestion_control(options.congestion_control.into())
+            .priority(options.priority.into());
+    }
+    match p.res_sync() {
+        Err(e) => {
+            log::error!("{}", e);
+            Inplace::empty(this);
+            errors::Z_EGENERIC
         }
-        None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
-            None
+        Ok(publisher) => {
+            Inplace::init(this, Some(publisher));
+            errors::Z_OK
         }
     }
-    .into()
 }
 
 /// Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_null() -> z_owned_publisher_t {
-    z_owned_publisher_t::null()
+pub extern "C" fn z_publisher_null(this: *mut MaybeUninit<z_owned_publisher_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::empty(this);
 }
 
 /// Returns ``true`` if `pub` is valid.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_publisher_check(pbl: &z_owned_publisher_t) -> bool {
-    pbl.as_ref().is_some()
+pub extern "C" fn z_publisher_check(this: &z_owned_publisher_t) -> bool {
+    this.transmute_ref().is_some()
 }
 
-/// A loaned zenoh publisher.
-#[allow(non_camel_case_types)]
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub struct z_publisher_t(*const z_owned_publisher_t);
-
-impl<'a> AsRef<Option<Publisher<'a>>> for z_owned_publisher_t {
-    fn as_ref(&self) -> &'a Option<Publisher<'a>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl<'a> AsMut<Option<Publisher<'a>>> for z_owned_publisher_t {
-    fn as_mut(&mut self) -> &'a mut Option<Publisher<'a>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl<'a> AsRef<Option<Publisher<'a>>> for z_publisher_t {
-    fn as_ref(&self) -> &'a Option<Publisher<'a>> {
-        unsafe { (*self.0).as_ref() }
-    }
-}
-
-/// Returns a :c:type:`z_publisher_t` loaned from `p`.
+/// Returns a :c:type:`z_loaned_publisher_t` loaned from `p`.
 #[no_mangle]
-pub extern "C" fn z_publisher_loan(p: &z_owned_publisher_t) -> z_publisher_t {
-    z_publisher_t(p)
+pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publisher_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
 }
 
 /// Options passed to the :c:func:`z_publisher_put` function.
 ///
 /// Members:
-///     z_encoding_t encoding: The encoding of the payload.
-///     z_attachment_t attachment: The attachment to attach to the publication.
+///     z_owned_encoding_t encoding: The encoding of the payload.
+///    z_owned_bytes_t attachment: The attachment to attach to the publication.
 #[repr(C)]
 pub struct z_publisher_put_options_t {
-    pub encoding: z_encoding_t,
-    pub attachment: z_attachment_t,
+    pub encoding: *mut z_owned_encoding_t,
+    pub attachment: *mut z_owned_bytes_t,
 }
 
 /// Constructs the default value for :c:type:`z_publisher_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_put_options_default() -> z_publisher_put_options_t {
-    z_publisher_put_options_t {
-        encoding: z_encoding_default(),
-        attachment: z_attachment_null(),
+pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_options_t) {
+    *this = z_publisher_put_options_t {
+        encoding: ptr::null_mut(),
+        attachment: ptr::null_mut(),
     }
 }
 
-/// Sends a `PUT` message onto the publisher's key expression.
+/// Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
 ///
-/// The payload's encoding can be sepcified through the options.
+/// This is avoids copies when transfering data that was either:
+/// - `z_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
+/// - constructed from a `zc_owned_shmbuf_t`
+///
+/// The payload and all owned options fields are consumed upon function return.
 ///
 /// Parameters:
 ///     session: The zenoh session.
 ///     payload: The value to put.
-///     len: The length of the value to put.
 ///     options: The publisher put options.
 /// Returns:
 ///     ``0`` in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
-    publisher: z_publisher_t,
-    payload: *const u8,
-    len: usize,
-    options: Option<&z_publisher_put_options_t>,
-) -> i8 {
-    if let Some(p) = publisher.as_ref() {
-        let value: Value = std::slice::from_raw_parts(payload, len).into();
-        let put = match options {
-            Some(options) => {
-                let mut put = p.put(value.encoding(options.encoding.into()));
-                if z_attachment_check(&options.attachment) {
-                    let mut attachment_builder = AttachmentBuilder::new();
-                    z_attachment_iterate(
-                        options.attachment,
-                        insert_in_attachment_builder,
-                        &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-                    );
-                    put = put.with_attachment(attachment_builder.build());
-                };
-                put
-            }
-            None => p.put(value),
-        };
-        if let Err(e) = put.res_sync() {
-            log::error!("{}", e);
-            e.errno().get()
-        } else {
-            0
+    publisher: &z_loaned_publisher_t,
+    payload: &mut z_owned_bytes_t,
+    options: Option<&mut z_publisher_put_options_t>,
+) -> errors::z_error_t {
+    let publisher = publisher.transmute_ref();
+    let payload = match payload.transmute_mut().extract() {
+        Some(p) => p,
+        None => {
+            log::debug!("Attempted to put with a null payload");
+            return errors::Z_EINVAL;
         }
-    } else {
-        i8::MIN
-    }
-}
+    };
 
-/// Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
-///
-/// This is avoids copies when transfering data that was either:
-/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
-/// - constructed from a `zc_owned_shmbuf_t`
-///
-/// The payload's encoding can be sepcified through the options.
-///
-/// Parameters:
-///     session: The zenoh session.
-///     payload: The value to put.
-///     len: The length of the value to put.
-///     options: The publisher put options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_publisher_put_owned(
-    publisher: z_publisher_t,
-    payload: Option<&mut zc_owned_payload_t>,
-    options: Option<&z_publisher_put_options_t>,
-) -> i8 {
-    if let Some(p) = publisher.as_ref() {
-        let Some(payload) = payload.and_then(|p| p.take()) else {
-            log::debug!("Attempted to put without a payload");
-            return i8::MIN;
+    let mut put = publisher.put(payload);
+    if let Some(options) = options {
+        if !options.encoding.is_null() {
+            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            put = put.encoding(encoding);
         };
-        let value: Value = payload.into();
-        let put = match options {
-            Some(options) => p.put(value.encoding(options.encoding.into())),
-            None => p.put(value),
-        };
-        if let Err(e) = put.res_sync() {
-            log::error!("{}", e);
-            e.errno().get()
-        } else {
-            0
+        if !options.attachment.is_null() {
+            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            put = put.attachment(attachment);
         }
+    }
+
+    if let Err(e) = put.res_sync() {
+        log::error!("{}", e);
+        errors::Z_EGENERIC
     } else {
-        i8::MIN
+        errors::Z_OK
     }
 }
 
@@ -338,8 +233,8 @@ pub struct z_publisher_delete_options_t {
 ///   Returns the constructed :c:type:`z_publisher_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_options_t {
-    z_publisher_delete_options_t { __dummy: 0 }
+pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_delete_options_t) {
+    *this = z_publisher_delete_options_t { __dummy: 0 }
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
@@ -348,61 +243,31 @@ pub extern "C" fn z_publisher_delete_options_default() -> z_publisher_delete_opt
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete(
-    publisher: z_publisher_t,
-    _options: *const z_publisher_delete_options_t,
-) -> i8 {
-    if let Some(p) = publisher.as_ref() {
-        if let Err(e) = p.delete().res_sync() {
-            log::error!("{}", e);
-            e.errno().get()
-        } else {
-            0
-        }
+    publisher: &z_loaned_publisher_t,
+    _options: z_publisher_delete_options_t,
+) -> errors::z_error_t {
+    let publisher = publisher.transmute_ref();
+    if let Err(e) = publisher.delete().res_sync() {
+        log::error!("{}", e);
+        errors::Z_EGENERIC
     } else {
-        i8::MIN
+        errors::Z_OK
     }
 }
 
 /// Returns the key expression of the publisher
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_keyexpr(publisher: z_publisher_t) -> z_owned_keyexpr_t {
-    if let Some(p) = publisher.as_ref() {
-        p.key_expr().clone().into()
-    } else {
-        z_keyexpr_t::null().into()
-    }
+pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_loaned_keyexpr_t {
+    let publisher = publisher.transmute_ref();
+    publisher.key_expr().transmute_handle()
 }
 
-/// An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C, align(8))]
-pub struct zcu_owned_matching_listener_t([u64; 4]);
-
-impl_guarded_transmute!(noderefs
-    Option<MatchingListener<'_, ()>>,
+pub use crate::opaque_types::zcu_owned_matching_listener_t;
+decl_transmute_owned!(
+    Option<MatchingListener<'static, DefaultHandler>>,
     zcu_owned_matching_listener_t
 );
-
-impl From<Option<MatchingListener<'_, ()>>> for zcu_owned_matching_listener_t {
-    fn from(val: Option<MatchingListener<'_, ()>>) -> Self {
-        val.transmute()
-    }
-}
-
-impl zcu_owned_matching_listener_t {
-    pub fn null() -> Self {
-        None.into()
-    }
-}
 
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 ///
@@ -418,40 +283,44 @@ pub struct zcu_matching_status_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_callback(
-    publisher: z_publisher_t,
+    this: *mut MaybeUninit<zcu_owned_matching_listener_t>,
+    publisher: &z_loaned_publisher_t,
     callback: &mut zcu_owned_closure_matching_status_t,
-) -> zcu_owned_matching_listener_t {
+) -> errors::z_error_t {
+    let this = this.transmute_uninit_ptr();
     let mut closure = zcu_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
-    {
-        if let Some(p) = publisher.as_ref() {
-            let listener = p
-                .matching_listener()
-                .callback_mut(move |matching_status| {
-                    let status = zcu_matching_status_t {
-                        matching: matching_status.matching_subscribers(),
-                    };
-                    zcu_closure_matching_status_call(&closure, &status);
-                })
-                .res()
-                .unwrap();
-            Some(listener)
-        } else {
-            None
+    let publisher = publisher.transmute_ref();
+    let listener = publisher
+        .matching_listener()
+        .callback_mut(move |matching_status| {
+            let status = zcu_matching_status_t {
+                matching: matching_status.matching_subscribers(),
+            };
+            zcu_closure_matching_status_call(&closure, &status);
+        })
+        .res();
+    match listener {
+        Ok(_) => {
+            Inplace::empty(this);
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("{}", e);
+            errors::Z_EGENERIC
         }
     }
-    .into()
 }
 
 /// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(publisher: &mut z_owned_publisher_t) -> i8 {
-    if let Some(p) = publisher.take() {
+pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
+    if let Some(p) = this.transmute_mut().extract().take() {
         if let Err(e) = p.undeclare().res_sync() {
             log::error!("{}", e);
-            return e.errno().get();
+            return errors::Z_EGENERIC;
         }
     }
-    0
+    errors::Z_OK
 }

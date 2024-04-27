@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         expr = argv[1];
     }
-    z_keyexpr_t keyexpr = z_keyexpr(expr);
+    z_loaned_keyexpr_t keyexpr = z_keyexpr(expr);
     if (!z_check(keyexpr)) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
@@ -49,17 +49,20 @@ int main(int argc, char **argv) {
     opts.target = Z_QUERY_TARGET_ALL;
     z_owned_reply_channel_t channel = zc_reply_non_blocking_fifo_new(16);
     z_get(z_loan(s), keyexpr, "", z_move(channel.send),
-          &opts);  // here, the send is moved and will be dropped by zenoh when adequate
+          z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply = z_reply_null();
+    z_owned_str_t payload_value = z_str_null();
     for (bool call_success = z_call(channel.recv, &reply); !call_success || z_check(reply);
          call_success = z_call(channel.recv, &reply)) {
         if (!call_success) {
             continue;
         }
         if (z_reply_is_ok(&reply)) {
-            z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
-            printf(">> Received ('%s': '%.*s')\n", z_loan(keystr), (int)sample.payload.len, sample.payload.start);
+            z_loaned_sample_t sample = z_reply_ok(&reply);
+            z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_bytes_decode_into_string(z_sample_payload(&sample), &payload_value);
+            printf(">> Received ('%s': '%s')\n", z_loan(keystr), z_loan(payload_value));
+            z_drop(z_move(payload_value));
             z_drop(z_move(keystr));
         } else {
             printf("Received an error\n");
