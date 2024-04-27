@@ -53,6 +53,7 @@ decl_rust_copy_type!(
 );
 
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct Context(zc_context_t);
 impl DroppableContext for Context {
     fn get(&self) -> *mut c_void {
@@ -100,6 +101,7 @@ decl_rust_copy_type!(
 );
 
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct ThreadsafeContext(zc_threadsafe_context_t);
 impl DroppableContext for ThreadsafeContext {
     fn get(&self) -> *mut c_void {

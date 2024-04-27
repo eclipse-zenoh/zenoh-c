@@ -19,9 +19,9 @@ use zenoh::shm::provider::types::{
 };
 use zenoh_util::core::zerror;
 
-use crate::{decl_rust_new_owned_type, decl_rust_copy_type, impl_guarded_transmute, GuardedTransmute};
+use crate::{decl_rust_copy_type, decl_rust_new_owned_type, impl_guarded_transmute, move_owned_memory, GuardedTransmute};
 
-use super::{chunk::z_allocated_chunk_t, zsliceshm::z_slice_shm_mut_t};
+use super::{chunk::z_allocated_chunk_t, zsliceshm::z_owned_slice_shm_mut_t};
 
 /// Allocation errors
 ///
@@ -189,20 +189,22 @@ decl_rust_new_owned_type!(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_owned_buf_alloc_result_unwrap(
-    alloc_result: z_owned_buf_alloc_result_t,
-    out_buf: &mut MaybeUninit<z_slice_shm_mut_t>,
+    alloc_result: &mut z_owned_buf_alloc_result_t,
+    out_buf: &mut MaybeUninit<z_owned_slice_shm_mut_t>,
     out_error: &mut MaybeUninit<z_alloc_error_t>,
-) -> bool {
-    match alloc_result.transmute() {
-        Ok(val) => {
-            out_buf.write(val.transmute());
-            true
+) -> i32 {
+    move_owned_memory!(alloc_result, |result: BufAllocResult| {
+        match result {
+            Ok(val) => {
+                out_buf.write(Some(val).transmute());
+                0
+            }
+            Err(e) => {
+                out_error.write(e.into());
+                -5 // todo: E_ARGUMENT_INVALID
+            }
         }
-        Err(e) => {
-            out_error.write(e.into());
-            false
-        }
-    }
+    })
 }
 
 #[no_mangle]

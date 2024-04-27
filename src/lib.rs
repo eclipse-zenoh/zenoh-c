@@ -112,6 +112,13 @@ macro_rules! prepare_memory_to_init {
 }
 
 #[macro_export]
+macro_rules! access_loaned_memory {
+    ($loaned_c_obj_mut:expr, $acess_expr:expr) => {
+        access_owned_memory!($loaned_c_obj_mut.0, $acess_expr)
+    };
+}
+
+#[macro_export]
 macro_rules! access_owned_memory {
     ($owned_c_obj_mut:expr, $acess_expr:expr) => {
         match $owned_c_obj_mut.transmute_mut() {

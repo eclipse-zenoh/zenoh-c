@@ -54,7 +54,7 @@
                    z_owned_alloc_layout_t : z_owned_alloc_layout_delete, \
                    z_chunk_descriptor_t : z_chunk_descriptor_delete, \
                    z_allocated_chunk_t : z_allocated_chunk_delete, \
-                   z_shared_memory_provider_threadsafe_t : z_shared_memory_provider_threadsafe_delete, \
+                   z_owned_shared_memory_provider_threadsafe_t : z_shared_memory_provider_threadsafe_delete, \
                    z_shared_memory_provider_t : z_shared_memory_provider_delete, \
                    z_alloc_alignment_t : z_alloc_alignment_delete, \
                    z_memory_layout_t : z_memory_layout_delete, \

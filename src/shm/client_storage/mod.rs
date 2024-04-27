@@ -31,7 +31,7 @@ use std::sync::Arc;
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct zc_shared_memory_client_list_t<'a>(&'a zc_owned_shared_memory_client_list_t);
+pub struct zc_loaned_shared_memory_client_list_t<'a>(&'a zc_owned_shared_memory_client_list_t);
 
 /// An owned list of SharedMemoryClients
 ///
@@ -74,34 +74,34 @@ pub unsafe extern "C" fn zc_shared_memory_client_list_new(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_shared_memory_client_list_null(
-    out: &mut zc_owned_shared_memory_client_list_t,
+    val: &mut zc_owned_shared_memory_client_list_t,
 ) {
-    out.make_null();
+    val.make_null();
 }
 
-/// Returns ``true`` if `list` is valid.
+/// Returns ``true`` if `val` is valid.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_shared_memory_client_list_check(
-    list: &zc_owned_shared_memory_client_list_t,
+    val: &zc_owned_shared_memory_client_list_t,
 ) -> bool {
-    list.check()
+    val.check()
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_shared_memory_client_list_delete(
-    out_client: &mut zc_owned_shared_memory_client_list_t,
+    val: &mut zc_owned_shared_memory_client_list_t,
 ) {
-    out_client.delete();
+    val.delete();
 }
 
-/// Returns a :c:type:`zc_shared_memory_client_list_t` loaned from `list`.
+/// Returns a :c:type:`zc_loaned_shared_memory_client_list_t` loaned from `list`.
 #[no_mangle]
 pub extern "C" fn zc_shared_memory_client_list_loan(
     list: &zc_owned_shared_memory_client_list_t,
-) -> zc_shared_memory_client_list_t {
-    zc_shared_memory_client_list_t(list)
+) -> zc_loaned_shared_memory_client_list_t {
+    zc_loaned_shared_memory_client_list_t(list)
 }
 
 #[no_mangle]
@@ -109,7 +109,7 @@ pub extern "C" fn zc_shared_memory_client_list_loan(
 pub unsafe extern "C" fn zc_shared_memory_client_list_add_client(
     id: z_protocol_id_t,
     client: &mut z_owned_shared_memory_client_t,
-    list: zc_shared_memory_client_list_t,
+    list: zc_loaned_shared_memory_client_list_t,
 ) -> i32 {
     access_owned_memory!(list.0, |list: &mut Vec<_>| {
         move_owned_memory!(client, |client| {
@@ -142,7 +142,7 @@ pub unsafe extern "C" fn z_shared_memory_client_storage_global(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_owned_shared_memory_client_storage_new(
     out: &mut z_owned_shared_memory_client_storage_t,
-    clients: zc_shared_memory_client_list_t,
+    clients: zc_loaned_shared_memory_client_list_t,
 ) -> i32 {
     let out = prepare_memory_to_init!(out);
     access_owned_memory!(clients.0, |list: &Vec<_>| {
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn z_owned_shared_memory_client_storage_new(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_owned_shared_memory_client_storage_new_with_default_client_set(
     out: &mut z_owned_shared_memory_client_storage_t,
-    clients: zc_shared_memory_client_list_t,
+    clients: zc_loaned_shared_memory_client_list_t,
 ) -> i32 {
     let out = prepare_memory_to_init!(out);
     access_owned_memory!(clients.0, |list: &Vec<_>| {

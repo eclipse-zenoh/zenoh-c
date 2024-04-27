@@ -31,7 +31,7 @@ use super::{
     },
     shared_memory_provider_impl::alloc,
     types::{z_alloc_alignment_t, z_owned_buf_alloc_result_t},
-    zsliceshm::z_slice_shm_mut_t,
+    zsliceshm::z_owned_slice_shm_mut_t,
 };
 
 /// A non-thread-safe SharedMemoryProvider specialization
@@ -133,12 +133,12 @@ pub unsafe extern "C" fn z_shared_memory_provider_alloc_gc_defrag_blocking(
 
 #[allow(clippy::missing_safety_doc)]
 unsafe fn alloc_inner<Policy: AllocPolicy>(
-    provider: &z_shared_memory_provider_t,
+    provider: &z_loaned_shared_memory_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
     out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
 ) -> bool {
-    alloc::<Policy, z_shared_memory_provider_t, Context>(provider, size, alignment, out_buffer)
+    alloc::<Policy, Context>(provider, size, alignment, out_buffer)
 }
 
 #[no_mangle]
@@ -171,12 +171,12 @@ pub unsafe extern "C" fn z_shared_memory_provider_map(
     provider: &z_shared_memory_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
-    out_buffer: &mut MaybeUninit<z_slice_shm_mut_t>,
+    out_buffer: &mut MaybeUninit<z_owned_slice_shm_mut_t>,
 ) -> bool {
     let provider = provider.transmute_ref();
     match provider.map(allocated_chunk.transmute(), len) {
         Ok(buffer) => {
-            out_buffer.write(buffer.transmute());
+            out_buffer.write(Some(buffer).transmute());
             true
         }
         Err(e) => {

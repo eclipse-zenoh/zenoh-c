@@ -26,19 +26,15 @@ use super::{
 };
 
 #[allow(clippy::missing_safety_doc)]
-pub(crate) unsafe fn alloc<Policy: AllocPolicy, TAnyProvider, TAnyContext>(
-    provider: &TAnyProvider,
+pub(crate) unsafe fn alloc<Policy: AllocPolicy, TAnyContext: DroppableContext>(
+    provider: &SharedMemoryProvider<
+        DynamicProtocolID,
+        DynamicSharedMemoryProviderBackend<TAnyContext>,
+    >,
     size: usize,
     alignment: z_alloc_alignment_t,
     out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
-) -> bool
-where
-    TAnyContext: DroppableContext,
-    TAnyProvider: GuardedTransmute<
-        SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<TAnyContext>>,
-    >,
-{
-    let provider = provider.transmute_ref();
+) -> i32 {
     match provider
         .alloc_layout()
         .size(size)
@@ -46,33 +42,27 @@ where
         .res()
     {
         Ok(layout) => {
-            let result = layout.alloc().with_policy::<Policy>().res().transmute();
-            out_buffer.write(result);
-            return true;
+            let result = layout.alloc().with_policy::<Policy>().res();
+            out_buffer.write(Some(result).transmute());
+            0
         }
         Err(e) => {
             log::error!("{e}");
+            -5 // todo: E_ARGUMENT_INVALID
         }
-    };
-    false
+    }
 }
 
 #[allow(clippy::missing_safety_doc)]
-pub(crate) async fn alloc_async<Policy: AsyncAllocPolicy, TThreadsafeProvider>(
-    provider: &TThreadsafeProvider,
+pub(crate) async fn alloc_async<Policy: AsyncAllocPolicy>(
+    provider: &SharedMemoryProvider<
+        DynamicProtocolID,
+        DynamicSharedMemoryProviderBackend<ThreadsafeContext>,
+    >,
     size: usize,
     alignment: z_alloc_alignment_t,
     out_buffer: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
-) -> bool
-where
-    TThreadsafeProvider: GuardedTransmute<
-        SharedMemoryProvider<
-            DynamicProtocolID,
-            DynamicSharedMemoryProviderBackend<ThreadsafeContext>,
-        >,
-    >,
-{
-    let provider = provider.transmute_ref();
+) -> i32 {
     match provider
         .alloc_layout()
         .size(size)
@@ -80,18 +70,13 @@ where
         .res()
     {
         Ok(layout) => {
-            let result = layout
-                .alloc()
-                .with_policy::<Policy>()
-                .res_async()
-                .await
-                .transmute();
-            out_buffer.write(result);
-            return true;
+            let result = layout.alloc().with_policy::<Policy>().res_async().await;
+            out_buffer.write(Some(result).transmute());
+            0
         }
         Err(e) => {
             log::error!("{e}");
+            -5 // todo: E_ARGUMENT_INVALID
         }
-    };
-    false
+    }
 }
