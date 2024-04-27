@@ -53,10 +53,10 @@ spin = "0.9.5"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 # shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
-zenoh = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_watchdog_poc", features = ["shared-memory", "unstable"], default-features = false }
-zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_watchdog_poc", features = ["shared-memory"] }
-zenoh-util = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_watchdog_poc" }
-zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_watchdog_poc", features = ["unstable"] }
+zenoh = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine", features = ["shared-memory", "unstable"], default-features = false }
+zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine", features = ["shared-memory"] }
+zenoh-util = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine" }
+zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine", features = ["unstable"] }
 
 [build-dependencies]
 cbindgen = "0.26.0"
