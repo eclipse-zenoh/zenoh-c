@@ -33,7 +33,8 @@ build = "@CARGO_PROJECT_DIR@build.rs"
 [features]
 logger-autoinit = []
 shared-memory = ["zenoh/shared-memory"]
-default = ["zenoh/default", "shared-memory"]
+unstable = ["zenoh/unstable"]
+default = ["zenoh/default"]
 
 [badges]
 maintenance = { status = "actively-developed" }
