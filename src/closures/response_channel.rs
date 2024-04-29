@@ -38,11 +38,12 @@ pub extern "C" fn z_reply_channel_drop(channel: &mut z_owned_reply_channel_t) {
 }
 /// Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
 #[no_mangle]
-pub extern "C" fn z_reply_channel_null() -> z_owned_reply_channel_t {
-    z_owned_reply_channel_t {
+pub unsafe extern "C" fn z_reply_channel_null(this: *mut MaybeUninit<z_owned_reply_channel_t>) {
+    let c = z_owned_reply_channel_t {
         send: z_owned_closure_reply_t::empty(),
         recv: z_owned_reply_channel_closure_t::empty(),
-    }
+    };
+    (*this).write(c);
 }
 
 unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver<z_owned_reply_t>) {
@@ -85,9 +86,9 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channel_t {
+pub unsafe extern "C" fn zc_reply_fifo_new(this: *mut MaybeUninit<z_owned_reply_channel_t> ,bound: usize) {
     let (send, rx) = get_send_recv_ends(bound);
-    z_owned_reply_channel_t {
+    let c = z_owned_reply_channel_t {
         send,
         recv: From::from(move |this: *mut MaybeUninit<z_owned_reply_t>| {
             if let Ok(val) = rx.recv() {
@@ -97,7 +98,8 @@ pub unsafe extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channe
             }
             true
         }),
-    }
+    };
+    (*this).write(c);
 }
 
 /// Creates a new non-blocking fifo channel, returned as a pair of closures.
@@ -111,9 +113,9 @@ pub unsafe extern "C" fn zc_reply_fifo_new(bound: usize) -> z_owned_reply_channe
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned_reply_channel_t {
+pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(this: *mut MaybeUninit<z_owned_reply_channel_t>, bound: usize) {
     let (send, rx) = get_send_recv_ends(bound);
-    z_owned_reply_channel_t {
+    let c = z_owned_reply_channel_t {
         send,
         recv: From::from(
             move |this: *mut MaybeUninit<z_owned_reply_t>| match rx.try_recv() {
@@ -131,7 +133,8 @@ pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(bound: usize) -> z_owned
                 }
             },
         ),
-    }
+    };
+    (*this).write(c);
 }
 
 impl z_owned_reply_channel_closure_t {
@@ -155,8 +158,8 @@ impl Drop for z_owned_reply_channel_closure_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
 #[no_mangle]
-pub extern "C" fn z_reply_channel_closure_null() -> z_owned_reply_channel_closure_t {
-    z_owned_reply_channel_closure_t::empty()
+pub unsafe extern "C" fn z_reply_channel_closure_null(this: *mut MaybeUninit<z_owned_reply_channel_closure_t>) {
+    (*this).write(z_owned_reply_channel_closure_t::empty());
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.

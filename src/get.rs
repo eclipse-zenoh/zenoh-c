@@ -13,6 +13,7 @@
 //
 
 use libc::c_char;
+use zenoh::selector::Selector;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::ptr::null;
@@ -20,7 +21,7 @@ use std::ptr::null_mut;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 
-use zenoh::prelude::{ConsolidationMode, Mode, QueryConsolidation, QueryTarget, Reply};
+use zenoh::prelude::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
 use crate::transmute::unwrap_ref_unchecked;
@@ -162,8 +163,7 @@ pub unsafe extern "C" fn z_get(
     };
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-
-    let mut get = session.get(key_expr.clone().with_parameters(p));
+    let mut get = session.get(Selector::new(key_expr, p));
     if let Some(options) = options {
         if !options.payload.is_null() {
             if let Some(payload) = unsafe { *options.payload }.transmute_mut().extract() {
@@ -201,6 +201,7 @@ pub unsafe extern "C" fn z_get(
 pub extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
     Inplace::drop(this.transmute_mut())
 }
+
 /// Returns ``true`` if `reply` is valid.
 #[no_mangle]
 pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
@@ -208,7 +209,7 @@ pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn z_reply_loan(this: &mut z_owned_reply_t) -> &z_loaned_reply_t {
+pub extern "C" fn z_reply_loan(this: & z_owned_reply_t) -> &z_loaned_reply_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
@@ -233,11 +234,8 @@ impl From<QueryConsolidation> for z_query_consolidation_t {
 impl From<z_query_consolidation_t> for QueryConsolidation {
     #[inline]
     fn from(val: z_query_consolidation_t) -> Self {
-        let cm: Mode<ConsolidationMode> = val.mode.into();
-        match cm {
-            Mode::Manual(cm) => QueryConsolidation::from(cm),
-            Mode::Auto => QueryConsolidation::AUTO,
-        }
+        let cm: ConsolidationMode = val.mode.into();
+        cm.into()
     }
 }
 

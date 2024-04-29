@@ -4,8 +4,7 @@ use crate::transmute::{
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{
-    z_loaned_slice_map_t, z_loaned_slice_t, z_loaned_str_t, z_owned_slice_map_t, z_owned_slice_t,
-    z_owned_str_t, ZHashMap,
+    z_loaned_slice_map_t, z_loaned_slice_t, z_loaned_str_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, ZHashMap
 };
 use core::fmt;
 use std::any::Any;
@@ -95,7 +94,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_decode_into_bytes_map(
-    payload: z_loaned_bytes_t,
+    payload: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<z_owned_slice_map_t>,
 ) -> z_error_t {
     let dst = dst.transmute_uninit_ptr();
@@ -157,7 +156,7 @@ impl ZSliceBuffer for z_loaned_slice_t {
 /// Encodes byte sequence by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_bytes(
+pub unsafe extern "C" fn z_bytes_encode_from_slice(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     bytes: &z_loaned_slice_t,
 ) {
@@ -179,7 +178,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_bytes_map(
     Inplace::init(dst, Some(payload));
 }
 
-/// Encodes a null-terminated string by aliasing.
+/// Encodes a loaned string by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_string(
@@ -189,7 +188,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_string(
     let s = s.transmute_ref();
     let ss = &s[0..s.len() - 1];
     let b = ss.transmute_handle();
-    z_bytes_encode_from_bytes(this, b);
+    z_bytes_encode_from_slice(this, b);
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;

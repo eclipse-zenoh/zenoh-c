@@ -149,7 +149,7 @@ pub extern "C" fn z_keyexpr_loan(key_expr: &z_owned_keyexpr_t) -> &z_loaned_keye
     unwrap_ref_unchecked(key_expr.transmute_ref()).transmute_handle()
 }
 
-/// Returns a :c:type:`z_loaned_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
+/// Returns a :c:type:`z_loaned_keyexpr_t` loaned from :c:type:`z_view_keyexpr_t`.
 #[no_mangle]
 pub extern "C" fn z_view_keyexpr_loan(key_expr: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
     unwrap_ref_unchecked(key_expr.transmute_ref()).transmute_handle()
@@ -237,7 +237,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
     }
 }
 
-/// Constructs a :c:type:`z_loaned_keyexpr_t` by aliasing a string.
+/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_slice(
@@ -263,7 +263,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice(
     }
 }
 
-/// Constructs a :c:type:`z_loaned_keyexpr_t` by aliasing a string.
+/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
 /// The string is canonized in-place before being passed to keyexpr.
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
@@ -293,7 +293,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_autocanonize(
     }
 }
 
-/// Constructs a :c:type:`z_loaned_keyexpr_t` departing from a string.
+/// Constructs a :c:type:`z_view_keyexpr_t` departing from a string.
 /// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -310,7 +310,7 @@ pub unsafe extern "C" fn z_view_keyexpr(
     }
 }
 
-/// Constructs a :c:type:`z_loaned_keyexpr_t` by aliasing a string.
+/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
 /// The string is canonized in-place before being passed to keyexpr.
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
@@ -332,7 +332,7 @@ pub unsafe extern "C" fn z_view_keyexpr_autocanonize(
     }
 }
 
-/// Constructs a :c:type:`z_eyexpr_t` by aliasing a string without checking any of `z_loaned_keyexpr_t`'s assertions:
+/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
 /// - `name` MUST be valid UTF8.
 /// - `name` MUST follow the Key Expression specification, ie:
 ///   - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
@@ -353,7 +353,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_unchecked(
     Inplace::init(this.transmute_uninit_ptr(), Some(name))
 }
 
-/// Constructs a :c:type:`z_loaned_keyexpr_t` by aliasing a string without checking any of `z_loaned_keyexpr_t`'s assertions:
+/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
 ///
 ///  - `name` MUST be valid UTF8.
 ///  - `name` MUST follow the Key Expression specification, ie:
@@ -362,21 +362,21 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_unchecked(
 ///   - any instance of `**` may only be lead or followed by `/`.
 ///   - the key expression must have canon form.
 ///
-/// It is a loaned key expression that aliases `name`.
+/// It is a view key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_unchecked(
+pub unsafe extern "C" fn z_view_keyexpr_unchecked(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
-    name: *const c_char,
+    s: *const c_char
 ) {
-    z_view_keyexpr_from_slice_unchecked(this, name, libc::strlen(name))
+    z_view_keyexpr_from_slice_unchecked(this, s, libc::strlen(s))
 }
 
 /// Constructs a null-terminated string departing from a :c:type:`z_loaned_keyexpr_t`.
 /// The user is responsible of droping the returned string using `z_drop`
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_loaned_keyexpr_to_string(
+pub unsafe extern "C" fn z_keyexpr_to_string(
     ke: &z_loaned_keyexpr_t,
     s: *mut MaybeUninit<z_owned_str_t>,
 ) {

@@ -34,7 +34,7 @@ z_stats_t *z_stats_make() {
     return stats;
 }
 
-void on_sample(z_loaned_sample_t sample, void *context) {
+void on_sample(const z_loaned_sample_t* sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
         stats->start = z_clock_now();
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     z_owned_config_t config;
     z_config_default(&config);
     if (argc > 1) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
+        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -80,13 +80,14 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    z_owned_keyexpr_t ke;
-    z_keyexpr(&ke, "test/thr");
+    z_view_keyexpr_t ke;
+    z_view_keyexpr(&ke, "test/thr");
     z_owned_keyexpr_t declared_ke;
-    z_declare_keyexpr(&ke, z_loan(s), z_loan(ke));
+    z_declare_keyexpr(&declared_ke, z_loan(s), z_loan(ke));
 
     z_stats_t *context = z_stats_make();
-    z_owned_closure_sample_t callback = z_closure(on_sample, drop_stats, context);
+    z_owned_closure_sample_t callback;
+    z_closure(&callback, on_sample, drop_stats, context);
     z_owned_subscriber_t sub;
     if (z_declare_subscriber(&sub, z_loan(s), z_loan(declared_ke), z_move(callback), NULL)) {
         printf("Unable to create subscriber.\n");
@@ -99,7 +100,6 @@ int main(int argc, char **argv) {
     }
 
     z_undeclare_subscriber(z_move(sub));
-    z_keyexpr_drop(z_move(ke));
     z_undeclare_keyexpr(z_loan(s), z_move(declared_ke));
     z_close(z_move(s));
     return 0;

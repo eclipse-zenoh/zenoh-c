@@ -47,6 +47,12 @@ pub extern "C" fn zc_liveliness_token_null(this: *mut MaybeUninit<zc_owned_livel
 pub extern "C" fn zc_liveliness_token_check(this: &zc_owned_liveliness_token_t) -> bool {
     this.transmute_ref().is_some()
 }
+
+#[no_mangle]
+pub extern "C" fn zc_liveliness_token_drop(this: &mut zc_owned_liveliness_token_t) {
+    let this = this.transmute_mut();
+    Inplace::drop(this);
+}
 /// The options for `zc_liveliness_declare_token`
 #[repr(C)]
 pub struct zc_liveliness_declaration_options_t {

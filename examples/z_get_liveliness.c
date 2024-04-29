@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
         expr = argv[1];
     }
 
-    z_owned_keyexpr_t keyexpr;
-    if (z_keyexpr(&keyexpr, expr) < 0) {
+    z_view_keyexpr_t keyexpr;
+    if (z_view_keyexpr(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression\n", expr);
         exit(-1);
     }
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     z_owned_config_t config;
     z_config_default(&config);
     if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -48,21 +48,22 @@ int main(int argc, char **argv) {
     }
 
     printf("Sending liveliness query '%s'...\n", expr);
-    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
+    z_owned_reply_channel_t channel;
+    zc_reply_fifo_new(&channel, 16);
     zc_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(channel.send), NULL);
     z_owned_reply_t reply;
     for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {
-            z_loaned_sample_t sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t key_str = z_loaned_keyexpr_to_string(z_sample_keyexpr(&sample));
-            printf(">> Alive token ('%s')\n", z_loan(key_str));
+            const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
+            z_owned_str_t key_str;
+            z_keyexpr_to_string(z_sample_keyexpr(sample), &key_str);
+            printf(">> Alive token ('%s')\n", z_str_data(z_loan(key_str)));
             z_drop(z_move(key_str));
         } else {
             printf("Received an error\n");
         }
     }
 
-    z_drop(z_move(keyexpr));
     z_drop(z_move(reply));
     z_drop(z_move(channel));
     z_close(z_move(s));

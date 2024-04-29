@@ -32,7 +32,7 @@ const char *const V_CONST = "v const";
 void query_handler(const z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
-    z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_query_keyexpr(query));
+    z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(query));
     z_loaned_slice_t pred = z_query_parameters(query);
     z_loaned_value_t payload_value = z_query_value(query);
 
@@ -109,7 +109,7 @@ int run_get() {
             assert(z_reply_is_ok(&reply));
 
             z_loaned_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_loaned_keyexpr_to_string(z_sample_keyexpr(&sample));
+            z_owned_str_t keystr = z_keyexpr_to_string(z_sample_keyexpr(&sample));
             z_owned_str_t payload_value = z_str_null();
             z_bytes_decode_into_string(z_sample_payload(&sample), &payload_value);
             if (strcmp(values[val_num], z_loan(payload_value))) {

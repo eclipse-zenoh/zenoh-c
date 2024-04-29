@@ -767,6 +767,9 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .unwrap();
 
     let header = "#pragma once
+
+#define z_move(x) (&x)
+
 // clang-format off
 #ifndef __cplusplus
 
@@ -1052,21 +1055,11 @@ pub fn generate_generic_call_c(macro_func: &Vec<FunctionSignature>) -> String {
 }
 
 pub fn generate_generic_closure_c(
-    macro_func: &Vec<FunctionSignature>
+    _macro_func: &Vec<FunctionSignature>
 ) -> String {
-    let mut out = "#define z_closure(x, callback, dropper, ctx) \\
-     _Generic((x)"
+    let out = "#define z_closure(x, callback, dropper, ctx) \\
+    {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}"
         .to_owned();
-
-    for func in macro_func {
-        let owned_type = &func.arg_type_and_name[0].typename;
-        out += ", \\\n";
-        out += &format!(
-"        {owned_type} * : {{ x->context = (void*)ctx; x->call = callback; x->drop = droper; }}");
-    }
-    out += " \\\n";
-    out += "    )";
-
     out
 }
 

@@ -23,9 +23,10 @@ int main(int argc, char **argv) {
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
 
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
+    z_config_default(&config);
     if (argc > 3) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
+        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -34,25 +35,28 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (zc_config_insert_json(z_loan(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
         printf("Unable to configure timestamps!\n");
         exit(-1);
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    ze_publication_cache_options_t pub_cache_opts = ze_publication_cache_options_default();
+    ze_publication_cache_options_t pub_cache_opts;
+    ze_publication_cache_options_default(&pub_cache_opts);
     pub_cache_opts.history = 42;
     pub_cache_opts.queryable_complete = false;
 
     printf("Declaring publication cache on '%s'...\n", keyexpr);
-    ze_owned_publication_cache_t pub_cache =
-        ze_declare_publication_cache(z_loan(s), z_keyexpr(keyexpr), &pub_cache_opts);
+    ze_owned_publication_cache_t pub_cache;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr(&ke, keyexpr);
+    ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts);
     if (!z_check(pub_cache)) {
         printf("Unable to declare publication cache for key expression!\n");
         exit(-1);
@@ -63,11 +67,15 @@ int main(int argc, char **argv) {
         z_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-        z_owned_bytes_t payload = z_bytes_encode_from_string(buf);
-        z_put(z_loan(s), z_keyexpr(keyexpr), z_move(payload), NULL);
+        z_owned_bytes_t payload;
+        z_view_str_t payload_str;
+        z_view_str_wrap(&payload_str, buf);
+        z_bytes_encode_from_string(&payload, z_loan(payload_str));
+        
+        z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 
-    z_drop(z_move(pub_cache));
+    ze_undeclare_publication_cache(z_move(pub_cache));
     z_close(z_move(s));
 
     return 0;

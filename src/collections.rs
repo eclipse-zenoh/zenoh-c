@@ -241,7 +241,7 @@ pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> *const z_loaned_str_t 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_wrap(
-    this: *mut MaybeUninit<z_owned_slice_t>,
+    this: *mut MaybeUninit<z_owned_str_t>,
     str: *const libc::c_char,
 ) {
     z_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
@@ -269,7 +269,7 @@ pub unsafe extern "C" fn z_str_from_substring(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_str_wrap(
-    this: *mut MaybeUninit<z_view_slice_t>,
+    this: *mut MaybeUninit<z_view_str_t>,
     str: *const libc::c_char,
 ) {
     z_view_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
@@ -281,8 +281,7 @@ pub extern "C" fn z_view_str_len(this: &z_loaned_str_t) -> usize {
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_view_str_data(this: &z_loaned_str_t) -> *const libc::c_char {
+pub extern "C" fn z_str_data(this: &z_loaned_str_t) -> *const libc::c_char {
     z_slice_data(this.transmute_ref().transmute_handle()) as _
 }
 
@@ -292,17 +291,21 @@ pub extern "C" fn z_str_clone(this: &z_loaned_str_t, dst: *mut MaybeUninit<z_own
     Inplace::init(dst.transmute_uninit_ptr(), Some(slice));
 }
 
+// returns string as slice (with null-terminating character)
+#[no_mangle]
+pub extern "C" fn z_str_as_slice(this: &z_loaned_str_t) -> &z_loaned_slice_t {
+    this.transmute_ref().transmute_handle()
+}
+
 pub use crate::opaque_types::z_loaned_slice_map_t;
 pub use crate::opaque_types::z_owned_slice_map_t;
 
 pub type ZHashMap = HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>;
-pub use crate::opaque_types::z_loaned_config_t;
 decl_transmute_handle!(
     HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>,
     z_loaned_slice_map_t
 );
 
-pub use crate::opaque_types::z_owned_config_t;
 decl_transmute_owned!(
     Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>,
     z_owned_slice_map_t
@@ -372,7 +375,7 @@ pub extern "C" fn z_slice_map_is_empty(this: &z_loaned_slice_map_t) -> bool {
 /// `key` and `value` are loaned to the body for the duration of a single call.
 /// `context` is passed transparently through the iteration driver.
 ///
-/// Returning `true` is treated as `continue`.
+/// Returning `true` is treated as `break`.
 #[allow(non_camel_case_types)]
 pub type z_slice_map_iter_body_t =
     extern "C" fn(key: &z_loaned_slice_t, value: &z_loaned_slice_t, context: *mut c_void) -> bool;
@@ -387,7 +390,7 @@ pub extern "C" fn z_slice_map_iterate(
     for (key, value) in this {
         let key_slice = key.as_ref();
         let value_slice = value.as_ref();
-        if !body(
+        if body(
             key_slice.transmute_handle(),
             value_slice.transmute_handle(),
             context,
@@ -449,4 +452,124 @@ pub extern "C" fn z_slice_map_insert_by_alias(
         Some(_) => 1,
         None => 0,
     }
+}
+
+
+pub use crate::opaque_types::z_owned_slice_array_t;
+pub use crate::opaque_types::z_loaned_slice_array_t;
+
+pub type ZVector = Vec<Cow<'static, [u8]>>;
+decl_transmute_handle!(
+    Vec<Cow<'static, [u8]>>,
+    z_loaned_slice_array_t
+);
+
+decl_transmute_owned!(
+    Option<Vec<Cow<'static, [u8]>>>,
+    z_owned_slice_array_t
+);
+
+/// Constructs a new empty array.
+#[no_mangle]
+pub extern "C" fn z_slice_array_new(this: *mut MaybeUninit<z_owned_slice_array_t>) {
+    let this = this.transmute_uninit_ptr();
+    let a = ZVector::new();
+    Inplace::init(this, Some(a));
+}
+
+/// Constructs the gravestone value for `z_owned_slice_array_t`
+#[no_mangle]
+pub extern "C" fn z_slice_array_null(this: *mut MaybeUninit<z_owned_slice_array_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::empty(this);
+}
+
+/// Returns `true` if the array is not in its gravestone state
+#[no_mangle]
+pub extern "C" fn z_slice_array_check(this: &z_owned_slice_array_t) -> bool {
+    let this = this.transmute_ref();
+    this.as_ref().is_some()
+}
+
+/// Destroys the array, resetting `this` to its gravestone value.
+///
+/// This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+#[no_mangle]
+pub extern "C" fn z_slice_array_drop(this: &mut z_owned_slice_array_t) {
+    let this = this.transmute_mut();
+    Inplace::drop(this);
+}
+
+#[no_mangle]
+pub extern "C" fn z_slice_array_loan(this: &z_owned_slice_array_t) -> &z_loaned_slice_array_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
+}
+
+#[no_mangle]
+pub extern "C" fn z_slice_array_loan_mut(
+    this: &mut z_owned_slice_array_t,
+) -> &mut z_loaned_slice_array_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
+}
+
+/// Returns number of key-value pairs in the map.
+#[no_mangle]
+pub extern "C" fn z_slice_array_len(this: &z_loaned_slice_array_t) -> usize {
+    this.transmute_ref().len()
+}
+
+/// Returns true if the array is empty, false otherwise.
+#[no_mangle]
+pub extern "C" fn z_slice_array_is_empty(this: &z_loaned_slice_array_t) -> bool {
+    z_slice_array_len(this) == 0
+}
+
+
+/// Returns the value at the position of index in the array.
+///
+/// Will return NULL if the index is out of bounds.
+#[no_mangle]
+pub extern "C" fn z_slice_array_get(
+    this: &z_loaned_slice_array_t,
+    index: usize,
+) -> *const z_loaned_slice_t {
+    let a = this.transmute_ref();
+    if index >= a.len() {
+        return null();
+    }
+
+    a[index].as_ref().transmute_handle() as *const _
+}
+
+/// Appends specified value to the end of the array by copying.
+///
+/// Returns the new length of the array.
+#[no_mangle]
+pub extern "C" fn z_slice_array_push_by_copy(
+    this: &mut z_loaned_slice_array_t,
+    value: &z_loaned_slice_t,
+) -> usize {
+    let this = this.transmute_mut();
+    let v = (*value.transmute_ref()).to_owned();
+    this.push(Cow::Owned(v));
+
+    this.len()
+}
+
+/// Appends specified value to the end of the array by aliasing.
+///
+/// Returns the new length of the array.
+#[no_mangle]
+pub extern "C" fn z_slice_array_push_by_alias(
+    this: &mut z_loaned_slice_array_t,
+    value: &z_loaned_slice_t,
+) -> usize {
+    let this = this.transmute_mut();
+    this.push(Cow::Borrowed(value.transmute_ref()));
+
+    this.len()
 }

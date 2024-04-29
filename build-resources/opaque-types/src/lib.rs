@@ -18,6 +18,7 @@ use zenoh::query::Reply;
 use zenoh::queryable::Query;
 use zenoh::queryable::Queryable;
 use zenoh::sample::Sample;
+use zenoh::scouting::Hello;
 use zenoh::session::Session;
 use zenoh::subscriber::Subscriber;
 use zenoh::time::Timestamp;
@@ -61,11 +62,16 @@ get_opaque_type_data!(Option<Box<[u8]>>, z_owned_str_t);
 get_opaque_type_data!(Option<&'static [u8]>, z_view_str_t);
 get_opaque_type_data!(&'static [u8], z_loaned_str_t);
 
-/// A map of maybe-owned vector of bytes to maybe-owned vector of bytes.
+/// A map of maybe-owned slices to maybe-owned slices.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
 get_opaque_type_data!(Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>, z_owned_slice_map_t);
 get_opaque_type_data!(HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>, z_loaned_slice_map_t);
+
+/// An array of maybe-owned slices
+///
+get_opaque_type_data!(Option<Vec<Cow<'static, [u8]>>>, z_owned_slice_array_t);
+get_opaque_type_data!(Vec<Cow<'static, [u8]>>, z_loaned_slice_array_t);
 
 /// An owned sample.
 ///
@@ -273,3 +279,13 @@ get_opaque_type_data!(Option<Condvar>, z_owned_condvar_t);
 get_opaque_type_data!(Condvar, z_loaned_condvar_t);
 
 get_opaque_type_data!(Option<JoinHandle<()>>, z_owned_task_t);
+
+/// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
+///
+/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
+///
+/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+get_opaque_type_data!(Option<Hello>, z_owned_hello_t);
+get_opaque_type_data!(Hello, z_loaned_hello_t);

@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 use crate::z_loaned_sample_t;
 use libc::c_void;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -41,8 +43,8 @@ impl Drop for z_owned_closure_sample_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_closure_sample_t' type
 #[no_mangle]
-pub extern "C" fn z_closure_sample_null() -> z_owned_closure_sample_t {
-    z_owned_closure_sample_t::empty()
+pub unsafe extern "C" fn z_closure_sample_null(this: *mut MaybeUninit<z_owned_closure_sample_t>) {
+    (*this).write(z_owned_closure_sample_t::empty());
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.

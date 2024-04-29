@@ -211,8 +211,8 @@ pub extern "C" fn z_queryable_check(qable: &z_owned_queryable_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply(
-    query: z_loaned_query_t,
-    key_expr: z_loaned_keyexpr_t,
+    query: &z_loaned_query_t,
+    key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_options_t>,
 ) -> errors::z_error_t {

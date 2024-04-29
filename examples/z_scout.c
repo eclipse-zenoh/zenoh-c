@@ -38,32 +38,37 @@ void fprintwhatami(FILE *stream, unsigned int whatami) {
     fprintf(stream, "%s", buf);
 }
 
-void fprintlocators(FILE *stream, const z_str_array_t *locs) {
+void fprintlocators(FILE *stream, const z_loaned_slice_array_t *locs) {
     fprintf(stream, "[");
-    for (unsigned int i = 0; i < locs->len; i++) {
+    for (unsigned int i = 0; i < z_slice_array_len(locs); i++) {
         fprintf(stream, "\"");
-        fprintf(stream, "%s", locs->val[i]);
+        const z_loaned_slice_t *loc = z_slice_array_get(locs, i);
+        fprintf(stream, "%.*s", (int)z_slice_len(loc), (const char*)z_slice_data(loc));
         fprintf(stream, "\"");
-        if (i < locs->len - 1) {
+        if (i < z_slice_array_len(locs) - 1) {
             fprintf(stream, ", ");
         }
     }
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, const z_hello_t hello) {
+void fprinthello(FILE *stream, const z_loaned_hello_t* hello) {
     fprintf(stream, "Hello { pid: ");
-    fprintpid(stream, hello.pid);
+    fprintpid(stream, z_hello_zid(hello));
     fprintf(stream, ", whatami: ");
-    fprintwhatami(stream, hello.whatami);
+    fprintwhatami(stream, z_hello_whatami(hello));
+
     fprintf(stream, ", locators: ");
-    fprintlocators(stream, &hello.locators);
+    z_owned_slice_array_t locators;
+    z_hello_locators(hello, &locators);
+    fprintlocators(stream, z_loan(locators));
+    z_slice_array_drop(z_move(locators));
+
     fprintf(stream, " }");
 }
 
-void callback(z_owned_hello_t *hello, void *context) {
-    z_hello_t lhello = z_loan(*hello);
-    fprinthello(stdout, lhello);
+void callback(const z_loaned_hello_t *hello, void *context) {
+    fprinthello(stdout, hello);
     fprintf(stdout, "\n");
     (*(int *)context)++;
 }
@@ -80,8 +85,11 @@ void drop(void *context) {
 int main(int argc, char **argv) {
     int *context = z_malloc(sizeof(int));
     *context = 0;
-    z_owned_scouting_config_t config = z_scouting_config_default();
-    z_owned_closure_hello_t closure = z_closure(callback, drop, context);
+    z_owned_scouting_config_t config;
+    z_scouting_config_default(&config);
+
+    z_owned_closure_hello_t closure;
+    z_closure(&closure, callback, drop, context);
     printf("Scouting...\n");
     z_scout(z_move(config), z_move(closure));
     z_sleep_s(1);

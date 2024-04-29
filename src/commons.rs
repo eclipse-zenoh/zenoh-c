@@ -34,13 +34,13 @@ use zenoh::prelude::SampleKind;
 use zenoh::publication::CongestionControl;
 use zenoh::publication::Priority;
 use zenoh::query::ConsolidationMode;
-use zenoh::query::Mode;
 use zenoh::query::QueryTarget;
 use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh::time::Timestamp;
 use zenoh::value::Value;
+use zenoh_protocol::zenoh::Consolidation;
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -281,6 +281,17 @@ decl_transmute_owned!(Value, z_owned_value_t);
 pub use crate::opaque_types::z_loaned_value_t;
 decl_transmute_handle!(Value, z_loaned_value_t);
 
+
+#[no_mangle]
+pub extern "C" fn z_value_payload(this: &z_loaned_value_t) -> &z_loaned_bytes_t {
+    this.transmute_ref().payload().transmute_handle()
+}
+
+#[no_mangle]
+pub extern "C" fn z_value_encoding(this: &z_loaned_value_t) -> &z_loaned_encoding_t {
+    this.transmute_ref().encoding().transmute_handle()
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zcu_locality_t {
@@ -408,16 +419,6 @@ pub enum z_consolidation_mode_t {
     LATEST = 2,
 }
 
-impl From<Mode<ConsolidationMode>> for z_consolidation_mode_t {
-    #[inline]
-    fn from(cm: Mode<ConsolidationMode>) -> Self {
-        match cm {
-            Mode::Manual(cm) => Self::from(cm),
-            Mode::Auto => z_consolidation_mode_t::AUTO,
-        }
-    }
-}
-
 impl From<ConsolidationMode> for z_consolidation_mode_t {
     #[inline]
     fn from(cm: ConsolidationMode) -> Self {
@@ -430,14 +431,14 @@ impl From<ConsolidationMode> for z_consolidation_mode_t {
     }
 }
 
-impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
+impl From<z_consolidation_mode_t> for ConsolidationMode {
     #[inline]
     fn from(val: z_consolidation_mode_t) -> Self {
         match val {
-            z_consolidation_mode_t::AUTO => Mode::Auto,
-            z_consolidation_mode_t::NONE => Mode::Manual(ConsolidationMode::None),
-            z_consolidation_mode_t::MONOTONIC => Mode::Manual(ConsolidationMode::Monotonic),
-            z_consolidation_mode_t::LATEST => Mode::Manual(ConsolidationMode::Latest),
+            z_consolidation_mode_t::AUTO => Consolidation::Auto,
+            z_consolidation_mode_t::NONE => ConsolidationMode::None,
+            z_consolidation_mode_t::MONOTONIC => ConsolidationMode::Monotonic,
+            z_consolidation_mode_t::LATEST => ConsolidationMode::Latest,
         }
     }
 }

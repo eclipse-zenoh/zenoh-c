@@ -21,15 +21,16 @@ int main(int argc, char **argv) {
         expr = argv[1];
     }
 
-    z_loaned_keyexpr_t keyexpr = z_keyexpr(expr);
-    if (!z_check(keyexpr)) {
+    z_view_keyexpr_t keyexpr;
+    if (z_view_keyexpr(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression\n", expr);
         exit(-1);
     }
 
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
+    z_config_default(&config);
     if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -39,15 +40,15 @@ int main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config))) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring liveliness token '%s'...\n", expr);
-    zc_owned_liveliness_token_t token = zc_liveliness_declare_token(z_loan(s), keyexpr, NULL);
-    if (!z_check(token)) {
+    zc_owned_liveliness_token_t token;
+    if (zc_liveliness_declare_token(&token, z_loan(s), z_loan(keyexpr), NULL) < 0) {
         printf("Unable to create liveliness token!\n");
         exit(-1);
     }

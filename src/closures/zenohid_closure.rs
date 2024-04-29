@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 use libc::c_void;
 
 use crate::z_id_t;
@@ -42,8 +44,8 @@ impl Drop for z_owned_closure_zid_t {
 }
 /// Constructs a null safe-to-drop value of 'z_owned_closure_zid_t' type
 #[no_mangle]
-pub extern "C" fn z_closure_zid_null() -> z_owned_closure_zid_t {
-    z_owned_closure_zid_t::empty()
+pub unsafe extern "C" fn z_closure_zid_null(this: *mut MaybeUninit<z_owned_closure_zid_t>) {
+    (*this).write(z_owned_closure_zid_t::empty());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
