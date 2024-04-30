@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
             break;
     }
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr(&keyexpr, expr) < 0) {
+    if (z_view_keyexpr_new(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
     }
@@ -88,9 +88,9 @@ int main(int argc, char **argv) {
         } else {
             printf("Received an error\n");
         }
+        z_drop(z_move(reply));
     }
 
-    z_drop(z_move(reply));
     z_drop(z_move(channel));
     z_close(z_move(s));
     return 0;

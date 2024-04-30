@@ -23,29 +23,40 @@
 #define URL "demo/example"
 
 void test_session() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t session = z_open(z_move(config));
+    z_owned_config_t config;
+    z_config_default(&config);
+    z_owned_session_t session;
+    z_open(&session, z_move(config));
     assert(z_check(session));
-    z_drop(z_move(session));
+    z_close(z_move(session));
     assert(!z_check(session));
-    z_drop(z_move(session));
+    z_close(z_move(session));
     assert(!z_check(session));
 }
 
 void test_publisher() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t s = z_open(z_move(config));
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(URL), NULL);
+    z_owned_config_t config;
+    z_config_default(&config);
+    z_owned_session_t s;
+    z_open(&s, z_move(config));
+
+    z_owned_keyexpr_t keyexpr;
+    z_keyexpr_new(&keyexpr, URL);
+
+    z_owned_publisher_t pub;
+    z_declare_publisher(&pub, z_loan(s), z_loan(keyexpr), NULL);
     assert(z_check(pub));
-    z_drop(z_move(pub));
+    z_undeclare_publisher(z_move(pub));
     assert(!z_check(pub));
-    z_drop(z_move(pub));
+    z_undeclare_publisher(z_move(pub));
     assert(!z_check(pub));
-    z_drop(z_move(s));
+    z_close(z_move(s));
 }
 
 void test_keyexpr() {
-    z_owned_keyexpr_t keyexpr = z_keyexpr_new(URL);
+    z_owned_keyexpr_t keyexpr;
+    z_keyexpr_new(&keyexpr, URL);
+
     assert(z_check(keyexpr));
     z_drop(z_move(keyexpr));
     assert(!z_check(keyexpr));
@@ -54,7 +65,8 @@ void test_keyexpr() {
 }
 
 void test_config() {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
+    z_config_default(&config);
     assert(z_check(config));
     z_drop(z_move(config));
     assert(!z_check(config));
@@ -63,7 +75,8 @@ void test_config() {
 }
 
 void test_scouting_config() {
-    z_owned_scouting_config_t config = z_scouting_config_default();
+    z_owned_scouting_config_t config;
+    z_scouting_config_default(&config);
     assert(z_check(config));
     z_drop(z_move(config));
     assert(!z_check(config));
@@ -73,45 +86,46 @@ void test_scouting_config() {
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {}
 
-void test_pull_subscriber() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t s = z_open(z_move(config));
-    z_owned_closure_sample_t callback = z_closure(data_handler);
-    z_owned_pull_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(URL), z_move(callback), NULL);
-    assert(z_check(sub));
-    z_drop(z_move(sub));
-    assert(!z_check(sub));
-    z_drop(z_move(sub));
-    assert(!z_check(sub));
-    z_drop(z_move(s));
-}
-
 void test_subscriber() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t s = z_open(z_move(config));
-    z_owned_closure_sample_t callback = z_closure(data_handler);
-    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(URL), z_move(callback), NULL);
+    z_owned_config_t config;
+    z_config_default(&config);
+    z_owned_session_t s;
+    z_open(&s, z_move(config));
+    z_owned_closure_sample_t callback;
+    z_closure(&callback, data_handler, NULL, NULL);
+
+    z_view_keyexpr_t keyexpr;
+    z_view_keyexpr_new(&keyexpr, URL);
+    z_owned_subscriber_t sub;
+    z_declare_subscriber(&sub, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
     assert(z_check(sub));
-    z_drop(z_move(sub));
+    z_undeclare_subscriber(z_move(sub));
     assert(!z_check(sub));
-    z_drop(z_move(sub));
+    z_undeclare_subscriber(z_move(sub));
     assert(!z_check(sub));
-    z_drop(z_move(s));
+    z_close(z_move(s));
 }
 
 void query_handler(const z_loaned_query_t *query, void *context) {}
 
 void test_queryable() {
-    z_owned_config_t config = z_config_default();
-    z_owned_session_t s = z_open(z_move(config));
-    z_owned_closure_query_t callback = z_closure(query_handler);
-    z_owned_queryable_t queryable = z_declare_queryable(z_loan(s), z_keyexpr(URL), z_move(callback), NULL);
+    z_owned_config_t config;
+    z_config_default(&config);
+    z_owned_session_t s;
+    z_open(&s, z_move(config));
+    z_owned_closure_query_t callback;
+    z_closure(&callback, query_handler, NULL, NULL);
+
+    z_view_keyexpr_t keyexpr;
+    z_view_keyexpr_new(&keyexpr, URL);
+    z_owned_queryable_t queryable;
+    z_declare_queryable(&queryable, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
     assert(z_check(queryable));
-    z_drop(z_move(queryable));
+    z_undeclare_queryable(z_move(queryable));
     assert(!z_check(queryable));
-    z_drop(z_move(queryable));
+    z_undeclare_queryable(z_move(queryable));
     assert(!z_check(queryable));
-    z_drop(z_move(s));
+    z_close(z_move(s));
 }
 
 int main(int argc, char **argv) {
@@ -120,7 +134,6 @@ int main(int argc, char **argv) {
     test_keyexpr();
     test_config();
     test_scouting_config();
-    test_pull_subscriber();
     test_subscriber();
     test_queryable();
 

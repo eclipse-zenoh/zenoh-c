@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     }
 
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr(&keyexpr, expr) < 0) {
+    if (z_view_keyexpr_new(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression\n", expr);
         exit(-1);
     }

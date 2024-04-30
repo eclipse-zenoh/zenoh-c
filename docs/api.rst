@@ -111,7 +111,7 @@ Key expression
 .. autocfunction:: zenoh_commons.h::z_keyexpr_autocanonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_unchecked
 .. autocfunction:: zenoh_commons.h::z_keyexpr_to_string
-.. autocfunction:: zenoh_commons.h::z_keyexpr_as_bytes
+.. autocfunction:: zenoh_commons.h::z_keyexpr_as_slice
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize_null_terminated
 .. autocfunction:: zenoh_commons.h::z_keyexpr_is_canon

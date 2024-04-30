@@ -97,8 +97,8 @@ unsafe fn keyexpr_create(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_new(
-    name: *const c_char,
     this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    name: *const c_char,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     if name.is_null() {
@@ -297,7 +297,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_autocanonize(
 /// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr(
+pub unsafe extern "C" fn z_view_keyexpr_new(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
     name: *const c_char,
 ) -> z_error_t {
@@ -315,7 +315,7 @@ pub unsafe extern "C" fn z_view_keyexpr(
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_autocanonize(
+pub unsafe extern "C" fn z_view_keyexpr_new_autocanonize(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
     name: *mut c_char,
 ) -> z_error_t {
@@ -389,7 +389,7 @@ pub unsafe extern "C" fn z_keyexpr_to_string(
 /// Currently exclusive to zenoh-c
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_as_bytes(
+pub unsafe extern "C" fn z_keyexpr_as_slice(
     ke: &z_loaned_keyexpr_t,
     b: *mut MaybeUninit<z_view_slice_t>,
 ) {
@@ -460,7 +460,7 @@ pub extern "C" fn z_keyexpr_equals(left: &z_loaned_keyexpr_t, right: &z_loaned_k
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
+/// Returns ``true`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
 /// sets defined by ``left`` and ``right``.
 pub extern "C" fn z_keyexpr_intersects(
     left: &z_loaned_keyexpr_t,
@@ -473,7 +473,7 @@ pub extern "C" fn z_keyexpr_intersects(
 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-/// Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
+/// Returns ``true`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
 /// defined by ``right``.
 pub extern "C" fn z_keyexpr_includes(
     left: &z_loaned_keyexpr_t,

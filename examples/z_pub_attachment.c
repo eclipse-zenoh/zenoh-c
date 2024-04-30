@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
     printf("Declaring Publisher on '%s'...\n", keyexpr);
     z_view_keyexpr_t ke;
-    z_view_keyexpr(&ke, keyexpr);
+    z_view_keyexpr_new(&ke, keyexpr);
     z_owned_publisher_t pub;
     if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL)) {
         printf("Unable to declare Publisher for key expression!\n");
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
         z_view_slice_from_str(&index_key, "index");
         z_view_slice_from_str(&index_value, buf_ind);
         z_slice_map_insert_by_alias(z_loan_mut(map), z_loan(index_key), z_loan(index_value));
-        z_bytes_encode_from_bytes_map(&attachment, z_loan(map));
+        z_bytes_encode_from_slice_map(&attachment, z_loan(map));
         options.attachment = &attachment;
 
         sprintf(buf, "[%4d] %s", idx, value);

@@ -48,7 +48,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_bytes_encode_from_string(&reply_payload, z_loan(reply_string));
 
     z_view_keyexpr_t reply_keyexpr;
-    z_view_keyexpr(&reply_keyexpr, (const char *)context);
+    z_view_keyexpr_new(&reply_keyexpr, (const char *)context);
 
     z_query_reply(query, z_loan(reply_keyexpr), z_move(reply_payload), &options);
     z_drop(z_move(key_string));
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    if (z_view_keyexpr(&ke, keyexpr)) {
+    if (z_view_keyexpr_new(&ke, keyexpr)) {
         printf("%s is not a valid key expression", keyexpr);
         exit(-1);
     }

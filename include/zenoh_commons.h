@@ -154,12 +154,12 @@ typedef struct ALIGN(8) z_owned_slice_map_t {
 typedef struct ALIGN(8) z_owned_str_t {
   uint8_t _0[16];
 } z_owned_str_t;
-typedef struct ALIGN(8) z_loaned_slice_map_t {
-  uint8_t _0[48];
-} z_loaned_slice_map_t;
 typedef struct ALIGN(8) z_loaned_slice_t {
   uint8_t _0[16];
 } z_loaned_slice_t;
+typedef struct ALIGN(8) z_loaned_slice_map_t {
+  uint8_t _0[48];
+} z_loaned_slice_map_t;
 typedef struct ALIGN(8) z_loaned_str_t {
   uint8_t _0[16];
 } z_loaned_str_t;
@@ -861,7 +861,7 @@ z_error_t z_bytes_decode_into_bytes(const struct z_loaned_bytes_t *payload,
  * Decodes payload into bytes map.
  */
 ZENOHC_API
-z_error_t z_bytes_decode_into_bytes_map(const struct z_loaned_bytes_t *payload,
+z_error_t z_bytes_decode_into_slice_map(const struct z_loaned_bytes_t *payload,
                                         struct z_owned_slice_map_t *dst);
 /**
  * Decodes payload into null-terminated string.
@@ -876,17 +876,17 @@ z_error_t z_bytes_decode_into_string(const struct z_loaned_bytes_t *payload,
  */
 ZENOHC_API void z_bytes_drop(struct z_owned_bytes_t *this_);
 /**
- * Encodes bytes map by copying.
- */
-ZENOHC_API
-void z_bytes_encode_from_bytes_map(struct z_owned_bytes_t *this_,
-                                   const struct z_loaned_slice_map_t *bytes_map);
-/**
  * Encodes byte sequence by aliasing.
  */
 ZENOHC_API
 void z_bytes_encode_from_slice(struct z_owned_bytes_t *this_,
                                const struct z_loaned_slice_t *bytes);
+/**
+ * Encodes bytes map by copying.
+ */
+ZENOHC_API
+void z_bytes_encode_from_slice_map(struct z_owned_bytes_t *this_,
+                                   const struct z_loaned_slice_map_t *bytes_map);
 /**
  * Encodes a loaned string by aliasing.
  */
@@ -913,12 +913,10 @@ ZENOHC_API
 struct z_loaned_bytes_reader_t *z_bytes_reader_loan_mut(struct z_owned_bytes_reader_t *reader);
 /**
  * Creates a reader for the specified `payload`.
- *
- * Returns 0 in case of success, -1 if `payload` is not valid.
  */
 ZENOHC_API
-void z_bytes_reader_new(struct z_loaned_bytes_t payload,
-                        struct z_owned_bytes_reader_t *this_);
+void z_bytes_reader_new(struct z_owned_bytes_reader_t *this_,
+                        const struct z_loaned_bytes_t *payload);
 ZENOHC_API void z_bytes_reader_null(struct z_owned_bytes_reader_t *this_);
 /**
  * Reads data into specified destination.
@@ -940,6 +938,11 @@ ZENOHC_API
 z_error_t z_bytes_reader_seek(struct z_loaned_bytes_reader_t *this_,
                               int64_t offset,
                               int origin);
+/**
+ * Returns the read position indicator.
+ * Returns read position indicator on success or -1L if failure occurs.
+ */
+ZENOHC_API int64_t z_bytes_reader_tell(struct z_loaned_bytes_reader_t *this_);
 ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);
 ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
 ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
@@ -1323,7 +1326,7 @@ ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
  *
  * Currently exclusive to zenoh-c
  */
-ZENOHC_API void z_keyexpr_as_bytes(const struct z_loaned_keyexpr_t *ke, struct z_view_slice_t *b);
+ZENOHC_API void z_keyexpr_as_slice(const struct z_loaned_keyexpr_t *ke, struct z_view_slice_t *b);
 /**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
@@ -1376,14 +1379,14 @@ ZENOHC_API
 bool z_keyexpr_equals(const struct z_loaned_keyexpr_t *left,
                       const struct z_loaned_keyexpr_t *right);
 /**
- * Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
+ * Returns ``true`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
  * defined by ``right``.
  */
 ZENOHC_API
 bool z_keyexpr_includes(const struct z_loaned_keyexpr_t *left,
                         const struct z_loaned_keyexpr_t *right);
 /**
- * Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
+ * Returns ``true`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
  * sets defined by ``left`` and ``right``.
  */
 ZENOHC_API
@@ -1410,7 +1413,7 @@ const struct z_loaned_keyexpr_t *z_keyexpr_loan(const struct z_owned_keyexpr_t *
 /**
  * Constructs a :c:type:`z_owned_keyexpr_t` departing from a string, copying the passed string.
  */
-ZENOHC_API z_error_t z_keyexpr_new(const char *name, struct z_owned_keyexpr_t *this_);
+ZENOHC_API z_error_t z_keyexpr_new(struct z_owned_keyexpr_t *this_, const char *name);
 /**
  * Constructs a :c:type:`z_owned_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
  */
@@ -1434,11 +1437,6 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
  * The user is responsible of droping the returned string using `z_drop`
  */
 ZENOHC_API void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *ke, struct z_owned_str_t *s);
-/**
- * Returns the read position indicator.
- * Returns read position indicator on success or -1L if failure occurs.
- */
-ZENOHC_API int64_t z_loaned_bytes_reader_tell(struct z_loaned_bytes_reader_t *this_);
 ZENOHC_API z_error_t z_loaned_mutex_try_lock(struct z_loaned_mutex_t *this_);
 /**
  * Create a default :c:type:`z_loaned_query_target_t`.
@@ -2110,19 +2108,6 @@ z_error_t z_undeclare_subscriber(struct z_owned_subscriber_t *subscriber);
 ZENOHC_API const struct z_loaned_encoding_t *z_value_encoding(const struct z_loaned_value_t *this_);
 ZENOHC_API const struct z_loaned_bytes_t *z_value_payload(const struct z_loaned_value_t *this_);
 /**
- * Constructs a :c:type:`z_view_keyexpr_t` departing from a string.
- * It is a loaned key expression that aliases `name`.
- */
-ZENOHC_API z_error_t z_view_keyexpr(struct z_view_keyexpr_t *this_, const char *name);
-/**
- * Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
- * The string is canonized in-place before being passed to keyexpr.
- * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
- */
-ZENOHC_API
-z_error_t z_view_keyexpr_autocanonize(struct z_view_keyexpr_t *this_,
-                                      char *name);
-/**
  * Returns ``true`` if `keyexpr` is valid.
  */
 ZENOHC_API bool z_view_keyexpr_check(const struct z_view_keyexpr_t *keyexpr);
@@ -2161,6 +2146,19 @@ void z_view_keyexpr_from_slice_unchecked(struct z_view_keyexpr_t *this_,
  */
 ZENOHC_API
 const struct z_loaned_keyexpr_t *z_view_keyexpr_loan(const struct z_view_keyexpr_t *key_expr);
+/**
+ * Constructs a :c:type:`z_view_keyexpr_t` departing from a string.
+ * It is a loaned key expression that aliases `name`.
+ */
+ZENOHC_API z_error_t z_view_keyexpr_new(struct z_view_keyexpr_t *this_, const char *name);
+/**
+ * Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
+ * The string is canonized in-place before being passed to keyexpr.
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ */
+ZENOHC_API
+z_error_t z_view_keyexpr_new_autocanonize(struct z_view_keyexpr_t *this_,
+                                          char *name);
 ZENOHC_API void z_view_keyexpr_null(struct z_view_keyexpr_t *this_);
 /**
  * Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:

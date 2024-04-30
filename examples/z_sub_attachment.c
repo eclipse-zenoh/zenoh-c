@@ -40,7 +40,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     if (attachment != NULL) {
         // reads full attachment
         z_owned_slice_map_t attachment_map;
-        z_bytes_decode_into_bytes_map(attachment, &attachment_map);
+        z_bytes_decode_into_slice_map(attachment, &attachment_map);
 
         z_slice_map_iterate(z_loan(attachment_map), attachment_map_reader, NULL);
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr(&ke, keyexpr);
+    z_view_keyexpr_new(&ke, keyexpr);
 
     z_owned_config_t config;
     z_config_default(&config);

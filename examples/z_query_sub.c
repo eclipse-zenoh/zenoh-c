@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr(&ke, keyexpr);
+    z_view_keyexpr_new(&ke, keyexpr);
 
     ze_querying_subscriber_options_t sub_opts;
     ze_querying_subscriber_options_default(&sub_opts);

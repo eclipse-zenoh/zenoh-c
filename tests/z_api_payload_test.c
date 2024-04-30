@@ -24,17 +24,27 @@
 void test_reader() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     uint8_t data_out[10] = {0};
-    z_loaned_slice_t bytes = {.start = data, .len = 10 };
+    z_view_slice_t slice;
+    z_view_slice_wrap(&slice, data, 10);
 
-    z_owned_bytes_t payload = z_bytes_encode_from_bytes(bytes);
-    z_bytes_reader reader;
-    z_bytes_reader_init(z_loan(payload), &reader);
-    assert(z_bytes_reader_remaining(&reader) == 10);
+    z_owned_bytes_t payload;
+    z_bytes_encode_from_slice(&payload, z_loan(slice));
+    z_owned_bytes_reader_t reader;
+    z_bytes_reader_new(&reader, z_loan(payload));
+    assert(z_bytes_reader_tell(z_loan_mut(reader)) == 0);
 
-    z_bytes_reader_read(&reader, data_out, 5);
-    assert(z_bytes_reader_remaining(&reader) == 5);
-    z_bytes_reader_read(&reader, data_out, 5);
-    assert(z_bytes_reader_remaining(&reader) == 0);
+    z_bytes_reader_read(z_loan_mut(reader), data_out, 5);
+    assert(z_bytes_reader_tell(z_loan_mut(reader)) == 5);
+    z_bytes_reader_seek(z_loan_mut(reader), 2, SEEK_CUR);
+    assert(z_bytes_reader_tell(z_loan_mut(reader)) == 7);
+    z_bytes_reader_read(z_loan_mut(reader), data_out + 7, 2);
+    z_bytes_reader_seek(z_loan_mut(reader), 5, SEEK_SET);
+    assert(z_bytes_reader_tell(z_loan_mut(reader)) == 7);
+    z_bytes_reader_read(z_loan_mut(reader), data_out + 5, 2);
+
+    z_bytes_reader_seek(z_loan_mut(reader), -1, SEEK_END);
+    assert(z_bytes_reader_tell(z_loan_mut(reader)) == 9);
+    z_bytes_reader_read(z_loan_mut(reader), data_out + 9, 1);
     assert(memcmp(data, data_out, 10));
 }
 
