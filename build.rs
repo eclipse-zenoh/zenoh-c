@@ -763,6 +763,8 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .create(false)
         .write(true)
         .truncate(true)
+        .append(false)
+        .create(true)
         .open(path_out)
         .unwrap();
 
