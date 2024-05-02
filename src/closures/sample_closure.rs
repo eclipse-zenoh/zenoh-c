@@ -43,6 +43,7 @@ impl Drop for z_owned_closure_sample_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_closure_sample_t' type
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_sample_null(this: *mut MaybeUninit<z_owned_closure_sample_t>) {
     (*this).write(z_owned_closure_sample_t::empty());
 }

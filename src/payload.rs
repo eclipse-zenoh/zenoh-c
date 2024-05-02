@@ -4,7 +4,8 @@ use crate::transmute::{
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{
-    z_loaned_slice_map_t, z_loaned_slice_t, z_loaned_str_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, ZHashMap
+    z_loaned_slice_map_t, z_loaned_slice_t, z_loaned_str_t, z_owned_slice_map_t, z_owned_slice_t,
+    z_owned_str_t, CSlice, ZHashMap,
 };
 use core::fmt;
 use std::any::Any;
@@ -84,8 +85,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
         Inplace::empty(dst.transmute_uninit_ptr());
         errors::Z_EPARSE
     } else {
-        let b = out.into_boxed_slice();
-        Inplace::init(dst.transmute_uninit_ptr(), Some(b));
+        Inplace::init(dst.transmute_uninit_ptr(), out.into());
         errors::Z_OK
     }
 }
@@ -118,8 +118,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_bytes(
     let payload = payload.transmute_ref();
     match payload.deserialize::<Vec<u8>>() {
         Ok(v) => {
-            let b = v.into_boxed_slice();
-            Inplace::init(dst.transmute_uninit_ptr(), Some(b));
+            Inplace::init(dst.transmute_uninit_ptr(), v.into());
             errors::Z_OK
         }
         Err(e) => {
@@ -136,13 +135,15 @@ unsafe impl Sync for z_loaned_slice_t {}
 impl fmt::Debug for z_loaned_slice_t {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = self.transmute_ref();
-        f.debug_struct("z_loaned_slice_t").field("_0", s).finish()
+        f.debug_struct("z_loaned_slice_t")
+            .field("_0", &s.slice())
+            .finish()
     }
 }
 
 impl ZSliceBuffer for z_loaned_slice_t {
     fn as_slice(&self) -> &[u8] {
-        self.transmute_ref()
+        self.transmute_ref().slice()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -174,7 +175,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
 ) {
     let dst = this.transmute_uninit_ptr();
     let hm = bytes_map.transmute_ref();
-    let payload = ZBytes::from_iter(hm.iter());
+    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| (k.slice(), v.slice())));
     Inplace::init(dst, Some(payload));
 }
 
@@ -186,9 +187,9 @@ pub unsafe extern "C" fn z_bytes_encode_from_string(
     s: &z_loaned_str_t,
 ) {
     let s = s.transmute_ref();
-    let ss = &s[0..s.len() - 1];
-    let b = ss.transmute_handle();
-    z_bytes_encode_from_slice(this, b);
+    let s_without_terminating_0 = &s.slice()[0..s.len() - 1];
+    let s_without_terminating_0 = CSlice::new_borrowed_from_slice(s_without_terminating_0);
+    z_bytes_encode_from_slice(this, s_without_terminating_0.transmute_handle());
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;

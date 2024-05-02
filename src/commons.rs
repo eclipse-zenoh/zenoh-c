@@ -281,7 +281,6 @@ decl_transmute_owned!(Value, z_owned_value_t);
 pub use crate::opaque_types::z_loaned_value_t;
 decl_transmute_handle!(Value, z_loaned_value_t);
 
-
 #[no_mangle]
 pub extern "C" fn z_value_payload(this: &z_loaned_value_t) -> &z_loaned_bytes_t {
     this.transmute_ref().payload().transmute_handle()

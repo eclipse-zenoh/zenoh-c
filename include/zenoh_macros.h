@@ -99,12 +99,10 @@
         z_owned_session_t * : z_session_null, \
         z_owned_slice_array_t * : z_slice_array_null, \
         z_owned_slice_map_t * : z_slice_map_null, \
-        z_owned_slice_t * : z_slice_null, \
         z_owned_str_t * : z_str_null, \
         z_owned_subscriber_t * : z_subscriber_null, \
         z_owned_task_t * : z_task_null, \
         z_view_keyexpr_t * : z_view_keyexpr_null, \
-        z_view_slice_t * : z_view_slice_null, \
         z_view_str_t * : z_view_str_null, \
         zc_owned_liveliness_token_t * : zc_liveliness_token_null, \
         zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_null, \
@@ -137,6 +135,7 @@
         z_owned_task_t : z_task_check, \
         z_view_keyexpr_t : z_view_keyexpr_check, \
         z_view_slice_t : z_view_slice_check, \
+        z_view_str_t : z_view_str_check, \
         zc_owned_liveliness_token_t : zc_liveliness_token_check, \
         ze_owned_publication_cache_t : ze_publication_cache_check, \
         ze_owned_querying_subscriber_t : ze_querying_subscriber_check \
@@ -247,12 +246,10 @@ inline void z_null( z_owned_scouting_config_t* this_) { return z_scouting_config
 inline void z_null( z_owned_session_t* this_) { return z_session_null(this_); };
 inline void z_null( z_owned_slice_array_t* this_) { return z_slice_array_null(this_); };
 inline void z_null( z_owned_slice_map_t* this_) { return z_slice_map_null(this_); };
-inline void z_null( z_owned_slice_t* this_) { return z_slice_null(this_); };
 inline void z_null( z_owned_str_t* this_) { return z_str_null(this_); };
 inline void z_null( z_owned_subscriber_t* this_) { return z_subscriber_null(this_); };
 inline void z_null( z_owned_task_t* this_) { return z_task_null(this_); };
 inline void z_null( z_view_keyexpr_t* this_) { return z_view_keyexpr_null(this_); };
-inline void z_null( z_view_slice_t* this_) { return z_view_slice_null(this_); };
 inline void z_null( z_view_str_t* this_) { return z_view_str_null(this_); };
 inline void z_null( zc_owned_liveliness_token_t* this_) { return zc_liveliness_token_null(this_); };
 inline void z_null( zcu_owned_closure_matching_status_t* this_) { return zcu_closure_matching_status_null(this_); };
@@ -283,6 +280,7 @@ inline bool z_check(const z_owned_subscriber_t& subscriber) { return z_subscribe
 inline bool z_check(const z_owned_task_t& this_) { return z_task_check(&this_); };
 inline bool z_check(const z_view_keyexpr_t& keyexpr) { return z_view_keyexpr_check(&keyexpr); };
 inline bool z_check(const z_view_slice_t& this_) { return z_view_slice_check(&this_); };
+inline bool z_check(const z_view_str_t& this_) { return z_view_str_check(&this_); };
 inline bool z_check(const zc_owned_liveliness_token_t& this_) { return zc_liveliness_token_check(&this_); };
 inline bool z_check(const ze_owned_publication_cache_t& this_) { return ze_publication_cache_check(&this_); };
 inline bool z_check(const ze_owned_querying_subscriber_t& this_) { return ze_querying_subscriber_check(&this_); };

@@ -479,8 +479,9 @@ typedef struct z_query_consolidation_t {
  * Members:
  *     z_loaned_query_target_t target: The Queryables that should be target of the query.
  *     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
- *     z_loaned_value_t value: An optional value to attach to the query.
- *    z_loaned_bytes_t attachment: The attachment to attach to the query.
+ *     z_owned_payload_t* payload: An optional payload to attach to the query.
+ *     z_owned_encdoing_t* encdoing: An optional encoding of the query payload and or attachment.
+ *     z_owned_bytes_t attachment: The attachment to attach to the query.
  *     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
  */
 typedef struct z_get_options_t {
@@ -1629,10 +1630,6 @@ ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
 ZENOHC_API
 void z_query_drop(struct z_owned_query_t *this_);
 /**
- * Checks if query contains a payload value.
- */
-ZENOHC_API bool z_query_has_value(const struct z_loaned_query_t *query);
-/**
  * Get a query's key by aliasing it.
  */
 ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loaned_query_t *query);
@@ -1681,8 +1678,7 @@ ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *th
 /**
  * Gets a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
  *
- * **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
- * Before calling this funciton, the user must ensure that `z_query_has_value` returns true.
+ * Returns NULL if query does not contain a value.
  */
 ZENOHC_API
 const struct z_loaned_value_t *z_query_value(const struct z_loaned_query_t *query);
@@ -1998,7 +1994,6 @@ ZENOHC_API void z_slice_map_new(struct z_owned_slice_map_t *this_);
  * Constructs the gravestone value for `z_owned_slice_map_t`
  */
 ZENOHC_API void z_slice_map_null(struct z_owned_slice_map_t *this_);
-ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
 /**
  * Constructs a `len` bytes long view starting at `start`.
  */
@@ -2190,11 +2185,14 @@ ZENOHC_API void z_view_slice_empty(struct z_view_slice_t *this_);
  */
 ZENOHC_API void z_view_slice_from_str(struct z_view_slice_t *this_, const char *str);
 ZENOHC_API const struct z_loaned_slice_t *z_view_slice_loan(const struct z_view_slice_t *this_);
-ZENOHC_API void z_view_slice_null(struct z_view_slice_t *this_);
 /**
  * Constructs a `len` bytes long view starting at `start`.
  */
 ZENOHC_API void z_view_slice_wrap(struct z_view_slice_t *this_, const uint8_t *start, size_t len);
+/**
+ * Returns ``true`` if `s` is a valid string
+ */
+ZENOHC_API bool z_view_str_check(const struct z_view_str_t *this_);
 ZENOHC_API void z_view_str_empty(struct z_view_str_t *this_);
 ZENOHC_API size_t z_view_str_len(const struct z_loaned_str_t *this_);
 /**

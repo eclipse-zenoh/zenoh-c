@@ -207,18 +207,22 @@ macro_rules! impl_transmute_handle {
     ($c_type:ty, $zenoh_type:ty) => {
         impl $crate::transmute::TransmuteFromHandle<$zenoh_type> for $c_type {
             fn transmute_ref(&self) -> &'static $zenoh_type {
-                unsafe { std::mem::transmute::<&$c_type, &'static $zenoh_type>(self) }
+                unsafe {
+                    (self as *const Self as *const $zenoh_type)
+                        .as_ref()
+                        .unwrap()
+                }
             }
             fn transmute_mut(&mut self) -> &'static mut $zenoh_type {
-                unsafe { std::mem::transmute::<&mut $c_type, &'static mut $zenoh_type>(self) }
+                unsafe { (self as *mut Self as *mut $zenoh_type).as_mut().unwrap() }
             }
         }
         impl $crate::transmute::TransmuteIntoHandle<$c_type> for $zenoh_type {
             fn transmute_handle(&self) -> &'static $c_type {
-                unsafe { std::mem::transmute::<&$zenoh_type, &'static $c_type>(self) }
+                unsafe { (self as *const Self as *const $c_type).as_ref().unwrap() }
             }
             fn transmute_handle_mut(&mut self) -> &'static mut $c_type {
-                unsafe { std::mem::transmute::<&mut $zenoh_type, &'static mut $c_type>(self) }
+                unsafe { (self as *mut Self as *mut $c_type).as_mut().unwrap() }
             }
         }
     };

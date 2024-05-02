@@ -367,7 +367,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_unchecked(
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_unchecked(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
-    s: *const c_char
+    s: *const c_char,
 ) {
     z_view_keyexpr_from_slice_unchecked(this, s, libc::strlen(s))
 }

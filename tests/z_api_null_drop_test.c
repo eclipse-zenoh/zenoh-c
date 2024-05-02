@@ -60,8 +60,6 @@ int main(int argc, char **argv) {
     z_reply_channel_null(&reply_channel_null_1);
     z_owned_str_t str_null_1;
     z_str_null(&str_null_1);
-    z_owned_slice_t slice_null_1;
-    z_slice_null(&slice_null_1);
     z_owned_slice_map_t slice_map_null_1;
     z_slice_map_null(&slice_map_null_1);
     z_owned_bytes_t bytes_null_1;
@@ -83,7 +81,6 @@ int main(int argc, char **argv) {
     assert(!z_check(reply_null_1));
     assert(!z_check(hello_null_1));
     assert(!z_check(str_null_1));
-    assert(!z_check(slice_null_1));
     assert(!z_check(slice_map_null_1));
     assert(!z_check(bytes_null_1));
     assert(!z_check(bytes_reader_null_1));
@@ -110,7 +107,6 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_closure_t reply_channel_closure_null_2;
     z_owned_reply_channel_t reply_channel_null_2;
     z_owned_str_t str_null_2;
-    z_owned_slice_t slice_null_2;
     z_owned_slice_map_t slice_map_null_2;
     z_owned_bytes_t bytes_null_2;
     z_owned_bytes_reader_t bytes_reader_null_2;
@@ -133,7 +129,6 @@ int main(int argc, char **argv) {
     z_null(&reply_channel_closure_null_2);
     z_null(&reply_channel_null_2);
     z_null(&str_null_2);
-    z_null(&slice_null_2);
     z_null(&slice_map_null_2);
     z_null(&bytes_null_2);
     z_null(&bytes_reader_null_2);
@@ -152,7 +147,6 @@ int main(int argc, char **argv) {
     assert(!z_check(reply_null_2));
     assert(!z_check(hello_null_2));
     assert(!z_check(str_null_2));
-    assert(!z_check(slice_null_2));
     assert(!z_check(slice_map_null_2));
     assert(!z_check(bytes_null_2));
     assert(!z_check(bytes_reader_null_2));
@@ -179,7 +173,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(reply_channel_closure_null_1));
         z_drop(z_move(reply_channel_null_1));
         z_drop(z_move(str_null_1));
-        z_drop(z_move(slice_null_1));
         z_drop(z_move(slice_map_null_1));
         z_drop(z_move(bytes_null_1));
         z_drop(z_move(bytes_reader_null_1));
@@ -203,7 +196,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(reply_channel_closure_null_2));
         z_drop(z_move(reply_channel_null_2));
         z_drop(z_move(str_null_2));
-        z_drop(z_move(slice_null_2));
         z_drop(z_move(slice_map_null_2));
         z_drop(z_move(bytes_null_2));
         z_drop(z_move(bytes_reader_null_2));

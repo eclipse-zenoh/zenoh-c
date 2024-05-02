@@ -21,7 +21,7 @@ use crate::{
     z_view_slice_wrap,
 };
 use std::mem::MaybeUninit;
-use std::ptr::{null, null_mut};
+use std::ptr::null_mut;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::SyncResolve;
 use zenoh::prelude::{Query, Queryable};
@@ -265,32 +265,21 @@ pub unsafe extern "C" fn z_query_parameters(
     unsafe { z_view_slice_wrap(parameters, params.as_ptr(), params.len()) };
 }
 
-/// Checks if query contains a payload value.
-#[no_mangle]
-pub extern "C" fn z_query_has_value(query: &z_loaned_query_t) -> bool {
-    query.transmute_ref().value().is_some()
-}
-
 /// Gets a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
 ///
-/// **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
-/// Before calling this funciton, the user must ensure that `z_query_has_value` returns true.
+/// Returns NULL if query does not contain a value.
 #[no_mangle]
-pub extern "C" fn z_query_value(query: &z_loaned_query_t) -> &z_loaned_value_t {
-    query
-        .transmute_ref()
-        .value()
-        .expect("Query does not contain a value")
-        .transmute_handle()
+pub extern "C" fn z_query_value(query: &z_loaned_query_t) -> Option<&z_loaned_value_t> {
+    query.transmute_ref().value().map(|v| v.transmute_handle())
 }
 
 /// Gets the attachment to the query by aliasing.
 ///
 /// Returns NULL if query does not contain an attachment.
 #[no_mangle]
-pub extern "C" fn z_query_attachment(query: &z_loaned_query_t) -> *const z_loaned_bytes_t {
-    match query.transmute_ref().attachment() {
-        Some(attachment) => attachment.transmute_handle() as *const _,
-        None => null(),
-    }
+pub extern "C" fn z_query_attachment(query: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
+    query
+        .transmute_ref()
+        .attachment()
+        .map(|a| a.transmute_handle())
 }

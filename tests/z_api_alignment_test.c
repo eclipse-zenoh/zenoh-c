@@ -118,21 +118,20 @@ int main(int argc, char **argv) {
     _Bool _ret_bool = z_view_keyexpr_check(&key_demo_example);
     assert(_ret_bool == true);
 
-    int8_t _ret_int;
-    _ret_int = z_keyexpr_includes(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
-    assert(_ret_int == 0);
+    _ret_bool = z_keyexpr_includes(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
+    assert(_ret_bool);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_includes_null_terminated("demo/example/**", "demo/example/a");
     assert(_ret_int == 0);
 #endif
-    _ret_int = z_keyexpr_intersects(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
-    assert(_ret_int == 0);
+    _ret_bool = z_keyexpr_intersects(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
+    assert(_ret_bool);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_intersect_null_terminated("demo/example/**", "demo/example/a");
     assert(_ret_int == 0);
 #endif
-    _ret_int = z_keyexpr_equals(z_loan(key_demo_example_starstar), z_loan(key_demo_example));
-    assert(_ret_int == -1);
+    _ret_bool = z_keyexpr_equals(z_loan(key_demo_example_starstar), z_loan(key_demo_example));
+    assert(!_ret_bool);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_equals_null_terminated("demo/example/**", "demo/example");
     assert(_ret_int == -1);
@@ -154,6 +153,7 @@ int main(int argc, char **argv) {
     _ret_int8 = z_keyexpr_canonize(keyexpr_str, &keyexpr_len);
     assert(_ret_int8 == 0);
     assert(strlen(URI) == keyexpr_len);
+    printf("keyexpr: %s", keyexpr_str);
 #ifdef ZENOH_PICO
     _ret_int8 = zp_keyexpr_canonize_null_terminated(keyexpr_str);
     assert(_ret_int8 == 0);

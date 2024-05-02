@@ -12,21 +12,27 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    errors::{self, Z_OK}, transmute::{unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr}, z_closure_hello_call, z_config_check, z_config_clone, z_config_default, z_config_drop, z_config_null, z_id_t, z_loaned_config_t, z_owned_closure_hello_t, z_owned_config_t, z_owned_slice_array_t, zc_init_logger, CopyableToCArray, ZVector
+    errors::{self, Z_OK},
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
+        TransmuteRef, TransmuteUninitPtr,
+    },
+    z_closure_hello_call, z_config_check, z_config_clone, z_config_default, z_config_drop,
+    z_config_null, z_id_t, z_loaned_config_t, z_owned_closure_hello_t, z_owned_config_t,
+    z_owned_slice_array_t, zc_init_logger, CSlice, CopyableToCArray, ZVector,
 };
 use async_std::task;
 use libc::{c_char, c_ulong};
-use std::{borrow::Cow, mem::MaybeUninit, os::raw::c_void};
+use std::{mem::MaybeUninit, os::raw::c_void};
 use zenoh::scouting::Hello;
 use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
 
-pub use crate::opaque_types::z_owned_hello_t;
 pub use crate::opaque_types::z_loaned_hello_t;
+pub use crate::opaque_types::z_owned_hello_t;
 
 decl_transmute_owned!(Option<Hello>, z_owned_hello_t);
 decl_transmute_handle!(Hello, z_loaned_hello_t);
-
 
 /// Frees `hello`, invalidating it for double-drop safety.
 #[no_mangle]
@@ -54,7 +60,6 @@ pub extern "C" fn z_hello_null(this: *mut MaybeUninit<z_owned_hello_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
-
 #[no_mangle]
 pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
     this.transmute_ref().zid.transmute_copy()
@@ -66,14 +71,17 @@ pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> u8 {
 }
 
 /// Returns an array of non-owned locators as an array of non-null terminated strings.
-/// 
+///
 /// The lifetime of locator strings is bound to `this`.
 #[no_mangle]
-pub extern "C" fn z_hello_locators(this: &z_loaned_hello_t, locators_out: *mut MaybeUninit<z_owned_slice_array_t>) {
+pub extern "C" fn z_hello_locators(
+    this: &z_loaned_hello_t,
+    locators_out: *mut MaybeUninit<z_owned_slice_array_t>,
+) {
     let this = this.transmute_ref();
     let mut locators = ZVector::with_capacity(this.locators.len());
     for l in this.locators.iter() {
-        locators.push(Cow::Borrowed(l.as_str().as_bytes()));
+        locators.push(CSlice::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
     Inplace::init(locators_out.transmute_uninit_ptr(), Some(locators));
 }
@@ -181,9 +189,7 @@ pub extern "C" fn z_scout(
 
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
-            .callback(move |h| {
-                z_closure_hello_call(&closure, h.transmute_handle())
-            })
+            .callback(move |h| z_closure_hello_call(&closure, h.transmute_handle()))
             .res_async()
             .await
             .unwrap();

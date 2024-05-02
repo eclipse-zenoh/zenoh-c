@@ -59,14 +59,17 @@ int run_publisher() {
 
     z_publisher_put_options_t options;
     z_publisher_put_options_default(&options);
-    z_owned_bytes_t attachment;
-    z_bytes_encode_from_slice_map(&attachment, z_loan(map));
-    options.attachment = &attachment;
+
     for (int i = 0; i < values_count; ++i) {
         z_view_slice_t k_var, v_var;
         z_view_slice_from_str(&k_var, K_VAR);
         z_view_slice_from_str(&v_var, values[i]);
-        z_slice_map_insert_by_copy(z_loan_mut(map), z_loan(k_var), z_loan(v_var));
+        z_slice_map_insert_by_copy(z_loan_mut(map), z_loan(k_var), z_loan(v_var)); //value with the same key will be ovewritten
+
+        z_owned_bytes_t attachment;
+        z_bytes_encode_from_slice_map(&attachment, z_loan(map));
+        options.attachment = &attachment;
+
         z_owned_bytes_t payload;
         z_bytes_encode_from_slice(&payload, z_loan(v_var));
         z_publisher_put(z_loan(pub), z_move(payload), &options);
@@ -108,7 +111,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
 
     z_view_slice_t k_const, k_var;
     z_view_slice_from_str(&k_const, K_CONST);
-    z_view_slice_from_str(&k_var, K_CONST);
+    z_view_slice_from_str(&k_var, K_VAR);
 
     const z_loaned_slice_t* v_const = z_slice_map_get(z_loan(map), z_loan(k_const));
     ASSERT_STR_SLICE_EQUAL(V_CONST, v_const);

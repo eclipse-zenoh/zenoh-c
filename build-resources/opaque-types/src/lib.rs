@@ -47,31 +47,33 @@ get_opaque_type_data!(Option<ZBytes>, z_owned_bytes_t);
 /// A loaned payload.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 
+
+type CSlice = (usize, isize);
 /// A contiguous view of bytes owned by some other entity.
 ///
 /// `start` being `null` is considered a gravestone value,
 /// and empty slices are represented using a possibly dangling pointer for `start`.
-get_opaque_type_data!(Option<Box<[u8]>>, z_owned_slice_t);
-get_opaque_type_data!(Option<&'static [u8]>, z_view_slice_t);
-get_opaque_type_data!(&'static [u8], z_loaned_slice_t);
+get_opaque_type_data!(CSlice, z_owned_slice_t);
+get_opaque_type_data!(CSlice, z_view_slice_t);
+get_opaque_type_data!(CSlice, z_loaned_slice_t);
 
 /// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
 /// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
 /// `z_check` and `z_str_check` correspondently
-get_opaque_type_data!(Option<Box<[u8]>>, z_owned_str_t);
-get_opaque_type_data!(Option<&'static [u8]>, z_view_str_t);
-get_opaque_type_data!(&'static [u8], z_loaned_str_t);
+get_opaque_type_data!(CSlice, z_owned_str_t);
+get_opaque_type_data!(CSlice, z_view_str_t);
+get_opaque_type_data!(CSlice, z_loaned_str_t);
 
 /// A map of maybe-owned slices to maybe-owned slices.
 ///
 /// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
-get_opaque_type_data!(Option<HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>>, z_owned_slice_map_t);
-get_opaque_type_data!(HashMap<Cow<'static, [u8]>, Cow<'static, [u8]>>, z_loaned_slice_map_t);
+get_opaque_type_data!(Option<HashMap<usize, usize>>, z_owned_slice_map_t);
+get_opaque_type_data!(HashMap<usize, usize>, z_loaned_slice_map_t);
 
 /// An array of maybe-owned slices
 ///
-get_opaque_type_data!(Option<Vec<Cow<'static, [u8]>>>, z_owned_slice_array_t);
-get_opaque_type_data!(Vec<Cow<'static, [u8]>>, z_loaned_slice_array_t);
+get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_slice_array_t);
+get_opaque_type_data!(Vec<CSlice>, z_loaned_slice_array_t);
 
 /// An owned sample.
 ///

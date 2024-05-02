@@ -68,8 +68,8 @@ void includes() {
     z_view_keyexpr_new(&foobar, "foo/bar");
     z_view_keyexpr_new(&foostar, "foo/*");
 
-    assert(z_keyexpr_includes(z_loan(foostar), z_loan(foobar)) == false);
-    assert(z_keyexpr_includes(z_loan(foobar), z_loan(foostar)) == true);
+    assert(z_keyexpr_includes(z_loan(foostar), z_loan(foobar)) == true);
+    assert(z_keyexpr_includes(z_loan(foobar), z_loan(foostar)) == false);
 }
 
 void intersects() {

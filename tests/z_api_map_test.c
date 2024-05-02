@@ -44,7 +44,7 @@ void writting_by_alias_read_by_get() {
     const z_loaned_slice_t* a1 = z_slice_map_get(z_loan(map), z_loan(k1));
     ASSERT_STR_SLICE_EQUAL("v1", a1);
 
-    const z_loaned_slice_t* a2 = z_slice_map_get(z_loan(map), z_loan(k1));
+    const z_loaned_slice_t* a2 = z_slice_map_get(z_loan(map), z_loan(k2));
     ASSERT_STR_SLICE_EQUAL("v2", a2);
 
     const z_loaned_slice_t* a_null = z_slice_map_get(z_loan(map), z_loan(k0));

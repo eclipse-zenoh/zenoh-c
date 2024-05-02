@@ -38,6 +38,7 @@ pub extern "C" fn z_reply_channel_drop(channel: &mut z_owned_reply_channel_t) {
 }
 /// Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_channel_null(this: *mut MaybeUninit<z_owned_reply_channel_t>) {
     let c = z_owned_reply_channel_t {
         send: z_owned_closure_reply_t::empty(),
@@ -86,7 +87,10 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_reply_fifo_new(this: *mut MaybeUninit<z_owned_reply_channel_t> ,bound: usize) {
+pub unsafe extern "C" fn zc_reply_fifo_new(
+    this: *mut MaybeUninit<z_owned_reply_channel_t>,
+    bound: usize,
+) {
     let (send, rx) = get_send_recv_ends(bound);
     let c = z_owned_reply_channel_t {
         send,
@@ -113,7 +117,10 @@ pub unsafe extern "C" fn zc_reply_fifo_new(this: *mut MaybeUninit<z_owned_reply_
 /// at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(this: *mut MaybeUninit<z_owned_reply_channel_t>, bound: usize) {
+pub unsafe extern "C" fn zc_reply_non_blocking_fifo_new(
+    this: *mut MaybeUninit<z_owned_reply_channel_t>,
+    bound: usize,
+) {
     let (send, rx) = get_send_recv_ends(bound);
     let c = z_owned_reply_channel_t {
         send,
@@ -158,7 +165,10 @@ impl Drop for z_owned_reply_channel_closure_t {
 
 /// Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
 #[no_mangle]
-pub unsafe extern "C" fn z_reply_channel_closure_null(this: *mut MaybeUninit<z_owned_reply_channel_closure_t>) {
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_channel_closure_null(
+    this: *mut MaybeUninit<z_owned_reply_channel_closure_t>,
+) {
     (*this).write(z_owned_reply_channel_closure_t::empty());
 }
 

@@ -13,13 +13,13 @@
 //
 
 use libc::c_char;
-use zenoh::selector::Selector;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::ptr::null;
 use std::ptr::null_mut;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
+use zenoh::selector::Selector;
 
 use zenoh::prelude::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
@@ -107,8 +107,9 @@ pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: 
 /// Members:
 ///     z_loaned_query_target_t target: The Queryables that should be target of the query.
 ///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
-///     z_loaned_value_t value: An optional value to attach to the query.
-///    z_loaned_bytes_t attachment: The attachment to attach to the query.
+///     z_owned_payload_t* payload: An optional payload to attach to the query.
+///     z_owned_encdoing_t* encdoing: An optional encoding of the query payload and or attachment.
+///     z_owned_bytes_t attachment: The attachment to attach to the query.
 ///     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
 #[repr(C)]
 pub struct z_get_options_t {
@@ -175,14 +176,17 @@ pub unsafe extern "C" fn z_get(
             get = get.encoding(encoding);
         }
         if !options.attachment.is_null() {
-            let attachment = unsafe { *options.payload }.transmute_mut().extract();
+            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
             get = get.attachment(attachment);
         }
 
         get = get
             .consolidation(options.consolidation)
-            .timeout(std::time::Duration::from_millis(options.timeout_ms))
             .target(options.target.into());
+
+        if options.timeout_ms != 0 {
+            get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
+        }
     }
     match get
         .callback(move |response| z_closure_reply_call(&closure, response.transmute_handle()))
@@ -209,7 +213,7 @@ pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn z_reply_loan(this: & z_owned_reply_t) -> &z_loaned_reply_t {
+pub extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()

@@ -44,7 +44,10 @@ impl Drop for zcu_owned_closure_matching_status_t {
 }
 /// Constructs a null safe-to-drop value of 'zcu_owned_closure_matching_status_t' type
 #[no_mangle]
-pub unsafe extern "C" fn zcu_closure_matching_status_null(this: *mut MaybeUninit<zcu_owned_closure_matching_status_t>) {
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zcu_closure_matching_status_null(
+    this: *mut MaybeUninit<zcu_owned_closure_matching_status_t>,
+) {
     (*this).write(zcu_owned_closure_matching_status_t::empty());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.

@@ -955,7 +955,7 @@ pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
-pub fn generate_generic_loan_c(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_loan_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = "#define z_loan(x) \\
     _Generic((x)"
         .to_owned();
@@ -971,9 +971,7 @@ pub fn generate_generic_loan_c(macro_func: &Vec<FunctionSignature>) -> String {
     out
 }
 
-pub fn generate_generic_loan_mut_c(
-    macro_func: &Vec<FunctionSignature>
-) -> String {
+pub fn generate_generic_loan_mut_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = "#define z_loan_mut(x) \\
     _Generic((x)"
         .to_owned();
@@ -989,7 +987,7 @@ pub fn generate_generic_loan_mut_c(
     out
 }
 
-pub fn generate_generic_drop_c(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = "#define z_drop(x) \\
     _Generic((x)"
         .to_owned();
@@ -1005,7 +1003,7 @@ pub fn generate_generic_drop_c(macro_func: &Vec<FunctionSignature>) -> String {
     out
 }
 
-pub fn generate_generic_null_c(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_null_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = "#define z_null(x) \\
     _Generic((x)"
         .to_owned();
@@ -1021,7 +1019,7 @@ pub fn generate_generic_null_c(macro_func: &Vec<FunctionSignature>) -> String {
     out
 }
 
-pub fn generate_generic_check_c(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_check_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = "#define z_check(x) \\
     _Generic((x)"
         .to_owned();
@@ -1037,7 +1035,7 @@ pub fn generate_generic_check_c(macro_func: &Vec<FunctionSignature>) -> String {
     out
 }
 
-pub fn generate_generic_call_c(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = "#define z_call(x, ...) \\
      _Generic((x)"
         .to_owned();
@@ -1054,16 +1052,13 @@ pub fn generate_generic_call_c(macro_func: &Vec<FunctionSignature>) -> String {
     out
 }
 
-pub fn generate_generic_closure_c(
-    _macro_func: &Vec<FunctionSignature>
-) -> String {
-    let out = "#define z_closure(x, callback, dropper, ctx) \\
+pub fn generate_generic_closure_c(_macro_func: &[FunctionSignature]) -> String {
+    "#define z_closure(x, callback, dropper, ctx) \\
     {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}"
-        .to_owned();
-    out
+        .to_owned()
 }
 
-pub fn generate_generic_loan_cpp(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_loan_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {
@@ -1078,9 +1073,7 @@ pub fn generate_generic_loan_cpp(macro_func: &Vec<FunctionSignature>) -> String 
     out
 }
 
-pub fn generate_generic_loan_mut_cpp(
-    macro_func: &Vec<FunctionSignature>
-) -> String {
+pub fn generate_generic_loan_mut_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {
@@ -1095,7 +1088,7 @@ pub fn generate_generic_loan_mut_cpp(
     out
 }
 
-pub fn generate_generic_drop_cpp(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_drop_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {
@@ -1110,7 +1103,7 @@ pub fn generate_generic_drop_cpp(macro_func: &Vec<FunctionSignature>) -> String 
     out
 }
 
-pub fn generate_generic_null_cpp(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_null_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {
@@ -1125,9 +1118,7 @@ pub fn generate_generic_null_cpp(macro_func: &Vec<FunctionSignature>) -> String 
     out
 }
 
-pub fn generate_generic_check_cpp(
-    macro_func: &Vec<FunctionSignature>
-) -> String {
+pub fn generate_generic_check_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {
@@ -1142,7 +1133,7 @@ pub fn generate_generic_check_cpp(
     out
 }
 
-pub fn generate_generic_call_cpp(macro_func: &Vec<FunctionSignature>) -> String {
+pub fn generate_generic_call_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {
@@ -1162,9 +1153,7 @@ pub fn generate_generic_call_cpp(macro_func: &Vec<FunctionSignature>) -> String 
     out
 }
 
-pub fn generate_generic_closure_cpp(
-    macro_func: &Vec<FunctionSignature>
-) -> String {
+pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {

@@ -55,7 +55,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     ASSERT_STR_SLICE_EQUAL(V_CONST, v_const);
 
     const z_loaned_slice_t* v_var = z_slice_map_get(z_loan(map), z_loan(k_var));
-    ASSERT_STR_SLICE_EQUAL(values[value_num], v_var);
+    ASSERT_STR_SLICE_EQUAL(values[value_num], v_var); 
 
     z_owned_slice_map_t reply_map;
     z_slice_map_new(&reply_map);
@@ -79,7 +79,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_query_reply(query, z_loan(reply_ke), z_move(payload), &options);
     z_drop(z_move(keystr));
     z_drop(z_move(map));
-    z_drop(z_move(reply_map));
+   // z_drop(z_move(reply_map));
 
     if (++value_num == values_count) {
         exit(0);
@@ -142,17 +142,18 @@ int run_get() {
     z_get_options_t opts;
     z_get_options_default(&opts);
 
-    z_owned_bytes_t attachment;
-    z_bytes_encode_from_slice_map(&attachment, z_loan(map));
-    opts.attachment = &attachment;
 
     for (int val_num = 0; val_num < values_count; ++val_num) {
         z_view_slice_t v_var;
         z_view_slice_from_str(&v_var, values[val_num]);
-        z_slice_map_insert_by_copy(z_loan_mut(map), z_loan(k_var), z_loan(v_var));
+        z_slice_map_insert_by_copy(z_loan_mut(map), z_loan(k_var), z_loan(v_var)); // will overwrite any previous value for the same key
 
         z_owned_reply_channel_t channel;
         zc_reply_fifo_new(&channel, 16);
+
+        z_owned_bytes_t attachment;
+        z_bytes_encode_from_slice_map(&attachment, z_loan(map));
+        opts.attachment = &attachment;
         z_get(z_loan(s), z_loan(ke), "", z_move(channel.send), &opts);
         z_owned_reply_t reply;
         for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {

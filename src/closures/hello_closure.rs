@@ -44,6 +44,7 @@ impl Drop for z_owned_closure_hello_t {
 }
 /// Constructs a null safe-to-drop value of 'z_owned_closure_hello_t' type
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_hello_null(this: *mut MaybeUninit<z_owned_closure_hello_t>) {
     (*this).write(z_owned_closure_hello_t::empty());
 }
