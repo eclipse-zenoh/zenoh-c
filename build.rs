@@ -760,7 +760,6 @@ pub struct FunctionSignature {
 pub fn create_generics_header(path_in: &str, path_out: &str) {
     let mut file_out = std::fs::File::options()
         .read(false)
-        .create(false)
         .write(true)
         .truncate(true)
         .append(false)
