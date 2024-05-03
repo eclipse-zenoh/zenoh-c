@@ -661,9 +661,6 @@ typedef struct ALIGN(8) z_loaned_slice_array_t {
 typedef bool (*z_slice_map_iter_body_t)(const struct z_loaned_slice_t *key,
                                         const struct z_loaned_slice_t *value,
                                         void *context);
-typedef struct ALIGN(8) z_loaned_subscriber_t {
-  uint8_t _0[32];
-} z_loaned_subscriber_t;
 typedef struct ALIGN(8) z_owned_task_t {
   uint8_t _0[24];
 } z_owned_task_t;
@@ -757,21 +754,6 @@ typedef struct ALIGN(8) zcu_owned_matching_listener_t {
   uint8_t _0[40];
 } zcu_owned_matching_listener_t;
 /**
- * An owned zenoh publication_cache.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct ALIGN(8) ze_owned_publication_cache_t {
-  uint8_t _0[96];
-} ze_owned_publication_cache_t;
-/**
  * Options passed to the :c:func:`ze_declare_publication_cache` function.
  *
  * Members:
@@ -789,21 +771,6 @@ typedef struct ze_publication_cache_options_t {
   size_t history;
   size_t resources_limit;
 } ze_publication_cache_options_t;
-/**
- * An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
- *
- * Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct ALIGN(8) ze_owned_querying_subscriber_t {
-  uint8_t _0[64];
-} ze_owned_querying_subscriber_t;
 /**
  * Represents the set of options that can be applied to a querying subscriber,
  * upon its declaration via :c:func:`ze_declare_querying_subscriber`.
@@ -827,9 +794,6 @@ typedef struct ze_querying_subscriber_options_t {
   enum zcu_reply_keyexpr_t query_accept_replies;
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
-typedef struct ALIGN(8) ze_loaned_querying_subscriber_t {
-  uint8_t _0[64];
-} ze_loaned_querying_subscriber_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
