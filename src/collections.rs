@@ -366,8 +366,8 @@ pub unsafe extern "C" fn z_view_str_wrap(
 }
 
 #[no_mangle]
-pub extern "C" fn z_view_str_len(this: &z_loaned_str_t) -> usize {
-    z_slice_len(this.transmute_ref().transmute_handle()) - 1
+pub extern "C" fn z_str_len(this: &z_loaned_str_t) -> usize {
+    z_slice_len(this.transmute_ref().transmute_handle()).max(1) - 1
 }
 
 #[no_mangle]

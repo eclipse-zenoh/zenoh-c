@@ -2016,6 +2016,7 @@ ZENOHC_API void z_str_empty(struct z_owned_str_t *this_);
  * Calling this with `str == NULL` is equivalent to `z_str_null`.
  */
 ZENOHC_API void z_str_from_substring(struct z_owned_str_t *this_, const char *str, size_t len);
+ZENOHC_API size_t z_str_len(const struct z_loaned_str_t *this_);
 /**
  * Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_owned_str_t`.
  */
@@ -2194,7 +2195,6 @@ ZENOHC_API void z_view_slice_wrap(struct z_view_slice_t *this_, const uint8_t *s
  */
 ZENOHC_API bool z_view_str_check(const struct z_view_str_t *this_);
 ZENOHC_API void z_view_str_empty(struct z_view_str_t *this_);
-ZENOHC_API size_t z_view_str_len(const struct z_loaned_str_t *this_);
 /**
  * Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_view_str_t`.
  */
