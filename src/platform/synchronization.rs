@@ -1,240 +1,211 @@
 use std::{
+    mem::MaybeUninit,
     sync::{Condvar, Mutex, MutexGuard},
     thread::{self, JoinHandle},
 };
 
 use libc::c_void;
 
-use crate::{impl_guarded_transmute, GuardedTransmute};
+pub use crate::opaque_types::z_loaned_mutex_t;
+pub use crate::opaque_types::z_owned_mutex_t;
+use crate::{
+    errors,
+    transmute::{
+        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    },
+};
 
-pub struct ZMutex<'a> {
-    mutex: Mutex<()>,
-    lock: Option<MutexGuard<'a, ()>>,
-}
-
-pub struct ZMutexPtr {
-    data: Option<Box<ZMutex<'static>>>,
-}
-
-/// Mutex
-///
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct z_mutex_t(usize);
-
-impl_guarded_transmute!(noderefs z_mutex_t, ZMutexPtr);
-impl_guarded_transmute!(noderefs ZMutexPtr, z_mutex_t);
-
-// using the same error codes as in GNU pthreads, but with negative sign
-// due to convention to return negative values on error
-const EBUSY: i8 = -16;
-const EINVAL: i8 = -22;
-const EAGAIN: i8 = -11;
-const EPOISON: i8 = -22; // same as EINVAL
+decl_transmute_owned!(
+    Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>,
+    z_owned_mutex_t
+);
+decl_transmute_handle!(
+    (Mutex<()>, Option<MutexGuard<'static, ()>>),
+    z_loaned_mutex_t
+);
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_init(m: *mut z_mutex_t) -> i8 {
-    if m.is_null() {
-        return EINVAL;
-    }
-    let t = ZMutexPtr {
-        data: Some(Box::new(ZMutex {
-            mutex: Mutex::new(()),
-            lock: None,
-        })),
-    };
-    *m = t.transmute();
-    0
+pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> errors::z_error_t {
+    let this = this.transmute_uninit_ptr();
+    let m = (Mutex::<()>::new(()), None::<MutexGuard<'static, ()>>);
+    Inplace::init(this, Some(m));
+    errors::Z_OK
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_free(m: *mut z_mutex_t) -> i8 {
-    if m.is_null() {
-        return EINVAL;
-    }
-    let mut t = (*m).transmute();
-
-    t.data.take();
-    *m = t.transmute();
-    0
+pub extern "C" fn z_mutex_drop(this: &mut z_owned_mutex_t) {
+    let _ = this.transmute_mut().extract().take();
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_lock(m: *mut z_mutex_t) -> i8 {
-    if m.is_null() {
-        return EINVAL;
-    }
-    let mut t = (*m).transmute();
-    if t.data.is_none() {
-        return EINVAL;
-    }
-    let mut_data = t.data.as_mut().unwrap();
-    match mut_data.mutex.lock() {
+pub extern "C" fn z_mutex_check(this: &z_owned_mutex_t) -> bool {
+    this.transmute_ref().is_some()
+}
+
+#[no_mangle]
+pub extern "C" fn z_mutex_null(this: *mut MaybeUninit<z_owned_mutex_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
+}
+
+#[no_mangle]
+pub extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
+}
+
+#[no_mangle]
+pub extern "C" fn z_mutex_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
+    let this = this.transmute_mut();
+
+    match this.0.lock() {
         Ok(new_lock) => {
-            let old_lock = mut_data.lock.replace(std::mem::transmute(new_lock));
+            let old_lock = this.1.replace(new_lock);
             std::mem::forget(old_lock);
         }
         Err(_) => {
-            return EPOISON;
+            return errors::Z_EPOISON_MUTEX;
         }
     }
-
-    *m = t.transmute();
-    0
+    errors::Z_OK
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_unlock(m: *mut z_mutex_t) -> i8 {
-    if m.is_null() {
-        return EINVAL;
-    }
-    let mut t = (*m).transmute();
-    if t.data.is_none() {
-        return EINVAL;
-    }
-    let mut_data = t.data.as_mut().unwrap();
-    if mut_data.lock.is_none() {
-        return EINVAL;
+pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
+    let this = this.transmute_mut();
+    if this.1.is_none() {
+        return errors::Z_EINVAL_MUTEX;
     } else {
-        mut_data.lock.take();
+        this.1.take();
     }
-    *m = t.transmute();
-    0
+    errors::Z_OK
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_try_lock(m: *mut z_mutex_t) -> i8 {
-    if m.is_null() {
-        return EINVAL;
-    }
-    let mut t = (*m).transmute();
-    if t.data.is_none() {
-        return EINVAL;
-    }
-    let mut_data = t.data.as_mut().unwrap();
-    let mut ret: i8 = 0;
-    match mut_data.mutex.try_lock() {
+pub unsafe extern "C" fn z_loaned_mutex_try_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
+    let this = this.transmute_mut();
+    match this.0.try_lock() {
         Ok(new_lock) => {
-            let old_lock = mut_data.lock.replace(std::mem::transmute(new_lock));
+            let old_lock = this.1.replace(new_lock);
             std::mem::forget(old_lock);
         }
         Err(_) => {
-            ret = EBUSY;
+            return errors::Z_EBUSY_MUTEX;
         }
     }
-    *m = t.transmute();
-    ret
+    errors::Z_OK
 }
 
-struct ZCondvarPtr {
-    data: Option<Box<Condvar>>,
-}
+pub use crate::opaque_types::z_loaned_condvar_t;
+pub use crate::opaque_types::z_owned_condvar_t;
 
-/// Condvar
-///
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct z_condvar_t(usize);
-
-impl_guarded_transmute!(noderefs z_condvar_t, ZCondvarPtr);
-impl_guarded_transmute!(noderefs ZCondvarPtr, z_condvar_t);
+decl_transmute_owned!(Option<Condvar>, z_owned_condvar_t);
+decl_transmute_handle!(Condvar, z_loaned_condvar_t);
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_init(cv: *mut z_condvar_t) -> i8 {
-    if cv.is_null() {
-        return EINVAL;
-    }
-    let t: ZCondvarPtr = ZCondvarPtr {
-        data: Some(Box::new(Condvar::new())),
-    };
-    *cv = t.transmute();
-    0
+pub extern "C" fn z_condvar_init(this: *mut MaybeUninit<z_owned_condvar_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::init(this, Some(Condvar::new()));
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_free(cv: *mut z_condvar_t) -> i8 {
-    if cv.is_null() {
-        return EINVAL;
-    }
-    let mut t = (*cv).transmute();
-    if t.data.is_none() {
-        return EINVAL;
-    }
-    t.data.take();
-    *cv = t.transmute();
-    0
+pub extern "C" fn z_condvar_null(this: *mut MaybeUninit<z_owned_condvar_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::empty(this);
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_signal(cv: *mut z_condvar_t) -> i8 {
-    if cv.is_null() {
-        return EINVAL;
-    }
-    let t = (*cv).transmute();
-    if t.data.is_none() {
-        return EINVAL;
-    }
-    t.data.as_ref().unwrap().notify_one();
-    *cv = t.transmute();
-    0
+pub extern "C" fn z_condvar_drop(this: &mut z_owned_condvar_t) {
+    let _ = this.transmute_mut().extract().take();
+}
+
+#[no_mangle]
+pub extern "C" fn z_condvar_check(this: &z_owned_condvar_t) -> bool {
+    this.transmute_ref().is_some()
+}
+
+#[no_mangle]
+pub extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_loaned_condvar_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
+}
+
+#[no_mangle]
+pub extern "C" fn z_condvar_loan_mut(this: &mut z_owned_condvar_t) -> &mut z_loaned_condvar_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
+}
+
+#[no_mangle]
+pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_error_t {
+    let this = this.transmute_ref();
+    this.notify_one();
+    errors::Z_OK
 }
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_wait(cv: *mut z_condvar_t, m: *mut z_mutex_t) -> i8 {
-    if cv.is_null() {
-        return EINVAL;
+pub unsafe extern "C" fn z_condvar_wait(
+    this: &z_loaned_condvar_t,
+    m: &mut z_loaned_mutex_t,
+) -> errors::z_error_t {
+    let this = this.transmute_ref();
+    let m = m.transmute_mut();
+    if m.1.is_none() {
+        return errors::Z_EINVAL_MUTEX; // lock was not aquired prior to wait call
     }
-    let tcv = (*cv).transmute();
-    if tcv.data.is_none() {
-        return EINVAL;
+
+    let lock = m.1.take().unwrap();
+    match this.wait(lock) {
+        Ok(new_lock) => m.1 = Some(new_lock),
+        Err(_) => return errors::Z_EPOISON_MUTEX,
     }
-    if m.is_null() {
-        return EINVAL;
-    }
-    let mut tm = (*m).transmute();
-    if tm.data.is_none() || tm.data.as_ref().unwrap().lock.is_none() {
-        return EINVAL;
-    }
-    let mut_data = tm.data.as_mut().unwrap();
-    let lock = mut_data.lock.take().unwrap();
-    match tcv.data.as_ref().unwrap().wait(lock) {
-        Ok(new_lock) => mut_data.lock = Some(std::mem::transmute(new_lock)),
-        Err(_) => return EPOISON,
-    }
-    *cv = tcv.transmute();
-    *m = tm.transmute();
-    0
+
+    errors::Z_OK
 }
 
-struct ZTask {
-    join_handle: JoinHandle<()>,
-}
+pub use crate::opaque_types::z_owned_task_t;
 
-struct ZTaskPtr {
-    data: Option<Box<ZTask>>,
-}
-
-/// Task
-///
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct z_task_t(usize);
+decl_transmute_owned!(Option<JoinHandle<()>>, z_owned_task_t);
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_task_attr_t(usize);
 
-impl_guarded_transmute!(noderefs z_task_t, ZTaskPtr);
-impl_guarded_transmute!(noderefs ZTaskPtr, z_task_t);
+#[no_mangle]
+pub extern "C" fn z_task_null(this: *mut MaybeUninit<z_owned_task_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::empty(this);
+}
+
+/// Detaches the task and releases all allocated resources.
+#[no_mangle]
+pub extern "C" fn z_task_detach(this: &mut z_owned_task_t) {
+    let _ = this.transmute_mut().extract().take();
+}
+
+/// Joins the task and releases all allocated resources
+#[no_mangle]
+pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_error_t {
+    let this = this.transmute_mut().extract().take();
+    if let Some(task) = this {
+        match task.join() {
+            Ok(_) => errors::Z_OK,
+            Err(_) => errors::Z_EINVAL_MUTEX,
+        }
+    } else {
+        errors::Z_OK
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn z_task_check(this: &z_owned_task_t) -> bool {
+    this.transmute_ref().is_some()
+}
 
 struct FunArgPair {
     fun: unsafe extern "C" fn(arg: *mut c_void),
@@ -252,42 +223,19 @@ unsafe impl Send for FunArgPair {}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_task_init(
-    task: *mut z_task_t,
+    this: *mut MaybeUninit<z_owned_task_t>,
     _attr: *const z_task_attr_t,
     fun: unsafe extern "C" fn(arg: *mut c_void),
     arg: *mut c_void,
-) -> i8 {
-    if task.is_null() {
-        return EINVAL;
-    }
-
-    let mut ttask = ZTaskPtr { data: None };
+) -> errors::z_error_t {
+    let this = this.transmute_uninit_ptr();
     let fun_arg_pair = FunArgPair { fun, arg };
 
-    let mut ret = 0;
     match thread::Builder::new().spawn(move || fun_arg_pair.call()) {
-        Ok(join_handle) => ttask.data = Some(Box::new(ZTask { join_handle })),
-        Err(_) => ret = EAGAIN,
+        Ok(join_handle) => {
+            Inplace::init(this, Some(join_handle));
+        }
+        Err(_) => return errors::Z_EAGAIN_MUTEX,
     }
-    *task = ttask.transmute();
-    ret
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_task_join(task: *mut z_task_t) -> i8 {
-    if task.is_null() {
-        return EINVAL;
-    }
-    let mut ttask = (*task).transmute();
-    if ttask.data.is_none() {
-        return EINVAL;
-    }
-    let data = ttask.data.take();
-    let ret = match data.unwrap().join_handle.join() {
-        Ok(_) => 0,
-        Err(_) => EINVAL,
-    };
-    *task = ttask.transmute();
-    ret
+    errors::Z_OK
 }

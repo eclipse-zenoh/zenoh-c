@@ -23,7 +23,7 @@ use zenoh::{
     shm::{SharedMemoryBuf, SharedMemoryManager},
 };
 
-use crate::{z_session_t, zc_owned_payload_t, zc_payload_null};
+use crate::{z_loaned_session_t, z_owned_bytes_t, z_bytes_null};
 
 #[repr(C)]
 pub struct zc_owned_shm_manager_t(usize);
@@ -51,7 +51,7 @@ impl zc_owned_shm_manager_t {
 
 #[no_mangle]
 pub extern "C" fn zc_shm_manager_new(
-    session: z_session_t,
+    session: z_loaned_session_t,
     id: *const c_char,
     size: usize,
 ) -> zc_owned_shm_manager_t {
@@ -179,10 +179,10 @@ pub extern "C" fn zc_shmbuf_null() -> zc_owned_shmbuf_t {
 
 /// Constructs an owned payload from an owned SHM buffer.
 #[no_mangle]
-pub extern "C" fn zc_shmbuf_into_payload(buf: &mut zc_owned_shmbuf_t) -> zc_owned_payload_t {
+pub extern "C" fn zc_shmbuf_into_payload(buf: &mut zc_owned_shmbuf_t) -> z_owned_bytes_t {
     match buf.get_mut().take() {
         Some(buf) => ZBuf::from(buf).try_into().unwrap_or_default(),
-        None => zc_payload_null(),
+        None => z_bytes_null(),
     }
 }
 

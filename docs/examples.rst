@@ -43,7 +43,7 @@ Subscribe
   #include <stdio.h>
   #include "zenoh.h"
 
-  void data_handler(const z_sample_t *sample, const void *arg) {
+  void data_handler(const z_loaned_sample_t *sample, const void *arg) {
       z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
       printf(">> Received (%s, %.*s)\n",
           keystr, (int)sample->payload.len, sample->payload.start);
@@ -86,7 +86,7 @@ Query
       {
           if (z_reply_is_ok(&reply))
           {
-              z_sample_t sample = z_reply_ok(&reply);
+              z_loaned_sample_t sample = z_reply_ok(&reply);
               z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
               printf(">> Received ('%s': '%.*s')\n", keystr, (int)sample.payload.len, sample.payload.start);
               z_drop(z_move(keystr));

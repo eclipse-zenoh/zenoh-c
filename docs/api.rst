@@ -16,35 +16,84 @@
 API Reference
 *************
 
-Generic types
+Containers
 =============
 
-Bytes
+Slice
 -----
 
-.. autocstruct:: zenoh_commons.h::z_bytes_t
+.. autocstruct:: zenoh_commons.h::z_view_slice_t
+.. autocstruct:: zenoh_commons.h::z_owned_slice_t
+.. autocstruct:: zenoh_commons.h::z_loaned_slice_t
 
-.. autocfunction:: zenoh_commons.h::z_bytes_new
-.. autocfunction:: zenoh_commons.h::z_bytes_check
-.. autocfunction:: zenoh_commons.h::z_bytes_null
+.. autocfunction:: zenoh_commons.h::z_slice_empty
+.. autocfunction:: zenoh_commons.h::z_view_slice_empty
+.. autocfunction:: zenoh_commons.h::z_slice_wrap
+.. autocfunction:: zenoh_commons.h::z_view_slice_wrap
+.. autocfunction:: zenoh_commons.h::z_slice_from_str
+.. autocfunction:: zenoh_commons.h::z_slice_check
+.. autocfunction:: zenoh_commons.h::z_view_slice_check
+.. autocfunction:: zenoh_commons.h::z_slice_drop
+.. autocfunction:: zenoh_commons.h::z_slice_loan
+.. autocfunction:: zenoh_commons.h::z_view_slice_loan
+.. autocfunction:: zenoh_commons.h::z_slice_data
+.. autocfunction:: zenoh_commons.h::z_slice_len
 
-Bytes map
+
+String
+------
+
+.. autocstruct:: zenoh_commons.h::z_view_str_t
+.. autocstruct:: zenoh_commons.h::z_owned_str_t
+.. autocstruct:: zenoh_commons.h::z_loaned_str_t
+
+.. autocfunction:: zenoh_commons.h::z_str_empty
+.. autocfunction:: zenoh_commons.h::z_view_str_empty
+.. autocfunction:: zenoh_commons.h::z_str_check
+.. autocfunction:: zenoh_commons.h::z_view_str_check
+.. autocfunction:: zenoh_commons.h::z_view_str_null
+.. autocfunction:: zenoh_commons.h::z_str_null
+.. autocfunction:: zenoh_commons.h::z_str_wrap
+.. autocfunction:: zenoh_commons.h::z_view_str_wrap
+.. autocfunction:: zenoh_commons.h::z_str_from_substring
+.. autocfunction:: zenoh_commons.h::z_str_drop
+.. autocfunction:: zenoh_commons.h::z_str_loan
+.. autocfunction:: zenoh_commons.h::z_view_str_loan
+.. autocfunction:: zenoh_commons.h::z_str_data
+.. autocfunction:: zenoh_commons.h::z_str_len
+
+Slice map
 ---------
 
-.. autocstruct:: zenoh_commons.h::z_owned_bytes_map_t
+.. autocstruct:: zenoh_commons.h::z_owned_slice_map_t
 
-.. autocfunction:: zenoh_commons.h::z_bytes_map_new
-.. autocfunction:: zenoh_commons.h::z_bytes_map_check
-.. autocfunction:: zenoh_commons.h::z_bytes_map_null
-.. autocfunction:: zenoh_commons.h::z_bytes_map_drop
-.. autocfunction:: zenoh_commons.h::z_bytes_map_get
-.. autocfunction:: zenoh_commons.h::z_bytes_map_len
-.. autocfunction:: zenoh_commons.h::z_bytes_map_is_empty
-.. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_alias
-.. autocfunction:: zenoh_commons.h::z_bytes_map_insert_by_copy
-.. autocfunction:: zenoh_commons.h::z_bytes_map_iter
-.. autocfunction:: zenoh_commons.h::z_bytes_map_from_attachment
-.. autocfunction:: zenoh_commons.h::z_bytes_map_from_attachment_aliasing
+.. autocfunction:: zenoh_commons.h::z_slice_map_new
+.. autocfunction:: zenoh_commons.h::z_slice_map_check
+.. autocfunction:: zenoh_commons.h::z_slice_map_null
+.. autocfunction:: zenoh_commons.h::z_slice_map_drop
+.. autocfunction:: zenoh_commons.h::z_slice_map_loan
+.. autocfunction:: zenoh_commons.h::z_slice_map_loan_mut
+.. autocfunction:: zenoh_commons.h::z_slice_map_get
+.. autocfunction:: zenoh_commons.h::z_slice_map_len
+.. autocfunction:: zenoh_commons.h::z_slice_map_is_empty
+.. autocfunction:: zenoh_commons.h::z_slice_map_insert_by_alias
+.. autocfunction:: zenoh_commons.h::z_slice_map_insert_by_copy
+.. autocfunction:: zenoh_commons.h::z_slice_map_iterate
+
+Slice array
+-----------
+
+.. autocstruct:: zenoh_commons.h::z_owned_slice_array_t
+
+.. autocfunction:: zenoh_commons.h::z_slice_array_new
+.. autocfunction:: zenoh_commons.h::z_slice_array_check
+.. autocfunction:: zenoh_commons.h::z_slice_array_null
+.. autocfunction:: zenoh_commons.h::z_slice_array_drop
+.. autocfunction:: zenoh_commons.h::z_slice_array_loan
+.. autocfunction:: zenoh_commons.h::z_slice_array_loan_mut
+.. autocfunction:: zenoh_commons.h::z_slice_array_get
+.. autocfunction:: zenoh_commons.h::z_slice_array_len
+.. autocfunction:: zenoh_commons.h::z_slice_array_is_empty
 
 .. Scouting
 .. ========
@@ -56,11 +105,10 @@ Session configuration
 ---------------------
 
 
-.. autocstruct:: zenoh_commons.h::z_config_t
+.. autocstruct:: zenoh_commons.h::z_loaned_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_scouting_config_t
 
-.. autocfunction:: zenoh_commons.h::z_config_new
 .. autocfunction:: zenoh_commons.h::z_config_default
 .. autocfunction:: zenoh_commons.h::z_config_client
 .. autocfunction:: zenoh_commons.h::z_config_peer
@@ -70,6 +118,7 @@ Session configuration
 .. autocfunction:: zenoh_commons.h::zc_config_get
 .. autocfunction:: zenoh_commons.h::zc_config_to_string
 .. autocfunction:: zenoh_commons.h::z_config_loan
+.. autocfunction:: zenoh_commons.h::z_config_loan_mut
 .. autocfunction:: zenoh_commons.h::z_config_check
 .. autocfunction:: zenoh_commons.h::z_config_drop
 
@@ -79,7 +128,7 @@ Session management
 Types
 ^^^^^
 
-.. autocstruct:: zenoh_concrete.h::z_session_t
+.. autocstruct:: zenoh_concrete.h::z_loaned_session_t
 .. autocstruct:: zenoh_concrete.h::z_owned_session_t
 
 .. autocstruct:: zenoh_commons.h::z_owned_closure_zid_t
@@ -104,36 +153,41 @@ Functions
 Key expression
 ==============
 
-.. autocstruct:: zenoh_commons.h::z_keyexpr_t
+.. autocstruct:: zenoh_commons.h::z_view_keyexpr_t
+.. autocstruct:: zenoh_commons.h::z_loaned_keyexpr_t
 .. autocstruct:: zenoh_commons.h::z_owned_keyexpr_t
 
-.. autocfunction:: zenoh_commons.h::z_keyexpr
-.. autocfunction:: zenoh_commons.h::z_keyexpr_autocanonize
-.. autocfunction:: zenoh_commons.h::z_keyexpr_unchecked
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_new
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new_autocanonize
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_new_autocanonize
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_unchecked
+.. autocfunction:: zenoh_commons.h::z_keyexpr_loan
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_loan
+.. autocfunction:: zenoh_commons.h::z_keyexpr_check
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_check
+.. autocfunction:: zenoh_commons.h::z_keyexpr_drop
 .. autocfunction:: zenoh_commons.h::z_keyexpr_to_string
-.. autocfunction:: zenoh_commons.h::z_keyexpr_as_bytes
+.. autocfunction:: zenoh_commons.h::z_keyexpr_as_slice
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize
 .. autocfunction:: zenoh_commons.h::z_keyexpr_canonize_null_terminated
 .. autocfunction:: zenoh_commons.h::z_keyexpr_is_canon
-.. autocfunction:: zenoh_commons.h::z_keyexpr_is_initialized
 .. autocfunction:: zenoh_commons.h::z_keyexpr_concat
 .. autocfunction:: zenoh_commons.h::z_keyexpr_join
 .. autocfunction:: zenoh_commons.h::z_keyexpr_equals
 .. autocfunction:: zenoh_commons.h::z_keyexpr_includes
 .. autocfunction:: zenoh_commons.h::z_keyexpr_intersects
 
-.. autocfunction:: zenoh_commons.h::z_keyexpr_new
-.. autocfunction:: zenoh_commons.h::z_keyexpr_new_autocanonize
-.. autocfunction:: zenoh_commons.h::z_keyexpr_loan
-.. autocfunction:: zenoh_commons.h::z_keyexpr_check
-.. autocfunction:: zenoh_commons.h::z_keyexpr_drop
+
+
 
 .. autocfunction:: zenoh_commons.h::z_declare_keyexpr
+.. autocfunction:: zenoh_commons.h::z_undeclare_keyexpr
 
 Encoding
 ========
 
-.. autocstruct:: zenoh_commons.h::z_encoding_t
+.. autocstruct:: zenoh_commons.h::z_loaned_encoding_t
 .. autocstruct:: zenoh_commons.h::z_owned_encoding_t
 
 .. autocfunction:: zenoh_commons.h::z_encoding_default
@@ -142,36 +196,23 @@ Encoding
 .. autocfunction:: zenoh_commons.h::z_encoding_check
 .. autocfunction:: zenoh_commons.h::z_encoding_drop
 
-.. autocstruct:: zenoh_commons.h::z_encoding_prefix_t
-
 Value
 =====
 
-.. autocstruct:: zenoh_commons.h::z_value_t
+.. autocstruct:: zenoh_commons.h::z_loaned_value_t
 
 Sample
 ======
 
-.. autocstruct:: zenoh_commons.h::z_sample_t
-
-Attachment
-==========
-
-.. autocstruct:: zenoh_commons.h::z_attachment_t
-
-.. autocfunction:: zenoh_commons.h::z_attachment_null
-.. autocfunction:: zenoh_commons.h::z_attachment_get
-.. autocfunction:: zenoh_commons.h::z_attachment_len
-.. autocfunction:: zenoh_commons.h::z_attachment_is_empty
-.. autocfunction:: zenoh_commons.h::z_attachment_check
-.. autocfunction:: zenoh_commons.h::z_attachment_iterate
+.. autocstruct:: zenoh_commons.h::z_loaned_sample_t
+.. autocstruct:: zenoh_commons.h::z_owned_sample_t
 
 Publication
 ===========
 
 Types
 -----
-
+.. autocstruct:: zenoh_commons.h::z_loaned_publisher_t
 .. autocstruct:: zenoh_commons.h::z_owned_publisher_t
 
 .. autocstruct:: zenoh_commons.h::z_congestion_control_t
@@ -189,6 +230,7 @@ Functions
 ---------
 
 .. autocfunction:: zenoh_commons.h::z_put
+.. autocfunction:: zenoh_commons.h::z_delete
 
 .. autocfunction:: zenoh_commons.h::z_declare_publisher
 .. autocfunction:: zenoh_commons.h::z_publisher_put
@@ -201,9 +243,8 @@ Subscription
 Types
 -----
 
+.. autocstruct:: zenoh_concrete.h::z_loaned_subscriber_t
 .. autocstruct:: zenoh_concrete.h::z_owned_subscriber_t
-
-.. autocstruct:: zenoh_concrete.h::z_owned_pull_subscriber_t
 
 .. autocstruct:: zenoh_commons.h::z_owned_closure_sample_t
 
@@ -218,11 +259,6 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_declare_subscriber
 .. autocfunction:: zenoh_commons.h::z_subscriber_check
 .. autocfunction:: zenoh_commons.h::z_undeclare_subscriber
-
-.. autocfunction:: zenoh_commons.h::z_declare_pull_subscriber
-.. autocfunction:: zenoh_commons.h::z_subscriber_pull
-.. autocfunction:: zenoh_commons.h::z_pull_subscriber_check
-.. autocfunction:: zenoh_commons.h::z_undeclare_pull_subscriber
 
 .. autocfunction:: zenoh_commons.h::z_closure_sample_call
 .. autocfunction:: zenoh_commons.h::z_closure_sample_drop
@@ -255,6 +291,9 @@ Types
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_latest
 
 .. autocstruct:: zenoh_commons.h::z_owned_reply_t
+.. autocstruct:: zenoh_commons.h::z_loaned_reply_t
+.. autocstruct:: zenoh_commons.h::z_owned_query_t
+.. autocstruct:: zenoh_commons.h::z_loaned_query_t
 .. autocfunction:: zenoh_commons.h::z_reply_check
 .. autocfunction:: zenoh_commons.h::z_reply_drop
 
@@ -304,9 +343,9 @@ Types
 -----
 
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_token_t
-.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declaration_options_t
+.. autocstruct:: zenoh_commons.h::zc_liveliness_declaration_options_t
 .. autocstruct:: zenoh_commons.h::zc_liveliness_get_options_t
-.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declare_subscriber_options_t
+.. autocstruct:: zenoh_commons.h::zc_liveliness_declare_subscriber_options_t
 
 Functions
 ---------
@@ -326,7 +365,7 @@ Types
 -----
 
 .. autocstruct:: zenoh_commons.h::ze_publication_cache_options_t
-.. autocstruct:: zenoh_commons.h::ze_owned_publication_cache_t
+.. autocstruct:: zenoh_concrete.h::ze_owned_publication_cache_t
 
 Functions
 ---------
@@ -343,7 +382,8 @@ Querying Subscriber
 Types
 -----
 
-.. autocstruct:: zenoh_commons.h::ze_owned_querying_subscriber_t
+.. autocstruct:: zenoh_concrete.h::ze_owned_querying_subscriber_t
+.. autocstruct:: zenoh_concrete.h::ze_loaned_querying_subscriber_t
 .. autocstruct:: zenoh_commons.h::ze_querying_subscriber_options_t
 
 Functions

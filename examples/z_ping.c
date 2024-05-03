@@ -13,11 +13,11 @@
 #define handle_error_en(en, msg) \
     do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
-z_condvar_t cond;
-z_mutex_t mutex;
+z_owned_condvar_t cond;
+z_owned_mutex_t mutex;
 
-void callback(const z_sample_t* sample, void* context) { z_condvar_signal(&cond); }
-void drop(void* context) { z_condvar_free(&cond); }
+void callback(const z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loan(cond)); }
+void drop(void* context) { z_drop(z_move(cond)); }
 
 struct args_t {
     unsigned int size;             // -s
@@ -43,27 +43,42 @@ int main(int argc, char** argv) {
     }
     z_mutex_init(&mutex);
     z_condvar_init(&cond);
-    z_owned_config_t config = args.config_path ? zc_config_from_file(args.config_path) : z_config_default();
-    z_owned_session_t session = z_open(z_move(config));
-    z_keyexpr_t ping = z_keyexpr_unchecked("test/ping");
-    z_keyexpr_t pong = z_keyexpr_unchecked("test/pong");
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(session), ping, NULL);
-    z_owned_closure_sample_t respond = z_closure(callback, drop, (void*)(&pub));
-    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(session), pong, z_move(respond), NULL);
+    z_owned_config_t config; 
+    if (args.config_path) {
+        zc_config_from_file(&config, args.config_path);
+    } else {
+        z_config_default(&config);
+    }  
+    z_owned_session_t session;
+    z_open(&session, z_move(config));
+    z_view_keyexpr_t ping;
+    z_view_keyexpr_unchecked(&ping, "test/ping");
+    z_view_keyexpr_t pong;
+    z_view_keyexpr_unchecked(&pong, "test/pong");
+    z_owned_publisher_t pub;
+    z_declare_publisher(&pub, z_loan(session), z_loan(ping), NULL);
+    z_owned_closure_sample_t respond;
+    z_closure(&respond, callback, drop, (void*)(&pub));
+    z_owned_subscriber_t sub;
+    z_declare_subscriber(&sub, z_loan(session), z_loan(pong), z_move(respond), NULL);
     uint8_t* data = z_malloc(args.size);
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
-    zc_owned_payload_t payload = zc_payload_encode_from_bytes((z_bytes_t){.start = data, .len = args.size});
-    z_mutex_lock(&mutex);
+    z_owned_bytes_t payload;
+    z_view_slice_t data_slice;
+    z_view_slice_wrap(&data_slice, data, args.size);
+    
+    z_mutex_lock(z_loan_mut(mutex));
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);
         z_clock_t warmup_start = z_clock_now();
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
+            z_bytes_encode_from_slice(&payload, z_loan(data_slice));
             z_publisher_put(z_loan(pub), z_move(payload), NULL);
-            int s = z_condvar_wait(&cond, &mutex);
+            int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
             if (s != 0) {
                 handle_error_en(s, "z_condvar_wait");
             }
@@ -74,7 +89,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.number_of_pings; i++) {
         z_clock_t measure_start = z_clock_now();
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
-        int s = z_condvar_wait(&cond, &mutex);
+        int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
         if (s != 0) {
             handle_error_en(s, "z_condvar_wait");
         }
@@ -83,11 +98,12 @@ int main(int argc, char** argv) {
     for (int i = 0; i < args.number_of_pings; i++) {
         printf("%d bytes: seq=%d rtt=%luµs, lat=%luµs\n", args.size, i, results[i], results[i] / 2);
     }
-    z_mutex_unlock(&mutex);
+    z_mutex_unlock(z_loan_mut(mutex));
     z_free(results);
     z_free(data);
-    z_drop(z_move(sub));
-    z_drop(z_move(pub));
+    z_undeclare_subscriber(z_move(sub));
+    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(mutex));
     z_close(z_move(session));
 }
 

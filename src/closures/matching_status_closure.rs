@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 use libc::c_void;
 
 use crate::zcu_matching_status_t;
@@ -42,8 +44,11 @@ impl Drop for zcu_owned_closure_matching_status_t {
 }
 /// Constructs a null safe-to-drop value of 'zcu_owned_closure_matching_status_t' type
 #[no_mangle]
-pub extern "C" fn zcu_closure_matching_status_null() -> zcu_owned_closure_matching_status_t {
-    zcu_owned_closure_matching_status_t::empty()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zcu_closure_matching_status_null(
+    this: *mut MaybeUninit<zcu_owned_closure_matching_status_t>,
+) {
+    (*this).write(zcu_owned_closure_matching_status_t::empty());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]

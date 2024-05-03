@@ -23,9 +23,10 @@ void print_zid(const z_id_t *id, void *ctx) {
 }
 
 int main(int argc, char **argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
+    z_config_default(&config);
     if (argc > 1) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
+        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -35,8 +36,8 @@ int main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -46,13 +47,15 @@ int main(int argc, char **argv) {
     print_zid(&self_id, NULL);
 
     printf("routers ids:\n");
-    z_owned_closure_zid_t callback = z_closure(print_zid);
+    z_owned_closure_zid_t callback;
+    z_closure(&callback, print_zid, NULL, NULL);
     z_info_routers_zid(z_loan(s), z_move(callback));
 
     // `callback` has been `z_move`d just above, so it's safe to reuse the variable,
     // we'll just have to make sure we `z_move` it again to avoid mem-leaks.
     printf("peers ids:\n");
-    z_owned_closure_zid_t callback2 = z_closure(print_zid);
+    z_owned_closure_zid_t callback2;
+    z_closure(&callback, print_zid, NULL, NULL);
     z_info_peers_zid(z_loan(s), z_move(callback2));
 
     z_close(z_move(s));

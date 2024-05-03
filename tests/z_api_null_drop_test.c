@@ -24,28 +24,48 @@ int main(int argc, char **argv) {
     //
     // Check that all null functions exists
     //
-    z_owned_session_t session_null_1 = z_session_null();
-    z_owned_publisher_t publisher_null_1 = z_publisher_null();
-    z_owned_keyexpr_t keyexpr_null_1 = z_keyexpr_null();
-    z_owned_config_t config_null_1 = z_config_null();
-    z_owned_scouting_config_t scouting_config_null_1 = z_scouting_config_null();
-    z_owned_pull_subscriber_t pull_subscriber_null_1 = z_pull_subscriber_null();
-    z_owned_subscriber_t subscriber_null_1 = z_subscriber_null();
-    z_owned_queryable_t queryable_null_1 = z_queryable_null();
-    z_owned_encoding_t encoding_null_1 = z_encoding_null();
-    z_owned_reply_t reply_null_1 = z_reply_null();
-    z_owned_hello_t hello_null_1 = z_hello_null();
-    z_owned_closure_sample_t closure_sample_null_1 = z_closure_sample_null();
-    z_owned_closure_query_t closure_query_null_1 = z_closure_query_null();
-    z_owned_closure_reply_t closure_reply_null_1 = z_closure_reply_null();
-    z_owned_closure_hello_t closure_hello_null_1 = z_closure_hello_null();
-    z_owned_closure_zid_t closure_zid_null_1 = z_closure_zid_null();
-    z_owned_reply_channel_closure_t reply_channel_closure_null_1 = z_reply_channel_closure_null();
-    z_owned_reply_channel_t reply_channel_null_1 = z_reply_channel_null();
-    z_owned_str_t str_null_1 = z_str_null();
-    zc_owned_payload_t payload_null_1 = zc_payload_null();
-    zc_owned_shmbuf_t shmbuf_null_1 = zc_shmbuf_null();
-    zc_owned_shm_manager_t shm_manager_null_1 = zc_shm_manager_null();
+    z_owned_session_t session_null_1;
+    z_session_null(&session_null_1);
+    z_owned_publisher_t publisher_null_1;
+    z_publisher_null(&publisher_null_1);
+    z_owned_keyexpr_t keyexpr_null_1;
+    z_keyexpr_null(&keyexpr_null_1);
+    z_owned_config_t config_null_1;
+    z_config_null(&config_null_1);
+    z_owned_scouting_config_t scouting_config_null_1;
+    z_scouting_config_null(&scouting_config_null_1);
+    z_owned_subscriber_t subscriber_null_1;
+    z_subscriber_null(&subscriber_null_1);
+    z_owned_queryable_t queryable_null_1;
+    z_queryable_null(&queryable_null_1);
+    z_owned_encoding_t encoding_null_1;
+    z_encoding_null(&encoding_null_1);
+    z_owned_reply_t reply_null_1;
+    z_reply_null(&reply_null_1);
+    z_owned_hello_t hello_null_1;
+    z_hello_null(&hello_null_1);
+    z_owned_closure_sample_t closure_sample_null_1;
+    z_closure_sample_null(&closure_sample_null_1);
+    z_owned_closure_query_t closure_query_null_1;
+    z_closure_query_null(&closure_query_null_1);
+    z_owned_closure_reply_t closure_reply_null_1;
+    z_closure_reply_null(&closure_reply_null_1);
+    z_owned_closure_hello_t closure_hello_null_1;
+    z_closure_hello_null(&closure_hello_null_1);
+    z_owned_closure_zid_t closure_zid_null_1;
+    z_closure_zid_null(&closure_zid_null_1);
+    z_owned_reply_channel_closure_t reply_channel_closure_null_1;
+    z_reply_channel_closure_null(&reply_channel_closure_null_1);
+    z_owned_reply_channel_t reply_channel_null_1;
+    z_reply_channel_null(&reply_channel_null_1);
+    z_owned_str_t str_null_1;
+    z_str_null(&str_null_1);
+    z_owned_slice_map_t slice_map_null_1;
+    z_slice_map_null(&slice_map_null_1);
+    z_owned_bytes_t bytes_null_1;
+    z_bytes_null(&bytes_null_1);
+    z_owned_bytes_reader_t bytes_reader_null_1;
+    z_bytes_reader_null(&bytes_reader_null_1);
 
     //
     // Test that they actually make invalid value (where applicable)
@@ -55,16 +75,16 @@ int main(int argc, char **argv) {
     assert(!z_check(keyexpr_null_1));
     assert(!z_check(config_null_1));
     assert(!z_check(scouting_config_null_1));
-    assert(!z_check(pull_subscriber_null_1));
     assert(!z_check(subscriber_null_1));
     assert(!z_check(queryable_null_1));
     assert(!z_check(encoding_null_1));
     assert(!z_check(reply_null_1));
     assert(!z_check(hello_null_1));
     assert(!z_check(str_null_1));
-    assert(!z_check(payload_null_1));
-    assert(!z_check(shmbuf_null_1));
-    assert(!z_check(shm_manager_null_1));
+    assert(!z_check(slice_map_null_1));
+    assert(!z_check(bytes_null_1));
+    assert(!z_check(bytes_reader_null_1));
+
 
     //
     // Test that z_null macro defined for all types
@@ -74,7 +94,6 @@ int main(int argc, char **argv) {
     z_owned_keyexpr_t keyexpr_null_2;
     z_owned_config_t config_null_2;
     z_owned_scouting_config_t scouting_config_null_2;
-    z_owned_pull_subscriber_t pull_subscriber_null_2;
     z_owned_subscriber_t subscriber_null_2;
     z_owned_queryable_t queryable_null_2;
     z_owned_encoding_t encoding_null_2;
@@ -88,16 +107,15 @@ int main(int argc, char **argv) {
     z_owned_reply_channel_closure_t reply_channel_closure_null_2;
     z_owned_reply_channel_t reply_channel_null_2;
     z_owned_str_t str_null_2;
-    zc_owned_payload_t payload_null_2;
-    zc_owned_shmbuf_t shmbuf_null_2;
-    zc_owned_shm_manager_t shm_manager_null_2;
+    z_owned_slice_map_t slice_map_null_2;
+    z_owned_bytes_t bytes_null_2;
+    z_owned_bytes_reader_t bytes_reader_null_2;
 
     z_null(&session_null_2);
     z_null(&publisher_null_2);
     z_null(&keyexpr_null_2);
     z_null(&config_null_2);
     z_null(&scouting_config_null_2);
-    z_null(&pull_subscriber_null_2);
     z_null(&subscriber_null_2);
     z_null(&queryable_null_2);
     z_null(&encoding_null_2);
@@ -111,9 +129,9 @@ int main(int argc, char **argv) {
     z_null(&reply_channel_closure_null_2);
     z_null(&reply_channel_null_2);
     z_null(&str_null_2);
-    z_null(&payload_null_2);
-    z_null(&shmbuf_null_2);
-    z_null(&shm_manager_null_2);
+    z_null(&slice_map_null_2);
+    z_null(&bytes_null_2);
+    z_null(&bytes_reader_null_2);
 
     //
     // Test that null macro works the same as direct call
@@ -123,29 +141,27 @@ int main(int argc, char **argv) {
     assert(!z_check(keyexpr_null_2));
     assert(!z_check(config_null_2));
     assert(!z_check(scouting_config_null_2));
-    assert(!z_check(pull_subscriber_null_2));
     assert(!z_check(subscriber_null_2));
     assert(!z_check(queryable_null_2));
     assert(!z_check(encoding_null_2));
     assert(!z_check(reply_null_2));
     assert(!z_check(hello_null_2));
     assert(!z_check(str_null_2));
-    assert(!z_check(payload_null_2));
-    assert(!z_check(shmbuf_null_2));
-    assert(!z_check(shm_manager_null_2));
+    assert(!z_check(slice_map_null_2));
+    assert(!z_check(bytes_null_2));
+    assert(!z_check(bytes_reader_null_2));
 
     //
     // Test drop null and double drop it
     //
     for (int i = 0; i < 2; ++i) {
-        z_drop(z_move(session_null_1));
-        z_drop(z_move(publisher_null_1));
+        z_close(z_move(session_null_1));
+        z_undeclare_publisher(z_move(publisher_null_1));
         z_drop(z_move(keyexpr_null_1));
         z_drop(z_move(config_null_1));
         z_drop(z_move(scouting_config_null_1));
-        z_drop(z_move(pull_subscriber_null_1));
-        z_drop(z_move(subscriber_null_1));
-        z_drop(z_move(queryable_null_1));
+        z_undeclare_subscriber(z_move(subscriber_null_1));
+        z_undeclare_queryable(z_move(queryable_null_1));
         z_drop(z_move(encoding_null_1));
         z_drop(z_move(reply_null_1));
         z_drop(z_move(hello_null_1));
@@ -157,18 +173,18 @@ int main(int argc, char **argv) {
         z_drop(z_move(reply_channel_closure_null_1));
         z_drop(z_move(reply_channel_null_1));
         z_drop(z_move(str_null_1));
-        z_drop(z_move(payload_null_1));
-        z_drop(z_move(shmbuf_null_1));
-        z_drop(z_move(shm_manager_null_1));
+        z_drop(z_move(slice_map_null_1));
+        z_drop(z_move(bytes_null_1));
+        z_drop(z_move(bytes_reader_null_1));
 
-        z_drop(z_move(session_null_2));
-        z_drop(z_move(publisher_null_2));
+
+        z_close(z_move(session_null_2));
+        z_undeclare_publisher(z_move(publisher_null_2));
         z_drop(z_move(keyexpr_null_2));
         z_drop(z_move(config_null_2));
         z_drop(z_move(scouting_config_null_2));
-        z_drop(z_move(pull_subscriber_null_2));
-        z_drop(z_move(subscriber_null_2));
-        z_drop(z_move(queryable_null_2));
+        z_undeclare_subscriber(z_move(subscriber_null_2));
+        z_undeclare_queryable(z_move(queryable_null_2));
         z_drop(z_move(encoding_null_2));
         z_drop(z_move(reply_null_2));
         z_drop(z_move(hello_null_2));
@@ -180,9 +196,9 @@ int main(int argc, char **argv) {
         z_drop(z_move(reply_channel_closure_null_2));
         z_drop(z_move(reply_channel_null_2));
         z_drop(z_move(str_null_2));
-        z_drop(z_move(payload_null_2));
-        z_drop(z_move(shmbuf_null_2));
-        z_drop(z_move(shm_manager_null_2));
+        z_drop(z_move(slice_map_null_2));
+        z_drop(z_move(bytes_null_2));
+        z_drop(z_move(bytes_reader_null_2));
     }
 
     return 0;

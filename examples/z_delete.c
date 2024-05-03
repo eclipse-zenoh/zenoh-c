@@ -21,9 +21,10 @@ int main(int argc, char **argv) {
 
     if (argc > 1) keyexpr = argv[1];
 
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
+    z_config_default(&config);
     if (argc > 3) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
+        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -33,15 +34,16 @@ int main(int argc, char **argv) {
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Deleting resources matching '%s'...\n", keyexpr);
-    z_delete_options_t options = z_delete_options_default();
-    int res = z_delete(z_loan(s), z_keyexpr(keyexpr), &options);
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_new(&ke, keyexpr);
+    int res = z_delete(z_loan(s), z_loan(ke), NULL);
     if (res < 0) {
         printf("Delete failed...\n");
     }

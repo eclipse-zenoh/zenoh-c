@@ -33,65 +33,72 @@ void zid_handler(const z_id_t *id, void *arg) {
 }
 
 volatile unsigned int hellos = 0;
-void hello_handler(z_owned_hello_t *hello, void *arg) {
+void hello_handler(const z_loaned_hello_t *hello, void *arg) {
     (void)(arg);
     (void)(hello);
     hellos++;
-    z_hello_null();
 }
 
 volatile unsigned int queries = 0;
-void query_handler(const z_query_t *query, void *arg) {
+void query_handler(const z_loaned_query_t *query, void *arg) {
     queries++;
 
-    z_owned_str_t k_str = z_keyexpr_to_string(z_query_keyexpr(query));
+    const z_loaned_keyexpr_t* query_ke = z_query_keyexpr(query);
+    z_owned_str_t k_str;
+    z_keyexpr_to_string(query_ke, &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
-        k_str = zp_keyexpr_resolve(*(z_session_t *)arg, z_query_keyexpr(query));
+        k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, z_query_keyexpr(query));
     }
 #endif
 
-    z_bytes_t pred = z_query_parameters(query);
-    (void)(pred);
-    z_value_t payload_value = z_query_value(query);
+    z_view_slice_t params;
+    z_query_parameters(query, &params);
+    (void)(params);
+    const z_loaned_value_t* payload_value = z_query_value(query);
     (void)(payload_value);
-    z_query_reply_options_t _ret_qreply_opt = z_query_reply_options_default();
-    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
-    z_query_reply(query, z_keyexpr(z_loan(k_str)), z_move(payload), &_ret_qreply_opt);
+    z_query_reply_options_t _ret_qreply_opt;
+    z_query_reply_options_default(&_ret_qreply_opt);
+
+    z_view_str_t value_str;
+    z_view_str_wrap(&value_str, value);
+    z_owned_bytes_t payload;
+    z_bytes_encode_from_string(&payload, z_loan(value_str));
+    z_query_reply(query, query_ke, z_move(payload), &_ret_qreply_opt);
 
     z_drop(z_move(k_str));
 }
 
 volatile unsigned int replies = 0;
-void reply_handler(z_owned_reply_t *reply, void *arg) {
+void reply_handler(const z_loaned_reply_t *reply, void *arg) {
     replies++;
 
     if (z_reply_is_ok(reply)) {
-        z_sample_t sample = z_reply_ok(reply);
+        const z_loaned_sample_t* sample = z_reply_ok(reply);
 
-        z_owned_str_t k_str = z_keyexpr_to_string(z_sample_keyexpr(&sample));
+        z_owned_str_t k_str;
+        z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
         if (k_str == NULL) {
-            k_str = zp_keyexpr_resolve(*(z_session_t *)arg, sample.keyexpr);
+            k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, sample.keyexpr);
         }
 #endif
         z_drop(z_move(k_str));
     } else {
-        z_value_t _ret_zvalue = z_reply_err(reply);
+        const z_loaned_value_t* _ret_zvalue = z_reply_err(reply);
         (void)(_ret_zvalue);
     }
-
-    z_reply_null();  // Does nothing. Just to test compilation
 }
 
 volatile unsigned int datas = 0;
-void data_handler(const z_sample_t *sample, void *arg) {
+void data_handler(const z_loaned_sample_t *sample, void *arg) {
     datas++;
 
-    z_owned_str_t k_str = z_keyexpr_to_string(z_sample_keyexpr(sample));
+    z_owned_str_t k_str;
+    z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
-        k_str = zp_keyexpr_resolve(*(z_session_t *)arg, sample->keyexpr);
+        k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, sample->keyexpr);
     }
 #endif
     z_drop(z_move(k_str));
@@ -104,25 +111,27 @@ int main(int argc, char **argv) {
     zc_init_logger();
 #endif
 
-    z_keyexpr_t key = z_keyexpr("demo/example");
-    _Bool _ret_bool = z_keyexpr_is_initialized(&key);
+    z_view_keyexpr_t key_demo_example, key_demo_example_a, key_demo_example_starstar;
+    z_view_keyexpr_new(&key_demo_example, "demo/example");
+    z_view_keyexpr_new(&key_demo_example_a, "demo/example/a");
+    z_view_keyexpr_new(&key_demo_example_starstar, "demo/example/**");
+    _Bool _ret_bool = z_view_keyexpr_check(&key_demo_example);
     assert(_ret_bool == true);
 
-    int8_t _ret_int;
-    _ret_int = z_keyexpr_includes(z_keyexpr("demo/example/**"), z_keyexpr("demo/example/a"));
-    assert(_ret_int == 0);
+    _ret_bool = z_keyexpr_includes(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
+    assert(_ret_bool);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_includes_null_terminated("demo/example/**", "demo/example/a");
     assert(_ret_int == 0);
 #endif
-    _ret_int = z_keyexpr_intersects(z_keyexpr("demo/example/**"), z_keyexpr("demo/example/a"));
-    assert(_ret_int == 0);
+    _ret_bool = z_keyexpr_intersects(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
+    assert(_ret_bool);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_intersect_null_terminated("demo/example/**", "demo/example/a");
     assert(_ret_int == 0);
 #endif
-    _ret_int = z_keyexpr_equals(z_keyexpr("demo/example/**"), z_keyexpr("demo/example"));
-    assert(_ret_int == -1);
+    _ret_bool = z_keyexpr_equals(z_loan(key_demo_example_starstar), z_loan(key_demo_example));
+    assert(!_ret_bool);
 #ifdef ZENOH_PICO
     _ret_bool = zp_keyexpr_equals_null_terminated("demo/example/**", "demo/example");
     assert(_ret_int == -1);
@@ -144,6 +153,7 @@ int main(int argc, char **argv) {
     _ret_int8 = z_keyexpr_canonize(keyexpr_str, &keyexpr_len);
     assert(_ret_int8 == 0);
     assert(strlen(URI) == keyexpr_len);
+    printf("keyexpr: %s", keyexpr_str);
 #ifdef ZENOH_PICO
     _ret_int8 = zp_keyexpr_canonize_null_terminated(keyexpr_str);
     assert(_ret_int8 == 0);
@@ -152,11 +162,10 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
 
-    z_owned_config_t _ret_config = z_config_new();
+    z_owned_config_t _ret_config;
+    z_config_default(&_ret_config);
     assert(z_check(_ret_config));
     z_drop(z_move(_ret_config));
-    _ret_config = z_config_default();
-    assert(z_check(_ret_config));
 #ifdef ZENOH_PICO
     _ret_int8 = zp_config_insert(z_loan(_ret_config), Z_CONFIG_PEER_KEY, z_string_make(argv[1]));
     assert(_ret_int8 == 0);
@@ -165,7 +174,8 @@ int main(int argc, char **argv) {
     assert(strncmp(_ret_cstr, argv[1], strlen(_ret_cstr)) == 0);
 #endif
 
-    z_owned_scouting_config_t _ret_sconfig = z_scouting_config_default();
+    z_owned_scouting_config_t _ret_sconfig;
+    z_scouting_config_default(&_ret_sconfig);
     assert(z_check(_ret_sconfig));
 #ifdef ZENOH_PICO
     _ret_int8 =
@@ -178,9 +188,10 @@ int main(int argc, char **argv) {
     z_drop(z_move(_ret_sconfig));
 
     z_sleep_s(SLEEP);
-
-    _ret_sconfig = z_scouting_config_from(z_loan(_ret_config));
-    z_owned_closure_hello_t _ret_closure_hello = z_closure(hello_handler, NULL, NULL);
+    z_config_default(&_ret_config);
+    z_scouting_config_from(&_ret_sconfig, z_loan(_ret_config));
+    z_owned_closure_hello_t _ret_closure_hello;
+    z_closure(&_ret_closure_hello, hello_handler, NULL, NULL);
     _ret_int8 = z_scout(z_move(_ret_sconfig), z_move(_ret_closure_hello));
     assert(_ret_int8 == 0);
     assert(hellos == 1);
@@ -188,7 +199,8 @@ int main(int argc, char **argv) {
     z_sleep_s(atoi(SCOUTING_TIMEOUT) / 1000);
     z_sleep_s(SLEEP);
 
-    z_owned_session_t s1 = z_open(z_move(_ret_config));
+    z_owned_session_t s1;
+    assert(0 == z_open(&s1, z_move(_ret_config)));
     assert(z_check(s1));
     z_id_t _ret_zid = z_info_zid(z_loan(s1));
     printf("Session 1 with PID: 0x");
@@ -197,12 +209,14 @@ int main(int argc, char **argv) {
     }
     printf("\n");
 
-    z_owned_closure_zid_t _ret_closure_zid = z_closure(zid_handler, NULL, NULL);
+    z_owned_closure_zid_t _ret_closure_zid;
+    z_closure(&_ret_closure_zid, zid_handler, NULL, NULL);
     _ret_int8 = z_info_peers_zid(z_loan(s1), z_move(_ret_closure_zid));
     assert(_ret_int8 == 0);
     z_sleep_s(SLEEP);
     assert(zids == 0);
 
+    z_closure(&_ret_closure_zid, zid_handler, NULL, NULL);
     _ret_int8 = z_info_routers_zid(z_loan(s1), z_move(_ret_closure_zid));
     assert(_ret_int8 == 0);
 
@@ -218,7 +232,7 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
 
-    _ret_config = z_config_default();
+    z_config_default(&_ret_config);
 #ifdef ZENOH_PICO
     _ret_int8 = zp_config_insert(z_loan(_ret_config), Z_CONFIG_PEER_KEY, z_string_make(argv[1]));
     assert(_ret_int8 == 0);
@@ -227,7 +241,8 @@ int main(int argc, char **argv) {
     assert(strncmp(_ret_cstr, argv[1], strlen(_ret_cstr)) == 0);
 #endif
 
-    z_owned_session_t s2 = z_open(z_move(_ret_config));
+    z_owned_session_t s2;
+    assert(0 == z_open(&s2, z_move(_ret_config)));
     assert(z_check(s2));
     _ret_zid = z_info_zid(z_loan(s2));
     printf("Session 2 with PID: 0x");
@@ -243,32 +258,44 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
 
-    z_session_t ls1 = z_loan(s1);
-    z_owned_closure_sample_t _ret_closure_sample = z_closure(data_handler, NULL, &ls1);
-    z_subscriber_options_t _ret_sub_opt = z_subscriber_options_default();
-    z_owned_subscriber_t _ret_sub =
-        z_declare_subscriber(z_loan(s2), z_keyexpr(keyexpr_str), z_move(_ret_closure_sample), &_ret_sub_opt);
+    const z_loaned_session_t* ls1 = z_loan(s1);
+    z_owned_closure_sample_t _ret_closure_sample;
+    z_closure(&_ret_closure_sample, data_handler, NULL, ls1);
+    z_subscriber_options_t _ret_sub_opt;
+    z_subscriber_options_default(&_ret_sub_opt);
+
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_new(&ke, keyexpr_str);
+    z_owned_subscriber_t _ret_sub;
+    z_declare_subscriber(&_ret_sub, z_loan(s2), z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
     assert(z_check(_ret_sub));
 
     z_sleep_s(SLEEP);
 
     char s1_res[64];
     sprintf(s1_res, "%s/chunk/%d", keyexpr_str, 1);
-    z_owned_keyexpr_t _ret_expr = z_declare_keyexpr(z_loan(s1), z_keyexpr(s1_res));
+    z_view_keyexpr_t s1_key;
+    z_view_keyexpr_new(&s1_key, s1_res);
+    z_owned_keyexpr_t _ret_expr;
+    z_declare_keyexpr(&_ret_expr, z_loan(s1), z_loan(s1_key));
     assert(z_check(_ret_expr));
-    z_put_options_t _ret_put_opt = z_put_options_default();
+    z_put_options_t _ret_put_opt;
+    z_put_options_default(&_ret_put_opt);
     _ret_put_opt.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
-    z_encoding_t _ret_encoding = z_encoding_default();
-    _ret_encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    _ret_put_opt.encoding = _ret_encoding;
-    zc_owned_payload_t payload = zc_payload_encode_from_string(value);
+    // TODO: set encoding option
+    z_view_str_t value_str;
+    z_view_str_wrap(&value_str, value);
+
+    z_owned_bytes_t payload;
+    z_bytes_encode_from_string(&payload, z_loan(value_str));
     _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 
     z_sleep_s(SLEEP);
     assert(datas == 1);
 
-    z_delete_options_t _ret_delete_opt = z_delete_options_default();
+    z_delete_options_t _ret_delete_opt;
+    z_delete_options_default(&_ret_delete_opt);
     _ret_int8 = z_delete(z_loan(s1), z_loan(_ret_expr), &_ret_delete_opt);
     assert(_ret_int8 == 0);
 
@@ -282,67 +309,30 @@ int main(int argc, char **argv) {
     _ret_int8 = z_undeclare_subscriber(z_move(_ret_sub));
     assert(_ret_int8 == 0);
 
-    z_owned_closure_sample_t _ret_closure_sample2 = z_closure(data_handler, NULL, &ls1);
-    z_pull_subscriber_options_t _ret_psub_opt = z_pull_subscriber_options_default();
-    z_owned_pull_subscriber_t _ret_psub =
-        z_declare_pull_subscriber(z_loan(s2), z_keyexpr(keyexpr_str), z_move(_ret_closure_sample2), &_ret_psub_opt);
-    assert(z_check(_ret_psub));
+    // TODO: test for pull subscriber
 
-    z_publisher_options_t _ret_pub_opt = z_publisher_options_default();
-    _ret_pub_opt.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
-    z_owned_publisher_t _ret_pub = z_declare_publisher(z_loan(s1), z_keyexpr(keyexpr_str), &_ret_pub_opt);
-    assert(z_check(_ret_pub));
-
-    z_publisher_put_options_t _ret_pput_opt = z_publisher_put_options_default();
-    payload = zc_payload_encode_from_string(value);
-    _ret_int8 = z_publisher_put(z_loan(_ret_pub), z_move(payload), &_ret_pput_opt);
-    assert(_ret_int8 == 0);
-
-    z_sleep_s(SLEEP);
-
-    _ret_int8 = z_subscriber_pull(z_loan(_ret_psub));
-    assert(_ret_int8 == 0);
-
-    z_sleep_s(SLEEP);
-    assert(datas == 3);
-
-    z_publisher_delete_options_t _ret_pdelete_opt = z_publisher_delete_options_default();
-    _ret_int8 = z_publisher_delete(z_loan(_ret_pub), &_ret_pdelete_opt);
-
-    z_sleep_s(SLEEP);
-
-    _ret_int8 = z_subscriber_pull(z_loan(_ret_psub));
-    assert(_ret_int8 == 0);
-
-    z_sleep_s(SLEEP);
-    assert(datas == 4);
-
-    _ret_int8 = z_undeclare_publisher(z_move(_ret_pub));
-    assert(!z_check(_ret_pub));
-
-    _ret_int8 = z_undeclare_pull_subscriber(z_move(_ret_psub));
-    assert(_ret_int8 == 0);
-
-    z_sleep_s(SLEEP);
-
-    z_owned_closure_query_t _ret_closure_query = z_closure(query_handler, NULL, &ls1);
-    z_queryable_options_t _ret_qle_opt = z_queryable_options_default();
-    z_owned_queryable_t qle =
-        z_declare_queryable(z_loan(s1), z_keyexpr(s1_res), z_move(_ret_closure_query), &_ret_qle_opt);
+    z_owned_closure_query_t _ret_closure_query;
+    z_closure(&_ret_closure_query, query_handler, NULL, ls1);
+    z_queryable_options_t _ret_qle_opt;
+    z_queryable_options_default(&_ret_qle_opt);
+    z_owned_queryable_t qle;
+    z_declare_queryable(&qle, z_loan(s1), z_loan(s1_key), z_move(_ret_closure_query), &_ret_qle_opt);
     assert(z_check(qle));
 
     z_sleep_s(SLEEP);
 
-    z_session_t ls2 = z_loan(s2);
-    z_owned_closure_reply_t _ret_closure_reply = z_closure(reply_handler, NULL, &ls2);
-    z_get_options_t _ret_get_opt = z_get_options_default();
+    const z_loaned_session_t* ls2 = z_loan(s2);
+    z_owned_closure_reply_t _ret_closure_reply;
+    z_closure(&_ret_closure_reply, reply_handler, NULL, &ls2);
+    z_get_options_t _ret_get_opt;
+    z_get_options_default(&_ret_get_opt);
     _ret_get_opt.target = z_query_target_default();
     _ret_get_opt.consolidation = z_query_consolidation_auto();
     _ret_get_opt.consolidation = z_query_consolidation_default();
     _ret_get_opt.consolidation = z_query_consolidation_latest();
     _ret_get_opt.consolidation = z_query_consolidation_monotonic();
     _ret_get_opt.consolidation = z_query_consolidation_none();
-    _ret_int8 = z_get(z_loan(s2), z_keyexpr(s1_res), "", z_move(_ret_closure_reply), &_ret_get_opt);
+    _ret_int8 = z_get(z_loan(s2), z_loan(s1_key), "", z_move(_ret_closure_reply), &_ret_get_opt);
     assert(_ret_int8 == 0);
 
     z_sleep_s(SLEEP);

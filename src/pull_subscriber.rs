@@ -131,15 +131,15 @@ pub extern "C" fn z_pull_subscriber_options_default() -> z_pull_subscriber_optio
 ///
 ///    .. code-block:: C
 ///
-///       z_subscriber_options_t opts = z_subscriber_options_default();
+///       z_subscriber_options_t options = z_subscriber_options_default();
 ///       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_pull_subscriber(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
+    session: z_loaned_session_t,
+    keyexpr: z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
-    opts: Option<&z_pull_subscriber_options_t>,
+    options: Option<&z_pull_subscriber_options_t>,
 ) -> z_owned_pull_subscriber_t {
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -149,7 +149,7 @@ pub extern "C" fn z_declare_pull_subscriber(
             let mut res = s
                 .declare_subscriber(keyexpr)
                 .callback(move |sample| {
-                    let sample = z_sample_t::new(&sample);
+                    let sample = z_loaned_sample_t::new(&sample);
                     z_closure_sample_call(&closure, &sample)
                 })
                 .pull_mode();

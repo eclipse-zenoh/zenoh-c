@@ -27,9 +27,10 @@ int main(int argc, char **argv) {
     uint8_t *value = (uint8_t *)z_malloc(len);
     memset(value, 1, len);
 
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
+    z_config_default(&config);
     if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -38,23 +39,29 @@ int main(int argc, char **argv) {
         }
     }
 
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    z_publisher_options_t options = z_publisher_options_default();
+    z_publisher_options_t options;
+    z_publisher_options_default(&options);
     options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
 
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), &options);
-    if (!z_check(pub)) {
+    z_owned_publisher_t pub;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_new(&ke, keyexpr);
+    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &options)) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
 
+    z_owned_bytes_t payload;
+    z_view_slice_t payload_data;
+    z_view_slice_wrap(&payload_data, value, len);
     while (1) {
-        zc_owned_payload_t payload = zc_payload_encode_from_bytes((z_bytes_t){.start = value, .len = len});
+        z_bytes_encode_from_slice(&payload, z_loan(payload_data));
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
