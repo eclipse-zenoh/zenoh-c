@@ -60,18 +60,6 @@ typedef enum z_keyexpr_intersection_level_t {
   Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
 } z_keyexpr_intersection_level_t;
 /**
- * The Queryables that should be target of a :c:func:`z_get`.
- *
- *     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
- *     - **ALL_COMPLETE**: All complete queryables.
- *     - **ALL**: All matching queryables.
- */
-typedef enum z_loaned_query_target_t {
-  Z_LOANED_QUERY_TARGET_BEST_MATCHING,
-  Z_LOANED_QUERY_TARGET_ALL,
-  Z_LOANED_QUERY_TARGET_ALL_COMPLETE,
-} z_loaned_query_target_t;
-/**
  * The priority of zenoh messages.
  *
  *     - **REAL_TIME**
@@ -91,6 +79,18 @@ typedef enum z_priority_t {
   Z_PRIORITY_DATA_LOW = 6,
   Z_PRIORITY_BACKGROUND = 7,
 } z_priority_t;
+/**
+ * The Queryables that should be target of a :c:func:`z_get`.
+ *
+ *     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
+ *     - **ALL_COMPLETE**: All complete queryables.
+ *     - **ALL**: All matching queryables.
+ */
+typedef enum z_query_target_t {
+  Z_QUERY_TARGET_BEST_MATCHING,
+  Z_QUERY_TARGET_ALL,
+  Z_QUERY_TARGET_ALL_COMPLETE,
+} z_query_target_t;
 /**
  * The subscription reliability.
  *
@@ -477,7 +477,7 @@ typedef struct z_query_consolidation_t {
  * Options passed to the :c:func:`z_get` function.
  *
  * Members:
- *     z_loaned_query_target_t target: The Queryables that should be target of the query.
+ *     z_query_target_t target: The Queryables that should be target of the query.
  *     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
  *     z_owned_payload_t* payload: An optional payload to attach to the query.
  *     z_owned_encdoing_t* encdoing: An optional encoding of the query payload and or attachment.
@@ -485,7 +485,7 @@ typedef struct z_query_consolidation_t {
  *     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
  */
 typedef struct z_get_options_t {
-  enum z_loaned_query_target_t target;
+  enum z_query_target_t target;
   struct z_query_consolidation_t consolidation;
   struct z_owned_bytes_t *payload;
   struct z_owned_encoding_t *encoding;
@@ -813,7 +813,7 @@ typedef struct ALIGN(8) ze_owned_querying_subscriber_t {
  *   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
  *                                  receive by this subscriber.
  *   z_loaned_keyexpr_t query_selector: The selector to be used for queries.
- *   z_loaned_query_target_t query_target: The target to be used for queries.
+ *   z_query_target_t query_target: The target to be used for queries.
  *   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
  *   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
  *   uint64_t query_timeout_ms: The timeout to be used for queries.
@@ -822,7 +822,7 @@ typedef struct ze_querying_subscriber_options_t {
   enum z_reliability_t reliability;
   enum zcu_locality_t allowed_origin;
   const struct z_loaned_keyexpr_t *query_selector;
-  enum z_loaned_query_target_t query_target;
+  enum z_query_target_t query_target;
   struct z_query_consolidation_t query_consolidation;
   enum zcu_reply_keyexpr_t query_accept_replies;
   uint64_t query_timeout_ms;
@@ -1440,10 +1440,6 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
 ZENOHC_API void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *ke, struct z_owned_str_t *s);
 ZENOHC_API z_error_t z_loaned_mutex_try_lock(struct z_loaned_mutex_t *this_);
 /**
- * Create a default :c:type:`z_loaned_query_target_t`.
- */
-ZENOHC_API enum z_loaned_query_target_t z_loaned_query_target_default(void);
-/**
  * The samples timestamp
  *
  * Returns true if Sample contains timestamp, false otherwise. In the latter case the timestamp_out value is not altered.
@@ -1675,6 +1671,10 @@ z_error_t z_query_reply(const struct z_loaned_query_t *query,
  * Constructs the default value for :c:type:`z_query_reply_options_t`.
  */
 ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *this_);
+/**
+ * Create a default :c:type:`z_query_target_t`.
+ */
+ZENOHC_API enum z_query_target_t z_query_target_default(void);
 /**
  * Gets a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
  *

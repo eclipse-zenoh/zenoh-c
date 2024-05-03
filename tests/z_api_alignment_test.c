@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
     z_closure(&_ret_closure_reply, reply_handler, NULL, &ls2);
     z_get_options_t _ret_get_opt;
     z_get_options_default(&_ret_get_opt);
-    _ret_get_opt.target = z_loaned_query_target_default();
+    _ret_get_opt.target = z_query_target_default();
     _ret_get_opt.consolidation = z_query_consolidation_auto();
     _ret_get_opt.consolidation = z_query_consolidation_default();
     _ret_get_opt.consolidation = z_query_consolidation_latest();

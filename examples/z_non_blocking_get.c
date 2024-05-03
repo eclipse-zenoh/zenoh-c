@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     printf("Sending Query '%s'...\n", expr);
     z_get_options_t opts;
     z_get_options_default(&opts);
-    opts.target = Z_LOANED_QUERY_TARGET_ALL;
+    opts.target = Z_QUERY_TARGET_ALL;
     z_owned_reply_channel_t channel;
     zc_reply_non_blocking_fifo_new(&channel, 16);
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(channel.send),

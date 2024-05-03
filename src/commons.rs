@@ -362,37 +362,37 @@ pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum z_loaned_query_target_t {
+pub enum z_query_target_t {
     BEST_MATCHING,
     ALL,
     ALL_COMPLETE,
 }
 
-impl From<QueryTarget> for z_loaned_query_target_t {
+impl From<QueryTarget> for z_query_target_t {
     #[inline]
     fn from(t: QueryTarget) -> Self {
         match t {
-            QueryTarget::BestMatching => z_loaned_query_target_t::BEST_MATCHING,
-            QueryTarget::All => z_loaned_query_target_t::ALL,
-            QueryTarget::AllComplete => z_loaned_query_target_t::ALL_COMPLETE,
+            QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
+            QueryTarget::All => z_query_target_t::ALL,
+            QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
         }
     }
 }
 
-impl From<z_loaned_query_target_t> for QueryTarget {
+impl From<z_query_target_t> for QueryTarget {
     #[inline]
-    fn from(val: z_loaned_query_target_t) -> Self {
+    fn from(val: z_query_target_t) -> Self {
         match val {
-            z_loaned_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
-            z_loaned_query_target_t::ALL => QueryTarget::All,
-            z_loaned_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
+            z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
+            z_query_target_t::ALL => QueryTarget::All,
+            z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
         }
     }
 }
 
-/// Create a default :c:type:`z_loaned_query_target_t`.
+/// Create a default :c:type:`z_query_target_t`.
 #[no_mangle]
-pub extern "C" fn z_loaned_query_target_default() -> z_loaned_query_target_t {
+pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()
 }
 

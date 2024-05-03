@@ -31,7 +31,7 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_consolidation_mode_t;
-use crate::z_loaned_query_target_t;
+use crate::z_query_target_t;
 use crate::z_loaned_sample_t;
 use crate::z_loaned_value_t;
 use crate::z_owned_bytes_t;
@@ -105,7 +105,7 @@ pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: 
 /// Options passed to the :c:func:`z_get` function.
 ///
 /// Members:
-///     z_loaned_query_target_t target: The Queryables that should be target of the query.
+///     z_query_target_t target: The Queryables that should be target of the query.
 ///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
 ///     z_owned_payload_t* payload: An optional payload to attach to the query.
 ///     z_owned_encdoing_t* encdoing: An optional encoding of the query payload and or attachment.
@@ -113,7 +113,7 @@ pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: 
 ///     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
 #[repr(C)]
 pub struct z_get_options_t {
-    pub target: z_loaned_query_target_t,
+    pub target: z_query_target_t,
     pub consolidation: z_query_consolidation_t,
     pub payload: *mut z_owned_bytes_t,
     pub encoding: *mut z_owned_encoding_t,

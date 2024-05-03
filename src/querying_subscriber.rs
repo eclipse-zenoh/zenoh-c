@@ -26,7 +26,7 @@ use crate::z_loaned_keyexpr_t;
 use crate::z_owned_closure_sample_t;
 use crate::z_reliability_t;
 use crate::{
-    z_closure_sample_call, z_get_options_t, z_loaned_query_target_default, z_loaned_query_target_t,
+    z_closure_sample_call, z_get_options_t, z_query_target_default, z_query_target_t,
     z_loaned_session_t, z_query_consolidation_none, z_query_consolidation_t, zcu_locality_default,
     zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
@@ -65,7 +65,7 @@ pub extern "C" fn ze_querying_subscriber_null(
 ///   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
 ///                                  receive by this subscriber.
 ///   z_loaned_keyexpr_t query_selector: The selector to be used for queries.
-///   z_loaned_query_target_t query_target: The target to be used for queries.
+///   z_query_target_t query_target: The target to be used for queries.
 ///   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
 ///   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
 ///   uint64_t query_timeout_ms: The timeout to be used for queries.
@@ -75,7 +75,7 @@ pub struct ze_querying_subscriber_options_t {
     reliability: z_reliability_t,
     allowed_origin: zcu_locality_t,
     query_selector: *const z_loaned_keyexpr_t,
-    query_target: z_loaned_query_target_t,
+    query_target: z_query_target_t,
     query_consolidation: z_query_consolidation_t,
     query_accept_replies: zcu_reply_keyexpr_t,
     query_timeout_ms: u64,
@@ -90,7 +90,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
         reliability: Reliability::DEFAULT.into(),
         allowed_origin: zcu_locality_default(),
         query_selector: null(),
-        query_target: z_loaned_query_target_default(),
+        query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
         query_accept_replies: zcu_reply_keyexpr_default(),
         query_timeout_ms: 0,
