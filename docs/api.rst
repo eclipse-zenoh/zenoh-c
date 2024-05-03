@@ -182,7 +182,7 @@ Key expression
 
 
 .. autocfunction:: zenoh_commons.h::z_declare_keyexpr
-.. autocfunction:: zenoh_commons.h::z_undeclare_declare_keyexpr
+.. autocfunction:: zenoh_commons.h::z_undeclare_keyexpr
 
 Encoding
 ========
