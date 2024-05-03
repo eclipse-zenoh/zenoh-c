@@ -31,11 +31,11 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_consolidation_mode_t;
-use crate::z_query_target_t;
 use crate::z_loaned_sample_t;
 use crate::z_loaned_value_t;
 use crate::z_owned_bytes_t;
 use crate::z_owned_encoding_t;
+use crate::z_query_target_t;
 use crate::{
     z_closure_reply_call, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t,
 };

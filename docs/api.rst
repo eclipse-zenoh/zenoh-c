@@ -196,8 +196,6 @@ Encoding
 .. autocfunction:: zenoh_commons.h::z_encoding_check
 .. autocfunction:: zenoh_commons.h::z_encoding_drop
 
-.. autocstruct:: zenoh_commons.h::z_encoding_prefix_t
-
 Value
 =====
 

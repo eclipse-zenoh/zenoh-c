@@ -26,8 +26,8 @@ use crate::z_loaned_keyexpr_t;
 use crate::z_owned_closure_sample_t;
 use crate::z_reliability_t;
 use crate::{
-    z_closure_sample_call, z_get_options_t, z_query_target_default, z_query_target_t,
-    z_loaned_session_t, z_query_consolidation_none, z_query_consolidation_t, zcu_locality_default,
+    z_closure_sample_call, z_get_options_t, z_loaned_session_t, z_query_consolidation_none,
+    z_query_consolidation_t, z_query_target_default, z_query_target_t, zcu_locality_default,
     zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 use zenoh::prelude::sync::SyncResolve;

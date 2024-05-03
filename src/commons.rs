@@ -17,6 +17,7 @@ use std::mem::MaybeUninit;
 use std::ptr::null;
 use std::str::FromStr;
 
+use crate::errors;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteCopy;
@@ -235,20 +236,20 @@ pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>
 pub unsafe extern "C" fn z_encoding_from_str(
     encoding: *mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
-) -> i8 {
+) -> errors::z_error_t {
     let encoding = encoding.transmute_uninit_ptr();
     if s.is_null() {
         Inplace::empty(encoding);
-        0
+        errors::Z_OK
     } else {
         let s = CStr::from_ptr(s).to_string_lossy();
         let value = Encoding::from_str(s.as_ref()).unwrap_infallible();
         Inplace::init(encoding, value);
-        0
+        errors::Z_OK
     }
 }
 
-/// Constructs a default :c:type:`z_loaned_encoding_t`.
+/// Returns a default :c:type:`z_loaned_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_default() -> &'static z_loaned_encoding_t {

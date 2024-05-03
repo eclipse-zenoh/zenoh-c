@@ -1229,7 +1229,7 @@ ZENOHC_API void z_delete_options_default(struct z_delete_options_t *this_);
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
 /**
- * Constructs a default :c:type:`z_loaned_encoding_t`.
+ * Returns a default :c:type:`z_loaned_encoding_t`.
  */
 ZENOHC_API const struct z_loaned_encoding_t *z_encoding_default(void);
 /**
@@ -1239,7 +1239,7 @@ ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
 /**
  * Constructs a specific :c:type:`z_loaned_encoding_t`.
  */
-ZENOHC_API int8_t z_encoding_from_str(struct z_owned_encoding_t *encoding, const char *s);
+ZENOHC_API z_error_t z_encoding_from_str(struct z_owned_encoding_t *encoding, const char *s);
 /**
  * Returns a :c:type:`z_loaned_encoding_t` loaned from `encoding`.
  */
