@@ -34,7 +34,6 @@ Slice
 .. autocfunction:: zenoh_commons.h::z_slice_check
 .. autocfunction:: zenoh_commons.h::z_view_slice_check
 .. autocfunction:: zenoh_commons.h::z_slice_drop
-.. autocfunction:: zenoh_commons.h::z_view_slice_drop
 .. autocfunction:: zenoh_commons.h::z_slice_loan
 .. autocfunction:: zenoh_commons.h::z_view_slice_loan
 .. autocfunction:: zenoh_commons.h::z_slice_data
@@ -58,7 +57,6 @@ String
 .. autocfunction:: zenoh_commons.h::z_view_str_wrap
 .. autocfunction:: zenoh_commons.h::z_str_from_substring
 .. autocfunction:: zenoh_commons.h::z_str_drop
-.. autocfunction:: zenoh_commons.h::z_view_str_drop
 .. autocfunction:: zenoh_commons.h::z_str_loan
 .. autocfunction:: zenoh_commons.h::z_view_str_loan
 .. autocfunction:: zenoh_commons.h::z_str_data
