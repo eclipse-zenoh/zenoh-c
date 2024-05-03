@@ -1912,7 +1912,7 @@ size_t z_slice_array_push_by_copy(struct z_loaned_slice_array_t *this_,
 /**
  * Returns ``true`` if `this` is initialized.
  */
-ZENOHC_API bool z_slice_checkck(const struct z_owned_slice_t *this_);
+ZENOHC_API bool z_slice_check(const struct z_owned_slice_t *this_);
 ZENOHC_API void z_slice_clone(const struct z_loaned_slice_t *this_, struct z_owned_slice_t *dst);
 ZENOHC_API const uint8_t *z_slice_data(const struct z_loaned_slice_t *this_);
 /**

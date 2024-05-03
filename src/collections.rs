@@ -235,7 +235,7 @@ pub extern "C" fn z_slice_clone(this: &z_loaned_slice_t, dst: *mut MaybeUninit<z
 
 /// Returns ``true`` if `this` is initialized.
 #[no_mangle]
-pub extern "C" fn z_slice_checkck(this: &z_owned_slice_t) -> bool {
+pub extern "C" fn z_slice_check(this: &z_owned_slice_t) -> bool {
     !this.transmute_ref().is_empty()
 }
 
@@ -267,7 +267,7 @@ pub unsafe extern "C" fn z_str_drop(this: &mut z_owned_str_t) {
 /// Returns ``true`` if `s` is a valid string
 #[no_mangle]
 pub extern "C" fn z_str_check(this: &z_owned_str_t) -> bool {
-    z_slice_checkck(this.transmute_ref().transmute_ref())
+    z_slice_check(this.transmute_ref().transmute_ref())
 }
 
 /// Returns undefined `z_owned_str_t`

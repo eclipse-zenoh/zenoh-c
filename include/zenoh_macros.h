@@ -128,6 +128,7 @@
         z_owned_scouting_config_t : z_scouting_config_check, \
         z_owned_session_t : z_session_check, \
         z_owned_slice_array_t : z_slice_array_check, \
+        z_owned_slice_t : z_slice_check, \
         z_owned_slice_map_t : z_slice_map_check, \
         z_owned_str_t : z_str_check, \
         z_owned_subscriber_t : z_subscriber_check, \
@@ -272,6 +273,7 @@ inline bool z_check(const z_owned_sample_t& sample) { return z_sample_check(&sam
 inline bool z_check(const z_owned_scouting_config_t& config) { return z_scouting_config_check(&config); };
 inline bool z_check(const z_owned_session_t& this_) { return z_session_check(&this_); };
 inline bool z_check(const z_owned_slice_array_t& this_) { return z_slice_array_check(&this_); };
+inline bool z_check(const z_owned_slice_t& this_) { return z_slice_check(&this_); };
 inline bool z_check(const z_owned_slice_map_t& map) { return z_slice_map_check(&map); };
 inline bool z_check(const z_owned_str_t& this_) { return z_str_check(&this_); };
 inline bool z_check(const z_owned_subscriber_t& subscriber) { return z_subscriber_check(&subscriber); };
