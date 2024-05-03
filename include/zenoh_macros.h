@@ -120,7 +120,6 @@
         z_owned_hello_t : z_hello_check, \
         z_owned_keyexpr_t : z_keyexpr_check, \
         z_owned_mutex_t : z_mutex_check, \
-        z_owned_slice_t : z_owned_slice_check, \
         z_owned_publisher_t : z_publisher_check, \
         z_owned_query_t : z_query_check, \
         z_owned_queryable_t : z_queryable_check, \
@@ -265,7 +264,6 @@ inline bool z_check(const z_owned_encoding_t& encoding) { return z_encoding_chec
 inline bool z_check(const z_owned_hello_t& this_) { return z_hello_check(&this_); };
 inline bool z_check(const z_owned_keyexpr_t& keyexpr) { return z_keyexpr_check(&keyexpr); };
 inline bool z_check(const z_owned_mutex_t& this_) { return z_mutex_check(&this_); };
-inline bool z_check(const z_owned_slice_t& this_) { return z_owned_slice_check(&this_); };
 inline bool z_check(const z_owned_publisher_t& this_) { return z_publisher_check(&this_); };
 inline bool z_check(const z_owned_query_t& query) { return z_query_check(&query); };
 inline bool z_check(const z_owned_queryable_t& qable) { return z_queryable_check(&qable); };

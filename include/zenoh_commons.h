@@ -1462,10 +1462,6 @@ ZENOHC_API
 z_error_t z_open(struct z_owned_session_t *this_,
                  struct z_owned_config_t *config);
 /**
- * Returns ``true`` if `this` is initialized.
- */
-ZENOHC_API bool z_owned_slice_check(const struct z_owned_slice_t *this_);
-/**
  * Returns ``true`` if `pub` is valid.
  */
 ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *this_);
@@ -1913,6 +1909,10 @@ size_t z_slice_array_push_by_alias(struct z_loaned_slice_array_t *this_,
 ZENOHC_API
 size_t z_slice_array_push_by_copy(struct z_loaned_slice_array_t *this_,
                                   const struct z_loaned_slice_t *value);
+/**
+ * Returns ``true`` if `this` is initialized.
+ */
+ZENOHC_API bool z_slice_checkck(const struct z_owned_slice_t *this_);
 ZENOHC_API void z_slice_clone(const struct z_loaned_slice_t *this_, struct z_owned_slice_t *dst);
 ZENOHC_API const uint8_t *z_slice_data(const struct z_loaned_slice_t *this_);
 /**

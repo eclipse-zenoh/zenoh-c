@@ -111,7 +111,6 @@ Session configuration
 .. autocstruct:: zenoh_commons.h::z_owned_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_scouting_config_t
 
-.. autocfunction:: zenoh_commons.h::z_config_new
 .. autocfunction:: zenoh_commons.h::z_config_default
 .. autocfunction:: zenoh_commons.h::z_config_client
 .. autocfunction:: zenoh_commons.h::z_config_peer
