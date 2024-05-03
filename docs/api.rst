@@ -30,7 +30,7 @@ Slice
 .. autocfunction:: zenoh_commons.h::z_view_slice_empty
 .. autocfunction:: zenoh_commons.h::z_slice_wrap
 .. autocfunction:: zenoh_commons.h::z_view_slice_wrap
-.. autocfunction:: zenoh_commons.h::z_slice_from_string
+.. autocfunction:: zenoh_commons.h::z_slice_from_str
 .. autocfunction:: zenoh_commons.h::z_slice_check
 .. autocfunction:: zenoh_commons.h::z_view_slice_check
 .. autocfunction:: zenoh_commons.h::z_slice_drop
