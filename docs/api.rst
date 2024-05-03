@@ -41,7 +41,7 @@ Slice
 
 
 String
------
+------
 
 .. autocstruct:: zenoh_commons.h::z_view_str_t
 .. autocstruct:: zenoh_commons.h::z_owned_str_t
@@ -81,7 +81,7 @@ Slice map
 .. autocfunction:: zenoh_commons.h::z_slice_map_iterate
 
 Slice array
----------
+-----------
 
 .. autocstruct:: zenoh_commons.h::z_owned_slice_array_t
 
@@ -200,7 +200,6 @@ Value
 =====
 
 .. autocstruct:: zenoh_commons.h::z_loaned_value_t
-.. autocstruct:: zenoh_commons.h::z_owned_value_t
 
 Sample
 ======
@@ -230,7 +229,7 @@ Types
 Functions
 ---------
 
-.. autocfunction:: zenoh_commons.h::
+.. autocfunction:: zenoh_commons.h::z_put
 .. autocfunction:: zenoh_commons.h::z_delete
 
 .. autocfunction:: zenoh_commons.h::z_declare_publisher
@@ -292,6 +291,9 @@ Types
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_latest
 
 .. autocstruct:: zenoh_commons.h::z_owned_reply_t
+.. autocstruct:: zenoh_commons.h::z_loaned_reply_t
+.. autocstruct:: zenoh_commons.h::z_owned_query_t
+.. autocstruct:: zenoh_commons.h::z_loaned_query_t
 .. autocfunction:: zenoh_commons.h::z_reply_check
 .. autocfunction:: zenoh_commons.h::z_reply_drop
 
@@ -341,9 +343,9 @@ Types
 -----
 
 .. autocstruct:: zenoh_commons.h::zc_owned_liveliness_token_t
-.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declaration_options_t
+.. autocstruct:: zenoh_commons.h::zc_liveliness_declaration_options_t
 .. autocstruct:: zenoh_commons.h::zc_liveliness_get_options_t
-.. autocstruct:: zenoh_commons.h::zc_owned_liveliness_declare_subscriber_options_t
+.. autocstruct:: zenoh_commons.h::zc_liveliness_declare_subscriber_options_t
 
 Functions
 ---------
@@ -363,7 +365,7 @@ Types
 -----
 
 .. autocstruct:: zenoh_commons.h::ze_publication_cache_options_t
-.. autocstruct:: zenoh_commons.h::ze_owned_publication_cache_t
+.. autocstruct:: zenoh_concrete.h::ze_owned_publication_cache_t
 
 Functions
 ---------
@@ -380,7 +382,8 @@ Querying Subscriber
 Types
 -----
 
-.. autocstruct:: zenoh_commons.h::ze_owned_querying_subscriber_t
+.. autocstruct:: zenoh_concrete.h::ze_owned_querying_subscriber_t
+.. autocstruct:: zenoh_concrete.h::ze_loaned_querying_subscriber_t
 .. autocstruct:: zenoh_commons.h::ze_querying_subscriber_options_t
 
 Functions
