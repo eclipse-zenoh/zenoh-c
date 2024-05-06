@@ -131,8 +131,6 @@ typedef struct ALIGN(8) z_loaned_bytes_t {
 typedef int8_t z_error_t;
 /**
  * A contiguous owned sequence of bytes allocated by Zenoh.
- * The instances should be released with `z_drop` macro or with `z_slice_drop` function and checked to validity with
- * `z_check` and `z_slice_check` correspondently.
  */
 typedef struct ALIGN(8) z_owned_slice_t {
   uint8_t _0[16];
@@ -146,9 +144,7 @@ typedef struct ALIGN(8) z_owned_slice_map_t {
   uint8_t _0[48];
 } z_owned_slice_map_t;
 /**
- * The wrapper type for null-terminated string values allocated by Zenoh. The instances of `z_owned_str_t`
- * should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
- * `z_check` and `z_str_check` correspondently.
+ * The wrapper type for null-terminated string values allocated by Zenoh.
  */
 typedef struct ALIGN(8) z_owned_str_t {
   uint8_t _0[16];
@@ -160,7 +156,7 @@ typedef struct ALIGN(8) z_loaned_slice_t {
   uint8_t _0[16];
 } z_loaned_slice_t;
 /**
- * A loaned Slice Map.
+ * A loaned slice map.
  */
 typedef struct ALIGN(8) z_loaned_slice_map_t {
   uint8_t _0[48];
@@ -501,7 +497,7 @@ typedef struct ALIGN(8) z_owned_hello_t {
   uint8_t _0[48];
 } z_owned_hello_t;
 /**
- * An array of maybe-owned slices
+ * An array of maybe-owned slices.
  *
  */
 typedef struct ALIGN(8) z_owned_slice_array_t {
@@ -660,17 +656,6 @@ typedef struct z_owned_scouting_config_t {
 typedef struct ALIGN(8) z_loaned_slice_array_t {
   uint8_t _0[24];
 } z_loaned_slice_array_t;
-/**
- * The body of a loop over a z_slice_map's key-value pairs.
- *
- * `key` and `value` are loaned to the body for the duration of a single call.
- * `context` is passed transparently through the iteration driver.
- *
- * Returning `true` is treated as `break`.
- */
-typedef bool (*z_slice_map_iter_body_t)(const struct z_loaned_slice_t *key,
-                                        const struct z_loaned_slice_t *value,
-                                        void *context);
 /**
  * An owned Zenoh task.
  */
@@ -1833,45 +1818,49 @@ ZENOHC_API int8_t z_sleep_ms(size_t time);
 ZENOHC_API int8_t z_sleep_s(size_t time);
 ZENOHC_API int8_t z_sleep_us(size_t time);
 /**
- * Returns `true` if the array is not in its gravestone state
+ * Returns ``true`` if the slice array is valid, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool z_slice_array_check(const struct z_owned_slice_array_t *this_);
 /**
- * Destroys the array, resetting `this` to its gravestone value.
- *
- * This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+ * Destroys the slice array, resetting it to its gravestone value.
  */
 ZENOHC_API void z_slice_array_drop(struct z_owned_slice_array_t *this_);
 /**
- * Returns the value at the position of index in the array.
+ * Returns the value at the position of index in the slice array.
  *
- * Will return NULL if the index is out of bounds.
+ * Will return `NULL` if the index is out of bounds.
  */
 ZENOHC_API
 const struct z_loaned_slice_t *z_slice_array_get(const struct z_loaned_slice_array_t *this_,
                                                  size_t index);
 /**
- * Returns true if the array is empty, false otherwise.
+ * Returns ``true`` if the array is empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_slice_array_is_empty(const struct z_loaned_slice_array_t *this_);
 /**
- * Returns number of key-value pairs in the map.
+ * Returns number of elements in the array.
  */
 ZENOHC_API size_t z_slice_array_len(const struct z_loaned_slice_array_t *this_);
+/**
+ * Returns a loaned slice array.
+ */
 ZENOHC_API
 const struct z_loaned_slice_array_t *z_slice_array_loan(const struct z_owned_slice_array_t *this_);
+/**
+ * Returns a mutable loaned slice array.
+ */
 ZENOHC_API
 struct z_loaned_slice_array_t *z_slice_array_loan_mut(struct z_owned_slice_array_t *this_);
 /**
- * Constructs a new empty array.
+ * Constructs a new empty slice array.
  */
 ZENOHC_API void z_slice_array_new(struct z_owned_slice_array_t *this_);
 /**
- * Constructs the gravestone value for `z_owned_slice_array_t`
+ * Constructs slice array in its gravestone state.
  */
 ZENOHC_API void z_slice_array_null(struct z_owned_slice_array_t *this_);
 /**
- * Appends specified value to the end of the array by aliasing.
+ * Appends specified value to the end of the slice array by alias.
  *
  * Returns the new length of the array.
  */
@@ -1879,7 +1868,7 @@ ZENOHC_API
 size_t z_slice_array_push_by_alias(struct z_loaned_slice_array_t *this_,
                                    const struct z_loaned_slice_t *value);
 /**
- * Appends specified value to the end of the array by copying.
+ * Appends specified value to the end of the slice array by copying.
  *
  * Returns the new length of the array.
  */
@@ -1887,43 +1876,57 @@ ZENOHC_API
 size_t z_slice_array_push_by_copy(struct z_loaned_slice_array_t *this_,
                                   const struct z_loaned_slice_t *value);
 /**
- * Returns ``true`` if `this` is initialized.
+ * Returns ``true`` if slice is not empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_slice_check(const struct z_owned_slice_t *this_);
+/**
+ * Constructs an owned copy of a slice.
+ */
 ZENOHC_API void z_slice_clone(const struct z_loaned_slice_t *this_, struct z_owned_slice_t *dst);
+/**
+ * Returns the pointer to the slice data.
+ */
 ZENOHC_API const uint8_t *z_slice_data(const struct z_loaned_slice_t *this_);
 /**
- * Frees `this` and invalidates it for double-drop safety.
+ * Frees the memory and invalidates the slice.
  */
 ZENOHC_API void z_slice_drop(struct z_owned_slice_t *this_);
 /**
- * Returns an empty `z_owned_slice_t`
+ * Constructs an empty `z_owned_slice_t`.
  */
 ZENOHC_API void z_slice_empty(struct z_owned_slice_t *this_);
 /**
  * Copies a string into `z_owned_slice_t` using `strlen` (this should therefore not be used with untrusted inputs).
  *
- * Calling this with `str == NULL` is equivalent to `z_slice_null`.
+ * Returns -1 if `str == NULL` (and creates an empty slice), 0 otherwise.
  */
 ZENOHC_API
-void z_slice_from_str(struct z_owned_slice_t *this_,
-                      const char *str);
+z_error_t z_slice_from_str(struct z_owned_slice_t *this_,
+                           const char *str);
+/**
+ * Returns ``true`` if slice is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_slice_is_empty(const struct z_loaned_slice_t *this_);
+/**
+ * Returns the length of the slice.
+ */
 ZENOHC_API size_t z_slice_len(const struct z_loaned_slice_t *this_);
+/**
+ * Returns a loaned slice.
+ */
 ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slice_t *this_);
 /**
- * Returns `true` if the map is not in its gravestone state
+ * Returns ``true`` if the map is not in its gravestone state, ``false`` otherwise.
  */
 ZENOHC_API bool z_slice_map_check(const struct z_owned_slice_map_t *map);
 /**
- * Destroys the map, resetting `this` to its gravestone value.
- *
- * This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+ * Destroys the map, resetting it to its gravestone value.
  */
 ZENOHC_API void z_slice_map_drop(struct z_owned_slice_map_t *this_);
 /**
  * Returns the value associated with `key`.
  *
- * Will return NULL if the key is not present in the map.
+ * Will return `NULL` if the key is not present in the map.
  */
 ZENOHC_API
 const struct z_loaned_slice_t *z_slice_map_get(const struct z_loaned_slice_map_t *this_,
@@ -1931,8 +1934,7 @@ const struct z_loaned_slice_t *z_slice_map_get(const struct z_loaned_slice_map_t
 /**
  * Associates `value` to `key` in the map, aliasing them.
  *
- * Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
- *
+ * If the `key` was already present in the map, its value is updated.
  * Returns 1 if there was already an entry associated with the key, 0 otherwise.
  */
 ZENOHC_API
@@ -1942,6 +1944,7 @@ z_error_t z_slice_map_insert_by_alias(struct z_loaned_slice_map_t *this_,
 /**
  * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
  *
+ * If the `key` was already present in the map, its value is updated.
  * Returns 1 if there was already an entry associated with the key, 0 otherwise.
  */
 ZENOHC_API
@@ -1949,67 +1952,104 @@ uint8_t z_slice_map_insert_by_copy(struct z_loaned_slice_map_t *this_,
                                    const struct z_loaned_slice_t *key,
                                    const struct z_loaned_slice_t *value);
 /**
- * Returns true if the map is empty, false otherwise.
+ * Returns ``true`` if the map is empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_slice_map_is_empty(const struct z_loaned_slice_map_t *this_);
+/**
+ * Iterates over key-value pairs of a slice map.
+ *
+ * Parameters:
+ *     this_: Slice map to iterate over.
+ *     body: Iterator body function. Returning `true` is treated as iteration loop `break`.
+ *     context: Some data passed to every body invocation.
+ */
 ZENOHC_API
 void z_slice_map_iterate(const struct z_loaned_slice_map_t *this_,
-                         z_slice_map_iter_body_t body,
+                         bool (*body)(const struct z_loaned_slice_t *key,
+                                      const struct z_loaned_slice_t *value,
+                                      void *context),
                          void *context);
 /**
  * Returns number of key-value pairs in the map.
  */
 ZENOHC_API size_t z_slice_map_len(const struct z_loaned_slice_map_t *this_);
+/**
+ * Returns a loaned slice map.
+ */
 ZENOHC_API
 const struct z_loaned_slice_map_t *z_slice_map_loan(const struct z_owned_slice_map_t *this_);
+/**
+ * Returns a mutable loaned slice map.
+ */
 ZENOHC_API struct z_loaned_slice_map_t *z_slice_map_loan_mut(struct z_owned_slice_map_t *this_);
 /**
  * Constructs a new empty map.
  */
 ZENOHC_API void z_slice_map_new(struct z_owned_slice_map_t *this_);
 /**
- * Constructs the gravestone value for `z_owned_slice_map_t`
+ * Constructs the gravestone value for :c:type:`z_owned_slice_map_t`.
  */
 ZENOHC_API void z_slice_map_null(struct z_owned_slice_map_t *this_);
 /**
- * Constructs a `len` bytes long view starting at `start`.
+ * Constructs a slice by copying a `len` bytes long sequence starting at `start`.
+ *
+ * Returns -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
  */
-ZENOHC_API void z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *start, size_t len);
+ZENOHC_API z_error_t z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *start, size_t len);
 ZENOHC_API const struct z_loaned_slice_t *z_str_as_slice(const struct z_loaned_str_t *this_);
 /**
- * Returns ``true`` if `s` is a valid string
+ * Returns ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
  */
 ZENOHC_API bool z_str_check(const struct z_owned_str_t *this_);
+/**
+ * Constructs an owned copy of a string.
+ */
 ZENOHC_API void z_str_clone(const struct z_loaned_str_t *this_, struct z_owned_str_t *dst);
+/**
+ * Returns the pointer of the string data.
+ */
 ZENOHC_API const char *z_str_data(const struct z_loaned_str_t *this_);
 /**
- * Frees `z_owned_str_t`, invalidating it for double-drop safety.
+ * Frees memory and invalidates `z_owned_str_t`, putting it in gravestone state.
  */
 ZENOHC_API void z_str_drop(struct z_owned_str_t *this_);
+/**
+ * Constructs an empty owned string.
+ */
 ZENOHC_API void z_str_empty(struct z_owned_str_t *this_);
 /**
- * Copies a a substring of length `len`into `z_owned_str_t`.
+ * Constructs an owned string by copying a `str` substring of length `len` (and adding terminating 0).
  *
- * Calling this with `str == NULL` is equivalent to `z_str_null`.
+ * Returns -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
  */
-ZENOHC_API void z_str_from_substring(struct z_owned_str_t *this_, const char *str, size_t len);
+ZENOHC_API
+z_error_t z_str_from_substring(struct z_owned_str_t *this_,
+                               const char *str,
+                               size_t len);
+/**
+ * Returns ``true`` if string is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_str_is_empty(const struct z_loaned_str_t *this_);
+/**
+ * Returns the length of the string (without terminating 0 character).
+ */
 ZENOHC_API size_t z_str_len(const struct z_loaned_str_t *this_);
 /**
- * Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_owned_str_t`.
+ * Returns a loaned string.
  */
 ZENOHC_API const struct z_loaned_str_t *z_str_loan(const struct z_owned_str_t *this_);
 /**
- * Returns undefined `z_owned_str_t`
+ * Constructs owned string in a gravestone state.
  */
 ZENOHC_API void z_str_null(struct z_owned_str_t *this_);
 /**
- * Copies a string into `z_owned_str_t` using `strlen` (this should therefore not be used with untrusted inputs).
+ * Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
  *
- * Calling this with `str == NULL` is equivalent to `z_str_null`.
+ * Returns -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
  */
 ZENOHC_API
-void z_str_wrap(struct z_owned_str_t *this_,
-                const char *str);
+z_error_t z_str_wrap(struct z_owned_str_t *this_,
+                     const char *str);
 /**
  * Returns ``true`` if `sub` is valid.
  */
@@ -2155,43 +2195,58 @@ ZENOHC_API
 void z_view_keyexpr_unchecked(struct z_view_keyexpr_t *this_,
                               const char *s);
 /**
- * Returns ``true`` if `this` is initialized.
+ * Returns ``true`` if the slice is not empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_view_slice_check(const struct z_view_slice_t *this_);
 /**
- * Returns an empty `z_view_slice_t`
+ * Constructs an empty view slice.
  */
 ZENOHC_API void z_view_slice_empty(struct z_view_slice_t *this_);
 /**
- * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+ * Constructs a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
  *
- * Calling this with `str == NULL` is equivalent to `z_view_slice_null`.
+ * Returns -1 if `str == NULL` (and creates an empty view slice), 0 otherwise.
  */
-ZENOHC_API void z_view_slice_from_str(struct z_view_slice_t *this_, const char *str);
+ZENOHC_API
+z_error_t z_view_slice_from_str(struct z_view_slice_t *this_,
+                                const char *str);
+/**
+ * Returns a loaned view slice.
+ */
 ZENOHC_API const struct z_loaned_slice_t *z_view_slice_loan(const struct z_view_slice_t *this_);
 /**
  * Constructs a `len` bytes long view starting at `start`.
+ *
+ * Returns -1 if `start == NULL` and `len > 0` (and creates an empty view slice), 0 otherwise.
  */
-ZENOHC_API void z_view_slice_wrap(struct z_view_slice_t *this_, const uint8_t *start, size_t len);
+ZENOHC_API
+z_error_t z_view_slice_wrap(struct z_view_slice_t *this_,
+                            const uint8_t *start,
+                            size_t len);
 /**
- * Returns ``true`` if `s` is a valid string
+ * Returns ``true`` if view string is valid, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool z_view_str_check(const struct z_view_str_t *this_);
+/**
+ * Constructs an empty view string.
+ */
 ZENOHC_API void z_view_str_empty(struct z_view_str_t *this_);
 /**
- * Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_view_str_t`.
+ * Returns a loaned view string.
  */
 ZENOHC_API const struct z_loaned_str_t *z_view_str_loan(const struct z_view_str_t *this_);
 /**
- * Returns undefined `z_owned_str_t`
+ * Constructs view string in a gravestone state.
  */
 ZENOHC_API void z_view_str_null(struct z_view_str_t *this_);
 /**
- * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+ * Constructs a view string of `str`, using `strlen` (this should therefore not be used with untrusted inputs).
  *
- * Calling this with `str == NULL` is equivalent to `z_view_str_null`.
+ * Returns -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
  */
-ZENOHC_API void z_view_str_wrap(struct z_view_str_t *this_, const char *str);
+ZENOHC_API
+z_error_t z_view_str_wrap(struct z_view_str_t *this_,
+                          const char *str);
 /**
  * Converts the kind of zenoh entity into a string.
  *

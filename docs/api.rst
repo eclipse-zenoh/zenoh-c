@@ -38,6 +38,7 @@ Slice
 .. autocfunction:: zenoh_commons.h::z_view_slice_loan
 .. autocfunction:: zenoh_commons.h::z_slice_data
 .. autocfunction:: zenoh_commons.h::z_slice_len
+.. autocfunction:: zenoh_commons.h::z_slice_is_empty
 
 
 String
@@ -61,11 +62,13 @@ String
 .. autocfunction:: zenoh_commons.h::z_view_str_loan
 .. autocfunction:: zenoh_commons.h::z_str_data
 .. autocfunction:: zenoh_commons.h::z_str_len
+.. autocfunction:: zenoh_commons.h::z_str_is_empty
 
 Slice map
 ---------
 
 .. autocstruct:: zenoh_commons.h::z_owned_slice_map_t
+.. autocstruct:: zenoh_commons.h::z_loaned_slice_map_t
 
 .. autocfunction:: zenoh_commons.h::z_slice_map_new
 .. autocfunction:: zenoh_commons.h::z_slice_map_check
@@ -84,6 +87,7 @@ Slice array
 -----------
 
 .. autocstruct:: zenoh_commons.h::z_owned_slice_array_t
+.. autocstruct:: zenoh_commons.h::z_loaned_slice_array_t
 
 .. autocfunction:: zenoh_commons.h::z_slice_array_new
 .. autocfunction:: zenoh_commons.h::z_slice_array_check

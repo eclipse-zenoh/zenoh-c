@@ -20,7 +20,7 @@ use std::slice::from_raw_parts;
 
 use libc::{c_char, c_void, strlen};
 
-use crate::errors;
+use crate::errors::{self, z_error_t};
 use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
@@ -127,58 +127,68 @@ decl_transmute_owned!(CSlice, z_owned_slice_t);
 decl_transmute_owned!(custom_inplace_init CSlice, z_view_slice_t);
 decl_transmute_handle!(CSlice, z_loaned_slice_t);
 
-/// Returns an empty `z_view_slice_t`
+/// Constructs an empty view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_empty(this: *mut MaybeUninit<z_view_slice_t>) {
     Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
 }
 
-/// Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+/// Constructs a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
-/// Calling this with `str == NULL` is equivalent to `z_view_slice_null`.
+/// Returns -1 if `str == NULL` (and creates an empty view slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_slice_from_str(
     this: *mut MaybeUninit<z_view_slice_t>,
     str: *const c_char,
-) {
+) -> z_error_t {
     if str.is_null() {
-        z_view_slice_empty(this)
+        z_view_slice_empty(this);
+        errors::Z_EINVAL
     } else {
-        z_view_slice_wrap(this, str as *const u8, libc::strlen(str))
+        z_view_slice_wrap(this, str as *const u8, libc::strlen(str));
+        errors::Z_OK
     }
 }
 
 /// Constructs a `len` bytes long view starting at `start`.
+/// 
+/// Returns -1 if `start == NULL` and `len > 0` (and creates an empty view slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_slice_wrap(
     this: *mut MaybeUninit<z_view_slice_t>,
     start: *const u8,
     len: usize,
-) {
-    if len == 0 || start.is_null() {
-        z_view_slice_empty(this)
+) -> z_error_t {
+    if len == 0 {
+        z_view_slice_empty(this);
+        errors::Z_OK
+    } else if start.is_null() {
+        z_view_slice_empty(this);
+        errors::Z_EINVAL
     } else {
         Inplace::init(
             this.transmute_uninit_ptr(),
             CSlice::new_borrowed(start, len),
-        )
+        );
+        errors::Z_OK
     }
 }
 
+/// Returns a loaned view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> &z_loaned_slice_t {
     this.transmute_ref().transmute_handle()
 }
 
-/// Returns ``true`` if `this` is initialized.
+/// Returns ``true`` if the slice is not empty, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_view_slice_check(this: &z_view_slice_t) -> bool {
     !this.transmute_ref().is_empty()
 }
 
-/// Returns an empty `z_owned_slice_t`
+/// Constructs an empty `z_owned_slice_t`.
 #[no_mangle]
 pub extern "C" fn z_slice_empty(this: *mut MaybeUninit<z_owned_slice_t>) {
     Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
@@ -186,36 +196,45 @@ pub extern "C" fn z_slice_empty(this: *mut MaybeUninit<z_owned_slice_t>) {
 
 /// Copies a string into `z_owned_slice_t` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
-/// Calling this with `str == NULL` is equivalent to `z_slice_null`.
+/// Returns -1 if `str == NULL` (and creates an empty slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_slice_from_str(
     this: *mut MaybeUninit<z_owned_slice_t>,
     str: *const c_char,
-) {
+) -> z_error_t {
     if str.is_null() {
-        z_slice_empty(this)
+        z_slice_empty(this);
+        errors::Z_EINVAL
     } else {
-        z_slice_wrap(this, str as *const u8, libc::strlen(str))
+        z_slice_wrap(this, str as *const u8, libc::strlen(str));
+        errors::Z_OK
     }
 }
 
-/// Constructs a `len` bytes long view starting at `start`.
+/// Constructs a slice by copying a `len` bytes long sequence starting at `start`.
+/// 
+/// Returns -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_slice_wrap(
     this: *mut MaybeUninit<z_owned_slice_t>,
     start: *const u8,
     len: usize,
-) {
-    if len == 0 || start.is_null() {
-        z_slice_empty(this)
+) -> z_error_t {
+    if len == 0 {
+        z_slice_empty(this);
+        errors::Z_OK
+    } else if start.is_null() {
+        z_slice_empty(this);
+        errors::Z_EINVAL
     } else {
-        Inplace::init(this.transmute_uninit_ptr(), CSlice::new_owned(start, len))
+        Inplace::init(this.transmute_uninit_ptr(), CSlice::new_owned(start, len));
+        errors::Z_OK
     }
 }
 
-/// Frees `this` and invalidates it for double-drop safety.
+/// Frees the memory and invalidates the slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
@@ -223,30 +242,40 @@ pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
     Inplace::drop(this);
 }
 
+/// Returns a loaned slice.
 #[no_mangle]
 pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> &z_loaned_slice_t {
     this.transmute_ref().transmute_handle()
 }
 
+/// Constructs an owned copy of a slice.
 #[no_mangle]
 pub extern "C" fn z_slice_clone(this: &z_loaned_slice_t, dst: *mut MaybeUninit<z_owned_slice_t>) {
     Inplace::init(dst.transmute_uninit_ptr(), this.transmute_ref().clone());
 }
 
-/// Returns ``true`` if `this` is initialized.
+/// Returns ``true`` if slice is not empty, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_check(this: &z_owned_slice_t) -> bool {
     !this.transmute_ref().is_empty()
 }
 
+/// Returns the length of the slice.
 #[no_mangle]
 pub extern "C" fn z_slice_len(this: &z_loaned_slice_t) -> usize {
     this.transmute_ref().len()
 }
 
+/// Returns the pointer to the slice data.
 #[no_mangle]
 pub extern "C" fn z_slice_data(this: &z_loaned_slice_t) -> *const u8 {
     this.transmute_ref().data()
+}
+
+/// Returns ``true`` if slice is empty, ``false`` otherwise.
+#[no_mangle]
+pub extern "C" fn z_slice_is_empty(this: &z_loaned_slice_t) -> bool {
+    this.transmute_ref().is_empty()
 }
 
 pub use crate::opaque_types::z_loaned_str_t;
@@ -257,50 +286,52 @@ decl_transmute_owned!(custom_inplace_init CSlice, z_owned_str_t);
 decl_transmute_owned!(custom_inplace_init CSlice, z_view_str_t);
 decl_transmute_handle!(CSlice, z_loaned_str_t);
 
-/// Frees `z_owned_str_t`, invalidating it for double-drop safety.
+/// Frees memory and invalidates `z_owned_str_t`, putting it in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_drop(this: &mut z_owned_str_t) {
     z_slice_drop(this.transmute_mut().transmute_mut());
 }
 
-/// Returns ``true`` if `s` is a valid string
+/// Returns ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_str_check(this: &z_owned_str_t) -> bool {
     z_slice_check(this.transmute_ref().transmute_ref())
 }
 
-/// Returns undefined `z_owned_str_t`
+/// Constructs owned string in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_str_null(this: *mut MaybeUninit<z_owned_str_t>) {
     z_slice_empty(this as *mut _)
 }
 
-/// Returns ``true`` if `s` is a valid string
+/// Returns ``true`` if view string is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_view_str_check(this: &z_view_str_t) -> bool {
     z_view_slice_check(this.transmute_ref().transmute_ref())
 }
 
-/// Returns undefined `z_owned_str_t`
+/// Constructs view string in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_view_str_null(this: *mut MaybeUninit<z_view_str_t>) {
     z_view_slice_empty(this as *mut _)
 }
 
+/// Constructs an empty owned string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_empty(this: *mut MaybeUninit<z_owned_str_t>) {
-    z_slice_wrap(this as *mut _, [0u8].as_ptr(), 1)
+    z_slice_wrap(this as *mut _, [0u8].as_ptr(), 1);
 }
 
+/// Constructs an empty view string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_str_empty(this: *mut MaybeUninit<z_view_str_t>) {
-    z_view_slice_wrap(this as *mut _, [0u8].as_ptr(), 1)
+    z_view_slice_wrap(this as *mut _, [0u8].as_ptr(), 1);
 }
 
-/// Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_owned_str_t`.
+/// Returns a loaned string.
 #[no_mangle]
 pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> Option<&z_loaned_str_t> {
     if !z_str_check(this) {
@@ -313,7 +344,7 @@ pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> Option<&z_loaned_str_t> {
     )
 }
 
-/// Returns :c:type:`z_loaned_str_t` structure loaned from :c:type:`z_view_str_t`.
+/// Returns a loaned view string.
 #[no_mangle]
 pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> Option<&z_loaned_str_t> {
     if !z_view_str_check(this) {
@@ -326,64 +357,91 @@ pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> Option<&z_loaned_str_t
     )
 }
 
-/// Copies a string into `z_owned_str_t` using `strlen` (this should therefore not be used with untrusted inputs).
+/// Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
 ///
-/// Calling this with `str == NULL` is equivalent to `z_str_null`.
+/// Returns -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_wrap(
     this: *mut MaybeUninit<z_owned_str_t>,
     str: *const libc::c_char,
-) {
-    z_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
+) -> z_error_t {
+    if str.is_null() {
+        z_str_null(this);
+        errors::Z_EINVAL
+    } else {
+        z_slice_wrap(this as *mut _, str as _, strlen(str) + 1);
+        errors::Z_OK
+    }
 }
 
-/// Copies a a substring of length `len`into `z_owned_str_t`.
+/// Constructs an owned string by copying a `str` substring of length `len` (and adding terminating 0).
 ///
-/// Calling this with `str == NULL` is equivalent to `z_str_null`.
+/// Returns -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_from_substring(
     this: *mut MaybeUninit<z_owned_str_t>,
     str: *const libc::c_char,
     len: usize,
-) {
-    let mut v = vec![0u8; len + 1];
-    v[0..len].copy_from_slice(from_raw_parts(str as *const u8, len));
-    Inplace::init(this.transmute_uninit_ptr(), v.into());
+) -> z_error_t {
+    if str.is_null() && len != 0 {
+        z_str_null(this);
+        errors::Z_EINVAL
+    } else {
+        let mut v = vec![0u8; len + 1];
+        v[0..len].copy_from_slice(from_raw_parts(str as *const u8, len));
+        Inplace::init(this.transmute_uninit_ptr(), v.into());
+        errors::Z_OK
+    }
 }
 
-/// Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+/// Constructs a view string of `str`, using `strlen` (this should therefore not be used with untrusted inputs).
 ///
-/// Calling this with `str == NULL` is equivalent to `z_view_str_null`.
+/// Returns -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_str_wrap(
     this: *mut MaybeUninit<z_view_str_t>,
     str: *const libc::c_char,
-) {
-    z_view_slice_wrap(this as *mut _, str as _, strlen(str) + 1)
+) -> z_error_t {
+    if str.is_null() {
+        z_view_str_null(this);
+        errors::Z_EINVAL
+    } else {
+        z_view_slice_wrap(this as *mut _, str as _, strlen(str) + 1);
+        errors::Z_OK
+    }
 }
 
+/// Returns the length of the string (without terminating 0 character).
 #[no_mangle]
 pub extern "C" fn z_str_len(this: &z_loaned_str_t) -> usize {
     z_slice_len(this.transmute_ref().transmute_handle()).max(1) - 1
 }
 
+/// Returns the pointer of the string data.
 #[no_mangle]
 pub extern "C" fn z_str_data(this: &z_loaned_str_t) -> *const libc::c_char {
     z_slice_data(this.transmute_ref().transmute_handle()) as _
 }
 
+/// Constructs an owned copy of a string.
 #[no_mangle]
 pub extern "C" fn z_str_clone(this: &z_loaned_str_t, dst: *mut MaybeUninit<z_owned_str_t>) {
     z_slice_clone(this.transmute_ref().transmute_handle(), dst as *mut _);
 }
 
-// returns string as slice (with null-terminating character)
+// Converts loaned string into loaned slice (with terminating 0 character).
 #[no_mangle]
 pub extern "C" fn z_str_as_slice(this: &z_loaned_str_t) -> &z_loaned_slice_t {
     this.transmute_ref().transmute_handle()
+}
+
+/// Returns ``true`` if string is empty, ``false`` otherwise.
+#[no_mangle]
+pub extern "C" fn z_str_is_empty(this: &z_loaned_str_t) -> bool {
+    z_str_len(this) == 0
 }
 
 pub use crate::opaque_types::z_loaned_slice_map_t;
@@ -405,29 +463,28 @@ pub extern "C" fn z_slice_map_new(this: *mut MaybeUninit<z_owned_slice_map_t>) {
     Inplace::init(this, Some(map));
 }
 
-/// Constructs the gravestone value for `z_owned_slice_map_t`
+/// Constructs the gravestone value for :c:type:`z_owned_slice_map_t`.
 #[no_mangle]
 pub extern "C" fn z_slice_map_null(this: *mut MaybeUninit<z_owned_slice_map_t>) {
     let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 
-/// Returns `true` if the map is not in its gravestone state
+/// Returns ``true`` if the map is not in its gravestone state, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_check(map: &z_owned_slice_map_t) -> bool {
     let map = map.transmute_ref();
     map.as_ref().is_some()
 }
 
-/// Destroys the map, resetting `this` to its gravestone value.
-///
-/// This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+/// Destroys the map, resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
     let this = this.transmute_mut();
     Inplace::drop(this);
 }
 
+/// Returns a loaned slice map.
 #[no_mangle]
 pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loaned_slice_map_t {
     let this = this.transmute_ref();
@@ -435,6 +492,7 @@ pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loaned_slic
     this.transmute_handle()
 }
 
+/// Returns a mutable loaned slice map.
 #[no_mangle]
 pub extern "C" fn z_slice_map_loan_mut(
     this: &mut z_owned_slice_map_t,
@@ -450,26 +508,22 @@ pub extern "C" fn z_slice_map_len(this: &z_loaned_slice_map_t) -> usize {
     this.transmute_ref().len()
 }
 
-/// Returns true if the map is empty, false otherwise.
+/// Returns ``true`` if the map is empty, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_is_empty(this: &z_loaned_slice_map_t) -> bool {
     z_slice_map_len(this) == 0
 }
 
-/// The body of a loop over a z_slice_map's key-value pairs.
-///
-/// `key` and `value` are loaned to the body for the duration of a single call.
-/// `context` is passed transparently through the iteration driver.
-///
-/// Returning `true` is treated as `break`.
-#[allow(non_camel_case_types)]
-pub type z_slice_map_iter_body_t =
-    extern "C" fn(key: &z_loaned_slice_t, value: &z_loaned_slice_t, context: *mut c_void) -> bool;
-
+/// Iterates over key-value pairs of a slice map.
+/// 
+/// Parameters:
+///     this_: Slice map to iterate over.
+///     body: Iterator body function. Returning `true` is treated as iteration loop `break`.
+///     context: Some data passed to every body invocation.
 #[no_mangle]
 pub extern "C" fn z_slice_map_iterate(
     this: &z_loaned_slice_map_t,
-    body: z_slice_map_iter_body_t,
+    body: extern "C" fn(key: &z_loaned_slice_t, value: &z_loaned_slice_t, context: *mut c_void) -> bool,
     context: *mut c_void,
 ) {
     let this = this.transmute_ref();
@@ -482,7 +536,7 @@ pub extern "C" fn z_slice_map_iterate(
 
 /// Returns the value associated with `key`.
 ///
-/// Will return NULL if the key is not present in the map.
+/// Will return `NULL` if the key is not present in the map.
 #[no_mangle]
 pub extern "C" fn z_slice_map_get(
     this: &z_loaned_slice_map_t,
@@ -495,6 +549,7 @@ pub extern "C" fn z_slice_map_get(
 
 /// Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
 ///
+/// If the `key` was already present in the map, its value is updated.
 /// Returns 1 if there was already an entry associated with the key, 0 otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_insert_by_copy(
@@ -513,8 +568,7 @@ pub extern "C" fn z_slice_map_insert_by_copy(
 
 /// Associates `value` to `key` in the map, aliasing them.
 ///
-/// Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
-///
+/// If the `key` was already present in the map, its value is updated.
 /// Returns 1 if there was already an entry associated with the key, 0 otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_insert_by_alias(
@@ -539,7 +593,7 @@ decl_transmute_handle!(Vec<CSlice>, z_loaned_slice_array_t);
 
 decl_transmute_owned!(Option<Vec<CSlice>>, z_owned_slice_array_t);
 
-/// Constructs a new empty array.
+/// Constructs a new empty slice array.
 #[no_mangle]
 pub extern "C" fn z_slice_array_new(this: *mut MaybeUninit<z_owned_slice_array_t>) {
     let this = this.transmute_uninit_ptr();
@@ -547,29 +601,28 @@ pub extern "C" fn z_slice_array_new(this: *mut MaybeUninit<z_owned_slice_array_t
     Inplace::init(this, Some(a));
 }
 
-/// Constructs the gravestone value for `z_owned_slice_array_t`
+/// Constructs slice array in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_slice_array_null(this: *mut MaybeUninit<z_owned_slice_array_t>) {
     let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 
-/// Returns `true` if the array is not in its gravestone state
+/// Returns ``true`` if the slice array is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_slice_array_check(this: &z_owned_slice_array_t) -> bool {
     let this = this.transmute_ref();
     this.as_ref().is_some()
 }
 
-/// Destroys the array, resetting `this` to its gravestone value.
-///
-/// This function is double-free safe, passing a pointer to the gravestone value will have no effect.
+/// Destroys the slice array, resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_slice_array_drop(this: &mut z_owned_slice_array_t) {
     let this = this.transmute_mut();
     Inplace::drop(this);
 }
 
+/// Returns a loaned slice array.
 #[no_mangle]
 pub extern "C" fn z_slice_array_loan(this: &z_owned_slice_array_t) -> &z_loaned_slice_array_t {
     let this = this.transmute_ref();
@@ -577,6 +630,7 @@ pub extern "C" fn z_slice_array_loan(this: &z_owned_slice_array_t) -> &z_loaned_
     this.transmute_handle()
 }
 
+/// Returns a mutable loaned slice array.
 #[no_mangle]
 pub extern "C" fn z_slice_array_loan_mut(
     this: &mut z_owned_slice_array_t,
@@ -586,21 +640,21 @@ pub extern "C" fn z_slice_array_loan_mut(
     this.transmute_handle_mut()
 }
 
-/// Returns number of key-value pairs in the map.
+/// Returns number of elements in the array.
 #[no_mangle]
 pub extern "C" fn z_slice_array_len(this: &z_loaned_slice_array_t) -> usize {
     this.transmute_ref().len()
 }
 
-/// Returns true if the array is empty, false otherwise.
+/// Returns ``true`` if the array is empty, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_array_is_empty(this: &z_loaned_slice_array_t) -> bool {
     z_slice_array_len(this) == 0
 }
 
-/// Returns the value at the position of index in the array.
+/// Returns the value at the position of index in the slice array.
 ///
-/// Will return NULL if the index is out of bounds.
+/// Will return `NULL` if the index is out of bounds.
 #[no_mangle]
 pub extern "C" fn z_slice_array_get(
     this: &z_loaned_slice_array_t,
@@ -614,7 +668,7 @@ pub extern "C" fn z_slice_array_get(
     Some(a[index].transmute_handle())
 }
 
-/// Appends specified value to the end of the array by copying.
+/// Appends specified value to the end of the slice array by copying.
 ///
 /// Returns the new length of the array.
 #[no_mangle]
@@ -629,7 +683,7 @@ pub extern "C" fn z_slice_array_push_by_copy(
     this.len()
 }
 
-/// Appends specified value to the end of the array by aliasing.
+/// Appends specified value to the end of the slice array by alias.
 ///
 /// Returns the new length of the array.
 #[no_mangle]
