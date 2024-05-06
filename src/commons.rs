@@ -20,6 +20,7 @@ use crate::z_priority_t;
 use crate::{impl_guarded_transmute, GuardedTransmute};
 use libc::c_void;
 use libc::{c_char, c_ulong};
+use std::ops::{Deref, DerefMut};
 use zenoh::buffers::ZBuf;
 use zenoh::prelude::SampleKind;
 use zenoh::prelude::SplitBuffer;
@@ -278,6 +279,82 @@ impl<'a> z_sample_t<'a> {
             },
         }
     }
+}
+
+/// Owned variant of a z_sample_t.
+///
+/// You may construct it by `z_sample_clone`-ing a loaned sample.
+/// When the last `z_owned_sample_t` corresponding to a sample is destroyed, or the callback that produced the sample cloned to build them returns,
+/// the sample will receive its termination signal.
+#[cfg(not(target_arch = "arm"))]
+#[repr(C, align(8))]
+pub struct z_owned_sample_t([u64; 17]);
+
+#[cfg(target_arch = "arm")]
+#[repr(C, align(8))]
+pub struct z_owned_sample_t([u64; 15]);
+
+impl From<Option<z_sample_t<'_>>> for z_owned_sample_t {
+    fn from(value: Option<z_sample_t>) -> Self {
+        unsafe { core::mem::transmute(value) }
+    }
+}
+impl From<z_sample_t<'_>> for z_owned_sample_t {
+    fn from(value: z_sample_t<'_>) -> Self {
+        Some(value).into()
+    }
+}
+/*
+impl Deref for z_owned_sample_t {
+    type Target = Option<z_sample_t>;
+    fn deref(&self) -> &Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+impl DerefMut for z_owned_sample_t {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { core::mem::transmute(self) }
+    }
+}
+*/
+impl Drop for z_owned_sample_t {
+    fn drop(&mut self) {
+        let _: Option<z_sample_t> = self.take();
+    }
+}
+
+/// The gravestone value of `z_owned_sample_t`.
+#[no_mangle]
+pub extern "C" fn z_sample_null() -> z_owned_sample_t {
+    unsafe { core::mem::transmute(None::<z_sample_t>) }
+}
+/// Returns `false` if `this` is in a gravestone state, `true` otherwise.
+///
+/// This function may not be called with the null pointer, but can be called with the gravestone value.
+#[no_mangle]
+pub extern "C" fn z_sample_check(this: &z_owned_sample_t) -> bool {
+    this.is_some()
+}
+/// Aliases the sample.
+///
+/// This function may not be called with the null pointer, but can be called with the gravestone value.
+#[no_mangle]
+pub extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> z_sample_t {
+    this.as_ref().into()
+}
+/// Destroys the sample, setting `this` to its gravestone value to prevent double-frees.
+///
+/// This function may not be called with the null pointer, but can be called with the gravestone value.
+#[no_mangle]
+pub extern "C" fn z_sample_drop(this: &mut z_owned_sample_t) {
+    let _: Option<z_sample_t> = this.take();
+}
+/// Clones the sample, allowing to keep it in an "open" state past the callback's return.
+///
+/// This operation is infallible, but may return a gravestone value if `sample` itself was a gravestone value (which cannot be the case in a callback).
+#[no_mangle]
+pub extern "C" fn z_sample_clone(sample: Option<&z_sample_t>) -> z_owned_sample_t {
+    sample.and_then(|q| q.cloned()).into()
 }
 
 /// Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).

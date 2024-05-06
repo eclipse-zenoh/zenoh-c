@@ -316,6 +316,44 @@ typedef struct z_owned_closure_owned_query_t {
   void (*drop)(void*);
 } z_owned_closure_owned_query_t;
 /**
+ * Owned variant of a z_sample_t.
+ *
+ * You may construct it by `z_sample_clone`-ing a loaned sample.
+ * When the last `z_owned_sample_t` corresponding to a sample is destroyed, or the callback that produced the sample cloned to build them returns,
+ * the sample will receive its termination signal.
+ */
+#if !defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_sample_t {
+  uint64_t _0[17];
+} z_owned_sample_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_sample_t {
+  uint64_t _0[15];
+} z_owned_sample_t;
+#endif
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Members:
+ *   void *context: a pointer to an arbitrary state.
+ *   void *call(const struct z_sample_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+ *   void *drop(void*): allows the callback's state to be freed.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct z_owned_closure_owned_sample_t {
+  void *context;
+  void (*call)(struct z_owned_sample_t*, void *context);
+  void (*drop)(void*);
+} z_owned_closure_owned_sample_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
@@ -773,6 +811,16 @@ typedef struct z_owned_reply_ring_channel_t {
   struct z_owned_closure_reply_t recv;
   struct z_owned_closure_reply_t try_recv;
 } z_owned_reply_ring_channel_t;
+typedef struct z_owned_sample_fifo_channel_t {
+  struct z_owned_closure_sample_t send;
+  struct z_owned_closure_owned_sample_t recv;
+  struct z_owned_closure_owned_sample_t try_recv;
+} z_owned_sample_fifo_channel_t;
+typedef struct z_owned_sample_ring_channel_t {
+  struct z_owned_closure_sample_t send;
+  struct z_owned_closure_owned_sample_t recv;
+  struct z_owned_closure_owned_sample_t try_recv;
+} z_owned_sample_ring_channel_t;
 typedef struct z_owned_scouting_config_t {
   struct z_owned_config_t _config;
   unsigned long zc_timeout_ms;
@@ -1169,6 +1217,20 @@ ZENOHC_API void z_closure_owned_query_drop(struct z_owned_closure_owned_query_t 
  * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
  */
 ZENOHC_API struct z_owned_closure_owned_query_t z_closure_owned_query_null(void);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+ZENOHC_API
+void z_closure_owned_sample_call(const struct z_owned_closure_owned_sample_t *closure,
+                                 struct z_owned_sample_t *sample);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+ZENOHC_API void z_closure_owned_sample_drop(struct z_owned_closure_owned_sample_t *closure);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_closure_sample_t' type
+ */
+ZENOHC_API struct z_owned_closure_owned_sample_t z_closure_owned_sample_null(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -1975,6 +2037,74 @@ struct z_owned_reply_ring_channel_t z_reply_ring_channel_new(size_t bound);
  * Constructs a null safe-to-drop value of 'z_owned_reply_ring_channel_t' type
  */
 ZENOHC_API struct z_owned_reply_ring_channel_t z_reply_ring_channel_null(void);
+/**
+ * Returns `false` if `this` is in a gravestone state, `true` otherwise.
+ *
+ * This function may not be called with the null pointer, but can be called with the gravestone value.
+ */
+ZENOHC_API
+bool z_sample_check(const struct z_owned_sample_t *this_);
+/**
+ * Clones the sample, allowing to keep it in an "open" state past the callback's return.
+ *
+ * This operation is infallible, but may return a gravestone value if `sample` itself was a gravestone value (which cannot be the case in a callback).
+ */
+ZENOHC_API
+struct z_owned_sample_t z_sample_clone(const struct z_sample_t *sample);
+/**
+ * Destroys the sample, setting `this` to its gravestone value to prevent double-frees.
+ *
+ * This function may not be called with the null pointer, but can be called with the gravestone value.
+ */
+ZENOHC_API
+void z_sample_drop(struct z_owned_sample_t *this_);
+ZENOHC_API void z_sample_fifo_channel_drop(struct z_owned_sample_fifo_channel_t *channel);
+/**
+ * Creates a new blocking fifo channel, returned as a pair of closures.
+ *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_sample_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_sample_t`, and so will further calls.
+ */
+ZENOHC_API
+struct z_owned_sample_fifo_channel_t z_sample_fifo_channel_new(size_t bound);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_sample_fifo_channel_t' type
+ */
+ZENOHC_API struct z_owned_sample_fifo_channel_t z_sample_fifo_channel_null(void);
+/**
+ * Aliases the sample.
+ *
+ * This function may not be called with the null pointer, but can be called with the gravestone value.
+ */
+ZENOHC_API
+struct z_sample_t z_sample_loan(const struct z_owned_sample_t *this_);
+/**
+ * The gravestone value of `z_owned_sample_t`.
+ */
+ZENOHC_API struct z_owned_sample_t z_sample_null(void);
+ZENOHC_API void z_sample_ring_channel_drop(struct z_owned_sample_ring_channel_t *channel);
+/**
+ * Creates a new blocking ring channel, returned as a pair of closures.
+ *
+ * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ *
+ * The `send` end should be passed as callback to a `z_get` call.
+ *
+ * The `recv` end is a synchronous closure that will block until either a `z_owned_sample_t` is available,
+ * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
+ * at which point it will return an invalidated `z_owned_sample_t`, and so will further calls.
+ */
+ZENOHC_API
+struct z_owned_sample_ring_channel_t z_sample_ring_channel_new(size_t bound);
+/**
+ * Constructs a null safe-to-drop value of 'z_owned_sample_ring_channel_t' type
+ */
+ZENOHC_API struct z_owned_sample_ring_channel_t z_sample_ring_channel_null(void);
 /**
  * Scout for routers and/or peers.
  *
