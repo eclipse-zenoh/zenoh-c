@@ -88,9 +88,9 @@ get_opaque_type_data!(Sample, z_loaned_sample_t);
 get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
 get_opaque_type_data!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
 
-/// The encoding of Zenoh payload, (for example in a MIME-like format).
+/// The `encoding <https://zenoh.io/docs/manual/abstractions/#encoding>`_ of Zenoh data.
 get_opaque_type_data!(Encoding, z_loaned_encoding_t);
-/// A loaned Zenoh-encoding.
+/// A loaned Zenoh encoding.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
 
 /// An owned reply from a Quryable to a :c:func:`z_get`.

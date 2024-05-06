@@ -28,6 +28,8 @@ Slice
 
 .. autocfunction:: zenoh_commons.h::z_slice_empty
 .. autocfunction:: zenoh_commons.h::z_view_slice_empty
+.. autocfunction:: zenoh_commons.h::z_slice_null
+.. autocfunction:: zenoh_commons.h::z_view_slice_null
 .. autocfunction:: zenoh_commons.h::z_slice_wrap
 .. autocfunction:: zenoh_commons.h::z_view_slice_wrap
 .. autocfunction:: zenoh_commons.h::z_slice_from_str
@@ -101,6 +103,78 @@ Slice array
 
 Common
 ======
+
+Key expression
+--------------
+
+.. autocstruct:: zenoh_commons.h::z_view_keyexpr_t
+.. autocstruct:: zenoh_commons.h::z_loaned_keyexpr_t
+.. autocstruct:: zenoh_commons.h::z_owned_keyexpr_t
+
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_new
+.. autocfunction:: zenoh_commons.h::z_keyexpr_new_autocanonize
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_new_autocanonize
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_unchecked
+.. autocfunction:: zenoh_commons.h::z_keyexpr_loan
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_loan
+.. autocfunction:: zenoh_commons.h::z_keyexpr_check
+.. autocfunction:: zenoh_commons.h::z_view_keyexpr_check
+.. autocfunction:: zenoh_commons.h::z_keyexpr_drop
+.. autocfunction:: zenoh_commons.h::z_keyexpr_to_string
+.. autocfunction:: zenoh_commons.h::z_keyexpr_as_slice
+.. autocfunction:: zenoh_commons.h::z_keyexpr_canonize
+.. autocfunction:: zenoh_commons.h::z_keyexpr_canonize_null_terminated
+.. autocfunction:: zenoh_commons.h::z_keyexpr_is_canon
+.. autocfunction:: zenoh_commons.h::z_keyexpr_concat
+.. autocfunction:: zenoh_commons.h::z_keyexpr_join
+.. autocfunction:: zenoh_commons.h::z_keyexpr_equals
+.. autocfunction:: zenoh_commons.h::z_keyexpr_includes
+.. autocfunction:: zenoh_commons.h::z_keyexpr_intersects
+.. autocfunction:: zenoh_commons.h::z_declare_keyexpr
+.. autocfunction:: zenoh_commons.h::z_undeclare_keyexpr
+
+Encoding
+--------
+
+.. autocstruct:: zenoh_commons.h::z_loaned_encoding_t
+.. autocstruct:: zenoh_commons.h::z_owned_encoding_t
+
+.. autocfunction:: zenoh_commons.h::z_encoding_default
+.. autocfunction:: zenoh_commons.h::z_encoding_null
+
+.. autocfunction:: zenoh_commons.h::z_encoding_loan
+.. autocfunction:: zenoh_commons.h::z_encoding_check
+.. autocfunction:: zenoh_commons.h::z_encoding_drop
+.. autocfunction:: zenoh_commons.h::z_encoding_from_str
+
+Value
+-----
+
+.. autocstruct:: zenoh_commons.h::z_loaned_value_t
+
+.. autocfunction:: zenoh_commons.h::z_value_payload
+.. autocfunction:: zenoh_commons.h::z_value_encoding
+
+Sample
+------
+
+.. autocstruct:: zenoh_commons.h::z_loaned_sample_t
+.. autocstruct:: zenoh_commons.h::z_owned_sample_t
+
+.. autocfunction:: zenoh_commons.h::z_sample_loan
+.. autocfunction:: zenoh_commons.h::z_sample_check
+.. autocfunction:: zenoh_commons.h::z_sample_null
+.. autocfunction:: zenoh_commons.h::z_sample_drop
+.. autocfunction:: zenoh_commons.h::z_sample_timestamp
+.. autocfunction:: zenoh_commons.h::z_sample_attachment
+.. autocfunction:: zenoh_commons.h::z_sample_encoding
+.. autocfunction:: zenoh_commons.h::z_sample_payload
+.. autocfunction:: zenoh_commons.h::z_sample_priority
+.. autocfunction:: zenoh_commons.h::z_sample_congestion_control
+.. autocfunction:: zenoh_commons.h::z_sample_express
+
+
 
 Timestamp
 ---------
@@ -204,64 +278,6 @@ Functions
 .. autocfunction:: zenoh_commons.h::z_closure_zid_call
 .. autocfunction:: zenoh_commons.h::z_closure_zid_drop
 
-
-Key expression
-==============
-
-.. autocstruct:: zenoh_commons.h::z_view_keyexpr_t
-.. autocstruct:: zenoh_commons.h::z_loaned_keyexpr_t
-.. autocstruct:: zenoh_commons.h::z_owned_keyexpr_t
-
-.. autocfunction:: zenoh_commons.h::z_keyexpr_new
-.. autocfunction:: zenoh_commons.h::z_view_keyexpr_new
-.. autocfunction:: zenoh_commons.h::z_keyexpr_new_autocanonize
-.. autocfunction:: zenoh_commons.h::z_view_keyexpr_new_autocanonize
-.. autocfunction:: zenoh_commons.h::z_view_keyexpr_unchecked
-.. autocfunction:: zenoh_commons.h::z_keyexpr_loan
-.. autocfunction:: zenoh_commons.h::z_view_keyexpr_loan
-.. autocfunction:: zenoh_commons.h::z_keyexpr_check
-.. autocfunction:: zenoh_commons.h::z_view_keyexpr_check
-.. autocfunction:: zenoh_commons.h::z_keyexpr_drop
-.. autocfunction:: zenoh_commons.h::z_keyexpr_to_string
-.. autocfunction:: zenoh_commons.h::z_keyexpr_as_slice
-.. autocfunction:: zenoh_commons.h::z_keyexpr_canonize
-.. autocfunction:: zenoh_commons.h::z_keyexpr_canonize_null_terminated
-.. autocfunction:: zenoh_commons.h::z_keyexpr_is_canon
-.. autocfunction:: zenoh_commons.h::z_keyexpr_concat
-.. autocfunction:: zenoh_commons.h::z_keyexpr_join
-.. autocfunction:: zenoh_commons.h::z_keyexpr_equals
-.. autocfunction:: zenoh_commons.h::z_keyexpr_includes
-.. autocfunction:: zenoh_commons.h::z_keyexpr_intersects
-
-
-
-
-.. autocfunction:: zenoh_commons.h::z_declare_keyexpr
-.. autocfunction:: zenoh_commons.h::z_undeclare_keyexpr
-
-Encoding
-========
-
-.. autocstruct:: zenoh_commons.h::z_loaned_encoding_t
-.. autocstruct:: zenoh_commons.h::z_owned_encoding_t
-
-.. autocfunction:: zenoh_commons.h::z_encoding_default
-
-.. autocfunction:: zenoh_commons.h::z_encoding_loan
-.. autocfunction:: zenoh_commons.h::z_encoding_check
-.. autocfunction:: zenoh_commons.h::z_encoding_drop
-
-Value
-=====
-
-.. autocstruct:: zenoh_commons.h::z_loaned_value_t
-
-Sample
-======
-
-.. autocstruct:: zenoh_commons.h::z_loaned_sample_t
-.. autocstruct:: zenoh_commons.h::z_owned_sample_t
-
 Publication
 ===========
 
@@ -270,8 +286,10 @@ Types
 .. autocstruct:: zenoh_commons.h::z_loaned_publisher_t
 .. autocstruct:: zenoh_commons.h::z_owned_publisher_t
 
-.. autocstruct:: zenoh_commons.h::z_congestion_control_t
-.. autocstruct:: zenoh_commons.h::z_priority_t
+.. autocenum:: zenoh_commons.h::z_congestion_control_t
+    :members:
+.. autocenum:: zenoh_commons.h::z_priority_t
+    :members:
 
 .. autocstruct:: zenoh_commons.h::z_put_options_t
 .. autocfunction:: zenoh_commons.h::z_put_options_default
@@ -329,8 +347,10 @@ Types
 .. autocstruct:: zenoh_commons.h::z_get_options_t
 
 .. autocenum:: zenoh_commons.h::z_query_target_t
+    :members:
 
 .. autocenum:: zenoh_commons.h::z_consolidation_mode_t
+    :members:
 
 .. c:type:: z_query_consolidation_t
 
@@ -421,6 +441,8 @@ Types
 
 .. autocstruct:: zenoh_commons.h::ze_publication_cache_options_t
 .. autocstruct:: zenoh_concrete.h::ze_owned_publication_cache_t
+.. autocenum:: zenoh_commons.h::zcu_locality_t
+    :members:
 
 Functions
 ---------

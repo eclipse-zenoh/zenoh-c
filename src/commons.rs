@@ -51,7 +51,9 @@ pub type z_zint_t = c_ulong;
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum z_sample_kind_t {
+    /// PUT
     PUT = 0,
+    /// DELETE
     DELETE = 1,
 }
 
@@ -87,62 +89,50 @@ pub extern "C" fn z_timestamp_id(timestamp: &z_timestamp_t) -> z_id_t {
     timestamp.transmute_copy().get_id().to_le_bytes().into()
 }
 
-/// A data sample.
-///
-/// A sample is the value associated to a given resource at a given point in time.
 use crate::opaque_types::z_loaned_sample_t;
 decl_transmute_handle!(Sample, z_loaned_sample_t);
 
-/// The Key Expression of the sample.
-///
-/// `sample` is aliased by its return value.
+/// Returns the key expression of the sample.
 #[no_mangle]
 pub extern "C" fn z_sample_keyexpr(sample: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
     let sample = sample.transmute_ref();
     sample.key_expr().transmute_handle()
 }
-/// The encoding of the payload.
+/// Returns the encoding associated with the sample data.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(sample: &z_loaned_sample_t) -> &z_loaned_encoding_t {
     let sample = sample.transmute_ref();
     sample.encoding().transmute_handle()
 }
-/// The sample's data, the return value aliases the sample.
-///
+/// Returns the sample payload data.
 #[no_mangle]
 pub extern "C" fn z_sample_payload(sample: &z_loaned_sample_t) -> &z_loaned_bytes_t {
     let sample = sample.transmute_ref();
     sample.payload().transmute_handle()
 }
 
-/// The sample's kind (put or delete).
+/// Returns the sample kind.
 #[no_mangle]
 pub extern "C" fn z_sample_kind(sample: &z_loaned_sample_t) -> z_sample_kind_t {
     let sample = sample.transmute_ref();
     sample.kind().into()
 }
-/// The samples timestamp
-///
-/// Returns true if Sample contains timestamp, false otherwise. In the latter case the timestamp_out value is not altered.
+/// Returns the sample timestamp.
+/// 
+/// Will return `NULL`, if sample is not associated with a timestamp.
 #[no_mangle]
-pub extern "C" fn z_loaned_sample_timestamp(
-    sample: &z_loaned_sample_t,
-    timestamp_out: &mut z_timestamp_t,
-) -> bool {
+pub extern "C" fn z_sample_timestamp(sample: &z_loaned_sample_t) -> Option<&z_timestamp_t> {
     let sample = sample.transmute_ref();
     if let Some(t) = sample.timestamp() {
-        *timestamp_out = t.transmute_copy();
-        true
+        Some(t.transmute_ref())
     } else {
-        false
+        None
     }
 }
-/// The qos with which the sample was received.
-/// TODO: split to methods (priority, congestion_control, express)
 
-/// Gets sample's attachment.
+/// Returns sample attachment.
 ///
-/// Returns NULL if sample does not contain an attachement.
+/// Returns `NULL`, if sample does not contain any attachement.
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(sample: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
     let sample = sample.transmute_ref();
@@ -155,7 +145,7 @@ pub extern "C" fn z_sample_attachment(sample: &z_loaned_sample_t) -> *const z_lo
 pub use crate::opaque_types::z_owned_sample_t;
 decl_transmute_owned!(Option<Sample>, z_owned_sample_t);
 
-/// Clone a sample in the cheapest way available.
+/// Construct a shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original).
 #[no_mangle]
 pub extern "C" fn z_sample_clone(src: &z_loaned_sample_t, dst: *mut MaybeUninit<z_owned_sample_t>) {
     let src = src.transmute_ref();
@@ -164,18 +154,21 @@ pub extern "C" fn z_sample_clone(src: &z_loaned_sample_t, dst: *mut MaybeUninit<
     Inplace::init(dst, Some(src));
 }
 
+/// Returns sample qos priority value.
 #[no_mangle]
 pub extern "C" fn z_sample_priority(sample: &z_loaned_sample_t) -> z_priority_t {
     let sample = sample.transmute_ref();
     sample.priority().into()
 }
 
+/// Returns whether sample qos express flag was set or not.
 #[no_mangle]
 pub extern "C" fn z_sample_express(sample: &z_loaned_sample_t) -> bool {
     let sample = sample.transmute_ref();
     sample.express()
 }
 
+/// Returns sample qos congestion control value.
 #[no_mangle]
 pub extern "C" fn z_sample_congestion_control(
     sample: &z_loaned_sample_t,
@@ -184,30 +177,26 @@ pub extern "C" fn z_sample_congestion_control(
     sample.congestion_control().into()
 }
 
-/// Returns `true` if `sample` is valid.
-///
-/// Note that there exist no fallinle constructors for `z_owned_sample_t`, so validity is always guaranteed
-/// unless the value has been dropped already.
+/// Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_sample_check(sample: &z_owned_sample_t) -> bool {
     let sample = sample.transmute_ref();
     sample.is_some()
 }
 
-/// Borrow the sample, allowing calling its accessor methods.
-///
-/// Calling this function using a dropped sample is undefined behaviour.
+/// Borrows sample.
 #[no_mangle]
 pub extern "C" fn z_sample_loan(sample: &z_owned_sample_t) -> &z_loaned_sample_t {
     unwrap_ref_unchecked(sample.transmute_ref()).transmute_handle()
 }
 
-/// Destroy the sample.
+/// Frees the memory and invalidates the sample, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_sample_drop(sample: &mut z_owned_sample_t) {
     Inplace::drop(sample.transmute_mut());
 }
 
+/// Constructs sample in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_sample_null(sample: *mut MaybeUninit<z_owned_sample_t>) {
     Inplace::empty(sample.transmute_uninit_ptr());
@@ -216,23 +205,10 @@ pub extern "C" fn z_sample_null(sample: *mut MaybeUninit<z_owned_sample_t>) {
 pub use crate::opaque_types::z_loaned_encoding_t;
 decl_transmute_handle!(Encoding, z_loaned_encoding_t);
 
-/// An owned payload encoding.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 pub use crate::opaque_types::z_owned_encoding_t;
 decl_transmute_owned!(Encoding, z_owned_encoding_t);
 
-/// Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
-#[no_mangle]
-pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>) {
-    Inplace::empty(encoding.transmute_uninit_ptr());
-}
-
-/// Constructs a specific :c:type:`z_loaned_encoding_t`.
+/// Constructs a :c:type:`z_owned_encoding_t` from a specified string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_str(
@@ -258,21 +234,27 @@ pub extern "C" fn z_encoding_default() -> &'static z_loaned_encoding_t {
     Encoding::ZENOH_BYTES.transmute_handle()
 }
 
-/// Frees `encoding`, invalidating it for double-drop safety.
+/// Constructs a default :c:type:`z_owned_encoding_t`.
+#[no_mangle]
+pub extern "C" fn z_encoding_null(encoding: *mut MaybeUninit<z_owned_encoding_t>) {
+    Inplace::empty(encoding.transmute_uninit_ptr());
+}
+
+/// Frees memory `encoding`, resetting encoding to its default value.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_drop(encoding: &mut z_owned_encoding_t) {
     Inplace::drop(encoding.transmute_mut());
 }
 
-/// Returns ``true`` if `encoding` is valid.
+/// Returns ``true`` if `encoding` is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_check(encoding: &'static z_owned_encoding_t) -> bool {
     *encoding.transmute_ref() != Encoding::default()
 }
 
-/// Returns a :c:type:`z_loaned_encoding_t` loaned from `encoding`.
+/// Borrows encoding.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan(encoding: &z_owned_encoding_t) -> &z_loaned_encoding_t {
@@ -284,21 +266,27 @@ decl_transmute_owned!(Value, z_owned_value_t);
 pub use crate::opaque_types::z_loaned_value_t;
 decl_transmute_handle!(Value, z_loaned_value_t);
 
+/// Returns value payload.
 #[no_mangle]
 pub extern "C" fn z_value_payload(this: &z_loaned_value_t) -> &z_loaned_bytes_t {
     this.transmute_ref().payload().transmute_handle()
 }
 
+/// Returns value encoding.
 #[no_mangle]
 pub extern "C" fn z_value_encoding(this: &z_loaned_value_t) -> &z_loaned_encoding_t {
     this.transmute_ref().encoding().transmute_handle()
 }
 
+/// The locality of samples to be received by subscribers or targeted by publishers.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zcu_locality_t {
+    /// Any
     ANY = 0,
+    /// Only from local sessions.
     SESSION_LOCAL = 1,
+    /// Only from remote sessions.
     REMOTE = 2,
 }
 
@@ -322,15 +310,19 @@ impl From<zcu_locality_t> for Locality {
     }
 }
 
+/// Returns default value of :c:type:`zcu_locality_t`
 #[no_mangle]
 pub extern "C" fn zcu_locality_default() -> zcu_locality_t {
     Locality::default().into()
 }
 
+/// Key expressions types to which Queryable should reply to.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zcu_reply_keyexpr_t {
+    /// Replies to any key expression queries.
     ANY = 0,
+    /// Replies only to queries with intersecting key expressions.
     MATCHING_QUERY = 1,
 }
 
@@ -358,16 +350,15 @@ pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
 }
 
 /// The Queryables that should be target of a :c:func:`z_get`.
-///
-///     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
-///     - **ALL_COMPLETE**: All complete queryables.
-///     - **ALL**: All matching queryables.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_query_target_t {
+    /// The nearest complete queryable if any else all matching queryables.
     BEST_MATCHING,
+    /// All matching queryables.
     ALL,
+    /// All complete queryables.
     ALL_COMPLETE,
 }
 
@@ -400,24 +391,23 @@ pub extern "C" fn z_query_target_default() -> z_query_target_t {
 }
 
 /// Consolidation mode values.
-///
-///     - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
-///       If the selector contains time range properties, consolidation mode `NONE` is used.
-///       Otherwise the `LATEST` consolidation mode is used.
-///     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
-///     - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
-///       w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
-///       replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
-///       ts2 > ts1. It optimizes latency.
-///     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
-///       It optimizes bandwidth.
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub enum z_consolidation_mode_t {
+/// Let Zenoh decide the best consolidation mode depending on the query selector.
+/// If the selector contains time range properties, consolidation mode `NONE` is used.
+/// Otherwise the `LATEST` consolidation mode is used.
     AUTO = -1,
     #[default]
+    ///  No consolidation is applied. Replies may come in any order and any number.
     NONE = 0,
+    /// It guarantees that any reply for a given key expression will be monotonic in time
+    /// w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+    /// replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+    /// ts2 > ts1. It optimizes latency.
     MONOTONIC = 1,
+    /// It guarantees unicity of replies for the same key expression.
+    /// It optimizes bandwidth.
     LATEST = 2,
 }
 
@@ -446,24 +436,23 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
 }
 
 /// The priority of zenoh messages.
-///
-///     - **REAL_TIME**
-///     - **INTERACTIVE_HIGH**
-///     - **INTERACTIVE_LOW**
-///     - **DATA_HIGH**
-///     - **DATA**
-///     - **DATA_LOW**
-///     - **BACKGROUND**
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_priority_t {
+    /// REAL_TIME
     REAL_TIME = 1,
+    /// INTERACTIVE_HIGFH
     INTERACTIVE_HIGH = 2,
+    /// INTERACTIVE_LOW
     INTERACTIVE_LOW = 3,
+    /// DATA_HIGH
     DATA_HIGH = 4,
+    /// DATA
     DATA = 5,
+    /// DATA_LOW
     DATA_LOW = 6,
+    /// BACKGROUND
     BACKGROUND = 7,
 }
 
@@ -495,15 +484,13 @@ impl From<z_priority_t> for Priority {
     }
 }
 
-/// The kind of congestion control.
-///
-///     - **BLOCK**
-///     - **DROP**
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_congestion_control_t {
+    /// Block
     BLOCK,
+    /// Drop
     DROP,
 }
 

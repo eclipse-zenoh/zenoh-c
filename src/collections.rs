@@ -133,6 +133,12 @@ pub extern "C" fn z_view_slice_empty(this: *mut MaybeUninit<z_view_slice_t>) {
     Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
 }
 
+/// Constructs an empty view slice.
+#[no_mangle]
+pub extern "C" fn z_view_slice_null(this: *mut MaybeUninit<z_view_slice_t>) {
+    Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
+}
+
 /// Constructs a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
 ///
 /// Returns -1 if `str == NULL` (and creates an empty view slice), 0 otherwise.
@@ -176,7 +182,7 @@ pub unsafe extern "C" fn z_view_slice_wrap(
     }
 }
 
-/// Returns a loaned view slice.
+/// Borrows view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> &z_loaned_slice_t {
     this.transmute_ref().transmute_handle()
@@ -192,6 +198,12 @@ pub extern "C" fn z_view_slice_check(this: &z_view_slice_t) -> bool {
 #[no_mangle]
 pub extern "C" fn z_slice_empty(this: *mut MaybeUninit<z_owned_slice_t>) {
     Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
+}
+
+/// Constructs an empty `z_owned_slice_t`.
+#[no_mangle]
+pub extern "C" fn z_slice_null(this: *mut MaybeUninit<z_owned_slice_t>) {
+    z_slice_empty(this);
 }
 
 /// Copies a string into `z_owned_slice_t` using `strlen` (this should therefore not be used with untrusted inputs).
@@ -242,7 +254,7 @@ pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
     Inplace::drop(this);
 }
 
-/// Returns a loaned slice.
+/// Borrows slice.
 #[no_mangle]
 pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> &z_loaned_slice_t {
     this.transmute_ref().transmute_handle()
@@ -331,7 +343,7 @@ pub unsafe extern "C" fn z_view_str_empty(this: *mut MaybeUninit<z_view_str_t>) 
     z_view_slice_wrap(this as *mut _, [0u8].as_ptr(), 1);
 }
 
-/// Returns a loaned string.
+/// Borrows string.
 #[no_mangle]
 pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> Option<&z_loaned_str_t> {
     if !z_str_check(this) {
@@ -344,7 +356,7 @@ pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> Option<&z_loaned_str_t> {
     )
 }
 
-/// Returns a loaned view string.
+/// Borrows view string.
 #[no_mangle]
 pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> Option<&z_loaned_str_t> {
     if !z_view_str_check(this) {
@@ -484,7 +496,7 @@ pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
     Inplace::drop(this);
 }
 
-/// Returns a loaned slice map.
+/// Borrows slice map.
 #[no_mangle]
 pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loaned_slice_map_t {
     let this = this.transmute_ref();
@@ -492,7 +504,7 @@ pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loaned_slic
     this.transmute_handle()
 }
 
-/// Returns a mutable loaned slice map.
+/// Mutably borrows slice map.
 #[no_mangle]
 pub extern "C" fn z_slice_map_loan_mut(
     this: &mut z_owned_slice_map_t,
@@ -622,7 +634,7 @@ pub extern "C" fn z_slice_array_drop(this: &mut z_owned_slice_array_t) {
     Inplace::drop(this);
 }
 
-/// Returns a loaned slice array.
+/// Borrows slice array.
 #[no_mangle]
 pub extern "C" fn z_slice_array_loan(this: &z_owned_slice_array_t) -> &z_loaned_slice_array_t {
     let this = this.transmute_ref();
@@ -630,7 +642,7 @@ pub extern "C" fn z_slice_array_loan(this: &z_owned_slice_array_t) -> &z_loaned_
     this.transmute_handle()
 }
 
-/// Returns a mutable loaned slice array.
+/// Mutably borrows slice array.
 #[no_mangle]
 pub extern "C" fn z_slice_array_loan_mut(
     this: &mut z_owned_slice_array_t,
