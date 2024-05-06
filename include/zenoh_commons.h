@@ -115,25 +115,24 @@ typedef enum zcu_reply_keyexpr_t {
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
 /**
- * A split buffer that owns all of its data.
+ * A serialized Zenoh data.
  *
- * To minimize copies and reallocations, Zenoh may provide you data in split buffers.
+ * To minimize copies and reallocations, Zenoh may provide you data in several separate buffers.
  */
 typedef struct ALIGN(8) z_owned_bytes_t {
   uint8_t _0[40];
 } z_owned_bytes_t;
 /**
- * A loaned payload.
+ * A loaned serialized Zenoh data.
  */
 typedef struct ALIGN(8) z_loaned_bytes_t {
   uint8_t _0[40];
 } z_loaned_bytes_t;
 typedef int8_t z_error_t;
 /**
- * A contiguous view of bytes owned by some other entity.
- *
- * `start` being `null` is considered a gravestone value,
- * and empty slices are represented using a possibly dangling pointer for `start`.
+ * A contiguous owned sequence of bytes allocated by Zenoh.
+ * The instances should be released with `z_drop` macro or with `z_slice_drop` function and checked to validity with
+ * `z_check` and `z_slice_check` correspondently.
  */
 typedef struct ALIGN(8) z_owned_slice_t {
   uint8_t _0[16];
@@ -141,25 +140,34 @@ typedef struct ALIGN(8) z_owned_slice_t {
 /**
  * A map of maybe-owned slices to maybe-owned slices.
  *
- * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
+ * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher.
  */
 typedef struct ALIGN(8) z_owned_slice_map_t {
   uint8_t _0[48];
 } z_owned_slice_map_t;
 /**
- * The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
+ * The wrapper type for null-terminated string values allocated by Zenoh. The instances of `z_owned_str_t`
  * should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
- * `z_check` and `z_str_check` correspondently
+ * `z_check` and `z_str_check` correspondently.
  */
 typedef struct ALIGN(8) z_owned_str_t {
   uint8_t _0[16];
 } z_owned_str_t;
+/**
+ * A loaned sequence of bytes.
+ */
 typedef struct ALIGN(8) z_loaned_slice_t {
   uint8_t _0[16];
 } z_loaned_slice_t;
+/**
+ * A loaned Slice Map.
+ */
 typedef struct ALIGN(8) z_loaned_slice_map_t {
   uint8_t _0[48];
 } z_loaned_slice_map_t;
+/**
+ * A loaned null-terminated string.
+ */
 typedef struct ALIGN(8) z_loaned_str_t {
   uint8_t _0[16];
 } z_loaned_str_t;
@@ -180,6 +188,9 @@ typedef struct z_clock_t {
   uint64_t t;
   const void *t_base;
 } z_clock_t;
+/**
+ * A loaned hello message.
+ */
 typedef struct ALIGN(8) z_loaned_hello_t {
   uint8_t _0[48];
 } z_loaned_hello_t;
@@ -205,9 +216,9 @@ typedef struct z_owned_closure_hello_t {
   void (*drop)(void*);
 } z_owned_closure_hello_t;
 /**
+ * An owned Zenoh query received by a queryable.
  *
  * Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
- * `z_loaned_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
  */
 typedef struct ALIGN(8) z_owned_query_t {
   uint8_t _0[16];
@@ -254,6 +265,9 @@ typedef struct z_owned_closure_query_t {
   void (*call)(const struct z_loaned_query_t*, void *context);
   void (*drop)(void*);
 } z_owned_closure_query_t;
+/**
+ * A loaned reply to a :c:func:`z_get`.
+ */
 typedef struct ALIGN(8) z_loaned_reply_t {
   uint8_t _0[256];
 } z_loaned_reply_t;
@@ -278,6 +292,9 @@ typedef struct z_owned_closure_reply_t {
   void (*call)(const struct z_loaned_reply_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_reply_t;
+/**
+ * A loaned Zenoh sample.
+ */
 typedef struct ALIGN(8) z_loaned_sample_t {
   uint8_t _0[240];
 } z_loaned_sample_t;
@@ -303,7 +320,7 @@ typedef struct z_owned_closure_sample_t {
   void (*drop)(void*);
 } z_owned_closure_sample_t;
 /**
- * Represents a Zenoh ID.
+ * A Zenoh ID.
  *
  * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
  */
@@ -331,38 +348,40 @@ typedef struct z_owned_closure_zid_t {
   void (*call)(const struct z_id_t*, void*);
   void (*drop)(void*);
 } z_owned_closure_zid_t;
+/**
+ * An owned conditional variable.
+ *
+ * Used in combination with to wake up thread when certain conditions are met.
+ */
 typedef struct ALIGN(8) z_owned_condvar_t {
   uint8_t _0[24];
 } z_owned_condvar_t;
+/**
+ * A loaned conditional variable.
+ */
 typedef struct ALIGN(8) z_loaned_condvar_t {
   uint8_t _0[16];
 } z_loaned_condvar_t;
+/**
+ * A loaned mutex.
+ */
 typedef struct ALIGN(8) z_loaned_mutex_t {
   uint8_t _0[32];
 } z_loaned_mutex_t;
 /**
- * An owned zenoh configuration.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * An owned Zenoh configuration.
  */
 typedef struct ALIGN(8) z_owned_config_t {
   uint8_t _0[1544];
 } z_owned_config_t;
 /**
- * A loaned zenoh configuration.
+ * A loaned Zenoh configuration.
  */
 typedef struct ALIGN(8) z_loaned_config_t {
   uint8_t _0[1544];
 } z_loaned_config_t;
 /**
- * A zenoh-allocated key expression.
+ * A Zenoh-allocated `key expression <https://zenoh.io/docs/manual/abstractions/#key-expression>`_.
  *
  * Key expressions can identify a single key or a set of keys.
  *
@@ -370,22 +389,13 @@ typedef struct ALIGN(8) z_loaned_config_t {
  *    - ``"key/expression"``.
  *    - ``"key/ex*"``.
  *
- * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
+ * Key expressions can be mapped to numerical ids through :c:func:`z_declare_keyexpr`
  * for wire and computation efficiency.
  *
- * A `key expression <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md>`_ can be either:
+ * Internally key expressiobn can be either:
  *   - A plain string expression.
  *   - A pure numerical id.
  *   - The combination of a numerical prefix and a string suffix.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
 typedef struct ALIGN(8) z_owned_keyexpr_t {
   uint8_t _0[32];
@@ -399,23 +409,14 @@ typedef struct ALIGN(8) z_owned_keyexpr_t {
  *    - ``"key/expression"``.
  *    - ``"key/ex*"``.
  *
- * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
+ * Using :c:func:`z_declare_keyexpr` allows Zenoh to optimize a key expression,
  * both for local processing and network-wise.
  */
 typedef struct ALIGN(8) z_loaned_keyexpr_t {
   uint8_t _0[32];
 } z_loaned_keyexpr_t;
 /**
- * An owned zenoh publisher.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * An owned Zenoh publisher.
  */
 typedef struct ALIGN(8) z_owned_publisher_t {
   uint8_t _0[56];
@@ -456,13 +457,14 @@ typedef struct z_delete_options_t {
   enum z_congestion_control_t congestion_control;
   enum z_priority_t priority;
 } z_delete_options_t;
+/**
+ * A loaned Zenoh-encoding.
+ */
 typedef struct ALIGN(8) z_owned_encoding_t {
   uint8_t _0[48];
 } z_owned_encoding_t;
 /**
- * The encoding of a payload, in a MIME-like format.
- *
- * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
+ * The encoding of Zenoh payload, (for example in a MIME-like format).
  */
 typedef struct ALIGN(8) z_loaned_encoding_t {
   uint8_t _0[48];
@@ -493,13 +495,7 @@ typedef struct z_get_options_t {
   uint64_t timeout_ms;
 } z_get_options_t;
 /**
- * A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ * An owned Zenoh-allocated hello message returned by a Zenoh entity to a scout message sent with `z_scout`.
  */
 typedef struct ALIGN(8) z_owned_hello_t {
   uint8_t _0[48];
@@ -511,15 +507,29 @@ typedef struct ALIGN(8) z_owned_hello_t {
 typedef struct ALIGN(8) z_owned_slice_array_t {
   uint8_t _0[24];
 } z_owned_slice_array_t;
+/**
+ * A contiguous sequence of bytes owned by some other entity.
+ */
 typedef struct ALIGN(8) z_view_slice_t {
   uint8_t _0[16];
 } z_view_slice_t;
+/**
+ * A Zenoh `timestamp <https://zenoh.io/docs/manual/abstractions/#timestamp>`_.
+ *
+ * It consists of a time generated by a Hybrid Logical Clock (HLC) in NPT64 format and a unique zenoh identifier.
+ */
 typedef struct ALIGN(8) z_timestamp_t {
   uint8_t _0[24];
 } z_timestamp_t;
+/**
+ * An owned mutex.
+ */
 typedef struct ALIGN(8) z_owned_mutex_t {
   uint8_t _0[32];
 } z_owned_mutex_t;
+/**
+ * A loaned Zenoh publisher.
+ */
 typedef struct ALIGN(8) z_loaned_publisher_t {
   uint8_t _0[56];
 } z_loaned_publisher_t;
@@ -593,17 +603,14 @@ typedef struct z_query_reply_options_t {
   struct z_owned_encoding_t *encoding;
   struct z_owned_bytes_t *attachment;
 } z_query_reply_options_t;
+/**
+ * A loaned Zenoh value.
+ */
 typedef struct ALIGN(8) z_loaned_value_t {
   uint8_t _0[88];
 } z_loaned_value_t;
 /**
- * An owned reply to a :c:func:`z_get`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ * An owned reply from a Quryable to a :c:func:`z_get`.
  */
 typedef struct ALIGN(8) z_owned_reply_t {
   uint8_t _0[256];
@@ -634,10 +641,10 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
 /**
- * An owned sample.
+ * An owned Zenoh sample.
  *
  * This is a read only type that can only be constructed by cloning a `z_loaned_sample_t`.
- * Like all owned types, its memory must be freed by passing a mutable reference to it to `z_sample_drop`.
+ * Like all owned types, it should be freed using z_drop or z_sample_drop.
  */
 typedef struct ALIGN(8) z_owned_sample_t {
   uint8_t _0[240];
@@ -647,6 +654,9 @@ typedef struct z_owned_scouting_config_t {
   unsigned long zc_timeout_ms;
   uint8_t zc_what;
 } z_owned_scouting_config_t;
+/**
+ * A loaned slice array.
+ */
 typedef struct ALIGN(8) z_loaned_slice_array_t {
   uint8_t _0[24];
 } z_loaned_slice_array_t;
@@ -661,6 +671,9 @@ typedef struct ALIGN(8) z_loaned_slice_array_t {
 typedef bool (*z_slice_map_iter_body_t)(const struct z_loaned_slice_t *key,
                                         const struct z_loaned_slice_t *value,
                                         void *context);
+/**
+ * An owned Zenoh task.
+ */
 typedef struct ALIGN(8) z_owned_task_t {
   uint8_t _0[24];
 } z_owned_task_t;
@@ -674,9 +687,15 @@ typedef struct z_task_attr_t {
 typedef struct z_time_t {
   uint64_t t;
 } z_time_t;
+/**
+ * A user allocated string, viewed as a key expression.
+ */
 typedef struct ALIGN(8) z_view_keyexpr_t {
   uint8_t _0[32];
 } z_view_keyexpr_t;
+/**
+ * The view over a null-terminated string.
+ */
 typedef struct ALIGN(8) z_view_str_t {
   uint8_t _0[16];
 } z_view_str_t;
@@ -739,16 +758,10 @@ typedef struct zcu_owned_closure_matching_status_t {
   void (*drop)(void*);
 } zcu_owned_closure_matching_status_t;
 /**
- * An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
+ * An owned Zenoh matching listener.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
+ * Destroying the matching listener cancels the subscription.
  */
 typedef struct ALIGN(8) zcu_owned_matching_listener_t {
   uint8_t _0[40];
@@ -1402,7 +1415,6 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
  * The user is responsible of droping the returned string using `z_drop`
  */
 ZENOHC_API void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *ke, struct z_owned_str_t *s);
-ZENOHC_API z_error_t z_loaned_mutex_try_lock(struct z_loaned_mutex_t *this_);
 /**
  * The samples timestamp
  *
@@ -1417,6 +1429,7 @@ ZENOHC_API z_error_t z_mutex_init(struct z_owned_mutex_t *this_);
 ZENOHC_API struct z_loaned_mutex_t *z_mutex_loan_mut(struct z_owned_mutex_t *this_);
 ZENOHC_API z_error_t z_mutex_lock(struct z_loaned_mutex_t *this_);
 ZENOHC_API void z_mutex_null(struct z_owned_mutex_t *this_);
+ZENOHC_API z_error_t z_mutex_try_lock(struct z_loaned_mutex_t *this_);
 ZENOHC_API z_error_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
 /**
  * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
@@ -2039,7 +2052,13 @@ ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
 ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
 ZENOHC_API struct z_time_t z_time_now(void);
 ZENOHC_API const char *z_time_now_as_str(const char *buf, size_t len);
-ZENOHC_API struct z_id_t z_timestamp_get_id(const struct z_timestamp_t *timestamp);
+/**
+ * Returns id associated with this `timestamp`
+ */
+ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *timestamp);
+/**
+ * Returns NPT64 time associated with this `timestamp`
+ */
 ZENOHC_API uint64_t z_timestamp_npt64_time(const struct z_timestamp_t *timestamp);
 /**
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.

@@ -75,13 +75,15 @@ impl From<z_sample_kind_t> for SampleKind {
 use crate::opaque_types::z_timestamp_t;
 decl_transmute_copy!(Timestamp, z_timestamp_t);
 
+/// Returns NPT64 time associated with this `timestamp`
 #[no_mangle]
 pub extern "C" fn z_timestamp_npt64_time(timestamp: &z_timestamp_t) -> u64 {
     timestamp.transmute_copy().get_time().0
 }
 
+/// Returns id associated with this `timestamp`
 #[no_mangle]
-pub extern "C" fn z_timestamp_get_id(timestamp: &z_timestamp_t) -> z_id_t {
+pub extern "C" fn z_timestamp_id(timestamp: &z_timestamp_t) -> z_id_t {
     timestamp.transmute_copy().get_id().to_le_bytes().into()
 }
 

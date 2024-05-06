@@ -95,6 +95,57 @@ Slice array
 .. autocfunction:: zenoh_commons.h::z_slice_array_len
 .. autocfunction:: zenoh_commons.h::z_slice_array_is_empty
 
+Common
+======
+
+Timestamp
+---------
+.. autocstruct:: zenoh_commons.h::z_timestamp_t
+
+.. autocfunction:: zenoh_commons.h::z_timestamp_id
+.. autocfunction:: zenoh_commons.h::z_timestamp_npt64_time
+
+System
+======
+
+Mutex
+-----
+.. autocstruct:: zenoh_commons.h::z_owned_mutex_t
+.. autocstruct:: zenoh_commons.h::z_loaned_mutex_t
+
+.. autocfunction:: zenoh_commons.h::z_mutex_check
+.. autocfunction:: zenoh_commons.h::z_mutex_null
+.. autocfunction:: zenoh_commons.h::z_mutex_loan_mut
+.. autocfunction:: zenoh_commons.h::z_mutex_drop
+.. autocfunction:: zenoh_commons.h::z_mutex_init
+.. autocfunction:: zenoh_commons.h::z_mutex_lock
+.. autocfunction:: zenoh_commons.h::z_mutex_unlock
+.. autocfunction:: zenoh_commons.h::z_mutex_try_lock
+
+
+Conditional Variable
+--------------------
+.. autocstruct:: zenoh_commons.h::z_owned_condvar_t
+.. autocstruct:: zenoh_commons.h::z_loaned_condvar_t
+
+.. autocfunction:: zenoh_commons.h::z_condvar_check
+.. autocfunction:: zenoh_commons.h::z_condvar_null
+.. autocfunction:: zenoh_commons.h::z_condvar_loan
+.. autocfunction:: zenoh_commons.h::z_condvar_drop
+.. autocfunction:: zenoh_commons.h::z_condvar_init
+.. autocfunction:: zenoh_commons.h::z_condvar_wait
+.. autocfunction:: zenoh_commons.h::z_condvar_signal
+
+
+Task
+----
+.. autocstruct:: zenoh_commons.h::z_owned_task_t
+
+.. autocfunction:: zenoh_commons.h::z_task_check
+.. autocfunction:: zenoh_commons.h::z_task_null
+.. autocfunction:: zenoh_commons.h::z_task_join
+.. autocfunction:: zenoh_commons.h::z_task_detach
+
 .. Scouting
 .. ========
 

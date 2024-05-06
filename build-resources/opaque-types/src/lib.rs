@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Condvar;
@@ -40,106 +39,98 @@ macro_rules! get_opaque_type_data {
     }
 }
 
-/// A split buffer that owns all of its data.
+/// A serialized Zenoh data.
 ///
-/// To minimize copies and reallocations, Zenoh may provide you data in split buffers.
+/// To minimize copies and reallocations, Zenoh may provide you data in several separate buffers.
 get_opaque_type_data!(Option<ZBytes>, z_owned_bytes_t);
-/// A loaned payload.
+/// A loaned serialized Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 
 
 type CSlice = (usize, isize);
-/// A contiguous view of bytes owned by some other entity.
-///
-/// `start` being `null` is considered a gravestone value,
-/// and empty slices are represented using a possibly dangling pointer for `start`.
+/// A contiguous owned sequence of bytes allocated by Zenoh. 
+/// The instances should be released with `z_drop` macro or with `z_slice_drop` function and checked to validity with
+/// `z_check` and `z_slice_check` correspondently.
 get_opaque_type_data!(CSlice, z_owned_slice_t);
+/// A contiguous sequence of bytes owned by some other entity.
 get_opaque_type_data!(CSlice, z_view_slice_t);
+/// A loaned sequence of bytes.
 get_opaque_type_data!(CSlice, z_loaned_slice_t);
 
-/// The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
+/// The wrapper type for null-terminated string values allocated by Zenoh. The instances of `z_owned_str_t`
 /// should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
-/// `z_check` and `z_str_check` correspondently
+/// `z_check` and `z_str_check` correspondently.
 get_opaque_type_data!(CSlice, z_owned_str_t);
+/// The view over a null-terminated string.
 get_opaque_type_data!(CSlice, z_view_str_t);
+/// A loaned null-terminated string.
 get_opaque_type_data!(CSlice, z_loaned_str_t);
 
 /// A map of maybe-owned slices to maybe-owned slices.
 ///
-/// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
+/// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher.
 get_opaque_type_data!(Option<HashMap<usize, usize>>, z_owned_slice_map_t);
+/// A loaned Slice Map.
 get_opaque_type_data!(HashMap<usize, usize>, z_loaned_slice_map_t);
 
 /// An array of maybe-owned slices
 ///
 get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_slice_array_t);
+/// A loaned slice array.
 get_opaque_type_data!(Vec<CSlice>, z_loaned_slice_array_t);
 
-/// An owned sample.
+/// An owned Zenoh sample.
 ///
 /// This is a read only type that can only be constructed by cloning a `z_loaned_sample_t`.
-/// Like all owned types, its memory must be freed by passing a mutable reference to it to `z_sample_drop`.
+/// Like all owned types, it should be freed using z_drop or z_sample_drop.
 get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
+/// A loaned Zenoh sample.
 get_opaque_type_data!(Sample, z_loaned_sample_t);
 
 /// A reader for payload data.
 get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
 get_opaque_type_data!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
 
-/// The encoding of a payload, in a MIME-like format.
-///
-/// For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
+/// The encoding of Zenoh payload, (for example in a MIME-like format).
 get_opaque_type_data!(Encoding, z_loaned_encoding_t);
+/// A loaned Zenoh-encoding.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
 
-/// An owned reply to a :c:func:`z_get`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+/// An owned reply from a Quryable to a :c:func:`z_get`.
 get_opaque_type_data!(Option<Reply>, z_owned_reply_t);
+/// A loaned reply to a :c:func:`z_get`.
 get_opaque_type_data!(Reply, z_loaned_reply_t);
 
-/// A zenoh value.
+/// A Zenoh value - a compination of payload and its encoding.
 get_opaque_type_data!(Value, z_owned_value_t);
+/// A loaned Zenoh value.
 get_opaque_type_data!(Value, z_loaned_value_t);
 
-// Loaned variant of a Query received by a Queryable.
+/// An owned Zenoh query received by a queryable.
 ///
 /// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
-/// `z_loaned_query_t`'s are valid as long as at least one corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
 get_opaque_type_data!(Option<Query>, z_owned_query_t);
+/// A loaned Zenoh query.
+/// 
+/// It is valid as long as at least the corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
 get_opaque_type_data!(Query, z_loaned_query_t);
 
-/// An owned zenoh queryable.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh queryable. 
+/// 
+/// Responds to queries sent via :c:func:`z_get` with intersecting key expression. 
 get_opaque_type_data!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
+/// A loaned Zenoh queryable.
 get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
 
-/// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
-///
-/// Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
-///
-/// Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh querying subscriber. 
+/// 
+/// In addition to receiving the data it is subscribed to,
+/// it also will fetch data from a Quryable at startup and peridodically (using :c:func: `ze_querying_subscriber_get`).
 get_opaque_type_data!(Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>, ze_owned_querying_subscriber_t);
+/// A loaned Zenoh querying subscriber
 get_opaque_type_data!((zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session), ze_loaned_querying_subscriber_t);
 
-/// A zenoh-allocated key expression.
+/// A Zenoh-allocated `key expression <https://zenoh.io/docs/manual/abstractions/#key-expression>`_.
 ///
 /// Key expressions can identify a single key or a set of keys.
 ///
@@ -147,23 +138,15 @@ get_opaque_type_data!((zenoh_ext::FetchingSubscriber<'static, ()>, &'static Sess
 ///    - ``"key/expression"``.
 ///    - ``"key/ex*"``.
 ///
-/// Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
+/// Key expressions can be mapped to numerical ids through :c:func:`z_declare_keyexpr`
 /// for wire and computation efficiency.
 ///
-/// A `key expression <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md>`_ can be either:
+/// Internally key expressiobn can be either:
 ///   - A plain string expression.
 ///   - A pure numerical id.
 ///   - The combination of a numerical prefix and a string suffix.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 get_opaque_type_data!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
+/// A user allocated string, viewed as a key expression.
 get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
 
 /// A loaned key expression.
@@ -174,80 +157,46 @@ get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
 ///    - ``"key/expression"``.
 ///    - ``"key/ex*"``.
 ///
-/// Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
+/// Using :c:func:`z_declare_keyexpr` allows Zenoh to optimize a key expression,
 /// both for local processing and network-wise.
 get_opaque_type_data!(KeyExpr<'_>, z_loaned_keyexpr_t);
 
-/// An owned zenoh session.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh session.
 get_opaque_type_data!(Option<Arc<Session>>, z_owned_session_t);
+/// A loaned Zenoh session.
 get_opaque_type_data!(Session, z_loaned_session_t);
 
-/// An owned zenoh configuration.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh configuration.
 get_opaque_type_data!(Option<Config>, z_owned_config_t);
-/// A loaned zenoh configuration.
+/// A loaned Zenoh configuration.
 get_opaque_type_data!(Config, z_loaned_config_t);
 
-/// Represents a Zenoh ID.
+/// A Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
 get_opaque_type_data!(ZenohId, z_id_t);
 
+/// A Zenoh `timestamp <https://zenoh.io/docs/manual/abstractions/#timestamp>`_.
+/// 
+/// It consists of a time generated by a Hybrid Logical Clock (HLC) in NPT64 format and a unique zenoh identifier.
 get_opaque_type_data!(Timestamp, z_timestamp_t);
 
-/// An owned zenoh publisher.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh publisher.
 get_opaque_type_data!(Option<Publisher<'static>>, z_owned_publisher_t);
+/// A loaned Zenoh publisher.
 get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 
-/// An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh matching listener. 
+/// 
+/// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
+/// Destroying the matching listener cancels the subscription.
 get_opaque_type_data!(Option<MatchingListener<'static, DefaultHandler>>, zcu_owned_matching_listener_t);
 
 
-/// An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh subscriber. 
+/// 
+/// Receives data from publication on intersecting key expressions.
+/// Destroying the subscriber cancels the subscription.
 get_opaque_type_data!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
 get_opaque_type_data!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 
@@ -260,34 +209,30 @@ get_opaque_type_data!(Option<LivelinessToken<'static>>, zc_owned_liveliness_toke
 get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 
 
-/// An owned zenoh publication_cache.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// An owned Zenoh publication cache.
+/// 
+/// Used to store publications on intersecting key expressions. Can be queried later via :c:func:z_get to retrieve this data
+/// (for example by Querying Subscriber).
 get_opaque_type_data!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
+/// A loaned Zenoh publication cache.
 get_opaque_type_data!(zenoh_ext::PublicationCache<'static>, ze_loaned_publication_cache_t);
 
-
+/// An owned mutex.
 get_opaque_type_data!(Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>, z_owned_mutex_t);
+/// A loaned mutex.
 get_opaque_type_data!((Mutex<()>, Option<MutexGuard<'static, ()>>), z_loaned_mutex_t);
 
+/// An owned conditional variable.
+/// 
+/// Used in combination with to wake up thread when certain conditions are met.
 get_opaque_type_data!(Option<Condvar>, z_owned_condvar_t);
+/// A loaned conditional variable.
 get_opaque_type_data!(Condvar, z_loaned_condvar_t);
 
+/// An owned Zenoh task.
 get_opaque_type_data!(Option<JoinHandle<()>>, z_owned_task_t);
 
-/// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+/// An owned Zenoh-allocated hello message returned by a Zenoh entity to a scout message sent with `z_scout`.
 get_opaque_type_data!(Option<Hello>, z_owned_hello_t);
+/// A loaned hello message.
 get_opaque_type_data!(Hello, z_loaned_hello_t);

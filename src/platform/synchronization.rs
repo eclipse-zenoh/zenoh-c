@@ -84,7 +84,7 @@ pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error
 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_loaned_mutex_try_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
+pub unsafe extern "C" fn z_mutex_try_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
     match this.0.try_lock() {
         Ok(new_lock) => {
