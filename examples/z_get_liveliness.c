@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Sending liveliness query '%s'...\n", expr);
-    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
+    z_owned_reply_fifo_channel_t channel = z_reply_fifo_channel_new(16);
     zc_liveliness_get(z_loan(s), keyexpr, z_move(channel.send), NULL);
     z_owned_reply_t reply = z_reply_null();
     for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {

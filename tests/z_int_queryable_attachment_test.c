@@ -102,7 +102,7 @@ int run_get() {
     for (int val_num = 0; val_num < values_count; ++val_num) {
         z_bytes_map_insert_by_copy(&map, z_bytes_from_str(K_VAR), z_bytes_from_str(values[val_num]));
 
-        z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
+        z_owned_reply_fifo_channel_t channel = z_reply_fifo_channel_new(16);
         z_get(z_loan(s), z_keyexpr(keyexpr), "", z_move(channel.send), &opts);
         z_owned_reply_t reply = z_reply_null();
         for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {

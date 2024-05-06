@@ -14,17 +14,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <zenoh_macros.h>
+
 #include "zenoh.h"
 
 const char *expr = "demo/example/zenoh-c-queryable";
 const char *value = "Queryable from C!";
 z_keyexpr_t keyexpr;
-
-void query_handler(const z_query_t *query, void *context) {
-    z_owned_closure_owned_query_t *channel = (z_owned_closure_owned_query_t *)context;
-    z_owned_query_t oquery = z_query_clone(query);
-    z_call(*channel, &oquery);
-}
 
 int main(int argc, char **argv) {
     if (argc > 1) {
@@ -54,9 +49,8 @@ int main(int argc, char **argv) {
     }
 
     printf("Declaring Queryable on '%s'...\n", expr);
-    z_owned_query_channel_t channel = zc_query_fifo_new(16);
-    z_owned_closure_query_t callback = z_closure(query_handler, NULL, &channel.send);
-    z_owned_queryable_t qable = z_declare_queryable(z_loan(s), keyexpr, z_move(callback), NULL);
+    z_owned_query_fifo_channel_t channel = z_query_fifo_channel_new(16);
+    z_owned_queryable_t qable = z_declare_queryable(z_loan(s), keyexpr, z_move(channel.send), NULL);
     if (!z_check(qable)) {
         printf("Unable to create queryable.\n");
         exit(-1);

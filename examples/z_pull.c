@@ -64,30 +64,30 @@ int main(int argc, char **argv) {
     }
 
     printf("Pull functionality not implemented!\n");
-    // @TODO: implement z_owned_sample_channel_t and z_sample_channel_ring_new
-    // printf("Declaring Subscriber on '%s'...\n", keyexpr);
-    // z_owned_sample_channel_t channel = z_sample_channel_ring_new(size);
-    // z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(keyexpr), z_move(channel.send), NULL);
-    // if (!z_check(sub)) {
-    //     printf("Unable to declare subscriber.\n");
-    //     return -1;
-    // }
+    printf("Declaring Subscriber on '%s'...\n", keyexpr);
+    z_owned_sample_ring_channel_t channel = z_sample_channel_ring_new(size);
+    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(keyexpr), z_move(channel.send), NULL);
+    if (!z_check(sub)) {
+        printf("Unable to declare subscriber.\n");
+        return -1;
+    }
 
-    // printf("Pulling data every %zu ms... Ring size: %zd\n", interval, size);
-    // z_owned_sample_t sample = z_sample_null();
-    // while (true) {
-    //     for (z_call(channel.recv, &sample); z_check(sample); z_call(channel.recv, &sample)) {
-    //         z_owned_str_t keystr = z_keyexpr_to_string(z_loan(sample.keyexpr));
-    //         printf(">> [Subscriber] Pulled ('%s': '%.*s')\n", z_loan(keystr), (int)sample.payload.len,
-    //                sample.payload.start);
-    //         z_drop(z_move(keystr));
-    //         z_drop(z_move(sample));
-    //     }
-    //     printf(">> [Subscriber] Nothing to pull... sleep for %zu ms\n", interval);
-    //     z_sleep_ms(interval);
-    // }
+    printf("Pulling data every %zu ms... Ring size: %zd\n", interval, size);
+    z_owned_sample_t sample = z_sample_null();
+    while (true) {
+        for (z_call(channel.recv, &sample); z_check(sample); z_call(channel.recv, &sample)) {
+            z_owned_str_t keystr = z_keyexpr_to_string(z_loan(sample.keyexpr));
+            printf(">> [Subscriber] Pulled ('%s': '%.*s')\n", z_loan(keystr), (int)sample.payload.len,
+                   sample.payload.start);
+            z_drop(z_move(keystr));
+            z_drop(z_move(sample));
+        }
+        printf(">> [Subscriber] Nothing to pull... sleep for %zu ms\n", interval);
+        z_sleep_ms(interval);
+    }
 
-    // z_undeclare_subscriber(z_move(sub));
+    z_undeclare_subscriber(z_move(sub));
+    z_drop(z_move(channel));
 
     z_close(z_move(s));
 

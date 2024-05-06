@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Sending Query '%s'...\n", expr);
-    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
+    z_owned_reply_fifo_channel_t channel = z_reply_fifo_channel_new(16);
     z_get_options_t opts = z_get_options_default();
     if (value != NULL) {
         opts.value.payload = z_bytes_from_str(value);
