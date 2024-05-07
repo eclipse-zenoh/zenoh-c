@@ -262,19 +262,26 @@ pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
     QueryConsolidation::AUTO.into()
 }
 
-/// Latest value consolidation.
+/// Latest consolidation.
+///
+/// This strategy optimizes bandwidth on all links in the system but will provide a very poor latency.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Latest).into()
 }
 
 /// Monotonic consolidation.
+///
+/// This strategy offers the best latency. Replies are directly transmitted to the application when received
+/// without needing to wait for all replies. This mode does not guarantee that there will be no duplicates.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Monotonic).into()
 }
 
-/// Disable consolidation.
+/// No consolidation.
+///
+/// This strategy is useful when querying timeseries data bases or when using quorums.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::None).into()

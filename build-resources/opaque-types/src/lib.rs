@@ -208,7 +208,7 @@ get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 
 /// An owned Zenoh publication cache.
 /// 
-/// Used to store publications on intersecting key expressions. Can be queried later via :c:func:z_get to retrieve this data
+/// Used to store publications on intersecting key expressions. Can be queried later via :c:func:`z_get` to retrieve this data
 /// (for example by Querying Subscriber).
 get_opaque_type_data!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
 /// A loaned Zenoh publication cache.
@@ -221,7 +221,7 @@ get_opaque_type_data!((Mutex<()>, Option<MutexGuard<'static, ()>>), z_loaned_mut
 
 /// An owned conditional variable.
 /// 
-/// Used in combination with to wake up thread when certain conditions are met.
+/// Used in combination with :c:type:`z_owned_mutex_t` to wake up thread when certain conditions are met.
 get_opaque_type_data!(Option<Condvar>, z_owned_condvar_t);
 /// A loaned conditional variable.
 get_opaque_type_data!(Condvar, z_loaned_condvar_t);

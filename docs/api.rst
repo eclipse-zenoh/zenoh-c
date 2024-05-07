@@ -140,7 +140,7 @@ Encoding
 .. autocstruct:: zenoh_commons.h::z_loaned_encoding_t
 .. autocstruct:: zenoh_commons.h::z_owned_encoding_t
 
-.. autocfunction:: zenoh_commons.h::z_encoding_default
+.. autocfunction:: zenoh_commons.h::z_encoding_loan_default
 .. autocfunction:: zenoh_commons.h::z_encoding_null
 
 .. autocfunction:: zenoh_commons.h::z_encoding_loan
@@ -161,6 +161,8 @@ Sample
 
 .. autocstruct:: zenoh_commons.h::z_loaned_sample_t
 .. autocstruct:: zenoh_commons.h::z_owned_sample_t
+.. autocenum:: zenoh_commons.h::z_sample_kind_t
+    :members:
 
 .. autocfunction:: zenoh_commons.h::z_sample_loan
 .. autocfunction:: zenoh_commons.h::z_sample_check
@@ -364,6 +366,7 @@ Types
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_none
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_monotonic
 .. autocfunction:: zenoh_commons.h::z_query_consolidation_latest
+.. autocfunction:: zenoh_commons.h::z_query_target_default
 
 .. autocstruct:: zenoh_commons.h::z_owned_reply_t
 .. autocstruct:: zenoh_commons.h::z_loaned_reply_t
@@ -462,6 +465,7 @@ Types
 .. autocstruct:: zenoh_concrete.h::ze_owned_querying_subscriber_t
 .. autocstruct:: zenoh_concrete.h::ze_loaned_querying_subscriber_t
 .. autocstruct:: zenoh_commons.h::ze_querying_subscriber_options_t
+.. autocenum:: zenoh_commons.h::zcu_reply_keyexpr_t
 
 Functions
 ---------
@@ -472,3 +476,4 @@ Functions
 .. autocfunction:: zenoh_commons.h::ze_querying_subscriber_check
 .. autocfunction:: zenoh_commons.h::ze_querying_subscriber_null
 .. autocfunction:: zenoh_commons.h::ze_querying_subscriber_options_default
+.. autocfunction:: zenoh_commons.h::zcu_reply_keyexpr_default

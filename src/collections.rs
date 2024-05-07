@@ -158,7 +158,7 @@ pub unsafe extern "C" fn z_view_slice_from_str(
 }
 
 /// Constructs a `len` bytes long view starting at `start`.
-/// 
+///
 /// Returns -1 if `start == NULL` and `len > 0` (and creates an empty view slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -225,7 +225,7 @@ pub unsafe extern "C" fn z_slice_from_str(
 }
 
 /// Constructs a slice by copying a `len` bytes long sequence starting at `start`.
-/// 
+///
 /// Returns -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -527,7 +527,7 @@ pub extern "C" fn z_slice_map_is_empty(this: &z_loaned_slice_map_t) -> bool {
 }
 
 /// Iterates over key-value pairs of a slice map.
-/// 
+///
 /// Parameters:
 ///     this_: Slice map to iterate over.
 ///     body: Iterator body function. Returning `true` is treated as iteration loop `break`.
@@ -535,7 +535,11 @@ pub extern "C" fn z_slice_map_is_empty(this: &z_loaned_slice_map_t) -> bool {
 #[no_mangle]
 pub extern "C" fn z_slice_map_iterate(
     this: &z_loaned_slice_map_t,
-    body: extern "C" fn(key: &z_loaned_slice_t, value: &z_loaned_slice_t, context: *mut c_void) -> bool,
+    body: extern "C" fn(
+        key: &z_loaned_slice_t,
+        value: &z_loaned_slice_t,
+        context: *mut c_void,
+    ) -> bool,
     context: *mut c_void,
 ) {
     let this = this.transmute_ref();

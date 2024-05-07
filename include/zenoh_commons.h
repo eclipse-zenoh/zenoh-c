@@ -17,11 +17,11 @@
 #endif
 typedef enum z_congestion_control_t {
   /**
-   * Block
+   * Messages are not dropped in case of congestion.
    */
   Z_CONGESTION_CONTROL_BLOCK,
   /**
-   * Drop
+   * Messages are dropped in case of congestion.
    */
   Z_CONGESTION_CONTROL_DROP,
 } z_congestion_control_t;
@@ -71,31 +71,31 @@ typedef enum z_keyexpr_intersection_level_t {
  */
 typedef enum z_priority_t {
   /**
-   * REAL_TIME
+   * Priority for ``RealTime`` messages.
    */
   Z_PRIORITY_REAL_TIME = 1,
   /**
-   * INTERACTIVE_HIGFH
+   * Highest priority for ``Interactive`` messages.
    */
   Z_PRIORITY_INTERACTIVE_HIGH = 2,
   /**
-   * INTERACTIVE_LOW
+   * Lowest priority for ``Interactive`` messages.
    */
   Z_PRIORITY_INTERACTIVE_LOW = 3,
   /**
-   * DATA_HIGH
+   * Highest priority for ``Data`` messages.
    */
   Z_PRIORITY_DATA_HIGH = 4,
   /**
-   * DATA
+   * Default priority for ``Data`` messages.
    */
   Z_PRIORITY_DATA = 5,
   /**
-   * DATA_LOW
+   * Lowest priority for ``Data`` messages.
    */
   Z_PRIORITY_DATA_LOW = 6,
   /**
-   * BACKGROUND
+   * Priority for ``Background traffic`` messages.
    */
   Z_PRIORITY_BACKGROUND = 7,
 } z_priority_t;
@@ -128,11 +128,11 @@ typedef enum z_reliability_t {
 } z_reliability_t;
 typedef enum z_sample_kind_t {
   /**
-   * PUT
+   * The Sample was issued by a ``put`` operation.
    */
   Z_SAMPLE_KIND_PUT = 0,
   /**
-   * DELETE
+   * The Sample was issued by a ``delete`` operation.
    */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
@@ -399,7 +399,7 @@ typedef struct z_owned_closure_zid_t {
 /**
  * An owned conditional variable.
  *
- * Used in combination with to wake up thread when certain conditions are met.
+ * Used in combination with :c:type:`z_owned_mutex_t` to wake up thread when certain conditions are met.
  */
 typedef struct ALIGN(8) z_owned_condvar_t {
   uint8_t _0[24];
@@ -1239,30 +1239,30 @@ z_error_t z_delete(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_delete_options_default(struct z_delete_options_t *this_);
 /**
- * Returns ``true`` if `encoding` is in non-default state, ``false`` otherwise.
+ * Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
  */
-ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
+ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *this_);
 /**
- * Returns a default :c:type:`z_loaned_encoding_t`.
+ * Frees the memory and resets the encoding it to its default value.
  */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_default(void);
-/**
- * Frees memory `encoding`, resetting encoding to its default value.
- */
-ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
+ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *this_);
 /**
  * Constructs a :c:type:`z_owned_encoding_t` from a specified string.
  */
-ZENOHC_API z_error_t z_encoding_from_str(struct z_owned_encoding_t *encoding, const char *s);
+ZENOHC_API z_error_t z_encoding_from_str(struct z_owned_encoding_t *this_, const char *s);
 /**
  * Borrows encoding.
  */
 ZENOHC_API
-const struct z_loaned_encoding_t *z_encoding_loan(const struct z_owned_encoding_t *encoding);
+const struct z_loaned_encoding_t *z_encoding_loan(const struct z_owned_encoding_t *this_);
+/**
+ * Returns a loaned default :c:type:`z_loaned_encoding_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
 /**
  * Constructs a default :c:type:`z_owned_encoding_t`.
  */
-ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *encoding);
+ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *this_);
 /**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
@@ -1609,15 +1609,24 @@ ZENOHC_API struct z_query_consolidation_t z_query_consolidation_auto(void);
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
- * Latest value consolidation.
+ * Latest consolidation.
+ *
+ * This strategy optimizes bandwidth on all links in the system but will provide a very poor latency.
  */
-ZENOHC_API struct z_query_consolidation_t z_query_consolidation_latest(void);
+ZENOHC_API
+struct z_query_consolidation_t z_query_consolidation_latest(void);
 /**
  * Monotonic consolidation.
+ *
+ * This strategy offers the best latency. Replies are directly transmitted to the application when received
+ * without needing to wait for all replies. This mode does not guarantee that there will be no duplicates.
  */
-ZENOHC_API struct z_query_consolidation_t z_query_consolidation_monotonic(void);
+ZENOHC_API
+struct z_query_consolidation_t z_query_consolidation_monotonic(void);
 /**
- * Disable consolidation.
+ * No consolidation.
+ *
+ * This strategy is useful when querying timeseries data bases or when using quorums.
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
 /**
@@ -1767,66 +1776,65 @@ const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *reply)
  * Returns `NULL`, if sample does not contain any attachement.
  */
 ZENOHC_API
-const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_t *sample);
+const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_t *this_);
 /**
  * Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
  */
-ZENOHC_API bool z_sample_check(const struct z_owned_sample_t *sample);
+ZENOHC_API bool z_sample_check(const struct z_owned_sample_t *this_);
 /**
  * Construct a shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original).
  */
 ZENOHC_API
-void z_sample_clone(const struct z_loaned_sample_t *src,
+void z_sample_clone(const struct z_loaned_sample_t *this_,
                     struct z_owned_sample_t *dst);
 /**
  * Returns sample qos congestion control value.
  */
 ZENOHC_API
-enum z_congestion_control_t z_sample_congestion_control(const struct z_loaned_sample_t *sample);
+enum z_congestion_control_t z_sample_congestion_control(const struct z_loaned_sample_t *this_);
 /**
  * Frees the memory and invalidates the sample, resetting it to a gravestone state.
  */
-ZENOHC_API void z_sample_drop(struct z_owned_sample_t *sample);
+ZENOHC_API void z_sample_drop(struct z_owned_sample_t *this_);
 /**
  * Returns the encoding associated with the sample data.
  */
 ZENOHC_API
-const struct z_loaned_encoding_t *z_sample_encoding(const struct z_loaned_sample_t *sample);
+const struct z_loaned_encoding_t *z_sample_encoding(const struct z_loaned_sample_t *this_);
 /**
  * Returns whether sample qos express flag was set or not.
  */
-ZENOHC_API bool z_sample_express(const struct z_loaned_sample_t *sample);
+ZENOHC_API bool z_sample_express(const struct z_loaned_sample_t *this_);
 /**
  * Returns the key expression of the sample.
  */
-ZENOHC_API
-const struct z_loaned_keyexpr_t *z_sample_keyexpr(const struct z_loaned_sample_t *sample);
+ZENOHC_API const struct z_loaned_keyexpr_t *z_sample_keyexpr(const struct z_loaned_sample_t *this_);
 /**
  * Returns the sample kind.
  */
-ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_loaned_sample_t *sample);
+ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_loaned_sample_t *this_);
 /**
  * Borrows sample.
  */
-ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sample_t *sample);
+ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sample_t *this_);
 /**
  * Constructs sample in its gravestone state.
  */
-ZENOHC_API void z_sample_null(struct z_owned_sample_t *sample);
+ZENOHC_API void z_sample_null(struct z_owned_sample_t *this_);
 /**
  * Returns the sample payload data.
  */
-ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned_sample_t *sample);
+ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned_sample_t *this_);
 /**
  * Returns sample qos priority value.
  */
-ZENOHC_API enum z_priority_t z_sample_priority(const struct z_loaned_sample_t *sample);
+ZENOHC_API enum z_priority_t z_sample_priority(const struct z_loaned_sample_t *this_);
 /**
  * Returns the sample timestamp.
  *
  * Will return `NULL`, if sample is not associated with a timestamp.
  */
-ZENOHC_API const struct z_timestamp_t *z_sample_timestamp(const struct z_loaned_sample_t *sample);
+ZENOHC_API const struct z_timestamp_t *z_sample_timestamp(const struct z_loaned_sample_t *this_);
 /**
  * Scout for routers and/or peers.
  *
@@ -2150,13 +2158,13 @@ ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
 ZENOHC_API struct z_time_t z_time_now(void);
 ZENOHC_API const char *z_time_now_as_str(const char *buf, size_t len);
 /**
- * Returns id associated with this `timestamp`
+ * Returns id associated with this timestamp.
  */
-ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *timestamp);
+ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
 /**
- * Returns NPT64 time associated with this `timestamp`
+ * Returns NPT64 time associated with this timestamp.
  */
-ZENOHC_API uint64_t z_timestamp_npt64_time(const struct z_timestamp_t *timestamp);
+ZENOHC_API uint64_t z_timestamp_npt64_time(const struct z_timestamp_t *this_);
 /**
  * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
  * The keyxpr is consumed.
@@ -2526,6 +2534,9 @@ ZENOHC_API
 z_error_t zcu_publisher_matching_listener_callback(struct zcu_owned_matching_listener_t *this_,
                                                    const struct z_loaned_publisher_t *publisher,
                                                    struct zcu_owned_closure_matching_status_t *callback);
+/**
+ * Returns the default value of :c:type:`zcu_reply_keyexpr_t`
+ */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
  * Declares a Publication Cache.

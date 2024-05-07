@@ -64,7 +64,7 @@ typedef struct ALIGN(8) z_loaned_subscriber_t {
 /**
  * An owned Zenoh publication cache.
  *
- * Used to store publications on intersecting key expressions. Can be queried later via :c:func:z_get to retrieve this data
+ * Used to store publications on intersecting key expressions. Can be queried later via :c:func:`z_get` to retrieve this data
  * (for example by Querying Subscriber).
  */
 typedef struct ALIGN(8) ze_owned_publication_cache_t {
