@@ -25,18 +25,10 @@ use zenoh::session::Session;
 use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
 
-/// A loaned zenoh session.
 use crate::opaque_types::z_loaned_session_t;
 decl_transmute_handle!(Session, z_loaned_session_t);
 
-/// Returns a :c:type:`z_loaned_session_t` loaned from `s`.
-///
-/// This handle doesn't increase the refcount of the session, but does allow to do so with `zc_session_rcinc`.
-///
-/// # Safety
-/// The returned `z_loaned_session_t` aliases `z_owned_session_t`'s internal allocation,
-/// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
-/// have been destroyed is UB (likely SEGFAULT)
+/// Borrows session.
 #[no_mangle]
 pub extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_loaned_session_t {
     let this = this.transmute_ref();
@@ -45,15 +37,16 @@ pub extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_loaned_session_
     this.transmute_handle()
 }
 
-/// Constructs a null safe-to-drop value of 'z_owned_session_t' type
+/// Constructs a Zenoh session in its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_session_null(this: *mut MaybeUninit<z_owned_session_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
-/// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
-/// Config value is always consumed upon function return.
+/// Constructs and opens a new Zenoh session.
+/// 
+/// Returns 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_open(
@@ -85,23 +78,22 @@ pub extern "C" fn z_open(
     }
 }
 
-/// Returns ``true`` if `session` is valid.
+/// Returns ``true`` if `session` is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
     this.transmute_ref().is_some()
 }
 
-/// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
+/// Closes a zenoh session. This alos drops and invalidates `session`.
 ///
-/// Returns a negative value if an error occured while closing the session.
-/// Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
-#[allow(clippy::missing_safety_doc)]
+/// Returns 0 in  case of success, a negative value if an error occured while closing the session,
+/// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
-pub extern "C" fn z_close(session: &mut z_owned_session_t) -> errors::z_error_t {
-    let session = session.transmute_mut();
+pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
+    let session = this.transmute_mut();
     let Some(s) = session.take() else {
-        return errors::Z_OK;
+        return errors::Z_EINVAL;
     };
     let s = match Arc::try_unwrap(s) {
         Ok(s) => s,
@@ -115,16 +107,26 @@ pub extern "C" fn z_close(session: &mut z_owned_session_t) -> errors::z_error_t 
     }
 }
 
-/// Increments the session's reference count, returning a new owning handle.
+/// Frees memory and invalidates the session. 
+/// 
+/// This will also close the session if it does not have any clones left.
+#[no_mangle]
+pub extern "C" fn z_session_drop(this: &mut z_owned_session_t) {
+    let _ = this.transmute_mut().extract().take();
+}
+
+
+/// Constructs a shallow copy of the session in provided uninitialized memory location.
+/// 
+/// Returns 0 in case of success, false otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zc_session_clone(
+    this: &z_owned_session_t,
     dst: *mut MaybeUninit<z_owned_session_t>,
-    src: &z_owned_session_t,
 ) -> errors::z_error_t {
-    // session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
     let dst = dst.transmute_uninit_ptr();
-    let Some(src) = src.transmute_ref() else {
+    let Some(src) = this.transmute_ref() else {
         return errors::Z_EINVAL;
     };
     Inplace::init(dst, Some(src.clone()));

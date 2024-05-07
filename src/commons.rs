@@ -139,7 +139,7 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
 pub use crate::opaque_types::z_owned_sample_t;
 decl_transmute_owned!(Option<Sample>, z_owned_sample_t);
 
-/// Construct a shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original).
+/// Creates a shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
 #[no_mangle]
 pub extern "C" fn z_sample_clone(
     this: &z_loaned_sample_t,

@@ -238,8 +238,12 @@ Session configuration
 
 .. autocstruct:: zenoh_commons.h::z_loaned_config_t
 .. autocstruct:: zenoh_commons.h::z_owned_config_t
-.. autocstruct:: zenoh_commons.h::z_owned_scouting_config_t
 
+.. autocfunction:: zenoh_commons.h::z_config_loan
+.. autocfunction:: zenoh_commons.h::z_config_null
+.. autocfunction:: zenoh_commons.h::z_config_loan_mut
+.. autocfunction:: zenoh_commons.h::z_config_check
+.. autocfunction:: zenoh_commons.h::z_config_drop
 .. autocfunction:: zenoh_commons.h::z_config_default
 .. autocfunction:: zenoh_commons.h::z_config_client
 .. autocfunction:: zenoh_commons.h::z_config_peer
@@ -248,10 +252,6 @@ Session configuration
 .. autocfunction:: zenoh_commons.h::zc_config_insert_json
 .. autocfunction:: zenoh_commons.h::zc_config_get
 .. autocfunction:: zenoh_commons.h::zc_config_to_string
-.. autocfunction:: zenoh_commons.h::z_config_loan
-.. autocfunction:: zenoh_commons.h::z_config_loan_mut
-.. autocfunction:: zenoh_commons.h::z_config_check
-.. autocfunction:: zenoh_commons.h::z_config_drop
 
 Session management
 ------------------
@@ -272,6 +272,8 @@ Functions
 
 .. autocfunction:: zenoh_commons.h::z_session_loan
 .. autocfunction:: zenoh_commons.h::z_session_check
+.. autocfunction:: zenoh_commons.h::z_session_null
+.. autocfunction:: zenoh_commons.h::z_session_drop
 
 .. autocfunction:: zenoh_commons.h::z_info_zid
 .. autocfunction:: zenoh_commons.h::z_info_routers_zid

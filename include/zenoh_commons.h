@@ -963,12 +963,13 @@ ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
 ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
 ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
- * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
+ * Closes a zenoh session. This alos drops and invalidates `session`.
  *
- * Returns a negative value if an error occured while closing the session.
- * Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
+ * Returns 0 in  case of success, a negative value if an error occured while closing the session,
+ * the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
  */
-ZENOHC_API z_error_t z_close(struct z_owned_session_t *session);
+ZENOHC_API
+z_error_t z_close(struct z_owned_session_t *this_);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -1064,53 +1065,47 @@ ZENOHC_API
 z_error_t z_condvar_wait(const struct z_loaned_condvar_t *this_,
                          struct z_loaned_mutex_t *m);
 /**
- * Returns ``true`` if `config` is valid.
+ * Returns ``true`` if `config` is valid, ``false`` if it is in a gravestone state.
  */
-ZENOHC_API bool z_config_check(const struct z_owned_config_t *config);
+ZENOHC_API bool z_config_check(const struct z_owned_config_t *this_);
 /**
  * Constructs a default, zenoh-allocated, client mode configuration.
- * If `peer` is not null, it is added to the configuration as remote peer.
+ *
+ * Parameters:
+ *    peers: Array with `size >= n_peers`, containing peer locators to add to the config.
+ *    n_peers: Number of peers to add to the config.
+ * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t z_config_client(struct z_owned_config_t *this_,
                           const char *const *peers,
                           size_t n_peers);
 /**
- * Clones the config.
+ * Clones the config into provided uninitialized memory location.
  */
-ZENOHC_API void z_config_clone(const struct z_loaned_config_t *src, struct z_owned_config_t *dst);
+ZENOHC_API void z_config_clone(const struct z_loaned_config_t *this_, struct z_owned_config_t *dst);
 /**
- * Return a new, zenoh-allocated, empty configuration.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * Constructs a new empty configuration.
  */
-ZENOHC_API
-void z_config_default(struct z_owned_config_t *this_);
+ZENOHC_API void z_config_default(struct z_owned_config_t *this_);
 /**
- * Frees `config`, invalidating it for double-drop safety.
+ * Frees `config`, and resets it to its gravestone state.
  */
-ZENOHC_API void z_config_drop(struct z_owned_config_t *config);
+ZENOHC_API void z_config_drop(struct z_owned_config_t *this_);
 /**
- * Returns a :c:type:`z_loaned_config_t` loaned from `s`.
+ * Borrows config.
  */
 ZENOHC_API const struct z_loaned_config_t *z_config_loan(const struct z_owned_config_t *this_);
 /**
- * Returns a :c:type:`z_loaned_config_t` loaned from `s`.
+ * Mutably borrows config.
  */
 ZENOHC_API struct z_loaned_config_t *z_config_loan_mut(struct z_owned_config_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_config_t' type
+ * Constructs config in its gravestone state.
  */
 ZENOHC_API void z_config_null(struct z_owned_config_t *this_);
 /**
- * Constructs a default, zenoh-allocated, peer mode configuration.
+ * Constructs a default peer mode configuration.
  */
 ZENOHC_API void z_config_peer(struct z_owned_config_t *this_);
 /**
@@ -1329,7 +1324,7 @@ ZENOHC_API
 z_error_t z_info_routers_zid(const struct z_loaned_session_t *session,
                              struct z_owned_closure_zid_t *callback);
 /**
- * Returns the local Zenoh ID.
+ * Returns the session's Zenoh ID.
  *
  * Unless the `session` is invalid, that ID is guaranteed to be non-zero.
  * In other words, this function returning an array of 16 zeros means you failed
@@ -1461,8 +1456,9 @@ ZENOHC_API void z_mutex_null(struct z_owned_mutex_t *this_);
 ZENOHC_API z_error_t z_mutex_try_lock(struct z_loaned_mutex_t *this_);
 ZENOHC_API z_error_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
 /**
- * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
- * Config value is always consumed upon function return.
+ * Constructs and opens a new Zenoh session.
+ *
+ * Returns 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
  */
 ZENOHC_API
 z_error_t z_open(struct z_owned_session_t *this_,
@@ -1782,7 +1778,7 @@ const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_
  */
 ZENOHC_API bool z_sample_check(const struct z_owned_sample_t *this_);
 /**
- * Construct a shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original).
+ * Creates a shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
  */
 ZENOHC_API
 void z_sample_clone(const struct z_loaned_sample_t *this_,
@@ -1856,23 +1852,21 @@ void z_scouting_config_from(struct z_owned_scouting_config_t *this_,
                             const struct z_loaned_config_t *config);
 ZENOHC_API void z_scouting_config_null(struct z_owned_scouting_config_t *this_);
 /**
- * Returns ``true`` if `session` is valid.
+ * Returns ``true`` if `session` is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_session_check(const struct z_owned_session_t *this_);
 /**
- * Returns a :c:type:`z_loaned_session_t` loaned from `s`.
+ * Frees memory and invalidates the session.
  *
- * This handle doesn't increase the refcount of the session, but does allow to do so with `zc_session_rcinc`.
- *
- * # Safety
- * The returned `z_loaned_session_t` aliases `z_owned_session_t`'s internal allocation,
- * attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
- * have been destroyed is UB (likely SEGFAULT)
+ * This will also close the session if it does not have any clones left.
  */
-ZENOHC_API
-const struct z_loaned_session_t *z_session_loan(const struct z_owned_session_t *this_);
+ZENOHC_API void z_session_drop(struct z_owned_session_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_session_t' type
+ * Borrows session.
+ */
+ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_session_t *this_);
+/**
+ * Constructs a Zenoh session in its gravestone state.
  */
 ZENOHC_API void z_session_null(struct z_owned_session_t *this_);
 ZENOHC_API int8_t z_sleep_ms(size_t time);
@@ -2336,6 +2330,8 @@ z_error_t z_view_str_wrap(struct z_view_str_t *this_,
 ZENOHC_API int8_t z_whatami_to_str(uint8_t whatami, char *buf, size_t len);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t zc_config_from_file(struct z_owned_config_t *this_,
@@ -2343,34 +2339,35 @@ z_error_t zc_config_from_file(struct z_owned_config_t *this_,
 /**
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
- * Passing a null-ptr will result in a gravestone value (`z_check(x) == false`).
+ * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t zc_config_from_str(struct z_owned_config_t *this_,
                              const char *s);
 /**
- * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
- * Use `z_drop` to safely deallocate this string
+ * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
 ZENOHC_API
-z_error_t zc_config_get(const struct z_loaned_config_t *config,
+z_error_t zc_config_get(const struct z_loaned_config_t *this_,
                         const char *key,
-                        struct z_owned_str_t *value_string);
+                        struct z_owned_str_t *out_value_string);
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
- * Returns 0 if successful, a negative value otherwise.
+ * Returns 0 if successful, a negative error code otherwise.
  */
 ZENOHC_API
-z_error_t zc_config_insert_json(struct z_loaned_config_t *config,
+z_error_t zc_config_insert_json(struct z_loaned_config_t *this_,
                                 const char *key,
                                 const char *value);
 /**
- * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+ * Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t zc_config_to_string(const struct z_loaned_config_t *config,
-                              struct z_owned_str_t *config_string);
+                              struct z_owned_str_t *out_config_string);
 /**
  * Initialises the zenoh runtime logger.
  *
@@ -2503,11 +2500,13 @@ ZENOHC_API
 void zc_reply_non_blocking_fifo_new(struct z_owned_reply_channel_t *this_,
                                     size_t bound);
 /**
- * Increments the session's reference count, returning a new owning handle.
+ * Constructs a shallow copy of the session in provided uninitialized memory location.
+ *
+ * Returns 0 in case of success, false otherwise.
  */
 ZENOHC_API
-z_error_t zc_session_clone(struct z_owned_session_t *dst,
-                           const struct z_owned_session_t *src);
+z_error_t zc_session_clone(const struct z_owned_session_t *this_,
+                           struct z_owned_session_t *dst);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */

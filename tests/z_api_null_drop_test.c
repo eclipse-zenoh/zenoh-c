@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     // Test drop null and double drop it
     //
     for (int i = 0; i < 2; ++i) {
-        z_close(z_move(session_null_1));
+        z_drop(z_move(session_null_1));
         z_undeclare_publisher(z_move(publisher_null_1));
         z_drop(z_move(keyexpr_null_1));
         z_drop(z_move(config_null_1));
@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
         z_drop(z_move(bytes_reader_null_1));
 
 
-        z_close(z_move(session_null_2));
+        z_drop(z_move(session_null_2));
         z_undeclare_publisher(z_move(publisher_null_2));
         z_drop(z_move(keyexpr_null_2));
         z_drop(z_move(config_null_2));
