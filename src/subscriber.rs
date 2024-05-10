@@ -31,14 +31,13 @@ use zenoh::subscriber::Reliability;
 use zenoh::subscriber::Subscriber;
 
 /// The subscription reliability.
-///
-///     - **Z_RELIABILITY_BEST_EFFORT**
-///     - **Z_RELIABILITY_RELIABLE**
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_reliability_t {
+    /// Defines reliability as ``BEST_EFFORT``
     BEST_EFFORT,
+    /// Defines reliability as ``RELIABLE``
     RELIABLE,
 }
 
@@ -68,14 +67,14 @@ pub use crate::opaque_types::z_owned_subscriber_t;
 decl_transmute_owned!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
 decl_transmute_handle!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 
-/// Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
+/// Constructs a subscriber in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_subscriber_null(this: *mut MaybeUninit<z_owned_subscriber_t>) {
     let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 
-/// Returns a :c:type:`z_loaned_subscriber_t` loaned from `this`.
+/// Borrows subscriber.
 #[no_mangle]
 pub extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
     let this = this.transmute_ref();
@@ -83,17 +82,15 @@ pub extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_loaned_su
     this.transmute_handle()
 }
 
-/// Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
-///
-/// Members:
-///     z_reliability_t reliability: The subscription reliability.
+/// Options passed to the `z_declare_subscriber()` function.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
+    /// The subscription reliability.
     pub reliability: z_reliability_t,
 }
 
-/// Constructs the default value for :c:type:`z_subscriber_options_t`.
+/// Constructs the default value for `z_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default(this: &mut z_subscriber_options_t) {
     *this = z_subscriber_options_t {
@@ -101,37 +98,15 @@ pub extern "C" fn z_subscriber_options_default(this: &mut z_subscriber_options_t
     }
 }
 
-/// Declare a subscriber for a given key expression.
+/// Constructs and declares a subscriber for a given key expression. Dropping subscriber
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     key_expr: The key expression to subscribe.
-///     callback: The callback function that will be called each time a data matching the subscribed expression is received.
-///     opts: The options to be passed to describe the options to be passed to the subscriber declaration.
+/// @param this_: An uninitialized location in memory, where subscriber will be constructed.
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression to subscribe.
+/// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+/// @param options: The options to be passed to the subscriber declaration.
 ///
-/// Returns:
-///    A :c:type:`z_owned_subscriber_t`.
-///
-///    To check if the subscription succeeded and if the subscriber is still valid,
-///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-///
-///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// Example:
-///    Declaring a subscriber passing `NULL` for the options:
-///
-///    .. code-block:: C
-///
-///       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
-///
-///    is equivalent to initializing and passing the default subscriber options:
-///
-///    .. code-block:: C
-///
-///       z_subscriber_options_t opts = z_subscriber_options_default();
-///       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+/// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_subscriber(
@@ -176,13 +151,15 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
     subscriber.key_expr().transmute_handle()
 }
 
-/// Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
+/// Undeclares subscriber and drops subscriber.
+/// 
+/// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_subscriber(
-    subscriber: &mut z_owned_subscriber_t,
+    this: &mut z_owned_subscriber_t,
 ) -> errors::z_error_t {
-    if let Some(s) = subscriber.transmute_mut().extract().take() {
+    if let Some(s) = this.transmute_mut().extract().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -191,9 +168,17 @@ pub extern "C" fn z_undeclare_subscriber(
     errors::Z_OK
 }
 
-/// Returns ``true`` if `sub` is valid.
-#[allow(clippy::missing_safety_doc)]
+/// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn z_subscriber_check(subscriber: &z_owned_subscriber_t) -> bool {
-    subscriber.transmute_ref().is_some()
+pub extern "C" fn z_subscriber_drop(
+    this: &mut z_owned_subscriber_t,
+) {
+    z_undeclare_subscriber(this);
+}
+
+
+/// Returns ``true`` if subscriber is valid, ``false`` otherwise.
+#[no_mangle]
+pub extern "C" fn z_subscriber_check(this: &z_owned_subscriber_t) -> bool {
+    this.transmute_ref().is_some()
 }

@@ -29,8 +29,6 @@ typedef struct ALIGN(8) z_owned_session_t {
 } z_owned_session_t;
 /**
  * A loaned Zenoh query.
- *
- * It is valid as long as at least the corresponding `z_owned_query_t` exists, including the one owned by Zenoh until the callback returns.
  */
 typedef struct ALIGN(8) z_loaned_query_t {
   uint8_t _0[16];
@@ -39,18 +37,18 @@ typedef struct ALIGN(8) z_loaned_query_t {
  * A loaned Zenoh session.
  */
 typedef struct ALIGN(8) z_loaned_session_t {
-  uint8_t _0[40];
+  uint8_t _0[8];
 } z_loaned_session_t;
 /**
- * An owned Zenoh queryable.
+ * An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#queryable"> queryable </a>.
  *
- * Responds to queries sent via :c:func:`z_get` with intersecting key expression.
+ * Responds to queries sent via `z_get()` with intersecting key expression.
  */
 typedef struct ALIGN(8) z_owned_queryable_t {
   uint8_t _0[32];
 } z_owned_queryable_t;
 /**
- * An owned Zenoh subscriber.
+ * An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
  *
  * Receives data from publication on intersecting key expressions.
  * Destroying the subscriber cancels the subscription.
@@ -58,13 +56,16 @@ typedef struct ALIGN(8) z_owned_queryable_t {
 typedef struct ALIGN(8) z_owned_subscriber_t {
   uint8_t _0[32];
 } z_owned_subscriber_t;
+/**
+ * A loaned Zenoh subscriber.
+ */
 typedef struct ALIGN(8) z_loaned_subscriber_t {
   uint8_t _0[32];
 } z_loaned_subscriber_t;
 /**
  * An owned Zenoh publication cache.
  *
- * Used to store publications on intersecting key expressions. Can be queried later via :c:func:`z_get` to retrieve this data
+ * Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
  * (for example by Querying Subscriber).
  */
 typedef struct ALIGN(8) ze_owned_publication_cache_t {
@@ -74,7 +75,7 @@ typedef struct ALIGN(8) ze_owned_publication_cache_t {
  * An owned Zenoh querying subscriber.
  *
  * In addition to receiving the data it is subscribed to,
- * it also will fetch data from a Quryable at startup and peridodically (using :c:func: `ze_querying_subscriber_get`).
+ * it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get`).
  */
 typedef struct ALIGN(8) ze_owned_querying_subscriber_t {
   uint8_t _0[64];

@@ -4,23 +4,20 @@ use crate::z_loaned_sample_t;
 use libc::c_void;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
 ///
-/// Members:
-///   void *context: a pointer to an arbitrary state.
-///   void *call(struct z_loaned_sample_t, const void *context): the typical callback function. `context` will be passed as its last argument.
-///   void *drop(void*): allows the callback's state to be freed.
-///
 /// Closures are not guaranteed not to be called concurrently.
-///
+/// 
 /// It is guaranteed that:
-///
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 #[repr(C)]
 pub struct z_owned_closure_sample_t {
+    /// An optional pointer to a context representing a closure state.
     context: *mut c_void,
-    call: Option<extern "C" fn(*const z_loaned_sample_t, context: *mut c_void)>,
-    drop: Option<extern "C" fn(*mut c_void)>,
+     /// A closure body.
+    call: Option<extern "C" fn(sample: *const z_loaned_sample_t, context: *mut c_void)>,
+    /// An optional drop function that will be called when the closure is dropped.
+    drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 impl z_owned_closure_sample_t {
     pub const fn empty() -> Self {
@@ -29,6 +26,10 @@ impl z_owned_closure_sample_t {
             call: None,
             drop: None,
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.call.is_none() && self.drop.is_none() && self.context.is_null()
     }
 }
 unsafe impl Send for z_owned_closure_sample_t {}
@@ -41,11 +42,17 @@ impl Drop for z_owned_closure_sample_t {
     }
 }
 
-/// Constructs a null safe-to-drop value of 'z_owned_closure_sample_t' type
+/// Constructs a closure in its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_sample_null(this: *mut MaybeUninit<z_owned_closure_sample_t>) {
     (*this).write(z_owned_closure_sample_t::empty());
+}
+
+/// Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_closure_sample_check(this: &z_owned_closure_sample_t) -> bool {
+    !this.is_empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.

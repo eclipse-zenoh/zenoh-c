@@ -41,7 +41,7 @@ pub unsafe extern "C" fn z_hello_drop(this: &mut z_owned_hello_t) {
     Inplace::drop(this.transmute_mut())
 }
 
-/// Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
+/// Returns a `z_hello_t` loaned from `z_owned_hello_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_loan(this: &z_owned_hello_t) -> &z_loaned_hello_t {

@@ -58,7 +58,7 @@ pub extern "C" fn ze_querying_subscriber_null(
 }
 
 /// Represents the set of options that can be applied to a querying subscriber,
-/// upon its declaration via :c:func:`ze_declare_querying_subscriber`.
+/// upon its declaration via `ze_declare_querying_subscriber`.
 ///
 /// Members:
 ///   z_reliability_t reliability: The subscription reliability.
@@ -81,7 +81,7 @@ pub struct ze_querying_subscriber_options_t {
     query_timeout_ms: u64,
 }
 
-/// Constructs the default value for :c:type:`ze_querying_subscriber_options_t`.
+/// Constructs the default value for `ze_querying_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_options_default(
     this: &mut ze_querying_subscriber_options_t,
@@ -106,7 +106,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
 ///     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
 ///
 /// Returns:
-///    :c:type:`ze_owned_subscriber_t`.
+///    `ze_owned_subscriber_t`.
 ///
 ///    To check if the subscription succeeded and if the querying subscriber is still valid,
 ///    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
@@ -176,7 +176,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
 }
 
-/// Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
+/// Make a `ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
 /// The queried samples will be merged with the received publications and made available in the subscriber callback.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -211,7 +211,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     errors::Z_OK
 }
 
-/// Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
+/// Undeclares the given `ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
@@ -233,7 +233,7 @@ pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscrib
     this.transmute_ref().is_some()
 }
 
-/// Returns a :c:type:`ze_querying_subscriber_loan` loaned from `this`.
+/// Returns a `ze_querying_subscriber_loan` loaned from `this`.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_loan(
     this: &ze_owned_querying_subscriber_t,

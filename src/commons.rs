@@ -139,7 +139,7 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
 pub use crate::opaque_types::z_owned_sample_t;
 decl_transmute_owned!(Option<Sample>, z_owned_sample_t);
 
-/// Creates a shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
+/// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
 #[no_mangle]
 pub extern "C" fn z_sample_clone(
     this: &z_loaned_sample_t,
@@ -199,7 +199,7 @@ decl_transmute_handle!(Encoding, z_loaned_encoding_t);
 pub use crate::opaque_types::z_owned_encoding_t;
 decl_transmute_owned!(Encoding, z_owned_encoding_t);
 
-/// Constructs a :c:type:`z_owned_encoding_t` from a specified string.
+/// Constructs a `z_owned_encoding_t` from a specified string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_str(
@@ -218,14 +218,14 @@ pub unsafe extern "C" fn z_encoding_from_str(
     }
 }
 
-/// Returns a loaned default :c:type:`z_loaned_encoding_t`.
+/// Returns a loaned default `z_loaned_encoding_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan_default() -> &'static z_loaned_encoding_t {
     Encoding::ZENOH_BYTES.transmute_handle()
 }
 
-/// Constructs a default :c:type:`z_owned_encoding_t`.
+/// Constructs a default `z_owned_encoding_t`.
 #[no_mangle]
 pub extern "C" fn z_encoding_null(this: *mut MaybeUninit<z_owned_encoding_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
@@ -301,7 +301,7 @@ impl From<zcu_locality_t> for Locality {
     }
 }
 
-/// Returns default value of :c:type:`zcu_locality_t`
+/// Returns default value of `zcu_locality_t`
 #[no_mangle]
 pub extern "C" fn zcu_locality_default() -> zcu_locality_t {
     Locality::default().into()
@@ -335,13 +335,13 @@ impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
     }
 }
 
-/// Returns the default value of :c:type:`zcu_reply_keyexpr_t`
+/// Returns the default value of `zcu_reply_keyexpr_t`
 #[no_mangle]
 pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }
 
-/// The Queryables that should be target of a :c:func:`z_get`.
+/// The Queryables that should be target of a `z_get()`.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -376,7 +376,7 @@ impl From<z_query_target_t> for QueryTarget {
     }
 }
 
-/// Create a default :c:type:`z_query_target_t`.
+/// Create a default `z_query_target_t`.
 #[no_mangle]
 pub extern "C" fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()

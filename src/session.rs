@@ -13,7 +13,7 @@
 //
 
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
 };
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
@@ -26,14 +26,13 @@ use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
 
 use crate::opaque_types::z_loaned_session_t;
-decl_transmute_handle!(Session, z_loaned_session_t);
+decl_transmute_handle!(Arc<Session>, z_loaned_session_t);
 
 /// Borrows session.
 #[no_mangle]
 pub extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_loaned_session_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
-    let this = this.as_ref();
     this.transmute_handle()
 }
 
@@ -46,7 +45,7 @@ pub extern "C" fn z_session_null(this: *mut MaybeUninit<z_owned_session_t>) {
 
 /// Constructs and opens a new Zenoh session.
 /// 
-/// Returns 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+/// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_open(
@@ -87,7 +86,7 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 
 /// Closes a zenoh session. This alos drops and invalidates `session`.
 ///
-/// Returns 0 in  case of success, a negative value if an error occured while closing the session,
+/// @return 0 in  case of success, a negative value if an error occured while closing the session,
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
 pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
@@ -116,19 +115,14 @@ pub extern "C" fn z_session_drop(this: &mut z_owned_session_t) {
 }
 
 
-/// Constructs a shallow copy of the session in provided uninitialized memory location.
-/// 
-/// Returns 0 in case of success, false otherwise.
+/// Constructs an owned shallow copy of the session in provided uninitialized memory location.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zc_session_clone(
-    this: &z_owned_session_t,
+    this: &z_loaned_session_t,
     dst: *mut MaybeUninit<z_owned_session_t>,
-) -> errors::z_error_t {
+) {
     let dst = dst.transmute_uninit_ptr();
-    let Some(src) = this.transmute_ref() else {
-        return errors::Z_EINVAL;
-    };
+    let src = this.transmute_ref();
     Inplace::init(dst, Some(src.clone()));
-    errors::Z_OK
 }

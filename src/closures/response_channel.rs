@@ -8,7 +8,7 @@ use std::{
     sync::mpsc::{Receiver, TryRecvError},
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
-/// - `this` is a pointer to an arbitrary state.
+/// - `context` is a pointer to an arbitrary state.
 /// - `call` is the typical callback function. `this` will be passed as its last argument.
 /// - `drop` allows the callback's state to be freed.
 ///
@@ -21,8 +21,8 @@ use std::{
 #[repr(C)]
 pub struct z_owned_reply_channel_closure_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(*mut MaybeUninit<z_owned_reply_t>, *mut c_void) -> bool>,
-    drop: Option<extern "C" fn(*mut c_void)>,
+    call: Option<extern "C" fn(reply: *mut MaybeUninit<z_owned_reply_t>, context: *mut c_void) -> bool>,
+    drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
 /// A pair of closures, the `send` one accepting
@@ -53,7 +53,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
         (
             From::from(move |reply: &z_loaned_reply_t| {
                 let mut this = MaybeUninit::<z_owned_reply_t>::uninit();
-                z_reply_clone(&mut this as *mut MaybeUninit<z_owned_reply_t>, reply);
+                z_reply_clone(reply, &mut this as *mut MaybeUninit<z_owned_reply_t>);
                 let this = this.assume_init();
                 if let Err(e) = tx.send(this) {
                     log::error!("Attempted to push onto a closed reply_fifo: {}", e);
@@ -66,7 +66,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
         (
             From::from(move |reply: &z_loaned_reply_t| {
                 let mut this = MaybeUninit::<z_owned_reply_t>::uninit();
-                z_reply_clone(&mut this as *mut MaybeUninit<z_owned_reply_t>, reply);
+                z_reply_clone(reply, &mut this as *mut MaybeUninit<z_owned_reply_t>);
                 let this = this.assume_init();
                 if let Err(e) = tx.send(this) {
                     log::error!("Attempted to push onto a closed reply_fifo: {}", e);

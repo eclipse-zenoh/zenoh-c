@@ -93,7 +93,7 @@ unsafe fn keyexpr_create(
     }
 }
 
-/// Constructs a :c:type:`z_owned_keyexpr_t` departing from a string, copying the passed string.
+/// Constructs a `z_owned_keyexpr_t` departing from a string, copying the passed string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_new(
@@ -118,7 +118,7 @@ pub unsafe extern "C" fn z_keyexpr_new(
     }
 }
 
-/// Constructs a :c:type:`z_owned_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
+/// Constructs a `z_owned_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_new_autocanonize(
@@ -143,13 +143,13 @@ pub unsafe extern "C" fn z_keyexpr_new_autocanonize(
     }
 }
 
-/// Returns a :c:type:`z_loaned_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
+/// Returns a `z_loaned_keyexpr_t` loaned from `z_owned_keyexpr_t`.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_loan(key_expr: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
     unwrap_ref_unchecked(key_expr.transmute_ref()).transmute_handle()
 }
 
-/// Returns a :c:type:`z_loaned_keyexpr_t` loaned from :c:type:`z_view_keyexpr_t`.
+/// Returns a `z_loaned_keyexpr_t` loaned from `z_view_keyexpr_t`.
 #[no_mangle]
 pub extern "C" fn z_view_keyexpr_loan(key_expr: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
     unwrap_ref_unchecked(key_expr.transmute_ref()).transmute_handle()
@@ -181,7 +181,7 @@ pub extern "C" fn z_view_keyexpr_check(keyexpr: &z_view_keyexpr_t) -> bool {
 ///    - ``"key/expression"``.
 ///    - ``"key/ex*"``.
 ///
-/// Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
+/// Using `z_declare_keyexpr` allows zenoh to optimize a key expression,
 /// both for local processing and network-wise.
 pub use crate::opaque_types::z_loaned_keyexpr_t;
 decl_transmute_handle!(KeyExpr<'static>, z_loaned_keyexpr_t);
@@ -237,7 +237,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
     }
 }
 
-/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
+/// Constructs a `z_view_keyexpr_t` by aliasing a string.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_slice(
@@ -263,7 +263,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice(
     }
 }
 
-/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
+/// Constructs a `z_view_keyexpr_t` by aliasing a string.
 /// The string is canonized in-place before being passed to keyexpr.
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
@@ -293,7 +293,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_autocanonize(
     }
 }
 
-/// Constructs a :c:type:`z_view_keyexpr_t` departing from a string.
+/// Constructs a `z_view_keyexpr_t` departing from a string.
 /// It is a loaned key expression that aliases `name`.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -310,7 +310,7 @@ pub unsafe extern "C" fn z_view_keyexpr_new(
     }
 }
 
-/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string.
+/// Constructs a `z_view_keyexpr_t` by aliasing a string.
 /// The string is canonized in-place before being passed to keyexpr.
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 #[allow(clippy::missing_safety_doc)]
@@ -332,7 +332,7 @@ pub unsafe extern "C" fn z_view_keyexpr_new_autocanonize(
     }
 }
 
-/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
+/// Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
 /// - `name` MUST be valid UTF8.
 /// - `name` MUST follow the Key Expression specification, ie:
 ///   - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
@@ -353,7 +353,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_unchecked(
     Inplace::init(this.transmute_uninit_ptr(), Some(name))
 }
 
-/// Constructs a :c:type:`z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
+/// Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
 ///
 ///  - `name` MUST be valid UTF8.
 ///  - `name` MUST follow the Key Expression specification, ie:
@@ -372,7 +372,7 @@ pub unsafe extern "C" fn z_view_keyexpr_unchecked(
     z_view_keyexpr_from_slice_unchecked(this, s, libc::strlen(s))
 }
 
-/// Constructs a null-terminated string departing from a :c:type:`z_loaned_keyexpr_t`.
+/// Constructs a null-terminated string departing from a `z_loaned_keyexpr_t`.
 /// The user is responsible of droping the returned string using `z_drop`
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -400,7 +400,7 @@ pub unsafe extern "C" fn z_keyexpr_as_slice(
 /**************************************/
 /*            DECLARATION             */
 /**************************************/
-/// Declare a key expression. The id is returned as a :c:type:`z_loaned_keyexpr_t` with a nullptr suffix.
+/// Declare a key expression. The id is returned as a `z_loaned_keyexpr_t` with a nullptr suffix.
 ///
 /// This numerical id will be used on the network to save bandwidth and
 /// ease the retrieval of the concerned resource in the routing tables.
@@ -427,7 +427,7 @@ pub extern "C" fn z_declare_keyexpr(
     }
 }
 
-/// Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
+/// Undeclare the key expression generated by a call to `z_declare_keyexpr`.
 /// The keyxpr is consumed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -553,7 +553,7 @@ pub extern "C" fn z_keyexpr_join(
     }
 }
 
-/// A :c:type:`z_keyexpr_intersection_level_t`.
+/// A `z_keyexpr_intersection_level_t`.
 ///
 ///     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
 ///     - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**

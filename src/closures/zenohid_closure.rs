@@ -5,23 +5,20 @@ use libc::c_void;
 use crate::z_id_t;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
-/// Members:
-///   void *context: a pointer to an arbitrary state.
-///   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
-///   void *drop(void*): allows the callback's state to be freed.
-///
 /// Closures are not guaranteed not to be called concurrently.
-///
+/// 
 /// It is guaranteed that:
-///
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 #[repr(C)]
 pub struct z_owned_closure_zid_t {
+    /// An optional pointer to a closure state.
     context: *mut c_void,
-    call: Option<extern "C" fn(&z_id_t, *mut c_void)>,
-    drop: Option<extern "C" fn(*mut c_void)>,
+    /// A callback function.
+    call: Option<extern "C" fn(z_id: &z_id_t, context: *mut c_void)>,
+    /// An optional function that will be called upon closure drop.
+    drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
 impl z_owned_closure_zid_t {
@@ -31,6 +28,10 @@ impl z_owned_closure_zid_t {
             call: None,
             drop: None,
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.call.is_none() && self.drop.is_none() && self.context.is_null()
     }
 }
 unsafe impl Send for z_owned_closure_zid_t {}
@@ -42,7 +43,15 @@ impl Drop for z_owned_closure_zid_t {
         }
     }
 }
-/// Constructs a null safe-to-drop value of 'z_owned_closure_zid_t' type
+
+/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_closure_zid_check(this: &z_owned_closure_zid_t) -> bool {
+    !this.is_empty()
+}
+
+/// Constructs a null closure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_zid_null(this: *mut MaybeUninit<z_owned_closure_zid_t>) {
@@ -58,7 +67,7 @@ pub extern "C" fn z_closure_zid_call(closure: &z_owned_closure_zid_t, sample: &z
         }
     }
 }
-/// Drops the closure. Droping an uninitialized closure is a no-op.
+/// Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_drop(closure: &mut z_owned_closure_zid_t) {
     let mut empty_closure = z_owned_closure_zid_t::empty();

@@ -21,7 +21,7 @@ use zenoh_ext::SessionExt;
 use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t, zcu_locality_default, zcu_locality_t};
 
-/// Options passed to the :c:func:`ze_declare_publication_cache` function.
+/// Options passed to the `ze_declare_publication_cache` function.
 ///
 /// Members:
 ///     z_loaned_keyexpr_t queryable_prefix: The prefix used for queryable
@@ -39,7 +39,7 @@ pub struct ze_publication_cache_options_t {
     pub resources_limit: usize,
 }
 
-/// Constructs the default value for :c:type:`ze_publication_cache_options_t`.
+/// Constructs the default value for `ze_publication_cache_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication_cache_options_t) {
     *this = ze_publication_cache_options_t {
@@ -70,7 +70,7 @@ decl_transmute_handle!(
 ///     ze_publication_cache_options_t options: Additional options for the publication_cache.
 ///
 /// Returns:
-///    :c:type:`ze_owned_publication_cache_t`.
+///    `ze_owned_publication_cache_t`.
 ///
 ///
 /// Example:
@@ -138,7 +138,7 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
     this.transmute_ref().is_some()
 }
 
-/// Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
+/// Closes the given `ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(

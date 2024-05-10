@@ -259,10 +259,10 @@ pub extern "C" fn z_config_peer(this: *mut MaybeUninit<z_owned_config_t>) {
 
 /// Constructs a default, zenoh-allocated, client mode configuration.
 ///
-/// Parameters:
-///    peers: Array with `size >= n_peers`, containing peer locators to add to the config.
-///    n_peers: Number of peers to add to the config.
-/// Returns 0 in case of success, negative error code otherwise.
+/// @param peers: Array with `size >= n_peers`, containing peer locators to add to the config.
+/// @param n_peers: Number of peers to add to the config.
+/// 
+/// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_config_client(
