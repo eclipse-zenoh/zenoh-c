@@ -5,7 +5,7 @@ use libc::c_void;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
 ///
 /// Closures are not guaranteed not to be called concurrently.
-/// 
+///
 /// It is guaranteed that:
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
@@ -14,7 +14,7 @@ use libc::c_void;
 pub struct z_owned_closure_sample_t {
     /// An optional pointer to a context representing a closure state.
     context: *mut c_void,
-     /// A closure body.
+    /// A closure body.
     call: Option<extern "C" fn(sample: *const z_loaned_sample_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,

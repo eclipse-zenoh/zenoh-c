@@ -154,7 +154,7 @@ pub extern "C" fn z_declare_queryable(
 }
 
 /// Undeclares a `z_owned_queryable_t` and drops it.
-/// 
+///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

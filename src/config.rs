@@ -102,7 +102,10 @@ pub extern "C" fn z_config_null(this: *mut MaybeUninit<z_owned_config_t>) {
 
 /// Clones the config into provided uninitialized memory location.
 #[no_mangle]
-pub extern "C" fn z_config_clone(this: &z_loaned_config_t, dst: *mut MaybeUninit<z_owned_config_t>) {
+pub extern "C" fn z_config_clone(
+    this: &z_loaned_config_t,
+    dst: *mut MaybeUninit<z_owned_config_t>,
+) {
     let src = this.transmute_ref();
     let src = src.clone();
     let dst = dst.transmute_uninit_ptr();
@@ -128,7 +131,11 @@ pub unsafe extern "C" fn zc_config_get(
     let val = config.get_json(key).ok();
     match val {
         Some(val) => {
-            z_str_from_substring(out_value_string, val.as_ptr() as *const libc::c_char, val.len());
+            z_str_from_substring(
+                out_value_string,
+                val.as_ptr() as *const libc::c_char,
+                val.len(),
+            );
             errors::Z_OK
         }
         None => {
@@ -197,7 +204,7 @@ pub unsafe extern "C" fn zc_config_from_str(
 }
 
 /// Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
-/// 
+///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -209,7 +216,11 @@ pub unsafe extern "C" fn zc_config_to_string(
     match json5::to_string(config) {
         Ok(s) => {
             unsafe {
-                z_str_from_substring(out_config_string, s.as_ptr() as *const libc::c_char, s.len())
+                z_str_from_substring(
+                    out_config_string,
+                    s.as_ptr() as *const libc::c_char,
+                    s.len(),
+                )
             };
             errors::Z_OK
         }
@@ -221,7 +232,7 @@ pub unsafe extern "C" fn zc_config_to_string(
 }
 
 /// Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
-/// 
+///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -261,7 +272,7 @@ pub extern "C" fn z_config_peer(this: *mut MaybeUninit<z_owned_config_t>) {
 ///
 /// @param peers: Array with `size >= n_peers`, containing peer locators to add to the config.
 /// @param n_peers: Number of peers to add to the config.
-/// 
+///
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

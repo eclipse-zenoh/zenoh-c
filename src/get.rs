@@ -129,7 +129,7 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
 /// @param parameters: The query's parameters, similar to a url's query segment.
 /// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
 /// @param options: Additional options for the get. All owned fields will be consumed.
-/// 
+///
 /// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

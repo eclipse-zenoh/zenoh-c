@@ -21,7 +21,9 @@ use std::{
 #[repr(C)]
 pub struct z_owned_reply_channel_closure_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(reply: *mut MaybeUninit<z_owned_reply_t>, context: *mut c_void) -> bool>,
+    call: Option<
+        extern "C" fn(reply: *mut MaybeUninit<z_owned_reply_t>, context: *mut c_void) -> bool,
+    >,
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 

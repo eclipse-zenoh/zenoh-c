@@ -13,7 +13,8 @@
 //
 
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+    TransmuteUninitPtr,
 };
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
@@ -44,7 +45,7 @@ pub extern "C" fn z_session_null(this: *mut MaybeUninit<z_owned_session_t>) {
 }
 
 /// Constructs and opens a new Zenoh session.
-/// 
+///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -106,14 +107,13 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
     }
 }
 
-/// Frees memory and invalidates the session. 
-/// 
+/// Frees memory and invalidates the session.
+///
 /// This will also close the session if it does not have any clones left.
 #[no_mangle]
 pub extern "C" fn z_session_drop(this: &mut z_owned_session_t) {
     let _ = this.transmute_mut().extract().take();
 }
-
 
 /// Constructs an owned shallow copy of the session in provided uninitialized memory location.
 #[allow(clippy::missing_safety_doc)]

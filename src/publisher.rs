@@ -153,7 +153,7 @@ pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_opt
 /// @param session: The Zenoh session.
 /// @param payload: The dat to publish. WIll be consumed.
 /// @param options: The publisher put options. All owned fields will be consumed.
-/// 
+///
 /// @return 0 in case of success, negative error values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -245,11 +245,11 @@ pub struct zcu_matching_status_t {
 }
 
 /// Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
-/// 
+///
 /// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
 /// @publisher: A publisher to associate with matching listener.
 /// @callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
-/// 
+///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -283,11 +283,8 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     }
 }
 
-
-
-
 /// Undeclares the given publisher, droping and invalidating it.
-/// 
+///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

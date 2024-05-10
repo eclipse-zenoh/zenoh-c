@@ -124,7 +124,7 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
 /// @param session: The zenoh session.
 /// @param key_expr: The key expression to delete.
 /// @param options: The delete options.
-/// 
+///
 /// @return 0 in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

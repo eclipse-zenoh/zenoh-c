@@ -5,7 +5,7 @@ use libc::c_void;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
-/// 
+///
 /// It is guaranteed that:
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
@@ -50,8 +50,8 @@ pub unsafe extern "C" fn z_closure_query_null(this: *mut MaybeUninit<z_owned_clo
 
 /// Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub unsafe extern "C" fn z_closure_query_check(this: &z_owned_closure_query_t) -> bool {
-   !this.is_empty()
+pub extern "C" fn z_closure_query_check(this: &z_owned_closure_query_t) -> bool {
+    !this.is_empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.

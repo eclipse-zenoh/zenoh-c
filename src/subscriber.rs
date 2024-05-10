@@ -152,13 +152,11 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 }
 
 /// Undeclares subscriber and drops subscriber.
-/// 
+///
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(
-    this: &mut z_owned_subscriber_t,
-) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> errors::z_error_t {
     if let Some(s) = this.transmute_mut().extract().take() {
         if let Err(e) = s.undeclare().res_sync() {
             log::error!("{}", e);
@@ -170,12 +168,9 @@ pub extern "C" fn z_undeclare_subscriber(
 
 /// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn z_subscriber_drop(
-    this: &mut z_owned_subscriber_t,
-) {
+pub extern "C" fn z_subscriber_drop(this: &mut z_owned_subscriber_t) {
     z_undeclare_subscriber(this);
 }
-
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
 #[no_mangle]
