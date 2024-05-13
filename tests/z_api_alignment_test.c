@@ -302,7 +302,7 @@ int main(int argc, char **argv) {
     z_sleep_s(SLEEP);
     assert(datas == 2);
 
-    _ret_int8 = z_undeclare_keyexpr(z_loan(s1), z_move(_ret_expr));
+    _ret_int8 = z_undeclare_keyexpr(z_move(_ret_expr), z_loan(s1));
     assert(_ret_int8 == 0);
     assert(!z_check(_ret_expr));
 

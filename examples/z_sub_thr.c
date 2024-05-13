@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     }
 
     z_undeclare_subscriber(z_move(sub));
-    z_undeclare_keyexpr(z_loan(s), z_move(declared_ke));
+    z_undeclare_keyexpr(z_move(declared_ke), z_loan(s));
     z_close(z_move(s));
     return 0;
 }
