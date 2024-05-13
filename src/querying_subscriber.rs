@@ -47,7 +47,7 @@ decl_transmute_handle!(
     ze_loaned_querying_subscriber_t
 );
 
-/// Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
+/// Constructs a querying subscriber in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_querying_subscriber_null(
@@ -57,27 +57,25 @@ pub extern "C" fn ze_querying_subscriber_null(
     Inplace::empty(this);
 }
 
-/// Represents the set of options that can be applied to a querying subscriber,
-/// upon its declaration via `ze_declare_querying_subscriber`.
+/// A set of options that can be applied to a querying subscriber,
+/// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
-/// Members:
-///   z_reliability_t reliability: The subscription reliability.
-///   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
-///                                  receive by this subscriber.
-///   z_loaned_keyexpr_t query_selector: The selector to be used for queries.
-///   z_query_target_t query_target: The target to be used for queries.
-///   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
-///   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
-///   uint64_t query_timeout_ms: The timeout to be used for queries.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
+    /// The subscription reliability.
     reliability: z_reliability_t,
+    /// The restriction for the matching publications that will be receive by this subscriber.
     allowed_origin: zcu_locality_t,
+    /// The selector to be used for queries.
     query_selector: *const z_loaned_keyexpr_t,
+    /// The target to be used for queries.
     query_target: z_query_target_t,
+    /// The consolidation mode to be used for queries.
     query_consolidation: z_query_consolidation_t,
+    /// The accepted replies for queries.
     query_accept_replies: zcu_reply_keyexpr_t,
+    /// The timeout to be used for queries.
     query_timeout_ms: u64,
 }
 
@@ -97,37 +95,15 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     };
 }
 
-/// Declares a Querying Subscriber for a given key expression.
+/// Constructs and declares a querying subscriber for a given key expression.
 ///
-/// Parameters:
-///     z_loaned_session_t session: The zenoh session.
-///     z_loaned_keyexpr_t keyexpr: The key expression to subscribe.
-///     z_owned_closure_sample_t callback: The callback function that will be called each time a data matching the subscribed expression is received.
-///     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
+/// @param this_: An unitialized memory location where querying subscriber will be constructed.
+/// @param session: A Zenoh session.
+/// @param key_expr: A key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+/// @param options: Additional options for the querying subscriber.
 ///
-/// Returns:
-///    `ze_owned_subscriber_t`.
-///
-///    To check if the subscription succeeded and if the querying subscriber is still valid,
-///    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-///
-///    Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// Example:
-///    Declaring a subscriber passing ``NULL`` for the options:
-///
-///    .. code-block:: C
-///
-///       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
-///
-///    is equivalent to initializing and passing the default subscriber options:
-///
-///    .. code-block:: C
-///
-///       z_subscriber_options_t opts = z_subscriber_options_default();
-///       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_declare_querying_subscriber(
@@ -176,17 +152,18 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
 }
 
-/// Make a `ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
+/// Make querying subscriber perform an additional query on a specified selector.
 /// The queried samples will be merged with the received publications and made available in the subscriber callback.
+/// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn ze_querying_subscriber_get(
-    sub: &ze_loaned_querying_subscriber_t,
+    this: &ze_loaned_querying_subscriber_t,
     selector: &z_loaned_keyexpr_t,
     options: Option<&z_get_options_t>,
 ) -> errors::z_error_t {
     unsafe impl Sync for z_get_options_t {}
-    let sub = sub.transmute_ref();
+    let sub = this.transmute_ref();
     let session = sub.1;
     let selector = selector.transmute_ref().clone();
     if let Err(e) = sub
@@ -211,8 +188,9 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     errors::Z_OK
 }
 
-/// Undeclares the given `ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
-#[allow(clippy::missing_safety_doc)]
+/// Undeclares the given querying subscriber, drops it and resets to a gravestone state.
+/// 
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
     this: &mut ze_owned_querying_subscriber_t,
@@ -226,14 +204,19 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
     errors::Z_OK
 }
 
-/// Returns ``true`` if `this` is valid.
-#[allow(clippy::missing_safety_doc)]
+/// Drops querying subscriber. Also attempts to undeclare it.
+#[no_mangle]
+pub extern "C" fn ze_querying_subscriber_drop(this: &mut ze_owned_querying_subscriber_t) {
+    ze_undeclare_querying_subscriber(this);
+}
+
+/// Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscriber_t) -> bool {
     this.transmute_ref().is_some()
 }
 
-/// Returns a `ze_querying_subscriber_loan` loaned from `this`.
+/// Borrows querying subscriber.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_loan(
     this: &ze_owned_querying_subscriber_t,

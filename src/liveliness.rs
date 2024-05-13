@@ -133,7 +133,7 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 ///
 /// @param this_: An unitialized memory location where subscriber will be constructed.
 /// @param session: The Zenoh session.
-/// @param key_expr: The key expression to subscribe.
+/// @param key_expr: The key expression to subscribe to.
 /// @param callback: The callback function that will be called each time a liveliness token status is changed.
 /// @param _options: The options to be passed to the liveliness subscriber declaration.
 ///

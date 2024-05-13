@@ -21,21 +21,18 @@ use zenoh_ext::SessionExt;
 use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t, zcu_locality_default, zcu_locality_t};
 
-/// Options passed to the `ze_declare_publication_cache` function.
-///
-/// Members:
-///     z_loaned_keyexpr_t queryable_prefix: The prefix used for queryable
-///     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
-///                       publication cache
-///     bool queryable_complete: the `complete` option for the queryable
-///     size_t history: The the history size
-///     size_t resources_limit: The limit number of cached resources
+/// Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
+    /// The prefix used for queryable.
     pub queryable_prefix: *const z_loaned_keyexpr_t,
+    /// The restriction for the matching queries that will be receive by this publication cache.
     pub queryable_origin: zcu_locality_t,
+    /// The `complete` option for the queryable.
     pub queryable_complete: bool,
+    /// The the history size (i.e. maximum number of messages to store).
     pub history: usize,
+    /// The limit number of cached resources.
     pub resources_limit: usize,
 }
 
@@ -62,30 +59,14 @@ decl_transmute_handle!(
     ze_loaned_publication_cache_t
 );
 
-/// Declares a Publication Cache.
+/// Constructs and declares a publication cache.
 ///
-/// Parameters:
-///     z_loaned_session_t session: The zenoh session.
-///     z_loaned_keyexpr_t key_expr: The key expression to publish.
-///     ze_publication_cache_options_t options: Additional options for the publication_cache.
+/// @param this_: An unitialized location in memory where publication cache will be constructed.
+/// @param session: A Zenoh session.
+/// @param key_expr: The key expression to publish to.
+/// @param options: Additional options for the publication cache.
 ///
-/// Returns:
-///    `ze_owned_publication_cache_t`.
-///
-///
-/// Example:
-///    Declaring a publication cache `NULL` for the options:
-///
-///    .. code-block:: C
-///
-///       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), NULL);
-///
-///    is equivalent to initializing and passing the default publication cache options:
-///    
-///    .. code-block:: C
-///
-///       ze_publication_cache_options_t opts = ze_publication_cache_options_default();
-///       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), &opts);
+/// @returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_declare_publication_cache(
@@ -123,7 +104,7 @@ pub extern "C" fn ze_declare_publication_cache(
     }
 }
 
-/// Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
+/// Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_publication_cache_null(this: *mut MaybeUninit<ze_owned_publication_cache_t>) {
@@ -131,14 +112,16 @@ pub extern "C" fn ze_publication_cache_null(this: *mut MaybeUninit<ze_owned_publ
     Inplace::empty(this);
 }
 
-/// Returns ``true`` if `pub_cache` is valid.
+
+/// Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t) -> bool {
     this.transmute_ref().is_some()
 }
 
-/// Closes the given `ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
+/// Undeclares and drops publication cache.
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
@@ -151,4 +134,11 @@ pub extern "C" fn ze_undeclare_publication_cache(
         }
     }
     errors::Z_OK
+}
+
+/// Drops publication cache. Also attempts to undeclare it.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn ze_publication_cache_drop(this: &mut ze_owned_publication_cache_t) {
+    ze_undeclare_publication_cache(this);
 }

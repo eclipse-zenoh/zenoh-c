@@ -862,44 +862,63 @@ typedef struct ALIGN(8) zcu_owned_matching_listener_t {
   uint8_t _0[40];
 } zcu_owned_matching_listener_t;
 /**
- * Options passed to the `ze_declare_publication_cache` function.
- *
- * Members:
- *     z_loaned_keyexpr_t queryable_prefix: The prefix used for queryable
- *     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
- *                       publication cache
- *     bool queryable_complete: the `complete` option for the queryable
- *     size_t history: The the history size
- *     size_t resources_limit: The limit number of cached resources
+ * Options passed to the `ze_declare_publication_cache()` function.
  */
 typedef struct ze_publication_cache_options_t {
+  /**
+   * The prefix used for queryable.
+   */
   const struct z_loaned_keyexpr_t *queryable_prefix;
+  /**
+   * The restriction for the matching queries that will be receive by this publication cache.
+   */
   enum zcu_locality_t queryable_origin;
+  /**
+   * The `complete` option for the queryable.
+   */
   bool queryable_complete;
+  /**
+   * The the history size (i.e. maximum number of messages to store).
+   */
   size_t history;
+  /**
+   * The limit number of cached resources.
+   */
   size_t resources_limit;
 } ze_publication_cache_options_t;
 /**
- * Represents the set of options that can be applied to a querying subscriber,
- * upon its declaration via `ze_declare_querying_subscriber`.
+ * A set of options that can be applied to a querying subscriber,
+ * upon its declaration via `ze_declare_querying_subscriber()`.
  *
- * Members:
- *   z_reliability_t reliability: The subscription reliability.
- *   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
- *                                  receive by this subscriber.
- *   z_loaned_keyexpr_t query_selector: The selector to be used for queries.
- *   z_query_target_t query_target: The target to be used for queries.
- *   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
- *   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
- *   uint64_t query_timeout_ms: The timeout to be used for queries.
  */
 typedef struct ze_querying_subscriber_options_t {
+  /**
+   * The subscription reliability.
+   */
   enum z_reliability_t reliability;
+  /**
+   * The restriction for the matching publications that will be receive by this subscriber.
+   */
   enum zcu_locality_t allowed_origin;
+  /**
+   * The selector to be used for queries.
+   */
   const struct z_loaned_keyexpr_t *query_selector;
+  /**
+   * The target to be used for queries.
+   */
   enum z_query_target_t query_target;
+  /**
+   * The consolidation mode to be used for queries.
+   */
   struct z_query_consolidation_t query_consolidation;
+  /**
+   * The accepted replies for queries.
+   */
   enum zcu_reply_keyexpr_t query_accept_replies;
+  /**
+   * The timeout to be used for queries.
+   */
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
@@ -2411,7 +2430,7 @@ void zc_liveliness_declaration_options_default(struct zc_liveliness_declaration_
  *
  * @param this_: An unitialized memory location where subscriber will be constructed.
  * @param session: The Zenoh session.
- * @param key_expr: The key expression to subscribe.
+ * @param key_expr: The key expression to subscribe to.
  * @param callback: The callback function that will be called each time a liveliness token status is changed.
  * @param _options: The options to be passed to the liveliness subscriber declaration.
  *
@@ -2577,34 +2596,18 @@ z_error_t zcu_publisher_matching_listener_callback(struct zcu_owned_matching_lis
                                                    const struct z_loaned_publisher_t *publisher,
                                                    struct zcu_owned_closure_matching_status_t *callback);
 /**
- * Returns the default value of `zcu_reply_keyexpr_t`
+ * Returns the default value of #zcu_reply_keyexpr_t.
  */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
- * Declares a Publication Cache.
+ * Constructs and declares a publication cache.
  *
- * Parameters:
- *     z_loaned_session_t session: The zenoh session.
- *     z_loaned_keyexpr_t key_expr: The key expression to publish.
- *     ze_publication_cache_options_t options: Additional options for the publication_cache.
+ * @param this_: An unitialized location in memory where publication cache will be constructed.
+ * @param session: A Zenoh session.
+ * @param key_expr: The key expression to publish to.
+ * @param options: Additional options for the publication cache.
  *
- * Returns:
- *    `ze_owned_publication_cache_t`.
- *
- *
- * Example:
- *    Declaring a publication cache `NULL` for the options:
- *
- *    .. code-block:: C
- *
- *       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), NULL);
- *
- *    is equivalent to initializing and passing the default publication cache options:
- *
- *    .. code-block:: C
- *
- *       ze_publication_cache_options_t opts = ze_publication_cache_options_default();
- *       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), &opts);
+ * @returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t ze_declare_publication_cache(struct ze_owned_publication_cache_t *this_,
@@ -2612,37 +2615,15 @@ z_error_t ze_declare_publication_cache(struct ze_owned_publication_cache_t *this
                                        const struct z_loaned_keyexpr_t *key_expr,
                                        struct ze_publication_cache_options_t *options);
 /**
- * Declares a Querying Subscriber for a given key expression.
+ * Constructs and declares a querying subscriber for a given key expression.
  *
- * Parameters:
- *     z_loaned_session_t session: The zenoh session.
- *     z_loaned_keyexpr_t keyexpr: The key expression to subscribe.
- *     z_owned_closure_sample_t callback: The callback function that will be called each time a data matching the subscribed expression is received.
- *     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
+ * @param this_: An unitialized memory location where querying subscriber will be constructed.
+ * @param session: A Zenoh session.
+ * @param key_expr: A key expression to subscribe to.
+ * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+ * @param options: Additional options for the querying subscriber.
  *
- * Returns:
- *    `ze_owned_subscriber_t`.
- *
- *    To check if the subscription succeeded and if the querying subscriber is still valid,
- *    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- *
- *    Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * Example:
- *    Declaring a subscriber passing ``NULL`` for the options:
- *
- *    .. code-block:: C
- *
- *       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
- *
- *    is equivalent to initializing and passing the default subscriber options:
- *
- *    .. code-block:: C
- *
- *       z_subscriber_options_t opts = z_subscriber_options_default();
- *       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t ze_declare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_,
@@ -2651,11 +2632,15 @@ z_error_t ze_declare_querying_subscriber(struct ze_owned_querying_subscriber_t *
                                          struct z_owned_closure_sample_t *callback,
                                          struct ze_querying_subscriber_options_t *options);
 /**
- * Returns ``true`` if `pub_cache` is valid.
+ * Returns ``true`` if publication cache is valid, ``false`` otherwise.
  */
 ZENOHC_API bool ze_publication_cache_check(const struct ze_owned_publication_cache_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
+ * Drops publication cache. Also attempts to undeclare it.
+ */
+ZENOHC_API void ze_publication_cache_drop(struct ze_owned_publication_cache_t *this_);
+/**
+ * Constructs a publication cache in a gravestone state.
  */
 ZENOHC_API void ze_publication_cache_null(struct ze_owned_publication_cache_t *this_);
 /**
@@ -2663,24 +2648,29 @@ ZENOHC_API void ze_publication_cache_null(struct ze_owned_publication_cache_t *t
  */
 ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
 /**
- * Returns ``true`` if `this` is valid.
+ * Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
  */
 ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *this_);
 /**
- * Make a `ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
+ * Drops querying subscriber. Also attempts to undeclare it.
+ */
+ZENOHC_API void ze_querying_subscriber_drop(struct ze_owned_querying_subscriber_t *this_);
+/**
+ * Make querying subscriber perform an additional query on a specified selector.
  * The queried samples will be merged with the received publications and made available in the subscriber callback.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t ze_querying_subscriber_get(const struct ze_loaned_querying_subscriber_t *sub,
+z_error_t ze_querying_subscriber_get(const struct ze_loaned_querying_subscriber_t *this_,
                                      const struct z_loaned_keyexpr_t *selector,
                                      const struct z_get_options_t *options);
 /**
- * Returns a `ze_querying_subscriber_loan` loaned from `this`.
+ * Borrows querying subscriber.
  */
 ZENOHC_API
 const struct ze_loaned_querying_subscriber_t *ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
+ * Constructs a querying subscriber in a gravestone state.
  */
 ZENOHC_API void ze_querying_subscriber_null(struct ze_owned_querying_subscriber_t *this_);
 /**
@@ -2689,12 +2679,13 @@ ZENOHC_API void ze_querying_subscriber_null(struct ze_owned_querying_subscriber_
 ZENOHC_API
 void ze_querying_subscriber_options_default(struct ze_querying_subscriber_options_t *this_);
 /**
- * Closes the given `ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
+ * Undeclares and drops publication cache.
+ * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API
-z_error_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *this_);
+ZENOHC_API z_error_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *this_);
 /**
- * Undeclares the given `ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
+ * Undeclares the given querying subscriber, drops it and resets to a gravestone state.
+ *
+ * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API
-z_error_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_);
+ZENOHC_API z_error_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_);

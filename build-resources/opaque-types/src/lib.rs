@@ -120,9 +120,9 @@ get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
 /// An owned Zenoh querying subscriber. 
 /// 
 /// In addition to receiving the data it is subscribed to,
-/// it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get`).
+/// it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get()`).
 get_opaque_type_data!(Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>, ze_owned_querying_subscriber_t);
-/// A loaned Zenoh querying subscriber
+/// A loaned Zenoh querying subscriber.
 get_opaque_type_data!((zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session), ze_loaned_querying_subscriber_t);
 
 /// A Zenoh-allocated <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
@@ -208,7 +208,7 @@ get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 /// An owned Zenoh publication cache.
 /// 
 /// Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
-/// (for example by Querying Subscriber).
+/// (for example by `ze_owned_querying_subscriber_t`).
 get_opaque_type_data!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
 /// A loaned Zenoh publication cache.
 get_opaque_type_data!(zenoh_ext::PublicationCache<'static>, ze_loaned_publication_cache_t);

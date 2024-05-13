@@ -575,8 +575,9 @@ Publication Cache
 Types
 -----
 
-.. doxygenstruct:: ze_publication_cache_options_t
 .. doxygenstruct:: ze_owned_publication_cache_t
+.. doxygenstruct:: ze_publication_cache_options_t
+    :members:
 .. doxygenenum:: zcu_locality_t
 
 Functions
@@ -584,8 +585,11 @@ Functions
 
 .. doxygenfunction:: ze_declare_publication_cache
 .. doxygenfunction:: ze_undeclare_publication_cache
+
 .. doxygenfunction:: ze_publication_cache_check
 .. doxygenfunction:: ze_publication_cache_null
+.. doxygenfunction:: ze_publication_cache_drop
+
 .. doxygenfunction:: ze_publication_cache_options_default
 
 Querying Subscriber
@@ -597,6 +601,7 @@ Types
 .. doxygenstruct:: ze_owned_querying_subscriber_t
 .. doxygenstruct:: ze_loaned_querying_subscriber_t
 .. doxygenstruct:: ze_querying_subscriber_options_t
+    :members:
 .. doxygenenum:: zcu_reply_keyexpr_t
 
 Functions
@@ -605,7 +610,10 @@ Functions
 .. doxygenfunction:: ze_declare_querying_subscriber
 .. doxygenfunction:: ze_undeclare_querying_subscriber
 .. doxygenfunction:: ze_querying_subscriber_get
+
 .. doxygenfunction:: ze_querying_subscriber_check
 .. doxygenfunction:: ze_querying_subscriber_null
+.. doxygenfunction:: ze_querying_subscriber_drop
+
 .. doxygenfunction:: ze_querying_subscriber_options_default
 .. doxygenfunction:: zcu_reply_keyexpr_default

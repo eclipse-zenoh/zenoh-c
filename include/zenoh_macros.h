@@ -72,7 +72,9 @@
         z_owned_str_t * : z_str_drop,\
         z_owned_subscriber_t * : z_subscriber_drop,\
         zc_owned_liveliness_token_t * : zc_liveliness_token_drop,\
-        zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_drop \
+        zcu_owned_closure_matching_status_t * : zcu_closure_matching_status_drop,\
+        ze_owned_publication_cache_t * : ze_publication_cache_drop,\
+        ze_owned_querying_subscriber_t * : ze_querying_subscriber_drop \
     )(x)
 
 #define z_null(x) \
@@ -231,6 +233,8 @@ inline void z_drop(const z_owned_str_t* this_) { return z_str_drop(this_); };
 inline void z_drop(const z_owned_subscriber_t* this_) { return z_subscriber_drop(this_); };
 inline void z_drop(const zc_owned_liveliness_token_t* this_) { return zc_liveliness_token_drop(this_); };
 inline void z_drop(const zcu_owned_closure_matching_status_t* closure) { return zcu_closure_matching_status_drop(closure); };
+inline void z_drop(const ze_owned_publication_cache_t* this_) { return ze_publication_cache_drop(this_); };
+inline void z_drop(const ze_owned_querying_subscriber_t* this_) { return ze_querying_subscriber_drop(this_); };
 
 
 inline void z_null( z_owned_bytes_t* this_) { return z_bytes_null(this_); };

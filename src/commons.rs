@@ -335,7 +335,7 @@ impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
     }
 }
 
-/// Returns the default value of `zcu_reply_keyexpr_t`
+/// Returns the default value of #zcu_reply_keyexpr_t.
 #[no_mangle]
 pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
