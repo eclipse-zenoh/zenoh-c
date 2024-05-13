@@ -253,7 +253,6 @@ Functions
 .. doxygenfunction:: z_sample_express
 
 
-
 Timestamp
 ---------
 Types
@@ -267,6 +266,46 @@ Functions
 
 System
 ======
+
+Random
+------
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_random_u8
+.. doxygenfunction:: z_random_u16
+.. doxygenfunction:: z_random_u32
+.. doxygenfunction:: z_random_u64
+.. doxygenfunction:: z_random_fill
+
+Sleep
+------
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_sleep_s
+.. doxygenfunction:: z_sleep_ms
+.. doxygenfunction:: z_sleep_us
+
+Time
+----
+
+Types
+^^^^^
+.. doxygenstruct:: z_clock_t
+.. doxygenstruct:: z_time_t
+
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_clock_now
+.. doxygenfunction:: z_clock_elapsed_s
+.. doxygenfunction:: z_clock_elapsed_ms
+.. doxygenfunction:: z_clock_elapsed_us
+
+.. doxygenfunction:: z_time_now
+.. doxygenfunction:: z_time_elapsed_s
+.. doxygenfunction:: z_time_elapsed_ms
+.. doxygenfunction:: z_time_elapsed_us
+.. doxygenfunction:: z_time_now_as_str
+
 
 Mutex
 -----

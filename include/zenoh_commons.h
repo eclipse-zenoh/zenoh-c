@@ -242,8 +242,7 @@ typedef struct ALIGN(8) z_loaned_bytes_reader_t {
   uint8_t _0[24];
 } z_loaned_bytes_reader_t;
 /**
- * Clock
- * Uses monotonic clock
+ * Monotonic clock
  */
 typedef struct z_clock_t {
   uint64_t t;
@@ -789,8 +788,7 @@ typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
 /**
- * Time
- * Uses system clock
+ * Returns system clock time point corresponding to the current time instant.
  */
 typedef struct z_time_t {
   uint64_t t;
@@ -1078,9 +1076,21 @@ z_error_t z_bytes_reader_seek(struct z_loaned_bytes_reader_t *this_,
  * @return read position indicator on success or -1L if failure occurs.
  */
 ZENOHC_API int64_t z_bytes_reader_tell(struct z_loaned_bytes_reader_t *this_);
+/**
+ * Get number of milliseconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);
+/**
+ * Get number of seconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
+/**
+ * Get number of microseconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
+/**
+ * Returns monotonic clock time point corresponding to the current time instant.
+ */
 ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
  * Closes a zenoh session. This alos drops and invalidates `session`.
@@ -1196,13 +1206,42 @@ void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
  * Constructs a null closure.
  */
 ZENOHC_API void z_closure_zid_null(struct z_owned_closure_zid_t *this_);
+/**
+ * Returns ``true`` if conditional variable is valid, ``false`` otherwise.
+ */
 ZENOHC_API bool z_condvar_check(const struct z_owned_condvar_t *this_);
+/**
+ * Drops conditional variable.
+ */
 ZENOHC_API void z_condvar_drop(struct z_owned_condvar_t *this_);
+/**
+ * Constructs conditional variable.
+ */
 ZENOHC_API void z_condvar_init(struct z_owned_condvar_t *this_);
+/**
+ * Borrows conditional variable.
+ */
 ZENOHC_API const struct z_loaned_condvar_t *z_condvar_loan(const struct z_owned_condvar_t *this_);
+/**
+ * Mutably borrows conditional variable.
+ */
 ZENOHC_API struct z_loaned_condvar_t *z_condvar_loan_mut(struct z_owned_condvar_t *this_);
+/**
+ * Constructs conditional variable in a gravestone state.
+ */
 ZENOHC_API void z_condvar_null(struct z_owned_condvar_t *this_);
+/**
+ * Wakes up one blocked thread waiting on this condiitonal variable.
+ * @return 0 in case of success, negative error code in case of failure.
+ */
 ZENOHC_API z_error_t z_condvar_signal(const struct z_loaned_condvar_t *this_);
+/**
+ * Blocks the current thread until the conditional variable receives a notification.
+ *
+ * The function atomically unlocks the guard mutex `m` and blocks the current thread.
+ * When the function returns the lock will have been re-aquired again.
+ * Note: The function may be subject to spurious wakeups.
+ */
 ZENOHC_API
 z_error_t z_condvar_wait(const struct z_loaned_condvar_t *this_,
                          struct z_loaned_mutex_t *m);
@@ -1579,14 +1618,43 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
 ZENOHC_API
 void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *this_,
                          struct z_owned_str_t *out_string);
+/**
+ * Returns ``true`` if mutex is valid, ``false`` otherwise.
+ */
 ZENOHC_API bool z_mutex_check(const struct z_owned_mutex_t *this_);
+/**
+ * Drops mutex and resets it to its gravestone state.
+ */
 ZENOHC_API void z_mutex_drop(struct z_owned_mutex_t *this_);
+/**
+ * Constructs a mutex.
+ * @return 0 in case of success, negative error code otherwise.
+ */
 ZENOHC_API z_error_t z_mutex_init(struct z_owned_mutex_t *this_);
+/**
+ * Mutably borrows mutex.
+ */
 ZENOHC_API struct z_loaned_mutex_t *z_mutex_loan_mut(struct z_owned_mutex_t *this_);
+/**
+ * Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
+ * @return 0 in case of success, negative error code in case of failure.
+ */
 ZENOHC_API z_error_t z_mutex_lock(struct z_loaned_mutex_t *this_);
+/**
+ * Constructs mutex in a gravestone state.
+ */
 ZENOHC_API void z_mutex_null(struct z_owned_mutex_t *this_);
+/**
+ * Tries to lock mutex. If mutex is already locked, return immediately.
+ * @return 0 in case of success, negative value if failed to aquire the lock.
+ */
 ZENOHC_API z_error_t z_mutex_try_lock(struct z_loaned_mutex_t *this_);
-ZENOHC_API z_error_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
+/**
+ * Unlocks previously locked mutex. If mutex was not locked by the current thread, the behaviour is undefined.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
 /**
  * Constructs and opens a new Zenoh session.
  *
@@ -1816,10 +1884,25 @@ ZENOHC_API void z_queryable_null(struct z_owned_queryable_t *this_);
  * Constructs the default value for `z_query_reply_options_t`.
  */
 ZENOHC_API void z_queryable_options_default(struct z_queryable_options_t *this_);
+/**
+ * Fills buffer with random data.
+ */
 ZENOHC_API void z_random_fill(void *buf, size_t len);
+/**
+ * Generates random `uint16_t`.
+ */
 ZENOHC_API uint16_t z_random_u16(void);
+/**
+ * Generates random `uint32_t`.
+ */
 ZENOHC_API uint32_t z_random_u32(void);
+/**
+ * Generates random `uint64_t`.
+ */
 ZENOHC_API uint64_t z_random_u64(void);
+/**
+ * Generates random `uint8_t`.
+ */
 ZENOHC_API uint8_t z_random_u8(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
@@ -1977,8 +2060,17 @@ ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_
  * Constructs a Zenoh session in its gravestone state.
  */
 ZENOHC_API void z_session_null(struct z_owned_session_t *this_);
+/**
+ * Puts current thread to sleep for specified amount of milliseconds.
+ */
 ZENOHC_API int8_t z_sleep_ms(size_t time);
+/**
+ * Puts current thread to sleep for specified amount of seconds.
+ */
 ZENOHC_API int8_t z_sleep_s(size_t time);
+/**
+ * Puts current thread to sleep for specified amount of microseconds.
+ */
 ZENOHC_API int8_t z_sleep_us(size_t time);
 /**
  * @return ``true`` if the slice array is valid, ``false`` if it is in a gravestone state.
@@ -2240,11 +2332,22 @@ ZENOHC_API void z_subscriber_null(struct z_owned_subscriber_t *this_);
  * Constructs the default value for `z_subscriber_options_t`.
  */
 ZENOHC_API void z_subscriber_options_default(struct z_subscriber_options_t *this_);
+/**
+ * Returns ``true`` if task is valid, ``false`` otherwise.
+ */
 ZENOHC_API bool z_task_check(const struct z_owned_task_t *this_);
 /**
  * Detaches the task and releases all allocated resources.
  */
 ZENOHC_API void z_task_detach(struct z_owned_task_t *this_);
+/**
+ * Constructs a new task.
+ *
+ * @param this_: An uninitialized memory location where task will be constructed.
+ * @param _attr: Attributes of the task (currently unused).
+ * @param fun: Function to be executed by the task.
+ * @param arg: Argument that will be passed to the function `fun`.
+ */
 ZENOHC_API
 z_error_t z_task_init(struct z_owned_task_t *this_,
                       const struct z_task_attr_t *_attr,
@@ -2254,12 +2357,36 @@ z_error_t z_task_init(struct z_owned_task_t *this_,
  * Joins the task and releases all allocated resources
  */
 ZENOHC_API z_error_t z_task_join(struct z_owned_task_t *this_);
+/**
+ * Constructs task in a gravestone state.
+ */
 ZENOHC_API void z_task_null(struct z_owned_task_t *this_);
+/**
+ * Get number of milliseconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_time_elapsed_ms(const struct z_time_t *time);
+/**
+ * Get number of seconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
+/**
+ * Get number of microseconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
+/**
+ * Initialize clock with current time instant.
+ */
 ZENOHC_API struct z_time_t z_time_now(void);
-ZENOHC_API const char *z_time_now_as_str(const char *buf, size_t len);
+/**
+ * Converts current system time into null-terminated human readable string and writes it to the `buf`.
+ *
+ * @param buf: A buffer where the string will be writtent
+ * @param len: Maximum number of characters to write (including terminating 0). The string will be truncated
+ * if it is longer than `len`.
+ */
+ZENOHC_API
+const char *z_time_now_as_str(const char *buf,
+                              size_t len);
 /**
  * Returns id associated with this timestamp.
  */
