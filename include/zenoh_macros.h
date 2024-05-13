@@ -171,7 +171,7 @@
 
 
 
-inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t* payload) { return z_bytes_loan(payload); };
+inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t* this_) { return z_bytes_loan(this_); };
 inline const z_loaned_bytes_reader_t* z_loan(const z_owned_bytes_reader_t* reader) { return z_bytes_reader_loan(reader); };
 inline const z_loaned_condvar_t* z_loan(const z_owned_condvar_t* this_) { return z_condvar_loan(this_); };
 inline const z_loaned_config_t* z_loan(const z_owned_config_t* this_) { return z_config_loan(this_); };
@@ -274,7 +274,7 @@ inline void z_null( ze_owned_publication_cache_t* this_) { return ze_publication
 inline void z_null( ze_owned_querying_subscriber_t* this_) { return ze_querying_subscriber_null(this_); };
 
 
-inline bool z_check(const z_owned_bytes_t& payload) { return z_bytes_check(&payload); };
+inline bool z_check(const z_owned_bytes_t& this_) { return z_bytes_check(&this_); };
 inline bool z_check(const z_owned_bytes_reader_t& this_) { return z_bytes_reader_check(&this_); };
 inline bool z_check(const z_owned_closure_hello_t& this_) { return z_closure_hello_check(&this_); };
 inline bool z_check(const z_owned_closure_query_t& this_) { return z_closure_query_check(&this_); };

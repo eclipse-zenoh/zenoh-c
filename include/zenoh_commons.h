@@ -172,7 +172,7 @@ typedef enum zcu_reply_keyexpr_t {
 /**
  * A serialized Zenoh data.
  *
- * To minimize copies and reallocations, Zenoh may provide you data in several separate buffers.
+ * To minimize copies and reallocations, Zenoh may provide data in several separate buffers.
  */
 typedef struct ALIGN(8) z_owned_bytes_t {
   uint8_t _0[40];
@@ -223,11 +223,14 @@ typedef struct ALIGN(8) z_loaned_str_t {
   uint8_t _0[16];
 } z_loaned_str_t;
 /**
- * A reader for payload data.
+ * A reader for serialized data.
  */
 typedef struct ALIGN(8) z_owned_bytes_reader_t {
   uint8_t _0[24];
 } z_owned_bytes_reader_t;
+/**
+ * A loaned reader for serialized data.
+ */
 typedef struct ALIGN(8) z_loaned_bytes_reader_t {
   uint8_t _0[24];
 } z_loaned_bytes_reader_t;
@@ -653,9 +656,6 @@ typedef struct z_put_options_t {
 } z_put_options_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
@@ -665,9 +665,18 @@ typedef struct z_put_options_t {
  * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_query_channel_closure_t {
+  /**
+   * An optional pointer to a closure state.
+   */
   void *context;
-  bool (*call)(struct z_owned_query_t*, void*);
-  void (*drop)(void*);
+  /**
+   * A closure body.
+   */
+  bool (*call)(struct z_owned_query_t *query, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
 } z_owned_query_channel_closure_t;
 /**
  * A pair of closures
@@ -936,94 +945,121 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 /**
- * Returns `true` if the payload is in a valid state.
+ * Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
  */
-ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *payload);
+ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *this_);
 /**
- * Increments the payload's reference count, returning an owned version of it.
+ * Constructs an owned shallow copy of data in provided uninitialized memory location.
  */
-ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *src, struct z_owned_bytes_t *dst);
+ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *this_, struct z_owned_bytes_t *dst);
 /**
- * Decodes payload into owned bytes
+ * Decodes data into an owned slice.
+ *
+ * @param this_: Data to decode.
+ * @param dst: An unitialized memory location where to construct a slice.
  */
 ZENOHC_API
-z_error_t z_bytes_decode_into_bytes(const struct z_loaned_bytes_t *payload,
+z_error_t z_bytes_decode_into_slice(const struct z_loaned_bytes_t *this_,
                                     struct z_owned_slice_t *dst);
 /**
- * Decodes payload into bytes map.
+ * Decodes data into an owned bytes map.
+ *
+ * @param this_: Data to decode.
+ * @param dst: An unitialized memory location where to construct a decoded map.
  */
 ZENOHC_API
-z_error_t z_bytes_decode_into_slice_map(const struct z_loaned_bytes_t *payload,
+z_error_t z_bytes_decode_into_slice_map(const struct z_loaned_bytes_t *this_,
                                         struct z_owned_slice_map_t *dst);
 /**
- * Decodes payload into null-terminated string.
+ * Decodes data into an owned null-terminated string.
+ *
+ * @param this_: Data to decode.
+ * @param dst: An unitialized memory location where to construct a decoded string.
  */
 ZENOHC_API
-z_error_t z_bytes_decode_into_string(const struct z_loaned_bytes_t *payload,
+z_error_t z_bytes_decode_into_string(const struct z_loaned_bytes_t *this_,
                                      struct z_owned_str_t *dst);
 /**
- * Decrements the payload's reference counter, destroying it if applicable.
- *
- * `this` will be reset to `z_buffer_null`, preventing UB on double-frees.
+ * Drops `this_`, resetting it to gravestone value. If there are any shallow copies
+ * created by `z_bytes_clone()`, they would still stay valid.
  */
 ZENOHC_API void z_bytes_drop(struct z_owned_bytes_t *this_);
 /**
- * Encodes byte sequence by aliasing.
+ * Encodes a slice by aliasing.
  */
 ZENOHC_API
 void z_bytes_encode_from_slice(struct z_owned_bytes_t *this_,
                                const struct z_loaned_slice_t *bytes);
 /**
- * Encodes bytes map by copying.
+ * Encodes slice map by copying.
  */
 ZENOHC_API
 void z_bytes_encode_from_slice_map(struct z_owned_bytes_t *this_,
                                    const struct z_loaned_slice_map_t *bytes_map);
 /**
- * Encodes a loaned string by aliasing.
+ * Encodes string by aliasing.
  */
 ZENOHC_API
 void z_bytes_encode_from_string(struct z_owned_bytes_t *this_,
                                 const struct z_loaned_str_t *s);
 /**
- * Returns total number bytes in the payload.
+ * Returns total number of bytes in the payload.
  */
-ZENOHC_API size_t z_bytes_len(const struct z_loaned_bytes_t *payload);
+ZENOHC_API size_t z_bytes_len(const struct z_loaned_bytes_t *this_);
 /**
- * Loans the payload, allowing you to call functions that only need a loan of it.
+ * Borrows data.
  */
-ZENOHC_API const struct z_loaned_bytes_t *z_bytes_loan(const struct z_owned_bytes_t *payload);
+ZENOHC_API const struct z_loaned_bytes_t *z_bytes_loan(const struct z_owned_bytes_t *this_);
 /**
  * The gravestone value for `z_owned_bytes_t`.
  */
 ZENOHC_API void z_bytes_null(struct z_owned_bytes_t *this_);
+/**
+ * Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
+ */
 ZENOHC_API bool z_bytes_reader_check(const struct z_owned_bytes_reader_t *this_);
+/**
+ * Frees memory and resets data reader to its gravestone state.
+ */
 ZENOHC_API void z_bytes_reader_drop(struct z_owned_bytes_reader_t *this_);
+/**
+ * Borrows data reader.
+ */
 ZENOHC_API
 const struct z_loaned_bytes_reader_t *z_bytes_reader_loan(const struct z_owned_bytes_reader_t *reader);
+/**
+ * Mutably borrows data reader.
+ */
 ZENOHC_API
 struct z_loaned_bytes_reader_t *z_bytes_reader_loan_mut(struct z_owned_bytes_reader_t *reader);
 /**
- * Creates a reader for the specified `payload`.
+ * Creates a reader for the specified data.
+ *
+ * The `data` should outlive the reader.
  */
 ZENOHC_API
 void z_bytes_reader_new(struct z_owned_bytes_reader_t *this_,
-                        const struct z_loaned_bytes_t *payload);
+                        const struct z_loaned_bytes_t *data);
+/**
+ * Constructs data reader in a gravestone state.
+ */
 ZENOHC_API void z_bytes_reader_null(struct z_owned_bytes_reader_t *this_);
 /**
  * Reads data into specified destination.
  *
- * Will read at most `len` bytes.
- * Returns number of bytes read. If return value is smaller than `len`, it means that end of the payload was reached.
+ * @param this_: Data reader to read from.
+ * @param dst: Buffer where the read data is written.
+ * @param len: Maximum number of bytes to read.
+ * @return number of bytes read. If return value is smaller than `len`, it means that  theend of the data was reached.
  */
 ZENOHC_API
 size_t z_bytes_reader_read(struct z_loaned_bytes_reader_t *this_,
-                           uint8_t *dest,
+                           uint8_t *dst,
                            size_t len);
 /**
  * Sets the `reader` position indicator for the payload to the value pointed to by offset.
- * The new position is exactly offset bytes measured from the beginning of the payload if origin is SEEK_SET,
- * from the current reader position if origin is SEEK_CUR, and from the end of the payload if origin is SEEK_END.
+ * The new position is exactly `offset` bytes measured from the beginning of the payload if origin is `SEEK_SET`,
+ * from the current reader position if origin is `SEEK_CUR`, and from the end of the payload if origin is `SEEK_END`.
  * Return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
@@ -1031,8 +1067,8 @@ z_error_t z_bytes_reader_seek(struct z_loaned_bytes_reader_t *this_,
                               int64_t offset,
                               int origin);
 /**
- * Returns the read position indicator.
- * Returns read position indicator on success or -1L if failure occurs.
+ * Gets the read position indicator.
+ * @return read position indicator on success or -1L if failure occurs.
  */
 ZENOHC_API int64_t z_bytes_reader_tell(struct z_loaned_bytes_reader_t *this_);
 ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);

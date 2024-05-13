@@ -120,6 +120,41 @@ Functions
 
 Common
 ======
+Serialization / Deserialization
+-------------------------------
+Types
+^^^^^
+.. doxygenstruct:: z_owned_bytes_t
+.. doxygenstruct:: z_loaned_bytes_t
+.. doxygenstruct:: z_owned_bytes_reader_t
+.. doxygenstruct:: z_loaned_bytes_reader_t
+
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_bytes_len
+.. doxygenfunction:: z_bytes_encode_from_slice
+.. doxygenfunction:: z_bytes_encode_from_string
+.. doxygenfunction:: z_bytes_encode_from_slice_map
+.. doxygenfunction:: z_bytes_decode_into_slice
+.. doxygenfunction:: z_bytes_decode_into_string
+.. doxygenfunction:: z_bytes_decode_into_slice_map
+
+.. doxygenfunction:: z_bytes_clone
+.. doxygenfunction:: z_bytes_loan
+.. doxygenfunction:: z_bytes_null
+.. doxygenfunction:: z_bytes_check
+.. doxygenfunction:: z_bytes_drop
+
+.. doxygenfunction:: z_bytes_reader_read
+.. doxygenfunction:: z_bytes_reader_seek
+.. doxygenfunction:: z_bytes_reader_tell
+
+.. doxygenfunction:: z_bytes_reader_loan
+.. doxygenfunction:: z_bytes_reader_loan_mut
+.. doxygenfunction:: z_bytes_reader_null
+.. doxygenfunction:: z_bytes_reader_check
+.. doxygenfunction:: z_bytes_reader_drop
+
 
 Key expression
 --------------

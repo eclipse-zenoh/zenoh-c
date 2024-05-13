@@ -41,7 +41,7 @@ macro_rules! get_opaque_type_data {
 
 /// A serialized Zenoh data.
 ///
-/// To minimize copies and reallocations, Zenoh may provide you data in several separate buffers.
+/// To minimize copies and reallocations, Zenoh may provide data in several separate buffers.
 get_opaque_type_data!(Option<ZBytes>, z_owned_bytes_t);
 /// A loaned serialized Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
@@ -49,7 +49,7 @@ get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 
 type CSlice = (usize, isize);
 
-/// A contiguous owned sequence of bytes allocated by Zenoh. 
+/// A contiguous owned sequence of bytes allocated by Zenoh.
 get_opaque_type_data!(CSlice, z_owned_slice_t);
 /// A contiguous sequence of bytes owned by some other entity.
 get_opaque_type_data!(CSlice, z_view_slice_t);
@@ -84,8 +84,9 @@ get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
 /// A loaned Zenoh sample.
 get_opaque_type_data!(Sample, z_loaned_sample_t);
 
-/// A reader for payload data.
+/// A reader for serialized data.
 get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
+/// A loaned reader for serialized data.
 get_opaque_type_data!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
 
 /// The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
@@ -110,9 +111,9 @@ get_opaque_type_data!(Option<Query>, z_owned_query_t);
 /// A loaned Zenoh query.
 get_opaque_type_data!(Query, z_loaned_query_t);
 
-/// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#queryable"> queryable </a>. 
+/// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#queryable"> queryable </a>.
 /// 
-/// Responds to queries sent via `z_get()` with intersecting key expression. 
+/// Responds to queries sent via `z_get()` with intersecting key expression.
 get_opaque_type_data!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
 get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
@@ -181,14 +182,14 @@ get_opaque_type_data!(Option<Publisher<'static>>, z_owned_publisher_t);
 /// A loaned Zenoh publisher.
 get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 
-/// An owned Zenoh matching listener. 
+/// An owned Zenoh matching listener.
 /// 
 /// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
 /// Dropping the corresponding publisher, also drops matching listener.
 get_opaque_type_data!(Option<MatchingListener<'static, DefaultHandler>>, zcu_owned_matching_listener_t);
 
 
-/// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>. 
+/// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
 /// 
 /// Receives data from publication on intersecting key expressions.
 /// Destroying the subscriber cancels the subscription.
@@ -206,7 +207,7 @@ get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 
 
 /// An owned Zenoh publication cache.
-/// 
+///
 /// Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
 /// (for example by `ze_owned_querying_subscriber_t`).
 get_opaque_type_data!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
