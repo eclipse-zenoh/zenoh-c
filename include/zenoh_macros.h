@@ -65,7 +65,6 @@
         z_owned_reply_channel_t * : z_reply_channel_drop,\
         z_owned_reply_t * : z_reply_drop,\
         z_owned_sample_t * : z_sample_drop,\
-        z_owned_scouting_config_t * : z_scouting_config_drop,\
         z_owned_session_t * : z_session_drop,\
         z_owned_slice_array_t * : z_slice_array_drop,\
         z_owned_slice_t * : z_slice_drop,\
@@ -99,7 +98,6 @@
         z_owned_reply_channel_t * : z_reply_channel_null, \
         z_owned_reply_t * : z_reply_null, \
         z_owned_sample_t * : z_sample_null, \
-        z_owned_scouting_config_t * : z_scouting_config_null, \
         z_owned_session_t * : z_session_null, \
         z_owned_slice_array_t * : z_slice_array_null, \
         z_owned_slice_map_t * : z_slice_map_null, \
@@ -120,6 +118,7 @@
     _Generic((x), \
         z_owned_bytes_t : z_bytes_check, \
         z_owned_bytes_reader_t : z_bytes_reader_check, \
+        z_owned_closure_hello_t : z_closure_hello_check, \
         z_owned_closure_query_t : z_closure_query_check, \
         z_owned_closure_reply_t : z_closure_reply_check, \
         z_owned_closure_sample_t : z_closure_sample_check, \
@@ -135,7 +134,6 @@
         z_owned_queryable_t : z_queryable_check, \
         z_owned_reply_t : z_reply_check, \
         z_owned_sample_t : z_sample_check, \
-        z_owned_scouting_config_t : z_scouting_config_check, \
         z_owned_session_t : z_session_check, \
         z_owned_slice_array_t : z_slice_array_check, \
         z_owned_slice_t : z_slice_check, \
@@ -225,7 +223,6 @@ inline void z_drop(const z_owned_reply_channel_closure_t* closure) { return z_re
 inline void z_drop(const z_owned_reply_channel_t* channel) { return z_reply_channel_drop(channel); };
 inline void z_drop(const z_owned_reply_t* this_) { return z_reply_drop(this_); };
 inline void z_drop(const z_owned_sample_t* this_) { return z_sample_drop(this_); };
-inline void z_drop(const z_owned_scouting_config_t* config) { return z_scouting_config_drop(config); };
 inline void z_drop(const z_owned_session_t* this_) { return z_session_drop(this_); };
 inline void z_drop(const z_owned_slice_array_t* this_) { return z_slice_array_drop(this_); };
 inline void z_drop(const z_owned_slice_t* this_) { return z_slice_drop(this_); };
@@ -257,7 +254,6 @@ inline void z_null( z_owned_reply_channel_closure_t* this_) { return z_reply_cha
 inline void z_null( z_owned_reply_channel_t* this_) { return z_reply_channel_null(this_); };
 inline void z_null( z_owned_reply_t* this_) { return z_reply_null(this_); };
 inline void z_null( z_owned_sample_t* this_) { return z_sample_null(this_); };
-inline void z_null( z_owned_scouting_config_t* this_) { return z_scouting_config_null(this_); };
 inline void z_null( z_owned_session_t* this_) { return z_session_null(this_); };
 inline void z_null( z_owned_slice_array_t* this_) { return z_slice_array_null(this_); };
 inline void z_null( z_owned_slice_map_t* this_) { return z_slice_map_null(this_); };
@@ -276,6 +272,7 @@ inline void z_null( ze_owned_querying_subscriber_t* this_) { return ze_querying_
 
 inline bool z_check(const z_owned_bytes_t& payload) { return z_bytes_check(&payload); };
 inline bool z_check(const z_owned_bytes_reader_t& this_) { return z_bytes_reader_check(&this_); };
+inline bool z_check(const z_owned_closure_hello_t& this_) { return z_closure_hello_check(&this_); };
 inline bool z_check(const z_owned_closure_query_t& this_) { return z_closure_query_check(&this_); };
 inline bool z_check(const z_owned_closure_reply_t& this_) { return z_closure_reply_check(&this_); };
 inline bool z_check(const z_owned_closure_sample_t& this_) { return z_closure_sample_check(&this_); };
@@ -291,7 +288,6 @@ inline bool z_check(const z_owned_query_t& query) { return z_query_check(&query)
 inline bool z_check(const z_owned_queryable_t& this_) { return z_queryable_check(&this_); };
 inline bool z_check(const z_owned_reply_t& this_) { return z_reply_check(&this_); };
 inline bool z_check(const z_owned_sample_t& this_) { return z_sample_check(&this_); };
-inline bool z_check(const z_owned_scouting_config_t& config) { return z_scouting_config_check(&config); };
 inline bool z_check(const z_owned_session_t& this_) { return z_session_check(&this_); };
 inline bool z_check(const z_owned_slice_array_t& this_) { return z_slice_array_check(&this_); };
 inline bool z_check(const z_owned_slice_t& this_) { return z_slice_check(&this_); };

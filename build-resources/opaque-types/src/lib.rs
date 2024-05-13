@@ -228,7 +228,7 @@ get_opaque_type_data!(Condvar, z_loaned_condvar_t);
 /// An owned Zenoh task.
 get_opaque_type_data!(Option<JoinHandle<()>>, z_owned_task_t);
 
-/// An owned Zenoh-allocated hello message returned by a Zenoh entity to a scout message sent with `z_scout`.
+/// An owned Zenoh-allocated hello message returned by a Zenoh entity to a scout message sent with `z_scout()`.
 get_opaque_type_data!(Option<Hello>, z_owned_hello_t);
 /// A loaned hello message.
 get_opaque_type_data!(Hello, z_loaned_hello_t);

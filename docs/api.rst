@@ -274,9 +274,6 @@ Functions
 .. doxygenfunction:: z_task_join
 .. doxygenfunction:: z_task_detach
 
-.. Scouting
-.. ========
-
 Session
 =======
 
@@ -311,6 +308,7 @@ Types
 ^^^^^
 .. doxygenstruct:: z_owned_session_t
 .. doxygenstruct:: z_loaned_session_t
+.. doxygenstruct:: z_id_t
 
 .. doxygenstruct:: z_owned_closure_zid_t
     :members:
@@ -511,6 +509,39 @@ Functions
 .. doxygenfunction:: z_closure_reply_drop
 .. doxygenfunction:: z_closure_reply_null
 .. doxygenfunction:: z_closure_reply_check
+
+Scouting
+========
+
+Types
+-----
+.. doxygenstruct:: z_owned_hello_t
+.. doxygenstruct:: z_loaned_hello_t
+.. doxygenstruct:: z_scout_options_t
+    :members:
+.. doxygenstruct:: z_owned_closure_hello_t
+    :members:
+
+Functions
+---------
+.. doxygenfunction:: z_scout
+
+.. doxygenfunction:: z_hello_whatami
+.. doxygenfunction:: z_hello_locators
+.. doxygenfunction:: z_hello_zid
+.. doxygenfunction:: z_hello_loan
+.. doxygenfunction:: z_hello_drop 
+.. doxygenfunction:: z_hello_null 
+.. doxygenfunction:: z_hello_check
+
+.. doxygenfunction:: z_whatami_to_str
+
+.. doxygenfunction:: z_scout_options_default
+
+.. doxygenfunction:: z_closure_hello_call
+.. doxygenfunction:: z_closure_hello_drop
+.. doxygenfunction:: z_closure_hello_null
+.. doxygenfunction:: z_closure_hello_check
 
 Liveliness
 ==========

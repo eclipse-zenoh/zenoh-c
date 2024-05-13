@@ -248,11 +248,6 @@ typedef struct ALIGN(8) z_loaned_hello_t {
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_hello_t* hello, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
- *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
@@ -262,9 +257,18 @@ typedef struct ALIGN(8) z_loaned_hello_t {
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_hello_t {
+  /**
+   * An optional pointer to a closure state.
+   */
   void *context;
-  void (*call)(const struct z_loaned_hello_t*, void*);
-  void (*drop)(void*);
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct z_loaned_hello_t *hello, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
 } z_owned_closure_hello_t;
 /**
  * An owned Zenoh query received by a queryable.
@@ -576,7 +580,7 @@ typedef struct z_get_options_t {
   uint64_t timeout_ms;
 } z_get_options_t;
 /**
- * An owned Zenoh-allocated hello message returned by a Zenoh entity to a scout message sent with `z_scout`.
+ * An owned Zenoh-allocated hello message returned by a Zenoh entity to a scout message sent with `z_scout()`.
  */
 typedef struct ALIGN(8) z_owned_hello_t {
   uint8_t _0[48];
@@ -740,11 +744,19 @@ typedef struct ALIGN(8) z_owned_sample_t {
 typedef struct ALIGN(8) z_timestamp_t {
   uint8_t _0[24];
 } z_timestamp_t;
-typedef struct z_owned_scouting_config_t {
-  struct z_owned_config_t _config;
+/**
+ * Options to pass to `z_scout()`.
+ */
+typedef struct z_scout_options_t {
+  /**
+   * The maximum duration in ms the scouting can take.
+   */
   unsigned long zc_timeout_ms;
+  /**
+   * Type of entities to scout for.
+   */
   uint8_t zc_what;
-} z_owned_scouting_config_t;
+} z_scout_options_t;
 /**
  * A loaned slice array.
  */
@@ -1023,11 +1035,15 @@ ZENOHC_API
 void z_closure_hello_call(const struct z_owned_closure_hello_t *closure,
                           const struct z_loaned_hello_t *hello);
 /**
+ * Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_closure_hello_check(const struct z_owned_closure_hello_t *this_);
+/**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_closure_hello_t' type
+ * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
 /**
@@ -1129,7 +1145,7 @@ ZENOHC_API
 z_error_t z_condvar_wait(const struct z_loaned_condvar_t *this_,
                          struct z_loaned_mutex_t *m);
 /**
- * Returns ``true`` if `config` is valid, ``false`` if it is in a gravestone state.
+ * Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool z_config_check(const struct z_owned_config_t *this_);
 /**
@@ -1298,25 +1314,37 @@ z_error_t z_get(const struct z_loaned_session_t *session,
  * Constructs default `z_get_options_t`
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
+/**
+ * Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
+ */
 ZENOHC_API bool z_hello_check(const struct z_owned_hello_t *this_);
 /**
- * Frees `hello`, invalidating it for double-drop safety.
+ * Frees memory and resets hello message to its gravestone state.
  */
 ZENOHC_API void z_hello_drop(struct z_owned_hello_t *this_);
 /**
- * Returns a `z_hello_t` loaned from `z_owned_hello_t`.
+ * Borrows hello message.
  */
 ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hello_t *this_);
 /**
- * Returns an array of non-owned locators as an array of non-null terminated strings.
+ * Constructs an array of non-owned locators (in the form non-null terminated strings) of Zenoh entity that sent hello message.
  *
- * The lifetime of locator strings is bound to `this`.
+ * The lifetime of locator strings is bound to `this_`.
  */
 ZENOHC_API
 void z_hello_locators(const struct z_loaned_hello_t *this_,
                       struct z_owned_slice_array_t *locators_out);
+/**
+ * Constructs hello message in a gravestone state.
+ */
 ZENOHC_API void z_hello_null(struct z_owned_hello_t *this_);
+/**
+ * Returns type of Zenoh entity that transmitted hello message.
+ */
 ZENOHC_API uint8_t z_hello_whatami(const struct z_loaned_hello_t *this_);
+/**
+ * Returns id of Zenoh entity that transmitted hello message.
+ */
 ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
 /**
  * Fetches the Zenoh IDs of all connected peers.
@@ -1830,23 +1858,20 @@ ZENOHC_API const struct z_timestamp_t *z_sample_timestamp(const struct z_loaned_
 /**
  * Scout for routers and/or peers.
  *
- * Parameters:
- *     what: A whatami bitmask of zenoh entities kind to scout for.
- *     config: A set of properties to configure the scouting.
- *     timeout: The time (in milliseconds) that should be spent scouting.
+ * @param config: A set of properties to configure scouting session.
+ * @param callback: A closure that will be called on each hello message received from discoverd Zenoh entities.
+ * @param options: A set of scouting options
  *
- * Returns 0 if successful, negative values upon failure.
+ * @return 0 if successful, negative error values upon failure.
  */
 ZENOHC_API
-z_error_t z_scout(struct z_owned_scouting_config_t *config,
-                  struct z_owned_closure_hello_t *callback);
-ZENOHC_API bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
-ZENOHC_API void z_scouting_config_default(struct z_owned_scouting_config_t *this_);
-ZENOHC_API void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
-ZENOHC_API
-void z_scouting_config_from(struct z_owned_scouting_config_t *this_,
-                            const struct z_loaned_config_t *config);
-ZENOHC_API void z_scouting_config_null(struct z_owned_scouting_config_t *this_);
+z_error_t z_scout(struct z_owned_config_t *config,
+                  struct z_owned_closure_hello_t *callback,
+                  const struct z_scout_options_t *options);
+/**
+ * Constructs the default values for the scouting operation.
+ */
+ZENOHC_API void z_scout_options_default(struct z_scout_options_t *this_);
 /**
  * Returns ``true`` if `session` is valid, ``false`` otherwise.
  */
@@ -2317,15 +2342,18 @@ z_error_t z_view_str_wrap(struct z_view_str_t *this_,
 /**
  * Converts the kind of zenoh entity into a string.
  *
- * Parameters:
- *     whatami: A whatami bitmask of zenoh entity kind.
- *     buf: Buffer to write a null-terminated string to.
- *     len: Maximum number of bytes that can be written to the `buf`.
  *
- * Returns 0 if successful, negative values if whatami contains an invalid bitmask or `buf` is null,
+ * @param whatami: A whatami bitmask of zenoh entity kind.
+ * @param buf: Buffer to write a null-terminated string to.
+ * @param len: Maximum number of bytes that can be written to the `buf`.
+ *
+ * @return 0 if successful, negative error values if whatami contains an invalid bitmask or `buf` is null,
  * or number of remaining bytes, if the null-terminated string size exceeds `len`.
  */
-ZENOHC_API int8_t z_whatami_to_str(uint8_t whatami, char *buf, size_t len);
+ZENOHC_API
+z_error_t z_whatami_to_str(uint8_t whatami,
+                           char *buf,
+                           size_t len);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  *

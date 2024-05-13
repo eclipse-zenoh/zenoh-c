@@ -74,16 +74,6 @@ void test_config() {
     assert(!z_check(config));
 }
 
-void test_scouting_config() {
-    z_owned_scouting_config_t config;
-    z_scouting_config_default(&config);
-    assert(z_check(config));
-    z_drop(z_move(config));
-    assert(!z_check(config));
-    z_drop(z_move(config));
-    assert(!z_check(config));
-}
-
 void data_handler(const z_loaned_sample_t *sample, void *arg) {}
 
 void test_subscriber() {
@@ -133,7 +123,6 @@ int main(int argc, char **argv) {
     test_publisher();
     test_keyexpr();
     test_config();
-    test_scouting_config();
     test_subscriber();
     test_queryable();
 
