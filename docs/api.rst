@@ -556,13 +556,17 @@ Types
 
 Functions
 ---------
+.. doxygenfunction:: zc_liveliness_declare_subscriber
+.. doxygenfunction:: zc_liveliness_get
 
 .. doxygenfunction:: zc_liveliness_declare_token
 .. doxygenfunction:: zc_liveliness_undeclare_token
 .. doxygenfunction:: zc_liveliness_token_null
 .. doxygenfunction:: zc_liveliness_token_check
-.. doxygenfunction:: zc_liveliness_declare_subscriber
-.. doxygenfunction:: zc_liveliness_get
+.. doxygenfunction:: zc_liveliness_token_drop
+
+.. doxygenfunction:: zc_liveliness_subscriber_options_default
+.. doxygenfunction:: zc_liveliness_declaration_options_default
 .. doxygenfunction:: zc_liveliness_get_options_default
 
 Publication Cache

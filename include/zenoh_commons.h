@@ -792,13 +792,13 @@ typedef struct ALIGN(8) z_view_str_t {
   uint8_t _0[16];
 } z_view_str_t;
 /**
- * The options for `zc_liveliness_declare_token`
+ * The options for `zc_liveliness_declare_token()`.
  */
 typedef struct zc_liveliness_declaration_options_t {
   uint8_t _dummy;
 } zc_liveliness_declaration_options_t;
 /**
- * The options for `zc_liveliness_declare_subscriber`
+ * The options for `zc_liveliness_declare_subscriber()`
  */
 typedef struct zc_liveliness_declare_subscriber_options_t {
   uint8_t _dummy;
@@ -814,7 +814,7 @@ typedef struct ALIGN(8) zc_owned_liveliness_token_t {
   uint8_t _0[32];
 } zc_owned_liveliness_token_t;
 /**
- * The options for `zc_liveliness_declare_subscriber`
+ * The options for `zc_liveliness_get()`
  */
 typedef struct zc_liveliness_get_options_t {
   uint32_t timeout_ms;
@@ -2401,23 +2401,21 @@ z_error_t zc_config_to_string(const struct z_loaned_config_t *config,
  * this will be performed automatically by `z_open` and `z_scout`.
  */
 ZENOHC_API void zc_init_logger(void);
+/**
+ * Constructs default value for `zc_liveliness_declaration_options_t`.
+ */
 ZENOHC_API
 void zc_liveliness_declaration_options_default(struct zc_liveliness_declaration_options_t *this_);
 /**
- * Declares a subscriber on liveliness tokens that intersect `key`.
+ * Declares a subscriber on liveliness tokens that intersect `key_expr`.
  *
- * Parameters:
- *     z_loaned_session_t session: The zenoh session.
- *     z_loaned_keyexpr_t key_expr: The key expression to subscribe.
- *     z_owned_closure_sample_t callback: The callback function that will be called each time a
- *                                        liveliness token status changed.
- *     zc_owned_liveliness_declare_subscriber_options_t _options: The options to be passed to describe the options to be passed to the liveliness subscriber declaration.
+ * @param this_: An unitialized memory location where subscriber will be constructed.
+ * @param session: The Zenoh session.
+ * @param key_expr: The key expression to subscribe.
+ * @param callback: The callback function that will be called each time a liveliness token status is changed.
+ * @param _options: The options to be passed to the liveliness subscriber declaration.
  *
- * Returns:
- *    A `z_owned_subscriber_t`.
- *
- *    To check if the subscription succeeded and if the subscriber is still valid,
- *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * @return 0 in case of success, negative error values otherwise.
  */
 ZENOHC_API
 z_error_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
@@ -2431,19 +2429,23 @@ z_error_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
  * Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
  * is achieved, and a DELETE sample if it's lost.
  *
- * Passing `NULL` as options is valid and equivalent to a pointer to the default options.
+ * @param this_: An uninitialized memory location where liveliness token will be constructed.
+ * @param session: A Zenos session to declare the liveliness token.
+ * @param key_expr: A keyexpr to declare a liveliess token for.
+ * @param _options: Liveliness token declaration properties.
  */
 ZENOHC_API
 z_error_t zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_,
                                       const struct z_loaned_session_t *session,
                                       const struct z_loaned_keyexpr_t *key_expr,
-                                      struct zc_liveliness_declaration_options_t *_options);
+                                      const struct zc_liveliness_declaration_options_t *_options);
 /**
- * Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
+ * @Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
  *
- * Note that the same "value stealing" tricks apply as with a normal `z_get()`
- *
- * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+ * @param session: The Zenoh session.
+ * @param key_expr: The key expression to query liveliness tokens for.
+ * @param callback: The callback function that will be called for each received reply.
+ * @param options: Additional options for the liveliness get operation.
  */
 ZENOHC_API
 z_error_t zc_liveliness_get(const struct z_loaned_session_t *session,
@@ -2451,18 +2453,24 @@ z_error_t zc_liveliness_get(const struct z_loaned_session_t *session,
                             struct z_owned_closure_reply_t *callback,
                             struct zc_liveliness_get_options_t *options);
 /**
- * The gravestone value for `zc_liveliness_get_options_t`
+ * Constructs default value `zc_liveliness_get_options_t`.
  */
 ZENOHC_API void zc_liveliness_get_options_default(struct zc_liveliness_get_options_t *this_);
+/**
+ * Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
+ */
 ZENOHC_API
 void zc_liveliness_subscriber_options_default(struct zc_liveliness_declare_subscriber_options_t *this_);
 /**
- * Returns `true` unless the token is at its gravestone value.
+ * Returns ``true`` if liveliness token is valid, ``false`` otherwise.
  */
 ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token_t *this_);
+/**
+ * Undeclares liveliness token, frees memory and resets it to a gravestone state.
+ */
 ZENOHC_API void zc_liveliness_token_drop(struct zc_owned_liveliness_token_t *this_);
 /**
- * The gravestone value for liveliness tokens.
+ * Constructs liveliness token in its gravestone state.
  */
 ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *this_);
 /**
