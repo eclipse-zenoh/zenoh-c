@@ -112,7 +112,6 @@ pub extern "C" fn ze_publication_cache_null(this: *mut MaybeUninit<ze_owned_publ
     Inplace::empty(this);
 }
 
-
 /// Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

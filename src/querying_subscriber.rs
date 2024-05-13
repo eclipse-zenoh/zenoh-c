@@ -189,7 +189,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 }
 
 /// Undeclares the given querying subscriber, drops it and resets to a gravestone state.
-/// 
+///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
