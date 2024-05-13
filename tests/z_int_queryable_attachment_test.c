@@ -75,7 +75,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_bytes_encode_from_string(&payload, z_loan(value_str));
 
     z_view_keyexpr_t reply_ke;
-    z_view_keyexpr_new(&reply_ke, (const char *)context);
+    z_view_keyexpr_from_string(&reply_ke, (const char *)context);
     z_query_reply(query, z_loan(reply_ke), z_move(payload), &options);
     z_drop(z_move(keystr));
     z_drop(z_move(map));
@@ -99,7 +99,7 @@ int run_queryable() {
     z_closure(&callback, query_handler, NULL, keyexpr);
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
 
     z_owned_queryable_t qable;
     if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
@@ -127,7 +127,7 @@ int run_get() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
 
     z_owned_slice_map_t map;
     z_slice_map_new(&map);

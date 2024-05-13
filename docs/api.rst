@@ -163,29 +163,41 @@ Types
 .. doxygenstruct:: z_owned_keyexpr_t
 .. doxygenstruct:: z_view_keyexpr_t
 .. doxygenstruct:: z_loaned_keyexpr_t
+.. doxygenenum:: z_keyexpr_intersection_level_t
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_keyexpr_new
-.. doxygenfunction:: z_view_keyexpr_new
-.. doxygenfunction:: z_keyexpr_new_autocanonize
-.. doxygenfunction:: z_view_keyexpr_new_autocanonize
-.. doxygenfunction:: z_view_keyexpr_unchecked
+.. doxygenfunction:: z_keyexpr_from_string
+.. doxygenfunction:: z_view_keyexpr_from_string
+.. doxygenfunction:: z_keyexpr_from_string_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_string_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_string_unchecked
+
+.. doxygenfunction:: z_keyexpr_from_slice
+.. doxygenfunction:: z_view_keyexpr_from_slice
+.. doxygenfunction:: z_keyexpr_from_slice_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_slice_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_slice_unchecked
+
 .. doxygenfunction:: z_keyexpr_loan
 .. doxygenfunction:: z_view_keyexpr_loan
 .. doxygenfunction:: z_keyexpr_check
 .. doxygenfunction:: z_view_keyexpr_check
 .. doxygenfunction:: z_keyexpr_drop
+
 .. doxygenfunction:: z_keyexpr_to_string
 .. doxygenfunction:: z_keyexpr_as_slice
+
 .. doxygenfunction:: z_keyexpr_canonize
 .. doxygenfunction:: z_keyexpr_canonize_null_terminated
 .. doxygenfunction:: z_keyexpr_is_canon
+
 .. doxygenfunction:: z_keyexpr_concat
 .. doxygenfunction:: z_keyexpr_join
 .. doxygenfunction:: z_keyexpr_equals
 .. doxygenfunction:: z_keyexpr_includes
 .. doxygenfunction:: z_keyexpr_intersects
+
 .. doxygenfunction:: z_declare_keyexpr
 .. doxygenfunction:: z_undeclare_keyexpr
 

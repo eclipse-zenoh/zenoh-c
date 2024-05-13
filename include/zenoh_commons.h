@@ -53,17 +53,24 @@ typedef enum z_consolidation_mode_t {
   Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
 /**
- * A `z_keyexpr_intersection_level_t`.
- *
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES**
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS**
+ * Intersection level of 2 key expressions.
  */
 typedef enum z_keyexpr_intersection_level_t {
+  /**
+   * 2 key expressions do not intersect.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT = 0,
+  /**
+   * 2 key expressions intersect, i.e. there exists at least one key expression that is included by both.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS = 1,
+  /**
+   * First key expression is the superset of second one.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES = 2,
+  /**
+   * 2 key expressions are equal.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
 } z_keyexpr_intersection_level_t;
 /**
@@ -1244,10 +1251,13 @@ ZENOHC_API void z_config_null(struct z_owned_config_t *this_);
  */
 ZENOHC_API void z_config_peer(struct z_owned_config_t *this_);
 /**
- * Declare a key expression. The id is returned as a `z_loaned_keyexpr_t` with a nullptr suffix.
+ * Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
+ * which allows to save the bandwith, when passing key expression between Zenoh entities.
  *
- * This numerical id will be used on the network to save bandwidth and
- * ease the retrieval of the concerned resource in the routing tables.
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
+ * @param session: Session on which to declare key expression.
+ * @param key_expr: Key expression to declare on network.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
@@ -1432,44 +1442,41 @@ z_error_t z_info_routers_zid(const struct z_loaned_session_t *session,
  */
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
- * Returns the key expression's internal string by aliasing it.
- *
- * Currently exclusive to zenoh-c
+ * Constructs the view for key expression's internal string by aliasing it.
+ * `this_` must outlive constructed slice.
  */
-ZENOHC_API void z_keyexpr_as_slice(const struct z_loaned_keyexpr_t *ke, struct z_view_slice_t *b);
+ZENOHC_API
+void z_keyexpr_as_slice(const struct z_loaned_keyexpr_t *this_,
+                        struct z_view_slice_t *out_slice);
 /**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
- * Returns ``0`` upon success, negative values upon failure.
- * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
- * key expression for reasons other than a non-canon form.
- *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ *
+ * @return 0 upon success, negative error values upon failure (if the passed string was an invalid
+ * key expression for reasons other than a non-canon form).
  */
 ZENOHC_API
 z_error_t z_keyexpr_canonize(char *start,
                              size_t *len);
 /**
  * Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
- *
- * Returns ``0`` upon success, negative values upon failure.
- * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
- * key expression for reasons other than a non-canon form.
- *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ *
+ * @return 0 upon success, negative error values upon failure (if the passed string was an invalid
+ * key expression for reasons other than a non-canon form).
  */
 ZENOHC_API
 z_error_t z_keyexpr_canonize_null_terminated(char *start);
 /**
- * Returns ``true`` if `keyexpr` is valid.
+ * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
  */
-ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
+ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *this_);
 /**
- * Performs string concatenation and returns the result as a `z_owned_keyexpr_t`.
- * In case of error, the return value will be set to its invalidated state.
+ * Constructs key expression by concatenation of key expression in `left` with a string in `right`.
+ * Returns 0 in case of success, negative error code otherwise.
  *
  * You should probably prefer `z_keyexpr_join` as Zenoh may then take advantage of the hierachical separation it inserts.
- *
  * To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
  * as this would extremely likely cause bugs.
  */
@@ -1479,59 +1486,83 @@ z_error_t z_keyexpr_concat(struct z_owned_keyexpr_t *this_,
                            const char *right_start,
                            size_t right_len);
 /**
- * Frees `keyexpr` and invalidates it for double-drop safety.
+ * Frees key expression and resets it to its gravestone state.
  */
-ZENOHC_API void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
+ZENOHC_API void z_keyexpr_drop(struct z_owned_keyexpr_t *this_);
 /**
- * Returns ``0`` if both ``left`` and ``right`` are equal.
+ * Returns ``true`` if both ``left`` and ``right`` are equal, ``false`` otherwise.
  */
 ZENOHC_API
 bool z_keyexpr_equals(const struct z_loaned_keyexpr_t *left,
                       const struct z_loaned_keyexpr_t *right);
 /**
+ * Constructs a `z_owned_keyexpr_t` from a slice, copying the passed slice.
+ * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression or if it is
+ * not in canon form.
+ */
+ZENOHC_API
+z_error_t z_keyexpr_from_slice(struct z_owned_keyexpr_t *this_,
+                               const char *start,
+                               size_t len);
+/**
+ * Constructs `z_owned_keyexpr_t` from a slice, copying the passed slice. The copied slice is canonized
+ * (`len` will be equal to cannonized key expression string length).
+ * @return 0 in case of success, negative error code in case of failure (for example if `start` is not a valid key expression
+ * even despite canonization).
+ */
+ZENOHC_API
+z_error_t z_keyexpr_from_slice_autocanonize(struct z_owned_keyexpr_t *this_,
+                                            const char *start,
+                                            size_t *len);
+/**
+ * Constructs a `z_owned_keyexpr_t` from a string, copying the passed string.
+ * @return 0 in case of success, negative error code in case of failure (for example if `expr` is not a valid key expression or if it is
+ * not in canon form.
+ */
+ZENOHC_API
+z_error_t z_keyexpr_from_string(struct z_owned_keyexpr_t *this_,
+                                const char *expr);
+/**
+ * Constructs `z_owned_keyexpr_t` from a string, copying the passed string. The copied string is canonized.
+ * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression
+ * even despite canonization).
+ */
+ZENOHC_API
+z_error_t z_keyexpr_from_string_autocanonize(struct z_owned_keyexpr_t *this_,
+                                             const char *expr);
+/**
  * Returns ``true`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
- * defined by ``right``.
+ * defined by ``right``, ``false`` otherwise.
  */
 ZENOHC_API
 bool z_keyexpr_includes(const struct z_loaned_keyexpr_t *left,
                         const struct z_loaned_keyexpr_t *right);
 /**
  * Returns ``true`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
- * sets defined by ``left`` and ``right``.
+ * sets defined by ``left`` and ``right``, ``false`` otherwise.
  */
 ZENOHC_API
 bool z_keyexpr_intersects(const struct z_loaned_keyexpr_t *left,
                           const struct z_loaned_keyexpr_t *right);
 /**
- * Returns ``0`` if the passed string is a valid (and canon) key expression.
- * Otherwise returns error value
+ * Returns 0 if the passed string is a valid (and canon) key expression.
+ * Otherwise returns negative error value.
  */
 ZENOHC_API z_error_t z_keyexpr_is_canon(const char *start, size_t len);
 /**
- * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
- * In case of error, the return value will be set to its invalidated state.
+ * Constructs key expression by performing path-joining (automatically inserting) of `left` with `right`.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t z_keyexpr_join(struct z_owned_keyexpr_t *this_,
                          const struct z_loaned_keyexpr_t *left,
                          const struct z_loaned_keyexpr_t *right);
 /**
- * Returns a `z_loaned_keyexpr_t` loaned from `z_owned_keyexpr_t`.
+ * Borrows `z_owned_keyexpr_t`.
  */
-ZENOHC_API
-const struct z_loaned_keyexpr_t *z_keyexpr_loan(const struct z_owned_keyexpr_t *key_expr);
+ZENOHC_API const struct z_loaned_keyexpr_t *z_keyexpr_loan(const struct z_owned_keyexpr_t *this_);
 /**
- * Constructs a `z_owned_keyexpr_t` departing from a string, copying the passed string.
- */
-ZENOHC_API z_error_t z_keyexpr_new(struct z_owned_keyexpr_t *this_, const char *name);
-/**
- * Constructs a `z_owned_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
- */
-ZENOHC_API
-z_error_t z_keyexpr_new_autocanonize(const char *name,
-                                     struct z_owned_keyexpr_t *this_);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
+ * Constructs an owned key expression in a gravestone state.
  */
 ZENOHC_API void z_keyexpr_null(struct z_owned_keyexpr_t *this_);
 /**
@@ -1543,10 +1574,11 @@ ZENOHC_API
 enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_keyexpr_t *left,
                                                           const struct z_loaned_keyexpr_t *right);
 /**
- * Constructs a null-terminated string departing from a `z_loaned_keyexpr_t`.
- * The user is responsible of droping the returned string using `z_drop`
+ * Constructs an owned null-terminated string from key expression.
  */
-ZENOHC_API void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *ke, struct z_owned_str_t *s);
+ZENOHC_API
+void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *this_,
+                         struct z_owned_str_t *out_string);
 ZENOHC_API bool z_mutex_check(const struct z_owned_mutex_t *this_);
 ZENOHC_API void z_mutex_drop(struct z_owned_mutex_t *this_);
 ZENOHC_API z_error_t z_mutex_init(struct z_owned_mutex_t *this_);
@@ -2237,12 +2269,13 @@ ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
  */
 ZENOHC_API uint64_t z_timestamp_npt64_time(const struct z_timestamp_t *this_);
 /**
- * Undeclare the key expression generated by a call to `z_declare_keyexpr`.
- * The keyxpr is consumed.
+ * Undeclares the key expression generated by a call to `z_declare_keyexpr()`.
+ * The key expression is consumed.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_undeclare_keyexpr(const struct z_loaned_session_t *session,
-                              struct z_owned_keyexpr_t *kexpr);
+z_error_t z_undeclare_keyexpr(struct z_owned_keyexpr_t *this_,
+                              const struct z_loaned_session_t *session);
 /**
  * Undeclares the given publisher, droping and invalidating it.
  *
@@ -2270,73 +2303,92 @@ ZENOHC_API const struct z_loaned_encoding_t *z_value_encoding(const struct z_loa
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_value_payload(const struct z_loaned_value_t *this_);
 /**
- * Returns ``true`` if `keyexpr` is valid.
+ * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
  */
-ZENOHC_API bool z_view_keyexpr_check(const struct z_view_keyexpr_t *keyexpr);
+ZENOHC_API bool z_view_keyexpr_check(const struct z_view_keyexpr_t *this_);
 /**
- * Constructs a `z_view_keyexpr_t` by aliasing a string.
+ * Constructs a `z_view_keyexpr_t` by aliasing a slice.
+ * `expr` must outlive the constucted key expression.
+ *
+ * @param this_: An unitialized location in memory where key expression will be constructed
+ * @param expr: A buffer with length >= `len`.
+ * @param len: Number of characters from `expr` to consider.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t z_view_keyexpr_from_slice(struct z_view_keyexpr_t *this_,
-                                    const char *name,
+                                    const char *expr,
                                     size_t len);
 /**
- * Constructs a `z_view_keyexpr_t` by aliasing a string.
- * The string is canonized in-place before being passed to keyexpr.
+ * Constructs a `z_view_keyexpr_t` by aliasing a slice.
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * `expr` must outlive the constucted key expression.
+ *
+ * @param this_: An unitialized location in memory where key expression will be constructed
+ * @param expr: A buffer of with length >= `len`.
+ * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t z_view_keyexpr_from_slice_autocanonize(struct z_view_keyexpr_t *this_,
-                                                 char *name,
+                                                 char *start,
                                                  size_t *len);
 /**
- * Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
- * - `name` MUST be valid UTF8.
- * - `name` MUST follow the Key Expression specification, ie:
- *   - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
- *   - any instance of ``**`` may only be lead or followed by ``/``.
- *   - the key expression must have canon form.
+ * Constructs a `z_view_keyexpr_t` by aliasing a slice without checking any of `z_view_keyexpr_t`'s assertions:
  *
- * It is a loaned key expression that aliases `name`.
+ * - `start` MUST be valid UTF8.
+ * - `start` MUST follow the Key Expression specification, i.e.:
+ *  - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
+ *  - any instance of ``**`` may only be lead or followed by ``/``.
+ *  - the key expression must have canon form.
+ *
+ * `start` must outlive constructed key expression.
  */
 ZENOHC_API
 void z_view_keyexpr_from_slice_unchecked(struct z_view_keyexpr_t *this_,
                                          const char *start,
                                          size_t len);
 /**
- * Returns a `z_loaned_keyexpr_t` loaned from `z_view_keyexpr_t`.
+ * Constructs a `z_view_keyexpr_t` by aliasing a string.
+ * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression or if it is
+ * not in canon form.
+ * `expr` must outlive the constucted key expression.
  */
 ZENOHC_API
-const struct z_loaned_keyexpr_t *z_view_keyexpr_loan(const struct z_view_keyexpr_t *key_expr);
-/**
- * Constructs a `z_view_keyexpr_t` departing from a string.
- * It is a loaned key expression that aliases `name`.
- */
-ZENOHC_API z_error_t z_view_keyexpr_new(struct z_view_keyexpr_t *this_, const char *name);
+z_error_t z_view_keyexpr_from_string(struct z_view_keyexpr_t *this_,
+                                     const char *expr);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a string.
- * The string is canonized in-place before being passed to keyexpr.
- * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * The string is canonized in-place before being passed to keyexpr, possibly shortening it by modifying `len`.
+ * May SEGFAULT if `expr` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * `expr` must outlive the constucted key expression.
  */
 ZENOHC_API
-z_error_t z_view_keyexpr_new_autocanonize(struct z_view_keyexpr_t *this_,
-                                          char *name);
-ZENOHC_API void z_view_keyexpr_null(struct z_view_keyexpr_t *this_);
+z_error_t z_view_keyexpr_from_string_autocanonize(struct z_view_keyexpr_t *this_,
+                                                  char *expr);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
  *
- *  - `name` MUST be valid UTF8.
- *  - `name` MUST follow the Key Expression specification, ie:
- *
+ *  - `s` MUST be valid UTF8.
+ *  - `s` MUST follow the Key Expression specification, i.e.:
  *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
  *   - any instance of `**` may only be lead or followed by `/`.
  *   - the key expression must have canon form.
  *
- * It is a view key expression that aliases `name`.
+ * `s` must outlive constructed key expression.
  */
 ZENOHC_API
-void z_view_keyexpr_unchecked(struct z_view_keyexpr_t *this_,
-                              const char *s);
+void z_view_keyexpr_from_string_unchecked(struct z_view_keyexpr_t *this_,
+                                          const char *s);
+/**
+ * Borrows `z_view_keyexpr_t`.
+ */
+ZENOHC_API
+const struct z_loaned_keyexpr_t *z_view_keyexpr_loan(const struct z_view_keyexpr_t *this_);
+/**
+ * Constructs a view key expression in a gravestone state.
+ */
+ZENOHC_API void z_view_keyexpr_null(struct z_view_keyexpr_t *this_);
 /**
  * @return ``true`` if the slice is not empty, ``false`` otherwise.
  */

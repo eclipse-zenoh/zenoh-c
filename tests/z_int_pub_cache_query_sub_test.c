@@ -49,7 +49,7 @@ int run_publisher() {
     pub_cache_opts.history = 42;
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
     ze_owned_publication_cache_t pub_cache;
     ;
     if (ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts) < 0) {
@@ -134,7 +134,7 @@ int run_subscriber() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);

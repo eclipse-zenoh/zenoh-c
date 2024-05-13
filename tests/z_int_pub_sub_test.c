@@ -39,7 +39,7 @@ int run_publisher() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
     z_publisher_options_t publisher_options;
     z_publisher_options_default(&publisher_options);
     publisher_options.priority = Z_PRIORITY_DATA;
@@ -107,7 +107,7 @@ int run_subscriber() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
