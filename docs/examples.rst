@@ -161,9 +161,9 @@ Queryable
 
           printf(">> [Queryable ] Received Query '%s' with value '%s'\n", 
               z_str_data(z_loan(key_string)), z_str_data(z_loan(payload_string)));
-        z_drop(z_move(payload_string));
-        } else {
-            printf(">> [Queryable ] Received Query '%s'\n", z_str_data(z_loan(key_string)));
+          z_drop(z_move(payload_string));
+      } else {
+          printf(">> [Queryable ] Received Query '%s'\n", z_str_data(z_loan(key_string)));
       }
 
       z_view_str_t reply_string;
@@ -194,7 +194,7 @@ Queryable
       z_closure(&callback, query_handler, NULL, (void*)keyexpr);
       z_owned_queryable_t qable;
 
-      if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+      if (z_declare_queryable(&qable, z_loan(s), z_loan(key_expr), z_move(callback), NULL) < 0) {
           printf("Unable to create Zenoh queryable.\n");
           exit(-1);
       }
