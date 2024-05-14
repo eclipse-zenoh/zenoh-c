@@ -685,10 +685,16 @@ typedef struct z_owned_query_channel_closure_t {
   void (*drop)(void *context);
 } z_owned_query_channel_closure_t;
 /**
- * A pair of closures
+ * A pair of send / receive ends of channel.
  */
 typedef struct z_owned_query_channel_t {
+  /**
+   * Send end of the channel.
+   */
   struct z_owned_closure_query_t send;
+  /**
+   * Receive end of the channel.
+   */
   struct z_owned_query_channel_closure_t recv;
 } z_owned_query_channel_t;
 /**
@@ -719,9 +725,6 @@ typedef struct ALIGN(8) z_owned_reply_t {
 } z_owned_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `context` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
@@ -731,15 +734,30 @@ typedef struct ALIGN(8) z_owned_reply_t {
  * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_reply_channel_closure_t {
+  /**
+   * An optional pointer to a closure state.
+   */
   void *context;
+  /**
+   * A closure body.
+   */
   bool (*call)(struct z_owned_reply_t *reply, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
   void (*drop)(void *context);
 } z_owned_reply_channel_closure_t;
 /**
- * A pair of closures, the `send` one accepting
+ * A pair of send / receive ends of channel.
  */
 typedef struct z_owned_reply_channel_t {
+  /**
+   * Send end of the channel.
+   */
   struct z_owned_closure_reply_t send;
+  /**
+   * Receive end of the channel.
+   */
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
 /**
@@ -1107,7 +1125,7 @@ ZENOHC_API
 void z_closure_hello_call(const struct z_owned_closure_hello_t *closure,
                           const struct z_loaned_hello_t *hello);
 /**
- * Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API bool z_closure_hello_check(const struct z_owned_closure_hello_t *this_);
 /**
@@ -1139,7 +1157,7 @@ ZENOHC_API
 void z_closure_query_call(const struct z_owned_closure_query_t *closure,
                           const struct z_loaned_query_t *query);
 /**
- * Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API bool z_closure_query_check(const struct z_owned_closure_query_t *this_);
 /**
@@ -1157,7 +1175,7 @@ ZENOHC_API
 void z_closure_reply_call(const struct z_owned_closure_reply_t *closure,
                           const struct z_loaned_reply_t *reply);
 /**
- * Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API bool z_closure_reply_check(const struct z_owned_closure_reply_t *this_);
 /**
@@ -1176,7 +1194,7 @@ ZENOHC_API
 void z_closure_sample_call(const struct z_owned_closure_sample_t *closure,
                            const struct z_loaned_sample_t *sample);
 /**
- * Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API bool z_closure_sample_check(const struct z_owned_closure_sample_t *this_);
 /**
@@ -1748,22 +1766,33 @@ ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *query);
 /**
+ * Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_query_channel_check(const struct z_owned_query_channel_t *this_);
+/**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
 bool z_query_channel_closure_call(const struct z_owned_query_channel_closure_t *closure,
                                   struct z_owned_query_t *query);
 /**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_query_channel_closure_check(const struct z_owned_query_channel_closure_t *this_);
+/**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API void z_query_channel_closure_drop(struct z_owned_query_channel_closure_t *closure);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_query_channel_closure_t' type
+ * Constructs a gravestone value for `z_owned_query_channel_closure_t` type.
  */
 ZENOHC_API void z_query_channel_closure_null(struct z_owned_query_channel_closure_t *this_);
+/**
+ * Drops the channel and resets it to a gravestone state.
+ */
 ZENOHC_API void z_query_channel_drop(struct z_owned_query_channel_t *channel);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
+ * Constructs a channel in gravestone state.
  */
 ZENOHC_API struct z_owned_query_channel_t z_query_channel_null(void);
 /**
@@ -1905,22 +1934,33 @@ ZENOHC_API uint64_t z_random_u64(void);
  */
 ZENOHC_API uint8_t z_random_u8(void);
 /**
+ * Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_reply_channel_check(const struct z_owned_reply_channel_t *this_);
+/**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
 bool z_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *closure,
                                   struct z_owned_reply_t *reply);
 /**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_reply_channel_closure_check(const struct z_owned_reply_channel_closure_t *this_);
+/**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
+ * Constructs a gravestone value `z_owned_reply_channel_closure_t` type.
  */
 ZENOHC_API void z_reply_channel_closure_null(struct z_owned_reply_channel_closure_t *this_);
+/**
+ * Drops the channel and resets it to a gravestone state.
+ */
 ZENOHC_API void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
+ * Constructs a channel in gravestone state.
  */
 ZENOHC_API void z_reply_channel_null(struct z_owned_reply_channel_t *this_);
 /**
@@ -2712,11 +2752,11 @@ ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *thi
  */
 ZENOHC_API z_error_t zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *this_);
 /**
- * Creates a new blocking fifo channel, returned as a pair of closures.
+ * Constructs a new blocking fifo channel, returned as a pair of closures.
  *
  * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
  *
- * The `send` end should be passed as callback to a `z_get` call.
+ * The `send` end should be passed as callback to a `z_declare_queryable()` call.
  *
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
@@ -2726,11 +2766,11 @@ ZENOHC_API
 void zc_query_fifo_new(struct z_owned_query_channel_t *this_,
                        size_t bound);
 /**
- * Creates a new non-blocking fifo channel, returned as a pair of closures.
+ * Constructs a new non-blocking fifo channel, returned as a pair of closures.
  *
  * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
  *
- * The `send` end should be passed as callback to a `z_get` call.
+ * The `send` end should be passed as callback to a `z_declare_queryable()` call.
  *
  * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
  * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
@@ -2744,7 +2784,7 @@ void zc_query_non_blocking_fifo_new(struct z_owned_query_channel_t *this_,
  *
  * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
  *
- * The `send` end should be passed as callback to a `z_get` call.
+ * The `send` end should be passed as callback to a `z_get()` call.
  *
  * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
  * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
@@ -2758,7 +2798,7 @@ void zc_reply_fifo_new(struct z_owned_reply_channel_t *this_,
  *
  * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
  *
- * The `send` end should be passed as callback to a `z_get` call.
+ * The `send` end should be passed as callback to a `z_get()` call.
  *
  * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
  * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
@@ -2780,7 +2820,7 @@ ZENOHC_API
 void zcu_closure_matching_status_call(const struct zcu_owned_closure_matching_status_t *closure,
                                       const struct zcu_matching_status_t *sample);
 /**
- * Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API
 bool zcu_closure_matching_status_check(const struct zcu_owned_closure_matching_status_t *this_);

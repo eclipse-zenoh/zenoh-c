@@ -28,24 +28,35 @@ pub struct z_owned_query_channel_closure_t {
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
-/// A pair of closures
+/// A pair of send / receive ends of channel.
 #[repr(C)]
 pub struct z_owned_query_channel_t {
+    /// Send end of the channel.
     pub send: z_owned_closure_query_t,
+    /// Receive end of the channel.
     pub recv: z_owned_query_channel_closure_t,
 }
+
+/// Drops the channel and resets it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_query_channel_drop(channel: &mut z_owned_query_channel_t) {
     z_closure_query_drop(&mut channel.send);
     z_query_channel_closure_drop(&mut channel.recv);
 }
-/// Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
+
+/// Constructs a channel in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
     z_owned_query_channel_t {
         send: z_owned_closure_query_t::empty(),
         recv: z_owned_query_channel_closure_t::empty(),
     }
+}
+
+/// Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_query_channel_check(this: &z_owned_query_channel_t) -> bool {
+    !this.send.is_empty() && !this.recv.is_empty()
 }
 
 unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver<z_owned_query_t>) {
@@ -78,11 +89,11 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver
     }
 }
 
-/// Creates a new blocking fifo channel, returned as a pair of closures.
+/// Constructs a new blocking fifo channel, returned as a pair of closures.
 ///
 /// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
 ///
-/// The `send` end should be passed as callback to a `z_get` call.
+/// The `send` end should be passed as callback to a `z_declare_queryable()` call.
 ///
 /// The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
@@ -108,11 +119,11 @@ pub unsafe extern "C" fn zc_query_fifo_new(
     (*this).write(c);
 }
 
-/// Creates a new non-blocking fifo channel, returned as a pair of closures.
+/// Constructs a new non-blocking fifo channel, returned as a pair of closures.
 ///
 /// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
 ///
-/// The `send` end should be passed as callback to a `z_get` call.
+/// The `send` end should be passed as callback to a `z_declare_queryable()` call.
 ///
 /// The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
 /// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
@@ -154,6 +165,10 @@ impl z_owned_query_channel_closure_t {
             drop: None,
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.call.is_none() && self.drop.is_none() && self.context.is_null()
+    }
 }
 unsafe impl Send for z_owned_query_channel_closure_t {}
 unsafe impl Sync for z_owned_query_channel_closure_t {}
@@ -165,13 +180,19 @@ impl Drop for z_owned_query_channel_closure_t {
     }
 }
 
-/// Constructs a null safe-to-drop value of 'z_owned_query_channel_closure_t' type
+/// Constructs a gravestone value for `z_owned_query_channel_closure_t` type.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_query_channel_closure_null(
     this: *mut MaybeUninit<z_owned_query_channel_closure_t>,
 ) {
     (*this).write(z_owned_query_channel_closure_t::empty());
+}
+
+/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_query_channel_closure_check(this: &z_owned_query_channel_closure_t) -> bool {
+    !this.is_empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
@@ -194,6 +215,7 @@ pub extern "C" fn z_query_channel_closure_drop(closure: &mut z_owned_query_chann
     let mut empty_closure = z_owned_query_channel_closure_t::empty();
     std::mem::swap(&mut empty_closure, closure);
 }
+
 impl<F: Fn(*mut MaybeUninit<z_owned_query_t>) -> bool> From<F> for z_owned_query_channel_closure_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;

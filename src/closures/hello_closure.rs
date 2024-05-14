@@ -90,7 +90,7 @@ impl<F: Fn(&z_loaned_hello_t)> From<F> for z_owned_closure_hello_t {
     }
 }
 
-/// Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_closure_hello_check(this: &z_owned_closure_hello_t) -> bool {
     !this.is_empty()

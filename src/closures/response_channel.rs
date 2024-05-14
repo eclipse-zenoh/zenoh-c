@@ -8,9 +8,6 @@ use std::{
     sync::mpsc::{Receiver, TryRecvError},
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
-/// - `context` is a pointer to an arbitrary state.
-/// - `call` is the typical callback function. `this` will be passed as its last argument.
-/// - `drop` allows the callback's state to be freed.
 ///
 /// Closures are not guaranteed not to be called concurrently.
 ///
@@ -20,25 +17,39 @@ use std::{
 /// - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 #[repr(C)]
 pub struct z_owned_reply_channel_closure_t {
+    /// An optional pointer to a closure state.
     context: *mut c_void,
+    /// A closure body.
     call: Option<
         extern "C" fn(reply: *mut MaybeUninit<z_owned_reply_t>, context: *mut c_void) -> bool,
     >,
+    /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
-/// A pair of closures, the `send` one accepting
+/// A pair of send / receive ends of channel.
 #[repr(C)]
 pub struct z_owned_reply_channel_t {
+    /// Send end of the channel.
     pub send: z_owned_closure_reply_t,
+    /// Receive end of the channel.
     pub recv: z_owned_reply_channel_closure_t,
 }
+
+/// Drops the channel and resets it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_reply_channel_drop(channel: &mut z_owned_reply_channel_t) {
     z_closure_reply_drop(&mut channel.send);
     z_reply_channel_closure_drop(&mut channel.recv);
 }
-/// Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
+
+/// Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_reply_channel_check(this: &z_owned_reply_channel_t) -> bool {
+    !this.send.is_empty() && !this.recv.is_empty()
+}
+
+/// Constructs a channel in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_channel_null(this: *mut MaybeUninit<z_owned_reply_channel_t>) {
@@ -82,7 +93,7 @@ unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_reply_t, Receiver
 ///
 /// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
 ///
-/// The `send` end should be passed as callback to a `z_get` call.
+/// The `send` end should be passed as callback to a `z_get()` call.
 ///
 /// The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
 /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
@@ -112,7 +123,7 @@ pub unsafe extern "C" fn zc_reply_fifo_new(
 ///
 /// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
 ///
-/// The `send` end should be passed as callback to a `z_get` call.
+/// The `send` end should be passed as callback to a `z_get()` call.
 ///
 /// The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
 /// which it will then return; or until the `send` closure is dropped and all replies have been consumed,
@@ -154,6 +165,10 @@ impl z_owned_reply_channel_closure_t {
             drop: None,
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.call.is_none() && self.drop.is_none() && self.context.is_null()
+    }
 }
 unsafe impl Send for z_owned_reply_channel_closure_t {}
 unsafe impl Sync for z_owned_reply_channel_closure_t {}
@@ -165,7 +180,7 @@ impl Drop for z_owned_reply_channel_closure_t {
     }
 }
 
-/// Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
+/// Constructs a gravestone value `z_owned_reply_channel_closure_t` type.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_channel_closure_null(
@@ -188,6 +203,13 @@ pub extern "C" fn z_reply_channel_closure_call(
         }
     }
 }
+
+/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_reply_channel_closure_check(this: &z_owned_reply_channel_closure_t) -> bool {
+    !this.is_empty()
+}
+
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_reply_channel_closure_drop(closure: &mut z_owned_reply_channel_closure_t) {

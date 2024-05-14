@@ -524,22 +524,27 @@ Types
 .. doxygenstruct:: z_query_reply_options_t
     :members:
 
+.. doxygenstruct:: z_owned_query_channel_t
+    :members:
+.. doxygenstruct:: z_owned_query_channel_closure_t
+    :members:
+
 Functions
 ---------
-.. doxygenfunction::z_declare_queryable
-.. doxygenfunction::z_undeclare_queryable
+.. doxygenfunction:: z_declare_queryable
+.. doxygenfunction:: z_undeclare_queryable
 
-.. doxygenfunction::z_queryable_options_default
-.. doxygenfunction::z_query_reply_options_default
+.. doxygenfunction:: z_queryable_options_default
+.. doxygenfunction:: z_query_reply_options_default
 
-.. doxygenfunction::z_queryable_null
-.. doxygenfunction::z_queryable_check
-.. doxygenfunction::z_queryable_drop
+.. doxygenfunction:: z_queryable_null
+.. doxygenfunction:: z_queryable_check
+.. doxygenfunction:: z_queryable_drop
 
-.. doxygenfunction::z_query_null
-.. doxygenfunction::z_query_check
-.. doxygenfunction::z_query_loan
-.. doxygenfunction::z_query_drop
+.. doxygenfunction:: z_query_null
+.. doxygenfunction:: z_query_check
+.. doxygenfunction:: z_query_loan
+.. doxygenfunction:: z_query_drop
 .. doxygenfunction:: z_query_clone
 
 .. doxygenfunction:: z_query_keyexpr
@@ -553,6 +558,17 @@ Functions
 .. doxygenfunction:: z_closure_query_call
 .. doxygenfunction:: z_closure_query_drop
 
+.. doxygenfunction:: zc_query_fifo_new
+.. doxygenfunction:: zc_query_non_blocking_fifo_new
+
+.. doxygenfunction:: z_query_channel_null
+.. doxygenfunction:: z_query_channel_check
+.. doxygenfunction:: z_query_channel_drop
+
+.. doxygenfunction:: z_query_channel_closure_null
+.. doxygenfunction:: z_query_channel_closure_check
+.. doxygenfunction:: z_query_channel_closure_call
+.. doxygenfunction:: z_query_channel_closure_drop
 
 Query
 =====
@@ -569,6 +585,11 @@ Types
 .. doxygenenum:: z_query_target_t
 .. doxygenenum:: z_consolidation_mode_t
 .. doxygenstruct:: z_query_consolidation_t
+
+.. doxygenstruct:: z_owned_reply_channel_t
+    :members:
+.. doxygenstruct:: z_owned_reply_channel_closure_t
+    :members:
 
 Functions
 ---------
@@ -591,10 +612,22 @@ Functions
 .. doxygenfunction:: z_reply_err
 .. doxygenfunction:: z_reply_null
 
-.. doxygenfunction:: z_closure_reply_call
-.. doxygenfunction:: z_closure_reply_drop
 .. doxygenfunction:: z_closure_reply_null
 .. doxygenfunction:: z_closure_reply_check
+.. doxygenfunction:: z_closure_reply_call
+.. doxygenfunction:: z_closure_reply_drop
+
+.. doxygenfunction:: zc_reply_fifo_new
+.. doxygenfunction:: zc_reply_non_blocking_fifo_new
+
+.. doxygenfunction:: z_reply_channel_null
+.. doxygenfunction:: z_reply_channel_check
+.. doxygenfunction:: z_reply_channel_drop
+
+.. doxygenfunction:: z_reply_channel_closure_null
+.. doxygenfunction:: z_reply_channel_closure_check
+.. doxygenfunction:: z_reply_channel_closure_call
+.. doxygenfunction:: z_reply_channel_closure_drop
 
 Scouting
 ========

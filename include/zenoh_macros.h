@@ -132,8 +132,12 @@
         z_owned_keyexpr_t : z_keyexpr_check, \
         z_owned_mutex_t : z_mutex_check, \
         z_owned_publisher_t : z_publisher_check, \
+        z_owned_query_channel_t : z_query_channel_check, \
+        z_owned_query_channel_closure_t : z_query_channel_closure_check, \
         z_owned_query_t : z_query_check, \
         z_owned_queryable_t : z_queryable_check, \
+        z_owned_reply_channel_t : z_reply_channel_check, \
+        z_owned_reply_channel_closure_t : z_reply_channel_closure_check, \
         z_owned_reply_t : z_reply_check, \
         z_owned_sample_t : z_sample_check, \
         z_owned_session_t : z_session_check, \
@@ -288,8 +292,12 @@ inline bool z_check(const z_owned_hello_t& this_) { return z_hello_check(&this_)
 inline bool z_check(const z_owned_keyexpr_t& this_) { return z_keyexpr_check(&this_); };
 inline bool z_check(const z_owned_mutex_t& this_) { return z_mutex_check(&this_); };
 inline bool z_check(const z_owned_publisher_t& this_) { return z_publisher_check(&this_); };
+inline bool z_check(const z_owned_query_channel_t& this_) { return z_query_channel_check(&this_); };
+inline bool z_check(const z_owned_query_channel_closure_t& this_) { return z_query_channel_closure_check(&this_); };
 inline bool z_check(const z_owned_query_t& query) { return z_query_check(&query); };
 inline bool z_check(const z_owned_queryable_t& this_) { return z_queryable_check(&this_); };
+inline bool z_check(const z_owned_reply_channel_t& this_) { return z_reply_channel_check(&this_); };
+inline bool z_check(const z_owned_reply_channel_closure_t& this_) { return z_reply_channel_closure_check(&this_); };
 inline bool z_check(const z_owned_reply_t& this_) { return z_reply_check(&this_); };
 inline bool z_check(const z_owned_sample_t& this_) { return z_sample_check(&this_); };
 inline bool z_check(const z_owned_session_t& this_) { return z_session_check(&this_); };
