@@ -22,89 +22,67 @@
 #include <stdlib.h>
 #define DEFAULT_SCOUTING_TIMEOUT 1000
 /**
- * An owned zenoh session.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * An owned Zenoh session.
  */
 typedef struct ALIGN(8) z_owned_session_t {
   uint8_t _0[8];
 } z_owned_session_t;
+/**
+ * A loaned Zenoh query.
+ */
 typedef struct ALIGN(8) z_loaned_query_t {
   uint8_t _0[16];
 } z_loaned_query_t;
+/**
+ * A loaned Zenoh session.
+ */
 typedef struct ALIGN(8) z_loaned_session_t {
-  uint8_t _0[40];
+  uint8_t _0[8];
 } z_loaned_session_t;
 /**
- * An owned zenoh queryable.
+ * An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#queryable"> queryable </a>.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * Responds to queries sent via `z_get()` with intersecting key expression.
  */
 typedef struct ALIGN(8) z_owned_queryable_t {
   uint8_t _0[32];
 } z_owned_queryable_t;
 /**
- * An owned zenoh subscriber. Destroying the subscriber cancels the subscription.
+ * An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * Receives data from publication on intersecting key expressions.
+ * Destroying the subscriber cancels the subscription.
  */
 typedef struct ALIGN(8) z_owned_subscriber_t {
   uint8_t _0[32];
 } z_owned_subscriber_t;
+/**
+ * A loaned Zenoh subscriber.
+ */
 typedef struct ALIGN(8) z_loaned_subscriber_t {
   uint8_t _0[32];
 } z_loaned_subscriber_t;
 /**
- * An owned zenoh publication_cache.
+ * An owned Zenoh publication cache.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
+ * (for example by `ze_owned_querying_subscriber_t`).
  */
 typedef struct ALIGN(8) ze_owned_publication_cache_t {
   uint8_t _0[96];
 } ze_owned_publication_cache_t;
 /**
- * An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
+ * An owned Zenoh querying subscriber.
  *
- * Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * In addition to receiving the data it is subscribed to,
+ * it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get()`).
  */
 typedef struct ALIGN(8) ze_owned_querying_subscriber_t {
   uint8_t _0[64];
 } ze_owned_querying_subscriber_t;
+/**
+ * A loaned Zenoh querying subscriber.
+ */
 typedef struct ALIGN(8) ze_loaned_querying_subscriber_t {
   uint8_t _0[64];
 } ze_loaned_querying_subscriber_t;

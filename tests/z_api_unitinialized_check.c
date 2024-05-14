@@ -23,10 +23,10 @@
 
 int main(int argc, char **argv) {
     z_owned_keyexpr_t owned_keyexpr;
-    z_keyexpr_new(&owned_keyexpr, NULL);
+    z_keyexpr_from_string(&owned_keyexpr, NULL);
     assert(!z_check(owned_keyexpr));
 
     z_view_keyexpr_t keyexpr;
-    z_view_keyexpr_new(&keyexpr, NULL);
+    z_view_keyexpr_from_string(&keyexpr, NULL);
     assert(!z_check(keyexpr));
 }

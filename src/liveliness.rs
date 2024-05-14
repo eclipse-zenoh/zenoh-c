@@ -35,30 +35,32 @@ decl_transmute_owned!(
 );
 decl_transmute_handle!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 
-/// The gravestone value for liveliness tokens.
+/// Constructs liveliness token in its gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_null(this: *mut MaybeUninit<zc_owned_liveliness_token_t>) {
     let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 
-/// Returns `true` unless the token is at its gravestone value.
+/// Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_check(this: &zc_owned_liveliness_token_t) -> bool {
     this.transmute_ref().is_some()
 }
 
+/// Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_drop(this: &mut zc_owned_liveliness_token_t) {
     let this = this.transmute_mut();
     Inplace::drop(this);
 }
-/// The options for `zc_liveliness_declare_token`
+/// The options for `zc_liveliness_declare_token()`.
 #[repr(C)]
 pub struct zc_liveliness_declaration_options_t {
     _dummy: u8,
 }
 
+/// Constructs default value for `zc_liveliness_declaration_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declaration_options_default(
     this: &mut zc_liveliness_declaration_options_t,
@@ -71,13 +73,16 @@ pub extern "C" fn zc_liveliness_declaration_options_default(
 /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
 /// is achieved, and a DELETE sample if it's lost.
 ///
-/// Passing `NULL` as options is valid and equivalent to a pointer to the default options.
+/// @param this_: An uninitialized memory location where liveliness token will be constructed.
+/// @param session: A Zenos session to declare the liveliness token.
+/// @param key_expr: A keyexpr to declare a liveliess token for.
+/// @param _options: Liveliness token declaration properties.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
     this: *mut MaybeUninit<zc_owned_liveliness_token_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    _options: Option<&mut zc_liveliness_declaration_options_t>,
+    _options: Option<&zc_liveliness_declaration_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
@@ -110,12 +115,13 @@ pub extern "C" fn zc_liveliness_undeclare_token(
     errors::Z_OK
 }
 
-/// The options for :c:func:`zc_liveliness_declare_subscriber`
+/// The options for `zc_liveliness_declare_subscriber()`
 #[repr(C)]
 pub struct zc_liveliness_declare_subscriber_options_t {
     _dummy: u8,
 }
 
+/// Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_default(
     this: &mut zc_liveliness_declare_subscriber_options_t,
@@ -123,20 +129,15 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
     *this = zc_liveliness_declare_subscriber_options_t { _dummy: 0 };
 }
 
-/// Declares a subscriber on liveliness tokens that intersect `key`.
+/// Declares a subscriber on liveliness tokens that intersect `key_expr`.
 ///
-/// Parameters:
-///     z_loaned_session_t session: The zenoh session.
-///     z_loaned_keyexpr_t key_expr: The key expression to subscribe.
-///     z_owned_closure_sample_t callback: The callback function that will be called each time a
-///                                        liveliness token status changed.
-///     zc_owned_liveliness_declare_subscriber_options_t _options: The options to be passed to describe the options to be passed to the liveliness subscriber declaration.
+/// @param this_: An unitialized memory location where subscriber will be constructed.
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a liveliness token status is changed.
+/// @param _options: The options to be passed to the liveliness subscriber declaration.
 ///
-/// Returns:
-///    A :c:type:`z_owned_subscriber_t`.
-///
-///    To check if the subscription succeeded and if the subscriber is still valid,
-///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
     this: *mut MaybeUninit<z_owned_subscriber_t>,
@@ -170,23 +171,24 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     }
 }
 
-/// The options for :c:func:`zc_liveliness_declare_subscriber`
+/// The options for `zc_liveliness_get()`
 #[repr(C)]
 pub struct zc_liveliness_get_options_t {
     timeout_ms: u32,
 }
 
-/// The gravestone value for `zc_liveliness_get_options_t`
+/// Constructs default value `zc_liveliness_get_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get_options_default(this: &mut zc_liveliness_get_options_t) {
     *this = zc_liveliness_get_options_t { timeout_ms: 10000 };
 }
 
-/// Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
+/// @Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
 ///
-/// Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
-///
-/// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to query liveliness tokens for.
+/// @param callback: The callback function that will be called for each received reply.
+/// @param options: Additional options for the liveliness get operation.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get(
     session: &z_loaned_session_t,

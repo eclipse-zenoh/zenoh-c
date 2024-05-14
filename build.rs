@@ -93,9 +93,6 @@ fn generate_opaque_types() {
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     let mut data_out = String::new();
-    data_out += "#[rustfmt::skip]
-#[allow(clippy::all)]
-";
     let mut docs = get_opaque_type_docs();
 
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();

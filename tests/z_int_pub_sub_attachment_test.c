@@ -43,7 +43,7 @@ int run_publisher() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
     z_owned_publisher_t pub;
     if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         perror("Unable to declare Publisher for key expression!");
@@ -136,7 +136,7 @@ int run_subscriber() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr);
+    z_view_keyexpr_from_string(&ke, keyexpr);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);

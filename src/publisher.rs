@@ -38,18 +38,16 @@ use crate::{
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t, z_priority_t,
 };
 
-/// Options passed to the :c:func:`z_declare_publisher` function.
-///
-/// Members:
-///     z_congestion_control_t congestion_control: The congestion control to apply when routing messages from this publisher.
-///     z_priority_t priority: The priority of messages from this publisher.
+/// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
+    /// The congestion control to apply when routing messages from this publisher.
     pub congestion_control: z_congestion_control_t,
+    /// The priority of messages from this publisher.
     pub priority: z_priority_t,
 }
 
-/// Constructs the default value for :c:type:`z_publisher_options_t`.
+/// Constructs the default value for `z_publisher_options_t`.
 #[no_mangle]
 pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) {
     *this = z_publisher_options_t {
@@ -63,39 +61,17 @@ decl_transmute_owned!(Option<Publisher<'static>>, z_owned_publisher_t);
 pub use crate::opaque_types::z_loaned_publisher_t;
 decl_transmute_handle!(Publisher<'static>, z_loaned_publisher_t);
 
-/// Declares a publisher for the given key expression.
+/// Constructs and declares a publisher for the given key expression.
 ///
 /// Data can be put and deleted with this publisher with the help of the
-/// :c:func:`z_publisher_put` and :c:func:`z_publisher_delete` functions.
+/// `z_publisher_put()` and `z_publisher_delete()` functions.
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     key_expr: The key expression to publish.
-///     options: additional options for the publisher.
+/// @param this_: An unitilized location in memory where publisher will be constructed.
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to publish.
+/// @param options: Additional options for the publisher.
 ///
-/// Returns:
-///    A :c:type:`z_owned_publisherr_t`.
-///
-///    To check if the publisher decalration succeeded and if the publisher is still valid,
-///    you may use `z_publisher_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-///
-///    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// Example:
-///    Declaring a publisher passing `NULL` for the options:
-///
-///    .. code-block:: C
-///
-///       z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(expr), NULL);
-///
-///    is equivalent to initializing and passing the default publisher options:
-///
-///    .. code-block:: C
-///
-///       z_publisher_options_t opts = z_publisher_options_default();
-///       z_owned_publisher_t sub = z_declare_publisher(z_loan(s), z_keyexpr(expr), &opts);
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_publisher(
@@ -126,7 +102,7 @@ pub extern "C" fn z_declare_publisher(
     }
 }
 
-/// Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
+/// Constructs a publisher in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_null(this: *mut MaybeUninit<z_owned_publisher_t>) {
@@ -134,14 +110,14 @@ pub extern "C" fn z_publisher_null(this: *mut MaybeUninit<z_owned_publisher_t>) 
     Inplace::empty(this);
 }
 
-/// Returns ``true`` if `pub` is valid.
+/// Returns ``true`` if publisher is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_publisher_check(this: &z_owned_publisher_t) -> bool {
     this.transmute_ref().is_some()
 }
 
-/// Returns a :c:type:`z_loaned_publisher_t` loaned from `p`.
+/// Borrows publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publisher_t {
     let this = this.transmute_ref();
@@ -149,18 +125,16 @@ pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publ
     this.transmute_handle()
 }
 
-/// Options passed to the :c:func:`z_publisher_put` function.
-///
-/// Members:
-///     z_owned_encoding_t encoding: The encoding of the payload.
-///    z_owned_bytes_t attachment: The attachment to attach to the publication.
+/// Options passed to the `z_publisher_put()` function.
 #[repr(C)]
 pub struct z_publisher_put_options_t {
+    ///  The encoding of the data to publish.
     pub encoding: *mut z_owned_encoding_t,
+    /// The attachment to attach to the publication.
     pub attachment: *mut z_owned_bytes_t,
 }
 
-/// Constructs the default value for :c:type:`z_publisher_put_options_t`.
+/// Constructs the default value for `z_publisher_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_options_t) {
@@ -172,26 +146,23 @@ pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_opt
 
 /// Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
 ///
-/// This is avoids copies when transfering data that was either:
-/// - `z_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
-/// - constructed from a `zc_owned_shmbuf_t`
 ///
 /// The payload and all owned options fields are consumed upon function return.
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     payload: The value to put.
-///     options: The publisher put options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
+/// @param this_: The publisher.
+/// @param session: The Zenoh session.
+/// @param payload: The dat to publish. WIll be consumed.
+/// @param options: The publisher put options. All owned fields will be consumed.
+///
+/// @return 0 in case of success, negative error values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
-    publisher: &z_loaned_publisher_t,
+    this: &z_loaned_publisher_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
-    let publisher = publisher.transmute_ref();
+    let publisher = this.transmute_ref();
     let payload = match payload.transmute_mut().extract() {
         Some(p) => p,
         None => {
@@ -221,16 +192,13 @@ pub unsafe extern "C" fn z_publisher_put(
 }
 
 /// Represents the set of options that can be applied to the delete operation by a previously declared publisher,
-/// whenever issued via :c:func:`z_publisher_delete`.
+/// whenever issued via `z_publisher_delete()`.
 #[repr(C)]
 pub struct z_publisher_delete_options_t {
     __dummy: u8,
 }
 
 /// Constructs the default values for the delete operation via a publisher entity.
-///
-/// Returns:
-///   Returns the constructed :c:type:`z_publisher_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_delete_options_t) {
@@ -238,8 +206,7 @@ pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_dele
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
-/// Returns:
-///     ``0`` in case of success, ``1`` in case of failure.
+/// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete(
@@ -255,7 +222,7 @@ pub extern "C" fn z_publisher_delete(
     }
 }
 
-/// Returns the key expression of the publisher
+/// Returns the key expression of the publisher.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_loaned_keyexpr_t {
@@ -270,16 +237,20 @@ decl_transmute_owned!(
 );
 
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
-///
-/// Members:
-///   bool matching: true if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct zcu_matching_status_t {
+    /// True if there exist Subscribers matching the Publisher's key expression, false otherwise.
     pub matching: bool,
 }
 
-/// Register callback for notifying subscribers matching.
+/// Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
+///
+/// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
+/// @publisher: A publisher to associate with matching listener.
+/// @callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+///
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_callback(
@@ -312,7 +283,9 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     }
 }
 
-/// Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
+/// Undeclares the given publisher, droping and invalidating it.
+///
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
@@ -323,4 +296,11 @@ pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> error
         }
     }
     errors::Z_OK
+}
+
+/// Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_publisher_drop(this: &mut z_owned_publisher_t) {
+    z_undeclare_publisher(this);
 }

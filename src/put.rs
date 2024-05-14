@@ -27,23 +27,21 @@ use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 
-/// Options passed to the :c:func:`z_put` function.
-///
-/// Members:
-///     z_loaned_encoding_t encoding: The encoding of the payload.
-///     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
-///     z_priority_t priority: The priority of this message.
-///    z_loaned_bytes_t attachment: The attachment to this message.
+/// Options passed to the `z_put()` function.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
+    /// The encoding of the message.
     pub encoding: *mut z_owned_encoding_t,
+    /// The congestion control to apply when routing this message.
     pub congestion_control: z_congestion_control_t,
+    /// The priority of this message.
     pub priority: z_priority_t,
+    /// The attachment to this message.
     pub attachment: *mut z_owned_bytes_t,
 }
 
-/// Constructs the default value for :c:type:`z_put_options_t`.
+/// Constructs the default value for `z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
@@ -55,19 +53,14 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
     };
 }
 
-/// Put data, transfering its ownership.
+/// Publishes data on specified key expression.
 ///
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to publish to.
+/// @param payload: The value to put (consumed upon function return).
+/// @param options: The put options (all owned values will be consumed upon function return).
 ///
-/// The payload's encoding and attachment can be sepcified through the options. These values are consumed upon function
-/// return.
-///
-/// Parameters:
-///     session: The zenoh session.
-///     key_expr: The key expression to put.
-///     payload: The value to put (consumed upon function return).
-///     options: The put options.
-/// Returns:
-///     ``0`` in case of success, negative error values in case of failure.
+/// @return 0 in case of success, negative error values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put(
@@ -106,15 +99,17 @@ pub extern "C" fn z_put(
     }
 }
 
-/// Options passed to the :c:func:`z_delete` function.
+/// Options passed to the `z_delete()` function.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_delete_options_t {
+    /// The congestion control to apply when routing this delete message.
     pub congestion_control: z_congestion_control_t,
+    /// The priority of the delete message.
     pub priority: z_priority_t,
 }
 
-/// Constructs the default value for :c:type:`z_put_options_t`.
+/// Constructs the default value for `z_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t) {
@@ -124,14 +119,13 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
     };
 }
 
-/// Delete data.
+/// Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     key_expr: The key expression to delete.
-///     options: The delete options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression to delete.
+/// @param options: The delete options.
+///
+/// @return 0 in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_delete(

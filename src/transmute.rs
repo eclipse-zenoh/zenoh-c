@@ -157,6 +157,8 @@ macro_rules! decl_transmute_copy {
         validate_equivalence!($zenoh_type, $c_type);
         impl_transmute_copy!($zenoh_type, $c_type);
         impl_transmute_copy!($c_type, $zenoh_type);
+        impl_transmute_ref!($zenoh_type, $c_type);
+        impl_transmute_ref!($c_type, $zenoh_type);
         impl_transmute_uninit_ptr!($zenoh_type, $c_type);
         impl_transmute_uninit_ptr!($c_type, $zenoh_type);
     };

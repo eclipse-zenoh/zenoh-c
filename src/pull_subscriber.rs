@@ -83,7 +83,7 @@ pub extern "C" fn z_pull_subscriber_null() -> z_owned_pull_subscriber_t {
 }
 
 /// Represents the set of options that can be applied to a pull subscriber,
-/// upon its declaration via :c:func:`z_declare_pull_subscriber`.
+/// upon its declaration via `z_declare_pull_subscriber`.
 ///
 /// Members:
 ///   z_reliability_t reliability: The subscription reliability.
@@ -93,7 +93,7 @@ pub struct z_pull_subscriber_options_t {
     reliability: z_reliability_t,
 }
 
-/// Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
+/// Constructs the default value for `z_pull_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn z_pull_subscriber_options_default() -> z_pull_subscriber_options_t {
     let info = SubInfo::default();
@@ -108,10 +108,10 @@ pub extern "C" fn z_pull_subscriber_options_default() -> z_pull_subscriber_optio
 ///     session: The zenoh session.
 ///     keyexpr: The key expression to subscribe.
 ///     callback: The callback function that will be called each time a data matching the subscribed expression is received.
-///     opts: additional options for the pull subscriber.
+///     opts: Additional options for the pull subscriber.
 ///
 /// Returns:
-///    A :c:type:`z_owned_subscriber_t`.
+///    A `z_owned_subscriber_t`.
 ///
 ///    To check if the subscription succeeded and if the pull subscriber is still valid,
 ///    you may use `z_pull_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
@@ -171,7 +171,7 @@ pub extern "C" fn z_declare_pull_subscriber(
     }
 }
 
-/// Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
+/// Undeclares the given `z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_pull_subscriber(sub: &mut z_owned_pull_subscriber_t) -> i8 {
@@ -198,11 +198,11 @@ pub extern "C" fn z_pull_subscriber_loan(sub: &z_owned_pull_subscriber_t) -> z_p
     z_pull_subscriber_t(sub)
 }
 
-/// Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
-/// by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
+/// Pull data for `z_owned_pull_subscriber_t`. The pulled data will be provided
+/// by calling the **callback** function provided to the `z_declare_subscriber` function.
 ///
 /// Parameters:
-///     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
+///     sub: The `z_owned_pull_subscriber_t` to pull from.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_subscriber_pull(sub: z_pull_subscriber_t) -> i8 {

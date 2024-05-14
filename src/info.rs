@@ -27,7 +27,7 @@ impl From<[u8; 16]> for z_id_t {
     }
 }
 
-/// Returns the local Zenoh ID.
+/// Returns the session's Zenoh ID.
 ///
 /// Unless the `session` is invalid, that ID is guaranteed to be non-zero.
 /// In other words, this function returning an array of 16 zeros means you failed

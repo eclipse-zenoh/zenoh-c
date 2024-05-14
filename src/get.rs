@@ -46,24 +46,20 @@ decl_transmute_owned!(Option<Reply>, z_owned_reply_t);
 pub use crate::opaque_types::z_loaned_reply_t;
 decl_transmute_handle!(Reply, z_loaned_reply_t);
 
-/// Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
-///
-/// If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
+/// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_is_ok(reply: &z_loaned_reply_t) -> bool {
-    let reply = reply.transmute_ref();
-    reply.result().is_ok()
+pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
+    this.transmute_ref().result().is_ok()
 }
 
 /// Yields the contents of the reply by asserting it indicates a success.
 ///
-/// Returns null if reply does not contains a sample (i. e. if :c:func:`z_reply_is_ok` returns ``false``).
+/// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok(reply: &z_loaned_reply_t) -> *const z_loaned_sample_t {
-    let reply = reply.transmute_ref();
-    match reply.result() {
+pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_sample_t {
+    match this.transmute_ref().result() {
         Ok(sample) => sample.transmute_handle(),
         Err(_) => null(),
     }
@@ -71,55 +67,48 @@ pub unsafe extern "C" fn z_reply_ok(reply: &z_loaned_reply_t) -> *const z_loaned
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
-/// Returns null if reply does not contain a error  (i. e. if :c:func:`z_reply_is_ok` returns ``true``).
+/// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(reply: &z_loaned_reply_t) -> *const z_loaned_value_t {
-    let reply = reply.transmute_ref();
-    match reply.result() {
+pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_value_t {
+    match this.transmute_ref().result() {
         Ok(_) => null(),
         Err(v) => v.transmute_handle(),
     }
 }
 
-/// Returns an invalidated :c:type:`z_owned_reply_t`.
-///
-/// This is useful when you wish to take ownership of a value from a callback to :c:func:`z_get`:
-///
-///     - copy the value of the callback's argument's pointee,
-///     - overwrite the pointee with this function's return value,
-///     - you are now responsible for dropping your copy of the reply.
+/// Constructs the reply in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_reply_null(this: *mut MaybeUninit<z_owned_reply_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
-
+/// Constructs an owned shallow copy of reply in provided uninitialized memory location.
 #[no_mangle]
-pub extern "C" fn z_reply_clone(this: *mut MaybeUninit<z_owned_reply_t>, reply: &z_loaned_reply_t) {
+pub extern "C" fn z_reply_clone(this: &z_loaned_reply_t, dst: *mut MaybeUninit<z_owned_reply_t>) {
     Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(reply.transmute_ref().clone()),
+        dst.transmute_uninit_ptr(),
+        Some(this.transmute_ref().clone()),
     );
 }
 
-/// Options passed to the :c:func:`z_get` function.
-///
-/// Members:
-///     z_query_target_t target: The Queryables that should be target of the query.
-///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
-///     z_owned_payload_t* payload: An optional payload to attach to the query.
-///     z_owned_encdoing_t* encdoing: An optional encoding of the query payload and or attachment.
-///     z_owned_bytes_t attachment: The attachment to attach to the query.
-///     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
+/// Options passed to the `z_get()` function.
 #[repr(C)]
 pub struct z_get_options_t {
+    /// The Queryables that should be target of the query.
     pub target: z_query_target_t,
+    /// The replies consolidation strategy to apply on replies to the query.
     pub consolidation: z_query_consolidation_t,
+    /// An optional payload to attach to the query.
     pub payload: *mut z_owned_bytes_t,
+    /// An optional encoding of the query payload and or attachment.
     pub encoding: *mut z_owned_encoding_t,
+    /// An optional attachment to attach to the query.
     pub attachment: *mut z_owned_bytes_t,
+    /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
 }
+
+/// Constructs default `z_get_options_t`
 #[no_mangle]
 pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
     *this = z_get_options_t {
@@ -135,17 +124,13 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
 /// Query data from the matching queryables in the system.
 /// Replies are provided through a callback function.
 ///
-/// Returns a negative value upon failure.
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression matching resources to query.
+/// @param parameters: The query's parameters, similar to a url's query segment.
+/// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+/// @param options: Additional options for the get. All owned fields will be consumed.
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     key_expr: The key expression matching resources to query.
-///     parameters: The query's parameters, similar to a url's query segment.
-///     callback: The callback function that will be called on reception of replies for this query.
-///               Note that the `reply` parameter of the callback is passed by mutable reference,
-///               but **will** be dropped once your callback exits to help you avoid memory leaks.
-///               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
-///     options: additional options for the get.
+/// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_get(
@@ -200,18 +185,19 @@ pub unsafe extern "C" fn z_get(
     }
 }
 
-/// Frees `reply`, invalidating it for double-drop safety.
+/// Frees reply, resetting it to its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
     Inplace::drop(this.transmute_mut())
 }
 
-/// Returns ``true`` if `reply` is valid.
+/// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
     this.transmute_ref().is_some()
 }
 
+/// Borrows reply.
 #[no_mangle]
 pub extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply_t {
     let this = this.transmute_ref();
@@ -219,7 +205,7 @@ pub extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply_t {
     this.transmute_handle()
 }
 
-/// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+/// The replies consolidation strategy to apply on replies to a `z_get()`.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_query_consolidation_t {
@@ -243,7 +229,7 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
     }
 }
 
-/// Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
+/// Creates a default `z_query_consolidation_t` (consolidation mode AUTO).
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
@@ -253,28 +239,32 @@ pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
 ///
 /// A query consolidation strategy will automatically be selected depending the query selector.
 /// If the selector contains time range properties, no consolidation is performed.
-/// Otherwise the :c:func:`z_query_consolidation_latest` strategy is used.
-///
-/// Returns:
-///   Returns the constructed :c:type:`z_query_consolidation_t`.
+/// Otherwise the `z_query_consolidation_latest` strategy is used.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
     QueryConsolidation::AUTO.into()
 }
 
-/// Latest value consolidation.
+/// Latest consolidation.
+///
+/// This strategy optimizes bandwidth on all links in the system but will provide a very poor latency.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Latest).into()
 }
 
 /// Monotonic consolidation.
+///
+/// This strategy offers the best latency. Replies are directly transmitted to the application when received
+/// without needing to wait for all replies. This mode does not guarantee that there will be no duplicates.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Monotonic).into()
 }
 
-/// Disable consolidation.
+/// No consolidation.
+///
+/// This strategy is useful when querying timeseries data bases or when using quorums.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::None).into()
