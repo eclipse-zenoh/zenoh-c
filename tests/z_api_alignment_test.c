@@ -112,9 +112,9 @@ int main(int argc, char **argv) {
 #endif
 
     z_view_keyexpr_t key_demo_example, key_demo_example_a, key_demo_example_starstar;
-    z_view_keyexpr_new(&key_demo_example, "demo/example");
-    z_view_keyexpr_new(&key_demo_example_a, "demo/example/a");
-    z_view_keyexpr_new(&key_demo_example_starstar, "demo/example/**");
+    z_view_keyexpr_from_string(&key_demo_example, "demo/example");
+    z_view_keyexpr_from_string(&key_demo_example_a, "demo/example/a");
+    z_view_keyexpr_from_string(&key_demo_example_starstar, "demo/example/**");
     _Bool _ret_bool = z_view_keyexpr_check(&key_demo_example);
     assert(_ret_bool == true);
 
@@ -174,25 +174,25 @@ int main(int argc, char **argv) {
     assert(strncmp(_ret_cstr, argv[1], strlen(_ret_cstr)) == 0);
 #endif
 
+
+#ifdef ZENOH_PICO
     z_owned_scouting_config_t _ret_sconfig;
     z_scouting_config_default(&_ret_sconfig);
     assert(z_check(_ret_sconfig));
-#ifdef ZENOH_PICO
     _ret_int8 =
         zp_scouting_config_insert(z_loan(_ret_sconfig), Z_CONFIG_SCOUTING_TIMEOUT_KEY, z_string_make(SCOUTING_TIMEOUT));
     assert(_ret_int8 == 0);
     _ret_cstr = zp_scouting_config_get(z_loan(_ret_sconfig), Z_CONFIG_SCOUTING_TIMEOUT_KEY);
     assert(strlen(_ret_cstr) == strlen(SCOUTING_TIMEOUT));
     assert(strncmp(_ret_cstr, SCOUTING_TIMEOUT, strlen(_ret_cstr)) == 0);
-#endif
     z_drop(z_move(_ret_sconfig));
+#endif
 
     z_sleep_s(SLEEP);
     z_config_default(&_ret_config);
-    z_scouting_config_from(&_ret_sconfig, z_loan(_ret_config));
     z_owned_closure_hello_t _ret_closure_hello;
     z_closure(&_ret_closure_hello, hello_handler, NULL, NULL);
-    _ret_int8 = z_scout(z_move(_ret_sconfig), z_move(_ret_closure_hello));
+    _ret_int8 = z_scout(z_move(_ret_config), z_move(_ret_closure_hello), NULL);
     assert(_ret_int8 == 0);
     assert(hellos == 1);
 
@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
     z_subscriber_options_default(&_ret_sub_opt);
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_new(&ke, keyexpr_str);
+    z_view_keyexpr_from_string(&ke, keyexpr_str);
     z_owned_subscriber_t _ret_sub;
     z_declare_subscriber(&_ret_sub, z_loan(s2), z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
     assert(z_check(_ret_sub));
@@ -275,7 +275,7 @@ int main(int argc, char **argv) {
     char s1_res[64];
     sprintf(s1_res, "%s/chunk/%d", keyexpr_str, 1);
     z_view_keyexpr_t s1_key;
-    z_view_keyexpr_new(&s1_key, s1_res);
+    z_view_keyexpr_from_string(&s1_key, s1_res);
     z_owned_keyexpr_t _ret_expr;
     z_declare_keyexpr(&_ret_expr, z_loan(s1), z_loan(s1_key));
     assert(z_check(_ret_expr));
@@ -302,7 +302,7 @@ int main(int argc, char **argv) {
     z_sleep_s(SLEEP);
     assert(datas == 2);
 
-    _ret_int8 = z_undeclare_keyexpr(z_loan(s1), z_move(_ret_expr));
+    _ret_int8 = z_undeclare_keyexpr(z_move(_ret_expr), z_loan(s1));
     assert(_ret_int8 == 0);
     assert(!z_check(_ret_expr));
 

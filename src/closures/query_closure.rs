@@ -48,7 +48,7 @@ pub unsafe extern "C" fn z_closure_query_null(this: *mut MaybeUninit<z_owned_clo
     (*this).write(z_owned_closure_query_t::empty());
 }
 
-/// Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_closure_query_check(this: &z_owned_closure_query_t) -> bool {
     !this.is_empty()

@@ -171,7 +171,7 @@ pub extern "C" fn z_config_drop(this: &mut z_owned_config_t) {
     let config = this.transmute_mut();
     Inplace::drop(config);
 }
-/// Returns ``true`` if `config` is valid, ``false`` if it is in a gravestone state.
+/// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_check(this: &z_owned_config_t) -> bool {

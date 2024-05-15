@@ -120,6 +120,41 @@ Functions
 
 Common
 ======
+Serialization / Deserialization
+-------------------------------
+Types
+^^^^^
+.. doxygenstruct:: z_owned_bytes_t
+.. doxygenstruct:: z_loaned_bytes_t
+.. doxygenstruct:: z_owned_bytes_reader_t
+.. doxygenstruct:: z_loaned_bytes_reader_t
+
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_bytes_len
+.. doxygenfunction:: z_bytes_encode_from_slice
+.. doxygenfunction:: z_bytes_encode_from_string
+.. doxygenfunction:: z_bytes_encode_from_slice_map
+.. doxygenfunction:: z_bytes_decode_into_slice
+.. doxygenfunction:: z_bytes_decode_into_string
+.. doxygenfunction:: z_bytes_decode_into_slice_map
+
+.. doxygenfunction:: z_bytes_clone
+.. doxygenfunction:: z_bytes_loan
+.. doxygenfunction:: z_bytes_null
+.. doxygenfunction:: z_bytes_check
+.. doxygenfunction:: z_bytes_drop
+
+.. doxygenfunction:: z_bytes_reader_read
+.. doxygenfunction:: z_bytes_reader_seek
+.. doxygenfunction:: z_bytes_reader_tell
+
+.. doxygenfunction:: z_bytes_reader_loan
+.. doxygenfunction:: z_bytes_reader_loan_mut
+.. doxygenfunction:: z_bytes_reader_null
+.. doxygenfunction:: z_bytes_reader_check
+.. doxygenfunction:: z_bytes_reader_drop
+
 
 Key expression
 --------------
@@ -128,29 +163,41 @@ Types
 .. doxygenstruct:: z_owned_keyexpr_t
 .. doxygenstruct:: z_view_keyexpr_t
 .. doxygenstruct:: z_loaned_keyexpr_t
+.. doxygenenum:: z_keyexpr_intersection_level_t
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_keyexpr_new
-.. doxygenfunction:: z_view_keyexpr_new
-.. doxygenfunction:: z_keyexpr_new_autocanonize
-.. doxygenfunction:: z_view_keyexpr_new_autocanonize
-.. doxygenfunction:: z_view_keyexpr_unchecked
+.. doxygenfunction:: z_keyexpr_from_string
+.. doxygenfunction:: z_view_keyexpr_from_string
+.. doxygenfunction:: z_keyexpr_from_string_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_string_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_string_unchecked
+
+.. doxygenfunction:: z_keyexpr_from_slice
+.. doxygenfunction:: z_view_keyexpr_from_slice
+.. doxygenfunction:: z_keyexpr_from_slice_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_slice_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_slice_unchecked
+
 .. doxygenfunction:: z_keyexpr_loan
 .. doxygenfunction:: z_view_keyexpr_loan
 .. doxygenfunction:: z_keyexpr_check
 .. doxygenfunction:: z_view_keyexpr_check
 .. doxygenfunction:: z_keyexpr_drop
+
 .. doxygenfunction:: z_keyexpr_to_string
 .. doxygenfunction:: z_keyexpr_as_slice
+
 .. doxygenfunction:: z_keyexpr_canonize
 .. doxygenfunction:: z_keyexpr_canonize_null_terminated
 .. doxygenfunction:: z_keyexpr_is_canon
+
 .. doxygenfunction:: z_keyexpr_concat
 .. doxygenfunction:: z_keyexpr_join
 .. doxygenfunction:: z_keyexpr_equals
 .. doxygenfunction:: z_keyexpr_includes
 .. doxygenfunction:: z_keyexpr_intersects
+
 .. doxygenfunction:: z_declare_keyexpr
 .. doxygenfunction:: z_undeclare_keyexpr
 
@@ -206,7 +253,6 @@ Functions
 .. doxygenfunction:: z_sample_express
 
 
-
 Timestamp
 ---------
 Types
@@ -220,6 +266,46 @@ Functions
 
 System
 ======
+
+Random
+------
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_random_u8
+.. doxygenfunction:: z_random_u16
+.. doxygenfunction:: z_random_u32
+.. doxygenfunction:: z_random_u64
+.. doxygenfunction:: z_random_fill
+
+Sleep
+------
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_sleep_s
+.. doxygenfunction:: z_sleep_ms
+.. doxygenfunction:: z_sleep_us
+
+Time
+----
+
+Types
+^^^^^
+.. doxygenstruct:: z_clock_t
+.. doxygenstruct:: z_time_t
+
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_clock_now
+.. doxygenfunction:: z_clock_elapsed_s
+.. doxygenfunction:: z_clock_elapsed_ms
+.. doxygenfunction:: z_clock_elapsed_us
+
+.. doxygenfunction:: z_time_now
+.. doxygenfunction:: z_time_elapsed_s
+.. doxygenfunction:: z_time_elapsed_ms
+.. doxygenfunction:: z_time_elapsed_us
+.. doxygenfunction:: z_time_now_as_str
+
 
 Mutex
 -----
@@ -274,9 +360,6 @@ Functions
 .. doxygenfunction:: z_task_join
 .. doxygenfunction:: z_task_detach
 
-.. Scouting
-.. ========
-
 Session
 =======
 
@@ -311,6 +394,7 @@ Types
 ^^^^^
 .. doxygenstruct:: z_owned_session_t
 .. doxygenstruct:: z_loaned_session_t
+.. doxygenstruct:: z_id_t
 
 .. doxygenstruct:: z_owned_closure_zid_t
     :members:
@@ -440,22 +524,27 @@ Types
 .. doxygenstruct:: z_query_reply_options_t
     :members:
 
+.. doxygenstruct:: z_owned_query_channel_t
+    :members:
+.. doxygenstruct:: z_owned_query_channel_closure_t
+    :members:
+
 Functions
 ---------
-.. doxygenfunction::z_declare_queryable
-.. doxygenfunction::z_undeclare_queryable
+.. doxygenfunction:: z_declare_queryable
+.. doxygenfunction:: z_undeclare_queryable
 
-.. doxygenfunction::z_queryable_options_default
-.. doxygenfunction::z_query_reply_options_default
+.. doxygenfunction:: z_queryable_options_default
+.. doxygenfunction:: z_query_reply_options_default
 
-.. doxygenfunction::z_queryable_null
-.. doxygenfunction::z_queryable_check
-.. doxygenfunction::z_queryable_drop
+.. doxygenfunction:: z_queryable_null
+.. doxygenfunction:: z_queryable_check
+.. doxygenfunction:: z_queryable_drop
 
-.. doxygenfunction::z_query_null
-.. doxygenfunction::z_query_check
-.. doxygenfunction::z_query_loan
-.. doxygenfunction::z_query_drop
+.. doxygenfunction:: z_query_null
+.. doxygenfunction:: z_query_check
+.. doxygenfunction:: z_query_loan
+.. doxygenfunction:: z_query_drop
 .. doxygenfunction:: z_query_clone
 
 .. doxygenfunction:: z_query_keyexpr
@@ -469,6 +558,17 @@ Functions
 .. doxygenfunction:: z_closure_query_call
 .. doxygenfunction:: z_closure_query_drop
 
+.. doxygenfunction:: zc_query_fifo_new
+.. doxygenfunction:: zc_query_non_blocking_fifo_new
+
+.. doxygenfunction:: z_query_channel_null
+.. doxygenfunction:: z_query_channel_check
+.. doxygenfunction:: z_query_channel_drop
+
+.. doxygenfunction:: z_query_channel_closure_null
+.. doxygenfunction:: z_query_channel_closure_check
+.. doxygenfunction:: z_query_channel_closure_call
+.. doxygenfunction:: z_query_channel_closure_drop
 
 Query
 =====
@@ -485,6 +585,11 @@ Types
 .. doxygenenum:: z_query_target_t
 .. doxygenenum:: z_consolidation_mode_t
 .. doxygenstruct:: z_query_consolidation_t
+
+.. doxygenstruct:: z_owned_reply_channel_t
+    :members:
+.. doxygenstruct:: z_owned_reply_channel_closure_t
+    :members:
 
 Functions
 ---------
@@ -507,10 +612,55 @@ Functions
 .. doxygenfunction:: z_reply_err
 .. doxygenfunction:: z_reply_null
 
-.. doxygenfunction:: z_closure_reply_call
-.. doxygenfunction:: z_closure_reply_drop
 .. doxygenfunction:: z_closure_reply_null
 .. doxygenfunction:: z_closure_reply_check
+.. doxygenfunction:: z_closure_reply_call
+.. doxygenfunction:: z_closure_reply_drop
+
+.. doxygenfunction:: zc_reply_fifo_new
+.. doxygenfunction:: zc_reply_non_blocking_fifo_new
+
+.. doxygenfunction:: z_reply_channel_null
+.. doxygenfunction:: z_reply_channel_check
+.. doxygenfunction:: z_reply_channel_drop
+
+.. doxygenfunction:: z_reply_channel_closure_null
+.. doxygenfunction:: z_reply_channel_closure_check
+.. doxygenfunction:: z_reply_channel_closure_call
+.. doxygenfunction:: z_reply_channel_closure_drop
+
+Scouting
+========
+
+Types
+-----
+.. doxygenstruct:: z_owned_hello_t
+.. doxygenstruct:: z_loaned_hello_t
+.. doxygenstruct:: z_scout_options_t
+    :members:
+.. doxygenstruct:: z_owned_closure_hello_t
+    :members:
+
+Functions
+---------
+.. doxygenfunction:: z_scout
+
+.. doxygenfunction:: z_hello_whatami
+.. doxygenfunction:: z_hello_locators
+.. doxygenfunction:: z_hello_zid
+.. doxygenfunction:: z_hello_loan
+.. doxygenfunction:: z_hello_drop 
+.. doxygenfunction:: z_hello_null 
+.. doxygenfunction:: z_hello_check
+
+.. doxygenfunction:: z_whatami_to_str
+
+.. doxygenfunction:: z_scout_options_default
+
+.. doxygenfunction:: z_closure_hello_call
+.. doxygenfunction:: z_closure_hello_drop
+.. doxygenfunction:: z_closure_hello_null
+.. doxygenfunction:: z_closure_hello_check
 
 Liveliness
 ==========
@@ -525,13 +675,17 @@ Types
 
 Functions
 ---------
+.. doxygenfunction:: zc_liveliness_declare_subscriber
+.. doxygenfunction:: zc_liveliness_get
 
 .. doxygenfunction:: zc_liveliness_declare_token
 .. doxygenfunction:: zc_liveliness_undeclare_token
 .. doxygenfunction:: zc_liveliness_token_null
 .. doxygenfunction:: zc_liveliness_token_check
-.. doxygenfunction:: zc_liveliness_declare_subscriber
-.. doxygenfunction:: zc_liveliness_get
+.. doxygenfunction:: zc_liveliness_token_drop
+
+.. doxygenfunction:: zc_liveliness_subscriber_options_default
+.. doxygenfunction:: zc_liveliness_declaration_options_default
 .. doxygenfunction:: zc_liveliness_get_options_default
 
 Publication Cache
@@ -540,8 +694,9 @@ Publication Cache
 Types
 -----
 
-.. doxygenstruct:: ze_publication_cache_options_t
 .. doxygenstruct:: ze_owned_publication_cache_t
+.. doxygenstruct:: ze_publication_cache_options_t
+    :members:
 .. doxygenenum:: zcu_locality_t
 
 Functions
@@ -549,8 +704,11 @@ Functions
 
 .. doxygenfunction:: ze_declare_publication_cache
 .. doxygenfunction:: ze_undeclare_publication_cache
+
 .. doxygenfunction:: ze_publication_cache_check
 .. doxygenfunction:: ze_publication_cache_null
+.. doxygenfunction:: ze_publication_cache_drop
+
 .. doxygenfunction:: ze_publication_cache_options_default
 
 Querying Subscriber
@@ -562,6 +720,7 @@ Types
 .. doxygenstruct:: ze_owned_querying_subscriber_t
 .. doxygenstruct:: ze_loaned_querying_subscriber_t
 .. doxygenstruct:: ze_querying_subscriber_options_t
+    :members:
 .. doxygenenum:: zcu_reply_keyexpr_t
 
 Functions
@@ -570,7 +729,10 @@ Functions
 .. doxygenfunction:: ze_declare_querying_subscriber
 .. doxygenfunction:: ze_undeclare_querying_subscriber
 .. doxygenfunction:: ze_querying_subscriber_get
+
 .. doxygenfunction:: ze_querying_subscriber_check
 .. doxygenfunction:: ze_querying_subscriber_null
+.. doxygenfunction:: ze_querying_subscriber_drop
+
 .. doxygenfunction:: ze_querying_subscriber_options_default
 .. doxygenfunction:: zcu_reply_keyexpr_default

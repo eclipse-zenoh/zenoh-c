@@ -25,6 +25,8 @@ decl_transmute_handle!(
     z_loaned_mutex_t
 );
 
+/// Constructs a mutex.
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
@@ -33,21 +35,25 @@ pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> error
     errors::Z_OK
 }
 
+/// Drops mutex and resets it to its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_mutex_drop(this: &mut z_owned_mutex_t) {
     let _ = this.transmute_mut().extract().take();
 }
 
+/// Returns ``true`` if mutex is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_mutex_check(this: &z_owned_mutex_t) -> bool {
     this.transmute_ref().is_some()
 }
 
+/// Constructs mutex in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_mutex_null(this: *mut MaybeUninit<z_owned_mutex_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
+/// Mutably borrows mutex.
 #[no_mangle]
 pub extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
     let this = this.transmute_mut();
@@ -55,6 +61,8 @@ pub extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_loaned_
     this.transmute_handle_mut()
 }
 
+/// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
+/// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
 pub extern "C" fn z_mutex_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
@@ -71,6 +79,8 @@ pub extern "C" fn z_mutex_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t
     errors::Z_OK
 }
 
+/// Unlocks previously locked mutex. If mutex was not locked by the current thread, the behaviour is undefined.
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
     let this = this.transmute_mut();
@@ -82,6 +92,8 @@ pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error
     errors::Z_OK
 }
 
+/// Tries to lock mutex. If mutex is already locked, return immediately.
+/// @return 0 in case of success, negative value if failed to aquire the lock.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_mutex_try_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
@@ -104,28 +116,33 @@ pub use crate::opaque_types::z_owned_condvar_t;
 decl_transmute_owned!(Option<Condvar>, z_owned_condvar_t);
 decl_transmute_handle!(Condvar, z_loaned_condvar_t);
 
+/// Constructs conditional variable.
 #[no_mangle]
 pub extern "C" fn z_condvar_init(this: *mut MaybeUninit<z_owned_condvar_t>) {
     let this = this.transmute_uninit_ptr();
     Inplace::init(this, Some(Condvar::new()));
 }
 
+/// Constructs conditional variable in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_condvar_null(this: *mut MaybeUninit<z_owned_condvar_t>) {
     let this = this.transmute_uninit_ptr();
     Inplace::empty(this);
 }
 
+/// Drops conditional variable.
 #[no_mangle]
 pub extern "C" fn z_condvar_drop(this: &mut z_owned_condvar_t) {
     let _ = this.transmute_mut().extract().take();
 }
 
+/// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_condvar_check(this: &z_owned_condvar_t) -> bool {
     this.transmute_ref().is_some()
 }
 
+/// Borrows conditional variable.
 #[no_mangle]
 pub extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_loaned_condvar_t {
     let this = this.transmute_ref();
@@ -133,6 +150,7 @@ pub extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_loaned_condvar_
     this.transmute_handle()
 }
 
+/// Mutably borrows conditional variable.
 #[no_mangle]
 pub extern "C" fn z_condvar_loan_mut(this: &mut z_owned_condvar_t) -> &mut z_loaned_condvar_t {
     let this = this.transmute_mut();
@@ -140,6 +158,8 @@ pub extern "C" fn z_condvar_loan_mut(this: &mut z_owned_condvar_t) -> &mut z_loa
     this.transmute_handle_mut()
 }
 
+/// Wakes up one blocked thread waiting on this condiitonal variable.
+/// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
 pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_error_t {
     let this = this.transmute_ref();
@@ -147,6 +167,11 @@ pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_error
     errors::Z_OK
 }
 
+/// Blocks the current thread until the conditional variable receives a notification.
+///
+/// The function atomically unlocks the guard mutex `m` and blocks the current thread.
+/// When the function returns the lock will have been re-aquired again.
+/// Note: The function may be subject to spurious wakeups.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_condvar_wait(
@@ -176,6 +201,7 @@ decl_transmute_owned!(Option<JoinHandle<()>>, z_owned_task_t);
 #[derive(Clone, Copy)]
 pub struct z_task_attr_t(usize);
 
+/// Constructs task in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_task_null(this: *mut MaybeUninit<z_owned_task_t>) {
     let this = this.transmute_uninit_ptr();
@@ -202,6 +228,7 @@ pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_error_t {
     }
 }
 
+/// Returns ``true`` if task is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_task_check(this: &z_owned_task_t) -> bool {
     this.transmute_ref().is_some()
@@ -220,6 +247,12 @@ impl FunArgPair {
 
 unsafe impl Send for FunArgPair {}
 
+/// Constructs a new task.
+///
+/// @param this_: An uninitialized memory location where task will be constructed.
+/// @param _attr: Attributes of the task (currently unused).
+/// @param fun: Function to be executed by the task.
+/// @param arg: Argument that will be passed to the function `fun`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_task_init(

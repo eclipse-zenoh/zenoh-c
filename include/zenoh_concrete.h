@@ -66,7 +66,7 @@ typedef struct ALIGN(8) z_loaned_subscriber_t {
  * An owned Zenoh publication cache.
  *
  * Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
- * (for example by Querying Subscriber).
+ * (for example by `ze_owned_querying_subscriber_t`).
  */
 typedef struct ALIGN(8) ze_owned_publication_cache_t {
   uint8_t _0[96];
@@ -75,13 +75,13 @@ typedef struct ALIGN(8) ze_owned_publication_cache_t {
  * An owned Zenoh querying subscriber.
  *
  * In addition to receiving the data it is subscribed to,
- * it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get`).
+ * it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get()`).
  */
 typedef struct ALIGN(8) ze_owned_querying_subscriber_t {
   uint8_t _0[64];
 } ze_owned_querying_subscriber_t;
 /**
- * A loaned Zenoh querying subscriber
+ * A loaned Zenoh querying subscriber.
  */
 typedef struct ALIGN(8) ze_loaned_querying_subscriber_t {
   uint8_t _0[64];

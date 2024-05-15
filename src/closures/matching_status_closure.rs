@@ -52,7 +52,7 @@ pub unsafe extern "C" fn zcu_closure_matching_status_null(
     (*this).write(zcu_owned_closure_matching_status_t::empty());
 }
 
-/// Returns ``true`` if closue is valid, ``false`` if it is in gravestone state.
+/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn zcu_closure_matching_status_check(
     this: &zcu_owned_closure_matching_status_t,
