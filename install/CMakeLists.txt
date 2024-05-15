@@ -74,5 +74,5 @@ endforeach()
 #
 # Install lib files 
 #
-install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel" "RELEASE" zenohc)
+install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel;None" "RELEASE" zenohc)
 install_zenohc_lib("Debug" "DEBUG" zenohc_debug)
