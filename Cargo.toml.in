@@ -33,7 +33,8 @@ build = "@CARGO_PROJECT_DIR@build.rs"
 [features]
 logger-autoinit = []
 shared-memory = ["zenoh/shared-memory"]
-default = ["zenoh/default"]
+unstable = ["zenoh/unstable"]
+default = ["zenoh/default", "shared-memory", "unstable"]
 
 [badges]
 maintenance = { status = "actively-developed" }
@@ -53,10 +54,10 @@ spin = "0.9.5"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 # shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
-zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "protocol_changes", features = ["shared-memory", "unstable"], default-features = false }
-zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "protocol_changes", features = ["shared-memory"] }
-zenoh-util = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "protocol_changes" }
-zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "protocol_changes", features = ["unstable"] }
+zenoh = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine", features = ["shared-memory", "unstable"], default-features = false }
+zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine", features = ["shared-memory"] }
+zenoh-util = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine" }
+zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "shm_refine", features = ["unstable"] }
 
 
 [build-dependencies]

@@ -22,6 +22,12 @@ use zenoh::session::Session;
 use zenoh::subscriber::Subscriber;
 use zenoh::time::Timestamp;
 use zenoh::value::Value;
+ 
+// #[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use zenoh::shm::{
+    SharedMemoryClient, ProtocolID, SharedMemoryClientStorage, AllocLayout,DynamicProtocolID, BufAllocResult,
+    ChunkAllocResult, MemoryLayout, ZShmMut, ZShm, zshm, zshmmut
+};
 
 #[macro_export]
 macro_rules! get_opaque_type_data {
@@ -232,3 +238,43 @@ get_opaque_type_data!(Option<JoinHandle<()>>, z_owned_task_t);
 get_opaque_type_data!(Option<Hello>, z_owned_hello_t);
 /// A loaned hello message.
 get_opaque_type_data!(Hello, z_loaned_hello_t);
+
+// #[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// An owned SHM Client
+get_opaque_type_data!(Option<Arc<dyn SharedMemoryClient>>, z_owned_shared_memory_client_t);
+// #[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// A loaned SHM Client
+get_opaque_type_data!(Arc<dyn SharedMemoryClient>, z_loaned_shared_memory_client_t);
+
+/// An owned list of SHM Clients
+get_opaque_type_data!(Option<Vec<(ProtocolID, Arc<dyn SharedMemoryClient>)>>, zc_owned_shared_memory_client_list_t);
+/// A loaned list of SHM Clients
+get_opaque_type_data!(Vec<(ProtocolID, Arc<dyn SharedMemoryClient>)>, zc_loaned_shared_memory_client_list_t);
+
+/// An owned SHM Client Storage
+get_opaque_type_data!(Option<Arc<SharedMemoryClientStorage>>, z_owned_shared_memory_client_storage_t);
+
+/// An owned MemoryLayout
+get_opaque_type_data!(Option<MemoryLayout>, z_owned_memory_layout_t);
+/// A loaned MemoryLayout
+get_opaque_type_data!(MemoryLayout, z_loaned_memory_layout_t);
+
+/// An owned ChunkAllocResult
+get_opaque_type_data!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
+/// A loaned ChunkAllocResult
+get_opaque_type_data!(ChunkAllocResult, z_loaned_chunk_alloc_result_t);
+
+/// An owned BufAllocResult
+get_opaque_type_data!(Option<BufAllocResult>, z_owned_buf_alloc_result_t);
+/// A loaned BufAllocResult
+get_opaque_type_data!(BufAllocResult, z_loaned_buf_alloc_result_t);
+
+/// An owned ZShm slice
+get_opaque_type_data!(Option<ZShm>, z_owned_shm_t);
+/// A loaned ZShm slice
+get_opaque_type_data!(zshm, z_loaned_shm_t);
+
+/// An owned ZShmMut slice
+get_opaque_type_data!(Option<ZShmMut>, z_owned_shm_mut_t);
+/// A loaned ZShmMut slice
+get_opaque_type_data!(zshmmut, z_loaned_shm_mut_t);
