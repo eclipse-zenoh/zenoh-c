@@ -47,7 +47,10 @@ decl_transmute_handle!(
     ze_loaned_querying_subscriber_t
 );
 
-validate_equivalence!(ze_owned_querying_subscriber_t, ze_loaned_querying_subscriber_t);
+validate_equivalence!(
+    ze_owned_querying_subscriber_t,
+    ze_loaned_querying_subscriber_t
+);
 
 /// Constructs a querying subscriber in a gravestone state.
 #[no_mangle]
