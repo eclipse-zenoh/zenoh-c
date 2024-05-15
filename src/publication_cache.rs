@@ -59,6 +59,8 @@ decl_transmute_handle!(
     ze_loaned_publication_cache_t
 );
 
+validate_equivalence!(ze_owned_publication_cache_t, ze_loaned_publication_cache_t);
+
 /// Constructs and declares a publication cache.
 ///
 /// @param this_: An unitialized location in memory where publication cache will be constructed.

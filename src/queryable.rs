@@ -43,6 +43,8 @@ decl_transmute_handle!(Query, z_loaned_query_t);
 pub use crate::opaque_types::z_owned_query_t;
 decl_transmute_owned!(Option<Query>, z_owned_query_t);
 
+validate_equivalence!(z_owned_query_t, z_loaned_query_t);
+
 /// Constructs query in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_null(this: *mut MaybeUninit<z_owned_query_t>) {

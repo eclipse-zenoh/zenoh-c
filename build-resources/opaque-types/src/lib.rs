@@ -155,7 +155,7 @@ get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
 ///
 /// Using `z_declare_keyexpr` allows Zenoh to optimize a key expression,
 /// both for local processing and network-wise.
-get_opaque_type_data!(KeyExpr<'_>, z_loaned_keyexpr_t);
+get_opaque_type_data!(KeyExpr<'static>, z_loaned_keyexpr_t);
 
 /// An owned Zenoh session.
 get_opaque_type_data!(Option<Arc<Session>>, z_owned_session_t);

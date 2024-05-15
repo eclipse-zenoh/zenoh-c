@@ -61,6 +61,8 @@ decl_transmute_owned!(Option<Publisher<'static>>, z_owned_publisher_t);
 pub use crate::opaque_types::z_loaned_publisher_t;
 decl_transmute_handle!(Publisher<'static>, z_loaned_publisher_t);
 
+validate_equivalence!(z_owned_publisher_t, z_loaned_publisher_t);
+
 /// Constructs and declares a publisher for the given key expression.
 ///
 /// Data can be put and deleted with this publisher with the help of the

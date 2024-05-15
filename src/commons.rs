@@ -193,11 +193,14 @@ pub extern "C" fn z_sample_null(this: *mut MaybeUninit<z_owned_sample_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
+validate_equivalence!(z_owned_sample_t, z_loaned_sample_t);
+
 pub use crate::opaque_types::z_loaned_encoding_t;
 decl_transmute_handle!(Encoding, z_loaned_encoding_t);
-
 pub use crate::opaque_types::z_owned_encoding_t;
 decl_transmute_owned!(Encoding, z_owned_encoding_t);
+
+validate_equivalence!(z_owned_encoding_t, z_loaned_encoding_t);
 
 /// Constructs a `z_owned_encoding_t` from a specified string.
 #[no_mangle]

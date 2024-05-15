@@ -34,6 +34,7 @@ decl_transmute_owned!(
     zc_owned_liveliness_token_t
 );
 decl_transmute_handle!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
+validate_equivalence!(zc_owned_liveliness_token_t, zc_loaned_liveliness_token_t);
 
 /// Constructs liveliness token in its gravestone state.
 #[no_mangle]

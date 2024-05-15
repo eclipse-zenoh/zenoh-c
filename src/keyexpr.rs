@@ -210,6 +210,9 @@ pub extern "C" fn z_view_keyexpr_check(this: &z_view_keyexpr_t) -> bool {
 pub use crate::opaque_types::z_loaned_keyexpr_t;
 decl_transmute_handle!(KeyExpr<'static>, z_loaned_keyexpr_t);
 
+validate_equivalence!(z_owned_keyexpr_t, z_loaned_keyexpr_t);
+validate_equivalence!(z_view_keyexpr_t, z_loaned_keyexpr_t);
+
 /// Returns 0 if the passed string is a valid (and canon) key expression.
 /// Otherwise returns negative error value.
 #[allow(clippy::missing_safety_doc)]
