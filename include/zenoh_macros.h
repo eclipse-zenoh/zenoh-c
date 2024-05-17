@@ -8,7 +8,6 @@
 #define z_loan(x) \
     _Generic((x), \
         z_owned_alloc_layout_t : z_alloc_layout_loan, \
-        z_owned_alloc_layout_threadsafe_t : z_alloc_layout_threadsafe_loan, \
         z_owned_bytes_t : z_bytes_loan, \
         z_owned_bytes_reader_t : z_bytes_reader_loan, \
         z_owned_condvar_t : z_condvar_loan, \
@@ -22,7 +21,6 @@
         z_owned_sample_t : z_sample_loan, \
         z_owned_session_t : z_session_loan, \
         z_owned_shared_memory_provider_t : z_shared_memory_provider_loan, \
-        z_owned_shared_memory_provider_threadsafe_t : z_shared_memory_provider_threadsafe_loan, \
         z_owned_shm_t : z_shm_loan, \
         z_owned_slice_array_t : z_slice_array_loan, \
         z_owned_slice_t : z_slice_loan, \
@@ -44,13 +42,13 @@
         z_owned_mutex_t : z_mutex_loan_mut, \
         z_owned_shm_t : z_shm_loan_mut, \
         z_owned_shm_mut_t : z_shm_mut_loan_mut, \
-        z_loaned_shm_t : z_shm_try_loan_mut, \
         z_owned_slice_array_t : z_slice_array_loan_mut, \
         z_owned_slice_map_t : z_slice_map_loan_mut \
     )(&x)
 
 #define z_drop(x) \
     _Generic((x), \
+        z_owned_alloc_layout_t* : z_alloc_layout_drop, \
         z_owned_bytes_t* : z_bytes_drop, \
         z_owned_bytes_reader_t* : z_bytes_reader_drop, \
         z_owned_closure_hello_t* : z_closure_hello_drop, \
@@ -75,12 +73,18 @@
         z_owned_reply_t* : z_reply_drop, \
         z_owned_sample_t* : z_sample_drop, \
         z_owned_session_t* : z_session_drop, \
+        z_owned_shared_memory_client_t* : z_shared_memory_client_drop, \
+        z_owned_shared_memory_client_storage_t* : z_shared_memory_client_storage_drop, \
+        z_owned_shared_memory_provider_t* : z_shared_memory_provider_drop, \
+        z_owned_shm_t* : z_shm_drop, \
+        z_owned_shm_mut_t* : z_shm_mut_drop, \
         z_owned_slice_array_t* : z_slice_array_drop, \
         z_owned_slice_t* : z_slice_drop, \
         z_owned_slice_map_t* : z_slice_map_drop, \
         z_owned_str_t* : z_str_drop, \
         z_owned_subscriber_t* : z_subscriber_drop, \
         zc_owned_liveliness_token_t* : zc_liveliness_token_drop, \
+        zc_owned_shared_memory_client_list_t* : zc_shared_memory_client_list_drop, \
         zcu_owned_closure_matching_status_t* : zcu_closure_matching_status_drop, \
         ze_owned_publication_cache_t* : ze_publication_cache_drop, \
         ze_owned_querying_subscriber_t* : ze_querying_subscriber_drop \
@@ -89,7 +93,6 @@
 #define z_null(x) \
     _Generic((x), \
         z_owned_alloc_layout_t* : z_alloc_layout_null, \
-        z_owned_alloc_layout_threadsafe_t* : z_alloc_layout_threadsafe_null, \
         z_owned_buf_alloc_result_t* : z_buf_alloc_result_null, \
         z_owned_bytes_t* : z_bytes_null, \
         z_owned_bytes_reader_t* : z_bytes_reader_null, \
@@ -118,7 +121,6 @@
         z_owned_shared_memory_client_t* : z_shared_memory_client_null, \
         z_owned_shared_memory_client_storage_t* : z_shared_memory_client_storage_null, \
         z_owned_shared_memory_provider_t* : z_shared_memory_provider_null, \
-        z_owned_shared_memory_provider_threadsafe_t* : z_shared_memory_provider_threadsafe_null, \
         z_owned_shm_mut_t* : z_shm_mut_null, \
         z_owned_shm_t* : z_shm_null, \
         z_owned_slice_array_t* : z_slice_array_null, \
@@ -140,7 +142,6 @@
 #define z_check(x) \
     _Generic((x), \
         z_owned_alloc_layout_t : z_alloc_layout_check, \
-        z_owned_alloc_layout_threadsafe_t : z_alloc_layout_threadsafe_check, \
         z_owned_buf_alloc_result_t : z_buf_alloc_result_check, \
         z_owned_bytes_t : z_bytes_check, \
         z_owned_bytes_reader_t : z_bytes_reader_check, \
@@ -157,7 +158,6 @@
         z_owned_keyexpr_t : z_keyexpr_check, \
         z_owned_memory_layout_t : z_memory_layout_check, \
         z_owned_mutex_t : z_mutex_check, \
-        z_owned_shared_memory_client_t : z_owned_shared_memory_client_check, \
         z_owned_publisher_t : z_publisher_check, \
         z_owned_query_channel_t : z_query_channel_check, \
         z_owned_query_channel_closure_t : z_query_channel_closure_check, \
@@ -168,9 +168,9 @@
         z_owned_reply_t : z_reply_check, \
         z_owned_sample_t : z_sample_check, \
         z_owned_session_t : z_session_check, \
+        z_owned_shared_memory_client_t : z_shared_memory_client_check, \
         z_owned_shared_memory_client_storage_t : z_shared_memory_client_storage_check, \
         z_owned_shared_memory_provider_t : z_shared_memory_provider_check, \
-        z_owned_shared_memory_provider_threadsafe_t : z_shared_memory_provider_threadsafe_check, \
         z_owned_shm_t : z_shm_check, \
         z_owned_shm_mut_t : z_shm_mut_check, \
         z_owned_slice_array_t : z_slice_array_check, \
@@ -209,7 +209,6 @@
 
 
 inline const z_loaned_alloc_layout_t* z_loan(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_loan(&this_); };
-inline const z_loaned_alloc_layout_threadsafe_t* z_loan(const z_owned_alloc_layout_threadsafe_t& this_) { return z_alloc_layout_threadsafe_loan(&this_); };
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
 inline const z_loaned_bytes_reader_t* z_loan(const z_owned_bytes_reader_t& reader) { return z_bytes_reader_loan(&reader); };
 inline const z_loaned_condvar_t* z_loan(const z_owned_condvar_t& this_) { return z_condvar_loan(&this_); };
@@ -223,7 +222,6 @@ inline const z_loaned_reply_t* z_loan(const z_owned_reply_t& this_) { return z_r
 inline const z_loaned_sample_t* z_loan(const z_owned_sample_t& this_) { return z_sample_loan(&this_); };
 inline const z_loaned_session_t* z_loan(const z_owned_session_t& this_) { return z_session_loan(&this_); };
 inline const z_loaned_shared_memory_provider_t* z_loan(const z_owned_shared_memory_provider_t& this_) { return z_shared_memory_provider_loan(&this_); };
-inline const z_loaned_shared_memory_provider_threadsafe_t* z_loan(const z_owned_shared_memory_provider_threadsafe_t& this_) { return z_shared_memory_provider_threadsafe_loan(&this_); };
 inline const z_loaned_shm_t* z_loan(const z_owned_shm_t& this_) { return z_shm_loan(&this_); };
 inline const z_loaned_slice_array_t* z_loan(const z_owned_slice_array_t& this_) { return z_slice_array_loan(&this_); };
 inline const z_loaned_slice_t* z_loan(const z_owned_slice_t& this_) { return z_slice_loan(&this_); };
@@ -243,11 +241,11 @@ inline z_loaned_config_t* z_loan_mut(z_owned_config_t& this_) { return z_config_
 inline z_loaned_mutex_t* z_loan_mut(z_owned_mutex_t& this_) { return z_mutex_loan_mut(&this_); };
 inline z_loaned_shm_t* z_loan_mut(z_owned_shm_t& this_) { return z_shm_loan_mut(&this_); };
 inline z_loaned_shm_mut_t* z_loan_mut(z_owned_shm_mut_t& this_) { return z_shm_mut_loan_mut(&this_); };
-inline z_loaned_shm_mut_t* z_loan_mut(z_loaned_shm_t& this_) { return z_shm_try_loan_mut(&this_); };
 inline z_loaned_slice_array_t* z_loan_mut(z_owned_slice_array_t& this_) { return z_slice_array_loan_mut(&this_); };
 inline z_loaned_slice_map_t* z_loan_mut(z_owned_slice_map_t& this_) { return z_slice_map_loan_mut(&this_); };
 
 
+inline void z_drop(z_owned_alloc_layout_t* this_) { return z_alloc_layout_drop(this_); };
 inline void z_drop(z_owned_bytes_t* this_) { return z_bytes_drop(this_); };
 inline void z_drop(z_owned_bytes_reader_t* this_) { return z_bytes_reader_drop(this_); };
 inline void z_drop(z_owned_closure_hello_t* closure) { return z_closure_hello_drop(closure); };
@@ -272,19 +270,24 @@ inline void z_drop(z_owned_reply_channel_t* channel) { return z_reply_channel_dr
 inline void z_drop(z_owned_reply_t* this_) { return z_reply_drop(this_); };
 inline void z_drop(z_owned_sample_t* this_) { return z_sample_drop(this_); };
 inline void z_drop(z_owned_session_t* this_) { return z_session_drop(this_); };
+inline void z_drop(z_owned_shared_memory_client_t* this_) { return z_shared_memory_client_drop(this_); };
+inline void z_drop(z_owned_shared_memory_client_storage_t* this_) { return z_shared_memory_client_storage_drop(this_); };
+inline void z_drop(z_owned_shared_memory_provider_t* this_) { return z_shared_memory_provider_drop(this_); };
+inline void z_drop(z_owned_shm_t* this_) { return z_shm_drop(this_); };
+inline void z_drop(z_owned_shm_mut_t* this_) { return z_shm_mut_drop(this_); };
 inline void z_drop(z_owned_slice_array_t* this_) { return z_slice_array_drop(this_); };
 inline void z_drop(z_owned_slice_t* this_) { return z_slice_drop(this_); };
 inline void z_drop(z_owned_slice_map_t* this_) { return z_slice_map_drop(this_); };
 inline void z_drop(z_owned_str_t* this_) { return z_str_drop(this_); };
 inline void z_drop(z_owned_subscriber_t* this_) { return z_subscriber_drop(this_); };
 inline void z_drop(zc_owned_liveliness_token_t* this_) { return zc_liveliness_token_drop(this_); };
+inline void z_drop(zc_owned_shared_memory_client_list_t* this_) { return zc_shared_memory_client_list_drop(this_); };
 inline void z_drop(zcu_owned_closure_matching_status_t* closure) { return zcu_closure_matching_status_drop(closure); };
 inline void z_drop(ze_owned_publication_cache_t* this_) { return ze_publication_cache_drop(this_); };
 inline void z_drop(ze_owned_querying_subscriber_t* this_) { return ze_querying_subscriber_drop(this_); };
 
 
 inline void z_null(z_owned_alloc_layout_t* this_) { return z_alloc_layout_null(this_); };
-inline void z_null(z_owned_alloc_layout_threadsafe_t* this_) { return z_alloc_layout_threadsafe_null(this_); };
 inline void z_null(z_owned_buf_alloc_result_t* this_) { return z_buf_alloc_result_null(this_); };
 inline void z_null(z_owned_bytes_t* this_) { return z_bytes_null(this_); };
 inline void z_null(z_owned_bytes_reader_t* this_) { return z_bytes_reader_null(this_); };
@@ -313,7 +316,6 @@ inline void z_null(z_owned_session_t* this_) { return z_session_null(this_); };
 inline void z_null(z_owned_shared_memory_client_t* this_) { return z_shared_memory_client_null(this_); };
 inline void z_null(z_owned_shared_memory_client_storage_t* this_) { return z_shared_memory_client_storage_null(this_); };
 inline void z_null(z_owned_shared_memory_provider_t* this_) { return z_shared_memory_provider_null(this_); };
-inline void z_null(z_owned_shared_memory_provider_threadsafe_t* this_) { return z_shared_memory_provider_threadsafe_null(this_); };
 inline void z_null(z_owned_shm_mut_t* this_) { return z_shm_mut_null(this_); };
 inline void z_null(z_owned_shm_t* this_) { return z_shm_null(this_); };
 inline void z_null(z_owned_slice_array_t* this_) { return z_slice_array_null(this_); };
@@ -333,7 +335,6 @@ inline void z_null(ze_owned_querying_subscriber_t* this_) { return ze_querying_s
 
 
 inline bool z_check(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_check(&this_); };
-inline bool z_check(const z_owned_alloc_layout_threadsafe_t& this_) { return z_alloc_layout_threadsafe_check(&this_); };
 inline bool z_check(const z_owned_buf_alloc_result_t& this_) { return z_buf_alloc_result_check(&this_); };
 inline bool z_check(const z_owned_bytes_t& this_) { return z_bytes_check(&this_); };
 inline bool z_check(const z_owned_bytes_reader_t& this_) { return z_bytes_reader_check(&this_); };
@@ -350,7 +351,6 @@ inline bool z_check(const z_owned_hello_t& this_) { return z_hello_check(&this_)
 inline bool z_check(const z_owned_keyexpr_t& this_) { return z_keyexpr_check(&this_); };
 inline bool z_check(const z_owned_memory_layout_t& this_) { return z_memory_layout_check(&this_); };
 inline bool z_check(const z_owned_mutex_t& this_) { return z_mutex_check(&this_); };
-inline bool z_check(const z_owned_shared_memory_client_t& this_) { return z_owned_shared_memory_client_check(&this_); };
 inline bool z_check(const z_owned_publisher_t& this_) { return z_publisher_check(&this_); };
 inline bool z_check(const z_owned_query_channel_t& this_) { return z_query_channel_check(&this_); };
 inline bool z_check(const z_owned_query_channel_closure_t& this_) { return z_query_channel_closure_check(&this_); };
@@ -361,9 +361,9 @@ inline bool z_check(const z_owned_reply_channel_closure_t& this_) { return z_rep
 inline bool z_check(const z_owned_reply_t& this_) { return z_reply_check(&this_); };
 inline bool z_check(const z_owned_sample_t& this_) { return z_sample_check(&this_); };
 inline bool z_check(const z_owned_session_t& this_) { return z_session_check(&this_); };
+inline bool z_check(const z_owned_shared_memory_client_t& this_) { return z_shared_memory_client_check(&this_); };
 inline bool z_check(const z_owned_shared_memory_client_storage_t& this_) { return z_shared_memory_client_storage_check(&this_); };
 inline bool z_check(const z_owned_shared_memory_provider_t& this_) { return z_shared_memory_provider_check(&this_); };
-inline bool z_check(const z_owned_shared_memory_provider_threadsafe_t& this_) { return z_shared_memory_provider_threadsafe_check(&this_); };
 inline bool z_check(const z_owned_shm_t& this_) { return z_shm_check(&this_); };
 inline bool z_check(const z_owned_shm_mut_t& this_) { return z_shm_mut_check(&this_); };
 inline bool z_check(const z_owned_slice_array_t& this_) { return z_slice_array_check(&this_); };

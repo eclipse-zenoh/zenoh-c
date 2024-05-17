@@ -12,27 +12,161 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use libc::c_void;
 use std::mem::MaybeUninit;
+use std::sync::atomic::AtomicPtr;
 use zenoh::prelude::*;
-use zenoh::shm::{AllocPolicy, AsyncAllocPolicy, DynamicProtocolID, SharedMemoryProvider};
+use zenoh::shm::{AllocPolicy, AsyncAllocPolicy, SharedMemoryProvider};
 
+use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
-use crate::transmute::{Inplace, TransmuteUninitPtr};
-use crate::{
-    context::{DroppableContext, ThreadsafeContext},
-    z_owned_buf_alloc_result_t,
-};
+use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr};
+use crate::{z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
-use super::{
-    shared_memory_provider_backend::DynamicSharedMemoryProviderBackend, types::z_alloc_alignment_t,
-};
+use super::chunk::z_allocated_chunk_t;
+use super::shared_memory_provider::z_loaned_shared_memory_provider_t;
+use super::shared_memory_provider_backend::DynamicSharedMemoryProviderBackend;
+use super::types::z_alloc_alignment_t;
 
-pub(crate) fn alloc<Policy: AllocPolicy, TAnyContext: DroppableContext>(
+pub(crate) fn alloc<Policy: AllocPolicy>(
     out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &SharedMemoryProvider<
-        DynamicProtocolID,
-        DynamicSharedMemoryProviderBackend<TAnyContext>,
-    >,
+    provider: &z_loaned_shared_memory_provider_t,
+    size: usize,
+    alignment: z_alloc_alignment_t,
+) -> z_error_t {
+    match provider.transmute_ref() {
+        super::shared_memory_provider::CSHMProvider::Posix(provider) => {
+            alloc_impl::<
+                Policy,
+                StaticProtocolID<POSIX_PROTOCOL_ID>,
+                PosixSharedMemoryProviderBackend,
+            >(out_result, provider, size, alignment)
+        }
+        super::shared_memory_provider::CSHMProvider::Dynamic(provider) => {
+            alloc_impl::<Policy, DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>(
+                out_result, provider, size, alignment,
+            )
+        }
+        super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
+            alloc_impl::<
+                Policy,
+                DynamicProtocolID,
+                DynamicSharedMemoryProviderBackend<ThreadsafeContext>,
+            >(out_result, provider, size, alignment)
+        }
+    }
+}
+
+pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
+    out_result: AtomicPtr<MaybeUninit<z_owned_buf_alloc_result_t>>,
+    provider: &'static z_loaned_shared_memory_provider_t,
+    size: usize,
+    alignment: z_alloc_alignment_t,
+    result_context: ThreadsafeContext,
+    result_callback: unsafe extern "C" fn(
+        *mut c_void,
+        z_error_t,
+        *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    ),
+) -> z_error_t {
+    match provider.transmute_ref() {
+        super::shared_memory_provider::CSHMProvider::Posix(provider) => {
+            alloc_async_impl::<
+                Policy,
+                StaticProtocolID<POSIX_PROTOCOL_ID>,
+                PosixSharedMemoryProviderBackend,
+            >(
+                out_result,
+                provider,
+                size,
+                alignment,
+                result_context,
+                result_callback,
+            );
+            Z_OK
+        }
+        super::shared_memory_provider::CSHMProvider::Dynamic(_) => Z_EINVAL,
+        super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
+            alloc_async_impl::<
+                Policy,
+                DynamicProtocolID,
+                DynamicSharedMemoryProviderBackend<ThreadsafeContext>,
+            >(
+                out_result,
+                provider,
+                size,
+                alignment,
+                result_context,
+                result_callback,
+            );
+            Z_OK
+        }
+    }
+}
+
+pub(crate) fn defragment(provider: &z_loaned_shared_memory_provider_t) {
+    match provider.transmute_ref() {
+        super::shared_memory_provider::CSHMProvider::Posix(provider) => {
+            provider.defragment();
+        }
+        super::shared_memory_provider::CSHMProvider::Dynamic(provider) => {
+            provider.defragment();
+        }
+        super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
+            provider.defragment();
+        }
+    }
+}
+
+pub(crate) fn garbage_collect(provider: &z_loaned_shared_memory_provider_t) {
+    match provider.transmute_ref() {
+        super::shared_memory_provider::CSHMProvider::Posix(provider) => {
+            provider.garbage_collect();
+        }
+        super::shared_memory_provider::CSHMProvider::Dynamic(provider) => {
+            provider.garbage_collect();
+        }
+        super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
+            provider.garbage_collect();
+        }
+    }
+}
+
+#[no_mangle]
+pub(crate) fn map(
+    out_result: *mut MaybeUninit<z_owned_shm_mut_t>,
+    provider: &z_loaned_shared_memory_provider_t,
+    allocated_chunk: z_allocated_chunk_t,
+    len: usize,
+) {
+    let mapping = match provider.transmute_ref() {
+        super::shared_memory_provider::CSHMProvider::Posix(provider) => {
+            provider.map(allocated_chunk.into(), len)
+        }
+        super::shared_memory_provider::CSHMProvider::Dynamic(provider) => {
+            provider.map(allocated_chunk.into(), len)
+        }
+        super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
+            provider.map(allocated_chunk.into(), len)
+        }
+    };
+
+    match mapping {
+        Ok(buffer) => Inplace::init(out_result.transmute_uninit_ptr(), Some(buffer)),
+        Err(e) => {
+            log::error!("{e}");
+            Inplace::init(out_result.transmute_uninit_ptr(), None)
+        }
+    }
+}
+
+fn alloc_impl<
+    Policy: AllocPolicy,
+    TProtocolID: ProtocolIDSource,
+    TBackend: SharedMemoryProviderBackend,
+>(
+    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    provider: &SharedMemoryProvider<TProtocolID, TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
@@ -45,22 +179,36 @@ pub(crate) fn alloc<Policy: AllocPolicy, TAnyContext: DroppableContext>(
     parse_result(out_result, result)
 }
 
-pub(crate) async fn alloc_async<Policy: AsyncAllocPolicy>(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &SharedMemoryProvider<
-        DynamicProtocolID,
-        DynamicSharedMemoryProviderBackend<ThreadsafeContext>,
-    >,
+pub(crate) fn alloc_async_impl<
+    Policy: AsyncAllocPolicy,
+    TProtocolID: ProtocolIDSource,
+    TBackend: SharedMemoryProviderBackend + Send + Sync,
+>(
+    out_result: AtomicPtr<MaybeUninit<z_owned_buf_alloc_result_t>>,
+    provider: &'static SharedMemoryProvider<TProtocolID, TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
-    let result = provider
-        .alloc(size)
-        .with_alignment(alignment.into())
-        .with_policy::<Policy>()
-        .await;
+    result_context: ThreadsafeContext,
+    result_callback: unsafe extern "C" fn(
+        *mut c_void,
+        z_error_t,
+        *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    ),
+) {
+    //todo: this should be ported to tokio with executor argument support
+    async_std::task::spawn(async move {
+        // todo: fix compilation error!
 
-    parse_result(out_result, result)
+        //let result = provider
+        //    .alloc(size)
+        //    .with_alignment(alignment.into())
+        //    .with_policy::<Policy>()
+        //    .await;
+        //
+        //let error = parse_result(out_result.into_inner(), result);
+        //
+        //unsafe { (result_callback)(result_context.get(), error, out_result.into_inner()); }
+    });
 }
 
 fn parse_result(

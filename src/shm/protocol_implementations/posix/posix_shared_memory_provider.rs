@@ -15,52 +15,29 @@
 use std::mem::MaybeUninit;
 
 use zenoh::shm::{
-    protocol_implementations::posix::{
-        posix_shared_memory_provider_backend::PosixSharedMemoryProviderBackend,
-        protocol_id::POSIX_PROTOCOL_ID,
-    },
-    provider::shared_memory_provider::{
-        SharedMemoryProvider, SharedMemoryProviderBuilder, StaticProtocolID,
-    },
+    AllocLayout, PosixSharedMemoryProviderBackend, SharedMemoryProvider,
+    SharedMemoryProviderBuilder, StaticProtocolID, POSIX_PROTOCOL_ID,
 };
 
 use crate::{
-    decl_rust_copy_type, impl_guarded_transmute, provider::types::z_memory_layout_t,
-    GuardedTransmute,
+    errors::{z_error_t, Z_EINVAL, Z_OK},
+    shm::provider::shared_memory_provider::{z_owned_shared_memory_provider_t, CSHMProvider},
+    transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr},
+    z_loaned_memory_layout_t,
 };
 
-/// An owned SharedMemoryProvider with POSIX backend
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(target_arch = "x86_64")]
-#[repr(C, align(8))]
-pub struct z_posix_shared_memory_provider_t([u64; 26]);
-
-#[cfg(target_arch = "aarch64")]
-#[repr(C, align(16))]
-pub struct z_posix_shared_memory_provider_t([u64; 26]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_posix_shared_memory_provider_t([u64; 26]);
-
-type PosixSharedMemoryProvider =
+pub type PosixSharedMemoryProvider =
     SharedMemoryProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSharedMemoryProviderBackend>;
 
-decl_rust_copy_type!(
-    zenoh:(PosixSharedMemoryProvider),
-    c:(z_posix_shared_memory_provider_t));
+pub type PosixAllocLayout =
+    AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSharedMemoryProviderBackend>;
 
+/// Creates a new threadsafe SHM Provider
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_posix_shared_memory_provider_new(
-    layout: &z_memory_layout_t,
-    out_provider: &mut MaybeUninit<z_posix_shared_memory_provider_t>,
-) -> bool {
+pub extern "C" fn z_posix_shared_memory_provider_new(
+    this: *mut MaybeUninit<z_owned_shared_memory_provider_t>,
+    layout: &z_loaned_memory_layout_t,
+) -> z_error_t {
     match PosixSharedMemoryProviderBackend::builder()
         .with_layout(layout.transmute_ref())
         .res()
@@ -70,12 +47,15 @@ pub unsafe extern "C" fn z_posix_shared_memory_provider_new(
                 .protocol_id::<POSIX_PROTOCOL_ID>()
                 .backend(backend)
                 .res();
-            out_provider.write(provider.transmute());
-            true
+            Inplace::init(
+                this.transmute_uninit_ptr(),
+                Some(CSHMProvider::Posix(provider)),
+            );
+            Z_OK
         }
         Err(e) => {
             log::error!("{}", e);
-            false
+            Z_EINVAL
         }
     }
 }

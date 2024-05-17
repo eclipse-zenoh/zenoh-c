@@ -68,7 +68,7 @@ pub extern "C" fn zc_shared_memory_client_list_check(
 
 /// Deletes list of SHM Clients
 #[no_mangle]
-pub extern "C" fn zc_shared_memory_client_list_delete(
+pub extern "C" fn zc_shared_memory_client_list_drop(
     this: &mut zc_owned_shared_memory_client_list_t,
 ) {
     let _ = this.transmute_mut().extract();
@@ -116,8 +116,7 @@ pub extern "C" fn z_ref_shared_memory_client_storage_global(
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_client_storage_new(
+pub extern "C" fn z_shared_memory_client_storage_new(
     this: *mut MaybeUninit<z_owned_shared_memory_client_storage_t>,
     clients: &zc_loaned_shared_memory_client_list_t,
     add_default_client_set: bool,
@@ -155,7 +154,7 @@ pub extern "C" fn z_shared_memory_client_storage_check(
 
 /// Derefs SHM Client Storage
 #[no_mangle]
-pub extern "C" fn z_shared_memory_client_storage_deref(
+pub extern "C" fn z_shared_memory_client_storage_drop(
     this: &mut z_owned_shared_memory_client_storage_t,
 ) {
     let _ = this.transmute_mut().extract();

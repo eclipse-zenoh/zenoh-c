@@ -63,6 +63,6 @@ pub extern "C" fn z_shm_mut_loan_mut(this: &mut z_owned_shm_mut_t) -> &mut z_loa
 
 /// Deletes ZShm slice
 #[no_mangle]
-pub extern "C" fn z_shm_mut_delete(this: &mut z_owned_shm_mut_t) {
+pub extern "C" fn z_shm_mut_drop(this: &mut z_owned_shm_mut_t) {
     let _ = this.transmute_mut().extract();
 }

@@ -199,17 +199,17 @@ typedef struct ALIGN(8) z_owned_buf_alloc_result_t {
  */
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_loaned_alloc_layout_t {
-  uint64_t _0[4];
+  uint64_t _0[5];
 } z_loaned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
 typedef struct ALIGN(16) z_loaned_alloc_layout_t {
-  uint64_t _0[4];
+  uint64_t _0[6];
 } z_loaned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_loaned_alloc_layout_t {
-  uint64_t _0[4];
+  uint64_t _0[5];
 } z_loaned_alloc_layout_t;
 #endif
 /**
@@ -217,56 +217,41 @@ typedef struct ALIGN(8) z_loaned_alloc_layout_t {
  */
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_owned_alloc_layout_t {
-  uint64_t _0[4];
+  uint64_t _0[5];
 } z_owned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
 typedef struct ALIGN(16) z_owned_alloc_layout_t {
-  uint64_t _0[4];
+  uint64_t _0[6];
 } z_owned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
 typedef struct ALIGN(8) z_owned_alloc_layout_t {
-  uint64_t _0[4];
+  uint64_t _0[5];
 } z_owned_alloc_layout_t;
 #endif
-/**
- * A loaned threadsafe SharedMemoryProvider's AllocLayout
- */
-#if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(8) z_loaned_alloc_layout_threadsafe_t {
-  uint64_t _0[4];
-} z_loaned_alloc_layout_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_loaned_alloc_layout_threadsafe_t {
-  uint64_t _0[4];
-} z_loaned_alloc_layout_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_loaned_alloc_layout_threadsafe_t {
-  uint64_t _0[4];
-} z_loaned_alloc_layout_threadsafe_t;
-#endif
-/**
- * An owned threadsafe SharedMemoryProvider's AllocLayout
- */
-#if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(8) z_owned_alloc_layout_threadsafe_t {
-  uint64_t _0[4];
-} z_owned_alloc_layout_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_owned_alloc_layout_threadsafe_t {
-  uint64_t _0[4];
-} z_owned_alloc_layout_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_alloc_layout_threadsafe_t {
-  uint64_t _0[4];
-} z_owned_alloc_layout_threadsafe_t;
-#endif
 typedef int8_t z_error_t;
+/**
+ * A loaned SharedMemoryProvider specialization
+ */
+#if defined(TARGET_ARCH_X86_64)
+typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
+  uint64_t _0[26];
+} z_loaned_shared_memory_provider_t;
+#endif
+#if defined(TARGET_ARCH_AARCH64)
+typedef struct ALIGN(16) z_loaned_shared_memory_provider_t {
+  uint64_t _0[26];
+} z_loaned_shared_memory_provider_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
+  uint64_t _0[26];
+} z_loaned_shared_memory_provider_t;
+#endif
+typedef struct z_alloc_alignment_t {
+  uint8_t pow;
+} z_alloc_alignment_t;
 /**
  * An owned ZShmMut slice
  */
@@ -738,9 +723,6 @@ typedef struct ALIGN(8) z_view_slice_t {
 typedef struct ALIGN(8) z_owned_memory_layout_t {
   uint8_t _0[24];
 } z_owned_memory_layout_t;
-typedef struct z_alloc_alignment_t {
-  uint8_t pow;
-} z_alloc_alignment_t;
 /**
  * An owned mutex.
  */
@@ -753,46 +735,36 @@ typedef struct ALIGN(8) z_owned_mutex_t {
 typedef struct ALIGN(8) z_owned_shared_memory_client_t {
   uint8_t _0[16];
 } z_owned_shared_memory_client_t;
-typedef struct zc_threadsafe_context_data_t {
-  void *ptr;
-} zc_threadsafe_context_data_t;
 /**
- * A tread-safe droppable context.
- * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
- * information to each callback.
+ * An owned SharedMemoryProvider specialization
  *
- * This is a thread-safe context - the associated callbacks may be executed concurrently with the same
- * zc_context_t instance. In other words, the context data MUST be thread-safe.
+ * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+ * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+ * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
  *
- * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted.The
- * delete_fn is guaranteed to be executed only once at some point of time after the last associated
- * callback call returns.
- * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
- * be executed.
+ * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
-typedef struct zc_threadsafe_context_t {
-  struct zc_threadsafe_context_data_t context;
-  void (*delete_fn)(void*);
-} zc_threadsafe_context_t;
+#if defined(TARGET_ARCH_X86_64)
+typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
+  uint64_t _0[26];
+} z_owned_shared_memory_provider_t;
+#endif
+#if defined(TARGET_ARCH_AARCH64)
+typedef struct ALIGN(16) z_owned_shared_memory_provider_t {
+  uint64_t _0[26];
+} z_owned_shared_memory_provider_t;
+#endif
+#if defined(TARGET_ARCH_ARM)
+typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
+  uint64_t _0[26];
+} z_owned_shared_memory_provider_t;
+#endif
 /**
- * A callbacks for SharedMemorySegment
+ * A loaned MemoryLayout
  */
-typedef struct zc_shared_memory_segment_callbacks_t {
-  uint8_t *(*map_fn)(void*, z_chunk_id_t);
-} zc_shared_memory_segment_callbacks_t;
-/**
- * A SharedMemorySegment
- */
-typedef struct z_shared_memory_segment_t {
-  struct zc_threadsafe_context_t context;
-  struct zc_shared_memory_segment_callbacks_t callbacks;
-} z_shared_memory_segment_t;
-/**
- * A callbacks for SharedMemoryClient
- */
-typedef struct zc_shared_memory_client_callbacks_t {
-  bool (*attach_fn)(void*, z_segment_id_t, struct z_shared_memory_segment_t*);
-} zc_shared_memory_client_callbacks_t;
+typedef struct ALIGN(8) z_loaned_memory_layout_t {
+  uint8_t _0[16];
+} z_loaned_memory_layout_t;
 /**
  * A loaned Zenoh publisher.
  */
@@ -976,54 +948,52 @@ typedef struct z_scout_options_t {
    */
   uint8_t zc_what;
 } z_scout_options_t;
+typedef struct zc_threadsafe_context_data_t {
+  void *ptr;
+} zc_threadsafe_context_data_t;
+/**
+ * A tread-safe droppable context.
+ * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
+ * information to each callback.
+ *
+ * This is a thread-safe context - the associated callbacks may be executed concurrently with the same
+ * zc_context_t instance. In other words, the context data MUST be thread-safe.
+ *
+ * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted.The
+ * delete_fn is guaranteed to be executed only once at some point of time after the last associated
+ * callback call returns.
+ * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
+ * be executed.
+ */
+typedef struct zc_threadsafe_context_t {
+  struct zc_threadsafe_context_data_t context;
+  void (*delete_fn)(void*);
+} zc_threadsafe_context_t;
+/**
+ * A callbacks for SharedMemorySegment
+ */
+typedef struct zc_shared_memory_segment_callbacks_t {
+  uint8_t *(*map_fn)(void*, z_chunk_id_t);
+} zc_shared_memory_segment_callbacks_t;
+/**
+ * A SharedMemorySegment
+ */
+typedef struct z_shared_memory_segment_t {
+  struct zc_threadsafe_context_t context;
+  struct zc_shared_memory_segment_callbacks_t callbacks;
+} z_shared_memory_segment_t;
+/**
+ * A callbacks for SharedMemoryClient
+ */
+typedef struct zc_shared_memory_client_callbacks_t {
+  bool (*attach_fn)(void*, z_segment_id_t, struct z_shared_memory_segment_t*);
+} zc_shared_memory_client_callbacks_t;
 /**
  * A loaned list of SHM Clients
  */
 typedef struct ALIGN(8) zc_loaned_shared_memory_client_list_t {
   uint8_t _0[24];
 } zc_loaned_shared_memory_client_list_t;
-/**
- * A loaned SharedMemoryProvider specialization
- */
-#if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
-  uint64_t _0[14];
-} z_loaned_shared_memory_provider_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_loaned_shared_memory_provider_t {
-  uint64_t _0[14];
-} z_loaned_shared_memory_provider_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
-  uint64_t _0[14];
-} z_loaned_shared_memory_provider_t;
-#endif
-/**
- * An owned SharedMemoryProvider specialization
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-#if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
-  uint64_t _0[14];
-} z_owned_shared_memory_provider_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_owned_shared_memory_provider_t {
-  uint64_t _0[14];
-} z_owned_shared_memory_provider_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
-  uint64_t _0[14];
-} z_owned_shared_memory_provider_t;
-#endif
 /**
  * Unique protocol identifier.
  * Here is a contract: it is up to user to make sure that incompatible SharedMemoryClient
@@ -1054,12 +1024,6 @@ typedef struct zc_context_t {
   void (*delete_fn)(void*);
 } zc_context_t;
 /**
- * A loaned MemoryLayout
- */
-typedef struct ALIGN(8) z_loaned_memory_layout_t {
-  uint8_t _0[16];
-} z_loaned_memory_layout_t;
-/**
  * A callbacks for SharedMemoryProviderBackend
  */
 typedef struct zc_shared_memory_provider_backend_callbacks_t {
@@ -1072,48 +1036,6 @@ typedef struct zc_shared_memory_provider_backend_callbacks_t {
   void (*layout_for_fn)(void*, struct z_owned_memory_layout_t*);
   void (*drop_fn)(void*);
 } zc_shared_memory_provider_backend_callbacks_t;
-/**
- * A loaned SharedMemoryProvider threadsafe specialization
- */
-#if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(8) z_loaned_shared_memory_provider_threadsafe_t {
-  uint64_t _0[14];
-} z_loaned_shared_memory_provider_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_loaned_shared_memory_provider_threadsafe_t {
-  uint64_t _0[14];
-} z_loaned_shared_memory_provider_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_loaned_shared_memory_provider_threadsafe_t {
-  uint64_t _0[14];
-} z_loaned_shared_memory_provider_threadsafe_t;
-#endif
-/**
- * An owned SharedMemoryProvider threadsafe specialization
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-#if defined(TARGET_ARCH_X86_64)
-typedef struct ALIGN(8) z_owned_shared_memory_provider_threadsafe_t {
-  uint64_t _0[14];
-} z_owned_shared_memory_provider_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_owned_shared_memory_provider_threadsafe_t {
-  uint64_t _0[14];
-} z_owned_shared_memory_provider_threadsafe_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_shared_memory_provider_threadsafe_t {
-  uint64_t _0[14];
-} z_owned_shared_memory_provider_threadsafe_t;
-#endif
 /**
  * An owned ZShm slice
  */
@@ -1315,6 +1237,7 @@ ZENOHC_API extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
+ZENOHC_API extern const unsigned int Z_SHM_POSIX_PROTOCOL_ID;
 ZENOHC_API
 void z_alloc_layout_alloc(struct z_owned_buf_alloc_result_t *out_result,
                           const struct z_loaned_alloc_layout_t *layout);
@@ -1337,49 +1260,24 @@ ZENOHC_API bool z_alloc_layout_check(const struct z_owned_alloc_layout_t *this_)
 /**
  * Deletes Alloc Layout
  */
-ZENOHC_API void z_alloc_layout_delete(struct z_owned_alloc_layout_t *this_);
+ZENOHC_API void z_alloc_layout_drop(struct z_owned_alloc_layout_t *this_);
 /**
  * Borrows Alloc Layout
  */
 ZENOHC_API
 const struct z_loaned_alloc_layout_t *z_alloc_layout_loan(const struct z_owned_alloc_layout_t *this_);
 /**
+ * Creates a new Alloc Layout for SHM Provider
+ */
+ZENOHC_API
+z_error_t z_alloc_layout_new(struct z_owned_alloc_layout_t *this_,
+                             const struct z_loaned_shared_memory_provider_t *provider,
+                             size_t size,
+                             struct z_alloc_alignment_t alignment);
+/**
  * Constructs Alloc Layout in its gravestone value.
  */
 ZENOHC_API void z_alloc_layout_null(struct z_owned_alloc_layout_t *this_);
-ZENOHC_API
-void z_alloc_layout_threadsafe_alloc(struct z_owned_buf_alloc_result_t *out_result,
-                                     const struct z_loaned_alloc_layout_threadsafe_t *layout);
-ZENOHC_API
-void z_alloc_layout_threadsafe_alloc_gc(struct z_owned_buf_alloc_result_t *out_result,
-                                        const struct z_loaned_alloc_layout_threadsafe_t *layout);
-ZENOHC_API
-void z_alloc_layout_threadsafe_alloc_gc_defrag(struct z_owned_buf_alloc_result_t *out_result,
-                                               const struct z_loaned_alloc_layout_threadsafe_t *layout);
-ZENOHC_API
-void z_alloc_layout_threadsafe_alloc_gc_defrag_blocking(struct z_owned_buf_alloc_result_t *out_result,
-                                                        const struct z_loaned_alloc_layout_threadsafe_t *layout);
-ZENOHC_API
-void z_alloc_layout_threadsafe_alloc_gc_defrag_dealloc(struct z_owned_buf_alloc_result_t *out_result,
-                                                       const struct z_loaned_alloc_layout_threadsafe_t *layout);
-/**
- * Returns ``true`` if `this` is valid.
- */
-ZENOHC_API
-bool z_alloc_layout_threadsafe_check(const struct z_owned_alloc_layout_threadsafe_t *this_);
-/**
- * Deletes threadsafe Alloc Layout
- */
-ZENOHC_API void z_alloc_layout_threadsafe_delete(struct z_owned_alloc_layout_threadsafe_t *this_);
-/**
- * Borrows threadsafe Alloc Layout
- */
-ZENOHC_API
-const struct z_loaned_alloc_layout_threadsafe_t *z_alloc_layout_threadsafe_loan(const struct z_owned_alloc_layout_threadsafe_t *this_);
-/**
- * Constructs threadsafe Alloc Layout in its gravestone value.
- */
-ZENOHC_API void z_alloc_layout_threadsafe_null(struct z_owned_alloc_layout_threadsafe_t *this_);
 /**
  * Returns ``true`` if `this` is valid.
  */
@@ -2154,17 +2052,15 @@ ZENOHC_API
 z_error_t z_open(struct z_owned_session_t *this_,
                  struct z_owned_config_t *config);
 /**
- * Returns ``true`` if `this` is valid.
+ * Creates a new POSIX SHM Client
  */
-ZENOHC_API
-bool z_owned_shared_memory_client_check(const struct z_owned_shared_memory_client_t *this_);
+ZENOHC_API z_error_t z_posix_shared_memory_client_new(struct z_owned_shared_memory_client_t *this_);
 /**
- * Creates a new SHM Client
+ * Creates a new threadsafe SHM Provider
  */
 ZENOHC_API
-z_error_t z_owned_shared_memory_client_new(struct z_owned_shared_memory_client_t *this_,
-                                           struct zc_threadsafe_context_t context,
-                                           struct zc_shared_memory_client_callbacks_t callbacks);
+z_error_t z_posix_shared_memory_provider_new(struct z_owned_shared_memory_provider_t *this_,
+                                             const struct z_loaned_memory_layout_t *layout);
 /**
  * Returns ``true`` if publisher is valid, ``false`` otherwise.
  */
@@ -2587,9 +2483,20 @@ ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_
  */
 ZENOHC_API void z_session_null(struct z_owned_session_t *this_);
 /**
+ * Returns ``true`` if `this` is valid.
+ */
+ZENOHC_API bool z_shared_memory_client_check(const struct z_owned_shared_memory_client_t *this_);
+/**
  * Deletes SHM Client
  */
-ZENOHC_API void z_shared_memory_client_delete(struct z_owned_shared_memory_client_t *this_);
+ZENOHC_API void z_shared_memory_client_drop(struct z_owned_shared_memory_client_t *this_);
+/**
+ * Creates a new SHM Client
+ */
+ZENOHC_API
+z_error_t z_shared_memory_client_new(struct z_owned_shared_memory_client_t *this_,
+                                     struct zc_threadsafe_context_t context,
+                                     struct zc_shared_memory_client_callbacks_t callbacks);
 /**
  * Constructs SHM client in its gravestone value.
  */
@@ -2603,7 +2510,7 @@ bool z_shared_memory_client_storage_check(const struct z_owned_shared_memory_cli
  * Derefs SHM Client Storage
  */
 ZENOHC_API
-void z_shared_memory_client_storage_deref(struct z_owned_shared_memory_client_storage_t *this_);
+void z_shared_memory_client_storage_drop(struct z_owned_shared_memory_client_storage_t *this_);
 ZENOHC_API
 z_error_t z_shared_memory_client_storage_new(struct z_owned_shared_memory_client_storage_t *this_,
                                              const struct zc_loaned_shared_memory_client_list_t *clients,
@@ -2629,6 +2536,15 @@ z_error_t z_shared_memory_provider_alloc_gc_defrag(struct z_owned_buf_alloc_resu
                                                    size_t size,
                                                    struct z_alloc_alignment_t alignment);
 ZENOHC_API
+z_error_t z_shared_memory_provider_alloc_gc_defrag_async(struct z_owned_buf_alloc_result_t *out_result,
+                                                         const struct z_loaned_shared_memory_provider_t *provider,
+                                                         size_t size,
+                                                         struct z_alloc_alignment_t alignment,
+                                                         struct zc_threadsafe_context_t result_context,
+                                                         void (*result_callback)(void*,
+                                                                                 z_error_t,
+                                                                                 struct z_owned_buf_alloc_result_t*));
+ZENOHC_API
 z_error_t z_shared_memory_provider_alloc_gc_defrag_blocking(struct z_owned_buf_alloc_result_t *out_result,
                                                             const struct z_loaned_shared_memory_provider_t *provider,
                                                             size_t size,
@@ -2639,14 +2555,6 @@ z_error_t z_shared_memory_provider_alloc_gc_defrag_dealloc(struct z_owned_buf_al
                                                            size_t size,
                                                            struct z_alloc_alignment_t alignment);
 /**
- * Creates a new Alloc Layout
- */
-ZENOHC_API
-z_error_t z_shared_memory_provider_alloc_layout_new(struct z_owned_alloc_layout_t *this_,
-                                                    const struct z_loaned_shared_memory_provider_t *provider,
-                                                    size_t size,
-                                                    struct z_alloc_alignment_t alignment);
-/**
  * Returns ``true`` if `this` is valid.
  */
 ZENOHC_API
@@ -2656,7 +2564,7 @@ void z_shared_memory_provider_defragment(const struct z_loaned_shared_memory_pro
 /**
  * Deletes SHM Provider
  */
-ZENOHC_API void z_shared_memory_provider_delete(struct z_owned_shared_memory_provider_t *this_);
+ZENOHC_API void z_shared_memory_provider_drop(struct z_owned_shared_memory_provider_t *this_);
 ZENOHC_API
 void z_shared_memory_provider_garbage_collect(const struct z_loaned_shared_memory_provider_t *provider);
 /**
@@ -2681,84 +2589,26 @@ void z_shared_memory_provider_new(struct z_owned_shared_memory_provider_t *this_
  * Constructs SHM Provider in its gravestone value.
  */
 ZENOHC_API void z_shared_memory_provider_null(struct z_owned_shared_memory_provider_t *this_);
-ZENOHC_API
-z_error_t z_shared_memory_provider_threadsafe_alloc(struct z_owned_buf_alloc_result_t *out_result,
-                                                    const struct z_loaned_shared_memory_provider_threadsafe_t *provider,
-                                                    size_t size,
-                                                    struct z_alloc_alignment_t alignment);
-ZENOHC_API
-z_error_t z_shared_memory_provider_threadsafe_alloc_gc(struct z_owned_buf_alloc_result_t *out_result,
-                                                       const struct z_loaned_shared_memory_provider_threadsafe_t *provider,
-                                                       size_t size,
-                                                       struct z_alloc_alignment_t alignment);
-ZENOHC_API
-z_error_t z_shared_memory_provider_threadsafe_alloc_gc_defrag(struct z_owned_buf_alloc_result_t *out_result,
-                                                              const struct z_loaned_shared_memory_provider_threadsafe_t *provider,
-                                                              size_t size,
-                                                              struct z_alloc_alignment_t alignment);
-ZENOHC_API
-z_error_t z_shared_memory_provider_threadsafe_alloc_gc_defrag_blocking(struct z_owned_buf_alloc_result_t *out_result,
-                                                                       const struct z_loaned_shared_memory_provider_threadsafe_t *provider,
-                                                                       size_t size,
-                                                                       struct z_alloc_alignment_t alignment);
-ZENOHC_API
-z_error_t z_shared_memory_provider_threadsafe_alloc_gc_defrag_dealloc(struct z_owned_buf_alloc_result_t *out_result,
-                                                                      const struct z_loaned_shared_memory_provider_threadsafe_t *provider,
-                                                                      size_t size,
-                                                                      struct z_alloc_alignment_t alignment);
-/**
- * Creates a new threadsafe Alloc Layout
- */
-ZENOHC_API
-z_error_t z_shared_memory_provider_threadsafe_alloc_layout_new(struct z_owned_alloc_layout_threadsafe_t *this_,
-                                                               const struct z_loaned_shared_memory_provider_threadsafe_t *provider,
-                                                               size_t size,
-                                                               struct z_alloc_alignment_t alignment);
-/**
- * Returns ``true`` if `this` is valid.
- */
-ZENOHC_API
-bool z_shared_memory_provider_threadsafe_check(const struct z_owned_shared_memory_provider_threadsafe_t *this_);
-ZENOHC_API
-void z_shared_memory_provider_threadsafe_defragment(const struct z_loaned_shared_memory_provider_threadsafe_t *provider);
-/**
- * Deletes threadsafe SHM Provider
- */
-ZENOHC_API
-void z_shared_memory_provider_threadsafe_delete(struct z_owned_shared_memory_provider_threadsafe_t *this_);
-ZENOHC_API
-void z_shared_memory_provider_threadsafe_garbage_collect(const struct z_loaned_shared_memory_provider_threadsafe_t *provider);
-/**
- * Borrows threadsafe SHM Provider
- */
-ZENOHC_API
-const struct z_loaned_shared_memory_provider_threadsafe_t *z_shared_memory_provider_threadsafe_loan(const struct z_owned_shared_memory_provider_threadsafe_t *this_);
-ZENOHC_API
-void z_shared_memory_provider_threadsafe_map(struct z_owned_shm_mut_t *out_result,
-                                             const struct z_loaned_shared_memory_provider_threadsafe_t *provider,
-                                             struct z_allocated_chunk_t allocated_chunk,
-                                             size_t len);
 /**
  * Creates a new threadsafe SHM Provider
  */
 ZENOHC_API
-void z_shared_memory_provider_threadsafe_new(struct z_owned_shared_memory_provider_threadsafe_t *this_,
+void z_shared_memory_provider_threadsafe_new(struct z_owned_shared_memory_provider_t *this_,
                                              z_protocol_id_t id,
                                              struct zc_threadsafe_context_t context,
                                              struct zc_shared_memory_provider_backend_callbacks_t callbacks);
-/**
- * Constructs threadsafe SHM Provider in its gravestone value.
- */
-ZENOHC_API
-void z_shared_memory_provider_threadsafe_null(struct z_owned_shared_memory_provider_threadsafe_t *this_);
 /**
  * Returns ``true`` if `this` is valid.
  */
 ZENOHC_API bool z_shm_check(const struct z_owned_shm_t *this_);
 /**
+ * Converts borrowed ZShm slice as owned ZShm slice by performing shared memory handle copy
+ */
+ZENOHC_API void z_shm_copy(struct z_owned_shm_t *this_, const struct z_loaned_shm_t *loaned);
+/**
  * Deletes ZShm slice
  */
-ZENOHC_API void z_shm_delete(struct z_owned_shm_t *this_);
+ZENOHC_API void z_shm_drop(struct z_owned_shm_t *this_);
 /**
  * Constructs ZShm slice from ZShmMut slice
  */
@@ -2778,7 +2628,7 @@ ZENOHC_API bool z_shm_mut_check(const struct z_owned_shm_mut_t *this_);
 /**
  * Deletes ZShm slice
  */
-ZENOHC_API void z_shm_mut_delete(struct z_owned_shm_mut_t *this_);
+ZENOHC_API void z_shm_mut_drop(struct z_owned_shm_mut_t *this_);
 /**
  * Borrows ZShmMut slice
  */
@@ -2798,9 +2648,13 @@ void z_shm_mut_try_from_immut(struct z_owned_shm_mut_t *this_,
  */
 ZENOHC_API void z_shm_null(struct z_owned_shm_t *this_);
 /**
+ * Mutably borrows ZShm slice as borrowed ZShmMut slice
+ */
+ZENOHC_API struct z_loaned_shm_mut_t *z_shm_try_mut(struct z_owned_shm_t *this_);
+/**
  * Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice
  */
-ZENOHC_API struct z_loaned_shm_mut_t *z_shm_try_loan_mut(struct z_loaned_shm_t *this_);
+ZENOHC_API struct z_loaned_shm_mut_t *z_shm_try_reloan_mut(struct z_loaned_shm_t *this_);
 /**
  * Puts current thread to sleep for specified amount of milliseconds.
  */
@@ -3527,7 +3381,7 @@ bool zc_shared_memory_client_list_check(const struct zc_owned_shared_memory_clie
  * Deletes list of SHM Clients
  */
 ZENOHC_API
-void zc_shared_memory_client_list_delete(struct zc_owned_shared_memory_client_list_t *this_);
+void zc_shared_memory_client_list_drop(struct zc_owned_shared_memory_client_list_t *this_);
 /**
  * Borrows list of SHM Clients
  */

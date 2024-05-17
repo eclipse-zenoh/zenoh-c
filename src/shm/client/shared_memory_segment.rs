@@ -20,7 +20,10 @@ use zenoh::shm::{ChunkID, SharedMemorySegment};
 use zenoh_util::core::zerror;
 
 use crate::context::DroppableContext;
-use crate::{context::{zc_threadsafe_context_t, ThreadsafeContext}, shm::common::types::z_chunk_id_t};
+use crate::{
+    context::{zc_threadsafe_context_t, ThreadsafeContext},
+    shm::common::types::z_chunk_id_t,
+};
 
 /// A callbacks for SharedMemorySegment
 #[derive(Debug)]

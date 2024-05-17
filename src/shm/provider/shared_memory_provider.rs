@@ -12,20 +12,23 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, sync::atomic::AtomicPtr};
 
+use libc::c_void;
 use zenoh::shm::{
-    AllocPolicy, BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc,
+    BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc,
     SharedMemoryProvider, SharedMemoryProviderBuilder,
 };
 
 use crate::{
-    context::{zc_context_t, Context},
+    context::{zc_context_t, zc_threadsafe_context_t, Context, ThreadsafeContext},
     errors::z_error_t,
-    shm::common::types::z_protocol_id_t,
+    shm::{
+        common::types::z_protocol_id_t,
+        protocol_implementations::posix::posix_shared_memory_provider::PosixSharedMemoryProvider,
+    },
     transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-        TransmuteUninitPtr,
+        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
     z_owned_buf_alloc_result_t, z_owned_shm_mut_t,
 };
@@ -35,22 +38,22 @@ use super::{
     shared_memory_provider_backend::{
         zc_shared_memory_provider_backend_callbacks_t, DynamicSharedMemoryProviderBackend,
     },
-    shared_memory_provider_impl::alloc,
+    shared_memory_provider_impl::{alloc, alloc_async, defragment, garbage_collect, map},
     types::z_alloc_alignment_t,
 };
 
 /// A loaned SharedMemoryProvider specialization
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
-pub struct z_loaned_shared_memory_provider_t([u64; 14]);
+pub struct z_loaned_shared_memory_provider_t([u64; 26]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
-pub struct z_loaned_shared_memory_provider_t([u64; 14]);
+pub struct z_loaned_shared_memory_provider_t([u64; 26]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_loaned_shared_memory_provider_t([u64; 14]);
+pub struct z_loaned_shared_memory_provider_t([u64; 26]);
 
 /// An owned SharedMemoryProvider specialization
 ///
@@ -61,25 +64,31 @@ pub struct z_loaned_shared_memory_provider_t([u64; 14]);
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
 #[cfg(target_arch = "x86_64")]
 #[repr(C, align(8))]
-pub struct z_owned_shared_memory_provider_t([u64; 14]);
+pub struct z_owned_shared_memory_provider_t([u64; 26]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]
-pub struct z_owned_shared_memory_provider_t([u64; 14]);
+pub struct z_owned_shared_memory_provider_t([u64; 26]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
-pub struct z_owned_shared_memory_provider_t([u64; 14]);
+pub struct z_owned_shared_memory_provider_t([u64; 26]);
 
-decl_transmute_owned!(
-    Option<SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>>,
-    z_owned_shared_memory_provider_t
-);
+pub type DynamicSharedMemoryProvider =
+    SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>;
 
-decl_transmute_handle!(
-    SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>,
-    z_loaned_shared_memory_provider_t
-);
+pub type DynamicSharedMemoryProviderThreadsafe =
+    SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<ThreadsafeContext>>;
+
+pub enum CSHMProvider {
+    Posix(PosixSharedMemoryProvider),
+    Dynamic(DynamicSharedMemoryProvider),
+    DynamicThreadsafe(DynamicSharedMemoryProviderThreadsafe),
+}
+
+decl_transmute_owned!(Option<CSHMProvider>, z_owned_shared_memory_provider_t);
+
+decl_transmute_handle!(CSHMProvider, z_loaned_shared_memory_provider_t);
 
 /// Creates a new SHM Provider
 #[no_mangle]
@@ -95,7 +104,30 @@ pub extern "C" fn z_shared_memory_provider_new(
         .backend(backend)
         .res();
 
-    Inplace::init(this.transmute_uninit_ptr(), Some(provider));
+    Inplace::init(
+        this.transmute_uninit_ptr(),
+        Some(CSHMProvider::Dynamic(provider)),
+    );
+}
+
+/// Creates a new threadsafe SHM Provider
+#[no_mangle]
+pub extern "C" fn z_shared_memory_provider_threadsafe_new(
+    this: *mut MaybeUninit<z_owned_shared_memory_provider_t>,
+    id: z_protocol_id_t,
+    context: zc_threadsafe_context_t,
+    callbacks: zc_shared_memory_provider_backend_callbacks_t,
+) {
+    let backend = DynamicSharedMemoryProviderBackend::new(context.into(), callbacks);
+    let provider = SharedMemoryProviderBuilder::builder()
+        .dynamic_protocol_id(id)
+        .backend(backend)
+        .res();
+
+    Inplace::init(
+        this.transmute_uninit_ptr(),
+        Some(CSHMProvider::DynamicThreadsafe(provider)),
+    );
 }
 
 /// Constructs SHM Provider in its gravestone value.
@@ -124,7 +156,7 @@ pub extern "C" fn z_shared_memory_provider_loan(
 
 /// Deletes SHM Provider
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_delete(this: &mut z_owned_shared_memory_provider_t) {
+pub extern "C" fn z_shared_memory_provider_drop(this: &mut z_owned_shared_memory_provider_t) {
     let _ = this.transmute_mut().extract();
 }
 
@@ -135,7 +167,7 @@ pub extern "C" fn z_shared_memory_provider_alloc(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    alloc_inner::<JustAlloc>(out_result, provider, size, alignment)
+    alloc::<JustAlloc>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
@@ -145,7 +177,7 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    alloc_inner::<GarbageCollect>(out_result, provider, size, alignment)
+    alloc::<GarbageCollect>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
@@ -155,7 +187,7 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    alloc_inner::<Defragment<GarbageCollect>>(out_result, provider, size, alignment)
+    alloc::<Defragment<GarbageCollect>>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
@@ -165,9 +197,7 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_dealloc(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    alloc_inner::<Deallocate<100, Defragment<GarbageCollect>>>(
-        out_result, provider, size, alignment,
-    )
+    alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
@@ -177,46 +207,53 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_blocking(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    alloc_inner::<BlockOn<Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
+    alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
 }
 
-fn alloc_inner<Policy: AllocPolicy>(
+#[no_mangle]
+pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_async(
     out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &'static z_loaned_shared_memory_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
+    result_context: zc_threadsafe_context_t,
+    result_callback: unsafe extern "C" fn(
+        *mut c_void,
+        z_error_t,
+        *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    ),
 ) -> z_error_t {
-    alloc::<Policy, Context>(out_result, provider.transmute_ref(), size, alignment)
+    let out_result = AtomicPtr::new(out_result);
+    alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
+        out_result,
+        provider,
+        size,
+        alignment,
+        result_context.into(),
+        result_callback,
+    )
 }
 
 #[no_mangle]
 pub extern "C" fn z_shared_memory_provider_defragment(
     provider: &z_loaned_shared_memory_provider_t,
 ) {
-    let _ = provider.transmute_ref().defragment();
+    defragment(provider);
 }
 
 #[no_mangle]
 pub extern "C" fn z_shared_memory_provider_garbage_collect(
     provider: &z_loaned_shared_memory_provider_t,
 ) {
-    let _ = provider.transmute_ref().garbage_collect();
+    garbage_collect(provider);
 }
 
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shared_memory_provider_map(
+pub extern "C" fn z_shared_memory_provider_map(
     out_result: *mut MaybeUninit<z_owned_shm_mut_t>,
     provider: &z_loaned_shared_memory_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
 ) {
-    let provider = provider.transmute_ref();
-    match provider.map(allocated_chunk.into(), len) {
-        Ok(buffer) => Inplace::init(out_result.transmute_uninit_ptr(), Some(buffer)),
-        Err(e) => {
-            log::error!("{e}");
-            Inplace::init(out_result.transmute_uninit_ptr(), None)
-        }
-    }
+    map(out_result, provider, allocated_chunk, len);
 }

@@ -53,6 +53,14 @@ pub extern "C" fn z_shm_check(this: &z_owned_shm_t) -> bool {
     this.transmute_ref().is_some()
 }
 
+/// Converts borrowed ZShm slice as owned ZShm slice by performing shared memory handle copy
+#[no_mangle]
+pub extern "C" fn z_shm_copy(this: *mut MaybeUninit<z_owned_shm_t>, loaned: &z_loaned_shm_t) {
+    let loaned = loaned.transmute_ref();
+    let owned = loaned.to_owned();
+    Inplace::init(this.transmute_uninit_ptr(), Some(owned));
+}
+
 /// Borrows ZShm slice
 #[no_mangle]
 pub extern "C" fn z_shm_loan(this: &z_owned_shm_t) -> &z_loaned_shm_t {
@@ -71,15 +79,30 @@ pub extern "C" fn z_shm_loan_mut(this: &mut z_owned_shm_t) -> &mut z_loaned_shm_
     shm.transmute_handle_mut()
 }
 
+/// Mutably borrows ZShm slice as borrowed ZShmMut slice
+#[no_mangle]
+pub extern "C" fn z_shm_try_mut(this: &mut z_owned_shm_t) -> *mut z_loaned_shm_mut_t {
+    let this = this.transmute_mut();
+    let this: &mut ZShm = unwrap_ref_unchecked_mut(this);
+    let shm: &mut zshm = this.borrow_mut();
+    match shm.try_into() {
+        Ok(val) => {
+            let v: &mut zshmmut = val;
+            v.transmute_handle_mut()
+        }
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 /// Deletes ZShm slice
 #[no_mangle]
-pub extern "C" fn z_shm_delete(this: &mut z_owned_shm_t) {
+pub extern "C" fn z_shm_drop(this: &mut z_owned_shm_t) {
     let _ = this.transmute_mut().extract();
 }
 
 /// Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice
 #[no_mangle]
-pub extern "C" fn z_shm_try_loan_mut(this: &mut z_loaned_shm_t) -> *mut z_loaned_shm_mut_t {
+pub extern "C" fn z_shm_try_reloan_mut(this: &mut z_loaned_shm_t) -> *mut z_loaned_shm_mut_t {
     let this = this.transmute_mut();
     match this.try_into() {
         Ok(val) => {

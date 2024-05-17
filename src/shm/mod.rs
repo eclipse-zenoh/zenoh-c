@@ -15,6 +15,6 @@
 pub mod client;
 pub mod client_storage;
 pub mod common;
-//pub mod protocol_implementations;
-pub mod provider;
+pub mod protocol_implementations;
 pub mod buffer;
+pub mod provider;

@@ -13,11 +13,9 @@
 //
 
 pub mod alloc_layout;
-pub mod alloc_layout_threadsafe;
 pub(crate) mod alloc_layout_impl;
 pub mod chunk;
 pub mod shared_memory_provider;
 pub mod shared_memory_provider_backend;
 pub(crate) mod shared_memory_provider_impl;
-pub mod shared_memory_provider_threadsafe;
 pub mod types;

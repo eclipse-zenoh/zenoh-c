@@ -75,15 +75,13 @@ impl SharedMemoryClient for DynamicSharedMemoryClient {
 
 /// Creates a new SHM Client
 #[no_mangle]
-pub extern "C" fn z_owned_shared_memory_client_new(
+pub extern "C" fn z_shared_memory_client_new(
     this: *mut MaybeUninit<z_owned_shared_memory_client_t>,
     context: zc_threadsafe_context_t,
     callbacks: zc_shared_memory_client_callbacks_t,
 ) -> errors::z_error_t {
-    let client = Arc::new(DynamicSharedMemoryClient::new(
-        context.into(),
-        callbacks,
-    )) as Arc<dyn SharedMemoryClient>;
+    let client = Arc::new(DynamicSharedMemoryClient::new(context.into(), callbacks))
+        as Arc<dyn SharedMemoryClient>;
 
     Inplace::init(this.transmute_uninit_ptr(), Some(client));
     errors::Z_OK
@@ -99,7 +97,7 @@ pub extern "C" fn z_shared_memory_client_null(
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_owned_shared_memory_client_check(
+pub extern "C" fn z_shared_memory_client_check(
     this: &z_owned_shared_memory_client_t,
 ) -> bool {
     this.transmute_ref().is_some()
@@ -107,6 +105,6 @@ pub extern "C" fn z_owned_shared_memory_client_check(
 
 /// Deletes SHM Client
 #[no_mangle]
-pub extern "C" fn z_shared_memory_client_delete(this: &mut z_owned_shared_memory_client_t) {
+pub extern "C" fn z_shared_memory_client_drop(this: &mut z_owned_shared_memory_client_t) {
     let _ = this.transmute_mut().extract();
 }

@@ -12,25 +12,22 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::sync::Arc;
+use std::{mem::MaybeUninit, sync::Arc};
 
-use zenoh::shm::{
-    client::shared_memory_client::SharedMemoryClient,
-    protocol_implementations::posix::posix_shared_memory_client::PosixSharedMemoryClient,
-};
+use zenoh::shm::{PosixSharedMemoryClient, SharedMemoryClient};
 
 use crate::{
-    client::shared_memory_client::z_owned_shared_memory_client_t, prepare_memory_to_init,
-    GuardedTransmute,
+    errors::{z_error_t, Z_OK},
+    transmute::{Inplace, TransmuteUninitPtr},
+    z_owned_shared_memory_client_t,
 };
 
+/// Creates a new POSIX SHM Client
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_posix_shared_memory_client_new(
-    out_client: &mut z_owned_shared_memory_client_t,
-) -> i32 {
-    let out_client = prepare_memory_to_init!(out_client);
+pub extern "C" fn z_posix_shared_memory_client_new(
+    this: *mut MaybeUninit<z_owned_shared_memory_client_t>,
+) -> z_error_t {
     let client = Arc::new(PosixSharedMemoryClient) as Arc<dyn SharedMemoryClient>;
-    *out_client = Some(client);
-    0
+    Inplace::init(this.transmute_uninit_ptr(), Some(client));
+    Z_OK
 }
