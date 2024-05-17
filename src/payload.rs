@@ -50,6 +50,8 @@ extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
 pub use crate::opaque_types::z_loaned_bytes_t;
 decl_transmute_handle!(ZBytes, z_loaned_bytes_t);
 
+validate_equivalence!(z_owned_bytes_t, z_loaned_bytes_t);
+
 /// Constructs an owned shallow copy of data in provided uninitialized memory location.
 #[no_mangle]
 extern "C" fn z_bytes_clone(this: &z_loaned_bytes_t, dst: *mut MaybeUninit<z_owned_bytes_t>) {
@@ -202,9 +204,10 @@ pub unsafe extern "C" fn z_bytes_encode_from_string(
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;
 decl_transmute_owned!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
-
 pub use crate::opaque_types::z_loaned_bytes_reader_t;
 decl_transmute_handle!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
+
+validate_equivalence!(z_owned_bytes_reader_t, z_loaned_bytes_reader_t);
 
 /// Creates a reader for the specified data.
 ///

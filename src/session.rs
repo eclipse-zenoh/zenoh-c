@@ -28,6 +28,7 @@ decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
 
 use crate::opaque_types::z_loaned_session_t;
 decl_transmute_handle!(Arc<Session>, z_loaned_session_t);
+validate_equivalence!(z_owned_session_t, z_loaned_session_t);
 
 /// Borrows session.
 #[no_mangle]

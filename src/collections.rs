@@ -127,6 +127,9 @@ decl_transmute_owned!(CSlice, z_owned_slice_t);
 decl_transmute_owned!(custom_inplace_init CSlice, z_view_slice_t);
 decl_transmute_handle!(CSlice, z_loaned_slice_t);
 
+validate_equivalence!(z_owned_slice_t, z_loaned_slice_t);
+validate_equivalence!(z_view_slice_t, z_loaned_slice_t);
+
 /// Constructs an empty view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_empty(this: *mut MaybeUninit<z_view_slice_t>) {
@@ -298,6 +301,9 @@ decl_transmute_owned!(custom_inplace_init CSlice, z_owned_str_t);
 decl_transmute_owned!(custom_inplace_init CSlice, z_view_str_t);
 decl_transmute_handle!(CSlice, z_loaned_str_t);
 
+validate_equivalence!(z_owned_str_t, z_loaned_str_t);
+validate_equivalence!(z_view_str_t, z_loaned_str_t);
+
 /// Frees memory and invalidates `z_owned_str_t`, putting it in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -460,12 +466,10 @@ pub use crate::opaque_types::z_loaned_slice_map_t;
 pub use crate::opaque_types::z_owned_slice_map_t;
 
 pub type ZHashMap = HashMap<CSlice, CSlice>;
-decl_transmute_handle!(
-    HashMap<CSlice, CSlice>,
-    z_loaned_slice_map_t
-);
-
+decl_transmute_handle!(HashMap<CSlice, CSlice>, z_loaned_slice_map_t);
 decl_transmute_owned!(Option<HashMap<CSlice, CSlice>>, z_owned_slice_map_t);
+
+validate_equivalence!(z_owned_slice_map_t, z_loaned_slice_map_t);
 
 /// Constructs a new empty map.
 #[no_mangle]
@@ -603,8 +607,9 @@ pub use crate::opaque_types::z_owned_slice_array_t;
 
 pub type ZVector = Vec<CSlice>;
 decl_transmute_handle!(Vec<CSlice>, z_loaned_slice_array_t);
-
 decl_transmute_owned!(Option<Vec<CSlice>>, z_owned_slice_array_t);
+
+validate_equivalence!(z_owned_slice_array_t, z_loaned_slice_array_t);
 
 /// Constructs a new empty slice array.
 #[no_mangle]
