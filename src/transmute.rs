@@ -72,9 +72,8 @@ pub(crate) trait Inplace: Sized {
     fn extract(&mut self) -> Self {
         let mut out: MaybeUninit<Self> = MaybeUninit::uninit();
         Self::empty(&mut out);
-        let mut out = unsafe { out.assume_init() };
-        std::mem::swap(&mut out, self);
-        out
+        std::mem::swap(unsafe { out.assume_init_mut() }, self);
+        unsafe { out.assume_init() }
     }
     // TODO: for effective inplace_init, we can provide a method that takes a closure that initializes the object in place
 }
