@@ -117,6 +117,13 @@ impl From<Vec<u8>> for CSlice {
     }
 }
 
+impl From<String> for CSlice {
+    fn from(value: String) -> Self {
+        let slice = Box::leak(value.into_boxed_str());
+        CSlice(slice.as_ptr() as _, slice.len() as isize)
+    }
+}
+
 impl std::cmp::Eq for CSlice {}
 
 pub use crate::opaque_types::z_loaned_slice_t;
@@ -339,40 +346,26 @@ pub extern "C" fn z_view_str_null(this: *mut MaybeUninit<z_view_str_t>) {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_str_empty(this: *mut MaybeUninit<z_owned_str_t>) {
-    z_slice_wrap(this as *mut _, [0u8].as_ptr(), 1);
+    z_slice_empty(this as *mut _);
 }
 
 /// Constructs an empty view string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_str_empty(this: *mut MaybeUninit<z_view_str_t>) {
-    z_view_slice_wrap(this as *mut _, [0u8].as_ptr(), 1);
+    z_view_slice_empty(this as *mut _);
 }
 
 /// Borrows string.
 #[no_mangle]
-pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> Option<&z_loaned_str_t> {
-    if !z_str_check(this) {
-        return None;
-    }
-    Some(
-        z_slice_loan(this.transmute_ref().transmute_ref())
-            .transmute_ref()
-            .transmute_handle(),
-    )
+pub extern "C" fn z_str_loan(this: &z_owned_str_t) -> &z_loaned_str_t {
+    this.transmute_ref().transmute_handle()
 }
 
 /// Borrows view string.
 #[no_mangle]
-pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> Option<&z_loaned_str_t> {
-    if !z_view_str_check(this) {
-        return None;
-    }
-    Some(
-        z_view_slice_loan(this.transmute_ref().transmute_ref())
-            .transmute_ref()
-            .transmute_handle(),
-    )
+pub extern "C" fn z_view_str_loan(this: &z_view_str_t) -> &z_loaned_str_t {
+    this.transmute_ref().transmute_handle()
 }
 
 /// Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
@@ -384,16 +377,10 @@ pub unsafe extern "C" fn z_str_wrap(
     this: *mut MaybeUninit<z_owned_str_t>,
     str: *const libc::c_char,
 ) -> z_error_t {
-    if str.is_null() {
-        z_str_null(this);
-        errors::Z_EINVAL
-    } else {
-        z_slice_wrap(this as *mut _, str as _, strlen(str) + 1);
-        errors::Z_OK
-    }
+    z_slice_wrap(this as *mut _, str as _, strlen(str))
 }
 
-/// Constructs an owned string by copying a `str` substring of length `len` (and adding terminating 0).
+/// Constructs an owned string by copying a `str` substring of length `len`.
 ///
 /// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
@@ -403,15 +390,7 @@ pub unsafe extern "C" fn z_str_from_substring(
     str: *const libc::c_char,
     len: usize,
 ) -> z_error_t {
-    if str.is_null() && len != 0 {
-        z_str_null(this);
-        errors::Z_EINVAL
-    } else {
-        let mut v = vec![0u8; len + 1];
-        v[0..len].copy_from_slice(from_raw_parts(str as *const u8, len));
-        Inplace::init(this.transmute_uninit_ptr(), v.into());
-        errors::Z_OK
-    }
+    z_slice_wrap(this as *mut _, str as _, len)
 }
 
 /// Constructs a view string of `str`, using `strlen` (this should therefore not be used with untrusted inputs).
@@ -423,19 +402,26 @@ pub unsafe extern "C" fn z_view_str_wrap(
     this: *mut MaybeUninit<z_view_str_t>,
     str: *const libc::c_char,
 ) -> z_error_t {
-    if str.is_null() {
-        z_view_str_null(this);
-        errors::Z_EINVAL
-    } else {
-        z_view_slice_wrap(this as *mut _, str as _, strlen(str) + 1);
-        errors::Z_OK
-    }
+    z_view_slice_wrap(this as *mut _, str as _, strlen(str))
+}
+
+/// Constructs a view string to a specified substring of length `len`.
+///
+/// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_view_str_from_substring(
+    this: *mut MaybeUninit<z_view_str_t>,
+    str: *const libc::c_char,
+    len: usize,
+) -> z_error_t {
+    z_view_slice_wrap(this as *mut _, str as _, len)
 }
 
 /// @return the length of the string (without terminating 0 character).
 #[no_mangle]
 pub extern "C" fn z_str_len(this: &z_loaned_str_t) -> usize {
-    z_slice_len(this.transmute_ref().transmute_handle()).max(1) - 1
+    z_slice_len(this.transmute_ref().transmute_handle())
 }
 
 /// @return the pointer of the string data.

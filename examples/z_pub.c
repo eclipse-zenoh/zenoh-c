@@ -76,11 +76,8 @@ int main(int argc, char **argv) {
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
 
-        z_view_str_t payload_str;
-        z_view_str_wrap(&payload_str, buf);
-
         z_owned_bytes_t payload;
-        z_bytes_encode_from_string(&payload, z_loan(payload_str));
+        z_bytes_encode_from_string(&payload, buf);
         
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }

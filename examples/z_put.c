@@ -55,11 +55,8 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_string(&ke, keyexpr);
 
-    z_view_str_t payload_string;
-    z_view_str_wrap(&payload_string, value);
-
     z_owned_bytes_t payload;
-    z_bytes_encode_from_string(&payload, z_loan(payload_string));
+    z_bytes_encode_from_string(&payload, value);
     
     z_owned_bytes_t attachment;
     z_bytes_encode_from_slice_map(&attachment, z_loan(attachment_map));

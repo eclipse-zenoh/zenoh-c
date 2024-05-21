@@ -23,7 +23,7 @@ decl_transmute_copy!(ZenohId, z_id_t);
 
 impl From<[u8; 16]> for z_id_t {
     fn from(value: [u8; 16]) -> Self {
-        unsafe { std::mem::transmute(value) }
+        z_id_t { id: value }
     }
 }
 

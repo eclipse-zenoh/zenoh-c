@@ -66,8 +66,6 @@ int main(int argc, char** argv) {
         data[i] = i % 10;
     }
     z_owned_bytes_t payload;
-    z_view_slice_t data_slice;
-    z_view_slice_wrap(&data_slice, data, args.size);
     
     z_mutex_lock(z_loan_mut(mutex));
     if (args.warmup_ms) {
@@ -76,7 +74,7 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_bytes_encode_from_slice(&payload, z_loan(data_slice));
+            z_bytes_encode_from_slice(&payload, data, args.size);
             z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
             if (s != 0) {

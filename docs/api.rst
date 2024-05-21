@@ -173,11 +173,11 @@ Functions
 .. doxygenfunction:: z_view_keyexpr_from_string_autocanonize
 .. doxygenfunction:: z_view_keyexpr_from_string_unchecked
 
-.. doxygenfunction:: z_keyexpr_from_slice
-.. doxygenfunction:: z_view_keyexpr_from_slice
-.. doxygenfunction:: z_keyexpr_from_slice_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_slice_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_slice_unchecked
+.. doxygenfunction:: z_keyexpr_from_substring
+.. doxygenfunction:: z_view_keyexpr_from_substring
+.. doxygenfunction:: z_keyexpr_from_substring_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_substring_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_substring_unchecked
 
 .. doxygenfunction:: z_keyexpr_loan
 .. doxygenfunction:: z_view_keyexpr_loan
@@ -186,7 +186,6 @@ Functions
 .. doxygenfunction:: z_keyexpr_drop
 
 .. doxygenfunction:: z_keyexpr_to_string
-.. doxygenfunction:: z_keyexpr_as_slice
 
 .. doxygenfunction:: z_keyexpr_canonize
 .. doxygenfunction:: z_keyexpr_canonize_null_terminated
@@ -217,6 +216,8 @@ Functions
 
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
+.. doxygenfunction:: z_encoding_from_substring
+.. doxygenfunction:: z_encoding_to_string
 
 Value
 -----
@@ -228,6 +229,11 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_value_payload
 .. doxygenfunction:: z_value_encoding
+
+.. doxygenfunction:: z_value_null
+.. doxygenfunction:: z_value_loan
+.. doxygenfunction:: z_value_check
+.. doxygenfunction:: z_value_drop
 
 Sample
 ------
@@ -539,6 +545,7 @@ Functions
 
 .. doxygenfunction:: z_queryable_null
 .. doxygenfunction:: z_queryable_check
+.. doxygenfunction:: z_queryable_loan
 .. doxygenfunction:: z_queryable_drop
 
 .. doxygenfunction:: z_query_null

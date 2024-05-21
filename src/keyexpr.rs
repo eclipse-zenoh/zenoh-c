@@ -24,10 +24,8 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_loaned_session_t;
-use crate::z_owned_str_t;
-use crate::z_str_from_substring;
-use crate::z_view_slice_t;
-use crate::z_view_slice_wrap;
+use crate::z_view_str_from_substring;
+use crate::z_view_str_t;
 use libc::c_char;
 use std::error::Error;
 use zenoh::core::SyncResolve;
@@ -94,34 +92,6 @@ unsafe fn keyexpr_create(
     }
 }
 
-/// Constructs a `z_owned_keyexpr_t` from a slice, copying the passed slice.
-/// @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression or if it is
-/// not in canon form.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_from_slice(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
-    start: *const c_char,
-    len: usize,
-) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
-    if start.is_null() {
-        Inplace::empty(this);
-        return errors::Z_EINVAL;
-    }
-    let expr = std::slice::from_raw_parts_mut(start as _, len);
-    match keyexpr_create(expr, false, true) {
-        Ok(ke) => {
-            Inplace::init(this, Some(ke));
-            errors::Z_OK
-        }
-        Err(e) => {
-            Inplace::empty(this);
-            e
-        }
-    }
-}
-
 /// Constructs a `z_owned_keyexpr_t` from a string, copying the passed string.
 /// @return 0 in case of success, negative error code in case of failure (for example if `expr` is not a valid key expression or if it is
 /// not in canon form.
@@ -131,37 +101,7 @@ pub unsafe extern "C" fn z_keyexpr_from_string(
     this: *mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> errors::z_error_t {
-    z_keyexpr_from_slice(this, expr, libc::strlen(expr))
-}
-
-/// Constructs `z_owned_keyexpr_t` from a slice, copying the passed slice. The copied slice is canonized
-/// (`len` will be equal to cannonized key expression string length).
-/// @return 0 in case of success, negative error code in case of failure (for example if `start` is not a valid key expression
-/// even despite canonization).
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_from_slice_autocanonize(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
-    start: *const c_char,
-    len: &mut usize,
-) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
-    if start.is_null() {
-        Inplace::empty(this);
-        return errors::Z_EINVAL;
-    }
-    let expr = std::slice::from_raw_parts_mut(start as _, *len);
-    match keyexpr_create(expr, true, true) {
-        Ok(ke) => {
-            *len = ke.len();
-            Inplace::init(this, Some(ke));
-            errors::Z_OK
-        }
-        Err(e) => {
-            Inplace::empty(this);
-            e
-        }
-    }
+    z_keyexpr_from_substring(this, expr, libc::strlen(expr))
 }
 
 /// Constructs `z_owned_keyexpr_t` from a string, copying the passed string. The copied string is canonized.
@@ -174,7 +114,7 @@ pub unsafe extern "C" fn z_keyexpr_from_string_autocanonize(
     expr: *const c_char,
 ) -> z_error_t {
     let mut len = libc::strlen(expr);
-    z_keyexpr_from_slice_autocanonize(this, expr, &mut len)
+    z_keyexpr_from_substring_autocanonize(this, expr, &mut len)
 }
 
 /// Borrows `z_owned_keyexpr_t`.
@@ -261,16 +201,16 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
     }
 }
 
-/// Constructs a `z_view_keyexpr_t` by aliasing a slice.
+/// Constructs a `z_view_keyexpr_t` by aliasing a substring.
 /// `expr` must outlive the constucted key expression.
 ///
-/// @param this_: An unitialized location in memory where key expression will be constructed
+/// @param this_: An unitialized location in memory where key expression will be constructed.
 /// @param expr: A buffer with length >= `len`.
 /// @param len: Number of characters from `expr` to consider.
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_slice(
+pub unsafe extern "C" fn z_view_keyexpr_from_substring(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
     expr: *const c_char,
     len: usize,
@@ -293,7 +233,39 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice(
     }
 }
 
-/// Constructs a `z_view_keyexpr_t` by aliasing a slice.
+
+/// Constructs a `z_owned_keyexpr_t` by copying a substring.
+///
+/// @param this_: An unitialized location in memory where key expression will be constructed.
+/// @param expr: A buffer with length >= `len`.
+/// @param len: Number of characters from `expr` to consider.
+/// @return 0 in case of success, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_from_substring(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    expr: *const c_char,
+    len: usize,
+) -> z_error_t {
+    let this = this.transmute_uninit_ptr();
+    if expr.is_null() {
+        Inplace::empty(this);
+        return errors::Z_EINVAL;
+    }
+    let expr = std::slice::from_raw_parts_mut(expr as _, len);
+    match keyexpr_create(expr, false, true) {
+        Ok(ke) => {
+            Inplace::init(this, Some(ke));
+            errors::Z_OK
+        }
+        Err(e) => {
+            Inplace::empty(this);
+            e
+        }
+    }
+}
+
+/// Constructs a `z_view_keyexpr_t` by aliasing a substring.
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 /// `expr` must outlive the constucted key expression.
 ///
@@ -303,7 +275,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice(
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_slice_autocanonize(
+pub unsafe extern "C" fn z_view_keyexpr_from_substring_autocanonize(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
     start: *mut c_char,
     len: &mut usize,
@@ -316,6 +288,40 @@ pub unsafe extern "C" fn z_view_keyexpr_from_slice_autocanonize(
     let name = std::slice::from_raw_parts_mut(start as _, *len);
 
     match keyexpr_create(name, true, false) {
+        Ok(ke) => {
+            *len = ke.len();
+            Inplace::init(this, Some(ke));
+            errors::Z_OK
+        }
+        Err(e) => {
+            Inplace::empty(this);
+            e
+        }
+    }
+}
+
+
+/// Constructs a `z_keyexpr_t` by copying a substring.
+///
+/// @param this_: An unitialized location in memory where key expression will be constructed.
+/// @param expr: A buffer of with length >= `len`.
+/// @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
+/// @return 0 in case of success, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_keyexpr_from_substring_autocanonize(
+    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    start: *const c_char,
+    len: &mut usize,
+) -> z_error_t {
+    let this = this.transmute_uninit_ptr();
+    if start.is_null() {
+        Inplace::empty(this);
+        return errors::Z_EINVAL;
+    }
+    let name = std::slice::from_raw_parts_mut(start as _, *len);
+
+    match keyexpr_create(name, true, true) {
         Ok(ke) => {
             *len = ke.len();
             Inplace::init(this, Some(ke));
@@ -343,7 +349,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string(
         errors::Z_EINVAL
     } else {
         let len = libc::strlen(expr);
-        z_view_keyexpr_from_slice(this, expr, len)
+        z_view_keyexpr_from_substring(this, expr, len)
     }
 }
 
@@ -362,7 +368,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
         errors::Z_EINVAL
     } else {
         let mut len = libc::strlen(expr);
-        let res = z_view_keyexpr_from_slice_autocanonize(this, expr, &mut len);
+        let res = z_view_keyexpr_from_substring_autocanonize(this, expr, &mut len);
         if res == errors::Z_OK {
             *expr.add(len) = 0;
         }
@@ -370,7 +376,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
     }
 }
 
-/// Constructs a `z_view_keyexpr_t` by aliasing a slice without checking any of `z_view_keyexpr_t`'s assertions:
+/// Constructs a `z_view_keyexpr_t` by aliasing a substring without checking any of `z_view_keyexpr_t`'s assertions:
 ///
 /// - `start` MUST be valid UTF8.
 /// - `start` MUST follow the Key Expression specification, i.e.:
@@ -381,7 +387,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
 /// `start` must outlive constructed key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_slice_unchecked(
+pub unsafe extern "C" fn z_view_keyexpr_from_substring_unchecked(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
     start: *const c_char,
     len: usize,
@@ -407,39 +413,21 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
     this: *mut MaybeUninit<z_view_keyexpr_t>,
     s: *const c_char,
 ) {
-    z_view_keyexpr_from_slice_unchecked(this, s, libc::strlen(s))
+    z_view_keyexpr_from_substring_unchecked(this, s, libc::strlen(s))
 }
 
-/// Constructs an owned null-terminated string from key expression.
+/// Constructs a non-owned non-null-terminated string from key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(
     this: &z_loaned_keyexpr_t,
-    out_string: *mut MaybeUninit<z_owned_str_t>,
+    out_string: *mut MaybeUninit<z_view_str_t>,
 ) {
     let this = this.transmute_ref();
     unsafe {
-        z_str_from_substring(
+        z_view_str_from_substring(
             out_string,
-            this.as_bytes().as_ptr() as *const _,
-            this.as_bytes().len(),
-        )
-    };
-}
-
-/// Constructs the view for key expression's internal string by aliasing it.
-/// `this_` must outlive constructed slice.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_as_slice(
-    this: &z_loaned_keyexpr_t,
-    out_slice: *mut MaybeUninit<z_view_slice_t>,
-) {
-    let this = this.transmute_ref();
-    unsafe {
-        z_view_slice_wrap(
-            out_slice,
-            this.as_bytes().as_ptr() as *const _,
+            this.as_bytes().as_ptr() as _,
             this.as_bytes().len(),
         )
     };

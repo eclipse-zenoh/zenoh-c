@@ -24,11 +24,9 @@
 void test_reader_seek() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     uint8_t data_out[10] = {0};
-    z_view_slice_t slice;
-    z_view_slice_wrap(&slice, data, 10);
 
     z_owned_bytes_t payload;
-    z_bytes_encode_from_slice(&payload, z_loan(slice));
+    z_bytes_encode_from_slice(&payload, data, 10);
 
     z_owned_bytes_reader_t reader;
     z_bytes_reader_new(&reader, z_loan(payload));
@@ -59,11 +57,9 @@ void test_reader_seek() {
 void test_reader_read() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     uint8_t data_out[10] = {0};
-    z_view_slice_t slice;
-    z_view_slice_wrap(&slice, data, 10);
 
     z_owned_bytes_t payload;
-    z_bytes_encode_from_slice(&payload, z_loan(slice));
+    z_bytes_encode_from_slice(&payload, data, 10);
     z_owned_bytes_reader_t reader;
     z_bytes_reader_new(&reader, z_loan(payload));
 

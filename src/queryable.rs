@@ -17,8 +17,8 @@ use crate::transmute::{
 };
 use crate::{
     errors, z_closure_query_call, z_loaned_bytes_t, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t, z_view_slice_t,
-    z_view_slice_wrap,
+    z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t,
+    z_view_str_from_substring, z_view_str_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
@@ -29,12 +29,22 @@ use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
 
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
+pub use crate::opaque_types::z_loaned_queryable_t;
+decl_transmute_handle!(Queryable<'static, ()>, z_loaned_queryable_t);
+validate_equivalence!(z_owned_queryable_t, z_loaned_queryable_t);
 
 /// Constructs a queryable in its gravestone value.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_queryable_null(this: *mut MaybeUninit<z_owned_queryable_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
+}
+
+// Borrows Queryable
+#[no_mangle]
+pub extern "C" fn z_queryable_loan(this: &z_owned_queryable_t) -> &z_loaned_queryable_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
 }
 
 pub use crate::opaque_types::z_loaned_query_t;
@@ -246,11 +256,11 @@ pub extern "C" fn z_query_keyexpr(query: &z_loaned_query_t) -> &z_loaned_keyexpr
 #[no_mangle]
 pub unsafe extern "C" fn z_query_parameters(
     query: &z_loaned_query_t,
-    parameters: *mut MaybeUninit<z_view_slice_t>,
+    parameters: *mut MaybeUninit<z_view_str_t>,
 ) {
     let query = query.transmute_ref();
     let params = query.parameters().as_str();
-    unsafe { z_view_slice_wrap(parameters, params.as_ptr(), params.len()) };
+    unsafe { z_view_str_from_substring(parameters, params.as_ptr() as _, params.len()) };
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload value</a>.

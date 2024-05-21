@@ -44,7 +44,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     queries++;
 
     const z_loaned_keyexpr_t* query_ke = z_query_keyexpr(query);
-    z_owned_str_t k_str;
+    z_view_str_t k_str;
     z_keyexpr_to_string(query_ke, &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
@@ -52,7 +52,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     }
 #endif
 
-    z_view_slice_t params;
+    z_view_str_t params;
     z_query_parameters(query, &params);
     (void)(params);
     const z_loaned_value_t* payload_value = z_query_value(query);
@@ -60,13 +60,9 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     z_query_reply_options_t _ret_qreply_opt;
     z_query_reply_options_default(&_ret_qreply_opt);
 
-    z_view_str_t value_str;
-    z_view_str_wrap(&value_str, value);
     z_owned_bytes_t payload;
-    z_bytes_encode_from_string(&payload, z_loan(value_str));
+    z_bytes_encode_from_string(&payload, value);
     z_query_reply(query, query_ke, z_move(payload), &_ret_qreply_opt);
-
-    z_drop(z_move(k_str));
 }
 
 volatile unsigned int replies = 0;
@@ -76,14 +72,13 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
     if (z_reply_is_ok(reply)) {
         const z_loaned_sample_t* sample = z_reply_ok(reply);
 
-        z_owned_str_t k_str;
+        z_view_str_t k_str;
         z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
         if (k_str == NULL) {
             k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, sample.keyexpr);
         }
 #endif
-        z_drop(z_move(k_str));
     } else {
         const z_loaned_value_t* _ret_zvalue = z_reply_err(reply);
         (void)(_ret_zvalue);
@@ -94,14 +89,13 @@ volatile unsigned int datas = 0;
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     datas++;
 
-    z_owned_str_t k_str;
+    z_view_str_t k_str;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
         k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, sample->keyexpr);
     }
 #endif
-    z_drop(z_move(k_str));
 }
 
 int main(int argc, char **argv) {
@@ -283,11 +277,9 @@ int main(int argc, char **argv) {
     z_put_options_default(&_ret_put_opt);
     _ret_put_opt.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
     // TODO: set encoding option
-    z_view_str_t value_str;
-    z_view_str_wrap(&value_str, value);
 
     z_owned_bytes_t payload;
-    z_bytes_encode_from_string(&payload, z_loan(value_str));
+    z_bytes_encode_from_string(&payload, value);
     _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 

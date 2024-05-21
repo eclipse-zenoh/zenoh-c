@@ -71,7 +71,7 @@ int run_publisher() {
         options.attachment = &attachment;
 
         z_owned_bytes_t payload;
-        z_bytes_encode_from_slice(&payload, z_loan(v_var));
+        z_bytes_encode_from_slice(&payload, z_slice_data(z_loan(v_var)), z_slice_len(z_loan(v_var)));
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
@@ -83,17 +83,16 @@ int run_publisher() {
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr;
+    z_view_str_t keystr;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &keystr);
-    if (strcmp(keyexpr, z_str_data(z_loan(keystr)))) {
+    if (strncmp(keyexpr, z_str_data(z_loan(keystr)), z_str_len(z_loan(keystr)))) {
         perror("Unexpected key received");
         exit(-1);
     }
-    z_drop(z_move(keystr));
 
     z_owned_str_t payload_str;
     z_bytes_decode_into_string(z_sample_payload(sample), &payload_str);
-    if (strcmp(values[val_num], z_str_data(z_loan(payload_str)))) {
+    if (strncmp(values[val_num], z_str_data(z_loan(payload_str)), z_str_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));
         exit(-1);
@@ -104,7 +103,6 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Missing attachment!");
         exit(-1);
     }
-    z_drop(z_move(keystr));
 
     z_owned_slice_map_t map;
     z_bytes_decode_into_slice_map(attachment, &map);

@@ -18,11 +18,11 @@ use crate::{
         TransmuteRef, TransmuteUninitPtr,
     },
     z_closure_hello_call, z_id_t, z_owned_closure_hello_t, z_owned_config_t, z_owned_slice_array_t,
-    zc_init_logger, CSlice, CopyableToCArray, ZVector,
+    z_view_str_t, zc_init_logger, CSlice, ZVector,
 };
 use async_std::task;
-use libc::{c_char, c_ulong};
-use std::{mem::MaybeUninit, os::raw::c_void};
+use libc::c_ulong;
+use std::mem::MaybeUninit;
 use zenoh::scouting::Hello;
 use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
 use zenoh_util::core::AsyncResolve;
@@ -71,8 +71,12 @@ pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
 
 /// Returns type of Zenoh entity that transmitted hello message.
 #[no_mangle]
-pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> u8 {
-    this.transmute_ref().whatami as u8
+pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
+    match this.transmute_ref().whatami {
+        WhatAmI::Router => z_whatami_t::Z_WHATAMI_ROUTER,
+        WhatAmI::Peer => z_whatami_t::Z_WHATAMI_PEER,
+        WhatAmI::Client => z_whatami_t::Z_WHATAMI_CLIENT,
+    }
 }
 
 /// Constructs an array of non-owned locators (in the form non-null terminated strings) of Zenoh entity that sent hello message.
@@ -98,7 +102,7 @@ pub struct z_scout_options_t {
     /// The maximum duration in ms the scouting can take.
     pub zc_timeout_ms: c_ulong,
     /// Type of entities to scout for.
-    pub zc_what: u8,
+    pub zc_what: z_whatami_t,
 }
 
 impl Default for z_scout_options_t {
@@ -110,7 +114,20 @@ impl Default for z_scout_options_t {
     }
 }
 
-pub const DEFAULT_SCOUTING_WHAT: u8 = WhatAmI::Router as u8 | WhatAmI::Peer as u8;
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum z_whatami_t {
+    Z_WHATAMI_ROUTER = 0x01,
+    Z_WHATAMI_PEER = 0x02,
+    Z_WHATAMI_CLIENT = 0x04,
+    Z_WHATAMI_ROUTER_PEER = 0x01 | 0x02,
+    Z_WHATAMI_ROUTER_CLIENT = 0x01 | 0x04,
+    Z_WHATAMI_PEER_CLIENT = 0x02 | 0x04,
+    Z_WHATAMI_ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
+}
+
+pub const DEFAULT_SCOUTING_WHAT: z_whatami_t = z_whatami_t::Z_WHATAMI_ROUTER_PEER;
 pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 /// Constructs the default values for the scouting operation.
@@ -137,7 +154,8 @@ pub extern "C" fn z_scout(
         zc_init_logger();
     }
     let options = options.cloned().unwrap_or_default();
-    let what = WhatAmIMatcher::try_from(options.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
+    let what =
+        WhatAmIMatcher::try_from(options.zc_what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.zc_timeout_ms as u64;
     let config = match config.transmute_mut().extract().take() {
@@ -161,29 +179,26 @@ pub extern "C" fn z_scout(
     Z_OK
 }
 
-/// Converts the kind of zenoh entity into a string.
+/// Constructs a non-owned non-null-terminated string from the kind of zenoh entity.
 ///
-///
+/// The string has static storage (i.e. valid until the end of the program).
 /// @param whatami: A whatami bitmask of zenoh entity kind.
-/// @param buf: Buffer to write a null-terminated string to.
+/// @param str_out: An unitialized memory location where strring will be constructed.
 /// @param len: Maximum number of bytes that can be written to the `buf`.
 ///
-/// @return 0 if successful, negative error values if whatami contains an invalid bitmask or `buf` is null,
-/// or number of remaining bytes, if the null-terminated string size exceeds `len`.
+/// @return 0 if successful, negative error values if whatami contains an invalid bitmask.
 #[no_mangle]
-pub extern "C" fn z_whatami_to_str(whatami: u8, buf: *mut c_char, len: usize) -> errors::z_error_t {
-    if buf.is_null() || len == 0 {
-        return errors::Z_EINVAL;
-    }
-    match WhatAmIMatcher::try_from(whatami) {
+pub extern "C" fn z_whatami_to_str(
+    whatami: z_whatami_t,
+    str_out: *mut MaybeUninit<z_view_str_t>,
+) -> errors::z_error_t {
+    match WhatAmIMatcher::try_from(whatami as u8) {
         Err(_) => errors::Z_EINVAL,
         Ok(w) => {
             let s = w.to_str();
-            let res = s.copy_to_c_array(buf as *mut c_void, len - 1);
-            unsafe {
-                *((buf as usize + res) as *mut c_char) = 0;
-            }
-            (s.len() - res) as i8
+            let slice = CSlice::new_borrowed_from_slice(s.as_bytes());
+            Inplace::init(str_out.transmute_uninit_ptr(), slice);
+            errors::Z_OK
         }
     }
 }

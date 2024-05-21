@@ -35,10 +35,9 @@ void test_publisher() {
     strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the keyexpr is copied into publisher
     z_view_keyexpr_from_string(&ke, keyexpr);
     const z_loaned_keyexpr_t* pub_ke = z_publisher_keyexpr(z_loan(pub));
-    z_owned_str_t pub_keyexpr; 
+    z_view_str_t pub_keyexpr; 
     z_keyexpr_to_string(pub_ke, &pub_keyexpr);
-    assert(strcmp(z_str_data(z_loan(pub_keyexpr)), "foo/bar") == 0);  // Check that publisher keeps the correct keyexpr
-    z_drop(z_move(pub_keyexpr));
+    assert(strncmp(z_str_data(z_loan(pub_keyexpr)), "foo/bar", z_str_len(z_loan(pub_keyexpr))) == 0);  // Check that publisher keeps the correct keyexpr
     z_undeclare_publisher(z_move(pub));
     z_close(z_move(s));
 }
@@ -61,10 +60,9 @@ void test_subscriber() {
     strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the keyexpr is copied into the subscriber
     z_view_keyexpr_from_string(&ke, keyexpr);
     const z_loaned_keyexpr_t* sub_ke = z_subscriber_keyexpr(z_loan(sub));
-    z_owned_str_t sub_keyexpr;
+    z_view_str_t sub_keyexpr;
     z_keyexpr_to_string(sub_ke, &sub_keyexpr);
-    assert(strcmp(z_str_data(z_loan(sub_keyexpr)), "foo/bar") == 0);  // Check that subscriber keeps the correct keyexpr
-    z_drop(z_move(sub_keyexpr));
+    assert(strncmp(z_str_data(z_loan(sub_keyexpr)), "foo/bar", z_str_len(z_loan(sub_keyexpr))) == 0);  // Check that subscriber keeps the correct keyexpr
     z_undeclare_subscriber(z_move(sub));
     z_close(z_move(s));
 }

@@ -20,10 +20,10 @@ const char *value = "Queryable from C!";
 z_view_keyexpr_t ke;
 
 void query_handler(const z_loaned_query_t *query, void *context) {
-    z_owned_str_t key_string;
+    z_view_str_t key_string;
     z_keyexpr_to_string(z_query_keyexpr(query), &key_string);
 
-    z_view_slice_t params;
+    z_view_str_t params;
     z_query_parameters(query, &params);
 
     const z_loaned_bytes_t* payload =  z_value_payload(z_query_value(query));
@@ -31,27 +31,26 @@ void query_handler(const z_loaned_query_t *query, void *context) {
         z_owned_str_t payload_string;
         z_bytes_decode_into_string(payload, &payload_string);
 
-        printf(">> [Queryable ] Received Query '%s?%.*s' with value '%s'\n", 
-            z_str_data(z_loan(key_string)), (int)z_slice_len(z_loan(params)), (const char*)z_slice_data(z_loan(params)),
-            z_str_data(z_loan(payload_string)));
+        printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n", 
+            (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)),
+            (int)z_str_len(z_loan(params)), z_str_data(z_loan(params)),
+            (int)z_str_len(z_loan(payload_string)), z_str_data(z_loan(payload_string)));
         z_drop(z_move(payload_string));
     } else {
-        printf(">> [Queryable ] Received Query '%s?%.*s'\n", z_str_data(z_loan(key_string)),
-        (int)z_slice_len(z_loan(params)), (const char*)z_slice_data(z_loan(params)));
+        printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", 
+        (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)),
+        (int)z_str_len(z_loan(params)), z_str_data(z_loan(params)));
     }
     z_query_reply_options_t options;
     z_query_reply_options_default(&options);
     
-    z_view_str_t reply_string;
-    z_view_str_wrap(&reply_string, value);
     z_owned_bytes_t reply_payload;
-    z_bytes_encode_from_string(&reply_payload, z_loan(reply_string));
+    z_bytes_encode_from_string(&reply_payload, value);
 
     z_view_keyexpr_t reply_keyexpr;
     z_view_keyexpr_from_string(&reply_keyexpr, (const char *)context);
 
     z_query_reply(query, z_loan(reply_keyexpr), z_move(reply_payload), &options);
-    z_drop(z_move(key_string));
 }
 
 int main(int argc, char **argv) {
