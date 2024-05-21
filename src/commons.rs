@@ -328,7 +328,7 @@ pub extern "C" fn z_value_loan(this: &z_owned_value_t) -> &z_loaned_value_t {
 
 /// Frees the memory and resets the value it to its default value.
 #[no_mangle]
-pub extern "C" fn z_value_drop(this: &mut z_owned_encoding_t) {
+pub extern "C" fn z_value_drop(this: &mut z_owned_value_t) {
     Inplace::drop(this.transmute_mut());
 }
 

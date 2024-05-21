@@ -2529,7 +2529,7 @@ ZENOHC_API bool z_value_check(const struct z_owned_value_t *this_);
 /**
  * Frees the memory and resets the value it to its default value.
  */
-ZENOHC_API void z_value_drop(struct z_owned_encoding_t *this_);
+ZENOHC_API void z_value_drop(struct z_owned_value_t *this_);
 /**
  * Returns value encoding.
  */

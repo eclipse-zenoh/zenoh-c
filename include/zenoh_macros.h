@@ -72,7 +72,7 @@
         z_owned_slice_map_t* : z_slice_map_drop, \
         z_owned_str_t* : z_str_drop, \
         z_owned_subscriber_t* : z_subscriber_drop, \
-        z_owned_encoding_t* : z_value_drop, \
+        z_owned_value_t* : z_value_drop, \
         zc_owned_liveliness_token_t* : zc_liveliness_token_drop, \
         zcu_owned_closure_matching_status_t* : zcu_closure_matching_status_drop, \
         ze_owned_publication_cache_t* : ze_publication_cache_drop, \
@@ -243,7 +243,7 @@ inline void z_drop(z_owned_slice_t* this_) { return z_slice_drop(this_); };
 inline void z_drop(z_owned_slice_map_t* this_) { return z_slice_map_drop(this_); };
 inline void z_drop(z_owned_str_t* this_) { return z_str_drop(this_); };
 inline void z_drop(z_owned_subscriber_t* this_) { return z_subscriber_drop(this_); };
-inline void z_drop(z_owned_encoding_t* this_) { return z_value_drop(this_); };
+inline void z_drop(z_owned_value_t* this_) { return z_value_drop(this_); };
 inline void z_drop(zc_owned_liveliness_token_t* this_) { return zc_liveliness_token_drop(this_); };
 inline void z_drop(zcu_owned_closure_matching_status_t* closure) { return zcu_closure_matching_status_drop(closure); };
 inline void z_drop(ze_owned_publication_cache_t* this_) { return ze_publication_cache_drop(this_); };
@@ -279,7 +279,7 @@ inline z_owned_slice_t* z_move(z_owned_slice_t& this_) { return (&this_); };
 inline z_owned_slice_map_t* z_move(z_owned_slice_map_t& this_) { return (&this_); };
 inline z_owned_str_t* z_move(z_owned_str_t& this_) { return (&this_); };
 inline z_owned_subscriber_t* z_move(z_owned_subscriber_t& this_) { return (&this_); };
-inline z_owned_encoding_t* z_move(z_owned_encoding_t& this_) { return (&this_); };
+inline z_owned_value_t* z_move(z_owned_value_t& this_) { return (&this_); };
 inline zc_owned_liveliness_token_t* z_move(zc_owned_liveliness_token_t& this_) { return (&this_); };
 inline zcu_owned_closure_matching_status_t* z_move(zcu_owned_closure_matching_status_t& closure) { return (&closure); };
 inline ze_owned_publication_cache_t* z_move(ze_owned_publication_cache_t& this_) { return (&this_); };
