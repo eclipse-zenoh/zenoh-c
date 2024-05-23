@@ -21,8 +21,8 @@ use zenoh::shm::{
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-        TransmuteUninitPtr,
+        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
     z_owned_shared_memory_client_storage_t, z_owned_shared_memory_client_t,
     zc_loaned_shared_memory_client_list_t, zc_owned_shared_memory_client_list_t,
@@ -71,7 +71,7 @@ pub extern "C" fn zc_shared_memory_client_list_check(
 pub extern "C" fn zc_shared_memory_client_list_drop(
     this: &mut zc_owned_shared_memory_client_list_t,
 ) {
-    let _ = this.transmute_mut().extract();
+    let _ = this.transmute_mut().take();
 }
 
 /// Borrows list of SHM Clients
@@ -82,6 +82,16 @@ pub extern "C" fn zc_shared_memory_client_list_loan(
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
+}
+
+/// Mutably borrows list of SHM Clients
+#[no_mangle]
+pub extern "C" fn zc_shared_memory_client_list_loan_mut(
+    this: &mut zc_owned_shared_memory_client_list_t,
+) -> &mut zc_loaned_shared_memory_client_list_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
 }
 
 #[no_mangle]
@@ -111,6 +121,21 @@ pub extern "C" fn z_ref_shared_memory_client_storage_global(
     Inplace::init(
         this.transmute_uninit_ptr(),
         Some(GLOBAL_CLIENT_STORAGE.clone()),
+    );
+    Z_OK
+}
+
+#[no_mangle]
+pub extern "C" fn z_shared_memory_client_storage_new_default(
+    this: *mut MaybeUninit<z_owned_shared_memory_client_storage_t>,
+) -> z_error_t {
+    Inplace::init(
+        this.transmute_uninit_ptr(),
+        Some(Arc::new(
+            SharedMemoryClientStorage::builder()
+                .with_default_client_set()
+                .build(),
+        )),
     );
     Z_OK
 }
@@ -157,5 +182,5 @@ pub extern "C" fn z_shared_memory_client_storage_check(
 pub extern "C" fn z_shared_memory_client_storage_drop(
     this: &mut z_owned_shared_memory_client_storage_t,
 ) {
-    let _ = this.transmute_mut().extract();
+    let _ = this.transmute_mut().take();
 }

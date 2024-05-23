@@ -106,5 +106,5 @@ pub extern "C" fn z_shared_memory_client_check(
 /// Deletes SHM Client
 #[no_mangle]
 pub extern "C" fn z_shared_memory_client_drop(this: &mut z_owned_shared_memory_client_t) {
-    let _ = this.transmute_mut().extract();
+    let _ = this.transmute_mut().take();
 }

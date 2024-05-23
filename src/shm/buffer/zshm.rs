@@ -97,7 +97,7 @@ pub extern "C" fn z_shm_try_mut(this: &mut z_owned_shm_t) -> *mut z_loaned_shm_m
 /// Deletes ZShm slice
 #[no_mangle]
 pub extern "C" fn z_shm_drop(this: &mut z_owned_shm_t) {
-    let _ = this.transmute_mut().extract();
+    let _ = this.transmute_mut().take();
 }
 
 /// Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice

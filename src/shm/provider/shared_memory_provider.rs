@@ -157,7 +157,7 @@ pub extern "C" fn z_shared_memory_provider_loan(
 /// Deletes SHM Provider
 #[no_mangle]
 pub extern "C" fn z_shared_memory_provider_drop(this: &mut z_owned_shared_memory_provider_t) {
-    let _ = this.transmute_mut().extract();
+    let _ = this.transmute_mut().take();
 }
 
 #[no_mangle]

@@ -112,7 +112,7 @@ pub extern "C" fn z_alloc_layout_loan(this: &z_owned_alloc_layout_t) -> &z_loane
 /// Deletes Alloc Layout
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_drop(this: &mut z_owned_alloc_layout_t) {
-    let _ = this.transmute_mut().extract();
+    let _ = this.transmute_mut().take();
 }
 
 #[no_mangle]

@@ -19,7 +19,9 @@ use zenoh_util::core::zerror;
 
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    transmute::{Inplace, TransmuteRef, TransmuteUninitPtr},
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    },
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
@@ -108,10 +110,20 @@ pub extern "C" fn z_memory_layout_check(this: &z_owned_memory_layout_t) -> bool 
     this.transmute_ref().is_some()
 }
 
+/// Borrows Memory Layout
+#[no_mangle]
+pub extern "C" fn z_memory_layout_loan(
+    this: &z_owned_memory_layout_t,
+) -> &z_loaned_memory_layout_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
+}
+
 /// Deletes Memory Layout
 #[no_mangle]
-pub extern "C" fn z_memory_layout_delete(this: &mut z_owned_memory_layout_t) {
-    let _ = this.transmute_mut().extract();
+pub extern "C" fn z_memory_layout_drop(this: &mut z_owned_memory_layout_t) {
+    let _ = this.transmute_mut().take();
 }
 
 decl_transmute_owned!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
@@ -151,10 +163,20 @@ pub extern "C" fn z_chunk_alloc_result_check(this: &z_owned_chunk_alloc_result_t
     this.transmute_ref().is_some()
 }
 
+/// Borrows Chunk Alloc Result
+#[no_mangle]
+pub extern "C" fn z_chunk_alloc_result_loan(
+    this: &z_owned_chunk_alloc_result_t,
+) -> &z_loaned_chunk_alloc_result_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
+}
+
 /// Deletes Chunk Alloc Result
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_delete(this: &mut z_owned_chunk_alloc_result_t) {
-    let _ = this.transmute_mut().extract();
+pub extern "C" fn z_chunk_alloc_result_drop(this: &mut z_owned_chunk_alloc_result_t) {
+    let _ = this.transmute_mut().take();
 }
 
 decl_transmute_owned!(Option<BufAllocResult>, z_owned_buf_alloc_result_t);
@@ -173,6 +195,7 @@ pub extern "C" fn z_buf_alloc_result_unwrap(
             Z_OK
         }
         Some(Err(err)) => {
+            Inplace::init(out_buf.transmute_uninit_ptr(), None);
             out_error.write(err.into());
             Z_OK
         }
@@ -192,8 +215,18 @@ pub extern "C" fn z_buf_alloc_result_check(this: &z_owned_buf_alloc_result_t) ->
     this.transmute_ref().is_some()
 }
 
+/// Borrows Buf Alloc Result
+#[no_mangle]
+pub extern "C" fn z_buf_alloc_result_loan(
+    this: &z_owned_buf_alloc_result_t,
+) -> &z_loaned_buf_alloc_result_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
+}
+
 /// Deletes Buf Alloc Result
 #[no_mangle]
-pub extern "C" fn z_buf_alloc_result_delete(this: &mut z_owned_buf_alloc_result_t) {
-    let _ = this.transmute_mut().extract();
+pub extern "C" fn z_buf_alloc_result_drop(this: &mut z_owned_buf_alloc_result_t) {
+    let _ = this.transmute_mut().take();
 }
