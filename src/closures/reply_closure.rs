@@ -1,6 +1,6 @@
 use std::mem::MaybeUninit;
 
-use crate::z_loaned_reply_t;
+use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_loaned_reply_t};
 use libc::c_void;
 /// A structure that contains all the elements for stateful, memory-leak-free callbacks.
 ///
@@ -19,6 +19,13 @@ pub struct z_owned_closure_reply_t {
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
+
+/// Loaned closure.
+#[repr(C)]
+pub struct z_loaned_closure_reply_t {
+    _0: [usize; 3],
+}
+decl_transmute_handle!(z_owned_closure_reply_t, z_loaned_closure_reply_t);
 
 impl z_owned_closure_reply_t {
     pub(crate) fn empty() -> Self {
@@ -58,11 +65,11 @@ pub extern "C" fn z_closure_reply_check(this: &z_owned_closure_reply_t) -> bool 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_reply_call(
-    closure: &z_owned_closure_reply_t,
+    closure: &z_loaned_closure_reply_t,
     reply: &z_loaned_reply_t,
 ) {
-    match closure.call {
-        Some(call) => call(reply, closure.context),
+    match closure.transmute_ref().call {
+        Some(call) => call(reply, closure.transmute_ref().context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
         }
@@ -93,4 +100,11 @@ impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
             drop: Some(drop::<F>),
         }
     }
+}
+
+
+/// Borrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_reply_loan(closure: &z_owned_closure_reply_t) -> &z_loaned_closure_reply_t {
+    closure.transmute_handle()
 }

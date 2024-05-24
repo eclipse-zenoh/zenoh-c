@@ -12,7 +12,7 @@ use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{errors, z_closure_zid_call, z_loaned_session_t, z_owned_closure_zid_t};
+use crate::{errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_owned_closure_zid_t};
 use std::mem::MaybeUninit;
 use zenoh::config::ZenohId;
 use zenoh::prelude::sync::SyncResolve;
@@ -55,7 +55,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
     std::mem::swap(&mut closure, callback);
     let session = session.transmute_ref();
     for id in session.info().peers_zid().res_sync() {
-        z_closure_zid_call(&closure, &id.transmute_copy());
+        z_closure_zid_call(z_closure_zid_loan(&closure), &id.transmute_copy());
     }
     errors::Z_OK
 }
@@ -76,7 +76,7 @@ pub unsafe extern "C" fn z_info_routers_zid(
     std::mem::swap(&mut closure, callback);
     let session = session.transmute_ref();
     for id in session.info().routers_zid().res_sync() {
-        z_closure_zid_call(&closure, &id.transmute_copy());
+        z_closure_zid_call(z_closure_zid_loan(&closure), &id.transmute_copy());
     }
     errors::Z_OK
 }

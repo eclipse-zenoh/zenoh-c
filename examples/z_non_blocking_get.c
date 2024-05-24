@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(channel.send),
           z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
-    for (bool call_success = z_call(channel.recv, &reply); !call_success || z_check(reply);
-         call_success = z_call(channel.recv, &reply)) {
+    for (bool call_success = z_call(z_loan(channel.recv), &reply); !call_success || z_check(reply);
+        call_success = z_call(z_loan(channel.recv), &reply)) {
         if (!call_success) {
             continue;
         }

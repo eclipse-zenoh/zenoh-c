@@ -294,7 +294,6 @@ decl_transmute_owned!(Value, z_owned_value_t);
 pub use crate::opaque_types::z_loaned_value_t;
 decl_transmute_handle!(Value, z_loaned_value_t);
 
-
 /// Constructs an empty `z_owned_value_t`.
 #[no_mangle]
 pub extern "C" fn z_value_null(this: *mut MaybeUninit<z_owned_value_t>) {
@@ -331,8 +330,6 @@ pub extern "C" fn z_value_loan(this: &z_owned_value_t) -> &z_loaned_value_t {
 pub extern "C" fn z_value_drop(this: &mut z_owned_value_t) {
     Inplace::drop(this.transmute_mut());
 }
-
-
 
 /// The locality of samples to be received by subscribers or targeted by publishers.
 #[repr(C)]

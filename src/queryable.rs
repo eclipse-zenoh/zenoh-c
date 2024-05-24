@@ -16,16 +16,16 @@ use crate::transmute::{
     TransmuteUninitPtr,
 };
 use crate::{
-    errors, z_closure_query_call, z_loaned_bytes_t, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t,
-    z_view_str_from_substring, z_view_str_t,
+    errors, z_closure_query_call, z_closure_query_loan, z_loaned_bytes_t, z_loaned_keyexpr_t, z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t, z_view_str_from_substring, z_view_str_t
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
+use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::SyncResolve;
 use zenoh::prelude::{Query, Queryable};
 use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
+use zenoh::value::Value;
 
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
@@ -123,6 +123,24 @@ pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options
     };
 }
 
+/// Represents the set of options that can be applied to a query reply error,
+/// sent via `z_query_reply_err()`.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct z_query_reply_err_options_t {
+    /// The encoding of the error payload.
+    pub encoding: *mut z_owned_encoding_t,
+}
+
+/// Constructs the default value for `z_query_reply_err_options_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_query_reply_err_options_default(this: &mut z_query_reply_err_options_t) {
+    *this = z_query_reply_err_options_t {
+        encoding: null_mut(),
+    };
+}
+
 /// Constructs a Queryable for the given key expression.
 ///
 /// @param this_: An uninitialized memory location where queryable will be constructed.
@@ -151,7 +169,7 @@ pub extern "C" fn z_declare_queryable(
         builder = builder.complete(options.complete);
     }
     let queryable = builder
-        .callback(move |query| z_closure_query_call(&closure, query.transmute_handle()))
+        .callback(move |query| z_closure_query_call(z_closure_query_loan(&closure), query.transmute_handle()))
         .res_sync();
     match queryable {
         Ok(q) => {
@@ -202,7 +220,7 @@ pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
 ///
 /// @param query: The query to reply to.
 /// @param key_expr: The key of this reply.
-/// @param payload: The payload of this reply. WIll be consumed.
+/// @param payload: The payload of this reply. Will be consumed.
 /// @param options: The options of this reply. All owned fields will be consumed.
 ///
 /// @return 0 in case of success, negative error code otherwise.
@@ -236,6 +254,50 @@ pub unsafe extern "C" fn z_query_reply(
             reply = reply.attachment(attachment);
         }
     }
+
+    if let Err(e) = reply.res_sync() {
+        log::error!("{}", e);
+        return errors::Z_EGENERIC;
+    }
+    errors::Z_OK
+}
+
+/// Sends a error reply to a query.
+///
+/// This function must be called inside of a Queryable callback passing the
+/// query received as parameters of the callback function. This function can
+/// be called multiple times to send multiple replies to a query. The reply
+/// will be considered complete when the Queryable callback returns.
+///
+/// @param query: The query to reply to.
+/// @param payload: The payload carrying error message. Will be consumed.
+/// @param options: The options of this reply. All owned fields will be consumed.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_query_reply_err(
+    query: &z_loaned_query_t,
+    payload: &mut z_owned_bytes_t,
+    options: Option<&mut z_query_reply_err_options_t>,
+) -> errors::z_error_t {
+    let query = query.transmute_ref();
+
+    let payload = match payload.transmute_mut().extract() {
+        Some(p) => p,
+        None => {
+            log::debug!("Attempted to reply_err with a null payload");
+            return errors::Z_EINVAL;
+        }
+    };
+
+    let value = Value::new(
+        payload,
+        options
+            .and_then(|o| o.encoding.as_mut().map(|e| e.transmute_mut().extract()))
+            .unwrap_or(Encoding::default()),
+    );
+    let reply = query.reply_err(value);
 
     if let Err(e) = reply.res_sync() {
         log::error!("{}", e);

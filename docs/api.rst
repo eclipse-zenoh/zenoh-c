@@ -98,25 +98,25 @@ Functions
 .. doxygenfunction:: z_slice_map_insert_by_copy
 .. doxygenfunction:: z_slice_map_iterate
 
-Slice array
+string array
 -----------
 Types
 ^^^^^
-.. doxygenstruct:: z_owned_slice_array_t
-.. doxygenstruct:: z_loaned_slice_array_t
+.. doxygenstruct:: z_owned_str_array_t
+.. doxygenstruct:: z_loaned_str_array_t
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_slice_array_check
-.. doxygenfunction:: z_slice_array_null
-.. doxygenfunction:: z_slice_array_drop
-.. doxygenfunction:: z_slice_array_loan
-.. doxygenfunction:: z_slice_array_loan_mut
+.. doxygenfunction:: z_str_array_check
+.. doxygenfunction:: z_str_array_null
+.. doxygenfunction:: z_str_array_drop
+.. doxygenfunction:: z_str_array_loan
+.. doxygenfunction:: z_str_array_loan_mut
 
-.. doxygenfunction:: z_slice_array_new
-.. doxygenfunction:: z_slice_array_get
-.. doxygenfunction:: z_slice_array_len
-.. doxygenfunction:: z_slice_array_is_empty
+.. doxygenfunction:: z_str_array_new
+.. doxygenfunction:: z_str_array_get
+.. doxygenfunction:: z_str_array_len
+.. doxygenfunction:: z_str_array_is_empty
 
 Common
 ======
@@ -529,6 +529,8 @@ Types
     :members:
 .. doxygenstruct:: z_query_reply_options_t
     :members:
+.. doxygenstruct:: z_query_reply_err_options_t
+    :members:
 
 .. doxygenstruct:: z_owned_query_channel_t
     :members:
@@ -542,6 +544,7 @@ Functions
 
 .. doxygenfunction:: z_queryable_options_default
 .. doxygenfunction:: z_query_reply_options_default
+.. doxygenfunction:: z_query_reply_err_options_default
 
 .. doxygenfunction:: z_queryable_null
 .. doxygenfunction:: z_queryable_check
@@ -559,6 +562,7 @@ Functions
 .. doxygenfunction:: z_query_value
 .. doxygenfunction:: z_query_attachment
 .. doxygenfunction:: z_query_reply
+.. doxygenfunction:: z_query_reply_err
 
 .. doxygenfunction:: z_closure_query_null
 .. doxygenfunction:: z_closure_query_check

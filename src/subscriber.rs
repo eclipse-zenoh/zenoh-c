@@ -23,6 +23,7 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_closure_sample_call;
+use crate::z_closure_sample_loan;
 use crate::z_loaned_session_t;
 use crate::z_owned_closure_sample_t;
 use zenoh::prelude::sync::SyncResolve;
@@ -126,7 +127,7 @@ pub extern "C" fn z_declare_subscriber(
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.transmute_handle();
-            z_closure_sample_call(&closure, sample)
+            z_closure_sample_call(z_closure_sample_loan(&closure), sample)
         });
     if let Some(options) = options {
         subscriber = subscriber.reliability(options.reliability.into());

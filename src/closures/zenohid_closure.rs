@@ -2,7 +2,7 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 
-use crate::z_id_t;
+use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_id_t};
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -20,6 +20,13 @@ pub struct z_owned_closure_zid_t {
     /// An optional function that will be called upon closure drop.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
+
+/// Loaned closure.
+#[repr(C)]
+pub struct z_loaned_closure_zid_t {
+    _0: [usize; 3],
+}
+decl_transmute_handle!(z_owned_closure_zid_t, z_loaned_closure_zid_t);
 
 impl z_owned_closure_zid_t {
     pub fn empty() -> Self {
@@ -59,9 +66,9 @@ pub unsafe extern "C" fn z_closure_zid_null(this: *mut MaybeUninit<z_owned_closu
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_zid_call(closure: &z_owned_closure_zid_t, sample: &z_id_t) {
-    match closure.call {
-        Some(call) => call(sample, closure.context),
+pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
+    match closure.transmute_ref().call {
+        Some(call) => call(z_id, closure.transmute_ref().context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
         }
@@ -89,4 +96,10 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
             drop: Some(drop::<F>),
         }
     }
+}
+
+/// Vorrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
+    closure.transmute_handle()
 }

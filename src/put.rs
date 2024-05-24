@@ -124,7 +124,7 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
     *this = z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
-        is_express: false
+        is_express: false,
     };
 }
 

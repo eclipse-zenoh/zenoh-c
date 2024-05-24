@@ -22,6 +22,7 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::z_closure_sample_loan;
 use crate::z_loaned_keyexpr_t;
 use crate::z_owned_closure_sample_t;
 use crate::z_reliability_t;
@@ -142,7 +143,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
     let sub = sub.callback(move |sample| {
         let sample = sample.transmute_handle();
-        z_closure_sample_call(&closure, sample);
+        z_closure_sample_call(z_closure_sample_loan(&closure), sample);
     });
     match sub.res() {
         Ok(sub) => {

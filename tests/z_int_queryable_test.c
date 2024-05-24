@@ -96,7 +96,7 @@ int run_get() {
         z_get_options_default(&opts);
         z_get(z_loan(s), z_loan(ke), "", z_move(channel.send), &opts);
         z_owned_reply_t reply;
-        for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
+        for (z_call(z_loan(channel.recv), &reply); z_check(reply); z_call(z_loan(channel.recv), &reply)) {
             assert(z_reply_is_ok(z_loan(reply)));
 
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
