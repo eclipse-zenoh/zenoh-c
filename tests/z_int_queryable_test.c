@@ -28,23 +28,19 @@ const size_t values_count = sizeof(values) / sizeof(values[0]);
 void query_handler(const z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
-    z_owned_str_t key_string;
-    z_keyexpr_to_string(z_query_keyexpr(query), &key_string);
-    z_view_slice_t params;
+    z_view_str_t params;
     z_query_parameters(query, &params);
     const z_loaned_value_t* payload_value = z_query_value(query);
 
     z_query_reply_options_t options;
     z_query_reply_options_default(&options);
-    z_view_str_t value_str;
-    z_view_str_wrap(&value_str, values[value_num]);
+    
     z_owned_bytes_t payload;
-    z_bytes_encode_from_string(&payload, z_loan(value_str));
+    z_bytes_encode_from_string(&payload, values[value_num]);
 
     z_view_keyexpr_t reply_ke;
     z_view_keyexpr_from_string(&reply_ke, (const char*)context);
     z_query_reply(query, z_loan(reply_ke), z_move(payload), &options);
-    z_drop(z_move(key_string));
 
     if (++value_num == values_count) {
         exit(0);
@@ -104,17 +100,14 @@ int run_get() {
             assert(z_reply_is_ok(z_loan(reply)));
 
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t key_string;
-            z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
             z_owned_str_t payload_string;
             z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
-            if (strcmp(values[val_num], z_str_data(z_loan(payload_string)))) {
+            if (strncmp(values[val_num], z_str_data(z_loan(payload_string)), z_str_len(z_loan(payload_string)))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_string));
                 exit(-1);
             }
 
-            z_drop(z_move(key_string));
             z_drop(z_move(payload_string));
             z_drop(z_move(reply));
         }

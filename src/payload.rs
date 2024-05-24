@@ -4,8 +4,7 @@ use crate::transmute::{
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{
-    z_loaned_slice_map_t, z_loaned_slice_t, z_loaned_str_t, z_owned_slice_map_t, z_owned_slice_t,
-    z_owned_str_t, CSlice, ZHashMap,
+    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, CSlice, ZHashMap,
 };
 use core::fmt;
 use std::any::Any;
@@ -67,7 +66,7 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
     this.transmute_ref().len()
 }
 
-/// Decodes data into an owned null-terminated string.
+/// Decodes data into an owned non-null-terminated string.
 ///
 /// @param this_: Data to decode.
 /// @param dst: An unitialized memory location where to construct a decoded string.
@@ -77,20 +76,17 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
     this: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<z_owned_str_t>,
 ) -> z_error_t {
-    let len = z_bytes_len(this);
     let payload = this.transmute_ref();
-    let mut out = vec![0u8; len + 1];
-    if let Err(e) = payload.reader().read(out.as_mut_slice()) {
-        log::error!("Failed to read the payload: {}", e);
-        Inplace::empty(dst.transmute_uninit_ptr());
-        errors::Z_EIO
-    } else if let Err(e) = std::str::from_utf8(out.as_slice()) {
-        log::error!("Payload is not a valid utf-8 string: {}", e);
-        Inplace::empty(dst.transmute_uninit_ptr());
-        errors::Z_EPARSE
-    } else {
-        Inplace::init(dst.transmute_uninit_ptr(), out.into());
-        errors::Z_OK
+    match payload.deserialize::<String>() {
+        Ok(s) => {
+            Inplace::init(dst.transmute_uninit_ptr(), s.into());
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
+            Inplace::empty(dst.transmute_uninit_ptr());
+            errors::Z_EIO
+        }
     }
 }
 
@@ -139,21 +135,18 @@ pub unsafe extern "C" fn z_bytes_decode_into_slice(
     }
 }
 
-unsafe impl Send for z_loaned_slice_t {}
-unsafe impl Sync for z_loaned_slice_t {}
+unsafe impl Send for CSlice {}
+unsafe impl Sync for CSlice {}
 
-impl fmt::Debug for z_loaned_slice_t {
+impl fmt::Debug for CSlice {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = self.transmute_ref();
-        f.debug_struct("z_loaned_slice_t")
-            .field("_0", &s.slice())
-            .finish()
+        f.debug_struct("CSLice").field("_0", &self.slice()).finish()
     }
 }
 
-impl ZSliceBuffer for z_loaned_slice_t {
+impl ZSliceBuffer for CSlice {
     fn as_slice(&self) -> &[u8] {
-        self.transmute_ref().slice()
+        self.slice()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -164,19 +157,41 @@ impl ZSliceBuffer for z_loaned_slice_t {
     }
 }
 
+impl From<CSlice> for ZBytes {
+    fn from(value: CSlice) -> Self {
+        ZBytes::new(value)
+    }
+}
+
 /// Encodes a slice by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_slice(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    bytes: &z_loaned_slice_t,
+    data: *const u8,
+    len: usize,
 ) {
+    let s = CSlice::new_borrowed(data, len);
     let this = this.transmute_uninit_ptr();
-    let payload = ZBytes::from(ZSlice::from(*bytes));
+    let payload = ZBytes::from(ZSlice::from(s));
     Inplace::init(this, Some(payload));
 }
 
-/// Encodes slice map by copying.
+/// Encodes a slice by copying.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_slice_copy(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    data: *const u8,
+    len: usize,
+) {
+    let s = CSlice::new_borrowed(data, len).clone();
+    let this = this.transmute_uninit_ptr();
+    let payload = ZBytes::from(ZSlice::from(s));
+    Inplace::init(this, Some(payload));
+}
+
+/// Encodes slice map by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
@@ -185,21 +200,51 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
 ) {
     let dst = this.transmute_uninit_ptr();
     let hm = bytes_map.transmute_ref();
-    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| (k.slice(), v.slice())));
+    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
+        (
+            CSlice::new_borrowed(k.data(), k.len()),
+            CSlice::new_borrowed(v.data(), v.len()),
+        )
+    }));
     Inplace::init(dst, Some(payload));
 }
 
-/// Encodes string by aliasing.
+/// Encodes slice map by copying.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_slice_map_copy(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    bytes_map: &z_loaned_slice_map_t,
+) {
+    let dst = this.transmute_uninit_ptr();
+    let hm = bytes_map.transmute_ref();
+    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
+        (
+            CSlice::new_borrowed(k.data(), k.len()).clone(),
+            CSlice::new_borrowed(v.data(), v.len()).clone(),
+        )
+    }));
+    Inplace::init(dst, Some(payload));
+}
+
+/// Encodes a null-terminated string by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_string(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    s: &z_loaned_str_t,
+    s: *const libc::c_char,
 ) {
-    let s = s.transmute_ref();
-    let s_without_terminating_0 = &s.slice()[0..s.len() - 1];
-    let s_without_terminating_0 = CSlice::new_borrowed_from_slice(s_without_terminating_0);
-    z_bytes_encode_from_slice(this, s_without_terminating_0.transmute_handle());
+    z_bytes_encode_from_slice(this, s as *const u8, libc::strlen(s));
+}
+
+/// Encodes a null-terminated string by copying.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_string_copy(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    s: *const libc::c_char,
+) {
+    z_bytes_encode_from_slice_copy(this, s as *const u8, libc::strlen(s));
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;

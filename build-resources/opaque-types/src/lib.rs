@@ -62,11 +62,11 @@ get_opaque_type_data!(CSlice, z_view_slice_t);
 /// A loaned sequence of bytes.
 get_opaque_type_data!(CSlice, z_loaned_slice_t);
 
-/// The wrapper type for null-terminated string values allocated by Zenoh.
+/// The wrapper type for strings allocated by Zenoh.
 get_opaque_type_data!(CSlice, z_owned_str_t);
-/// The view over a null-terminated string.
+/// The view over a string.
 get_opaque_type_data!(CSlice, z_view_str_t);
-/// A loaned null-terminated string.
+/// A loaned string.
 get_opaque_type_data!(CSlice, z_loaned_str_t);
 
 /// A map of maybe-owned slices to maybe-owned slices.

@@ -58,10 +58,8 @@ int main(int argc, char **argv) {
     }
 
     z_owned_bytes_t payload;
-    z_view_slice_t payload_data;
-    z_view_slice_wrap(&payload_data, value, len);
     while (1) {
-        z_bytes_encode_from_slice(&payload, z_loan(payload_data));
+        z_bytes_encode_from_slice(&payload, value, len);
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 

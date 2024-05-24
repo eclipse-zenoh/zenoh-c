@@ -54,10 +54,8 @@ int run_publisher() {
     for (int i = 0; i < values_count; ++i) {
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
-        z_view_str_t value_str;
-        z_view_str_wrap(&value_str, values[i]);
         z_owned_bytes_t payload;
-        z_bytes_encode_from_string(&payload, z_loan(value_str));
+        z_bytes_encode_from_string(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
@@ -68,17 +66,16 @@ int run_publisher() {
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_owned_str_t keystr;
+    z_view_str_t keystr;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &keystr);
-    if (strcmp(keyexpr, z_str_data(z_loan(keystr)))) {
+    if (strncmp(keyexpr, z_str_data(z_loan(keystr)), z_str_len(z_loan(keystr)))) {
         perror("Unexpected key received");
         exit(-1);
     }
-    z_drop(z_move(keystr));
 
     z_owned_str_t payload_str;
     z_bytes_decode_into_string(z_sample_payload(sample), &payload_str);
-    if (strcmp(values[val_num], z_str_data(z_loan(payload_str)))) {
+    if (strncmp(values[val_num], z_str_data(z_loan(payload_str)), z_str_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));
         exit(-1);

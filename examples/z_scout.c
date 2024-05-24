@@ -32,10 +32,10 @@ void fprintpid(FILE *stream, z_id_t pid) {
     }
 }
 
-void fprintwhatami(FILE *stream, unsigned int whatami) {
-    char buf[64];
-    z_whatami_to_str(whatami, buf, sizeof(buf));
-    fprintf(stream, "%s", buf);
+void fprintwhatami(FILE *stream, z_whatami_t whatami) {
+    z_view_str_t whatami_str;
+    z_whatami_to_str(whatami, &whatami_str);
+    fprintf(stream, "%.*s", (int)z_str_len(z_loan(whatami_str)), z_str_data(z_loan(whatami_str)));
 }
 
 void fprintlocators(FILE *stream, const z_loaned_slice_array_t *locs) {

@@ -32,9 +32,7 @@ const char *const V_CONST = "v const";
 void query_handler(const z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
-    z_owned_str_t keystr;
-    z_keyexpr_to_string(z_query_keyexpr(query), &keystr);
-    z_view_slice_t params;
+    z_view_str_t params;
     z_query_parameters(query, &params);
     const z_loaned_value_t* payload_value = z_query_value(query);
 
@@ -68,18 +66,13 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_bytes_encode_from_slice_map(&reply_attachment, z_loan(reply_map));
     options.attachment = &reply_attachment;
 
-    z_view_str_t value_str;
-    z_view_str_wrap(&value_str, values[value_num]);
-
     z_owned_bytes_t payload;
-    z_bytes_encode_from_string(&payload, z_loan(value_str));
+    z_bytes_encode_from_string(&payload, values[value_num]);
 
     z_view_keyexpr_t reply_ke;
     z_view_keyexpr_from_string(&reply_ke, (const char *)context);
     z_query_reply(query, z_loan(reply_ke), z_move(payload), &options);
-    z_drop(z_move(keystr));
     z_drop(z_move(map));
-   // z_drop(z_move(reply_map));
 
     if (++value_num == values_count) {
         exit(0);
@@ -160,11 +153,9 @@ int run_get() {
             assert(z_reply_is_ok(z_loan(reply)));
 
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t keystr;
-            z_keyexpr_to_string(z_sample_keyexpr(sample), &keystr);
             z_owned_str_t payload_str;
             z_bytes_decode_into_string(z_sample_payload(sample), &payload_str);
-            if (strcmp(values[val_num], z_str_data(z_loan(payload_str)))) {
+            if (strncmp(values[val_num], z_str_data(z_loan(payload_str)), z_str_len(z_loan(payload_str)))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_str));
                 exit(-1);
@@ -180,7 +171,6 @@ int run_get() {
             const z_loaned_slice_t* v_const_get = z_slice_map_get(z_loan(received_map), z_loan(k_const));
             ASSERT_STR_SLICE_EQUAL(V_CONST, v_const_get);
 
-            z_drop(z_move(keystr));
             z_drop(z_move(payload_str));
             z_drop(z_move(received_map));
         }

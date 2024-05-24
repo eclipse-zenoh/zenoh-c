@@ -82,10 +82,8 @@ int main(int argc, char **argv) {
 
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-        z_view_str_t payload_str;
-        z_view_str_wrap(&payload_str, buf);
         
-        z_bytes_encode_from_string(&payload, z_loan(payload_str));
+        z_bytes_encode_from_string(&payload, buf);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
