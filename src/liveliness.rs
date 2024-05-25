@@ -20,6 +20,7 @@ use zenoh::{
 };
 
 use crate::transmute::TransmuteIntoHandle;
+use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use crate::{
     errors,
     transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr},
@@ -156,7 +157,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.transmute_handle();
-            z_closure_sample_call(&callback, sample)
+            z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         })
         .res()
     {
@@ -203,7 +204,7 @@ pub extern "C" fn zc_liveliness_get(
     let liveliness: Liveliness<'static> = session.liveliness();
     let mut builder = liveliness
         .get(key_expr)
-        .callback(move |response| z_closure_reply_call(&callback, response.transmute_handle()));
+        .callback(move |response| z_closure_reply_call(z_closure_reply_loan(&callback), response.transmute_handle()));
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
     }

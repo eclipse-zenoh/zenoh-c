@@ -21,6 +21,7 @@ use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_owned_encoding_t;
 use crate::zcu_closure_matching_status_call;
+use crate::zcu_closure_matching_status_loan;
 use crate::zcu_owned_closure_matching_status_t;
 use std::mem::MaybeUninit;
 use std::ptr;
@@ -45,6 +46,8 @@ pub struct z_publisher_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of messages from this publisher.
     pub priority: z_priority_t,
+    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith
+    pub is_express: bool,
 }
 
 /// Constructs the default value for `z_publisher_options_t`.
@@ -53,6 +56,7 @@ pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) 
     *this = z_publisher_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
+        is_express: false,
     };
 }
 
@@ -89,7 +93,8 @@ pub extern "C" fn z_declare_publisher(
     if let Some(options) = options {
         p = p
             .congestion_control(options.congestion_control.into())
-            .priority(options.priority.into());
+            .priority(options.priority.into())
+            .express(options.is_express);
     }
     match p.res_sync() {
         Err(e) => {
@@ -213,7 +218,7 @@ pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_dele
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
-    _options: z_publisher_delete_options_t,
+    _options: Option<&z_publisher_delete_options_t>,
 ) -> errors::z_error_t {
     let publisher = publisher.transmute_ref();
     if let Err(e) = publisher.delete().res_sync() {
@@ -270,7 +275,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
             let status = zcu_matching_status_t {
                 matching: matching_status.matching_subscribers(),
             };
-            zcu_closure_matching_status_call(&closure, &status);
+            zcu_closure_matching_status_call(zcu_closure_matching_status_loan(&closure), &status);
         })
         .res();
     match listener {

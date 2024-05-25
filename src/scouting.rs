@@ -12,13 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    errors::{self, Z_OK},
-    transmute::{
+    errors::{self, Z_OK}, transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
         TransmuteRef, TransmuteUninitPtr,
-    },
-    z_closure_hello_call, z_id_t, z_owned_closure_hello_t, z_owned_config_t, z_owned_slice_array_t,
-    z_view_str_t, zc_init_logger, CSlice, ZVector,
+    }, z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t, z_owned_str_array_t, z_view_str_t, zc_init_logger, CSlice, ZVector
 };
 use async_std::task;
 use libc::c_ulong;
@@ -73,19 +70,19 @@ pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
 #[no_mangle]
 pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
     match this.transmute_ref().whatami {
-        WhatAmI::Router => z_whatami_t::Z_WHATAMI_ROUTER,
-        WhatAmI::Peer => z_whatami_t::Z_WHATAMI_PEER,
-        WhatAmI::Client => z_whatami_t::Z_WHATAMI_CLIENT,
+        WhatAmI::Router => z_whatami_t::ROUTER,
+        WhatAmI::Peer => z_whatami_t::PEER,
+        WhatAmI::Client => z_whatami_t::CLIENT,
     }
 }
 
-/// Constructs an array of non-owned locators (in the form non-null terminated strings) of Zenoh entity that sent hello message.
+/// Constructs an array of non-owned locators (in the form non-null-terminated strings) of Zenoh entity that sent hello message.
 ///
 /// The lifetime of locator strings is bound to `this_`.
 #[no_mangle]
 pub extern "C" fn z_hello_locators(
     this: &z_loaned_hello_t,
-    locators_out: *mut MaybeUninit<z_owned_slice_array_t>,
+    locators_out: *mut MaybeUninit<z_owned_str_array_t>,
 ) {
     let this = this.transmute_ref();
     let mut locators = ZVector::with_capacity(this.locators.len());
@@ -118,16 +115,16 @@ impl Default for z_scout_options_t {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum z_whatami_t {
-    Z_WHATAMI_ROUTER = 0x01,
-    Z_WHATAMI_PEER = 0x02,
-    Z_WHATAMI_CLIENT = 0x04,
-    Z_WHATAMI_ROUTER_PEER = 0x01 | 0x02,
-    Z_WHATAMI_ROUTER_CLIENT = 0x01 | 0x04,
-    Z_WHATAMI_PEER_CLIENT = 0x02 | 0x04,
-    Z_WHATAMI_ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
+    ROUTER = 0x01,
+    PEER = 0x02,
+    CLIENT = 0x04,
+    ROUTER_PEER = 0x01 | 0x02,
+    ROUTER_CLIENT = 0x01 | 0x04,
+    PEER_CLIENT = 0x02 | 0x04,
+    ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
 }
 
-pub const DEFAULT_SCOUTING_WHAT: z_whatami_t = z_whatami_t::Z_WHATAMI_ROUTER_PEER;
+pub const DEFAULT_SCOUTING_WHAT: z_whatami_t = z_whatami_t::ROUTER_PEER;
 pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 /// Constructs the default values for the scouting operation.
@@ -169,7 +166,7 @@ pub extern "C" fn z_scout(
 
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
-            .callback(move |h| z_closure_hello_call(&closure, h.transmute_handle()))
+            .callback(move |h| z_closure_hello_call(z_closure_hello_loan(&closure), h.transmute_handle()))
             .res_async()
             .await
             .unwrap();

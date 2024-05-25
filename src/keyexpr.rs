@@ -233,7 +233,6 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring(
     }
 }
 
-
 /// Constructs a `z_owned_keyexpr_t` by copying a substring.
 ///
 /// @param this_: An unitialized location in memory where key expression will be constructed.
@@ -299,7 +298,6 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring_autocanonize(
         }
     }
 }
-
 
 /// Constructs a `z_keyexpr_t` by copying a substring.
 ///

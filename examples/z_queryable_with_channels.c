@@ -24,7 +24,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_owned_closure_owned_query_t *channel = (z_owned_closure_owned_query_t *)context;
     z_owned_query_t oquery;
     z_query_clone(query, &oquery);
-    z_call(*channel, &oquery);
+    z_call(z_loan(*channel), &oquery);
 }
 
 int main(int argc, char **argv) {
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
     printf("^C to quit...\n");
     z_owned_query_t oquery;
-    for (z_call(channel.recv, &oquery); z_check(oquery); z_call(channel.recv, &oquery)) {
+    for (z_call(z_loan(channel.recv), &oquery); z_check(oquery); z_call(z_loan(channel.recv), &oquery)) {
         const z_loaned_query_t* query = z_loan(oquery);
         z_view_str_t key_string;
         z_keyexpr_to_string(z_query_keyexpr(query), &key_string);

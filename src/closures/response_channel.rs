@@ -1,6 +1,5 @@
 use crate::{
-    z_closure_reply_drop, z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
-    z_reply_clone, z_reply_null,
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_closure_reply_drop, z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t, z_reply_clone, z_reply_null
 };
 use libc::c_void;
 use std::{
@@ -26,6 +25,13 @@ pub struct z_owned_reply_channel_closure_t {
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
+
+/// Loaned closure.
+#[repr(C)]
+pub struct z_loaned_reply_channel_closure_t {
+    _0: [usize; 3],
+}
+decl_transmute_handle!(z_owned_reply_channel_closure_t, z_loaned_reply_channel_closure_t);
 
 /// A pair of send / receive ends of channel.
 #[repr(C)]
@@ -192,11 +198,11 @@ pub unsafe extern "C" fn z_reply_channel_closure_null(
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_reply_channel_closure_call(
-    closure: &z_owned_reply_channel_closure_t,
+    closure: &z_loaned_reply_channel_closure_t,
     reply: *mut MaybeUninit<z_owned_reply_t>,
 ) -> bool {
-    match closure.call {
-        Some(call) => call(reply, closure.context),
+    match closure.transmute_ref().call {
+        Some(call) => call(reply, closure.transmute_ref().context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
             true
@@ -235,4 +241,10 @@ impl<F: Fn(*mut MaybeUninit<z_owned_reply_t>) -> bool> From<F> for z_owned_reply
             drop: Some(drop::<F>),
         }
     }
+}
+
+/// Borrows closure.
+#[no_mangle]
+pub extern "C" fn z_reply_channel_closure_loan(closure: &z_owned_reply_channel_closure_t) -> &z_loaned_reply_channel_closure_t {
+    closure.transmute_handle()
 }

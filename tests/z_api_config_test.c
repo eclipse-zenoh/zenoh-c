@@ -23,7 +23,7 @@ void config_client() {
     z_owned_config_t config;
     z_config_client(&config, peers, 3);
     z_owned_str_t endpoints;
-    zc_config_get(z_loan(config), "connect/endpoints", &endpoints);
+    zc_config_get_from_string(z_loan(config), "connect/endpoints", &endpoints);
     assert(strncmp(z_str_data(z_loan(endpoints)), "[\"tcp/127.0.0.1\",\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]", z_str_len(z_loan(endpoints))) == 0);
     z_drop(z_move(endpoints));
     z_drop(z_move(config));
@@ -33,7 +33,7 @@ void config_peer() {
     z_owned_config_t config;
     z_config_peer(&config);
     z_owned_str_t mode;
-    zc_config_get(z_loan(config), "mode", &mode);
+    zc_config_get_from_string(z_loan(config), "mode", &mode);
     assert(strncmp(z_str_data(z_loan(mode)), "\"peer\"", z_str_len(z_loan(mode))) == 0);
     z_drop(z_move(mode));
 }

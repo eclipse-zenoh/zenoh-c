@@ -30,6 +30,7 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::z_closure_reply_loan;
 use crate::z_consolidation_mode_t;
 use crate::z_loaned_sample_t;
 use crate::z_loaned_value_t;
@@ -174,7 +175,8 @@ pub unsafe extern "C" fn z_get(
         }
     }
     match get
-        .callback(move |response| z_closure_reply_call(&closure, response.transmute_handle()))
+        .callback(move |response|
+            z_closure_reply_call(z_closure_reply_loan(&closure), response.transmute_handle()))
         .res_sync()
     {
         Ok(()) => errors::Z_OK,

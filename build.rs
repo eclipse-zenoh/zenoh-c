@@ -1,5 +1,6 @@
 use fs2::FileExt;
 use regex::Regex;
+use std::collections::HashSet;
 use std::env;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
@@ -880,7 +881,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
 
     file_out.write_all("\n\n".as_bytes()).unwrap();
-    let out = generate_generic_loan_to_owned_type_cpp(&type_name_to_loan_func);
+    let out = generate_generic_loan_to_owned_type_cpp(&vec![type_name_to_loan_func, type_name_to_loan_mut_func].concat());
     file_out.write_all(out.as_bytes()).unwrap();
 
     file_out
@@ -1071,7 +1072,7 @@ pub fn generate_generic_check_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_call", true)
+    generate_generic_c(macro_func, "z_call", false)
 }
 
 pub fn generate_generic_closure_c(_macro_func: &[FunctionSignature]) -> String {
@@ -1126,11 +1127,17 @@ pub fn generate_generic_loan_cpp(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_loan_to_owned_type_cpp(macro_func: &[FunctionSignature]) -> String {
+    let mut processed_loaned_types = HashSet::<String>::new();
     let mut out = "template<class T> struct z_loaned_to_owned_type_t {};
 template<class T> struct z_owned_to_loaned_type_t {};"
         .to_owned();
     for f in macro_func {
         let loaned = f.return_type.clone().without_cv().without_ptr().typename;
+        if processed_loaned_types.contains(&loaned) {
+            continue;
+        } else {
+            processed_loaned_types.insert(loaned.clone());
+        }
         let owned = f.args[0]
             .typename
             .clone()
@@ -1178,7 +1185,7 @@ pub fn generate_generic_check_cpp(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_call_cpp(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_cpp(macro_func, "z_call", true)
+    generate_generic_cpp(macro_func, "z_call", false)
 }
 
 pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
@@ -1187,7 +1194,7 @@ pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String 
     for func in macro_func {
         let return_type = &func.return_type.typename;
         let closure_name = &func.args[0].name;
-        let closure_type = func.args[0].typename.clone().without_cv().typename;
+        let closure_type = func.args[0].typename.clone().without_cv().typename.replace("loaned", "owned");
         let arg_type = &func.args[1].typename.typename;
         out += "\n";
         out += &format!(

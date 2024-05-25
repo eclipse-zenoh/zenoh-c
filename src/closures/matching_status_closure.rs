@@ -2,7 +2,7 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 
-use crate::zcu_matching_status_t;
+use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, zcu_matching_status_t};
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -20,6 +20,14 @@ pub struct zcu_owned_closure_matching_status_t {
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
+
+/// Loaned closure.
+#[repr(C)]
+pub struct zcu_loaned_closure_matching_status_t {
+    _0: [usize; 3],
+}
+
+decl_transmute_handle!(zcu_owned_closure_matching_status_t, zcu_loaned_closure_matching_status_t);
 
 impl zcu_owned_closure_matching_status_t {
     pub fn empty() -> Self {
@@ -63,11 +71,11 @@ pub extern "C" fn zcu_closure_matching_status_check(
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn zcu_closure_matching_status_call(
-    closure: &zcu_owned_closure_matching_status_t,
-    sample: &zcu_matching_status_t,
+    closure: &zcu_loaned_closure_matching_status_t,
+    mathing_status: &zcu_matching_status_t,
 ) {
-    match closure.call {
-        Some(call) => call(sample, closure.context),
+    match closure.transmute_ref().call {
+        Some(call) => call(mathing_status, closure.transmute_ref().context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
         }
@@ -100,4 +108,10 @@ impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_statu
             drop: Some(drop::<F>),
         }
     }
+}
+
+/// Borrows closure.
+#[no_mangle]
+pub extern "C" fn zcu_closure_matching_status_loan(closure: &zcu_owned_closure_matching_status_t) -> &zcu_loaned_closure_matching_status_t {
+    closure.transmute_handle()
 }

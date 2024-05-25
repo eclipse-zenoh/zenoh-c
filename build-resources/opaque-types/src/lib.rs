@@ -76,11 +76,11 @@ get_opaque_type_data!(Option<HashMap<usize, usize>>, z_owned_slice_map_t);
 /// A loaned slice map.
 get_opaque_type_data!(HashMap<usize, usize>, z_loaned_slice_map_t);
 
-/// An array of maybe-owned slices.
+/// An array of maybe-owned non-null terminated strings.
 ///
-get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_slice_array_t);
-/// A loaned slice array.
-get_opaque_type_data!(Vec<CSlice>, z_loaned_slice_array_t);
+get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_str_array_t);
+/// A loaned string array.
+get_opaque_type_data!(Vec<CSlice>, z_loaned_str_array_t);
 
 /// An owned Zenoh sample.
 ///
