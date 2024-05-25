@@ -1042,7 +1042,8 @@ typedef struct zc_threadsafe_context_data_t {
  * information to each callback.
  *
  * This is a thread-safe context - the associated callbacks may be executed concurrently with the same
- * zc_context_t instance. In other words, the context data MUST be thread-safe.
+ * zc_context_t instance. In other words, all the callbacks associated with this context data MUST be
+ * thread-safe.
  *
  * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted.The
  * delete_fn is guaranteed to be executed only once at some point of time after the last associated
@@ -1091,8 +1092,9 @@ typedef uint32_t z_protocol_id_t;
  * information to each callback.
  *
  * This is a non-thread-safe context - zenoh-c guarantees that associated callbacks that share the same
- * zc_context_t instance will never be executed concurrently. In other words, the context data is not
- * required to be thread-safe.
+ * zc_context_t instance will never be executed concurrently. In other words, all the callbacks associated
+ * with this context data are not required to be thread-safe.
+ *
  * NOTE: Remember that the same callback interfaces associated with different zc_context_t instances can
  * still be executed concurrently. The exact behavior depends on user's application, but we strongly
  * discourage our users from pinning to some specific behavior unless they _really_ understand what they
