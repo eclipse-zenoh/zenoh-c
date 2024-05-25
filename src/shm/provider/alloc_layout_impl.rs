@@ -18,7 +18,7 @@ use zenoh::prelude::*;
 use zenoh::shm::AllocPolicy;
 
 use crate::{
-    errors::{z_error_t, Z_EINVAL, Z_OK}, transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr}, z_owned_buf_alloc_result_t
+    errors::{z_error_t, Z_EINVAL, Z_OK}, transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteUninitPtr}, z_owned_buf_alloc_result_t
 };
 
 use super::{alloc_layout::{z_loaned_alloc_layout_t, z_owned_alloc_layout_t, CSHMLayout}, shared_memory_provider::z_loaned_shared_memory_provider_t, types::z_alloc_alignment_t};
@@ -33,7 +33,7 @@ pub(crate) fn alloc_layout_new(
         super::shared_memory_provider::CSHMProvider::Posix(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.into())
+                .with_alignment(alignment.transmute_copy())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::Posix(layout),
@@ -46,7 +46,7 @@ pub(crate) fn alloc_layout_new(
         super::shared_memory_provider::CSHMProvider::Dynamic(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.into())
+                .with_alignment(alignment.transmute_copy())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
@@ -59,7 +59,7 @@ pub(crate) fn alloc_layout_new(
         super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.into())
+                .with_alignment(alignment.transmute_copy())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),

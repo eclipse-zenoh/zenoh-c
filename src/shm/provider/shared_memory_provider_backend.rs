@@ -38,7 +38,6 @@ pub struct zc_shared_memory_provider_backend_callbacks_t {
     defragment_fn: unsafe extern "C" fn(*mut c_void) -> usize,
     available_fn: unsafe extern "C" fn(*mut c_void) -> usize,
     layout_for_fn: unsafe extern "C" fn(*mut c_void, *mut z_owned_memory_layout_t),
-    drop_fn: unsafe extern "C" fn(*mut c_void),
 }
 
 #[derive(Debug)]

@@ -20,7 +20,7 @@ use zenoh::shm::{AllocPolicy, AsyncAllocPolicy, SharedMemoryProvider};
 
 use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
-use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr};
+use crate::transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteUninitPtr};
 use crate::{z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
 use super::chunk::z_allocated_chunk_t;
@@ -132,6 +132,20 @@ pub(crate) fn garbage_collect(provider: &z_loaned_shared_memory_provider_t) {
     }
 }
 
+pub(crate) fn available(provider: &z_loaned_shared_memory_provider_t) -> usize {
+    match provider.transmute_ref() {
+        super::shared_memory_provider::CSHMProvider::Posix(provider) => {
+            provider.available()
+        }
+        super::shared_memory_provider::CSHMProvider::Dynamic(provider) => {
+            provider.available()
+        }
+        super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
+            provider.available()
+        }
+    }
+}
+
 #[no_mangle]
 pub(crate) fn map(
     out_result: *mut MaybeUninit<z_owned_shm_mut_t>,
@@ -172,7 +186,7 @@ fn alloc_impl<
 ) -> z_error_t {
     let result = provider
         .alloc(size)
-        .with_alignment(alignment.into())
+        .with_alignment(alignment.transmute_copy())
         .with_policy::<Policy>()
         .wait();
 

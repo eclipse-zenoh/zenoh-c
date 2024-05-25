@@ -20,7 +20,7 @@ use zenoh_util::core::zerror;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+        unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
     },
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
@@ -66,15 +66,12 @@ impl From<z_alloc_error_t> for ZAllocError {
 
 // An AllocAlignment.
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct z_alloc_alignment_t {
-    pub pow: u8,
+    pow: u8,
 }
 
-impl From<z_alloc_alignment_t> for AllocAlignment {
-    fn from(value: z_alloc_alignment_t) -> Self {
-        Self::new(value.pow)
-    }
-}
+decl_transmute_copy!(AllocAlignment, z_alloc_alignment_t);
 
 decl_transmute_owned!(Option<MemoryLayout>, z_owned_memory_layout_t);
 decl_transmute_handle!(MemoryLayout, z_loaned_memory_layout_t);
@@ -124,6 +121,18 @@ pub extern "C" fn z_memory_layout_loan(
 #[no_mangle]
 pub extern "C" fn z_memory_layout_drop(this: &mut z_owned_memory_layout_t) {
     let _ = this.transmute_mut().take();
+}
+
+/// Deletes Memory Layout
+#[no_mangle]
+pub extern "C" fn z_memory_layout_get_data(
+    out_size: &mut MaybeUninit<usize>,
+    out_alignment: &mut MaybeUninit<z_alloc_alignment_t>,
+    this: &z_loaned_memory_layout_t,
+) {
+    let layout = this.transmute_ref();
+    out_size.write(layout.size());
+    out_alignment.write(layout.alignment().transmute_copy() );
 }
 
 decl_transmute_owned!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);

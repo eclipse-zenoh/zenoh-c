@@ -38,7 +38,7 @@ use super::{
     shared_memory_provider_backend::{
         zc_shared_memory_provider_backend_callbacks_t, DynamicSharedMemoryProviderBackend,
     },
-    shared_memory_provider_impl::{alloc, alloc_async, defragment, garbage_collect, map},
+    shared_memory_provider_impl::{alloc, alloc_async, available, defragment, garbage_collect, map},
     types::z_alloc_alignment_t,
 };
 
@@ -246,6 +246,13 @@ pub extern "C" fn z_shared_memory_provider_garbage_collect(
     provider: &z_loaned_shared_memory_provider_t,
 ) {
     garbage_collect(provider);
+}
+
+#[no_mangle]
+pub extern "C" fn z_shared_memory_provider_available(
+    provider: &z_loaned_shared_memory_provider_t,
+) -> usize {
+    available(provider)
 }
 
 #[no_mangle]
