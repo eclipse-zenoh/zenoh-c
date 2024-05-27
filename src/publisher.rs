@@ -32,8 +32,7 @@ use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 use zenoh::{prelude::Priority, publication::MatchingListener, publication::Publisher};
-
-use zenoh::prelude::SyncResolve;
+use zenoh::core::Wait;
 
 use crate::{
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t, z_priority_t,
@@ -96,7 +95,7 @@ pub extern "C" fn z_declare_publisher(
             .priority(options.priority.into())
             .express(options.is_express);
     }
-    match p.res_sync() {
+    match p.wait() {
         Err(e) => {
             log::error!("{}", e);
             Inplace::empty(this);
@@ -190,7 +189,7 @@ pub unsafe extern "C" fn z_publisher_put(
         }
     }
 
-    if let Err(e) = put.res_sync() {
+    if let Err(e) = put.wait() {
         log::error!("{}", e);
         errors::Z_EGENERIC
     } else {
@@ -221,7 +220,7 @@ pub extern "C" fn z_publisher_delete(
     _options: Option<&z_publisher_delete_options_t>,
 ) -> errors::z_error_t {
     let publisher = publisher.transmute_ref();
-    if let Err(e) = publisher.delete().res_sync() {
+    if let Err(e) = publisher.delete().wait() {
         log::error!("{}", e);
         errors::Z_EGENERIC
     } else {
@@ -277,7 +276,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
             };
             zcu_closure_matching_status_call(zcu_closure_matching_status_loan(&closure), &status);
         })
-        .res();
+        .wait();
     match listener {
         Ok(_) => {
             Inplace::empty(this);
@@ -297,7 +296,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
     if let Some(p) = this.transmute_mut().extract().take() {
-        if let Err(e) = p.undeclare().res_sync() {
+        if let Err(e) = p.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
         }

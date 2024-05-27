@@ -22,7 +22,6 @@ use libc::c_ulong;
 use std::mem::MaybeUninit;
 use zenoh::scouting::Hello;
 use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
-use zenoh_util::core::AsyncResolve;
 
 pub use crate::opaque_types::z_loaned_hello_t;
 pub use crate::opaque_types::z_owned_hello_t;
@@ -167,7 +166,6 @@ pub extern "C" fn z_scout(
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
             .callback(move |h| z_closure_hello_call(z_closure_hello_loan(&closure), h.transmute_handle()))
-            .res_async()
             .await
             .unwrap();
         async_std::task::sleep(std::time::Duration::from_millis(timeout)).await;

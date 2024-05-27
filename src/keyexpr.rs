@@ -11,7 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
 use std::mem::MaybeUninit;
 
 use crate::errors;
@@ -28,11 +27,11 @@ use crate::z_view_str_from_substring;
 use crate::z_view_str_t;
 use libc::c_char;
 use std::error::Error;
-use zenoh::core::SyncResolve;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::KeyExpr;
 use zenoh_protocol::core::key_expr::canon::Canonizable;
+use zenoh::core::Wait;
 
 pub use crate::opaque_types::z_owned_keyexpr_t;
 pub use crate::opaque_types::z_view_keyexpr_t;
@@ -447,7 +446,7 @@ pub extern "C" fn z_declare_keyexpr(
     let this = this.transmute_uninit_ptr();
     let key_expr = key_expr.transmute_ref();
     let session = session.transmute_ref();
-    match session.declare_keyexpr(key_expr).res_sync() {
+    match session.declare_keyexpr(key_expr).wait() {
         Ok(id) => {
             Inplace::init(this, Some(id.into_owned()));
             errors::Z_OK
@@ -473,7 +472,7 @@ pub extern "C" fn z_undeclare_keyexpr(
         return errors::Z_EINVAL;
     };
     let session = session.transmute_ref();
-    match session.undeclare(kexpr).res() {
+    match session.undeclare(kexpr).wait() {
         Ok(()) => errors::Z_OK,
         Err(e) => {
             log::debug!("{}", e);

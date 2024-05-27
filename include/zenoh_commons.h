@@ -294,7 +294,7 @@ typedef struct z_loaned_closure_owned_query_t {
  * Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
  */
 typedef struct ALIGN(8) z_owned_query_t {
-  uint8_t _0[16];
+  uint8_t _0[144];
 } z_owned_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
