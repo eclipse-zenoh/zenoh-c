@@ -1136,6 +1136,14 @@ z_error_t z_bytes_encode_from_iter(struct z_owned_bytes_t *this_,
                                    void (*iterator_body)(struct z_owned_bytes_t *data, void *context),
                                    void *context);
 /**
+ * Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_encode_from_pair(struct z_owned_bytes_t *this_,
+                                   struct z_owned_bytes_t *first,
+                                   struct z_owned_bytes_t *second);
+/**
  * Encodes a slice by aliasing.
  */
 ZENOHC_API
@@ -1169,14 +1177,6 @@ ZENOHC_API void z_bytes_encode_from_string(struct z_owned_bytes_t *this_, const 
  * Encodes a null-terminated string by copying.
  */
 ZENOHC_API void z_bytes_encode_from_string_copy(struct z_owned_bytes_t *this_, const char *s);
-/**
- * Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
- * @return 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_error_t z_bytes_encode_pair(struct z_owned_bytes_t *this_,
-                              struct z_owned_bytes_t *first,
-                              struct z_owned_bytes_t *second);
 /**
  * Returns total number of bytes in the payload.
  */

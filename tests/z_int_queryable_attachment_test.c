@@ -47,7 +47,7 @@ void create_attachement_it(z_owned_bytes_t* kv_pair, void* context) {
         z_bytes_encode_from_string(&v, ctx->values[ctx->iteration_index]);
     }
 
-    z_bytes_encode_pair(kv_pair, z_move(k), z_move(v));
+    z_bytes_encode_from_pair(kv_pair, z_move(k), z_move(v));
     ctx->iteration_index++;
 };
 

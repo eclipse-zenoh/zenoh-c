@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     z_owned_bytes_t attachment, key, val;
     z_bytes_encode_from_string(&key, "hello");
     z_bytes_encode_from_string(&val, "there");
-    z_bytes_encode_pair(&attachment, z_move(key), z_move(val));
+    z_bytes_encode_from_pair(&attachment, z_move(key), z_move(val));
 
     z_put_options_t options;
     z_put_options_default(&options);

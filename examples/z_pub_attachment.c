@@ -35,7 +35,7 @@ void create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
     } else {
         z_bytes_encode_from_string(&k, kvs->data[kvs->current_idx].key);
         z_bytes_encode_from_string(&v, kvs->data[kvs->current_idx].value);
-        z_bytes_encode_pair(kv_pair, z_move(k), z_move(v));
+        z_bytes_encode_from_pair(kv_pair, z_move(k), z_move(v));
         kvs->current_idx++;
     }
 };

@@ -251,7 +251,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_string_copy(
 /// Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_pair(
+pub extern "C" fn z_bytes_encode_from_pair(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     first: &mut z_owned_bytes_t,
     second: &mut z_owned_bytes_t,
