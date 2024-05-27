@@ -135,9 +135,13 @@ Functions
 .. doxygenfunction:: z_bytes_encode_from_slice
 .. doxygenfunction:: z_bytes_encode_from_string
 .. doxygenfunction:: z_bytes_encode_from_slice_map
+.. doxygenfunction:: z_bytes_encode_from_iter
+.. doxygenfunction:: z_bytes_encode_from_pair
 .. doxygenfunction:: z_bytes_decode_into_slice
 .. doxygenfunction:: z_bytes_decode_into_string
 .. doxygenfunction:: z_bytes_decode_into_slice_map
+.. doxygenfunction:: z_bytes_decode_into_iter
+.. doxygenfunction:: z_bytes_decode_into_pair
 
 .. doxygenfunction:: z_bytes_clone
 .. doxygenfunction:: z_bytes_loan

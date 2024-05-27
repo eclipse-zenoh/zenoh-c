@@ -17,11 +17,18 @@
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-bool attachment_map_reader(const z_loaned_slice_t* key, const z_loaned_slice_t* val, void *ctx) {
-    printf("   attachment: %.*s: '%.*s'\n", (int)z_slice_len(key), z_slice_data(key),
-        (int)z_slice_len(val), z_slice_data(val)
+z_error_t attachment_reader(const z_loaned_bytes_t* key_value, void *context) {
+    z_owned_bytes_t k, v;
+    z_owned_str_t key, value;
+    z_bytes_decode_into_pair(key_value, &k, &v);
+
+    z_bytes_decode_into_string(z_loan(k), &key);
+    z_bytes_decode_into_string(z_loan(v), &value);
+
+    printf("   attachment: %.*s: '%.*s'\n", (int)z_str_len(z_loan(key)), z_str_data(z_loan(key)),
+        (int)z_str_len(z_loan(value)), z_str_data(z_loan(value))
     );
-    return false;
+    return 0;
 }
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
@@ -40,19 +47,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     // checks if attachment exists
     if (attachment != NULL) {
         // reads full attachment
-        z_owned_slice_map_t attachment_map;
-        z_bytes_decode_into_slice_map(attachment, &attachment_map);
-
-        z_slice_map_iterate(z_loan(attachment_map), attachment_map_reader, NULL);
-
-        // reads particular attachment item
-        z_view_slice_t attachment_key;
-        z_view_slice_from_str(&attachment_key, "index");
-        const z_loaned_slice_t* index = z_slice_map_get(z_loan(attachment_map), z_loan(attachment_key));
-        if (index != NULL) {
-            printf("   message number: %.*s\n", (int)z_slice_len(index), z_slice_data(index));
-        }
-        z_drop(z_move(attachment_map));
+        z_bytes_decode_into_iter(attachment, attachment_reader, NULL);
     }
     z_drop(z_move(payload_string));
 }

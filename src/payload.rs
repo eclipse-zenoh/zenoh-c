@@ -1,4 +1,4 @@
-use crate::errors::{self, z_error_t};
+use crate::errors::{self, z_error_t, Z_EINVAL, Z_EPARSE, Z_OK};
 use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
@@ -10,8 +10,9 @@ use core::fmt;
 use std::any::Any;
 use std::io::{Read, Seek, SeekFrom};
 use std::mem::MaybeUninit;
+use std::os::raw::c_void;
 use std::slice::from_raw_parts_mut;
-use zenoh::buffers::{ZSlice, ZSliceBuffer};
+use zenoh::buffers::{ZBuf, ZSlice, ZSliceBuffer};
 use zenoh::bytes::{ZBytes, ZBytesReader};
 
 pub use crate::opaque_types::z_owned_bytes_t;
@@ -245,6 +246,119 @@ pub unsafe extern "C" fn z_bytes_encode_from_string_copy(
     s: *const libc::c_char,
 ) {
     z_bytes_encode_from_slice_copy(this, s as *const u8, libc::strlen(s));
+}
+
+/// Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_pair(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    first: &mut z_owned_bytes_t,
+    second: &mut z_owned_bytes_t,
+) -> z_error_t{
+    let first = match first.transmute_mut().extract() {
+        Some(z) => z,
+        None => return Z_EINVAL,
+    };
+    let second = match second.transmute_mut().extract() {
+        Some(z) => z,
+        None => return Z_EINVAL ,
+    };
+    let b = ZBytes::serialize((first, second));
+    Inplace::init(this.transmute_uninit_ptr(), Some(b));
+    return Z_OK;
+}
+
+/// Decodes into a pair of `z_owned_bytes` objects.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_pair(
+    this: &z_loaned_bytes_t,
+    first: *mut MaybeUninit<z_owned_bytes_t>,
+    second: *mut MaybeUninit<z_owned_bytes_t>,
+) -> z_error_t {
+    match this.transmute_ref().deserialize::<(ZBytes, ZBytes)>() {
+        Ok((a, b)) => {
+            Inplace::init(first.transmute_uninit_ptr(), Some(a));
+            Inplace::init(second.transmute_uninit_ptr(), Some(b));
+            return Z_OK;
+        },
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
+            return Z_EPARSE;
+        }
+    };
+}
+
+struct ZBytesInIterator {
+    body: extern "C" fn(
+        data: &mut MaybeUninit<z_owned_bytes_t>,
+        context: *mut c_void,
+    ),
+    context: *mut c_void,
+}
+
+impl Iterator for ZBytesInIterator {
+    type Item = ZBuf;
+
+    fn next(&mut self) -> Option<ZBuf> {
+        let mut data = MaybeUninit::<z_owned_bytes_t>::uninit();
+
+        (self.body)(&mut data, self.context);
+        unsafe { data.assume_init().transmute_mut().extract() }.map(|b| b.into())
+    }
+}
+
+
+
+/// Constructs payload from an iterator to `z_owned_bytes_t`.
+/// @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
+/// @param iterator_body: Iterator body function, providing data items. Returning NULL 
+/// @param context: Arbitrary context that will be passed to iterator_body.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_iter(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    iterator_body: extern "C" fn(
+        data: &mut MaybeUninit<z_owned_bytes_t>,
+        context: *mut c_void,
+    ),
+    context: *mut c_void,
+) -> z_error_t {
+    let it = ZBytesInIterator {
+        body: iterator_body,
+        context,
+    };
+
+    let b = ZBytes::from_iter(it);
+    Inplace::init(this.transmute_uninit_ptr(), Some(b));
+    return Z_OK;
+}
+
+/// Decodes payload into an iterator to `z_loaned_bytes_t`.
+/// @param this_: Data to decode.
+/// @param iterator_body: Iterator body function, that will be called on each data item. Returning non-zero value is treated as iteration loop `break`.
+/// @param context: Arbitrary context that will be passed to iterator_body.
+/// @return last value returned by iterator_body (or 0 if there are no elements in the payload).
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_iter(
+    this: &z_loaned_bytes_t,
+    iterator_body: extern "C" fn(
+        data: &z_loaned_bytes_t,
+        context: *mut c_void,
+    ) -> z_error_t,
+    context: *mut c_void,
+) -> z_error_t {
+    let mut res = Z_OK;
+    for zb in this.transmute_ref().iter::<ZBuf>() {
+        let b = ZBytes::new(zb);
+        res = iterator_body(b.transmute_handle(), context);
+        if res != Z_OK {
+            break;
+        }
+    }
+
+    return res;
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;
