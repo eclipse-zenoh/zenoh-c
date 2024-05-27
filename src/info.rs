@@ -1,4 +1,3 @@
-use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -12,11 +11,12 @@ use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 use crate::{errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_owned_closure_zid_t};
 use std::mem::MaybeUninit;
 use zenoh::config::ZenohId;
-use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::SessionDeclarations;
+use zenoh::core::Wait;
 
 pub use crate::opaque_types::z_id_t;
 decl_transmute_copy!(ZenohId, z_id_t);
@@ -36,7 +36,7 @@ impl From<[u8; 16]> for z_id_t {
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
     let session = session.transmute_ref();
-    session.info().zid().res_sync().transmute_copy()
+    session.info().zid().wait().transmute_copy()
 }
 
 /// Fetches the Zenoh IDs of all connected peers.
@@ -54,7 +54,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     let session = session.transmute_ref();
-    for id in session.info().peers_zid().res_sync() {
+    for id in session.info().peers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&closure), &id.transmute_copy());
     }
     errors::Z_OK
@@ -75,7 +75,7 @@ pub unsafe extern "C" fn z_info_routers_zid(
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     let session = session.transmute_ref();
-    for id in session.info().routers_zid().res_sync() {
+    for id in session.info().routers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&closure), &id.transmute_copy());
     }
     errors::Z_OK

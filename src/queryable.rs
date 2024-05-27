@@ -22,10 +22,10 @@ use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::SyncResolve;
 use zenoh::prelude::{Query, Queryable};
 use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
 use zenoh::value::Value;
+use zenoh::core::Wait;
 
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
@@ -170,7 +170,7 @@ pub extern "C" fn z_declare_queryable(
     }
     let queryable = builder
         .callback(move |query| z_closure_query_call(z_closure_query_loan(&closure), query.transmute_handle()))
-        .res_sync();
+        .wait();
     match queryable {
         Ok(q) => {
             Inplace::init(this, Some(q));
@@ -190,7 +190,7 @@ pub extern "C" fn z_declare_queryable(
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> errors::z_error_t {
     if let Some(qable) = this.transmute_mut().extract().take() {
-        if let Err(e) = qable.undeclare().res_sync() {
+        if let Err(e) = qable.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
         }
@@ -255,7 +255,7 @@ pub unsafe extern "C" fn z_query_reply(
         }
     }
 
-    if let Err(e) = reply.res_sync() {
+    if let Err(e) = reply.wait() {
         log::error!("{}", e);
         return errors::Z_EGENERIC;
     }
@@ -299,7 +299,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     );
     let reply = query.reply_err(value);
 
-    if let Err(e) = reply.res_sync() {
+    if let Err(e) = reply.wait() {
         log::error!("{}", e);
         return errors::Z_EGENERIC;
     }

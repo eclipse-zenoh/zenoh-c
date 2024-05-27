@@ -19,9 +19,8 @@ use crate::transmute::{
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
-use zenoh::core::ErrNo;
-use zenoh::prelude::sync::SyncResolve;
 use zenoh::session::Session;
+use zenoh::core::Wait;
 
 use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
@@ -66,7 +65,7 @@ pub extern "C" fn z_open(
             return errors::Z_EINVAL;
         }
     };
-    match zenoh::open(config).res() {
+    match zenoh::open(config).wait() {
         Ok(s) => {
             Inplace::init(this, Some(Arc::new(s)));
             errors::Z_OK
@@ -102,8 +101,11 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
             return (Arc::strong_count(&s) - 1).min(i8::MAX as usize) as i8;
         }
     };
-    match s.close().res() {
-        Err(e) => e.errno().get(),
+    match s.close().wait() {
+        Err(e) => {
+            log::error!("Error closing session: {}", e);
+            errors::Z_EGENERIC
+        },
         Ok(_) => errors::Z_OK,
     }
 }

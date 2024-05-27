@@ -21,11 +21,12 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
-use zenoh::prelude::{sync::SyncResolve, Priority};
+use zenoh::prelude::Priority;
 use zenoh::publication::CongestionControl;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
+use zenoh::core::Wait;
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]
@@ -97,7 +98,7 @@ pub extern "C" fn z_put(
         put = put.express(options.is_express);
     }
 
-    if let Err(e) = put.res_sync() {
+    if let Err(e) = put.wait() {
         log::error!("{}", e);
         errors::Z_EGENERIC
     } else {
@@ -152,7 +153,7 @@ pub extern "C" fn z_delete(
             .express(options.is_express);
     }
 
-    match del.res_sync() {
+    match del.wait() {
         Err(e) => {
             log::error!("{}", e);
             errors::Z_EGENERIC

@@ -31,11 +31,11 @@ use crate::{
     z_query_consolidation_t, z_query_target_default, z_query_target_t, zcu_locality_default,
     zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
-use zenoh::prelude::sync::SyncResolve;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::session::Session;
 use zenoh::subscriber::Reliability;
 use zenoh_ext::*;
+use zenoh::core::Wait;
 
 use crate::opaque_types::ze_loaned_querying_subscriber_t;
 use crate::opaque_types::ze_owned_querying_subscriber_t;
@@ -145,7 +145,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
         let sample = sample.transmute_handle();
         z_closure_sample_call(z_closure_sample_loan(&closure), sample);
     });
-    match sub.res() {
+    match sub.wait() {
         Ok(sub) => {
             Inplace::init(this, Some((sub, session)));
             errors::Z_OK
@@ -182,11 +182,11 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                     .consolidation(options.consolidation)
                     .timeout(std::time::Duration::from_millis(options.timeout_ms))
                     .callback(cb)
-                    .res_sync(),
-                None => session.get(selector).callback(cb).res_sync(),
+                    .wait(),
+                None => session.get(selector).callback(cb).wait(),
             }
         })
-        .res()
+        .wait()
     {
         log::debug!("{}", e);
         return errors::Z_EGENERIC;
@@ -202,7 +202,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
     this: &mut ze_owned_querying_subscriber_t,
 ) -> errors::z_error_t {
     if let Some(s) = this.transmute_mut().extract().take() {
-        if let Err(e) = s.0.close().res_sync() {
+        if let Err(e) = s.0.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
         }
