@@ -169,6 +169,8 @@ void delete_fn(void* context) {
     test_provider_context* c = (test_provider_context*)context;
     free(c->bytes);
     free(c->busy_flags);
+    c->bytes = NULL;
+    c->busy_flags = NULL;
 }
 void alloc_fn(void* context, const struct z_loaned_memory_layout_t* layout,
               struct z_owned_chunk_alloc_result_t* result) {
@@ -266,15 +268,19 @@ int run_c_provider() {
     // create provider
     z_owned_shared_memory_provider_t provider;
     z_shared_memory_provider_new(&provider, id, context, callbacks);
-
     ASSERT_CHECK(provider)
 
+    // test provider
     z_alloc_alignment_t alignment = {0};
-
     ASSERT_OK(test_provider(&provider, alignment, 1, 0));
 
+    // drop provider
     z_drop(z_move(provider));
     ASSERT_CHECK_ERR(provider);
+
+    // check that delete_fn executed
+    ASSERT_TRUE(test_context.busy_flags == NULL);
+    ASSERT_TRUE(test_context.bytes == NULL);
 
     return 0;
 }
@@ -326,24 +332,30 @@ int run_global_client_storage() {
 }
 
 int run_client_storage() {
+    // create client list
     zc_owned_shared_memory_client_list_t list;
     ASSERT_OK(zc_shared_memory_client_list_new(&list));
     ASSERT_CHECK(list);
 
+    // create POSIX SHM Client
     z_owned_shared_memory_client_t client;
     ASSERT_OK(z_posix_shared_memory_client_new(&client));
     ASSERT_CHECK(client);
 
+    // add client to the list
     ASSERT_OK(zc_shared_memory_client_list_add_client(Z_SHM_POSIX_PROTOCOL_ID, z_move(client), z_loan_mut(list)));
     ASSERT_CHECK_ERR(client);
 
+    // create client storage from the list
     z_owned_shared_memory_client_storage_t storage;
     ASSERT_OK(z_shared_memory_client_storage_new(&storage, z_loan(list), true));
     ASSERT_CHECK(storage);
 
+    // drop the client storage
     z_drop(z_move(storage));
     ASSERT_CHECK_ERR(storage);
 
+    // drop the client list
     z_drop(z_move(list));
     ASSERT_CHECK_ERR(list);
     return 0;
@@ -365,26 +377,32 @@ bool attach_fn(void* context, z_segment_id_t id, struct z_shared_memory_segment_
 }
 
 int run_c_client() {
+    // create client list
     zc_owned_shared_memory_client_list_t list;
     ASSERT_OK(zc_shared_memory_client_list_new(&list));
     ASSERT_CHECK(list);
 
+    // create C SHM Client
     zc_threadsafe_context_t context = {NULL, &delete_client_fn};
     zc_shared_memory_client_callbacks_t callbacks = {&attach_fn};
     z_owned_shared_memory_client_t client;
     ASSERT_OK(z_shared_memory_client_new(&client, context, callbacks));
     ASSERT_CHECK(client);
 
+    // add client to the list
     ASSERT_OK(zc_shared_memory_client_list_add_client(100500, z_move(client), z_loan_mut(list)));
     ASSERT_CHECK_ERR(client);
 
+    // create client storage from the list
     z_owned_shared_memory_client_storage_t storage;
     ASSERT_OK(z_shared_memory_client_storage_new(&storage, z_loan(list), true));
     ASSERT_CHECK(storage);
 
+    // drop the client storage
     z_drop(z_move(storage));
     ASSERT_CHECK_ERR(storage);
 
+    // drop the client list
     z_drop(z_move(list));
     ASSERT_CHECK_ERR(list);
     return 0;
