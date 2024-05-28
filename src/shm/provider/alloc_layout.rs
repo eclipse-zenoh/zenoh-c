@@ -15,7 +15,7 @@
 use std::mem::MaybeUninit;
 
 use crate::{
-    context::ThreadsafeContext,
+    context::{zc_threadsafe_context_t, ThreadsafeContext},
     errors::z_error_t,
     shm::protocol_implementations::posix::posix_shared_memory_provider::PosixAllocLayout,
     transmute::{
@@ -23,6 +23,7 @@ use crate::{
     },
     z_owned_buf_alloc_result_t,
 };
+use libc::c_void;
 use zenoh::shm::{
     AllocLayout, BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc,
 };
@@ -30,7 +31,7 @@ use zenoh::shm::{
 use crate::context::Context;
 
 use super::{
-    alloc_layout_impl::{alloc, alloc_layout_new},
+    alloc_layout_impl::{alloc, alloc_async, alloc_layout_new},
     shared_memory_provider::z_loaned_shared_memory_provider_t,
     shared_memory_provider_backend::DynamicSharedMemoryProviderBackend,
     types::z_alloc_alignment_t,
@@ -155,33 +156,20 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag_blocking(
     alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, layout);
 }
 
-/*
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_threadsafe_alloc_gc_defrag_async(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    layout: &'static z_loaned_alloc_layout_threadsafe_t,
+    out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    layout: &'static z_loaned_alloc_layout_t,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
         &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     ),
-) {
-    let layout = layout.transmute_ref();
-    let a = layout
-    .alloc()
-    .with_policy::<BlockOn<Defragment<GarbageCollect>>>();
-
-    let result_context: ThreadsafeContext = result_context.into();
-    //todo: this should be ported to tokio with executor argument support
-    async_std::task::spawn(async move {
-        let result = a.await;
-
-        Inplace::init(
-            (out_result as *mut MaybeUninit<z_owned_buf_alloc_result_t>).transmute_uninit_ptr(),
-            Some(result),
-        );
-
-        (result_callback)(result_context.get(), out_result);
-    });
+) -> z_error_t {
+    alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
+        out_result,
+        layout,
+        result_context,
+        result_callback,
+    )
 }
-*/

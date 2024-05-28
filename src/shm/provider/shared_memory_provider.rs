@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::atomic::AtomicPtr};
+use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::shm::{
@@ -38,7 +38,9 @@ use super::{
     shared_memory_provider_backend::{
         zc_shared_memory_provider_backend_callbacks_t, DynamicSharedMemoryProviderBackend,
     },
-    shared_memory_provider_impl::{alloc, alloc_async, available, defragment, garbage_collect, map},
+    shared_memory_provider_impl::{
+        alloc, alloc_async, available, defragment, garbage_collect, map,
+    },
     types::z_alloc_alignment_t,
 };
 
@@ -212,7 +214,7 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_blocking(
 
 #[no_mangle]
 pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_async(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &'static z_loaned_shared_memory_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -223,7 +225,6 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_async(
         *mut MaybeUninit<z_owned_buf_alloc_result_t>,
     ),
 ) -> z_error_t {
-    let out_result = AtomicPtr::new(out_result);
     alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
         out_result,
         provider,

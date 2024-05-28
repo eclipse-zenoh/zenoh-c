@@ -261,6 +261,28 @@ typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
 typedef struct z_alloc_alignment_t {
   uint8_t pow;
 } z_alloc_alignment_t;
+typedef struct zc_threadsafe_context_data_t {
+  void *ptr;
+} zc_threadsafe_context_data_t;
+/**
+ * A tread-safe droppable context.
+ * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
+ * information to each callback.
+ *
+ * This is a thread-safe context - the associated callbacks may be executed concurrently with the same
+ * zc_context_t instance. In other words, all the callbacks associated with this context data MUST be
+ * thread-safe.
+ *
+ * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted.The
+ * delete_fn is guaranteed to be executed only once at some point of time after the last associated
+ * callback call returns.
+ * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
+ * be executed.
+ */
+typedef struct zc_threadsafe_context_t {
+  struct zc_threadsafe_context_data_t context;
+  void (*delete_fn)(void*);
+} zc_threadsafe_context_t;
 /**
  * A loaned BufAllocResult
  */
@@ -1051,28 +1073,6 @@ typedef struct z_scout_options_t {
    */
   enum z_whatami_t zc_what;
 } z_scout_options_t;
-typedef struct zc_threadsafe_context_data_t {
-  void *ptr;
-} zc_threadsafe_context_data_t;
-/**
- * A tread-safe droppable context.
- * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
- * information to each callback.
- *
- * This is a thread-safe context - the associated callbacks may be executed concurrently with the same
- * zc_context_t instance. In other words, all the callbacks associated with this context data MUST be
- * thread-safe.
- *
- * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted.The
- * delete_fn is guaranteed to be executed only once at some point of time after the last associated
- * callback call returns.
- * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
- * be executed.
- */
-typedef struct zc_threadsafe_context_t {
-  struct zc_threadsafe_context_data_t context;
-  void (*delete_fn)(void*);
-} zc_threadsafe_context_t;
 /**
  * A callbacks for SharedMemorySegment
  */
@@ -1394,6 +1394,12 @@ z_error_t z_alloc_layout_new(struct z_owned_alloc_layout_t *this_,
  * Constructs Alloc Layout in its gravestone value.
  */
 ZENOHC_API void z_alloc_layout_null(struct z_owned_alloc_layout_t *this_);
+ZENOHC_API
+z_error_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(struct z_owned_buf_alloc_result_t *out_result,
+                                                          const struct z_loaned_alloc_layout_t *layout,
+                                                          struct zc_threadsafe_context_t result_context,
+                                                          void (*result_callback)(void*,
+                                                                                  struct z_owned_buf_alloc_result_t*));
 /**
  * Returns ``true`` if `this` is valid.
  */

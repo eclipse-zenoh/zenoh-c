@@ -14,7 +14,6 @@
 
 use libc::c_void;
 use std::mem::MaybeUninit;
-use std::sync::atomic::AtomicPtr;
 use zenoh::prelude::*;
 use zenoh::shm::{AllocPolicy, AsyncAllocPolicy, SharedMemoryProvider};
 
@@ -58,7 +57,7 @@ pub(crate) fn alloc<Policy: AllocPolicy>(
 }
 
 pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
-    out_result: AtomicPtr<MaybeUninit<z_owned_buf_alloc_result_t>>,
+    out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &'static z_loaned_shared_memory_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -134,12 +133,8 @@ pub(crate) fn garbage_collect(provider: &z_loaned_shared_memory_provider_t) {
 
 pub(crate) fn available(provider: &z_loaned_shared_memory_provider_t) -> usize {
     match provider.transmute_ref() {
-        super::shared_memory_provider::CSHMProvider::Posix(provider) => {
-            provider.available()
-        }
-        super::shared_memory_provider::CSHMProvider::Dynamic(provider) => {
-            provider.available()
-        }
+        super::shared_memory_provider::CSHMProvider::Posix(provider) => provider.available(),
+        super::shared_memory_provider::CSHMProvider::Dynamic(provider) => provider.available(),
         super::shared_memory_provider::CSHMProvider::DynamicThreadsafe(provider) => {
             provider.available()
         }
@@ -198,7 +193,7 @@ pub(crate) fn alloc_async_impl<
     TProtocolID: ProtocolIDSource,
     TBackend: SharedMemoryProviderBackend + Send + Sync,
 >(
-    out_result: AtomicPtr<MaybeUninit<z_owned_buf_alloc_result_t>>,
+    out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &'static SharedMemoryProvider<TProtocolID, TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -211,17 +206,15 @@ pub(crate) fn alloc_async_impl<
 ) {
     //todo: this should be ported to tokio with executor argument support
     async_std::task::spawn(async move {
-        // todo: fix compilation error!
-
-        //let result = provider
-        //    .alloc(size)
-        //    .with_alignment(alignment.into())
-        //    .with_policy::<Policy>()
-        //    .await;
-        //
-        //let error = parse_result(out_result.into_inner(), result);
-        //
-        //unsafe { (result_callback)(result_context.get(), error, out_result.into_inner()); }
+        let result = provider
+            .alloc(size)
+            .with_alignment(alignment.transmute_copy())
+            .with_policy::<Policy>()
+            .await;
+        let error = parse_result(out_result, result);
+        unsafe {
+            (result_callback)(result_context.get(), error, out_result);
+        }
     });
 }
 
