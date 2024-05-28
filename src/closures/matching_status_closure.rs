@@ -2,7 +2,10 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 
-use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, zcu_matching_status_t};
+use crate::{
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    zcu_matching_status_t,
+};
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -27,7 +30,10 @@ pub struct zcu_loaned_closure_matching_status_t {
     _0: [usize; 3],
 }
 
-decl_transmute_handle!(zcu_owned_closure_matching_status_t, zcu_loaned_closure_matching_status_t);
+decl_transmute_handle!(
+    zcu_owned_closure_matching_status_t,
+    zcu_loaned_closure_matching_status_t
+);
 
 impl zcu_owned_closure_matching_status_t {
     pub fn empty() -> Self {
@@ -112,6 +118,8 @@ impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_statu
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn zcu_closure_matching_status_loan(closure: &zcu_owned_closure_matching_status_t) -> &zcu_loaned_closure_matching_status_t {
+pub extern "C" fn zcu_closure_matching_status_loan(
+    closure: &zcu_owned_closure_matching_status_t,
+) -> &zcu_loaned_closure_matching_status_t {
     closure.transmute_handle()
 }

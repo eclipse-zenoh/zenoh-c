@@ -1,6 +1,9 @@
 use std::mem::MaybeUninit;
 
-use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_loaned_hello_t};
+use crate::{
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    z_loaned_hello_t,
+};
 use libc::c_void;
 
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -106,6 +109,8 @@ pub extern "C" fn z_closure_hello_check(this: &z_owned_closure_hello_t) -> bool 
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn z_closure_hello_loan(closure: &z_owned_closure_hello_t) -> &z_loaned_closure_hello_t {
+pub extern "C" fn z_closure_hello_loan(
+    closure: &z_owned_closure_hello_t,
+) -> &z_loaned_closure_hello_t {
     closure.transmute_handle()
 }

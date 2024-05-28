@@ -1,5 +1,7 @@
 use crate::{
-    transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_closure_query_drop, z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t, z_query_clone, z_query_null
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    z_closure_query_drop, z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
+    z_query_clone, z_query_null,
 };
 use libc::c_void;
 use std::{
@@ -33,7 +35,10 @@ pub struct z_loaned_query_channel_closure_t {
     _0: [usize; 3],
 }
 
-decl_transmute_handle!(z_owned_query_channel_closure_t, z_loaned_query_channel_closure_t);
+decl_transmute_handle!(
+    z_owned_query_channel_closure_t,
+    z_loaned_query_channel_closure_t
+);
 
 /// A pair of send / receive ends of channel.
 #[repr(C)]
@@ -246,6 +251,8 @@ impl<F: Fn(*mut MaybeUninit<z_owned_query_t>) -> bool> From<F> for z_owned_query
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn z_query_channel_closure_loan(closure: &z_owned_query_channel_closure_t) -> &z_loaned_query_channel_closure_t {
+pub extern "C" fn z_query_channel_closure_loan(
+    closure: &z_owned_query_channel_closure_t,
+) -> &z_loaned_query_channel_closure_t {
     closure.transmute_handle()
 }

@@ -313,14 +313,14 @@ pub extern "C" fn z_bytes_encode_from_pair(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     first: &mut z_owned_bytes_t,
     second: &mut z_owned_bytes_t,
-) -> z_error_t{
+) -> z_error_t {
     let first = match first.transmute_mut().extract() {
         Some(z) => z,
         None => return Z_EINVAL,
     };
     let second = match second.transmute_mut().extract() {
         Some(z) => z,
-        None => return Z_EINVAL ,
+        None => return Z_EINVAL,
     };
     let b = ZBytes::serialize((first, second));
     Inplace::init(this.transmute_uninit_ptr(), Some(b));
@@ -340,7 +340,7 @@ pub extern "C" fn z_bytes_decode_into_pair(
             Inplace::init(first.transmute_uninit_ptr(), Some(a));
             Inplace::init(second.transmute_uninit_ptr(), Some(b));
             Z_OK
-        },
+        }
         Err(e) => {
             log::error!("Failed to decode the payload: {}", e);
             Z_EPARSE
@@ -349,10 +349,7 @@ pub extern "C" fn z_bytes_decode_into_pair(
 }
 
 struct ZBytesInIterator {
-    body: extern "C" fn(
-        data: &mut MaybeUninit<z_owned_bytes_t>,
-        context: *mut c_void,
-    ),
+    body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void),
     context: *mut c_void,
 }
 
@@ -367,20 +364,15 @@ impl Iterator for ZBytesInIterator {
     }
 }
 
-
-
 /// Constructs payload from an iterator to `z_owned_bytes_t`.
 /// @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
-/// @param iterator_body: Iterator body function, providing data items. Returning NULL 
+/// @param iterator_body: Iterator body function, providing data items. Returning NULL
 /// @param context: Arbitrary context that will be passed to iterator_body.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_bytes_encode_from_iter(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    iterator_body: extern "C" fn(
-        data: &mut MaybeUninit<z_owned_bytes_t>,
-        context: *mut c_void,
-    ),
+    iterator_body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void),
     context: *mut c_void,
 ) -> z_error_t {
     let it = ZBytesInIterator {
@@ -401,10 +393,7 @@ pub extern "C" fn z_bytes_encode_from_iter(
 #[no_mangle]
 pub extern "C" fn z_bytes_decode_into_iter(
     this: &z_loaned_bytes_t,
-    iterator_body: extern "C" fn(
-        data: &z_loaned_bytes_t,
-        context: *mut c_void,
-    ) -> z_error_t,
+    iterator_body: extern "C" fn(data: &z_loaned_bytes_t, context: *mut c_void) -> z_error_t,
     context: *mut c_void,
 ) -> z_error_t {
     let mut res = Z_OK;

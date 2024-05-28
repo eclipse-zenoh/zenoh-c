@@ -1,6 +1,9 @@
 use std::mem::MaybeUninit;
 
-use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_loaned_sample_t};
+use crate::{
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    z_loaned_sample_t,
+};
 use libc::c_void;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
 ///
@@ -104,6 +107,8 @@ impl<F: Fn(&z_loaned_sample_t)> From<F> for z_owned_closure_sample_t {
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn z_closure_sample_loan(closure: &z_owned_closure_sample_t) -> &z_loaned_closure_sample_t {
+pub extern "C" fn z_closure_sample_loan(
+    closure: &z_owned_closure_sample_t,
+) -> &z_loaned_closure_sample_t {
     closure.transmute_handle()
 }

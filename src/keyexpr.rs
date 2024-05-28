@@ -27,11 +27,11 @@ use crate::z_view_str_from_substring;
 use crate::z_view_str_t;
 use libc::c_char;
 use std::error::Error;
+use zenoh::core::Wait;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::prelude::keyexpr;
 use zenoh::prelude::KeyExpr;
 use zenoh_protocol::core::key_expr::canon::Canonizable;
-use zenoh::core::Wait;
 
 pub use crate::opaque_types::z_owned_keyexpr_t;
 pub use crate::opaque_types::z_view_keyexpr_t;
