@@ -227,17 +227,17 @@ typedef struct ALIGN(8) z_loaned_slice_map_t {
   uint8_t _0[48];
 } z_loaned_slice_map_t;
 /**
+ * An iterator over multi-element serialized data
+ */
+typedef struct ALIGN(8) z_bytes_iterator_t {
+  uint8_t _0[24];
+} z_bytes_iterator_t;
+/**
  * A reader for serialized data.
  */
-typedef struct ALIGN(8) z_owned_bytes_reader_t {
+typedef struct ALIGN(8) z_bytes_reader_t {
   uint8_t _0[24];
-} z_owned_bytes_reader_t;
-/**
- * A loaned reader for serialized data.
- */
-typedef struct ALIGN(8) z_loaned_bytes_reader_t {
-  uint8_t _0[24];
-} z_loaned_bytes_reader_t;
+} z_bytes_reader_t;
 /**
  * Monotonic clock
  */
@@ -1073,18 +1073,6 @@ ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *this_);
  */
 ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *this_, struct z_owned_bytes_t *dst);
 /**
- * Decodes payload into an iterator to `z_loaned_bytes_t`.
- * @param this_: Data to decode.
- * @param iterator_body: Iterator body function, that will be called on each data item. Returning non-zero value is treated as iteration loop `break`.
- * @param context: Arbitrary context that will be passed to iterator_body.
- * @return last value returned by iterator_body (or 0 if there are no elements in the payload).
- */
-ZENOHC_API
-z_error_t z_bytes_decode_into_iter(const struct z_loaned_bytes_t *this_,
-                                   z_error_t (*iterator_body)(const struct z_loaned_bytes_t *data,
-                                                              void *context),
-                                   void *context);
-/**
  * Decodes into a pair of `z_owned_bytes` objects.
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -1178,6 +1166,33 @@ ZENOHC_API void z_bytes_encode_from_string(struct z_owned_bytes_t *this_, const 
  */
 ZENOHC_API void z_bytes_encode_from_string_copy(struct z_owned_bytes_t *this_, const char *s);
 /**
+ * Returns an iterator for multi-piece serialized data.
+ *
+ * The `data` should outlive the iterator.
+ */
+ZENOHC_API struct z_bytes_iterator_t z_bytes_get_iterator(const struct z_loaned_bytes_t *data);
+/**
+ * Returns a reader for the data.
+ *
+ * The `data` should outlive the reader.
+ */
+ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_bytes_t *data);
+/**
+ * Returns an iterator for multi-piece serialized data.
+ * @param this_: Data to decode.
+ */
+ZENOHC_API
+z_error_t z_bytes_iter(const struct z_loaned_bytes_t *this_,
+                       z_error_t (*iterator_body)(const struct z_loaned_bytes_t *data, void *context),
+                       void *context);
+/**
+ * Constructs `z_owned_bytes` object corresponding to the next element of encoded data.
+ *
+ * Will construct `z_owned_bytes` when iterator reaches the end.
+ * @return ``false`` when iterator reaches the end,  ``true`` otherwise
+ */
+ZENOHC_API bool z_bytes_iterator_next(struct z_bytes_iterator_t *iter, struct z_owned_bytes_t *out);
+/**
  * Returns total number of bytes in the payload.
  */
 ZENOHC_API size_t z_bytes_len(const struct z_loaned_bytes_t *this_);
@@ -1190,36 +1205,6 @@ ZENOHC_API const struct z_loaned_bytes_t *z_bytes_loan(const struct z_owned_byte
  */
 ZENOHC_API void z_bytes_null(struct z_owned_bytes_t *this_);
 /**
- * Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
- */
-ZENOHC_API bool z_bytes_reader_check(const struct z_owned_bytes_reader_t *this_);
-/**
- * Frees memory and resets data reader to its gravestone state.
- */
-ZENOHC_API void z_bytes_reader_drop(struct z_owned_bytes_reader_t *this_);
-/**
- * Borrows data reader.
- */
-ZENOHC_API
-const struct z_loaned_bytes_reader_t *z_bytes_reader_loan(const struct z_owned_bytes_reader_t *reader);
-/**
- * Mutably borrows data reader.
- */
-ZENOHC_API
-struct z_loaned_bytes_reader_t *z_bytes_reader_loan_mut(struct z_owned_bytes_reader_t *reader);
-/**
- * Creates a reader for the specified data.
- *
- * The `data` should outlive the reader.
- */
-ZENOHC_API
-void z_bytes_reader_new(struct z_owned_bytes_reader_t *this_,
-                        const struct z_loaned_bytes_t *data);
-/**
- * Constructs data reader in a gravestone state.
- */
-ZENOHC_API void z_bytes_reader_null(struct z_owned_bytes_reader_t *this_);
-/**
  * Reads data into specified destination.
  *
  * @param this_: Data reader to read from.
@@ -1228,7 +1213,7 @@ ZENOHC_API void z_bytes_reader_null(struct z_owned_bytes_reader_t *this_);
  * @return number of bytes read. If return value is smaller than `len`, it means that  theend of the data was reached.
  */
 ZENOHC_API
-size_t z_bytes_reader_read(struct z_loaned_bytes_reader_t *this_,
+size_t z_bytes_reader_read(struct z_bytes_reader_t *this_,
                            uint8_t *dst,
                            size_t len);
 /**
@@ -1238,14 +1223,14 @@ size_t z_bytes_reader_read(struct z_loaned_bytes_reader_t *this_,
  * Return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_bytes_reader_seek(struct z_loaned_bytes_reader_t *this_,
+z_error_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
                               int64_t offset,
                               int origin);
 /**
  * Gets the read position indicator.
  * @return read position indicator on success or -1L if failure occurs.
  */
-ZENOHC_API int64_t z_bytes_reader_tell(struct z_loaned_bytes_reader_t *this_);
+ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
 /**
  * Get number of milliseconds passed since creation of `time`.
  */

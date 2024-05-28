@@ -126,8 +126,8 @@ Types
 ^^^^^
 .. doxygenstruct:: z_owned_bytes_t
 .. doxygenstruct:: z_loaned_bytes_t
-.. doxygenstruct:: z_owned_bytes_reader_t
-.. doxygenstruct:: z_loaned_bytes_reader_t
+.. doxygenstruct:: z_bytes_iterator_t
+.. doxygenstruct:: z_bytes_reader_t
 
 Functions
 ^^^^^^^^^
@@ -149,15 +149,14 @@ Functions
 .. doxygenfunction:: z_bytes_check
 .. doxygenfunction:: z_bytes_drop
 
+.. doxygenfunction:: z_bytes_get_reader
 .. doxygenfunction:: z_bytes_reader_read
 .. doxygenfunction:: z_bytes_reader_seek
 .. doxygenfunction:: z_bytes_reader_tell
 
-.. doxygenfunction:: z_bytes_reader_loan
-.. doxygenfunction:: z_bytes_reader_loan_mut
-.. doxygenfunction:: z_bytes_reader_null
-.. doxygenfunction:: z_bytes_reader_check
-.. doxygenfunction:: z_bytes_reader_drop
+.. doxygenfunction:: z_bytes_get_iterator
+.. doxygenfunction:: z_bytes_iterator_next
+
 
 
 Key expression

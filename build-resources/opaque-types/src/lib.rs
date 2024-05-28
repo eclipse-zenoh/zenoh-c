@@ -4,6 +4,8 @@ use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 use std::thread::JoinHandle;
+use zenoh::buffers::ZBuf;
+use zenoh::bytes::ZBytesIterator;
 use zenoh::config::Config;
 use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
@@ -85,9 +87,10 @@ get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
 get_opaque_type_data!(Sample, z_loaned_sample_t);
 
 /// A reader for serialized data.
-get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
-/// A loaned reader for serialized data.
-get_opaque_type_data!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
+get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
+
+/// An iterator over multi-element serialized data
+get_opaque_type_data!(ZBytesIterator<'static, ZBuf>, z_bytes_iterator_t);
 
 /// The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
