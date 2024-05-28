@@ -1418,6 +1418,26 @@ ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *this_);
  */
 ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *this_, struct z_owned_bytes_t *dst);
 /**
+ * Decodes payload into an iterator to `z_loaned_bytes_t`.
+ * @param this_: Data to decode.
+ * @param iterator_body: Iterator body function, that will be called on each data item. Returning non-zero value is treated as iteration loop `break`.
+ * @param context: Arbitrary context that will be passed to iterator_body.
+ * @return last value returned by iterator_body (or 0 if there are no elements in the payload).
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_iter(const struct z_loaned_bytes_t *this_,
+                                   z_error_t (*iterator_body)(const struct z_loaned_bytes_t *data,
+                                                              void *context),
+                                   void *context);
+/**
+ * Decodes into a pair of `z_owned_bytes` objects.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_pair(const struct z_loaned_bytes_t *this_,
+                                   struct z_owned_bytes_t *first,
+                                   struct z_owned_bytes_t *second);
+/**
  * Decodes data into an owned slice.
  *
  * @param this_: Data to decode.
@@ -1449,6 +1469,25 @@ z_error_t z_bytes_decode_into_string(const struct z_loaned_bytes_t *this_,
  * created by `z_bytes_clone()`, they would still stay valid.
  */
 ZENOHC_API void z_bytes_drop(struct z_owned_bytes_t *this_);
+/**
+ * Constructs payload from an iterator to `z_owned_bytes_t`.
+ * @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
+ * @param iterator_body: Iterator body function, providing data items. Returning NULL
+ * @param context: Arbitrary context that will be passed to iterator_body.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_encode_from_iter(struct z_owned_bytes_t *this_,
+                                   void (*iterator_body)(struct z_owned_bytes_t *data, void *context),
+                                   void *context);
+/**
+ * Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_encode_from_pair(struct z_owned_bytes_t *this_,
+                                   struct z_owned_bytes_t *first,
+                                   struct z_owned_bytes_t *second);
 /**
  * Encodes a slice by aliasing.
  */
