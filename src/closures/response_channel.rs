@@ -1,5 +1,7 @@
 use crate::{
-    transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_closure_reply_drop, z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t, z_reply_clone, z_reply_null
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    z_closure_reply_drop, z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
+    z_reply_clone, z_reply_null,
 };
 use libc::c_void;
 use std::{
@@ -31,7 +33,10 @@ pub struct z_owned_reply_channel_closure_t {
 pub struct z_loaned_reply_channel_closure_t {
     _0: [usize; 3],
 }
-decl_transmute_handle!(z_owned_reply_channel_closure_t, z_loaned_reply_channel_closure_t);
+decl_transmute_handle!(
+    z_owned_reply_channel_closure_t,
+    z_loaned_reply_channel_closure_t
+);
 
 /// A pair of send / receive ends of channel.
 #[repr(C)]
@@ -245,6 +250,8 @@ impl<F: Fn(*mut MaybeUninit<z_owned_reply_t>) -> bool> From<F> for z_owned_reply
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn z_reply_channel_closure_loan(closure: &z_owned_reply_channel_closure_t) -> &z_loaned_reply_channel_closure_t {
+pub extern "C" fn z_reply_channel_closure_loan(
+    closure: &z_owned_reply_channel_closure_t,
+) -> &z_loaned_reply_channel_closure_t {
     closure.transmute_handle()
 }

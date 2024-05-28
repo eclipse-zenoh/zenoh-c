@@ -1,6 +1,9 @@
 use std::mem::MaybeUninit;
 
-use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_loaned_reply_t};
+use crate::{
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    z_loaned_reply_t,
+};
 use libc::c_void;
 /// A structure that contains all the elements for stateful, memory-leak-free callbacks.
 ///
@@ -102,9 +105,10 @@ impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
     }
 }
 
-
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn z_closure_reply_loan(closure: &z_owned_closure_reply_t) -> &z_loaned_closure_reply_t {
+pub extern "C" fn z_closure_reply_loan(
+    closure: &z_owned_closure_reply_t,
+) -> &z_loaned_closure_reply_t {
     closure.transmute_handle()
 }

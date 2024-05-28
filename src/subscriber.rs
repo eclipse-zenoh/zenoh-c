@@ -26,10 +26,10 @@ use crate::z_closure_sample_call;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_session_t;
 use crate::z_owned_closure_sample_t;
+use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::subscriber::Reliability;
 use zenoh::subscriber::Subscriber;
-use zenoh::core::Wait;
 
 /// The subscription reliability.
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]

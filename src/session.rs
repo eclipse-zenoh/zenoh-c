@@ -19,8 +19,8 @@ use crate::transmute::{
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
-use zenoh::session::Session;
 use zenoh::core::Wait;
+use zenoh::session::Session;
 
 use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
@@ -105,7 +105,7 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
         Err(e) => {
             log::error!("Error closing session: {}", e);
             errors::Z_EGENERIC
-        },
+        }
         Ok(_) => errors::Z_OK,
     }
 }

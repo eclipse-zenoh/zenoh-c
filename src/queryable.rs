@@ -16,16 +16,18 @@ use crate::transmute::{
     TransmuteUninitPtr,
 };
 use crate::{
-    errors, z_closure_query_call, z_closure_query_loan, z_loaned_bytes_t, z_loaned_keyexpr_t, z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t, z_owned_encoding_t, z_view_str_from_substring, z_view_str_t
+    errors, z_closure_query_call, z_closure_query_loan, z_loaned_bytes_t, z_loaned_keyexpr_t,
+    z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t,
+    z_owned_encoding_t, z_view_str_from_substring, z_view_str_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
+use zenoh::core::Wait;
 use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::prelude::{Query, Queryable};
 use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
 use zenoh::value::Value;
-use zenoh::core::Wait;
 
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
@@ -169,7 +171,9 @@ pub extern "C" fn z_declare_queryable(
         builder = builder.complete(options.complete);
     }
     let queryable = builder
-        .callback(move |query| z_closure_query_call(z_closure_query_loan(&closure), query.transmute_handle()))
+        .callback(move |query| {
+            z_closure_query_call(z_closure_query_loan(&closure), query.transmute_handle())
+        })
         .wait();
     match queryable {
         Ok(q) => {
@@ -218,7 +222,7 @@ pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
 /// be called multiple times to send multiple replies to a query. The reply
 /// will be considered complete when the Queryable callback returns.
 ///
-/// @param query: The query to reply to.
+/// @param this_: The query to reply to.
 /// @param key_expr: The key of this reply.
 /// @param payload: The payload of this reply. Will be consumed.
 /// @param options: The options of this reply. All owned fields will be consumed.
@@ -227,12 +231,12 @@ pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply(
-    query: &z_loaned_query_t,
+    this: &z_loaned_query_t,
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_options_t>,
 ) -> errors::z_error_t {
-    let query = query.transmute_ref();
+    let query = this.transmute_ref();
     let key_expr = key_expr.transmute_ref();
 
     let payload = match payload.transmute_mut().extract() {
@@ -269,7 +273,7 @@ pub unsafe extern "C" fn z_query_reply(
 /// be called multiple times to send multiple replies to a query. The reply
 /// will be considered complete when the Queryable callback returns.
 ///
-/// @param query: The query to reply to.
+/// @param this_: The query to reply to.
 /// @param payload: The payload carrying error message. Will be consumed.
 /// @param options: The options of this reply. All owned fields will be consumed.
 ///
@@ -277,11 +281,11 @@ pub unsafe extern "C" fn z_query_reply(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply_err(
-    query: &z_loaned_query_t,
+    this: &z_loaned_query_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_err_options_t>,
 ) -> errors::z_error_t {
-    let query = query.transmute_ref();
+    let query = this.transmute_ref();
 
     let payload = match payload.transmute_mut().extract() {
         Some(p) => p,
@@ -309,18 +313,18 @@ pub unsafe extern "C" fn z_query_reply_err(
 /// Gets query key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_keyexpr(query: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
-    query.transmute_ref().key_expr().transmute_handle()
+pub extern "C" fn z_query_keyexpr(this: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
+    this.transmute_ref().key_expr().transmute_handle()
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_query_parameters(
-    query: &z_loaned_query_t,
+    this: &z_loaned_query_t,
     parameters: *mut MaybeUninit<z_view_str_t>,
 ) {
-    let query = query.transmute_ref();
+    let query = this.transmute_ref();
     let params = query.parameters().as_str();
     unsafe { z_view_str_from_substring(parameters, params.as_ptr() as _, params.len()) };
 }
@@ -329,17 +333,16 @@ pub unsafe extern "C" fn z_query_parameters(
 ///
 /// Returns NULL if query does not contain a value.
 #[no_mangle]
-pub extern "C" fn z_query_value(query: &z_loaned_query_t) -> Option<&z_loaned_value_t> {
-    query.transmute_ref().value().map(|v| v.transmute_handle())
+pub extern "C" fn z_query_value(this: &z_loaned_query_t) -> Option<&z_loaned_value_t> {
+    this.transmute_ref().value().map(|v| v.transmute_handle())
 }
 
 /// Gets query attachment.
 ///
 /// Returns NULL if query does not contain an attachment.
 #[no_mangle]
-pub extern "C" fn z_query_attachment(query: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
-    query
-        .transmute_ref()
+pub extern "C" fn z_query_attachment(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
+    this.transmute_ref()
         .attachment()
         .map(|a| a.transmute_handle())
 }

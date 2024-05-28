@@ -40,7 +40,7 @@ use crate::z_query_target_t;
 use crate::{
     z_closure_reply_call, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t,
 };
-use::zenoh::core::Wait;
+use ::zenoh::core::Wait;
 
 pub use crate::opaque_types::z_owned_reply_t;
 decl_transmute_owned!(Option<Reply>, z_owned_reply_t);
@@ -175,8 +175,9 @@ pub unsafe extern "C" fn z_get(
         }
     }
     match get
-        .callback(move |response|
-            z_closure_reply_call(z_closure_reply_loan(&closure), response.transmute_handle()))
+        .callback(move |response| {
+            z_closure_reply_call(z_closure_reply_loan(&closure), response.transmute_handle())
+        })
         .wait()
     {
         Ok(()) => errors::Z_OK,

@@ -12,10 +12,13 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    errors::{self, Z_OK}, transmute::{
+    errors::{self, Z_OK},
+    transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
         TransmuteRef, TransmuteUninitPtr,
-    }, z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t, z_owned_str_array_t, z_view_str_t, zc_init_logger, CSlice, ZVector
+    },
+    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
+    z_owned_str_array_t, z_view_str_t, zc_init_logger, CSlice, ZVector,
 };
 use async_std::task;
 use libc::c_ulong;
@@ -165,7 +168,9 @@ pub extern "C" fn z_scout(
 
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
-            .callback(move |h| z_closure_hello_call(z_closure_hello_loan(&closure), h.transmute_handle()))
+            .callback(move |h| {
+                z_closure_hello_call(z_closure_hello_loan(&closure), h.transmute_handle())
+            })
             .await
             .unwrap();
         async_std::task::sleep(std::time::Duration::from_millis(timeout)).await;

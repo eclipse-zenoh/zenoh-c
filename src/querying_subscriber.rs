@@ -31,11 +31,11 @@ use crate::{
     z_query_consolidation_t, z_query_target_default, z_query_target_t, zcu_locality_default,
     zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
+use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::session::Session;
 use zenoh::subscriber::Reliability;
 use zenoh_ext::*;
-use zenoh::core::Wait;
 
 use crate::opaque_types::ze_loaned_querying_subscriber_t;
 use crate::opaque_types::ze_owned_querying_subscriber_t;

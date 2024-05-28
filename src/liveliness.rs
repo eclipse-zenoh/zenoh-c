@@ -19,13 +19,13 @@ use zenoh::{
 };
 
 use crate::transmute::TransmuteIntoHandle;
-use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use crate::{
     errors,
     transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr},
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
+use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use zenoh::core::Wait;
 
 use crate::opaque_types::zc_loaned_liveliness_token_t;
@@ -202,9 +202,9 @@ pub extern "C" fn zc_liveliness_get(
     let key_expr = key_expr.transmute_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
     let liveliness: Liveliness<'static> = session.liveliness();
-    let mut builder = liveliness
-        .get(key_expr)
-        .callback(move |response| z_closure_reply_call(z_closure_reply_loan(&callback), response.transmute_handle()));
+    let mut builder = liveliness.get(key_expr).callback(move |response| {
+        z_closure_reply_call(z_closure_reply_loan(&callback), response.transmute_handle())
+    });
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
     }

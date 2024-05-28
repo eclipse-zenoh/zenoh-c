@@ -1960,7 +1960,7 @@ ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
  *
  * Returns NULL if query does not contain an attachment.
  */
-ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *query);
+ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *this_);
 /**
  * Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
  */
@@ -2048,7 +2048,7 @@ ZENOHC_API void z_query_drop(struct z_owned_query_t *this_);
 /**
  * Gets query key expression.
  */
-ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loaned_query_t *query);
+ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loaned_query_t *this_);
 /**
  * Borrows the query.
  */
@@ -2061,7 +2061,7 @@ ZENOHC_API void z_query_null(struct z_owned_query_t *this_);
  * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
  */
 ZENOHC_API
-void z_query_parameters(const struct z_loaned_query_t *query,
+void z_query_parameters(const struct z_loaned_query_t *this_,
                         struct z_view_str_t *parameters);
 /**
  * Sends a reply to a query.
@@ -2071,7 +2071,7 @@ void z_query_parameters(const struct z_loaned_query_t *query,
  * be called multiple times to send multiple replies to a query. The reply
  * will be considered complete when the Queryable callback returns.
  *
- * @param query: The query to reply to.
+ * @param this_: The query to reply to.
  * @param key_expr: The key of this reply.
  * @param payload: The payload of this reply. Will be consumed.
  * @param options: The options of this reply. All owned fields will be consumed.
@@ -2079,7 +2079,7 @@ void z_query_parameters(const struct z_loaned_query_t *query,
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_query_reply(const struct z_loaned_query_t *query,
+z_error_t z_query_reply(const struct z_loaned_query_t *this_,
                         const struct z_loaned_keyexpr_t *key_expr,
                         struct z_owned_bytes_t *payload,
                         struct z_query_reply_options_t *options);
@@ -2091,14 +2091,14 @@ z_error_t z_query_reply(const struct z_loaned_query_t *query,
  * be called multiple times to send multiple replies to a query. The reply
  * will be considered complete when the Queryable callback returns.
  *
- * @param query: The query to reply to.
+ * @param this_: The query to reply to.
  * @param payload: The payload carrying error message. Will be consumed.
  * @param options: The options of this reply. All owned fields will be consumed.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_query_reply_err(const struct z_loaned_query_t *query,
+z_error_t z_query_reply_err(const struct z_loaned_query_t *this_,
                             struct z_owned_bytes_t *payload,
                             struct z_query_reply_err_options_t *options);
 /**
@@ -2119,7 +2119,7 @@ ZENOHC_API enum z_query_target_t z_query_target_default(void);
  * Returns NULL if query does not contain a value.
  */
 ZENOHC_API
-const struct z_loaned_value_t *z_query_value(const struct z_loaned_query_t *query);
+const struct z_loaned_value_t *z_query_value(const struct z_loaned_query_t *this_);
 /**
  * Returns ``true`` if queryable is valid, ``false`` otherwise.
  */

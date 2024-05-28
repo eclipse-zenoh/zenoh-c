@@ -2,7 +2,10 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 
-use crate::{transmute::{TransmuteFromHandle, TransmuteIntoHandle}, z_id_t};
+use crate::{
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    z_id_t,
+};
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.

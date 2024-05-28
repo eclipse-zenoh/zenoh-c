@@ -881,7 +881,9 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
 
     file_out.write_all("\n\n".as_bytes()).unwrap();
-    let out = generate_generic_loan_to_owned_type_cpp(&vec![type_name_to_loan_func, type_name_to_loan_mut_func].concat());
+    let out = generate_generic_loan_to_owned_type_cpp(
+        &[type_name_to_loan_func, type_name_to_loan_mut_func].concat(),
+    );
     file_out.write_all(out.as_bytes()).unwrap();
 
     file_out
@@ -1194,7 +1196,12 @@ pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String 
     for func in macro_func {
         let return_type = &func.return_type.typename;
         let closure_name = &func.args[0].name;
-        let closure_type = func.args[0].typename.clone().without_cv().typename.replace("loaned", "owned");
+        let closure_type = func.args[0]
+            .typename
+            .clone()
+            .without_cv()
+            .typename
+            .replace("loaned", "owned");
         let arg_type = &func.args[1].typename.typename;
         out += "\n";
         out += &format!(
