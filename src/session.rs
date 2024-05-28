@@ -19,8 +19,11 @@ use crate::transmute::{
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
-use zenoh::session::Session;
 use zenoh::core::Wait;
+use zenoh::session::Session;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use crate::z_loaned_shared_memory_client_storage_t;
 
 use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
@@ -78,6 +81,45 @@ pub extern "C" fn z_open(
     }
 }
 
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Constructs and opens a new Zenoh session with specified client storage.
+///
+/// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub extern "C" fn z_open_with_custom_shm_clients(
+    this: *mut MaybeUninit<z_owned_session_t>,
+    config: &mut z_owned_config_t,
+    shm_clients: &z_loaned_shared_memory_client_storage_t,
+) -> errors::z_error_t {
+    let this = this.transmute_uninit_ptr();
+    if cfg!(feature = "logger-autoinit") {
+        zc_init_logger();
+    }
+    let config = match config.transmute_mut().extract() {
+        Some(c) => c,
+        None => {
+            log::error!("Config not provided");
+            Inplace::empty(this);
+            return errors::Z_EINVAL;
+        }
+    };
+    match zenoh::open(config)
+        .with_shm_clients(shm_clients.transmute_ref().clone())
+        .wait()
+    {
+        Ok(s) => {
+            Inplace::init(this, Some(Arc::new(s)));
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("Error opening session: {}", e);
+            Inplace::empty(this);
+            errors::Z_ENETWORK
+        }
+    }
+}
+
 /// Returns ``true`` if `session` is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -105,7 +147,7 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
         Err(e) => {
             log::error!("Error closing session: {}", e);
             errors::Z_EGENERIC
-        },
+        }
         Ok(_) => errors::Z_OK,
     }
 }

@@ -254,6 +254,8 @@ get_opaque_type_data!(Vec<(ProtocolID, Arc<dyn SharedMemoryClient>)>, zc_loaned_
 
 /// An owned SHM Client Storage
 get_opaque_type_data!(Option<Arc<SharedMemoryClientStorage>>, z_owned_shared_memory_client_storage_t);
+/// A loaned SHM Client Storage
+get_opaque_type_data!(Arc<SharedMemoryClientStorage>, z_loaned_shared_memory_client_storage_t);
 
 /// An owned MemoryLayout
 get_opaque_type_data!(Option<MemoryLayout>, z_owned_memory_layout_t);

@@ -62,7 +62,7 @@ mod querying_subscriber;
 pub use platform::*;
 pub use querying_subscriber::*;
 pub mod platform;
-//#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod context;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;

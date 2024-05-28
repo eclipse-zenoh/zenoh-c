@@ -18,7 +18,8 @@ use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
     transmute::{
-        unwrap_ref_unchecked_mut, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+        unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
     },
     z_loaned_shm_mut_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
@@ -61,8 +62,21 @@ pub extern "C" fn z_shm_mut_loan_mut(this: &mut z_owned_shm_mut_t) -> &mut z_loa
     shmmut.transmute_handle_mut()
 }
 
-/// Deletes ZShm slice
+/// Deletes ZShmMut slice
 #[no_mangle]
 pub extern "C" fn z_shm_mut_drop(this: &mut z_owned_shm_mut_t) {
-    let _ = this.transmute_mut().take(); 
+    let _ = this.transmute_mut().take();
+}
+
+/// @return the length of the ZShmMut slice
+#[no_mangle]
+pub extern "C" fn z_shm_mut_len(this: &z_loaned_shm_mut_t) -> usize {
+    this.transmute_ref().len()
+}
+
+/// @return the mutable pointer of the ZShmMut slice
+#[no_mangle]
+pub extern "C" fn z_shm_mut_data_mut(this: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
+    let s = this.transmute_mut();
+    s.as_mut().as_mut_ptr()
 }

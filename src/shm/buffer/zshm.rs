@@ -112,3 +112,16 @@ pub extern "C" fn z_shm_try_reloan_mut(this: &mut z_loaned_shm_t) -> *mut z_loan
         Err(_) => std::ptr::null_mut(),
     }
 }
+
+/// @return the length of the ZShm slice
+#[no_mangle]
+pub extern "C" fn z_shm_len(this: &z_loaned_shm_t) -> usize {
+    this.transmute_ref().len()
+}
+
+/// @return the pointer of the ZShm slice
+#[no_mangle]
+pub extern "C" fn z_shm_data(this: &z_loaned_shm_t) -> *const libc::c_uchar {
+    let s = this.transmute_ref();
+    s.as_ref().as_ptr()
+}

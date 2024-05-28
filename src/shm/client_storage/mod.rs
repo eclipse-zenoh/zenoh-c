@@ -24,8 +24,9 @@ use crate::{
         unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
         TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
-    z_owned_shared_memory_client_storage_t, z_owned_shared_memory_client_t,
-    zc_loaned_shared_memory_client_list_t, zc_owned_shared_memory_client_list_t,
+    z_loaned_shared_memory_client_storage_t, z_owned_shared_memory_client_storage_t,
+    z_owned_shared_memory_client_t, zc_loaned_shared_memory_client_list_t,
+    zc_owned_shared_memory_client_list_t,
 };
 
 use super::common::types::z_protocol_id_t;
@@ -114,6 +115,11 @@ decl_transmute_owned!(
     z_owned_shared_memory_client_storage_t
 );
 
+decl_transmute_handle!(
+    Arc<SharedMemoryClientStorage>,
+    z_loaned_shared_memory_client_storage_t
+);
+
 #[no_mangle]
 pub extern "C" fn z_ref_shared_memory_client_storage_global(
     this: *mut MaybeUninit<z_owned_shared_memory_client_storage_t>,
@@ -183,4 +189,14 @@ pub extern "C" fn z_shared_memory_client_storage_drop(
     this: &mut z_owned_shared_memory_client_storage_t,
 ) {
     let _ = this.transmute_mut().take();
+}
+
+/// Borrows SHM Client Storage
+#[no_mangle]
+pub extern "C" fn z_shared_memory_client_storage_loan(
+    this: &z_owned_shared_memory_client_storage_t,
+) -> &z_loaned_shared_memory_client_storage_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
 }

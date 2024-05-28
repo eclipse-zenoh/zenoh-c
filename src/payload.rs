@@ -15,6 +15,11 @@ use std::slice::from_raw_parts_mut;
 use zenoh::buffers::{ZBuf, ZSlice, ZSliceBuffer};
 use zenoh::bytes::{ZBytes, ZBytesReader};
 
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use crate::errors::Z_ENULL;
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
+
 pub use crate::opaque_types::z_owned_bytes_t;
 decl_transmute_owned!(Option<ZBytes>, z_owned_bytes_t);
 
@@ -131,6 +136,59 @@ pub unsafe extern "C" fn z_bytes_decode_into_slice(
         Err(e) => {
             log::error!("Failed to read the payload: {}", e);
             Inplace::empty(dst.transmute_uninit_ptr());
+            errors::Z_EIO
+        }
+    }
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Decodes data into an owned SHM buffer by copying it's shared reference
+///
+/// @param this_: Data to decode.
+/// @param dst: An unitialized memory location where to construct a decoded string.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_decode_into_owned_shm(
+    this: &z_loaned_bytes_t,
+    dst: *mut MaybeUninit<z_owned_shm_t>,
+) -> z_error_t {
+    use zenoh::shm::zshm;
+
+    let payload = this.transmute_ref();
+    match payload.deserialize::<&zshm>() {
+        Ok(s) => {
+            Inplace::init(dst.transmute_uninit_ptr(), Some(s.clone().to_owned()));
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
+            Inplace::empty(dst.transmute_uninit_ptr());
+            errors::Z_EIO
+        }
+    }
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Decodes data into a loaned SHM buffer
+///
+/// @param this_: Data to decode.
+/// @param dst: An unitialized memory location where to construct a decoded string.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_decode_into_loaned_shm(
+    this: &z_loaned_bytes_t,
+    dst: *mut MaybeUninit<&'static z_loaned_shm_t>,
+) -> z_error_t {
+    use zenoh::shm::zshm;
+
+    let payload = this.transmute_ref();
+    match payload.deserialize::<&zshm>() {
+        Ok(s) => {
+            (*dst).write(s.transmute_handle());
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
             errors::Z_EIO
         }
     }
@@ -266,7 +324,7 @@ pub extern "C" fn z_bytes_encode_from_pair(
     };
     let b = ZBytes::serialize((first, second));
     Inplace::init(this.transmute_uninit_ptr(), Some(b));
-    return Z_OK;
+    Z_OK
 }
 
 /// Decodes into a pair of `z_owned_bytes` objects.
@@ -281,13 +339,13 @@ pub extern "C" fn z_bytes_decode_into_pair(
         Ok((a, b)) => {
             Inplace::init(first.transmute_uninit_ptr(), Some(a));
             Inplace::init(second.transmute_uninit_ptr(), Some(b));
-            return Z_OK;
+            Z_OK
         },
         Err(e) => {
             log::error!("Failed to decode the payload: {}", e);
-            return Z_EPARSE;
+            Z_EPARSE
         }
-    };
+    }
 }
 
 struct ZBytesInIterator {
@@ -332,7 +390,7 @@ pub extern "C" fn z_bytes_encode_from_iter(
 
     let b = ZBytes::from_iter(it);
     Inplace::init(this.transmute_uninit_ptr(), Some(b));
-    return Z_OK;
+    Z_OK
 }
 
 /// Decodes payload into an iterator to `z_loaned_bytes_t`.
@@ -358,7 +416,55 @@ pub extern "C" fn z_bytes_decode_into_iter(
         }
     }
 
-    return res;
+    res
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Encodes from an immutable SHM buffer consuming it
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_shm(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    shm: &mut z_owned_shm_t,
+) -> z_error_t {
+    match shm.transmute_mut().take() {
+        Some(shm) => {
+            let this = this.transmute_uninit_ptr();
+            Inplace::init(this, Some(shm.into()));
+            Z_OK
+        }
+        None => Z_ENULL,
+    }
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Encodes from an immutable SHM buffer copying it
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_shm_copy(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    shm: &z_loaned_shm_t,
+) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::init(this, Some(shm.transmute_ref().to_owned().into()));
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Encodes from a mutable SHM buffer consuming it
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_shm_mut(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    shm: &mut z_owned_shm_mut_t,
+) -> z_error_t {
+    match shm.transmute_mut().take() {
+        Some(shm) => {
+            let this = this.transmute_uninit_ptr();
+            Inplace::init(this, Some(shm.into()));
+            Z_OK
+        }
+        None => Z_ENULL,
+    }
 }
 
 pub use crate::opaque_types::z_owned_bytes_reader_t;

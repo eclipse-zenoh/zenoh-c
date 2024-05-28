@@ -288,6 +288,18 @@ typedef struct ALIGN(8) z_loaned_bytes_t {
   uint8_t _0[40];
 } z_loaned_bytes_t;
 /**
+ * A loaned ZShm slice
+ */
+typedef struct ALIGN(8) z_loaned_shm_t {
+  uint8_t _0[80];
+} z_loaned_shm_t;
+/**
+ * An owned ZShm slice
+ */
+typedef struct ALIGN(8) z_owned_shm_t {
+  uint8_t _0[80];
+} z_owned_shm_t;
+/**
  * A contiguous owned sequence of bytes allocated by Zenoh.
  */
 typedef struct ALIGN(8) z_owned_slice_t {
@@ -789,6 +801,12 @@ typedef struct ALIGN(8) z_owned_mutex_t {
   uint8_t _0[24];
 } z_owned_mutex_t;
 /**
+ * A loaned SHM Client Storage
+ */
+typedef struct ALIGN(8) z_loaned_shared_memory_client_storage_t {
+  uint8_t _0[8];
+} z_loaned_shared_memory_client_storage_t;
+/**
  * An owned SHM Client
  */
 typedef struct ALIGN(8) z_owned_shared_memory_client_t {
@@ -1123,18 +1141,6 @@ typedef struct zc_shared_memory_provider_backend_callbacks_t {
   void (*layout_for_fn)(void*, struct z_owned_memory_layout_t*);
 } zc_shared_memory_provider_backend_callbacks_t;
 /**
- * An owned ZShm slice
- */
-typedef struct ALIGN(8) z_owned_shm_t {
-  uint8_t _0[80];
-} z_owned_shm_t;
-/**
- * A loaned ZShm slice
- */
-typedef struct ALIGN(8) z_loaned_shm_t {
-  uint8_t _0[80];
-} z_loaned_shm_t;
-/**
  * A loaned ZShmMut slice
  */
 typedef struct ALIGN(8) z_loaned_shm_mut_t {
@@ -1430,6 +1436,24 @@ z_error_t z_bytes_decode_into_iter(const struct z_loaned_bytes_t *this_,
                                                               void *context),
                                    void *context);
 /**
+ * Decodes data into a loaned SHM buffer
+ *
+ * @param this_: Data to decode.
+ * @param dst: An unitialized memory location where to construct a decoded string.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_loaned_shm(const struct z_loaned_bytes_t *this_,
+                                         const struct z_loaned_shm_t **dst);
+/**
+ * Decodes data into an owned SHM buffer by copying it's shared reference
+ *
+ * @param this_: Data to decode.
+ * @param dst: An unitialized memory location where to construct a decoded string.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_owned_shm(const struct z_loaned_bytes_t *this_,
+                                        struct z_owned_shm_t *dst);
+/**
  * Decodes into a pair of `z_owned_bytes` objects.
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -1488,6 +1512,24 @@ ZENOHC_API
 z_error_t z_bytes_encode_from_pair(struct z_owned_bytes_t *this_,
                                    struct z_owned_bytes_t *first,
                                    struct z_owned_bytes_t *second);
+/**
+ * Encodes from an immutable SHM buffer consuming it
+ */
+ZENOHC_API
+z_error_t z_bytes_encode_from_shm(struct z_owned_bytes_t *this_,
+                                  struct z_owned_shm_t *shm);
+/**
+ * Encodes from an immutable SHM buffer copying it
+ */
+ZENOHC_API
+void z_bytes_encode_from_shm_copy(struct z_owned_bytes_t *this_,
+                                  const struct z_loaned_shm_t *shm);
+/**
+ * Encodes from a mutable SHM buffer consuming it
+ */
+ZENOHC_API
+z_error_t z_bytes_encode_from_shm_mut(struct z_owned_bytes_t *this_,
+                                      struct z_owned_shm_mut_t *shm);
 /**
  * Encodes a slice by aliasing.
  */
@@ -2283,6 +2325,15 @@ ZENOHC_API
 z_error_t z_open(struct z_owned_session_t *this_,
                  struct z_owned_config_t *config);
 /**
+ * Constructs and opens a new Zenoh session with specified client storage.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+ */
+ZENOHC_API
+z_error_t z_open_with_custom_shm_clients(struct z_owned_session_t *this_,
+                                         struct z_owned_config_t *config,
+                                         const struct z_loaned_shared_memory_client_storage_t *shm_clients);
+/**
  * Creates a new POSIX SHM Client
  */
 ZENOHC_API z_error_t z_posix_shared_memory_client_new(struct z_owned_shared_memory_client_t *this_);
@@ -2776,6 +2827,11 @@ bool z_shared_memory_client_storage_check(const struct z_owned_shared_memory_cli
  */
 ZENOHC_API
 void z_shared_memory_client_storage_drop(struct z_owned_shared_memory_client_storage_t *this_);
+/**
+ * Borrows SHM Client Storage
+ */
+ZENOHC_API
+const struct z_loaned_shared_memory_client_storage_t *z_shared_memory_client_storage_loan(const struct z_owned_shared_memory_client_storage_t *this_);
 ZENOHC_API
 z_error_t z_shared_memory_client_storage_new(struct z_owned_shared_memory_client_storage_t *this_,
                                              const struct zc_loaned_shared_memory_client_list_t *clients,
@@ -2875,6 +2931,10 @@ ZENOHC_API bool z_shm_check(const struct z_owned_shm_t *this_);
  */
 ZENOHC_API void z_shm_copy(struct z_owned_shm_t *this_, const struct z_loaned_shm_t *loaned);
 /**
+ * @return the pointer of the ZShm slice
+ */
+ZENOHC_API const unsigned char *z_shm_data(const struct z_loaned_shm_t *this_);
+/**
  * Deletes ZShm slice
  */
 ZENOHC_API void z_shm_drop(struct z_owned_shm_t *this_);
@@ -2882,6 +2942,10 @@ ZENOHC_API void z_shm_drop(struct z_owned_shm_t *this_);
  * Constructs ZShm slice from ZShmMut slice
  */
 ZENOHC_API void z_shm_from_mut(struct z_owned_shm_t *this_, struct z_owned_shm_mut_t *that);
+/**
+ * @return the length of the ZShm slice
+ */
+ZENOHC_API size_t z_shm_len(const struct z_loaned_shm_t *this_);
 /**
  * Borrows ZShm slice
  */
@@ -2895,9 +2959,17 @@ ZENOHC_API struct z_loaned_shm_t *z_shm_loan_mut(struct z_owned_shm_t *this_);
  */
 ZENOHC_API bool z_shm_mut_check(const struct z_owned_shm_mut_t *this_);
 /**
- * Deletes ZShm slice
+ * @return the mutable pointer of the ZShmMut slice
+ */
+ZENOHC_API unsigned char *z_shm_mut_data_mut(struct z_loaned_shm_mut_t *this_);
+/**
+ * Deletes ZShmMut slice
  */
 ZENOHC_API void z_shm_mut_drop(struct z_owned_shm_mut_t *this_);
+/**
+ * @return the length of the ZShmMut slice
+ */
+ZENOHC_API size_t z_shm_mut_len(const struct z_loaned_shm_mut_t *this_);
 /**
  * Borrows ZShmMut slice
  */

@@ -31,6 +31,7 @@
         z_owned_reply_t : z_reply_loan, \
         z_owned_sample_t : z_sample_loan, \
         z_owned_session_t : z_session_loan, \
+        z_owned_shared_memory_client_storage_t : z_shared_memory_client_storage_loan, \
         z_owned_shared_memory_provider_t : z_shared_memory_provider_loan, \
         z_owned_shm_t : z_shm_loan, \
         z_owned_slice_t : z_slice_loan, \
@@ -255,6 +256,7 @@ inline const z_loaned_reply_channel_closure_t* z_loan(const z_owned_reply_channe
 inline const z_loaned_reply_t* z_loan(const z_owned_reply_t& this_) { return z_reply_loan(&this_); };
 inline const z_loaned_sample_t* z_loan(const z_owned_sample_t& this_) { return z_sample_loan(&this_); };
 inline const z_loaned_session_t* z_loan(const z_owned_session_t& this_) { return z_session_loan(&this_); };
+inline const z_loaned_shared_memory_client_storage_t* z_loan(const z_owned_shared_memory_client_storage_t& this_) { return z_shared_memory_client_storage_loan(&this_); };
 inline const z_loaned_shared_memory_provider_t* z_loan(const z_owned_shared_memory_provider_t& this_) { return z_shared_memory_provider_loan(&this_); };
 inline const z_loaned_shm_t* z_loan(const z_owned_shm_t& this_) { return z_shm_loan(&this_); };
 inline const z_loaned_slice_t* z_loan(const z_owned_slice_t& this_) { return z_slice_loan(&this_); };
@@ -634,6 +636,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_sample_t> { typedef z_owned_
 template<> struct z_owned_to_loaned_type_t<z_owned_sample_t> { typedef z_loaned_sample_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_session_t> { typedef z_owned_session_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_session_t> { typedef z_loaned_session_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_shared_memory_client_storage_t> { typedef z_owned_shared_memory_client_storage_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_shared_memory_client_storage_t> { typedef z_loaned_shared_memory_client_storage_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_shared_memory_provider_t> { typedef z_owned_shared_memory_provider_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_shared_memory_provider_t> { typedef z_loaned_shared_memory_provider_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_shm_t> { typedef z_owned_shm_t type; };
