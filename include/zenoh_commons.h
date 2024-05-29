@@ -289,7 +289,7 @@ typedef struct ALIGN(8) z_owned_bytes_t {
  * A loaned serialized Zenoh data.
  */
 typedef struct ALIGN(8) z_loaned_bytes_t {
-  uint8_t _0[32];
+  uint8_t _0[40];
 } z_loaned_bytes_t;
 /**
  * A contiguous owned sequence of bytes allocated by Zenoh.
@@ -420,7 +420,7 @@ typedef struct z_loaned_closure_owned_query_t {
  * Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
  */
 typedef struct ALIGN(8) z_owned_query_t {
-  uint8_t _0[136];
+  uint8_t _0[144];
 } z_owned_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -483,7 +483,7 @@ typedef struct z_loaned_closure_reply_t {
  * A loaned reply.
  */
 typedef struct ALIGN(8) z_loaned_reply_t {
-  uint8_t _0[240];
+  uint8_t _0[256];
 } z_loaned_reply_t;
 /**
  * A structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -519,7 +519,7 @@ typedef struct z_loaned_closure_sample_t {
  * A loaned Zenoh sample.
  */
 typedef struct ALIGN(8) z_loaned_sample_t {
-  uint8_t _0[224];
+  uint8_t _0[240];
 } z_loaned_sample_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -712,13 +712,13 @@ typedef struct z_delete_options_t {
  * The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
  */
 typedef struct ALIGN(8) z_owned_encoding_t {
-  uint8_t _0[40];
+  uint8_t _0[48];
 } z_owned_encoding_t;
 /**
  * A loaned Zenoh encoding.
  */
 typedef struct ALIGN(8) z_loaned_encoding_t {
-  uint8_t _0[40];
+  uint8_t _0[48];
 } z_loaned_encoding_t;
 /**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
@@ -926,7 +926,7 @@ typedef struct z_query_reply_err_options_t {
  * A loaned Zenoh value.
  */
 typedef struct ALIGN(8) z_loaned_value_t {
-  uint8_t _0[72];
+  uint8_t _0[88];
 } z_loaned_value_t;
 /**
  * A loaned Zenoh queryable.
@@ -938,7 +938,7 @@ typedef struct ALIGN(8) z_loaned_queryable_t {
  * An owned reply from a Queryable to a `z_get()`.
  */
 typedef struct ALIGN(8) z_owned_reply_t {
-  uint8_t _0[240];
+  uint8_t _0[256];
 } z_owned_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -990,7 +990,7 @@ typedef struct z_loaned_reply_channel_closure_t {
  * Like all owned types, it should be freed using z_drop or z_sample_drop.
  */
 typedef struct ALIGN(8) z_owned_sample_t {
-  uint8_t _0[224];
+  uint8_t _0[240];
 } z_owned_sample_t;
 /**
  * A Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#timestamp"> timestamp </a>.
@@ -1109,7 +1109,7 @@ typedef struct z_time_t {
  * A Zenoh value - a compination of payload and its encoding.
  */
 typedef struct ALIGN(8) z_owned_value_t {
-  uint8_t _0[72];
+  uint8_t _0[88];
 } z_owned_value_t;
 /**
  * A user allocated string, viewed as a key expression.

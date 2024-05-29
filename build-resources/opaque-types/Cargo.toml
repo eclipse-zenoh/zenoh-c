@@ -12,6 +12,6 @@ default = ["zenoh/default"]
 
 [dependencies]
 # shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
-zenoh = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_shm_async_api", features = ["unstable"], default-features = false }
-zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_shm_async_api", features = ["unstable"] }
+zenoh = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_shm_async_api", features = ["unstable", "shared-memory"], default-features = false }
+zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_shm_async_api", features = ["unstable", "shared-memory"] }
 const_format = "0.2.32"
