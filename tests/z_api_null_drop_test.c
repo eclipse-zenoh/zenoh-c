@@ -62,8 +62,6 @@ int main(int argc, char **argv) {
     z_slice_map_null(&slice_map_null_1);
     z_owned_bytes_t bytes_null_1;
     z_bytes_null(&bytes_null_1);
-    z_owned_bytes_reader_t bytes_reader_null_1;
-    z_bytes_reader_null(&bytes_reader_null_1);
 
     //
     // Test that they actually make invalid value (where applicable)
@@ -80,7 +78,6 @@ int main(int argc, char **argv) {
     assert(!z_check(str_null_1));
     assert(!z_check(slice_map_null_1));
     assert(!z_check(bytes_null_1));
-    assert(!z_check(bytes_reader_null_1));
 
 
     //
@@ -105,7 +102,6 @@ int main(int argc, char **argv) {
     z_owned_str_t str_null_2;
     z_owned_slice_map_t slice_map_null_2;
     z_owned_bytes_t bytes_null_2;
-    z_owned_bytes_reader_t bytes_reader_null_2;
 
     z_null(&session_null_2);
     z_null(&publisher_null_2);
@@ -126,7 +122,6 @@ int main(int argc, char **argv) {
     z_null(&str_null_2);
     z_null(&slice_map_null_2);
     z_null(&bytes_null_2);
-    z_null(&bytes_reader_null_2);
 
     //
     // Test that null macro works the same as direct call
@@ -143,7 +138,6 @@ int main(int argc, char **argv) {
     assert(!z_check(str_null_2));
     assert(!z_check(slice_map_null_2));
     assert(!z_check(bytes_null_2));
-    assert(!z_check(bytes_reader_null_2));
 
     //
     // Test drop null and double drop it
@@ -168,7 +162,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(str_null_1));
         z_drop(z_move(slice_map_null_1));
         z_drop(z_move(bytes_null_1));
-        z_drop(z_move(bytes_reader_null_1));
 
 
         z_drop(z_move(session_null_2));
@@ -190,7 +183,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(str_null_2));
         z_drop(z_move(slice_map_null_2));
         z_drop(z_move(bytes_null_2));
-        z_drop(z_move(bytes_reader_null_2));
     }
 
     return 0;

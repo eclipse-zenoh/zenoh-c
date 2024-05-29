@@ -53,34 +53,36 @@ void create_attachement_it(z_owned_bytes_t* kv_pair, void* context) {
     ctx->iteration_index++;
 };
 
-z_error_t check_attachement_it(const z_loaned_bytes_t* kv_pair, void* context) {
-    attachement_context_t *ctx = (attachement_context_t*)(context);
-    if (ctx->iteration_index >= ctx->num_items) {
-        perror("Attachment contains more items than expected\n");
-        return -1;
+z_error_t check_attachement(const z_loaned_bytes_t* attachement, const attachement_context_t* ctx) {
+    z_bytes_iterator_t iter = z_bytes_get_iterator(attachement);
+    for (size_t i = 0; i < ctx->num_items; i++) {
+        z_owned_bytes_t kv, k, v;
+        if (!z_bytes_iterator_next(&iter, &kv)) {
+            perror("Not enough elements in the attachment\n");
+            return -1;
+        }
+        if (z_bytes_decode_into_pair(z_loan(kv), &k, &v) != 0) {
+            perror("Can not decode attachment elemnt into kv-pair\n");
+            return -1;
+        }
+        z_owned_str_t k_str, v_str;
+        z_bytes_decode_into_string(z_loan(k), &k_str);
+        z_bytes_decode_into_string(z_loan(v), &v_str);
+
+        if (strncmp(ctx->keys[i], z_str_data(z_loan(k_str)), z_str_len(z_loan(k_str))) != 0) {
+            perror("Incorrect attachment key\n");
+            return -1;
+        }
+        if (strncmp(ctx->values[i], z_str_data(z_loan(v_str)), z_str_len(z_loan(v_str))) != 0) {
+            perror("Incorrect attachment value\n");
+            return -1;
+        }
+        z_drop(z_move(k_str));
+        z_drop(z_move(v_str));
+        z_drop(z_move(k));
+        z_drop(z_move(v));
+        z_drop(z_move(kv));
     }
-
-    z_owned_bytes_t k, v;
-    z_owned_str_t k_str, v_str;
-    z_bytes_decode_into_pair(kv_pair, &k, &v);
-
-    z_bytes_decode_into_string(z_loan(k), &k_str);
-    z_bytes_decode_into_string(z_loan(v), &v_str);
-
-    if (strncmp(ctx->keys[ctx->iteration_index], z_str_data(z_loan(k_str)), z_str_len(z_loan(k_str))) != 0) {
-        perror("Incorrect attachment key\n");
-        return -1;
-    }
-    if (strncmp(ctx->values[ctx->iteration_index], z_str_data(z_loan(v_str)), z_str_len(z_loan(v_str))) != 0) {
-        perror("Incorrect attachment value\n");
-        return -1;
-    }
-
-    z_drop(&k_str);
-    z_drop(&v_str);
-    z_drop(&k);
-    z_drop(&v);
-    ctx->iteration_index++;
     return 0;
 };
 
@@ -154,8 +156,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     attachement_context_t in_attachment_context = (attachement_context_t){
         .keys = {K_CONST, K_VAR}, .values = {V_CONST, values[val_num]}, .num_items = 2, .iteration_index = 0 
     };
-    z_error_t res = z_bytes_decode_into_iter(attachment, check_attachement_it, (void*)&in_attachment_context);
-    if (in_attachment_context.iteration_index != in_attachment_context.num_items || res != 0) {
+    if (check_attachement(attachment, &in_attachment_context) != 0) {
         perror("Failed to validate attachment");
         exit(-1);
     }

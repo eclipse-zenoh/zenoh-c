@@ -17,20 +17,6 @@
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-z_error_t attachment_reader(const z_loaned_bytes_t* key_value, void *context) {
-    z_owned_bytes_t k, v;
-    z_owned_str_t key, value;
-    z_bytes_decode_into_pair(key_value, &k, &v);
-
-    z_bytes_decode_into_string(z_loan(k), &key);
-    z_bytes_decode_into_string(z_loan(v), &value);
-
-    printf("   attachment: %.*s: '%.*s'\n", (int)z_str_len(z_loan(key)), z_str_data(z_loan(key)),
-        (int)z_str_len(z_loan(value)), z_str_data(z_loan(value))
-    );
-    return 0;
-}
-
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     z_view_str_t key_string;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
@@ -47,7 +33,25 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     // checks if attachment exists
     if (attachment != NULL) {
         // reads full attachment
-        z_bytes_decode_into_iter(attachment, attachment_reader, NULL);
+        z_bytes_iterator_t iter = z_bytes_get_iterator(attachment);
+        z_owned_bytes_t kv;
+        while (z_bytes_iterator_next(&iter, &kv)) {
+            z_owned_bytes_t k, v;
+            z_owned_str_t key, value;
+            z_bytes_decode_into_pair(z_loan(kv), &k, &v);
+
+            z_bytes_decode_into_string(z_loan(k), &key);
+            z_bytes_decode_into_string(z_loan(v), &value);
+
+            printf("   attachment: %.*s: '%.*s'\n", (int)z_str_len(z_loan(key)), z_str_data(z_loan(key)),
+                (int)z_str_len(z_loan(value)), z_str_data(z_loan(value))
+            );
+            z_drop(z_move(kv));
+            z_drop(z_move(k));
+            z_drop(z_move(v));
+            z_drop(z_move(key));
+            z_drop(z_move(value));
+        }
     }
     z_drop(z_move(payload_string));
 }

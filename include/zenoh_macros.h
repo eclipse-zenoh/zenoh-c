@@ -8,7 +8,7 @@
     _Generic((x), \
         z_owned_alloc_layout_t : z_alloc_layout_loan, \
         z_owned_bytes_t : z_bytes_loan, \
-        z_owned_bytes_reader_t : z_bytes_reader_loan, \
+        z_owned_bytes_writer_t : z_bytes_writer_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
         z_owned_closure_owned_query_t : z_closure_owned_query_loan, \
         z_owned_closure_query_t : z_closure_query_loan, \
@@ -44,7 +44,8 @@
 
 #define z_loan_mut(x) \
     _Generic((x), \
-        z_owned_bytes_reader_t : z_bytes_reader_loan_mut, \
+        z_owned_bytes_t : z_bytes_loan_mut, \
+        z_owned_bytes_writer_t : z_bytes_writer_loan_mut, \
         z_owned_condvar_t : z_condvar_loan_mut, \
         z_owned_config_t : z_config_loan_mut, \
         z_owned_mutex_t : z_mutex_loan_mut, \
@@ -56,7 +57,7 @@
     _Generic((x), \
         z_owned_alloc_layout_t* : z_alloc_layout_drop, \
         z_owned_bytes_t* : z_bytes_drop, \
-        z_owned_bytes_reader_t* : z_bytes_reader_drop, \
+        z_owned_bytes_writer_t* : z_bytes_writer_drop, \
         z_owned_closure_hello_t* : z_closure_hello_drop, \
         z_owned_closure_owned_query_t* : z_closure_owned_query_drop, \
         z_owned_closure_query_t* : z_closure_query_drop, \
@@ -98,7 +99,7 @@
     _Generic((x), \
         z_owned_alloc_layout_t* : z_alloc_layout_null, \
         z_owned_bytes_t* : z_bytes_null, \
-        z_owned_bytes_reader_t* : z_bytes_reader_null, \
+        z_owned_bytes_writer_t* : z_bytes_writer_null, \
         z_owned_closure_hello_t* : z_closure_hello_null, \
         z_owned_closure_query_t* : z_closure_query_null, \
         z_owned_closure_reply_t* : z_closure_reply_null, \
@@ -140,7 +141,7 @@
     _Generic((x), \
         z_owned_alloc_layout_t : z_alloc_layout_check, \
         z_owned_bytes_t : z_bytes_check, \
-        z_owned_bytes_reader_t : z_bytes_reader_check, \
+        z_owned_bytes_writer_t : z_bytes_writer_check, \
         z_owned_closure_hello_t : z_closure_hello_check, \
         z_owned_closure_query_t : z_closure_query_check, \
         z_owned_closure_reply_t : z_closure_reply_check, \
@@ -200,7 +201,7 @@
 
 inline const z_loaned_alloc_layout_t* z_loan(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_loan(&this_); };
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
-inline const z_loaned_bytes_reader_t* z_loan(const z_owned_bytes_reader_t& reader) { return z_bytes_reader_loan(&reader); };
+inline const z_loaned_bytes_writer_t* z_loan(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan(&this_); };
 inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t& closure) { return z_closure_hello_loan(&closure); };
 inline const z_loaned_closure_owned_query_t* z_loan(const z_owned_closure_owned_query_t& closure) { return z_closure_owned_query_loan(&closure); };
 inline const z_loaned_closure_query_t* z_loan(const z_owned_closure_query_t& closure) { return z_closure_query_loan(&closure); };
@@ -234,7 +235,8 @@ inline const zcu_loaned_closure_matching_status_t* z_loan(const zcu_owned_closur
 inline const ze_loaned_querying_subscriber_t* z_loan(const ze_owned_querying_subscriber_t& this_) { return ze_querying_subscriber_loan(&this_); };
 
 
-inline z_loaned_bytes_reader_t* z_loan_mut(z_owned_bytes_reader_t& reader) { return z_bytes_reader_loan_mut(&reader); };
+inline z_loaned_bytes_t* z_loan_mut(z_owned_bytes_t& this_) { return z_bytes_loan_mut(&this_); };
+inline z_loaned_bytes_writer_t* z_loan_mut(z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan_mut(&this_); };
 inline z_loaned_condvar_t* z_loan_mut(z_owned_condvar_t& this_) { return z_condvar_loan_mut(&this_); };
 inline z_loaned_config_t* z_loan_mut(z_owned_config_t& this_) { return z_config_loan_mut(&this_); };
 inline z_loaned_mutex_t* z_loan_mut(z_owned_mutex_t& this_) { return z_mutex_loan_mut(&this_); };
@@ -244,7 +246,7 @@ inline z_loaned_str_array_t* z_loan_mut(z_owned_str_array_t& this_) { return z_s
 
 inline void z_drop(z_owned_alloc_layout_t* this_) { return z_alloc_layout_drop(this_); };
 inline void z_drop(z_owned_bytes_t* this_) { return z_bytes_drop(this_); };
-inline void z_drop(z_owned_bytes_reader_t* this_) { return z_bytes_reader_drop(this_); };
+inline void z_drop(z_owned_bytes_writer_t* this_) { return z_bytes_writer_drop(this_); };
 inline void z_drop(z_owned_closure_hello_t* closure) { return z_closure_hello_drop(closure); };
 inline void z_drop(z_owned_closure_owned_query_t* closure) { return z_closure_owned_query_drop(closure); };
 inline void z_drop(z_owned_closure_query_t* closure) { return z_closure_query_drop(closure); };
@@ -282,7 +284,7 @@ inline void z_drop(ze_owned_querying_subscriber_t* this_) { return ze_querying_s
 
 inline z_owned_alloc_layout_t* z_move(z_owned_alloc_layout_t& this_) { return (&this_); };
 inline z_owned_bytes_t* z_move(z_owned_bytes_t& this_) { return (&this_); };
-inline z_owned_bytes_reader_t* z_move(z_owned_bytes_reader_t& this_) { return (&this_); };
+inline z_owned_bytes_writer_t* z_move(z_owned_bytes_writer_t& this_) { return (&this_); };
 inline z_owned_closure_hello_t* z_move(z_owned_closure_hello_t& closure) { return (&closure); };
 inline z_owned_closure_owned_query_t* z_move(z_owned_closure_owned_query_t& closure) { return (&closure); };
 inline z_owned_closure_query_t* z_move(z_owned_closure_query_t& closure) { return (&closure); };
@@ -320,7 +322,7 @@ inline ze_owned_querying_subscriber_t* z_move(ze_owned_querying_subscriber_t& th
 
 inline void z_null(z_owned_alloc_layout_t* this_) { return z_alloc_layout_null(this_); };
 inline void z_null(z_owned_bytes_t* this_) { return z_bytes_null(this_); };
-inline void z_null(z_owned_bytes_reader_t* this_) { return z_bytes_reader_null(this_); };
+inline void z_null(z_owned_bytes_writer_t* this_) { return z_bytes_writer_null(this_); };
 inline void z_null(z_owned_closure_hello_t* this_) { return z_closure_hello_null(this_); };
 inline void z_null(z_owned_closure_query_t* this_) { return z_closure_query_null(this_); };
 inline void z_null(z_owned_closure_reply_t* this_) { return z_closure_reply_null(this_); };
@@ -360,7 +362,7 @@ inline void z_null(ze_owned_querying_subscriber_t* this_) { return ze_querying_s
 
 inline bool z_check(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_check(&this_); };
 inline bool z_check(const z_owned_bytes_t& this_) { return z_bytes_check(&this_); };
-inline bool z_check(const z_owned_bytes_reader_t& this_) { return z_bytes_reader_check(&this_); };
+inline bool z_check(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_check(&this_); };
 inline bool z_check(const z_owned_closure_hello_t& this_) { return z_closure_hello_check(&this_); };
 inline bool z_check(const z_owned_closure_query_t& this_) { return z_closure_query_check(&this_); };
 inline bool z_check(const z_owned_closure_reply_t& this_) { return z_closure_reply_check(&this_); };
@@ -516,8 +518,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_alloc_layout_t> { typedef z_
 template<> struct z_owned_to_loaned_type_t<z_owned_alloc_layout_t> { typedef z_loaned_alloc_layout_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_t> { typedef z_owned_bytes_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_bytes_t> { typedef z_loaned_bytes_t type; };
-template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_reader_t> { typedef z_owned_bytes_reader_t type; };
-template<> struct z_owned_to_loaned_type_t<z_owned_bytes_reader_t> { typedef z_loaned_bytes_reader_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_writer_t> { typedef z_owned_bytes_writer_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_bytes_writer_t> { typedef z_loaned_bytes_writer_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_hello_t> { typedef z_owned_closure_hello_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_hello_t> { typedef z_loaned_closure_hello_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_owned_query_t> { typedef z_owned_closure_owned_query_t type; };
