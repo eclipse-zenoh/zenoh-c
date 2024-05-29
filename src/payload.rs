@@ -504,13 +504,6 @@ pub unsafe extern "C" fn z_bytes_encode_from_shm_mut(
     }
 }
 
-pub use crate::opaque_types::z_owned_bytes_reader_t;
-decl_transmute_owned!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
-pub use crate::opaque_types::z_loaned_bytes_reader_t;
-decl_transmute_handle!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
-
-validate_equivalence!(z_owned_bytes_reader_t, z_loaned_bytes_reader_t);
-
 pub use crate::z_bytes_reader_t;
 decl_transmute_handle!(ZBytesReader<'static>, z_bytes_reader_t);
 /// Returns a reader for the data.
