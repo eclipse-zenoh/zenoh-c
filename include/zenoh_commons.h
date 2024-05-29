@@ -239,6 +239,18 @@ typedef struct ALIGN(8) z_bytes_reader_t {
   uint8_t _0[24];
 } z_bytes_reader_t;
 /**
+ * A writer for serialized data.
+ */
+typedef struct ALIGN(8) z_owned_bytes_writer_t {
+  uint8_t _0[16];
+} z_owned_bytes_writer_t;
+/**
+ * A loaned writer for serialized data.
+ */
+typedef struct ALIGN(8) z_loaned_bytes_writer_t {
+  uint8_t _0[16];
+} z_loaned_bytes_writer_t;
+/**
  * Monotonic clock
  */
 typedef struct z_clock_t {
@@ -1065,7 +1077,7 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 /**
- * Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *this_);
 /**
@@ -1112,6 +1124,10 @@ z_error_t z_bytes_decode_into_string(const struct z_loaned_bytes_t *this_,
  * created by `z_bytes_clone()`, they would still stay valid.
  */
 ZENOHC_API void z_bytes_drop(struct z_owned_bytes_t *this_);
+/**
+ * Constructs an empty instance of `z_owned_bytes_t`.
+ */
+ZENOHC_API void z_bytes_empty(struct z_owned_bytes_t *this_);
 /**
  * Constructs payload from an iterator to `z_owned_bytes_t`.
  * @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
@@ -1178,6 +1194,16 @@ ZENOHC_API struct z_bytes_iterator_t z_bytes_get_iterator(const struct z_loaned_
  */
 ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_bytes_t *data);
 /**
+ * Gets writer for `this_`.
+ */
+ZENOHC_API
+void z_bytes_get_writer(struct z_loaned_bytes_t *this_,
+                        struct z_owned_bytes_writer_t *out);
+/**
+ * Returns ``true`` if `this_` is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_bytes_is_empty(const struct z_loaned_bytes_t *this_);
+/**
  * Returns an iterator for multi-piece serialized data.
  * @param this_: Data to decode.
  */
@@ -1200,6 +1226,10 @@ ZENOHC_API size_t z_bytes_len(const struct z_loaned_bytes_t *this_);
  * Borrows data.
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_bytes_loan(const struct z_owned_bytes_t *this_);
+/**
+ * Muatably borrows data.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_bytes_loan_mut(struct z_owned_bytes_t *this_);
 /**
  * The gravestone value for `z_owned_bytes_t`.
  */
@@ -1231,6 +1261,37 @@ z_error_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
  * @return read position indicator on success or -1L if failure occurs.
  */
 ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
+/**
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_bytes_writer_check(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Drops `this_`, resetting it to gravestone value.
+ */
+ZENOHC_API void z_bytes_writer_drop(struct z_owned_bytes_writer_t *this_);
+/**
+ * Borrows writer.
+ */
+ZENOHC_API
+const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Muatably borrows writer.
+ */
+ZENOHC_API
+struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
+/**
+ * The gravestone value for `z_owned_bytes_reader_t`.
+ */
+ZENOHC_API void z_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
+/**
+ * Writes `len` bytes from `src` into underlying data
+ *
+ * @return 0 in case of success, negative error code otherwise
+ */
+ZENOHC_API
+z_error_t z_bytes_writer_write(struct z_loaned_bytes_writer_t *this_,
+                               const uint8_t *src,
+                               size_t len);
 /**
  * Get number of milliseconds passed since creation of `time`.
  */

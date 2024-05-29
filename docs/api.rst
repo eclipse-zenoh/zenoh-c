@@ -145,6 +145,7 @@ Functions
 
 .. doxygenfunction:: z_bytes_clone
 .. doxygenfunction:: z_bytes_loan
+.. doxygenfunction:: z_bytes_loan_mut
 .. doxygenfunction:: z_bytes_null
 .. doxygenfunction:: z_bytes_check
 .. doxygenfunction:: z_bytes_drop
@@ -156,6 +157,15 @@ Functions
 
 .. doxygenfunction:: z_bytes_get_iterator
 .. doxygenfunction:: z_bytes_iterator_next
+
+.. doxygenfunction:: z_bytes_get_writer
+
+.. doxygenfunction:: z_bytes_writer_loan
+.. doxygenfunction:: z_bytes_writer_loan_mut
+.. doxygenfunction:: z_bytes_writer_null
+.. doxygenfunction:: z_bytes_writer_check
+.. doxygenfunction:: z_bytes_writer_drop
+.. doxygenfunction:: z_bytes_writer_write
 
 
 

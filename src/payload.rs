@@ -1,19 +1,20 @@
-use crate::errors::{self, z_error_t, Z_EINVAL, Z_EPARSE, Z_OK};
+use crate::errors::{self, z_error_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK};
 use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
+    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{
     z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, CSlice, ZHashMap,
 };
 use core::fmt;
 use std::any::Any;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::mem::MaybeUninit;
 use std::os::raw::c_void;
+use std::slice::from_raw_parts;
 use std::slice::from_raw_parts_mut;
 use zenoh::buffers::{ZBuf, ZSlice, ZSliceBuffer};
-use zenoh::bytes::{ZBytes, ZBytesIterator, ZBytesReader};
+use zenoh::bytes::{ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter};
 
 pub use crate::opaque_types::z_owned_bytes_t;
 decl_transmute_owned!(Option<ZBytes>, z_owned_bytes_t);
@@ -25,6 +26,13 @@ extern "C" fn z_bytes_null(this: *mut MaybeUninit<z_owned_bytes_t>) {
     Inplace::empty(this);
 }
 
+/// Constructs an empty instance of `z_owned_bytes_t`.
+#[no_mangle]
+extern "C" fn z_bytes_empty(this: *mut MaybeUninit<z_owned_bytes_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::init(this, Some(ZBytes::empty()));
+}
+
 /// Drops `this_`, resetting it to gravestone value. If there are any shallow copies
 /// created by `z_bytes_clone()`, they would still stay valid.
 #[no_mangle]
@@ -33,7 +41,7 @@ extern "C" fn z_bytes_drop(this: &mut z_owned_bytes_t) {
     Inplace::drop(this);
 }
 
-/// Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
+/// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
 extern "C" fn z_bytes_check(this: &z_owned_bytes_t) -> bool {
     this.transmute_ref().is_some()
@@ -47,10 +55,24 @@ extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
     payload.transmute_handle()
 }
 
+/// Muatably borrows data.
+#[no_mangle]
+extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
+    let payload = this.transmute_mut();
+    let payload = unwrap_ref_unchecked_mut(payload);
+    payload.transmute_handle_mut()
+}
+
 pub use crate::opaque_types::z_loaned_bytes_t;
 decl_transmute_handle!(ZBytes, z_loaned_bytes_t);
 
 validate_equivalence!(z_owned_bytes_t, z_loaned_bytes_t);
+
+/// Returns ``true`` if `this_` is empty, ``false`` otherwise.
+#[no_mangle]
+extern "C" fn z_bytes_is_empty(this: &z_loaned_bytes_t) -> bool {
+    this.transmute_ref().is_empty()
+}
 
 /// Constructs an owned shallow copy of data in provided uninitialized memory location.
 #[no_mangle]
@@ -437,4 +459,75 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64 {
     let reader = this.transmute_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
+}
+
+pub use crate::opaque_types::z_loaned_bytes_writer_t;
+pub use crate::opaque_types::z_owned_bytes_writer_t;
+
+decl_transmute_owned!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
+decl_transmute_handle!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);
+validate_equivalence!(z_loaned_bytes_writer_t, z_owned_bytes_writer_t);
+
+/// The gravestone value for `z_owned_bytes_reader_t`.
+#[no_mangle]
+extern "C" fn z_bytes_writer_null(this: *mut MaybeUninit<z_owned_bytes_writer_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::empty(this);
+}
+
+/// Drops `this_`, resetting it to gravestone value.
+#[no_mangle]
+extern "C" fn z_bytes_writer_drop(this: &mut z_owned_bytes_writer_t) {
+    let this = this.transmute_mut();
+    Inplace::drop(this);
+}
+
+/// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+#[no_mangle]
+extern "C" fn z_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
+    this.transmute_ref().is_some()
+}
+
+/// Borrows writer.
+#[no_mangle]
+extern "C" fn z_bytes_writer_loan(this: &z_owned_bytes_writer_t) -> &z_loaned_bytes_writer_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
+}
+
+/// Muatably borrows writer.
+#[no_mangle]
+extern "C" fn z_bytes_writer_loan_mut(
+    this: &mut z_owned_bytes_writer_t,
+) -> &mut z_loaned_bytes_writer_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
+}
+
+/// Gets writer for `this_`.
+#[no_mangle]
+extern "C" fn z_bytes_get_writer(
+    this: &mut z_loaned_bytes_t,
+    out: *mut MaybeUninit<z_owned_bytes_writer_t>,
+) {
+    let out = out.transmute_uninit_ptr();
+    Inplace::init(out, Some(this.transmute_mut().writer()));
+}
+
+/// Writes `len` bytes from `src` into underlying data
+///
+/// @return 0 in case of success, negative error code otherwise
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+unsafe extern "C" fn z_bytes_writer_write(
+    this: &mut z_loaned_bytes_writer_t,
+    src: *const u8,
+    len: usize,
+) -> z_error_t {
+    match this.transmute_mut().write(from_raw_parts(src, len)) {
+        Ok(_) => Z_OK,
+        Err(_) => Z_EIO,
+    }
 }
