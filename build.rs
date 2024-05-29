@@ -116,9 +116,11 @@ pub struct {type_name} {{
         }
         data_out += &s;
     }
-    for d in docs.keys() {
-        panic!("Failed to find type information for opaque type: {d}");
-    }
+    // todo: in order to support rust features in opaque_types, we should respect features here.
+    // I will remove it for a while, maybe we'll implement this later
+    //for d in docs.keys() {
+    //    panic!("Failed to find type information for opaque type: {d}");
+    //}
     std::fs::write(path_out, data_out).unwrap();
 }
 

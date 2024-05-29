@@ -31,7 +31,7 @@ typedef struct ALIGN(8) z_owned_session_t {
  * A loaned Zenoh query.
  */
 typedef struct ALIGN(8) z_loaned_query_t {
-  uint8_t _0[144];
+  uint8_t _0[136];
 } z_loaned_query_t;
 /**
  * A loaned Zenoh session.
