@@ -21,7 +21,7 @@
     }
 
 #define ASSERT_TRUE(expr) \
-    if (!expr) {          \
+    if (!(expr)) {        \
         assert(false);    \
         return -300;      \
     }
@@ -155,7 +155,7 @@ int test_provider(z_owned_shared_memory_provider_t* provider, z_alloc_alignment_
     z_shared_memory_provider_defragment(z_loan(*provider));
     z_shared_memory_provider_garbage_collect(z_loan(*provider));
 
-    return 0;
+    return Z_OK;
 }
 
 typedef struct {
@@ -226,7 +226,7 @@ void free_fn(void* context, const struct z_chunk_descriptor_t* chunk) {
 }
 size_t defragment_fn(void* context) {
     assert(context);
-    return 0;
+    return Z_OK;
 }
 size_t available_fn(void* context) {
     assert(context);
@@ -282,7 +282,7 @@ int run_c_provider() {
     ASSERT_TRUE(test_context.busy_flags == NULL);
     ASSERT_TRUE(test_context.bytes == NULL);
 
-    return 0;
+    return Z_OK;
 }
 
 int run_posix_provider() {
@@ -308,27 +308,53 @@ int run_posix_provider() {
     z_drop(z_move(layout));
     ASSERT_CHECK_ERR(layout);
 
-    return 0;
+    return Z_OK;
+}
+
+int test_client_storage(z_owned_shared_memory_client_storage_t* storage) {
+    ASSERT_CHECK(*storage);
+
+    z_owned_config_t config;
+    z_config_default(&config);
+    ASSERT_CHECK(config);
+
+    z_owned_session_t session;
+    ASSERT_OK(z_open_with_custom_shm_clients(&session, z_move(config), z_loan(*storage)));
+
+    ASSERT_CHECK(session);
+    z_drop(z_move(session));
+    ASSERT_CHECK_ERR(session);
+
+    return Z_OK;
 }
 
 int run_default_client_storage() {
     z_owned_shared_memory_client_storage_t storage;
     ASSERT_OK(z_shared_memory_client_storage_new_default(&storage));
-    ASSERT_CHECK(storage);
+
+    // test client storage
+    ASSERT_OK(test_client_storage(&storage));
+
+    // deref the client storage
     z_drop(z_move(storage));
     ASSERT_CHECK_ERR(storage);
 
-    return 0;
+    return Z_OK;
 }
 
 int run_global_client_storage() {
+    // obtain defaul global client storage
     z_owned_shared_memory_client_storage_t storage;
     ASSERT_OK(z_ref_shared_memory_client_storage_global(&storage));
-    ASSERT_CHECK(storage);
+
+    // test client storage
+    ASSERT_OK(test_client_storage(&storage));
+
+    // deref the client storage
     z_drop(z_move(storage));
     ASSERT_CHECK_ERR(storage);
 
-    return 0;
+    return Z_OK;
 }
 
 int run_client_storage() {
@@ -349,16 +375,18 @@ int run_client_storage() {
     // create client storage from the list
     z_owned_shared_memory_client_storage_t storage;
     ASSERT_OK(z_shared_memory_client_storage_new(&storage, z_loan(list), true));
-    ASSERT_CHECK(storage);
 
-    // drop the client storage
+    // test client storage
+    ASSERT_OK(test_client_storage(&storage));
+
+    // deref the client storage
     z_drop(z_move(storage));
     ASSERT_CHECK_ERR(storage);
 
     // drop the client list
     z_drop(z_move(list));
     ASSERT_CHECK_ERR(list);
-    return 0;
+    return Z_OK;
 }
 
 void delete_client_fn(void* context) { assert(context == NULL); }
@@ -405,7 +433,7 @@ int run_c_client() {
     // drop the client list
     z_drop(z_move(list));
     ASSERT_CHECK_ERR(list);
-    return 0;
+    return Z_OK;
 }
 
 int main() {
@@ -415,5 +443,5 @@ int main() {
     ASSERT_OK(run_global_client_storage());
     ASSERT_OK(run_client_storage());
     ASSERT_OK(run_c_client());
-    return 0;
+    return Z_OK;
 }
