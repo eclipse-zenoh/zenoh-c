@@ -28,11 +28,11 @@ use std::ptr;
 use zenoh::core::Wait;
 use zenoh::handlers::DefaultHandler;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::publication::CongestionControl;
+use zenoh::publisher::CongestionControl;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
-use zenoh::{prelude::Priority, publication::MatchingListener, publication::Publisher};
+use zenoh::{publisher::MatchingListener, publisher::Priority, publisher::Publisher};
 
 use crate::{
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t, z_priority_t,

@@ -25,9 +25,8 @@ use std::ptr::null_mut;
 use zenoh::core::Wait;
 use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::{Query, Queryable};
+use zenoh::queryable::{Query, Queryable};
 use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
-use zenoh::value::Value;
 
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
@@ -295,13 +294,11 @@ pub unsafe extern "C" fn z_query_reply_err(
         }
     };
 
-    let value = Value::new(
-        payload,
+    let reply = query.reply_err(payload).encoding(
         options
             .and_then(|o| o.encoding.as_mut().map(|e| e.transmute_mut().extract()))
             .unwrap_or(Encoding::default()),
     );
-    let reply = query.reply_err(value);
 
     if let Err(e) = reply.wait() {
         log::error!("{}", e);
