@@ -474,20 +474,20 @@ typedef struct z_owned_closure_zid_t {
  *
  * Used in combination with `z_owned_mutex_t` to wake up thread when certain conditions are met.
  */
-typedef struct ALIGN(8) z_owned_condvar_t {
-  uint8_t _0[24];
+typedef struct ALIGN(4) z_owned_condvar_t {
+  uint8_t _0[8];
 } z_owned_condvar_t;
 /**
  * A loaned conditional variable.
  */
-typedef struct ALIGN(8) z_loaned_condvar_t {
-  uint8_t _0[16];
+typedef struct ALIGN(4) z_loaned_condvar_t {
+  uint8_t _0[4];
 } z_loaned_condvar_t;
 /**
  * A loaned mutex.
  */
 typedef struct ALIGN(8) z_loaned_mutex_t {
-  uint8_t _0[32];
+  uint8_t _0[24];
 } z_loaned_mutex_t;
 /**
  * An owned Zenoh configuration.
@@ -664,7 +664,7 @@ typedef struct ALIGN(8) z_view_str_t {
  * An owned mutex.
  */
 typedef struct ALIGN(8) z_owned_mutex_t {
-  uint8_t _0[32];
+  uint8_t _0[24];
 } z_owned_mutex_t;
 /**
  * A loaned Zenoh publisher.
