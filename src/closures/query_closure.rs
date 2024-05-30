@@ -1,6 +1,9 @@
 use std::mem::MaybeUninit;
 
-use crate::{z_loaned_query_t, z_owned_query_t};
+use crate::{
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    z_loaned_query_t, z_owned_query_t,
+};
 use libc::c_void;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
@@ -19,6 +22,14 @@ pub struct z_owned_closure_query_t {
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
+
+/// Loaned closure.
+#[repr(C)]
+pub struct z_loaned_closure_query_t {
+    _0: [usize; 3],
+}
+decl_transmute_handle!(z_owned_closure_query_t, z_loaned_closure_query_t);
+
 impl z_owned_closure_query_t {
     pub const fn empty() -> Self {
         z_owned_closure_query_t {
@@ -57,11 +68,11 @@ pub extern "C" fn z_closure_query_check(this: &z_owned_closure_query_t) -> bool 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_query_call(
-    closure: &z_owned_closure_query_t,
+    closure: &z_loaned_closure_query_t,
     query: &z_loaned_query_t,
 ) {
-    match closure.call {
-        Some(call) => call(query, closure.context),
+    match closure.transmute_ref().call {
+        Some(call) => call(query, closure.transmute_ref().context),
         None => log::error!("Attempted to call an uninitialized closure!"),
     }
 }
@@ -112,6 +123,17 @@ pub struct z_owned_closure_owned_query_t {
     call: Option<extern "C" fn(&mut z_owned_query_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
+
+/// Loaned closure.
+#[repr(C)]
+pub struct z_loaned_closure_owned_query_t {
+    _0: [usize; 3],
+}
+decl_transmute_handle!(
+    z_owned_closure_owned_query_t,
+    z_loaned_closure_owned_query_t
+);
+
 impl z_owned_closure_owned_query_t {
     pub fn empty() -> Self {
         z_owned_closure_owned_query_t {
@@ -138,11 +160,11 @@ pub extern "C" fn z_closure_owned_query_null() -> z_owned_closure_owned_query_t 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_owned_query_call(
-    closure: &z_owned_closure_owned_query_t,
+    closure: &z_loaned_closure_owned_query_t,
     query: &mut z_owned_query_t,
 ) {
-    match closure.call {
-        Some(call) => call(query, closure.context),
+    match closure.transmute_ref().call {
+        Some(call) => call(query, closure.transmute_ref().context),
         None => log::error!("Attempted to call an uninitialized closure!"),
     }
 }
@@ -171,4 +193,20 @@ impl<F: Fn(&mut z_owned_query_t)> From<F> for z_owned_closure_owned_query_t {
             drop: Some(drop::<F>),
         }
     }
+}
+
+/// Borrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_query_loan(
+    closure: &z_owned_closure_query_t,
+) -> &z_loaned_closure_query_t {
+    closure.transmute_handle()
+}
+
+/// Borrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_owned_query_loan(
+    closure: &z_owned_closure_owned_query_t,
+) -> &z_loaned_closure_owned_query_t {
+    closure.transmute_handle()
 }

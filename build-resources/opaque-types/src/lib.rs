@@ -4,6 +4,9 @@ use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 use std::thread::JoinHandle;
+use zenoh::buffers::ZBuf;
+use zenoh::bytes::ZBytesIterator;
+use zenoh::bytes::ZBytesWriter;
 use zenoh::config::Config;
 use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
@@ -56,11 +59,11 @@ get_opaque_type_data!(CSlice, z_view_slice_t);
 /// A loaned sequence of bytes.
 get_opaque_type_data!(CSlice, z_loaned_slice_t);
 
-/// The wrapper type for null-terminated string values allocated by Zenoh.
+/// The wrapper type for strings allocated by Zenoh.
 get_opaque_type_data!(CSlice, z_owned_str_t);
-/// The view over a null-terminated string.
+/// The view over a string.
 get_opaque_type_data!(CSlice, z_view_str_t);
-/// A loaned null-terminated string.
+/// A loaned string.
 get_opaque_type_data!(CSlice, z_loaned_str_t);
 
 /// A map of maybe-owned slices to maybe-owned slices.
@@ -70,11 +73,11 @@ get_opaque_type_data!(Option<HashMap<usize, usize>>, z_owned_slice_map_t);
 /// A loaned slice map.
 get_opaque_type_data!(HashMap<usize, usize>, z_loaned_slice_map_t);
 
-/// An array of maybe-owned slices.
+/// An array of maybe-owned non-null terminated strings.
 ///
-get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_slice_array_t);
-/// A loaned slice array.
-get_opaque_type_data!(Vec<CSlice>, z_loaned_slice_array_t);
+get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_str_array_t);
+/// A loaned string array.
+get_opaque_type_data!(Vec<CSlice>, z_loaned_str_array_t);
 
 /// An owned Zenoh sample.
 ///
@@ -85,9 +88,16 @@ get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
 get_opaque_type_data!(Sample, z_loaned_sample_t);
 
 /// A reader for serialized data.
-get_opaque_type_data!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
-/// A loaned reader for serialized data.
-get_opaque_type_data!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
+get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
+
+/// A writer for serialized data.
+get_opaque_type_data!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
+
+/// A loaned writer for serialized data.
+get_opaque_type_data!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);
+
+/// An iterator over multi-element serialized data
+get_opaque_type_data!(ZBytesIterator<'static, ZBuf>, z_bytes_iterator_t);
 
 /// The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
@@ -155,7 +165,7 @@ get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
 ///
 /// Using `z_declare_keyexpr` allows Zenoh to optimize a key expression,
 /// both for local processing and network-wise.
-get_opaque_type_data!(KeyExpr<'_>, z_loaned_keyexpr_t);
+get_opaque_type_data!(KeyExpr<'static>, z_loaned_keyexpr_t);
 
 /// An owned Zenoh session.
 get_opaque_type_data!(Option<Arc<Session>>, z_owned_session_t);

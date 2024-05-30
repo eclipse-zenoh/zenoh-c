@@ -54,20 +54,22 @@ int main(int argc, char **argv) {
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(channel.send),
           z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
-    for (bool call_success = z_call(channel.recv, &reply); !call_success || z_check(reply);
-         call_success = z_call(channel.recv, &reply)) {
+    for (bool call_success = z_call(z_loan(channel.recv), &reply); !call_success || z_check(reply);
+        call_success = z_call(z_loan(channel.recv), &reply)) {
         if (!call_success) {
             continue;
         }
         if (z_reply_is_ok(z_loan(reply))) {
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t keystr;
+            z_view_str_t key_str;
             z_owned_str_t payload_string;
-            z_keyexpr_to_string(z_sample_keyexpr(sample), &keystr);
+            z_keyexpr_to_string(z_sample_keyexpr(sample), &key_str);
             z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
-            printf(">> Received ('%s': '%s')\n", z_str_data(z_loan(keystr)), z_str_data(z_loan(payload_string)));
+            printf(">> Received ('%.*s': '%.*s')\n", 
+               (int)z_str_len(z_loan(key_str)), z_str_data(z_loan(key_str)),
+               (int)z_str_len(z_loan(payload_string)), z_str_data(z_loan(payload_string))
+            );
             z_drop(z_move(payload_string));
-            z_drop(z_move(keystr));
         } else {
             printf("Received an error\n");
         }

@@ -98,25 +98,25 @@ Functions
 .. doxygenfunction:: z_slice_map_insert_by_copy
 .. doxygenfunction:: z_slice_map_iterate
 
-Slice array
+string array
 -----------
 Types
 ^^^^^
-.. doxygenstruct:: z_owned_slice_array_t
-.. doxygenstruct:: z_loaned_slice_array_t
+.. doxygenstruct:: z_owned_str_array_t
+.. doxygenstruct:: z_loaned_str_array_t
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_slice_array_check
-.. doxygenfunction:: z_slice_array_null
-.. doxygenfunction:: z_slice_array_drop
-.. doxygenfunction:: z_slice_array_loan
-.. doxygenfunction:: z_slice_array_loan_mut
+.. doxygenfunction:: z_str_array_check
+.. doxygenfunction:: z_str_array_null
+.. doxygenfunction:: z_str_array_drop
+.. doxygenfunction:: z_str_array_loan
+.. doxygenfunction:: z_str_array_loan_mut
 
-.. doxygenfunction:: z_slice_array_new
-.. doxygenfunction:: z_slice_array_get
-.. doxygenfunction:: z_slice_array_len
-.. doxygenfunction:: z_slice_array_is_empty
+.. doxygenfunction:: z_str_array_new
+.. doxygenfunction:: z_str_array_get
+.. doxygenfunction:: z_str_array_len
+.. doxygenfunction:: z_str_array_is_empty
 
 Common
 ======
@@ -126,8 +126,8 @@ Types
 ^^^^^
 .. doxygenstruct:: z_owned_bytes_t
 .. doxygenstruct:: z_loaned_bytes_t
-.. doxygenstruct:: z_owned_bytes_reader_t
-.. doxygenstruct:: z_loaned_bytes_reader_t
+.. doxygenstruct:: z_bytes_iterator_t
+.. doxygenstruct:: z_bytes_reader_t
 
 Functions
 ^^^^^^^^^
@@ -135,25 +135,38 @@ Functions
 .. doxygenfunction:: z_bytes_encode_from_slice
 .. doxygenfunction:: z_bytes_encode_from_string
 .. doxygenfunction:: z_bytes_encode_from_slice_map
+.. doxygenfunction:: z_bytes_encode_from_iter
+.. doxygenfunction:: z_bytes_encode_from_pair
 .. doxygenfunction:: z_bytes_decode_into_slice
 .. doxygenfunction:: z_bytes_decode_into_string
 .. doxygenfunction:: z_bytes_decode_into_slice_map
+.. doxygenfunction:: z_bytes_decode_into_iter
+.. doxygenfunction:: z_bytes_decode_into_pair
 
 .. doxygenfunction:: z_bytes_clone
 .. doxygenfunction:: z_bytes_loan
+.. doxygenfunction:: z_bytes_loan_mut
 .. doxygenfunction:: z_bytes_null
 .. doxygenfunction:: z_bytes_check
 .. doxygenfunction:: z_bytes_drop
 
+.. doxygenfunction:: z_bytes_get_reader
 .. doxygenfunction:: z_bytes_reader_read
 .. doxygenfunction:: z_bytes_reader_seek
 .. doxygenfunction:: z_bytes_reader_tell
 
-.. doxygenfunction:: z_bytes_reader_loan
-.. doxygenfunction:: z_bytes_reader_loan_mut
-.. doxygenfunction:: z_bytes_reader_null
-.. doxygenfunction:: z_bytes_reader_check
-.. doxygenfunction:: z_bytes_reader_drop
+.. doxygenfunction:: z_bytes_get_iterator
+.. doxygenfunction:: z_bytes_iterator_next
+
+.. doxygenfunction:: z_bytes_get_writer
+
+.. doxygenfunction:: z_bytes_writer_loan
+.. doxygenfunction:: z_bytes_writer_loan_mut
+.. doxygenfunction:: z_bytes_writer_null
+.. doxygenfunction:: z_bytes_writer_check
+.. doxygenfunction:: z_bytes_writer_drop
+.. doxygenfunction:: z_bytes_writer_write
+
 
 
 Key expression
@@ -173,11 +186,11 @@ Functions
 .. doxygenfunction:: z_view_keyexpr_from_string_autocanonize
 .. doxygenfunction:: z_view_keyexpr_from_string_unchecked
 
-.. doxygenfunction:: z_keyexpr_from_slice
-.. doxygenfunction:: z_view_keyexpr_from_slice
-.. doxygenfunction:: z_keyexpr_from_slice_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_slice_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_slice_unchecked
+.. doxygenfunction:: z_keyexpr_from_substring
+.. doxygenfunction:: z_view_keyexpr_from_substring
+.. doxygenfunction:: z_keyexpr_from_substring_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_substring_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_substring_unchecked
 
 .. doxygenfunction:: z_keyexpr_loan
 .. doxygenfunction:: z_view_keyexpr_loan
@@ -186,7 +199,6 @@ Functions
 .. doxygenfunction:: z_keyexpr_drop
 
 .. doxygenfunction:: z_keyexpr_to_string
-.. doxygenfunction:: z_keyexpr_as_slice
 
 .. doxygenfunction:: z_keyexpr_canonize
 .. doxygenfunction:: z_keyexpr_canonize_null_terminated
@@ -217,6 +229,8 @@ Functions
 
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
+.. doxygenfunction:: z_encoding_from_substring
+.. doxygenfunction:: z_encoding_to_string
 
 Value
 -----
@@ -228,6 +242,11 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_value_payload
 .. doxygenfunction:: z_value_encoding
+
+.. doxygenfunction:: z_value_null
+.. doxygenfunction:: z_value_loan
+.. doxygenfunction:: z_value_check
+.. doxygenfunction:: z_value_drop
 
 Sample
 ------
@@ -523,6 +542,8 @@ Types
     :members:
 .. doxygenstruct:: z_query_reply_options_t
     :members:
+.. doxygenstruct:: z_query_reply_err_options_t
+    :members:
 
 .. doxygenstruct:: z_owned_query_channel_t
     :members:
@@ -536,9 +557,11 @@ Functions
 
 .. doxygenfunction:: z_queryable_options_default
 .. doxygenfunction:: z_query_reply_options_default
+.. doxygenfunction:: z_query_reply_err_options_default
 
 .. doxygenfunction:: z_queryable_null
 .. doxygenfunction:: z_queryable_check
+.. doxygenfunction:: z_queryable_loan
 .. doxygenfunction:: z_queryable_drop
 
 .. doxygenfunction:: z_query_null
@@ -552,6 +575,7 @@ Functions
 .. doxygenfunction:: z_query_value
 .. doxygenfunction:: z_query_attachment
 .. doxygenfunction:: z_query_reply
+.. doxygenfunction:: z_query_reply_err
 
 .. doxygenfunction:: z_closure_query_null
 .. doxygenfunction:: z_closure_query_check

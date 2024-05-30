@@ -30,6 +30,7 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::z_closure_reply_loan;
 use crate::z_consolidation_mode_t;
 use crate::z_loaned_sample_t;
 use crate::z_loaned_value_t;
@@ -39,7 +40,7 @@ use crate::z_query_target_t;
 use crate::{
     z_closure_reply_call, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t,
 };
-use zenoh::prelude::SyncResolve;
+use ::zenoh::core::Wait;
 
 pub use crate::opaque_types::z_owned_reply_t;
 decl_transmute_owned!(Option<Reply>, z_owned_reply_t);
@@ -174,8 +175,10 @@ pub unsafe extern "C" fn z_get(
         }
     }
     match get
-        .callback(move |response| z_closure_reply_call(&closure, response.transmute_handle()))
-        .res_sync()
+        .callback(move |response| {
+            z_closure_reply_call(z_closure_reply_loan(&closure), response.transmute_handle())
+        })
+        .wait()
     {
         Ok(()) => errors::Z_OK,
         Err(e) => {

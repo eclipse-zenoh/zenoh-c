@@ -21,7 +21,8 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
-use zenoh::prelude::{sync::SyncResolve, Priority};
+use zenoh::core::Wait;
+use zenoh::prelude::Priority;
 use zenoh::publication::CongestionControl;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
@@ -37,6 +38,8 @@ pub struct z_put_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of this message.
     pub priority: z_priority_t,
+    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    pub is_express: bool,
     /// The attachment to this message.
     pub attachment: *mut z_owned_bytes_t,
 }
@@ -49,6 +52,7 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
         encoding: null_mut(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
+        is_express: false,
         attachment: null_mut(),
     };
 }
@@ -89,9 +93,12 @@ pub extern "C" fn z_put(
             let attachment = unsafe { *options.attachment }.transmute_mut().extract();
             put = put.attachment(attachment);
         }
+        put = put.priority(options.priority.into());
+        put = put.congestion_control(options.congestion_control.into());
+        put = put.express(options.is_express);
     }
 
-    if let Err(e) = put.res_sync() {
+    if let Err(e) = put.wait() {
         log::error!("{}", e);
         errors::Z_EGENERIC
     } else {
@@ -107,6 +114,8 @@ pub struct z_delete_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of the delete message.
     pub priority: z_priority_t,
+    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    pub is_express: bool,
 }
 
 /// Constructs the default value for `z_delete_options_t`.
@@ -116,6 +125,7 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
     *this = z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
+        is_express: false,
     };
 }
 
@@ -139,10 +149,11 @@ pub extern "C" fn z_delete(
     if let Some(options) = options {
         del = del
             .congestion_control(options.congestion_control.into())
-            .priority(options.priority.into());
+            .priority(options.priority.into())
+            .express(options.is_express);
     }
 
-    match del.res_sync() {
+    match del.wait() {
         Err(e) => {
             log::error!("{}", e);
             errors::Z_EGENERIC

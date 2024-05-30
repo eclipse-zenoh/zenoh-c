@@ -13,7 +13,6 @@
 //
 
 use std::mem::MaybeUninit;
-use zenoh::prelude::SyncResolve;
 use zenoh::{
     liveliness::{Liveliness, LivelinessToken},
     prelude::SessionDeclarations,
@@ -26,6 +25,8 @@ use crate::{
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
+use crate::{z_closure_reply_loan, z_closure_sample_loan};
+use zenoh::core::Wait;
 
 use crate::opaque_types::zc_loaned_liveliness_token_t;
 use crate::opaque_types::zc_owned_liveliness_token_t;
@@ -34,6 +35,7 @@ decl_transmute_owned!(
     zc_owned_liveliness_token_t
 );
 decl_transmute_handle!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
+validate_equivalence!(zc_owned_liveliness_token_t, zc_loaned_liveliness_token_t);
 
 /// Constructs liveliness token in its gravestone state.
 #[no_mangle]
@@ -87,7 +89,7 @@ pub extern "C" fn zc_liveliness_declare_token(
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    match session.liveliness().declare_token(key_expr).res() {
+    match session.liveliness().declare_token(key_expr).wait() {
         Ok(token) => {
             Inplace::init(this, Some(token));
             errors::Z_OK
@@ -107,7 +109,7 @@ pub extern "C" fn zc_liveliness_undeclare_token(
 ) -> errors::z_error_t {
     let this = this.transmute_mut();
     if let Some(token) = this.extract().take() {
-        if let Err(e) = token.undeclare().res() {
+        if let Err(e) = token.undeclare().wait() {
             log::error!("Failed to undeclare token: {e}");
             return errors::Z_EGENERIC;
         }
@@ -155,9 +157,9 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.transmute_handle();
-            z_closure_sample_call(&callback, sample)
+            z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         })
-        .res()
+        .wait()
     {
         Ok(subscriber) => {
             Inplace::init(this, Some(subscriber));
@@ -200,13 +202,13 @@ pub extern "C" fn zc_liveliness_get(
     let key_expr = key_expr.transmute_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
     let liveliness: Liveliness<'static> = session.liveliness();
-    let mut builder = liveliness
-        .get(key_expr)
-        .callback(move |response| z_closure_reply_call(&callback, response.transmute_handle()));
+    let mut builder = liveliness.get(key_expr).callback(move |response| {
+        z_closure_reply_call(z_closure_reply_loan(&callback), response.transmute_handle())
+    });
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
     }
-    match builder.res() {
+    match builder.wait() {
         Ok(()) => errors::Z_OK,
         Err(e) => {
             log::error!("Failed to subscribe to liveliness: {e}");

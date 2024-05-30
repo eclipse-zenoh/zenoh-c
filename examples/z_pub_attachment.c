@@ -16,6 +16,31 @@
 
 #include "zenoh.h"
 
+typedef struct kv_pair_t {
+    const char* key;
+    const char* value;
+} kv_pair_t;
+
+typedef struct kv_pairs_t {
+    const kv_pair_t* data;
+    size_t len;
+    size_t current_idx;
+} kv_pairs_t;
+
+void create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
+    kv_pairs_t *kvs = (kv_pairs_t*)(context);
+    z_owned_bytes_t k, v;
+    if (kvs->current_idx >= kvs->len) {
+        z_null(kv_pair);
+    } else {
+        z_bytes_encode_from_string(&k, kvs->data[kvs->current_idx].key);
+        z_bytes_encode_from_string(&v, kvs->data[kvs->current_idx].value);
+        z_bytes_encode_from_pair(kv_pair, z_move(k), z_move(v));
+        kvs->current_idx++;
+    }
+};
+
+
 int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
     char *value = "Pub from C!";
@@ -54,14 +79,9 @@ int main(int argc, char **argv) {
     z_publisher_put_options_t options;
     z_publisher_put_options_default(&options);
 
-    // allocate attachment map
-    z_owned_slice_map_t map;
-    z_slice_map_new(&map);
-    z_view_slice_t src_key, src_value;
-    z_view_slice_from_str(&src_key, "source");
-    z_view_slice_from_str(&src_value, "C");
-    // add some value
-    z_slice_map_insert_by_alias(z_loan_mut(map), z_loan(src_key), z_loan(src_value));
+    // allocate attachment data
+    kv_pair_t kvs[2];
+    kvs[0] = (kv_pair_t){ .key = "source", .value = "C" };
     // allocate attachment and payload
     z_owned_bytes_t attachment;
     z_owned_bytes_t payload;
@@ -73,26 +93,21 @@ int main(int argc, char **argv) {
 
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
-        z_view_slice_t index_key, index_value;
-        z_view_slice_from_str(&index_key, "index");
-        z_view_slice_from_str(&index_value, buf_ind);
-        z_slice_map_insert_by_alias(z_loan_mut(map), z_loan(index_key), z_loan(index_value));
-        z_bytes_encode_from_slice_map(&attachment, z_loan(map));
+        kvs[1] = (kv_pair_t){ .key = "index", .value = buf_ind };
+        kv_pairs_t ctx = (kv_pairs_t) { .data = kvs, .current_idx = 0, .len = 2 };
+        z_bytes_encode_from_iter(&attachment, create_attachment_iter, (void*)&ctx);
         options.attachment = &attachment;
 
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-        z_view_str_t payload_str;
-        z_view_str_wrap(&payload_str, buf);
         
-        z_bytes_encode_from_string(&payload, z_loan(payload_str));
+        z_bytes_encode_from_string(&payload, buf);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));
 
     z_close(z_move(s));
-    z_drop(z_move(map));
 
     return 0;
 }

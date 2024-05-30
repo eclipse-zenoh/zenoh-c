@@ -23,13 +23,6 @@ int main(int argc, char **argv) {
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
 
-    z_owned_slice_map_t attachment_map;
-    z_slice_map_new(&attachment_map);
-    z_view_slice_t map_key, map_value;
-    z_view_slice_from_str(&map_key, "hello");
-    z_view_slice_from_str(&map_value, "there");
-    z_slice_map_insert_by_alias(z_loan_mut(attachment_map), z_loan(map_key), z_loan(map_value));
-
     z_owned_config_t config;
     z_config_default(&config);
 
@@ -55,14 +48,13 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_string(&ke, keyexpr);
 
-    z_view_str_t payload_string;
-    z_view_str_wrap(&payload_string, value);
-
     z_owned_bytes_t payload;
-    z_bytes_encode_from_string(&payload, z_loan(payload_string));
+    z_bytes_encode_from_string(&payload, value);
     
-    z_owned_bytes_t attachment;
-    z_bytes_encode_from_slice_map(&attachment, z_loan(attachment_map));
+    z_owned_bytes_t attachment, key, val;
+    z_bytes_encode_from_string(&key, "hello");
+    z_bytes_encode_from_string(&val, "there");
+    z_bytes_encode_from_pair(&attachment, z_move(key), z_move(val));
 
     z_put_options_t options;
     z_put_options_default(&options);
@@ -74,6 +66,5 @@ int main(int argc, char **argv) {
     }
 
     z_close(z_move(s));
-    z_drop(z_move(attachment_map));
     return 0;
 }

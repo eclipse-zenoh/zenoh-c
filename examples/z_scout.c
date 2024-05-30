@@ -32,20 +32,20 @@ void fprintpid(FILE *stream, z_id_t pid) {
     }
 }
 
-void fprintwhatami(FILE *stream, unsigned int whatami) {
-    char buf[64];
-    z_whatami_to_str(whatami, buf, sizeof(buf));
-    fprintf(stream, "%s", buf);
+void fprintwhatami(FILE *stream, z_whatami_t whatami) {
+    z_view_str_t whatami_str;
+    z_whatami_to_str(whatami, &whatami_str);
+    fprintf(stream, "%.*s", (int)z_str_len(z_loan(whatami_str)), z_str_data(z_loan(whatami_str)));
 }
 
-void fprintlocators(FILE *stream, const z_loaned_slice_array_t *locs) {
+void fprintlocators(FILE *stream, const z_loaned_str_array_t *locs) {
     fprintf(stream, "[");
-    for (unsigned int i = 0; i < z_slice_array_len(locs); i++) {
+    for (unsigned int i = 0; i < z_str_array_len(locs); i++) {
         fprintf(stream, "\"");
-        const z_loaned_slice_t *loc = z_slice_array_get(locs, i);
-        fprintf(stream, "%.*s", (int)z_slice_len(loc), (const char*)z_slice_data(loc));
+        const z_loaned_str_t *loc = z_str_array_get(locs, i);
+        fprintf(stream, "%.*s", (int)z_str_len(loc), z_str_data(loc));
         fprintf(stream, "\"");
-        if (i < z_slice_array_len(locs) - 1) {
+        if (i < z_str_array_len(locs) - 1) {
             fprintf(stream, ", ");
         }
     }
@@ -59,10 +59,10 @@ void fprinthello(FILE *stream, const z_loaned_hello_t* hello) {
     fprintwhatami(stream, z_hello_whatami(hello));
 
     fprintf(stream, ", locators: ");
-    z_owned_slice_array_t locators;
+    z_owned_str_array_t locators;
     z_hello_locators(hello, &locators);
     fprintlocators(stream, z_loan(locators));
-    z_slice_array_drop(z_move(locators));
+    z_str_array_drop(z_move(locators));
 
     fprintf(stream, " }");
 }

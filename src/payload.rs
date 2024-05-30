@@ -1,19 +1,20 @@
-use crate::errors::{self, z_error_t};
+use crate::errors::{self, z_error_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK};
 use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{
-    z_loaned_slice_map_t, z_loaned_slice_t, z_loaned_str_t, z_owned_slice_map_t, z_owned_slice_t,
-    z_owned_str_t, CSlice, ZHashMap,
+    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, CSlice, ZHashMap,
 };
 use core::fmt;
 use std::any::Any;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::mem::MaybeUninit;
+use std::os::raw::c_void;
+use std::slice::from_raw_parts;
 use std::slice::from_raw_parts_mut;
-use zenoh::buffers::{ZSlice, ZSliceBuffer};
-use zenoh::bytes::{ZBytes, ZBytesReader};
+use zenoh::buffers::{ZBuf, ZSlice, ZSliceBuffer};
+use zenoh::bytes::{ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter};
 
 pub use crate::opaque_types::z_owned_bytes_t;
 decl_transmute_owned!(Option<ZBytes>, z_owned_bytes_t);
@@ -25,6 +26,13 @@ extern "C" fn z_bytes_null(this: *mut MaybeUninit<z_owned_bytes_t>) {
     Inplace::empty(this);
 }
 
+/// Constructs an empty instance of `z_owned_bytes_t`.
+#[no_mangle]
+extern "C" fn z_bytes_empty(this: *mut MaybeUninit<z_owned_bytes_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::init(this, Some(ZBytes::empty()));
+}
+
 /// Drops `this_`, resetting it to gravestone value. If there are any shallow copies
 /// created by `z_bytes_clone()`, they would still stay valid.
 #[no_mangle]
@@ -33,7 +41,7 @@ extern "C" fn z_bytes_drop(this: &mut z_owned_bytes_t) {
     Inplace::drop(this);
 }
 
-/// Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
+/// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
 extern "C" fn z_bytes_check(this: &z_owned_bytes_t) -> bool {
     this.transmute_ref().is_some()
@@ -47,8 +55,24 @@ extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
     payload.transmute_handle()
 }
 
+/// Muatably borrows data.
+#[no_mangle]
+extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
+    let payload = this.transmute_mut();
+    let payload = unwrap_ref_unchecked_mut(payload);
+    payload.transmute_handle_mut()
+}
+
 pub use crate::opaque_types::z_loaned_bytes_t;
 decl_transmute_handle!(ZBytes, z_loaned_bytes_t);
+
+validate_equivalence!(z_owned_bytes_t, z_loaned_bytes_t);
+
+/// Returns ``true`` if `this_` is empty, ``false`` otherwise.
+#[no_mangle]
+extern "C" fn z_bytes_is_empty(this: &z_loaned_bytes_t) -> bool {
+    this.transmute_ref().is_empty()
+}
 
 /// Constructs an owned shallow copy of data in provided uninitialized memory location.
 #[no_mangle]
@@ -65,7 +89,7 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
     this.transmute_ref().len()
 }
 
-/// Decodes data into an owned null-terminated string.
+/// Decodes data into an owned non-null-terminated string.
 ///
 /// @param this_: Data to decode.
 /// @param dst: An unitialized memory location where to construct a decoded string.
@@ -75,20 +99,17 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
     this: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<z_owned_str_t>,
 ) -> z_error_t {
-    let len = z_bytes_len(this);
     let payload = this.transmute_ref();
-    let mut out = vec![0u8; len + 1];
-    if let Err(e) = payload.reader().read(out.as_mut_slice()) {
-        log::error!("Failed to read the payload: {}", e);
-        Inplace::empty(dst.transmute_uninit_ptr());
-        errors::Z_EIO
-    } else if let Err(e) = std::str::from_utf8(out.as_slice()) {
-        log::error!("Payload is not a valid utf-8 string: {}", e);
-        Inplace::empty(dst.transmute_uninit_ptr());
-        errors::Z_EPARSE
-    } else {
-        Inplace::init(dst.transmute_uninit_ptr(), out.into());
-        errors::Z_OK
+    match payload.deserialize::<String>() {
+        Ok(s) => {
+            Inplace::init(dst.transmute_uninit_ptr(), s.into());
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
+            Inplace::empty(dst.transmute_uninit_ptr());
+            errors::Z_EIO
+        }
     }
 }
 
@@ -137,21 +158,18 @@ pub unsafe extern "C" fn z_bytes_decode_into_slice(
     }
 }
 
-unsafe impl Send for z_loaned_slice_t {}
-unsafe impl Sync for z_loaned_slice_t {}
+unsafe impl Send for CSlice {}
+unsafe impl Sync for CSlice {}
 
-impl fmt::Debug for z_loaned_slice_t {
+impl fmt::Debug for CSlice {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = self.transmute_ref();
-        f.debug_struct("z_loaned_slice_t")
-            .field("_0", &s.slice())
-            .finish()
+        f.debug_struct("CSLice").field("_0", &self.slice()).finish()
     }
 }
 
-impl ZSliceBuffer for z_loaned_slice_t {
+impl ZSliceBuffer for CSlice {
     fn as_slice(&self) -> &[u8] {
-        self.transmute_ref().slice()
+        self.slice()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -162,19 +180,41 @@ impl ZSliceBuffer for z_loaned_slice_t {
     }
 }
 
+impl From<CSlice> for ZBytes {
+    fn from(value: CSlice) -> Self {
+        ZBytes::new(value)
+    }
+}
+
 /// Encodes a slice by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_slice(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    bytes: &z_loaned_slice_t,
+    data: *const u8,
+    len: usize,
 ) {
+    let s = CSlice::new_borrowed(data, len);
     let this = this.transmute_uninit_ptr();
-    let payload = ZBytes::from(ZSlice::from(*bytes));
+    let payload = ZBytes::from(ZSlice::from(s));
     Inplace::init(this, Some(payload));
 }
 
-/// Encodes slice map by copying.
+/// Encodes a slice by copying.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_slice_copy(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    data: *const u8,
+    len: usize,
+) {
+    let s = CSlice::new_borrowed(data, len).clone();
+    let this = this.transmute_uninit_ptr();
+    let payload = ZBytes::from(ZSlice::from(s));
+    Inplace::init(this, Some(payload));
+}
+
+/// Encodes slice map by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
@@ -183,79 +223,189 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
 ) {
     let dst = this.transmute_uninit_ptr();
     let hm = bytes_map.transmute_ref();
-    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| (k.slice(), v.slice())));
+    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
+        (
+            CSlice::new_borrowed(k.data(), k.len()),
+            CSlice::new_borrowed(v.data(), v.len()),
+        )
+    }));
     Inplace::init(dst, Some(payload));
 }
 
-/// Encodes string by aliasing.
+/// Encodes slice map by copying.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_slice_map_copy(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    bytes_map: &z_loaned_slice_map_t,
+) {
+    let dst = this.transmute_uninit_ptr();
+    let hm = bytes_map.transmute_ref();
+    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
+        (
+            CSlice::new_borrowed(k.data(), k.len()).clone(),
+            CSlice::new_borrowed(v.data(), v.len()).clone(),
+        )
+    }));
+    Inplace::init(dst, Some(payload));
+}
+
+/// Encodes a null-terminated string by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_encode_from_string(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    s: &z_loaned_str_t,
+    s: *const libc::c_char,
 ) {
-    let s = s.transmute_ref();
-    let s_without_terminating_0 = &s.slice()[0..s.len() - 1];
-    let s_without_terminating_0 = CSlice::new_borrowed_from_slice(s_without_terminating_0);
-    z_bytes_encode_from_slice(this, s_without_terminating_0.transmute_handle());
+    z_bytes_encode_from_slice(this, s as *const u8, libc::strlen(s));
 }
 
-pub use crate::opaque_types::z_owned_bytes_reader_t;
-decl_transmute_owned!(Option<ZBytesReader<'static>>, z_owned_bytes_reader_t);
+/// Encodes a null-terminated string by copying.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_encode_from_string_copy(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    s: *const libc::c_char,
+) {
+    z_bytes_encode_from_slice_copy(this, s as *const u8, libc::strlen(s));
+}
 
-pub use crate::opaque_types::z_loaned_bytes_reader_t;
-decl_transmute_handle!(ZBytesReader<'static>, z_loaned_bytes_reader_t);
+/// Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_pair(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    first: &mut z_owned_bytes_t,
+    second: &mut z_owned_bytes_t,
+) -> z_error_t {
+    let first = match first.transmute_mut().extract() {
+        Some(z) => z,
+        None => return Z_EINVAL,
+    };
+    let second = match second.transmute_mut().extract() {
+        Some(z) => z,
+        None => return Z_EINVAL,
+    };
+    let b = ZBytes::serialize((first, second));
+    Inplace::init(this.transmute_uninit_ptr(), Some(b));
+    Z_OK
+}
 
-/// Creates a reader for the specified data.
+/// Decodes into a pair of `z_owned_bytes` objects.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_pair(
+    this: &z_loaned_bytes_t,
+    first: *mut MaybeUninit<z_owned_bytes_t>,
+    second: *mut MaybeUninit<z_owned_bytes_t>,
+) -> z_error_t {
+    match this.transmute_ref().deserialize::<(ZBytes, ZBytes)>() {
+        Ok((a, b)) => {
+            Inplace::init(first.transmute_uninit_ptr(), Some(a));
+            Inplace::init(second.transmute_uninit_ptr(), Some(b));
+            Z_OK
+        }
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
+            Z_EPARSE
+        }
+    }
+}
+
+struct ZBytesInIterator {
+    body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void),
+    context: *mut c_void,
+}
+
+impl Iterator for ZBytesInIterator {
+    type Item = ZBuf;
+
+    fn next(&mut self) -> Option<ZBuf> {
+        let mut data = MaybeUninit::<z_owned_bytes_t>::uninit();
+
+        (self.body)(&mut data, self.context);
+        unsafe { data.assume_init().transmute_mut().extract() }.map(|b| b.into())
+    }
+}
+
+/// Constructs payload from an iterator to `z_owned_bytes_t`.
+/// @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
+/// @param iterator_body: Iterator body function, providing data items. Returning NULL
+/// @param context: Arbitrary context that will be passed to iterator_body.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_iter(
+    this: *mut MaybeUninit<z_owned_bytes_t>,
+    iterator_body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void),
+    context: *mut c_void,
+) -> z_error_t {
+    let it = ZBytesInIterator {
+        body: iterator_body,
+        context,
+    };
+
+    let b = ZBytes::from_iter(it);
+    Inplace::init(this.transmute_uninit_ptr(), Some(b));
+    Z_OK
+}
+
+pub use crate::z_bytes_iterator_t;
+decl_transmute_handle!(ZBytesIterator<'static, ZBuf>, z_bytes_iterator_t);
+/// Returns an iterator for multi-piece serialized data.
+///
+/// The `data` should outlive the iterator.
+#[no_mangle]
+pub extern "C" fn z_bytes_get_iterator(data: &z_loaned_bytes_t) -> z_bytes_iterator_t {
+    *data.transmute_ref().iter::<ZBuf>().transmute_handle()
+}
+
+/// Constructs `z_owned_bytes` object corresponding to the next element of encoded data.
+///
+/// Will construct `z_owned_bytes` when iterator reaches the end.
+/// @return ``false`` when iterator reaches the end,  ``true`` otherwise
+#[no_mangle]
+pub extern "C" fn z_bytes_iterator_next(
+    iter: &mut z_bytes_iterator_t,
+    out: *mut MaybeUninit<z_owned_bytes_t>,
+) -> bool {
+    let res = iter.transmute_mut().next().map(|z| z.into());
+    if res.is_none() {
+        Inplace::empty(out.transmute_uninit_ptr());
+        false
+    } else {
+        Inplace::init(out.transmute_uninit_ptr(), res);
+        true
+    }
+}
+
+/// Returns an iterator for multi-piece serialized data.
+/// @param this_: Data to decode.
+#[no_mangle]
+pub extern "C" fn z_bytes_iter(
+    this: &z_loaned_bytes_t,
+    iterator_body: extern "C" fn(data: &z_loaned_bytes_t, context: *mut c_void) -> z_error_t,
+    context: *mut c_void,
+) -> z_error_t {
+    let mut res = Z_OK;
+    for zb in this.transmute_ref().iter::<ZBuf>() {
+        let b = ZBytes::new(zb);
+        res = iterator_body(b.transmute_handle(), context);
+        if res != Z_OK {
+            break;
+        }
+    }
+
+    res
+}
+
+pub use crate::z_bytes_reader_t;
+decl_transmute_handle!(ZBytesReader<'static>, z_bytes_reader_t);
+/// Returns a reader for the data.
 ///
 /// The `data` should outlive the reader.
 #[no_mangle]
-pub extern "C" fn z_bytes_reader_new(
-    this: *mut MaybeUninit<z_owned_bytes_reader_t>,
-    data: &z_loaned_bytes_t,
-) {
-    let this = this.transmute_uninit_ptr();
-    let payload = data.transmute_ref();
-    let reader = payload.reader();
-    Inplace::init(this, Some(reader));
-}
-
-/// Constructs data reader in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_bytes_reader_null(this: *mut MaybeUninit<z_owned_bytes_reader_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
-}
-
-/// Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_bytes_reader_check(this: &z_owned_bytes_reader_t) -> bool {
-    this.transmute_ref().is_some()
-}
-
-/// Frees memory and resets data reader to its gravestone state.
-#[no_mangle]
-extern "C" fn z_bytes_reader_drop(this: &mut z_owned_bytes_reader_t) {
-    let reader = this.transmute_mut();
-    Inplace::drop(reader);
-}
-
-/// Borrows data reader.
-#[no_mangle]
-extern "C" fn z_bytes_reader_loan(reader: &z_owned_bytes_reader_t) -> &z_loaned_bytes_reader_t {
-    let reader = reader.transmute_ref();
-    let reader = unwrap_ref_unchecked(reader);
-    reader.transmute_handle()
-}
-
-/// Mutably borrows data reader.
-#[no_mangle]
-extern "C" fn z_bytes_reader_loan_mut(
-    reader: &mut z_owned_bytes_reader_t,
-) -> &mut z_loaned_bytes_reader_t {
-    let reader = reader.transmute_mut();
-    let reader = unwrap_ref_unchecked_mut(reader);
-    reader.transmute_handle_mut()
+pub extern "C" fn z_bytes_get_reader(data: &z_loaned_bytes_t) -> z_bytes_reader_t {
+    *data.transmute_ref().reader().transmute_handle()
 }
 
 /// Reads data into specified destination.
@@ -267,7 +417,7 @@ extern "C" fn z_bytes_reader_loan_mut(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_read(
-    this: &mut z_loaned_bytes_reader_t,
+    this: &mut z_bytes_reader_t,
     dst: *mut u8,
     len: usize,
 ) -> usize {
@@ -283,7 +433,7 @@ pub unsafe extern "C" fn z_bytes_reader_read(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_seek(
-    this: &mut z_loaned_bytes_reader_t,
+    this: &mut z_bytes_reader_t,
     offset: i64,
     origin: libc::c_int,
 ) -> z_error_t {
@@ -306,7 +456,78 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 /// @return read position indicator on success or -1L if failure occurs.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_loaned_bytes_reader_t) -> i64 {
+pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64 {
     let reader = this.transmute_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
+}
+
+pub use crate::opaque_types::z_loaned_bytes_writer_t;
+pub use crate::opaque_types::z_owned_bytes_writer_t;
+
+decl_transmute_owned!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
+decl_transmute_handle!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);
+validate_equivalence!(z_loaned_bytes_writer_t, z_owned_bytes_writer_t);
+
+/// The gravestone value for `z_owned_bytes_reader_t`.
+#[no_mangle]
+extern "C" fn z_bytes_writer_null(this: *mut MaybeUninit<z_owned_bytes_writer_t>) {
+    let this = this.transmute_uninit_ptr();
+    Inplace::empty(this);
+}
+
+/// Drops `this_`, resetting it to gravestone value.
+#[no_mangle]
+extern "C" fn z_bytes_writer_drop(this: &mut z_owned_bytes_writer_t) {
+    let this = this.transmute_mut();
+    Inplace::drop(this);
+}
+
+/// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+#[no_mangle]
+extern "C" fn z_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
+    this.transmute_ref().is_some()
+}
+
+/// Borrows writer.
+#[no_mangle]
+extern "C" fn z_bytes_writer_loan(this: &z_owned_bytes_writer_t) -> &z_loaned_bytes_writer_t {
+    let this = this.transmute_ref();
+    let this = unwrap_ref_unchecked(this);
+    this.transmute_handle()
+}
+
+/// Muatably borrows writer.
+#[no_mangle]
+extern "C" fn z_bytes_writer_loan_mut(
+    this: &mut z_owned_bytes_writer_t,
+) -> &mut z_loaned_bytes_writer_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
+}
+
+/// Gets writer for `this_`.
+#[no_mangle]
+extern "C" fn z_bytes_get_writer(
+    this: &mut z_loaned_bytes_t,
+    out: *mut MaybeUninit<z_owned_bytes_writer_t>,
+) {
+    let out = out.transmute_uninit_ptr();
+    Inplace::init(out, Some(this.transmute_mut().writer()));
+}
+
+/// Writes `len` bytes from `src` into underlying data
+///
+/// @return 0 in case of success, negative error code otherwise
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+unsafe extern "C" fn z_bytes_writer_write(
+    this: &mut z_loaned_bytes_writer_t,
+    src: *const u8,
+    len: usize,
+) -> z_error_t {
+    match this.transmute_mut().write(from_raw_parts(src, len)) {
+        Ok(_) => Z_OK,
+        Err(_) => Z_EIO,
+    }
 }

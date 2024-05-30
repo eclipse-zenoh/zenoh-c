@@ -6,7 +6,7 @@ pub const Z_EIO: z_error_t = -3;
 pub const Z_ENETWORK: z_error_t = -4;
 pub const Z_ENULL: z_error_t = -5;
 pub const Z_EUNAVAILABLE: z_error_t = -6;
-// negativ pthread error codes (due to convention to return negative values on error)
+// negative pthread error codes (due to convention to return negative values on error)
 pub const Z_EBUSY_MUTEX: z_error_t = -16;
 pub const Z_EINVAL_MUTEX: z_error_t = -22;
 pub const Z_EAGAIN_MUTEX: z_error_t = -11;

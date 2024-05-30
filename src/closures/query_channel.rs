@@ -1,4 +1,5 @@
 use crate::{
+    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
     z_closure_query_drop, z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
     z_query_clone, z_query_null,
 };
@@ -27,6 +28,17 @@ pub struct z_owned_query_channel_closure_t {
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
+
+/// Loaned closure.
+#[repr(C)]
+pub struct z_loaned_query_channel_closure_t {
+    _0: [usize; 3],
+}
+
+decl_transmute_handle!(
+    z_owned_query_channel_closure_t,
+    z_loaned_query_channel_closure_t
+);
 
 /// A pair of send / receive ends of channel.
 #[repr(C)]
@@ -198,11 +210,11 @@ pub extern "C" fn z_query_channel_closure_check(this: &z_owned_query_channel_clo
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_query_channel_closure_call(
-    closure: &z_owned_query_channel_closure_t,
+    closure: &z_loaned_query_channel_closure_t,
     query: *mut MaybeUninit<z_owned_query_t>,
 ) -> bool {
-    match closure.call {
-        Some(call) => call(query, closure.context),
+    match closure.transmute_ref().call {
+        Some(call) => call(query, closure.transmute_ref().context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
             true
@@ -235,4 +247,12 @@ impl<F: Fn(*mut MaybeUninit<z_owned_query_t>) -> bool> From<F> for z_owned_query
             drop: Some(drop::<F>),
         }
     }
+}
+
+/// Borrows closure.
+#[no_mangle]
+pub extern "C" fn z_query_channel_closure_loan(
+    closure: &z_owned_query_channel_closure_t,
+) -> &z_loaned_query_channel_closure_t {
+    closure.transmute_handle()
 }

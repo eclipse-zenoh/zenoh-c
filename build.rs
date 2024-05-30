@@ -1,5 +1,6 @@
 use fs2::FileExt;
 use regex::Regex;
+use std::collections::HashSet;
 use std::env;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
@@ -86,7 +87,7 @@ fn produce_opaque_types_data() -> PathBuf {
 }
 
 fn generate_opaque_types() {
-    let type_to_inner_field_name = HashMap::from([("z_id_t", "id")]);
+    let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
     let current_folder = get_build_rs_path();
     let path_in = produce_opaque_types_data();
     let path_out = current_folder.join("./src/opaque_types/mod.rs");
@@ -732,37 +733,32 @@ impl<'a> Iterator for Tokenizer<'a> {
 }
 
 #[derive(Clone, Debug)]
-pub struct FuncArg {
+pub struct Ctype {
     typename: String,
-    name: String,
 }
 
-impl FuncArg {
-    pub fn new(typename: &str, name: &str) -> Self {
-        FuncArg {
+impl Ctype {
+    pub fn new(typename: &str) -> Self {
+        Ctype {
             typename: typename.to_owned(),
-            name: name.to_owned(),
         }
     }
 
     pub fn without_cv(self) -> Self {
-        FuncArg {
+        Ctype {
             typename: self.typename.replace("const ", ""),
-            name: self.name,
         }
     }
 
     pub fn without_ptr(self) -> Self {
-        FuncArg {
+        Ctype {
             typename: self.typename.replace(['*', '&'], ""),
-            name: self.name,
         }
     }
 
     pub fn with_ref(self) -> Self {
-        FuncArg {
+        Ctype {
             typename: self.typename.replace('*', "&"),
-            name: self.name,
         }
     }
 
@@ -770,9 +766,24 @@ impl FuncArg {
         self.without_cv().without_ptr()
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct FuncArg {
+    typename: Ctype,
+    name: String,
+}
+
+impl FuncArg {
+    pub fn new(typename: &str, name: &str) -> Self {
+        FuncArg {
+            typename: Ctype::new(typename),
+            name: name.to_owned(),
+        }
+    }
+}
 #[derive(Clone, Debug)]
 pub struct FunctionSignature {
-    return_type: String,
+    return_type: Ctype,
     func_name: String,
     args: Vec<FuncArg>,
 }
@@ -789,10 +800,9 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
 
     let header = "#pragma once
 
-#define z_move(x) (&x)
-
 // clang-format off
 #ifndef __cplusplus
+
 
 ";
     file_out.write_all(header.as_bytes()).unwrap();
@@ -809,6 +819,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
 
     let type_name_to_drop_func = find_drop_functions(path_in);
     let out = generate_generic_drop_c(&type_name_to_drop_func);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_move_c(&type_name_to_drop_func);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -847,6 +861,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_move_cpp(&type_name_to_drop_func);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_null_cpp(&type_name_to_null_func);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
@@ -860,6 +878,12 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let out = generate_generic_closure_cpp(&type_name_to_call_func);
+    file_out.write_all(out.as_bytes()).unwrap();
+
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+    let out = generate_generic_loan_to_owned_type_cpp(
+        &[type_name_to_loan_func, type_name_to_loan_mut_func].concat(),
+    );
     file_out.write_all(out.as_bytes()).unwrap();
 
     file_out
@@ -876,7 +900,7 @@ pub fn find_loan_functions(path_in: &str) -> Vec<FunctionSignature> {
         re.captures_iter(&bindings).map(|c| c.extract())
     {
         let f = FunctionSignature {
-            return_type: "const ".to_string() + return_type + "*",
+            return_type: Ctype::new(&("const ".to_string() + return_type + "*")),
             func_name: func_name.to_string() + "_loan",
             args: vec![FuncArg::new(
                 &("const ".to_string() + arg_type + "*"),
@@ -897,7 +921,7 @@ pub fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
         re.captures_iter(&bindings).map(|c| c.extract())
     {
         let f = FunctionSignature {
-            return_type: return_type.to_string() + "*",
+            return_type: Ctype::new(&(return_type.to_string() + "*")),
             func_name: func_name.to_string() + "_loan_mut",
             args: vec![FuncArg::new(&(arg_type.to_string() + "*"), arg_name)],
         };
@@ -913,7 +937,7 @@ pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
         let f = FunctionSignature {
-            return_type: "void".to_string(),
+            return_type: Ctype::new("void"),
             func_name: func_name.to_string() + "_drop",
             args: vec![FuncArg::new(&(arg_type.to_string() + "*"), arg_name)],
         };
@@ -929,7 +953,7 @@ pub fn find_null_functions(path_in: &str) -> Vec<FunctionSignature> {
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
         let f = FunctionSignature {
-            return_type: "void".to_string(),
+            return_type: Ctype::new("void"),
             func_name: func_name.to_string() + "_null",
             args: vec![FuncArg::new(&(arg_type.to_string() + "*"), arg_name)],
         };
@@ -945,7 +969,7 @@ pub fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
         let f = FunctionSignature {
-            return_type: "bool".to_string(),
+            return_type: Ctype::new("bool"),
             func_name: func_name.to_string() + "_check",
             args: vec![FuncArg::new(
                 &("const ".to_string() + arg_type + "*"),
@@ -974,7 +998,7 @@ pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
             "const ".to_string()
         };
         let f = FunctionSignature {
-            return_type: return_type.to_string(),
+            return_type: Ctype::new(return_type),
             func_name: func_name.to_string() + "_call",
             args: vec![
                 FuncArg::new(&("const ".to_string() + closure_type + "*"), closure_name),
@@ -1008,9 +1032,9 @@ pub fn generate_generic_c(
 
     for func in macro_func {
         let owned_type = if decay {
-            func.args[0].clone().decay().typename
+            func.args[0].typename.clone().decay().typename
         } else {
-            func.args[0].clone().typename
+            func.args[0].typename.typename.clone()
         };
         let func_name = &func.func_name;
         out += ", \\\n";
@@ -1037,6 +1061,10 @@ pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_drop", false)
 }
 
+pub fn generate_generic_move_c(_macro_func: &[FunctionSignature]) -> String {
+    "#define z_move(x) (&x)".to_string()
+}
+
 pub fn generate_generic_null_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_null", false)
 }
@@ -1046,7 +1074,7 @@ pub fn generate_generic_check_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_call", true)
+    generate_generic_c(macro_func, "z_call", false)
 }
 
 pub fn generate_generic_closure_c(_macro_func: &[FunctionSignature]) -> String {
@@ -1070,12 +1098,12 @@ pub fn generate_generic_cpp(
 
     for func in macro_func {
         let func_name = &func.func_name;
-        let return_type = &func.return_type;
+        let return_type = &func.return_type.typename;
         let arg_name = &func.args[0].name;
         let arg_type = if decay {
-            func.args[0].clone().with_ref().typename
+            func.args[0].typename.clone().with_ref().typename
         } else {
-            func.args[0].clone().typename
+            func.args[0].typename.typename.clone()
         };
         let x = if decay {
             "&".to_string() + arg_name
@@ -1085,7 +1113,7 @@ pub fn generate_generic_cpp(
         out += "\n";
         out += &format!("inline {return_type} {generic_name}({arg_type} {arg_name}");
         for i in 1..func.args.len() {
-            out += &format!(", {} {}", func.args[i].typename, func.args[i].name);
+            out += &format!(", {} {}", func.args[i].typename.typename, func.args[i].name);
         }
         out += &format!(") {{{body_start}return {func_name}({x}");
         for i in 1..func.args.len() {
@@ -1100,12 +1128,54 @@ pub fn generate_generic_loan_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_loan", true)
 }
 
+pub fn generate_generic_loan_to_owned_type_cpp(macro_func: &[FunctionSignature]) -> String {
+    let mut processed_loaned_types = HashSet::<String>::new();
+    let mut out = "template<class T> struct z_loaned_to_owned_type_t {};
+template<class T> struct z_owned_to_loaned_type_t {};"
+        .to_owned();
+    for f in macro_func {
+        let loaned = f.return_type.clone().without_cv().without_ptr().typename;
+        if processed_loaned_types.contains(&loaned) {
+            continue;
+        } else {
+            processed_loaned_types.insert(loaned.clone());
+        }
+        let owned = f.args[0]
+            .typename
+            .clone()
+            .without_cv()
+            .without_ptr()
+            .typename;
+        if owned.contains("view") {
+            continue;
+        }
+        out += &format!(
+            "
+template<> struct z_loaned_to_owned_type_t<{loaned}> {{ typedef {owned} type; }};
+template<> struct z_owned_to_loaned_type_t<{owned}> {{ typedef {loaned} type; }};"
+        );
+    }
+    out
+}
+
 pub fn generate_generic_loan_mut_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_loan_mut", true)
 }
 
 pub fn generate_generic_drop_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_drop", false)
+}
+
+pub fn generate_generic_move_cpp(macro_func: &[FunctionSignature]) -> String {
+    let mut move_funcs = Vec::<FunctionSignature>::new();
+    for f in macro_func {
+        move_funcs.push(FunctionSignature {
+            return_type: f.args[0].typename.clone(),
+            func_name: "".to_string(),
+            args: [f.args[0].clone()].to_vec(),
+        });
+    }
+    generate_generic_cpp(&move_funcs, "z_move", true)
 }
 
 pub fn generate_generic_null_cpp(macro_func: &[FunctionSignature]) -> String {
@@ -1117,17 +1187,22 @@ pub fn generate_generic_check_cpp(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_call_cpp(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_cpp(macro_func, "z_call", true)
+    generate_generic_cpp(macro_func, "z_call", false)
 }
 
 pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
     for func in macro_func {
-        let return_type = &func.return_type;
+        let return_type = &func.return_type.typename;
         let closure_name = &func.args[0].name;
-        let closure_type = func.args[0].clone().without_cv().typename;
-        let arg_type = &func.args[1].typename;
+        let closure_type = func.args[0]
+            .typename
+            .clone()
+            .without_cv()
+            .typename
+            .replace("loaned", "owned");
+        let arg_type = &func.args[1].typename.typename;
         out += "\n";
         out += &format!(
             "inline void z_closure(

@@ -11,7 +11,11 @@
 #define PING_TIMEOUT_SEC 1
 
 #define handle_error_en(en, msg) \
-    do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+    do {                         \
+        errno = en;              \
+        perror(msg);             \
+        exit(EXIT_FAILURE);      \
+    } while (0)
 
 z_owned_condvar_t cond;
 z_owned_mutex_t mutex;
@@ -38,17 +42,17 @@ int main(int argc, char** argv) {
 		-w (optional, int, default=%d): the warmup time in ms during which pings will be emitted but not measured\n\
 		-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
 		",
-            DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
+            DEFAULT_PING_NB, DEFAULT_PKT_SIZE, DEFAULT_WARMUP_MS);
         return 1;
     }
     z_mutex_init(&mutex);
     z_condvar_init(&cond);
-    z_owned_config_t config; 
+    z_owned_config_t config;
     if (args.config_path) {
         zc_config_from_file(&config, args.config_path);
     } else {
         z_config_default(&config);
-    }  
+    }
     z_owned_session_t session;
     z_open(&session, z_move(config));
     z_view_keyexpr_t ping;
@@ -66,8 +70,6 @@ int main(int argc, char** argv) {
         data[i] = i % 10;
     }
     z_owned_bytes_t payload;
-    z_view_slice_t data_slice;
-    z_view_slice_wrap(&data_slice, data, args.size);
     
     z_mutex_lock(z_loan_mut(mutex));
     if (args.warmup_ms) {
@@ -76,7 +78,7 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_bytes_encode_from_slice(&payload, z_loan(data_slice));
+            z_bytes_encode_from_slice(&payload, data, args.size);
             z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
             if (s != 0) {
@@ -87,6 +89,7 @@ int main(int argc, char** argv) {
     }
     unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
+        z_bytes_encode_from_slice(&payload, data, args.size);
         z_clock_t measure_start = z_clock_now();
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
         int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));

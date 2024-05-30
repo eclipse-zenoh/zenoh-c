@@ -14,12 +14,12 @@
 
 use std::mem::MaybeUninit;
 use std::ptr::null;
-use zenoh::prelude::SyncResolve;
 
 use zenoh_ext::SessionExt;
 
 use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t, zcu_locality_default, zcu_locality_t};
+use zenoh::core::Wait;
 
 /// Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
@@ -59,6 +59,8 @@ decl_transmute_handle!(
     ze_loaned_publication_cache_t
 );
 
+validate_equivalence!(ze_owned_publication_cache_t, ze_loaned_publication_cache_t);
+
 /// Constructs and declares a publication cache.
 ///
 /// @param this_: An unitialized location in memory where publication cache will be constructed.
@@ -91,7 +93,7 @@ pub extern "C" fn ze_declare_publication_cache(
             p = p.queryable_prefix(queryable_prefix.clone());
         }
     }
-    match p.res_sync() {
+    match p.wait() {
         Ok(publication_cache) => {
             Inplace::init(this, Some(publication_cache));
             errors::Z_OK
@@ -127,7 +129,7 @@ pub extern "C" fn ze_undeclare_publication_cache(
     this: &mut ze_owned_publication_cache_t,
 ) -> errors::z_error_t {
     if let Some(p) = this.transmute_mut().extract().take() {
-        if let Err(e) = p.close().res_sync() {
+        if let Err(e) = p.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
         }

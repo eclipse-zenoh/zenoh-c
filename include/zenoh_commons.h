@@ -146,6 +146,15 @@ typedef enum z_sample_kind_t {
    */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
+typedef enum z_whatami_t {
+  Z_WHATAMI_ROUTER = 1,
+  Z_WHATAMI_PEER = 2,
+  Z_WHATAMI_CLIENT = 4,
+  Z_WHATAMI_ROUTER_PEER = (1 | 2),
+  Z_WHATAMI_ROUTER_CLIENT = (1 | 4),
+  Z_WHATAMI_PEER_CLIENT = (2 | 4),
+  Z_WHATAMI_ROUTER_PEER_CLIENT = ((1 | 2) | 4),
+} z_whatami_t;
 /**
  * The locality of samples to be received by subscribers or targeted by publishers.
  */
@@ -206,17 +215,11 @@ typedef struct ALIGN(8) z_owned_slice_map_t {
   uint8_t _0[48];
 } z_owned_slice_map_t;
 /**
- * The wrapper type for null-terminated string values allocated by Zenoh.
+ * The wrapper type for strings allocated by Zenoh.
  */
 typedef struct ALIGN(8) z_owned_str_t {
   uint8_t _0[16];
 } z_owned_str_t;
-/**
- * A loaned sequence of bytes.
- */
-typedef struct ALIGN(8) z_loaned_slice_t {
-  uint8_t _0[16];
-} z_loaned_slice_t;
 /**
  * A loaned slice map.
  */
@@ -224,23 +227,29 @@ typedef struct ALIGN(8) z_loaned_slice_map_t {
   uint8_t _0[48];
 } z_loaned_slice_map_t;
 /**
- * A loaned null-terminated string.
+ * An iterator over multi-element serialized data
  */
-typedef struct ALIGN(8) z_loaned_str_t {
-  uint8_t _0[16];
-} z_loaned_str_t;
+typedef struct ALIGN(8) z_bytes_iterator_t {
+  uint8_t _0[24];
+} z_bytes_iterator_t;
 /**
  * A reader for serialized data.
  */
-typedef struct ALIGN(8) z_owned_bytes_reader_t {
+typedef struct ALIGN(8) z_bytes_reader_t {
   uint8_t _0[24];
-} z_owned_bytes_reader_t;
+} z_bytes_reader_t;
 /**
- * A loaned reader for serialized data.
+ * A writer for serialized data.
  */
-typedef struct ALIGN(8) z_loaned_bytes_reader_t {
-  uint8_t _0[24];
-} z_loaned_bytes_reader_t;
+typedef struct ALIGN(8) z_owned_bytes_writer_t {
+  uint8_t _0[16];
+} z_owned_bytes_writer_t;
+/**
+ * A loaned writer for serialized data.
+ */
+typedef struct ALIGN(8) z_loaned_bytes_writer_t {
+  uint8_t _0[16];
+} z_loaned_bytes_writer_t;
 /**
  * Monotonic clock
  */
@@ -248,6 +257,12 @@ typedef struct z_clock_t {
   uint64_t t;
   const void *t_base;
 } z_clock_t;
+/**
+ * Loaned closure.
+ */
+typedef struct z_loaned_closure_hello_t {
+  size_t _0[3];
+} z_loaned_closure_hello_t;
 /**
  * A loaned hello message.
  */
@@ -280,12 +295,18 @@ typedef struct z_owned_closure_hello_t {
   void (*drop)(void *context);
 } z_owned_closure_hello_t;
 /**
+ * Loaned closure.
+ */
+typedef struct z_loaned_closure_owned_query_t {
+  size_t _0[3];
+} z_loaned_closure_owned_query_t;
+/**
  * An owned Zenoh query received by a queryable.
  *
  * Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
  */
 typedef struct ALIGN(8) z_owned_query_t {
-  uint8_t _0[16];
+  uint8_t _0[144];
 } z_owned_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -308,6 +329,12 @@ typedef struct z_owned_closure_owned_query_t {
   void (*call)(struct z_owned_query_t*, void *context);
   void (*drop)(void*);
 } z_owned_closure_owned_query_t;
+/**
+ * Loaned closure.
+ */
+typedef struct z_loaned_closure_query_t {
+  size_t _0[3];
+} z_loaned_closure_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -332,6 +359,12 @@ typedef struct z_owned_closure_query_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_query_t;
+/**
+ * Loaned closure.
+ */
+typedef struct z_loaned_closure_reply_t {
+  size_t _0[3];
+} z_loaned_closure_reply_t;
 /**
  * A loaned reply.
  */
@@ -363,6 +396,12 @@ typedef struct z_owned_closure_reply_t {
   void (*drop)(void *context);
 } z_owned_closure_reply_t;
 /**
+ * Loaned closure.
+ */
+typedef struct z_loaned_closure_sample_t {
+  size_t _0[3];
+} z_loaned_closure_sample_t;
+/**
  * A loaned Zenoh sample.
  */
 typedef struct ALIGN(8) z_loaned_sample_t {
@@ -392,6 +431,12 @@ typedef struct z_owned_closure_sample_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_sample_t;
+/**
+ * Loaned closure.
+ */
+typedef struct z_loaned_closure_zid_t {
+  size_t _0[3];
+} z_loaned_closure_zid_t;
 /**
  * A Zenoh ID.
  *
@@ -509,6 +554,10 @@ typedef struct z_publisher_options_t {
    * The priority of messages from this publisher.
    */
   enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith
+   */
+  bool is_express;
 } z_publisher_options_t;
 /**
  * Options passed to the `z_declare_queryable()` function.
@@ -540,6 +589,10 @@ typedef struct z_delete_options_t {
    * The priority of the delete message.
    */
   enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
 } z_delete_options_t;
 /**
  * The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
@@ -595,18 +648,18 @@ typedef struct ALIGN(8) z_owned_hello_t {
   uint8_t _0[48];
 } z_owned_hello_t;
 /**
- * An array of maybe-owned slices.
+ * An array of maybe-owned non-null terminated strings.
  *
  */
-typedef struct ALIGN(8) z_owned_slice_array_t {
+typedef struct ALIGN(8) z_owned_str_array_t {
   uint8_t _0[24];
-} z_owned_slice_array_t;
+} z_owned_str_array_t;
 /**
- * A contiguous sequence of bytes owned by some other entity.
+ * The view over a string.
  */
-typedef struct ALIGN(8) z_view_slice_t {
+typedef struct ALIGN(8) z_view_str_t {
   uint8_t _0[16];
-} z_view_slice_t;
+} z_view_str_t;
 /**
  * An owned mutex.
  */
@@ -656,6 +709,10 @@ typedef struct z_put_options_t {
    */
   enum z_priority_t priority;
   /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
+  /**
    * The attachment to this message.
    */
   struct z_owned_bytes_t *attachment;
@@ -698,6 +755,12 @@ typedef struct z_owned_query_channel_t {
   struct z_owned_query_channel_closure_t recv;
 } z_owned_query_channel_t;
 /**
+ * Loaned closure.
+ */
+typedef struct z_loaned_query_channel_closure_t {
+  size_t _0[3];
+} z_loaned_query_channel_closure_t;
+/**
  * Represents the set of options that can be applied to a query reply,
  * sent via `z_query_reply()`.
  */
@@ -712,11 +775,27 @@ typedef struct z_query_reply_options_t {
   struct z_owned_bytes_t *attachment;
 } z_query_reply_options_t;
 /**
+ * Represents the set of options that can be applied to a query reply error,
+ * sent via `z_query_reply_err()`.
+ */
+typedef struct z_query_reply_err_options_t {
+  /**
+   * The encoding of the error payload.
+   */
+  struct z_owned_encoding_t *encoding;
+} z_query_reply_err_options_t;
+/**
  * A loaned Zenoh value.
  */
 typedef struct ALIGN(8) z_loaned_value_t {
   uint8_t _0[88];
 } z_loaned_value_t;
+/**
+ * A loaned Zenoh queryable.
+ */
+typedef struct ALIGN(8) z_loaned_queryable_t {
+  uint8_t _0[32];
+} z_loaned_queryable_t;
 /**
  * An owned reply from a Queryable to a `z_get()`.
  */
@@ -761,6 +840,12 @@ typedef struct z_owned_reply_channel_t {
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
 /**
+ * Loaned closure.
+ */
+typedef struct z_loaned_reply_channel_closure_t {
+  size_t _0[3];
+} z_loaned_reply_channel_closure_t;
+/**
  * An owned Zenoh sample.
  *
  * This is a read only type that can only be constructed by cloning a `z_loaned_sample_t`.
@@ -788,14 +873,26 @@ typedef struct z_scout_options_t {
   /**
    * Type of entities to scout for.
    */
-  uint8_t zc_what;
+  enum z_whatami_t zc_what;
 } z_scout_options_t;
 /**
- * A loaned slice array.
+ * A loaned sequence of bytes.
  */
-typedef struct ALIGN(8) z_loaned_slice_array_t {
+typedef struct ALIGN(8) z_loaned_slice_t {
+  uint8_t _0[16];
+} z_loaned_slice_t;
+/**
+ * A loaned string.
+ */
+typedef struct ALIGN(8) z_loaned_str_t {
+  uint8_t _0[16];
+} z_loaned_str_t;
+/**
+ * A loaned string array.
+ */
+typedef struct ALIGN(8) z_loaned_str_array_t {
   uint8_t _0[24];
-} z_loaned_slice_array_t;
+} z_loaned_str_array_t;
 /**
  * An owned Zenoh task.
  */
@@ -812,17 +909,23 @@ typedef struct z_time_t {
   uint64_t t;
 } z_time_t;
 /**
+ * A Zenoh value - a compination of payload and its encoding.
+ */
+typedef struct ALIGN(8) z_owned_value_t {
+  uint8_t _0[88];
+} z_owned_value_t;
+/**
  * A user allocated string, viewed as a key expression.
  */
 typedef struct ALIGN(8) z_view_keyexpr_t {
   uint8_t _0[32];
 } z_view_keyexpr_t;
 /**
- * The view over a null-terminated string.
+ * A contiguous sequence of bytes owned by some other entity.
  */
-typedef struct ALIGN(8) z_view_str_t {
+typedef struct ALIGN(8) z_view_slice_t {
   uint8_t _0[16];
-} z_view_str_t;
+} z_view_slice_t;
 /**
  * The options for `zc_liveliness_declare_token()`.
  */
@@ -851,6 +954,12 @@ typedef struct ALIGN(8) zc_owned_liveliness_token_t {
 typedef struct zc_liveliness_get_options_t {
   uint32_t timeout_ms;
 } zc_liveliness_get_options_t;
+/**
+ * Loaned closure.
+ */
+typedef struct zcu_loaned_closure_matching_status_t {
+  size_t _0[3];
+} zcu_loaned_closure_matching_status_t;
 /**
  * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
  */
@@ -968,13 +1077,21 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 /**
- * Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *this_);
 /**
  * Constructs an owned shallow copy of data in provided uninitialized memory location.
  */
 ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *this_, struct z_owned_bytes_t *dst);
+/**
+ * Decodes into a pair of `z_owned_bytes` objects.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_pair(const struct z_loaned_bytes_t *this_,
+                                   struct z_owned_bytes_t *first,
+                                   struct z_owned_bytes_t *second);
 /**
  * Decodes data into an owned slice.
  *
@@ -994,7 +1111,7 @@ ZENOHC_API
 z_error_t z_bytes_decode_into_slice_map(const struct z_loaned_bytes_t *this_,
                                         struct z_owned_slice_map_t *dst);
 /**
- * Decodes data into an owned null-terminated string.
+ * Decodes data into an owned non-null-terminated string.
  *
  * @param this_: Data to decode.
  * @param dst: An unitialized memory location where to construct a decoded string.
@@ -1008,23 +1125,99 @@ z_error_t z_bytes_decode_into_string(const struct z_loaned_bytes_t *this_,
  */
 ZENOHC_API void z_bytes_drop(struct z_owned_bytes_t *this_);
 /**
+ * Constructs an empty instance of `z_owned_bytes_t`.
+ */
+ZENOHC_API void z_bytes_empty(struct z_owned_bytes_t *this_);
+/**
+ * Constructs payload from an iterator to `z_owned_bytes_t`.
+ * @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
+ * @param iterator_body: Iterator body function, providing data items. Returning NULL
+ * @param context: Arbitrary context that will be passed to iterator_body.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_encode_from_iter(struct z_owned_bytes_t *this_,
+                                   void (*iterator_body)(struct z_owned_bytes_t *data, void *context),
+                                   void *context);
+/**
+ * Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_encode_from_pair(struct z_owned_bytes_t *this_,
+                                   struct z_owned_bytes_t *first,
+                                   struct z_owned_bytes_t *second);
+/**
  * Encodes a slice by aliasing.
  */
 ZENOHC_API
 void z_bytes_encode_from_slice(struct z_owned_bytes_t *this_,
-                               const struct z_loaned_slice_t *bytes);
+                               const uint8_t *data,
+                               size_t len);
 /**
- * Encodes slice map by copying.
+ * Encodes a slice by copying.
+ */
+ZENOHC_API
+void z_bytes_encode_from_slice_copy(struct z_owned_bytes_t *this_,
+                                    const uint8_t *data,
+                                    size_t len);
+/**
+ * Encodes slice map by aliasing.
  */
 ZENOHC_API
 void z_bytes_encode_from_slice_map(struct z_owned_bytes_t *this_,
                                    const struct z_loaned_slice_map_t *bytes_map);
 /**
- * Encodes string by aliasing.
+ * Encodes slice map by copying.
  */
 ZENOHC_API
-void z_bytes_encode_from_string(struct z_owned_bytes_t *this_,
-                                const struct z_loaned_str_t *s);
+void z_bytes_encode_from_slice_map_copy(struct z_owned_bytes_t *this_,
+                                        const struct z_loaned_slice_map_t *bytes_map);
+/**
+ * Encodes a null-terminated string by aliasing.
+ */
+ZENOHC_API void z_bytes_encode_from_string(struct z_owned_bytes_t *this_, const char *s);
+/**
+ * Encodes a null-terminated string by copying.
+ */
+ZENOHC_API void z_bytes_encode_from_string_copy(struct z_owned_bytes_t *this_, const char *s);
+/**
+ * Returns an iterator for multi-piece serialized data.
+ *
+ * The `data` should outlive the iterator.
+ */
+ZENOHC_API struct z_bytes_iterator_t z_bytes_get_iterator(const struct z_loaned_bytes_t *data);
+/**
+ * Returns a reader for the data.
+ *
+ * The `data` should outlive the reader.
+ */
+ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_bytes_t *data);
+/**
+ * Gets writer for `this_`.
+ */
+ZENOHC_API
+void z_bytes_get_writer(struct z_loaned_bytes_t *this_,
+                        struct z_owned_bytes_writer_t *out);
+/**
+ * Returns ``true`` if `this_` is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_bytes_is_empty(const struct z_loaned_bytes_t *this_);
+/**
+ * Returns an iterator for multi-piece serialized data.
+ * @param this_: Data to decode.
+ */
+ZENOHC_API
+z_error_t z_bytes_iter(const struct z_loaned_bytes_t *this_,
+                       z_error_t (*iterator_body)(const struct z_loaned_bytes_t *data, void *context),
+                       void *context);
+/**
+ * Constructs `z_owned_bytes` object corresponding to the next element of encoded data.
+ *
+ * Will construct `z_owned_bytes` when iterator reaches the end.
+ * @return ``false`` when iterator reaches the end,  ``true`` otherwise
+ */
+ZENOHC_API bool z_bytes_iterator_next(struct z_bytes_iterator_t *iter, struct z_owned_bytes_t *out);
 /**
  * Returns total number of bytes in the payload.
  */
@@ -1034,39 +1227,13 @@ ZENOHC_API size_t z_bytes_len(const struct z_loaned_bytes_t *this_);
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_bytes_loan(const struct z_owned_bytes_t *this_);
 /**
+ * Muatably borrows data.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_bytes_loan_mut(struct z_owned_bytes_t *this_);
+/**
  * The gravestone value for `z_owned_bytes_t`.
  */
 ZENOHC_API void z_bytes_null(struct z_owned_bytes_t *this_);
-/**
- * Returns ``true`` if `this_` in a valid state, ``false`` if it is in a gravestone state.
- */
-ZENOHC_API bool z_bytes_reader_check(const struct z_owned_bytes_reader_t *this_);
-/**
- * Frees memory and resets data reader to its gravestone state.
- */
-ZENOHC_API void z_bytes_reader_drop(struct z_owned_bytes_reader_t *this_);
-/**
- * Borrows data reader.
- */
-ZENOHC_API
-const struct z_loaned_bytes_reader_t *z_bytes_reader_loan(const struct z_owned_bytes_reader_t *reader);
-/**
- * Mutably borrows data reader.
- */
-ZENOHC_API
-struct z_loaned_bytes_reader_t *z_bytes_reader_loan_mut(struct z_owned_bytes_reader_t *reader);
-/**
- * Creates a reader for the specified data.
- *
- * The `data` should outlive the reader.
- */
-ZENOHC_API
-void z_bytes_reader_new(struct z_owned_bytes_reader_t *this_,
-                        const struct z_loaned_bytes_t *data);
-/**
- * Constructs data reader in a gravestone state.
- */
-ZENOHC_API void z_bytes_reader_null(struct z_owned_bytes_reader_t *this_);
 /**
  * Reads data into specified destination.
  *
@@ -1076,7 +1243,7 @@ ZENOHC_API void z_bytes_reader_null(struct z_owned_bytes_reader_t *this_);
  * @return number of bytes read. If return value is smaller than `len`, it means that  theend of the data was reached.
  */
 ZENOHC_API
-size_t z_bytes_reader_read(struct z_loaned_bytes_reader_t *this_,
+size_t z_bytes_reader_read(struct z_bytes_reader_t *this_,
                            uint8_t *dst,
                            size_t len);
 /**
@@ -1086,14 +1253,45 @@ size_t z_bytes_reader_read(struct z_loaned_bytes_reader_t *this_,
  * Return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_bytes_reader_seek(struct z_loaned_bytes_reader_t *this_,
+z_error_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
                               int64_t offset,
                               int origin);
 /**
  * Gets the read position indicator.
  * @return read position indicator on success or -1L if failure occurs.
  */
-ZENOHC_API int64_t z_bytes_reader_tell(struct z_loaned_bytes_reader_t *this_);
+ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
+/**
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_bytes_writer_check(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Drops `this_`, resetting it to gravestone value.
+ */
+ZENOHC_API void z_bytes_writer_drop(struct z_owned_bytes_writer_t *this_);
+/**
+ * Borrows writer.
+ */
+ZENOHC_API
+const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Muatably borrows writer.
+ */
+ZENOHC_API
+struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
+/**
+ * The gravestone value for `z_owned_bytes_reader_t`.
+ */
+ZENOHC_API void z_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
+/**
+ * Writes `len` bytes from `src` into underlying data
+ *
+ * @return 0 in case of success, negative error code otherwise
+ */
+ZENOHC_API
+z_error_t z_bytes_writer_write(struct z_loaned_bytes_writer_t *this_,
+                               const uint8_t *src,
+                               size_t len);
 /**
  * Get number of milliseconds passed since creation of `time`.
  */
@@ -1122,7 +1320,7 @@ z_error_t z_close(struct z_owned_session_t *this_);
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_hello_call(const struct z_owned_closure_hello_t *closure,
+void z_closure_hello_call(const struct z_loaned_closure_hello_t *closure,
                           const struct z_loaned_hello_t *hello);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -1133,6 +1331,11 @@ ZENOHC_API bool z_closure_hello_check(const struct z_owned_closure_hello_t *this
  */
 ZENOHC_API void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
 /**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned_closure_hello_t *closure);
+/**
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
@@ -1140,12 +1343,17 @@ ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_owned_query_call(const struct z_owned_closure_owned_query_t *closure,
+void z_closure_owned_query_call(const struct z_loaned_closure_owned_query_t *closure,
                                 struct z_owned_query_t *query);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API void z_closure_owned_query_drop(struct z_owned_closure_owned_query_t *closure);
+/**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_closure_owned_query_t *z_closure_owned_query_loan(const struct z_owned_closure_owned_query_t *closure);
 /**
  * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
  */
@@ -1154,7 +1362,7 @@ ZENOHC_API struct z_owned_closure_owned_query_t z_closure_owned_query_null(void)
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_query_call(const struct z_owned_closure_query_t *closure,
+void z_closure_query_call(const struct z_loaned_closure_query_t *closure,
                           const struct z_loaned_query_t *query);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -1165,6 +1373,11 @@ ZENOHC_API bool z_closure_query_check(const struct z_owned_closure_query_t *this
  */
 ZENOHC_API void z_closure_query_drop(struct z_owned_closure_query_t *closure);
 /**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_closure_query_t *z_closure_query_loan(const struct z_owned_closure_query_t *closure);
+/**
  * Constructs a closure in its gravestone state.
  */
 ZENOHC_API void z_closure_query_null(struct z_owned_closure_query_t *this_);
@@ -1172,7 +1385,7 @@ ZENOHC_API void z_closure_query_null(struct z_owned_closure_query_t *this_);
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_reply_call(const struct z_owned_closure_reply_t *closure,
+void z_closure_reply_call(const struct z_loaned_closure_reply_t *closure,
                           const struct z_loaned_reply_t *reply);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -1184,6 +1397,11 @@ ZENOHC_API bool z_closure_reply_check(const struct z_owned_closure_reply_t *this
 ZENOHC_API
 void z_closure_reply_drop(struct z_owned_closure_reply_t *closure);
 /**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_closure_reply_t *z_closure_reply_loan(const struct z_owned_closure_reply_t *closure);
+/**
  * Constructs a closure int its gravestone state.
  */
 ZENOHC_API void z_closure_reply_null(struct z_owned_closure_reply_t *this_);
@@ -1191,7 +1409,7 @@ ZENOHC_API void z_closure_reply_null(struct z_owned_closure_reply_t *this_);
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_sample_call(const struct z_owned_closure_sample_t *closure,
+void z_closure_sample_call(const struct z_loaned_closure_sample_t *closure,
                            const struct z_loaned_sample_t *sample);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -1202,6 +1420,11 @@ ZENOHC_API bool z_closure_sample_check(const struct z_owned_closure_sample_t *th
  */
 ZENOHC_API void z_closure_sample_drop(struct z_owned_closure_sample_t *closure);
 /**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_owned_closure_sample_t *closure);
+/**
  * Constructs a closure in its gravestone state.
  */
 ZENOHC_API void z_closure_sample_null(struct z_owned_closure_sample_t *this_);
@@ -1209,8 +1432,8 @@ ZENOHC_API void z_closure_sample_null(struct z_owned_closure_sample_t *this_);
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_zid_call(const struct z_owned_closure_zid_t *closure,
-                        const struct z_id_t *sample);
+void z_closure_zid_call(const struct z_loaned_closure_zid_t *closure,
+                        const struct z_id_t *z_id);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
@@ -1220,6 +1443,11 @@ ZENOHC_API bool z_closure_zid_check(const struct z_owned_closure_zid_t *this_);
  */
 ZENOHC_API
 void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
+/**
+ * Vorrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_closure_zid_t *z_closure_zid_loan(const struct z_owned_closure_zid_t *closure);
 /**
  * Constructs a null closure.
  */
@@ -1402,6 +1630,13 @@ ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *this_);
  */
 ZENOHC_API z_error_t z_encoding_from_str(struct z_owned_encoding_t *this_, const char *s);
 /**
+ * Constructs a `z_owned_encoding_t` from a specified substring.
+ */
+ZENOHC_API
+z_error_t z_encoding_from_substring(struct z_owned_encoding_t *this_,
+                                    const char *s,
+                                    size_t len);
+/**
  * Borrows encoding.
  */
 ZENOHC_API
@@ -1414,6 +1649,15 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
  * Constructs a default `z_owned_encoding_t`.
  */
 ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *this_);
+/**
+ * Constructs an owned non-null-terminated string from encoding
+ *
+ * @param this_: Encoding.
+ * @param out_str: Uninitialized memory location where a string to be constructed.
+ */
+ZENOHC_API
+void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
+                          struct z_owned_str_t *out_str);
 /**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
@@ -1449,13 +1693,13 @@ ZENOHC_API void z_hello_drop(struct z_owned_hello_t *this_);
  */
 ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hello_t *this_);
 /**
- * Constructs an array of non-owned locators (in the form non-null terminated strings) of Zenoh entity that sent hello message.
+ * Constructs an array of non-owned locators (in the form non-null-terminated strings) of Zenoh entity that sent hello message.
  *
  * The lifetime of locator strings is bound to `this_`.
  */
 ZENOHC_API
 void z_hello_locators(const struct z_loaned_hello_t *this_,
-                      struct z_owned_slice_array_t *locators_out);
+                      struct z_owned_str_array_t *locators_out);
 /**
  * Constructs hello message in a gravestone state.
  */
@@ -1463,7 +1707,7 @@ ZENOHC_API void z_hello_null(struct z_owned_hello_t *this_);
 /**
  * Returns type of Zenoh entity that transmitted hello message.
  */
-ZENOHC_API uint8_t z_hello_whatami(const struct z_loaned_hello_t *this_);
+ZENOHC_API enum z_whatami_t z_hello_whatami(const struct z_loaned_hello_t *this_);
 /**
  * Returns id of Zenoh entity that transmitted hello message.
  */
@@ -1498,13 +1742,6 @@ z_error_t z_info_routers_zid(const struct z_loaned_session_t *session,
  * to pass it a valid session.
  */
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
-/**
- * Constructs the view for key expression's internal string by aliasing it.
- * `this_` must outlive constructed slice.
- */
-ZENOHC_API
-void z_keyexpr_as_slice(const struct z_loaned_keyexpr_t *this_,
-                        struct z_view_slice_t *out_slice);
 /**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
@@ -1553,25 +1790,6 @@ ZENOHC_API
 bool z_keyexpr_equals(const struct z_loaned_keyexpr_t *left,
                       const struct z_loaned_keyexpr_t *right);
 /**
- * Constructs a `z_owned_keyexpr_t` from a slice, copying the passed slice.
- * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression or if it is
- * not in canon form.
- */
-ZENOHC_API
-z_error_t z_keyexpr_from_slice(struct z_owned_keyexpr_t *this_,
-                               const char *start,
-                               size_t len);
-/**
- * Constructs `z_owned_keyexpr_t` from a slice, copying the passed slice. The copied slice is canonized
- * (`len` will be equal to cannonized key expression string length).
- * @return 0 in case of success, negative error code in case of failure (for example if `start` is not a valid key expression
- * even despite canonization).
- */
-ZENOHC_API
-z_error_t z_keyexpr_from_slice_autocanonize(struct z_owned_keyexpr_t *this_,
-                                            const char *start,
-                                            size_t *len);
-/**
  * Constructs a `z_owned_keyexpr_t` from a string, copying the passed string.
  * @return 0 in case of success, negative error code in case of failure (for example if `expr` is not a valid key expression or if it is
  * not in canon form.
@@ -1587,6 +1805,30 @@ z_error_t z_keyexpr_from_string(struct z_owned_keyexpr_t *this_,
 ZENOHC_API
 z_error_t z_keyexpr_from_string_autocanonize(struct z_owned_keyexpr_t *this_,
                                              const char *expr);
+/**
+ * Constructs a `z_owned_keyexpr_t` by copying a substring.
+ *
+ * @param this_: An unitialized location in memory where key expression will be constructed.
+ * @param expr: A buffer with length >= `len`.
+ * @param len: Number of characters from `expr` to consider.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_keyexpr_from_substring(struct z_owned_keyexpr_t *this_,
+                                   const char *expr,
+                                   size_t len);
+/**
+ * Constructs a `z_keyexpr_t` by copying a substring.
+ *
+ * @param this_: An unitialized location in memory where key expression will be constructed.
+ * @param expr: A buffer of with length >= `len`.
+ * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_keyexpr_from_substring_autocanonize(struct z_owned_keyexpr_t *this_,
+                                                const char *start,
+                                                size_t *len);
 /**
  * Returns ``true`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
  * defined by ``right``, ``false`` otherwise.
@@ -1631,11 +1873,11 @@ ZENOHC_API
 enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_keyexpr_t *left,
                                                           const struct z_loaned_keyexpr_t *right);
 /**
- * Constructs an owned null-terminated string from key expression.
+ * Constructs a non-owned non-null-terminated string from key expression.
  */
 ZENOHC_API
 void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *this_,
-                         struct z_owned_str_t *out_string);
+                         struct z_view_str_t *out_string);
 /**
  * Returns ``true`` if mutex is valid, ``false`` otherwise.
  */
@@ -1692,7 +1934,7 @@ ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *this_);
  */
 ZENOHC_API
 z_error_t z_publisher_delete(const struct z_loaned_publisher_t *publisher,
-                             struct z_publisher_delete_options_t _options);
+                             const struct z_publisher_delete_options_t *_options);
 /**
  * Constructs the default values for the delete operation via a publisher entity.
  */
@@ -1764,7 +2006,7 @@ ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
  *
  * Returns NULL if query does not contain an attachment.
  */
-ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *query);
+ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *this_);
 /**
  * Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
  */
@@ -1773,7 +2015,7 @@ ZENOHC_API bool z_query_channel_check(const struct z_owned_query_channel_t *this
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-bool z_query_channel_closure_call(const struct z_owned_query_channel_closure_t *closure,
+bool z_query_channel_closure_call(const struct z_loaned_query_channel_closure_t *closure,
                                   struct z_owned_query_t *query);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -1783,6 +2025,11 @@ ZENOHC_API bool z_query_channel_closure_check(const struct z_owned_query_channel
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API void z_query_channel_closure_drop(struct z_owned_query_channel_closure_t *closure);
+/**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_query_channel_closure_t *z_query_channel_closure_loan(const struct z_owned_query_channel_closure_t *closure);
 /**
  * Constructs a gravestone value for `z_owned_query_channel_closure_t` type.
  */
@@ -1847,7 +2094,7 @@ ZENOHC_API void z_query_drop(struct z_owned_query_t *this_);
 /**
  * Gets query key expression.
  */
-ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loaned_query_t *query);
+ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loaned_query_t *this_);
 /**
  * Borrows the query.
  */
@@ -1860,8 +2107,8 @@ ZENOHC_API void z_query_null(struct z_owned_query_t *this_);
  * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
  */
 ZENOHC_API
-void z_query_parameters(const struct z_loaned_query_t *query,
-                        struct z_view_slice_t *parameters);
+void z_query_parameters(const struct z_loaned_query_t *this_,
+                        struct z_view_str_t *parameters);
 /**
  * Sends a reply to a query.
  *
@@ -1870,18 +2117,40 @@ void z_query_parameters(const struct z_loaned_query_t *query,
  * be called multiple times to send multiple replies to a query. The reply
  * will be considered complete when the Queryable callback returns.
  *
- * @param query: The query to reply to.
+ * @param this_: The query to reply to.
  * @param key_expr: The key of this reply.
- * @param payload: The payload of this reply. WIll be consumed.
+ * @param payload: The payload of this reply. Will be consumed.
  * @param options: The options of this reply. All owned fields will be consumed.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_query_reply(const struct z_loaned_query_t *query,
+z_error_t z_query_reply(const struct z_loaned_query_t *this_,
                         const struct z_loaned_keyexpr_t *key_expr,
                         struct z_owned_bytes_t *payload,
                         struct z_query_reply_options_t *options);
+/**
+ * Sends a error reply to a query.
+ *
+ * This function must be called inside of a Queryable callback passing the
+ * query received as parameters of the callback function. This function can
+ * be called multiple times to send multiple replies to a query. The reply
+ * will be considered complete when the Queryable callback returns.
+ *
+ * @param this_: The query to reply to.
+ * @param payload: The payload carrying error message. Will be consumed.
+ * @param options: The options of this reply. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_query_reply_err(const struct z_loaned_query_t *this_,
+                            struct z_owned_bytes_t *payload,
+                            struct z_query_reply_err_options_t *options);
+/**
+ * Constructs the default value for `z_query_reply_err_options_t`.
+ */
+ZENOHC_API void z_query_reply_err_options_default(struct z_query_reply_err_options_t *this_);
 /**
  * Constructs the default value for `z_query_reply_options_t`.
  */
@@ -1896,7 +2165,7 @@ ZENOHC_API enum z_query_target_t z_query_target_default(void);
  * Returns NULL if query does not contain a value.
  */
 ZENOHC_API
-const struct z_loaned_value_t *z_query_value(const struct z_loaned_query_t *query);
+const struct z_loaned_value_t *z_query_value(const struct z_loaned_query_t *this_);
 /**
  * Returns ``true`` if queryable is valid, ``false`` otherwise.
  */
@@ -1905,6 +2174,8 @@ ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *this_);
  * Frees memory and resets it to its gravesztone state. Will also attempt to undeclare queryable.
  */
 ZENOHC_API void z_queryable_drop(struct z_owned_queryable_t *this_);
+ZENOHC_API
+const struct z_loaned_queryable_t *z_queryable_loan(const struct z_owned_queryable_t *this_);
 /**
  * Constructs a queryable in its gravestone value.
  */
@@ -1941,7 +2212,7 @@ ZENOHC_API bool z_reply_channel_check(const struct z_owned_reply_channel_t *this
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-bool z_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *closure,
+bool z_reply_channel_closure_call(const struct z_loaned_reply_channel_closure_t *closure,
                                   struct z_owned_reply_t *reply);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -1951,6 +2222,11 @@ ZENOHC_API bool z_reply_channel_closure_check(const struct z_owned_reply_channel
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
+/**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_reply_channel_closure_t *z_reply_channel_closure_loan(const struct z_owned_reply_channel_closure_t *closure);
 /**
  * Constructs a gravestone value `z_owned_reply_channel_closure_t` type.
  */
@@ -2113,64 +2389,6 @@ ZENOHC_API int8_t z_sleep_s(size_t time);
  */
 ZENOHC_API int8_t z_sleep_us(size_t time);
 /**
- * @return ``true`` if the slice array is valid, ``false`` if it is in a gravestone state.
- */
-ZENOHC_API bool z_slice_array_check(const struct z_owned_slice_array_t *this_);
-/**
- * Destroys the slice array, resetting it to its gravestone value.
- */
-ZENOHC_API void z_slice_array_drop(struct z_owned_slice_array_t *this_);
-/**
- * @return the value at the position of index in the slice array.
- *
- * Will return `NULL` if the index is out of bounds.
- */
-ZENOHC_API
-const struct z_loaned_slice_t *z_slice_array_get(const struct z_loaned_slice_array_t *this_,
-                                                 size_t index);
-/**
- * @return ``true`` if the array is empty, ``false`` otherwise.
- */
-ZENOHC_API bool z_slice_array_is_empty(const struct z_loaned_slice_array_t *this_);
-/**
- * @return number of elements in the array.
- */
-ZENOHC_API size_t z_slice_array_len(const struct z_loaned_slice_array_t *this_);
-/**
- * Borrows slice array.
- */
-ZENOHC_API
-const struct z_loaned_slice_array_t *z_slice_array_loan(const struct z_owned_slice_array_t *this_);
-/**
- * Mutably borrows slice array.
- */
-ZENOHC_API
-struct z_loaned_slice_array_t *z_slice_array_loan_mut(struct z_owned_slice_array_t *this_);
-/**
- * Constructs a new empty slice array.
- */
-ZENOHC_API void z_slice_array_new(struct z_owned_slice_array_t *this_);
-/**
- * Constructs slice array in its gravestone state.
- */
-ZENOHC_API void z_slice_array_null(struct z_owned_slice_array_t *this_);
-/**
- * Appends specified value to the end of the slice array by alias.
- *
- * @return the new length of the array.
- */
-ZENOHC_API
-size_t z_slice_array_push_by_alias(struct z_loaned_slice_array_t *this_,
-                                   const struct z_loaned_slice_t *value);
-/**
- * Appends specified value to the end of the slice array by copying.
- *
- * @return the new length of the array.
- */
-ZENOHC_API
-size_t z_slice_array_push_by_copy(struct z_loaned_slice_array_t *this_,
-                                  const struct z_loaned_slice_t *value);
-/**
  * @return ``true`` if slice is not empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_slice_check(const struct z_owned_slice_t *this_);
@@ -2292,6 +2510,63 @@ ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
  * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
  */
 ZENOHC_API z_error_t z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *start, size_t len);
+/**
+ * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_str_array_check(const struct z_owned_str_array_t *this_);
+/**
+ * Destroys the string array, resetting it to its gravestone value.
+ */
+ZENOHC_API void z_str_array_drop(struct z_owned_str_array_t *this_);
+/**
+ * @return the value at the position of index in the string array.
+ *
+ * Will return `NULL` if the index is out of bounds.
+ */
+ZENOHC_API
+const struct z_loaned_str_t *z_str_array_get(const struct z_loaned_str_array_t *this_,
+                                             size_t index);
+/**
+ * @return ``true`` if the array is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_str_array_is_empty(const struct z_loaned_str_array_t *this_);
+/**
+ * @return number of elements in the array.
+ */
+ZENOHC_API size_t z_str_array_len(const struct z_loaned_str_array_t *this_);
+/**
+ * Borrows string array.
+ */
+ZENOHC_API
+const struct z_loaned_str_array_t *z_str_array_loan(const struct z_owned_str_array_t *this_);
+/**
+ * Mutably borrows string array.
+ */
+ZENOHC_API struct z_loaned_str_array_t *z_str_array_loan_mut(struct z_owned_str_array_t *this_);
+/**
+ * Constructs a new empty string array.
+ */
+ZENOHC_API void z_str_array_new(struct z_owned_str_array_t *this_);
+/**
+ * Constructs string array in its gravestone state.
+ */
+ZENOHC_API void z_str_array_null(struct z_owned_str_array_t *this_);
+/**
+ * Appends specified value to the end of the string array by alias.
+ *
+ * @return the new length of the array.
+ */
+ZENOHC_API
+size_t z_str_array_push_by_alias(struct z_loaned_str_array_t *this_,
+                                 const struct z_loaned_str_t *value);
+/**
+ * Appends specified value to the end of the string array by copying.
+ *
+ * @return the new length of the array.
+ */
+ZENOHC_API
+size_t z_str_array_push_by_copy(struct z_loaned_str_array_t *this_,
+                                const struct z_loaned_str_t *value);
 ZENOHC_API const struct z_loaned_slice_t *z_str_as_slice(const struct z_loaned_str_t *this_);
 /**
  * @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
@@ -2314,7 +2589,7 @@ ZENOHC_API void z_str_drop(struct z_owned_str_t *this_);
  */
 ZENOHC_API void z_str_empty(struct z_owned_str_t *this_);
 /**
- * Constructs an owned string by copying a `str` substring of length `len` (and adding terminating 0).
+ * Constructs an owned string by copying a `str` substring of length `len`.
  *
  * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
  */
@@ -2462,9 +2737,25 @@ ZENOHC_API z_error_t z_undeclare_queryable(struct z_owned_queryable_t *this_);
  */
 ZENOHC_API z_error_t z_undeclare_subscriber(struct z_owned_subscriber_t *this_);
 /**
+ * Returns ``true`` if value is in non-default state, ``false`` otherwise.
+ */
+ZENOHC_API bool z_value_check(const struct z_owned_value_t *this_);
+/**
+ * Frees the memory and resets the value it to its default value.
+ */
+ZENOHC_API void z_value_drop(struct z_owned_value_t *this_);
+/**
  * Returns value encoding.
  */
 ZENOHC_API const struct z_loaned_encoding_t *z_value_encoding(const struct z_loaned_value_t *this_);
+/**
+ * Borrows value.
+ */
+ZENOHC_API const struct z_loaned_value_t *z_value_loan(const struct z_owned_value_t *this_);
+/**
+ * Constructs an empty `z_owned_value_t`.
+ */
+ZENOHC_API void z_value_null(struct z_owned_value_t *this_);
 /**
  * Returns value payload.
  */
@@ -2473,48 +2764,6 @@ ZENOHC_API const struct z_loaned_bytes_t *z_value_payload(const struct z_loaned_
  * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API bool z_view_keyexpr_check(const struct z_view_keyexpr_t *this_);
-/**
- * Constructs a `z_view_keyexpr_t` by aliasing a slice.
- * `expr` must outlive the constucted key expression.
- *
- * @param this_: An unitialized location in memory where key expression will be constructed
- * @param expr: A buffer with length >= `len`.
- * @param len: Number of characters from `expr` to consider.
- * @return 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_error_t z_view_keyexpr_from_slice(struct z_view_keyexpr_t *this_,
-                                    const char *expr,
-                                    size_t len);
-/**
- * Constructs a `z_view_keyexpr_t` by aliasing a slice.
- * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
- * `expr` must outlive the constucted key expression.
- *
- * @param this_: An unitialized location in memory where key expression will be constructed
- * @param expr: A buffer of with length >= `len`.
- * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
- * @return 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_error_t z_view_keyexpr_from_slice_autocanonize(struct z_view_keyexpr_t *this_,
-                                                 char *start,
-                                                 size_t *len);
-/**
- * Constructs a `z_view_keyexpr_t` by aliasing a slice without checking any of `z_view_keyexpr_t`'s assertions:
- *
- * - `start` MUST be valid UTF8.
- * - `start` MUST follow the Key Expression specification, i.e.:
- *  - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
- *  - any instance of ``**`` may only be lead or followed by ``/``.
- *  - the key expression must have canon form.
- *
- * `start` must outlive constructed key expression.
- */
-ZENOHC_API
-void z_view_keyexpr_from_slice_unchecked(struct z_view_keyexpr_t *this_,
-                                         const char *start,
-                                         size_t len);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a string.
  * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression or if it is
@@ -2547,6 +2796,48 @@ z_error_t z_view_keyexpr_from_string_autocanonize(struct z_view_keyexpr_t *this_
 ZENOHC_API
 void z_view_keyexpr_from_string_unchecked(struct z_view_keyexpr_t *this_,
                                           const char *s);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a substring.
+ * `expr` must outlive the constucted key expression.
+ *
+ * @param this_: An unitialized location in memory where key expression will be constructed.
+ * @param expr: A buffer with length >= `len`.
+ * @param len: Number of characters from `expr` to consider.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_view_keyexpr_from_substring(struct z_view_keyexpr_t *this_,
+                                        const char *expr,
+                                        size_t len);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a substring.
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * `expr` must outlive the constucted key expression.
+ *
+ * @param this_: An unitialized location in memory where key expression will be constructed
+ * @param expr: A buffer of with length >= `len`.
+ * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_view_keyexpr_from_substring_autocanonize(struct z_view_keyexpr_t *this_,
+                                                     char *start,
+                                                     size_t *len);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a substring without checking any of `z_view_keyexpr_t`'s assertions:
+ *
+ * - `start` MUST be valid UTF8.
+ * - `start` MUST follow the Key Expression specification, i.e.:
+ *  - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
+ *  - any instance of ``**`` may only be lead or followed by ``/``.
+ *  - the key expression must have canon form.
+ *
+ * `start` must outlive constructed key expression.
+ */
+ZENOHC_API
+void z_view_keyexpr_from_substring_unchecked(struct z_view_keyexpr_t *this_,
+                                             const char *start,
+                                             size_t len);
 /**
  * Borrows `z_view_keyexpr_t`.
  */
@@ -2598,6 +2889,15 @@ ZENOHC_API bool z_view_str_check(const struct z_view_str_t *this_);
  */
 ZENOHC_API void z_view_str_empty(struct z_view_str_t *this_);
 /**
+ * Constructs a view string to a specified substring of length `len`.
+ *
+ * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_error_t z_view_str_from_substring(struct z_view_str_t *this_,
+                                    const char *str,
+                                    size_t len);
+/**
  * Borrows view string.
  */
 ZENOHC_API const struct z_loaned_str_t *z_view_str_loan(const struct z_view_str_t *this_);
@@ -2614,20 +2914,16 @@ ZENOHC_API
 z_error_t z_view_str_wrap(struct z_view_str_t *this_,
                           const char *str);
 /**
- * Converts the kind of zenoh entity into a string.
+ * Constructs a non-owned non-null-terminated string from the kind of zenoh entity.
  *
- *
+ * The string has static storage (i.e. valid until the end of the program).
  * @param whatami: A whatami bitmask of zenoh entity kind.
- * @param buf: Buffer to write a null-terminated string to.
+ * @param str_out: An unitialized memory location where strring will be constructed.
  * @param len: Maximum number of bytes that can be written to the `buf`.
  *
- * @return 0 if successful, negative error values if whatami contains an invalid bitmask or `buf` is null,
- * or number of remaining bytes, if the null-terminated string size exceeds `len`.
+ * @return 0 if successful, negative error values if whatami contains an invalid bitmask.
  */
-ZENOHC_API
-z_error_t z_whatami_to_str(uint8_t whatami,
-                           char *buf,
-                           size_t len);
+ZENOHC_API z_error_t z_whatami_to_str(enum z_whatami_t whatami, struct z_view_str_t *str_out);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  *
@@ -2648,9 +2944,17 @@ z_error_t zc_config_from_str(struct z_owned_config_t *this_,
  * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
 ZENOHC_API
-z_error_t zc_config_get(const struct z_loaned_config_t *this_,
-                        const char *key,
-                        struct z_owned_str_t *out_value_string);
+z_error_t zc_config_get_from_string(const struct z_loaned_config_t *this_,
+                                    const char *key,
+                                    struct z_owned_str_t *out_value_string);
+/**
+ * Gets the property with the given path key from the configuration, and constructs and owned string from it.
+ */
+ZENOHC_API
+z_error_t zc_config_get_from_substring(const struct z_loaned_config_t *this_,
+                                       const char *key,
+                                       size_t key_len,
+                                       struct z_owned_str_t *out_value_string);
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
@@ -2660,6 +2964,17 @@ ZENOHC_API
 z_error_t zc_config_insert_json(struct z_loaned_config_t *this_,
                                 const char *key,
                                 const char *value);
+/**
+ * Inserts a JSON-serialized `value` at the `key` position of the configuration.
+ *
+ * Returns 0 if successful, a negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t zc_config_insert_json_from_substring(struct z_loaned_config_t *this_,
+                                               const char *key,
+                                               size_t key_len,
+                                               const char *value,
+                                               size_t value_len);
 /**
  * Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
  *
@@ -2817,8 +3132,8 @@ void zc_session_clone(const struct z_loaned_session_t *this_,
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void zcu_closure_matching_status_call(const struct zcu_owned_closure_matching_status_t *closure,
-                                      const struct zcu_matching_status_t *sample);
+void zcu_closure_matching_status_call(const struct zcu_loaned_closure_matching_status_t *closure,
+                                      const struct zcu_matching_status_t *mathing_status);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
@@ -2829,6 +3144,11 @@ bool zcu_closure_matching_status_check(const struct zcu_owned_closure_matching_s
  */
 ZENOHC_API
 void zcu_closure_matching_status_drop(struct zcu_owned_closure_matching_status_t *closure);
+/**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct zcu_loaned_closure_matching_status_t *zcu_closure_matching_status_loan(const struct zcu_owned_closure_matching_status_t *closure);
 /**
  * Constructs a null value of 'zcu_owned_closure_matching_status_t' type
  */

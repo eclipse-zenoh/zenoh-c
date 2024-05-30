@@ -23,9 +23,10 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_closure_sample_call;
+use crate::z_closure_sample_loan;
 use crate::z_loaned_session_t;
 use crate::z_owned_closure_sample_t;
-use zenoh::prelude::sync::SyncResolve;
+use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::subscriber::Reliability;
 use zenoh::subscriber::Subscriber;
@@ -63,9 +64,10 @@ impl From<z_reliability_t> for Reliability {
 
 pub use crate::opaque_types::z_loaned_subscriber_t;
 pub use crate::opaque_types::z_owned_subscriber_t;
-
 decl_transmute_owned!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
 decl_transmute_handle!(Subscriber<'static, ()>, z_loaned_subscriber_t);
+
+validate_equivalence!(z_owned_subscriber_t, z_loaned_subscriber_t);
 
 /// Constructs a subscriber in a gravestone state.
 #[no_mangle]
@@ -125,12 +127,12 @@ pub extern "C" fn z_declare_subscriber(
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.transmute_handle();
-            z_closure_sample_call(&closure, sample)
+            z_closure_sample_call(z_closure_sample_loan(&closure), sample)
         });
     if let Some(options) = options {
         subscriber = subscriber.reliability(options.reliability.into());
     }
-    match subscriber.res() {
+    match subscriber.wait() {
         Ok(sub) => {
             Inplace::init(this, Some(sub));
             errors::Z_OK
@@ -158,7 +160,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 #[no_mangle]
 pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> errors::z_error_t {
     if let Some(s) = this.transmute_mut().extract().take() {
-        if let Err(e) = s.undeclare().res_sync() {
+        if let Err(e) = s.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
         }
