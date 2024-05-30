@@ -69,8 +69,11 @@ Mkfile.old
 dkms.conf
 .cache
 
-# Platform dependent generated files
+#  Generated headers
 include/zenoh_configure.h
+include/zenoh_macros.h
+include/zenoh_commons.h
+include/zenoh_concrete.h
 
 # Build resources
 .build_resources*
