@@ -34,7 +34,7 @@ build = "build.rs"
 logger-autoinit = []
 shared-memory = ["zenoh/shared-memory", "zenoh-ext/shared-memory", "zenoh-protocol/shared-memory",]
 unstable = []
-default = ["zenoh/default"]
+default = ["zenoh/default", "unstable", "shared-memory"]
 
 [badges]
 maintenance = { status = "actively-developed" }

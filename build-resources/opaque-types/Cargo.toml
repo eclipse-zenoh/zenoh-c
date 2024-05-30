@@ -8,7 +8,7 @@ edition = "2021"
 [features]
 shared-memory = ["zenoh/shared-memory", "zenoh-ext/shared-memory"]
 unstable = []
-default = ["zenoh/default"]
+default = ["zenoh/default", "unstable", "shared-memory"]
 
 [dependencies]
 # shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
