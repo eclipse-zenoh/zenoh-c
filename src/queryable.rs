@@ -18,7 +18,7 @@ use crate::transmute::{
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_loaned_bytes_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t,
-    z_owned_encoding_t, z_view_str_from_substring, z_view_str_t,
+    z_owned_encoding_t, z_view_string_from_substring, z_view_string_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
@@ -322,11 +322,11 @@ pub extern "C" fn z_query_keyexpr(this: &z_loaned_query_t) -> &z_loaned_keyexpr_
 #[no_mangle]
 pub unsafe extern "C" fn z_query_parameters(
     this: &z_loaned_query_t,
-    parameters: *mut MaybeUninit<z_view_str_t>,
+    parameters: *mut MaybeUninit<z_view_string_t>,
 ) {
     let query = this.transmute_ref();
     let params = query.parameters().as_str();
-    unsafe { z_view_str_from_substring(parameters, params.as_ptr() as _, params.len()) };
+    unsafe { z_view_string_from_substring(parameters, params.as_ptr() as _, params.len()) };
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload value</a>.

@@ -93,15 +93,15 @@ int run_publisher() {
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
-    z_view_str_t keystr;
+    z_view_string_t keystr;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &keystr);
-    if (strncmp(keyexpr, z_str_data(z_loan(keystr)), z_str_len(z_loan(keystr)))) {
+    if (strncmp(keyexpr, z_string_data(z_loan(keystr)), z_string_len(z_loan(keystr)))) {
         perror("Unexpected key received");
         exit(-1);
     }
-    z_owned_str_t payload_str;
+    z_owned_string_t payload_str;
     z_bytes_decode_into_string(z_sample_payload(sample), &payload_str);
-    if (strncmp(values[val_num], z_str_data(z_loan(payload_str)), z_str_len(z_loan(payload_str)))) {
+    if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));
         exit(-1);

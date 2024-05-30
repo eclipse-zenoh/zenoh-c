@@ -47,10 +47,10 @@ void canonize() {
     z_view_keyexpr_from_string_autocanonize(&key_expr_canonized, keyexpr);
     assert(z_view_keyexpr_check(&key_expr_canonized) == true);
     assert(strcmp(keyexpr, "a/**/c") == 0);
-    z_view_str_t key_exp_canonized_bytes;
+    z_view_string_t key_exp_canonized_bytes;
     z_keyexpr_to_string(z_loan(key_expr_canonized), &key_exp_canonized_bytes);
-    assert(z_str_len(z_loan(key_exp_canonized_bytes)) == len_new);
-    assert(strncmp(z_str_data(z_loan(key_exp_canonized_bytes)), "a/**/c", len_new) == 0);
+    assert(z_string_len(z_loan(key_exp_canonized_bytes)) == len_new);
+    assert(strncmp(z_string_data(z_loan(key_exp_canonized_bytes)), "a/**/c", len_new) == 0);
 
     strcpy(keyexpr, "a/**/**/c");
     len_new = len_old;
@@ -59,8 +59,8 @@ void canonize() {
     assert(len_new == len_old - 3);
     assert(strncmp(keyexpr, "a/**/c", len_new) == 0);
     z_keyexpr_to_string(z_loan(key_expr_canonized), &key_exp_canonized_bytes);
-    assert(z_str_len(z_loan(key_exp_canonized_bytes)) == len_new);
-    assert(strncmp(z_str_data(z_loan(key_exp_canonized_bytes)), "a/**/c", len_new) == 0);
+    assert(z_string_len(z_loan(key_exp_canonized_bytes)) == len_new);
+    assert(strncmp(z_string_data(z_loan(key_exp_canonized_bytes)), "a/**/c", len_new) == 0);
 }
 
 void includes() {

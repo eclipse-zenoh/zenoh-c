@@ -63,15 +63,15 @@ z_error_t check_attachement(const z_loaned_bytes_t* attachement, const attacheme
             perror("Can not decode attachment elemnt into kv-pair\n");
             return -1;
         }
-        z_owned_str_t k_str, v_str;
+        z_owned_string_t k_str, v_str;
         z_bytes_decode_into_string(z_loan(k), &k_str);
         z_bytes_decode_into_string(z_loan(v), &v_str);
 
-        if (strncmp(ctx->keys[i], z_str_data(z_loan(k_str)), z_str_len(z_loan(k_str))) != 0) {
+        if (strncmp(ctx->keys[i], z_string_data(z_loan(k_str)), z_string_len(z_loan(k_str))) != 0) {
             perror("Incorrect attachment key\n");
             return -1;
         }
-        if (strncmp(ctx->values[i], z_str_data(z_loan(v_str)), z_str_len(z_loan(v_str))) != 0) {
+        if (strncmp(ctx->values[i], z_string_data(z_loan(v_str)), z_string_len(z_loan(v_str))) != 0) {
             perror("Incorrect attachment value\n");
             return -1;
         }
@@ -88,7 +88,7 @@ z_error_t check_attachement(const z_loaned_bytes_t* attachement, const attacheme
 void query_handler(const z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
-    z_view_str_t params;
+    z_view_string_t params;
     z_query_parameters(query, &params);
     const z_loaned_value_t* payload_value = z_query_value(query);
 
@@ -194,9 +194,9 @@ int run_get() {
             assert(z_reply_is_ok(z_loan(reply)));
 
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t payload_str;
+            z_owned_string_t payload_str;
             z_bytes_decode_into_string(z_sample_payload(sample), &payload_str);
-            if (strncmp(values[val_num], z_str_data(z_loan(payload_str)), z_str_len(z_loan(payload_str)))) {
+            if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_str));
                 exit(-1);
