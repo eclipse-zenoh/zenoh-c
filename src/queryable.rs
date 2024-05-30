@@ -27,7 +27,6 @@ use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::queryable::{Query, Queryable};
 use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
-use zenoh::value::Value;
 
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
