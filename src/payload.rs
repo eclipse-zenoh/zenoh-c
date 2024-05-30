@@ -596,10 +596,10 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 ) -> z_error_t {
     let reader = this.transmute_mut();
     let pos = match origin {
-        libc::SEEK_SET => {
-            match offset.try_into() {
-                Ok(o) => SeekFrom::Start(o),
-                Err(_) => { return errors::Z_EINVAL; }
+        libc::SEEK_SET => match offset.try_into() {
+            Ok(o) => SeekFrom::Start(o),
+            Err(_) => {
+                return errors::Z_EINVAL;
             }
         },
         libc::SEEK_CUR => SeekFrom::Current(offset),
