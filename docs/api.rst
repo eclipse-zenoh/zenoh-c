@@ -143,6 +143,7 @@ Functions
 .. doxygenfunction:: z_bytes_decode_into_iter
 .. doxygenfunction:: z_bytes_decode_into_pair
 
+.. doxygenfunction:: z_bytes_empty
 .. doxygenfunction:: z_bytes_clone
 .. doxygenfunction:: z_bytes_loan
 .. doxygenfunction:: z_bytes_loan_mut
