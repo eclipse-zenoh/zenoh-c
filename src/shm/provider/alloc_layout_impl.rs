@@ -15,8 +15,11 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
-use zenoh::prelude::*;
-use zenoh::shm::AllocPolicy;
+use zenoh::shm::{
+    AllocLayout, AllocPolicy, DynamicProtocolID, PosixSharedMemoryProviderBackend,
+    ProtocolIDSource, SharedMemoryProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
+};
+use zenoh::{prelude::*, shm::AsyncAllocPolicy};
 
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
