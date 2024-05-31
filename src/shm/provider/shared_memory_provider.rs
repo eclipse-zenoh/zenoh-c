@@ -45,7 +45,11 @@ use super::{
 };
 
 /// A loaned SharedMemoryProvider specialization
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+#[repr(C, align(8))]
+pub struct z_loaned_shared_memory_provider_t([u64; 26]);
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 #[repr(C, align(8))]
 pub struct z_loaned_shared_memory_provider_t([u64; 26]);
 
@@ -64,9 +68,13 @@ pub struct z_loaned_shared_memory_provider_t([u64; 26]);
 /// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 #[repr(C, align(8))]
 pub struct z_owned_shared_memory_provider_t([u64; 26]);
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+#[repr(C, align(8))]
+pub struct z_owned_shared_memory_provider_t([u64; 32]);
 
 #[cfg(target_arch = "aarch64")]
 #[repr(C, align(16))]

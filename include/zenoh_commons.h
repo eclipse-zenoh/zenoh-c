@@ -212,8 +212,8 @@ typedef struct ALIGN(8) z_loaned_alloc_layout_t {
 } z_loaned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_loaned_alloc_layout_t {
-  uint64_t _0[6];
+typedef struct ALIGN(8) z_loaned_alloc_layout_t {
+  uint64_t _0[5];
 } z_loaned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
@@ -230,8 +230,8 @@ typedef struct ALIGN(8) z_owned_alloc_layout_t {
 } z_owned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)
-typedef struct ALIGN(16) z_owned_alloc_layout_t {
-  uint64_t _0[6];
+typedef struct ALIGN(8) z_owned_alloc_layout_t {
+  uint64_t _0[5];
 } z_owned_alloc_layout_t;
 #endif
 #if defined(TARGET_ARCH_ARM)
@@ -243,6 +243,11 @@ typedef int8_t z_error_t;
 /**
  * A loaned SharedMemoryProvider specialization
  */
+#if defined(TARGET_ARCH_X86_64)
+typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
+  uint64_t _0[26];
+} z_loaned_shared_memory_provider_t;
+#endif
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
   uint64_t _0[26];
@@ -858,6 +863,11 @@ typedef struct ALIGN(8) z_owned_shared_memory_client_t {
 #if defined(TARGET_ARCH_X86_64)
 typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
   uint64_t _0[26];
+} z_owned_shared_memory_provider_t;
+#endif
+#if defined(TARGET_ARCH_X86_64)
+typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
+  uint64_t _0[32];
 } z_owned_shared_memory_provider_t;
 #endif
 #if defined(TARGET_ARCH_AARCH64)

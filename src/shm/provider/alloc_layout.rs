@@ -43,8 +43,8 @@ use super::{
 pub struct z_loaned_alloc_layout_t([u64; 5]);
 
 #[cfg(target_arch = "aarch64")]
-#[repr(C, align(16))]
-pub struct z_loaned_alloc_layout_t([u64; 6]);
+#[repr(C, align(8))]
+pub struct z_loaned_alloc_layout_t([u64; 5]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
@@ -56,8 +56,8 @@ pub struct z_loaned_alloc_layout_t([u64; 5]);
 pub struct z_owned_alloc_layout_t([u64; 5]);
 
 #[cfg(target_arch = "aarch64")]
-#[repr(C, align(16))]
-pub struct z_owned_alloc_layout_t([u64; 6]);
+#[repr(C, align(8))]
+pub struct z_owned_alloc_layout_t([u64; 5]);
 
 #[cfg(target_arch = "arm")]
 #[repr(C, align(8))]
