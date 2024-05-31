@@ -71,6 +71,7 @@ dkms.conf
 
 # Platform dependent generated files
 include/zenoh_configure.h
+include/zenoh_opaque.h
 
 # Build resources
 .build_resources*
