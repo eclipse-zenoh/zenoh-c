@@ -21,7 +21,7 @@ use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 use zenoh::selector::Selector;
 
-use zenoh::prelude::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
+use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
 use crate::transmute::unwrap_ref_unchecked;

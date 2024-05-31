@@ -329,7 +329,7 @@ pub unsafe extern "C" fn z_config_client(
         .iter()
         .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
         .try_fold(
-            Vec::<zenoh::prelude::Locator>::new(),
+            Vec::<zenoh_protocol::core::Locator>::new(),
             |mut acc, it| match it {
                 Err(e) => {
                     log::error!("Error parsing peer address: {}", e);

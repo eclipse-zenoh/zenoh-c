@@ -28,9 +28,9 @@ use crate::z_view_string_t;
 use libc::c_char;
 use std::error::Error;
 use zenoh::core::Wait;
+use zenoh::key_expr::keyexpr;
+use zenoh::key_expr::KeyExpr;
 use zenoh::key_expr::SetIntersectionLevel;
-use zenoh::prelude::keyexpr;
-use zenoh::prelude::KeyExpr;
 use zenoh_protocol::core::key_expr::canon::Canonizable;
 
 pub use crate::opaque_types::z_owned_keyexpr_t;
