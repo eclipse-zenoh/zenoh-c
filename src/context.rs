@@ -27,7 +27,7 @@ pub trait DroppableContext: Debug {
 /// This is a non-thread-safe context - zenoh-c guarantees that associated callbacks that share the same
 /// zc_context_t instance will never be executed concurrently. In other words, all the callbacks associated
 /// with this context data are not required to be thread-safe.
-/// 
+///
 /// NOTE: Remember that the same callback interfaces associated with different zc_context_t instances can
 /// still be executed concurrently. The exact behavior depends on user's application, but we strongly
 /// discourage our users from pinning to some specific behavior unless they _really_ understand what they

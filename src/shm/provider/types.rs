@@ -20,7 +20,8 @@ use zenoh_util::core::zerror;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr
+        unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
+        TransmuteRef, TransmuteUninitPtr,
     },
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
@@ -132,7 +133,7 @@ pub extern "C" fn z_memory_layout_get_data(
 ) {
     let layout = this.transmute_ref();
     out_size.write(layout.size());
-    out_alignment.write(layout.alignment().transmute_copy() );
+    out_alignment.write(layout.alignment().transmute_copy());
 }
 
 decl_transmute_owned!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);

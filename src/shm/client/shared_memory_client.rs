@@ -97,9 +97,7 @@ pub extern "C" fn z_shared_memory_client_null(
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shared_memory_client_check(
-    this: &z_owned_shared_memory_client_t,
-) -> bool {
+pub extern "C" fn z_shared_memory_client_check(this: &z_owned_shared_memory_client_t) -> bool {
     this.transmute_ref().is_some()
 }
 
