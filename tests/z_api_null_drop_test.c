@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
     z_reply_channel_closure_null(&reply_channel_closure_null_1);
     z_owned_reply_channel_t reply_channel_null_1;
     z_reply_channel_null(&reply_channel_null_1);
-    z_owned_str_t str_null_1;
-    z_str_null(&str_null_1);
+    z_owned_string_t str_null_1;
+    z_string_null(&str_null_1);
     z_owned_slice_map_t slice_map_null_1;
     z_slice_map_null(&slice_map_null_1);
     z_owned_bytes_t bytes_null_1;
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     z_owned_closure_zid_t closure_zid_null_2;
     z_owned_reply_channel_closure_t reply_channel_closure_null_2;
     z_owned_reply_channel_t reply_channel_null_2;
-    z_owned_str_t str_null_2;
+    z_owned_string_t str_null_2;
     z_owned_slice_map_t slice_map_null_2;
     z_owned_bytes_t bytes_null_2;
 

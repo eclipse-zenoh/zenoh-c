@@ -7,12 +7,12 @@ use std::thread::JoinHandle;
 use zenoh::buffers::ZBuf;
 use zenoh::bytes::ZBytesIterator;
 use zenoh::bytes::ZBytesWriter;
+use zenoh::bytes::{ZBytes, ZBytesReader};
 use zenoh::config::Config;
 use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
 use zenoh::handlers::DefaultHandler;
 use zenoh::key_expr::KeyExpr;
-use zenoh::bytes::{ZBytes, ZBytesReader};
 use zenoh::liveliness::LivelinessToken;
 use zenoh::publication::MatchingListener;
 use zenoh::publication::Publisher;
@@ -39,7 +39,7 @@ macro_rules! get_opaque_type_data {
             );
             panic!("{}", INFO_MESSAGE);
         };
-    }
+    };
 }
 
 /// A serialized Zenoh data.
@@ -48,7 +48,6 @@ macro_rules! get_opaque_type_data {
 get_opaque_type_data!(Option<ZBytes>, z_owned_bytes_t);
 /// A loaned serialized Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
-
 
 type CSlice = (usize, isize);
 
@@ -60,11 +59,11 @@ get_opaque_type_data!(CSlice, z_view_slice_t);
 get_opaque_type_data!(CSlice, z_loaned_slice_t);
 
 /// The wrapper type for strings allocated by Zenoh.
-get_opaque_type_data!(CSlice, z_owned_str_t);
+get_opaque_type_data!(CSlice, z_owned_string_t);
 /// The view over a string.
-get_opaque_type_data!(CSlice, z_view_str_t);
+get_opaque_type_data!(CSlice, z_view_string_t);
 /// A loaned string.
-get_opaque_type_data!(CSlice, z_loaned_str_t);
+get_opaque_type_data!(CSlice, z_loaned_string_t);
 
 /// A map of maybe-owned slices to maybe-owned slices.
 ///
@@ -75,9 +74,9 @@ get_opaque_type_data!(HashMap<usize, usize>, z_loaned_slice_map_t);
 
 /// An array of maybe-owned non-null terminated strings.
 ///
-get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_str_array_t);
+get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_string_array_t);
 /// A loaned string array.
-get_opaque_type_data!(Vec<CSlice>, z_loaned_str_array_t);
+get_opaque_type_data!(Vec<CSlice>, z_loaned_string_array_t);
 
 /// An owned Zenoh sample.
 ///
@@ -214,7 +213,6 @@ get_opaque_type_data!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
 get_opaque_type_data!(Option<LivelinessToken<'static>>, zc_owned_liveliness_token_t);
 get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
-
 
 /// An owned Zenoh publication cache.
 ///

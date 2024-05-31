@@ -54,12 +54,10 @@ int main(int argc, char **argv) {
     z_owned_reply_t reply;
     for (z_call(z_loan(channel.recv), &reply); z_check(reply); z_call(z_loan(channel.recv), &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {
-            const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
-            z_view_str_t key_str;
+            const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
+            z_view_string_t key_str;
             z_keyexpr_to_string(z_sample_keyexpr(sample), &key_str);
-            printf(">> Alive token ('%.*s')\n", 
-                (int)z_str_len(z_loan(key_str)), z_str_data(z_loan(key_str))
-            );
+            printf(">> Alive token ('%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)));
         } else {
             printf("Received an error\n");
         }

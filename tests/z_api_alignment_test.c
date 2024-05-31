@@ -44,7 +44,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     queries++;
 
     const z_loaned_keyexpr_t* query_ke = z_query_keyexpr(query);
-    z_view_str_t k_str;
+    z_view_string_t k_str;
     z_keyexpr_to_string(query_ke, &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
@@ -52,7 +52,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     }
 #endif
 
-    z_view_str_t params;
+    z_view_string_t params;
     z_query_parameters(query, &params);
     (void)(params);
     const z_loaned_value_t* payload_value = z_query_value(query);
@@ -72,7 +72,7 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
     if (z_reply_is_ok(reply)) {
         const z_loaned_sample_t* sample = z_reply_ok(reply);
 
-        z_view_str_t k_str;
+        z_view_string_t k_str;
         z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
         if (k_str == NULL) {
@@ -89,7 +89,7 @@ volatile unsigned int datas = 0;
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     datas++;
 
-    z_view_str_t k_str;
+    z_view_string_t k_str;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {

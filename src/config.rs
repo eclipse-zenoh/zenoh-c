@@ -23,7 +23,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
-use crate::{errors, z_owned_str_t, z_str_from_substring, z_str_null};
+use crate::{errors, z_owned_string_t, z_string_from_substring, z_string_null};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -121,7 +121,7 @@ pub extern "C" fn z_config_clone(
 pub unsafe extern "C" fn zc_config_get_from_string(
     this: &z_loaned_config_t,
     key: *const c_char,
-    out_value_string: *mut MaybeUninit<z_owned_str_t>,
+    out_value_string: *mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
     zc_config_get_from_substring(this, key, libc::strlen(key), out_value_string)
 }
@@ -133,25 +133,25 @@ pub unsafe extern "C" fn zc_config_get_from_substring(
     this: &z_loaned_config_t,
     key: *const c_char,
     key_len: usize,
-    out_value_string: *mut MaybeUninit<z_owned_str_t>,
+    out_value_string: *mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
     let config = this.transmute_ref();
     if key.is_null() {
-        z_str_null(out_value_string);
+        z_string_null(out_value_string);
         return errors::Z_EINVAL;
     }
 
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(_) => {
-            z_str_null(out_value_string);
+            z_string_null(out_value_string);
             return errors::Z_EINVAL;
         }
     };
     let val = config.get_json(key).ok();
     match val {
         Some(val) => {
-            z_str_from_substring(
+            z_string_from_substring(
                 out_value_string,
                 val.as_ptr() as *const libc::c_char,
                 val.len(),
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn zc_config_get_from_substring(
             errors::Z_OK
         }
         None => {
-            z_str_null(out_value_string);
+            z_string_null(out_value_string);
             errors::Z_EUNAVAILABLE
         }
     }
@@ -251,13 +251,13 @@ pub unsafe extern "C" fn zc_config_from_str(
 #[no_mangle]
 pub unsafe extern "C" fn zc_config_to_string(
     config: &z_loaned_config_t,
-    out_config_string: *mut MaybeUninit<z_owned_str_t>,
+    out_config_string: *mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
     let config: &Config = config.transmute_ref();
     match json5::to_string(config) {
         Ok(s) => {
             unsafe {
-                z_str_from_substring(
+                z_string_from_substring(
                     out_config_string,
                     s.as_ptr() as *const libc::c_char,
                     s.len(),
@@ -266,7 +266,7 @@ pub unsafe extern "C" fn zc_config_to_string(
             errors::Z_OK
         }
         Err(_) => {
-            z_str_null(out_config_string);
+            z_string_null(out_config_string);
             errors::Z_EPARSE
         }
     }

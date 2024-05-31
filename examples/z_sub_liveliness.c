@@ -15,17 +15,17 @@
 #include "zenoh.h"
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
-    z_view_str_t key_string;
+    z_view_string_t key_string;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
     switch (z_sample_kind(sample)) {
         case Z_SAMPLE_KIND_PUT:
             printf(">> [LivelinessSubscriber] New alive token ('%.*s')\n",
-                (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string))
+                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string))
             );
             break;
         case Z_SAMPLE_KIND_DELETE:
             printf(">> [LivelinessSubscriber] Dropped token ('%.*s')\n", 
-                (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string))
+                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string))
             );
             break;
     }

@@ -71,27 +71,27 @@ int main(int argc, char **argv) {
     z_owned_query_t oquery;
     for (z_call(z_loan(channel.recv), &oquery); z_check(oquery); z_call(z_loan(channel.recv), &oquery)) {
         const z_loaned_query_t* query = z_loan(oquery);
-        z_view_str_t key_string;
+        z_view_string_t key_string;
         z_keyexpr_to_string(z_query_keyexpr(query), &key_string);
 
-        z_view_str_t params;
+        z_view_string_t params;
         z_query_parameters(query, &params);
 
         const z_loaned_bytes_t* payload = z_value_payload(z_query_value(query));
         if (z_bytes_len(payload) > 0) {
-            z_owned_str_t payload_string;
+            z_owned_string_t payload_string;
             z_bytes_decode_into_string(payload, &payload_string);
 
             printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n", 
-                (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)),
-                (int)z_str_len(z_loan(params)), z_str_data(z_loan(params)), 
-                (int)z_str_len(z_loan(payload_string)), z_str_data(z_loan(payload_string))
+                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+                (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)), 
+                (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string))
             );
             z_drop(z_move(payload_string));
         } else {
             printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", 
-                (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)),
-                (int)z_str_len(z_loan(params)), z_str_data(z_loan(params))
+                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+                (int)z_string_len(z_loan(params)), z_string_data(z_loan(params))
             );
         }
         z_query_reply_options_t options;
