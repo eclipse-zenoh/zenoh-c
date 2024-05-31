@@ -32,8 +32,8 @@ extern "C" {
 
 // clang-format off
 // include order is important
-#include "zenoh_opaque.h"
 #include "zenoh_concrete.h"
+#include "zenoh_opaque.h"
 #include "zenoh_commons.h"
 // clang-format on
 
