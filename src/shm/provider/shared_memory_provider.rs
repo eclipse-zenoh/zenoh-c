@@ -51,10 +51,10 @@ pub struct z_loaned_shared_memory_provider_t([u64; 26]);
 
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 #[repr(C, align(8))]
-pub struct z_loaned_shared_memory_provider_t([u64; 26]);
+pub struct z_loaned_shared_memory_provider_t([u64; 32]);
 
 #[cfg(target_arch = "aarch64")]
-#[repr(C, align(16))]
+#[repr(C, align(8))]
 pub struct z_loaned_shared_memory_provider_t([u64; 26]);
 
 #[cfg(target_arch = "arm")]
@@ -77,7 +77,7 @@ pub struct z_owned_shared_memory_provider_t([u64; 26]);
 pub struct z_owned_shared_memory_provider_t([u64; 32]);
 
 #[cfg(target_arch = "aarch64")]
-#[repr(C, align(16))]
+#[repr(C, align(8))]
 pub struct z_owned_shared_memory_provider_t([u64; 26]);
 
 #[cfg(target_arch = "arm")]
