@@ -1085,6 +1085,36 @@ ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *this_);
  */
 ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *this_, struct z_owned_bytes_t *dst);
 /**
+ * Decodes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t z_bytes_decode_into_double(const struct z_loaned_bytes_t *this_, double *dst);
+/**
+ * Decodes into a float.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t z_bytes_decode_into_float(const struct z_loaned_bytes_t *this_, float *dst);
+/**
+ * Decodes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t z_bytes_decode_into_int16(const struct z_loaned_bytes_t *this_, int16_t *dst);
+/**
+ * Decodes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t z_bytes_decode_into_int32(const struct z_loaned_bytes_t *this_, int32_t *dst);
+/**
+ * Decodes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t z_bytes_decode_into_int64(const struct z_loaned_bytes_t *this_, int64_t *dst);
+/**
+ * Decodes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t z_bytes_decode_into_int8(const struct z_loaned_bytes_t *this_, int8_t *dst);
+/**
  * Decodes into a pair of `z_owned_bytes` objects.
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -1120,6 +1150,32 @@ ZENOHC_API
 z_error_t z_bytes_decode_into_string(const struct z_loaned_bytes_t *this_,
                                      struct z_owned_string_t *dst);
 /**
+ * Decodes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_uint16(const struct z_loaned_bytes_t *this_,
+                                     uint16_t *dst);
+/**
+ * Decodes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_uint32(const struct z_loaned_bytes_t *this_,
+                                     uint32_t *dst);
+/**
+ * Decodes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_uint64(const struct z_loaned_bytes_t *this_,
+                                     uint64_t *dst);
+/**
+ * Decodes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t z_bytes_decode_into_uint8(const struct z_loaned_bytes_t *this_, uint8_t *dst);
+/**
  * Drops `this_`, resetting it to gravestone value. If there are any shallow copies
  * created by `z_bytes_clone()`, they would still stay valid.
  */
@@ -1128,6 +1184,30 @@ ZENOHC_API void z_bytes_drop(struct z_owned_bytes_t *this_);
  * Constructs an empty instance of `z_owned_bytes_t`.
  */
 ZENOHC_API void z_bytes_empty(struct z_owned_bytes_t *this_);
+/**
+ * Encodes a double.
+ */
+ZENOHC_API void z_bytes_encode_from_double(struct z_owned_bytes_t *this_, double val);
+/**
+ * Encodes a float.
+ */
+ZENOHC_API void z_bytes_encode_from_float(struct z_owned_bytes_t *this_, float val);
+/**
+ * Encodes a signed integer.
+ */
+ZENOHC_API void z_bytes_encode_from_int16(struct z_owned_bytes_t *this_, int16_t val);
+/**
+ * Encodes a signed integer.
+ */
+ZENOHC_API void z_bytes_encode_from_int32(struct z_owned_bytes_t *this_, int32_t val);
+/**
+ * Encodes a signed integer.
+ */
+ZENOHC_API void z_bytes_encode_from_int64(struct z_owned_bytes_t *this_, int64_t val);
+/**
+ * Encodes a signed integer.
+ */
+ZENOHC_API void z_bytes_encode_from_int8(struct z_owned_bytes_t *this_, int8_t val);
 /**
  * Constructs payload from an iterator to `z_owned_bytes_t`.
  * @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
@@ -1181,6 +1261,22 @@ ZENOHC_API void z_bytes_encode_from_string(struct z_owned_bytes_t *this_, const 
  * Encodes a null-terminated string by copying.
  */
 ZENOHC_API void z_bytes_encode_from_string_copy(struct z_owned_bytes_t *this_, const char *s);
+/**
+ * Encodes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_encode_from_uint16(struct z_owned_bytes_t *this_, uint16_t val);
+/**
+ * Encodes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_encode_from_uint32(struct z_owned_bytes_t *this_, uint32_t val);
+/**
+ * Encodes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_encode_from_uint64(struct z_owned_bytes_t *this_, uint64_t val);
+/**
+ * Encodes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_encode_from_uint8(struct z_owned_bytes_t *this_, uint8_t val);
 /**
  * Returns an iterator for multi-piece serialized data.
  *

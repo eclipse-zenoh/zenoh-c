@@ -137,12 +137,36 @@ Functions
 .. doxygenfunction:: z_bytes_encode_from_slice_map
 .. doxygenfunction:: z_bytes_encode_from_iter
 .. doxygenfunction:: z_bytes_encode_from_pair
+
+.. doxygenfunction:: z_bytes_encode_from_uint8
+.. doxygenfunction:: z_bytes_encode_from_uint16
+.. doxygenfunction:: z_bytes_encode_from_uint32
+.. doxygenfunction:: z_bytes_encode_from_uint64
+.. doxygenfunction:: z_bytes_encode_from_int8
+.. doxygenfunction:: z_bytes_encode_from_int16
+.. doxygenfunction:: z_bytes_encode_from_int32
+.. doxygenfunction:: z_bytes_encode_from_int64
+.. doxygenfunction:: z_bytes_encode_from_float
+.. doxygenfunction:: z_bytes_encode_from_double
+
 .. doxygenfunction:: z_bytes_decode_into_slice
 .. doxygenfunction:: z_bytes_decode_into_string
 .. doxygenfunction:: z_bytes_decode_into_slice_map
 .. doxygenfunction:: z_bytes_decode_into_iter
 .. doxygenfunction:: z_bytes_decode_into_pair
 
+.. doxygenfunction:: z_bytes_decode_into_uint8
+.. doxygenfunction:: z_bytes_decode_into_uint16
+.. doxygenfunction:: z_bytes_decode_into_uint32
+.. doxygenfunction:: z_bytes_decode_into_uint64
+.. doxygenfunction:: z_bytes_decode_into_int8
+.. doxygenfunction:: z_bytes_decode_into_int16
+.. doxygenfunction:: z_bytes_decode_into_int32
+.. doxygenfunction:: z_bytes_decode_into_int64
+.. doxygenfunction:: z_bytes_decode_into_float
+.. doxygenfunction:: z_bytes_decode_into_double
+
+.. doxygenfunction:: z_bytes_empty
 .. doxygenfunction:: z_bytes_clone
 .. doxygenfunction:: z_bytes_loan
 .. doxygenfunction:: z_bytes_loan_mut
