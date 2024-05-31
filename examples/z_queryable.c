@@ -21,7 +21,7 @@ z_view_keyexpr_t ke;
 
 void query_handler(const z_loaned_query_t *query, void *context) {
     z_view_string_t key_string;
-    z_keyexpr_to_string(z_query_keyexpr(query), &key_string);
+    z_view_string_from_keyexpr(&key_string, z_query_keyexpr(query));
 
     z_view_string_t params;
     z_query_parameters(query, &params);

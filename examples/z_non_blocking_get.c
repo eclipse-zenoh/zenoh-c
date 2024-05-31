@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
             z_view_string_t key_str;
             z_owned_string_t payload_string;
-            z_keyexpr_to_string(z_sample_keyexpr(sample), &key_str);
+            z_view_string_from_keyexpr(&key_str, z_sample_keyexpr(sample));
             z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
             printf(">> Received ('%.*s': '%.*s')\n", 
                (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
