@@ -29,7 +29,7 @@ use crate::{
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shared_memory_segment_callbacks_t {
-    map_fn: unsafe extern "C" fn(*mut c_void, z_chunk_id_t) -> *mut u8,
+    map_fn: unsafe extern "C" fn(chunk_id: z_chunk_id_t, context: *mut c_void) -> *mut u8,
 }
 
 /// A SharedMemorySegment
@@ -58,7 +58,7 @@ impl DynamicSharedMemorySegment {
 impl SharedMemorySegment for DynamicSharedMemorySegment {
     fn map(&self, chunk: ChunkID) -> Result<AtomicPtr<u8>> {
         unsafe {
-            let cb_result = (self.callbacks.map_fn)(self.context.get(), chunk);
+            let cb_result = (self.callbacks.map_fn)(chunk, self.context.get());
             cb_result
                 .as_mut()
                 .map(|p| AtomicPtr::new(p))

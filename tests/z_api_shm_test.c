@@ -172,8 +172,8 @@ void delete_fn(void* context) {
     c->bytes = NULL;
     c->busy_flags = NULL;
 }
-void alloc_fn(void* context, const struct z_loaned_memory_layout_t* layout,
-              struct z_owned_chunk_alloc_result_t* result) {
+void alloc_fn(struct z_owned_chunk_alloc_result_t* result, const struct z_loaned_memory_layout_t* layout,
+              void* context) {
     assert(context);
     assert(layout);
     assert(result);
@@ -205,7 +205,7 @@ void alloc_fn(void* context, const struct z_loaned_memory_layout_t* layout,
     }
     z_chunk_alloc_result_new_error(result, Z_ALLOC_ERROR_OUT_OF_MEMORY);
 }
-void free_fn(void* context, const struct z_chunk_descriptor_t* chunk) {
+void free_fn(const struct z_chunk_descriptor_t* chunk, void* context) {
     assert(context);
     assert(chunk);
 
@@ -234,7 +234,7 @@ size_t available_fn(void* context) {
     test_provider_context* c = (test_provider_context*)context;
     return c->available;
 }
-void layout_for_fn(void* context, struct z_owned_memory_layout_t* layout) {
+void layout_for_fn(struct z_owned_memory_layout_t* layout, void* context) {
     assert(context);
     assert(layout);
 
@@ -392,11 +392,11 @@ int run_client_storage() {
 void delete_client_fn(void* context) { assert(context == NULL); }
 void delete_segment_fn(void* context) {}
 
-uint8_t* map_fn(void* context, z_chunk_id_t chunk) {
+uint8_t* map_fn(z_chunk_id_t chunk, void* context) {
     return (uint8_t*)((uint64_t)chunk | ((((uint64_t)context) << 32) & 0xFFFFFFFF00000000));
 }
 
-bool attach_fn(void* context, z_segment_id_t id, struct z_shared_memory_segment_t* out_segment) {
+bool attach_fn(struct z_shared_memory_segment_t* out_segment, z_segment_id_t id, void* context) {
     assert(context == NULL);
     out_segment->context.context.ptr = (void*)(uint64_t)id;
     out_segment->context.delete_fn = &delete_segment_fn;

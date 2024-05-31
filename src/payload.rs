@@ -216,6 +216,32 @@ pub unsafe extern "C" fn z_bytes_decode_into_loaned_shm(
     }
 }
 
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Decodes data into a mutably loaned SHM buffer
+///
+/// @param this_: Data to decode.
+/// @param dst: An unitialized memory location where to construct a decoded string.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_decode_into_mut_loaned_shm(
+    this: &mut z_loaned_bytes_t,
+    dst: *mut MaybeUninit<&'static mut z_loaned_shm_t>,
+) -> z_error_t {
+    use zenoh::shm::zshm;
+
+    let payload = this.transmute_mut();
+    match payload.deserialize_mut::<&mut zshm>() {
+        Ok(s) => {
+            (*dst).write(s.transmute_handle_mut());
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
+            errors::Z_EIO
+        }
+    }
+}
+
 unsafe impl Send for CSlice {}
 unsafe impl Sync for CSlice {}
 

@@ -36,9 +36,9 @@ use super::shared_memory_segment::{z_shared_memory_segment_t, DynamicSharedMemor
 #[repr(C)]
 pub struct zc_shared_memory_client_callbacks_t {
     attach_fn: unsafe extern "C" fn(
-        *mut c_void,
-        z_segment_id_t,
-        &mut MaybeUninit<z_shared_memory_segment_t>,
+        out_segment: &mut MaybeUninit<z_shared_memory_segment_t>,
+        segment_id: z_segment_id_t,
+        context: *mut c_void,
     ) -> bool,
 }
 
@@ -63,7 +63,7 @@ impl SharedMemoryClient for DynamicSharedMemoryClient {
     fn attach(&self, segment: SegmentID) -> Result<Arc<dyn SharedMemorySegment>> {
         let mut segment_data = MaybeUninit::uninit();
         unsafe {
-            match (self.callbacks.attach_fn)(self.context.get(), segment, &mut segment_data) {
+            match (self.callbacks.attach_fn)(&mut segment_data, segment, self.context.get()) {
                 true => Ok(Arc::new(DynamicSharedMemorySegment::new(
                     segment_data.assume_init(),
                 ))),

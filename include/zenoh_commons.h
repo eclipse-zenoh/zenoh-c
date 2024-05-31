@@ -1099,7 +1099,7 @@ typedef struct z_scout_options_t {
  * A callbacks for SharedMemorySegment
  */
 typedef struct zc_shared_memory_segment_callbacks_t {
-  uint8_t *(*map_fn)(void*, z_chunk_id_t);
+  uint8_t *(*map_fn)(z_chunk_id_t chunk_id, void *context);
 } zc_shared_memory_segment_callbacks_t;
 /**
  * A SharedMemorySegment
@@ -1112,7 +1112,9 @@ typedef struct z_shared_memory_segment_t {
  * A callbacks for SharedMemoryClient
  */
 typedef struct zc_shared_memory_client_callbacks_t {
-  bool (*attach_fn)(void*, z_segment_id_t, struct z_shared_memory_segment_t*);
+  bool (*attach_fn)(struct z_shared_memory_segment_t *out_segment,
+                    z_segment_id_t segment_id,
+                    void *context);
 } zc_shared_memory_client_callbacks_t;
 /**
  * A loaned list of SHM Clients
@@ -1154,13 +1156,13 @@ typedef struct zc_context_t {
  * A callbacks for SharedMemoryProviderBackend
  */
 typedef struct zc_shared_memory_provider_backend_callbacks_t {
-  void (*alloc_fn)(void*,
-                   const struct z_loaned_memory_layout_t*,
-                   struct z_owned_chunk_alloc_result_t*);
-  void (*free_fn)(void*, const struct z_chunk_descriptor_t*);
-  size_t (*defragment_fn)(void*);
-  size_t (*available_fn)(void*);
-  void (*layout_for_fn)(void*, struct z_owned_memory_layout_t*);
+  void (*alloc_fn)(struct z_owned_chunk_alloc_result_t *out_result,
+                   const struct z_loaned_memory_layout_t *layout,
+                   void *context);
+  void (*free_fn)(const struct z_chunk_descriptor_t *chunk, void *context);
+  size_t (*defragment_fn)(void *context);
+  size_t (*available_fn)(void *context);
+  void (*layout_for_fn)(struct z_owned_memory_layout_t *layout, void *context);
 } zc_shared_memory_provider_backend_callbacks_t;
 /**
  * A loaned ZShmMut slice
@@ -1460,6 +1462,15 @@ ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *this_, struct z_own
 ZENOHC_API
 z_error_t z_bytes_decode_into_loaned_shm(const struct z_loaned_bytes_t *this_,
                                          const struct z_loaned_shm_t **dst);
+/**
+ * Decodes data into a mutably loaned SHM buffer
+ *
+ * @param this_: Data to decode.
+ * @param dst: An unitialized memory location where to construct a decoded string.
+ */
+ZENOHC_API
+z_error_t z_bytes_decode_into_mut_loaned_shm(struct z_loaned_bytes_t *this_,
+                                             struct z_loaned_shm_t **dst);
 /**
  * Decodes data into an owned SHM buffer by copying it's shared reference
  *

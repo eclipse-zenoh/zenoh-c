@@ -30,14 +30,14 @@ use super::chunk::z_chunk_descriptor_t;
 #[repr(C)]
 pub struct zc_shared_memory_provider_backend_callbacks_t {
     alloc_fn: unsafe extern "C" fn(
-        *mut c_void,
-        &z_loaned_memory_layout_t,
-        *mut z_owned_chunk_alloc_result_t,
+        out_result: *mut z_owned_chunk_alloc_result_t,
+        layout: &z_loaned_memory_layout_t,
+        context: *mut c_void,
     ),
-    free_fn: unsafe extern "C" fn(*mut c_void, *const z_chunk_descriptor_t),
-    defragment_fn: unsafe extern "C" fn(*mut c_void) -> usize,
-    available_fn: unsafe extern "C" fn(*mut c_void) -> usize,
-    layout_for_fn: unsafe extern "C" fn(*mut c_void, *mut z_owned_memory_layout_t),
+    free_fn: unsafe extern "C" fn(chunk: *const z_chunk_descriptor_t, context: *mut c_void),
+    defragment_fn: unsafe extern "C" fn(context: *mut c_void) -> usize,
+    available_fn: unsafe extern "C" fn(context: *mut c_void) -> usize,
+    layout_for_fn: unsafe extern "C" fn(layout: *mut z_owned_memory_layout_t, context: *mut c_void),
 }
 
 #[derive(Debug)]
@@ -69,9 +69,9 @@ where
         let mut result = std::mem::MaybeUninit::uninit();
         unsafe {
             (self.callbacks.alloc_fn)(
-                self.context.get(),
-                layout.transmute_handle(),
                 result.as_mut_ptr(),
+                layout.transmute_handle(),
+                self.context.get(),
             );
             match result.assume_init().transmute_mut().take() {
                 Some(val) => val,
@@ -83,7 +83,7 @@ where
     }
 
     fn free(&self, chunk: &ChunkDescriptor) {
-        unsafe { (self.callbacks.free_fn)(self.context.get(), &chunk.into()) };
+        unsafe { (self.callbacks.free_fn)(&chunk.into(), self.context.get()) };
     }
 
     fn defragment(&self) -> usize {
@@ -97,7 +97,7 @@ where
     fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout> {
         let mut layout = Some(layout);
         unsafe {
-            (self.callbacks.layout_for_fn)(self.context.get(), layout.transmute_mut());
+            (self.callbacks.layout_for_fn)(layout.transmute_mut(), self.context.get());
         }
         layout.ok_or_else(|| zerror!("{:?}: unsupported layout", self).into())
     }
