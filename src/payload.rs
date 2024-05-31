@@ -4,7 +4,7 @@ use crate::transmute::{
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::{
-    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_str_t, CSlice, ZHashMap,
+    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, ZHashMap,
 };
 use core::fmt;
 use std::any::Any;
@@ -102,7 +102,7 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_decode_into_string(
     this: &z_loaned_bytes_t,
-    dst: *mut MaybeUninit<z_owned_str_t>,
+    dst: *mut MaybeUninit<z_owned_string_t>,
 ) -> z_error_t {
     let payload = this.transmute_ref();
     match payload.deserialize::<String>() {

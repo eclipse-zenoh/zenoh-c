@@ -28,7 +28,7 @@ const size_t values_count = sizeof(values) / sizeof(values[0]);
 void query_handler(const z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
-    z_view_str_t params;
+    z_view_string_t params;
     z_query_parameters(query, &params);
     const z_loaned_value_t* payload_value = z_query_value(query);
 
@@ -100,9 +100,9 @@ int run_get() {
             assert(z_reply_is_ok(z_loan(reply)));
 
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
-            z_owned_str_t payload_string;
+            z_owned_string_t payload_string;
             z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
-            if (strncmp(values[val_num], z_str_data(z_loan(payload_string)), z_str_len(z_loan(payload_string)))) {
+            if (strncmp(values[val_num], z_string_data(z_loan(payload_string)), z_string_len(z_loan(payload_string)))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_string));
                 exit(-1);

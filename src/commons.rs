@@ -30,8 +30,8 @@ use crate::transmute::TransmuteUninitPtr;
 use crate::z_id_t;
 use crate::z_loaned_bytes_t;
 use crate::z_loaned_keyexpr_t;
-use crate::z_owned_str_t;
-use crate::z_str_from_substring;
+use crate::z_owned_string_t;
+use crate::z_string_from_substring;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::encoding::Encoding;
@@ -252,10 +252,10 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_to_string(
     this: &z_loaned_encoding_t,
-    out_str: *mut MaybeUninit<z_owned_str_t>,
+    out_str: *mut MaybeUninit<z_owned_string_t>,
 ) {
     let s: Cow<'static, str> = this.transmute_ref().into();
-    z_str_from_substring(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
+    z_string_from_substring(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
 }
 
 /// Returns a loaned default `z_loaned_encoding_t`.

@@ -23,8 +23,8 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_loaned_session_t;
-use crate::z_view_str_from_substring;
-use crate::z_view_str_t;
+use crate::z_view_string_from_substring;
+use crate::z_view_string_t;
 use libc::c_char;
 use std::error::Error;
 use zenoh::core::Wait;
@@ -418,11 +418,11 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_to_string(
     this: &z_loaned_keyexpr_t,
-    out_string: *mut MaybeUninit<z_view_str_t>,
+    out_string: *mut MaybeUninit<z_view_string_t>,
 ) {
     let this = this.transmute_ref();
     unsafe {
-        z_view_str_from_substring(
+        z_view_string_from_substring(
             out_string,
             this.as_bytes().as_ptr() as _,
             this.as_bytes().len(),

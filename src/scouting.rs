@@ -18,7 +18,7 @@ use crate::{
         TransmuteRef, TransmuteUninitPtr,
     },
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
-    z_owned_str_array_t, z_view_str_t, zc_init_logger, CSlice, ZVector,
+    z_owned_string_array_t, z_view_string_t, zc_init_logger, CSlice, ZVector,
 };
 use async_std::task;
 use libc::c_ulong;
@@ -84,7 +84,7 @@ pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
 #[no_mangle]
 pub extern "C" fn z_hello_locators(
     this: &z_loaned_hello_t,
-    locators_out: *mut MaybeUninit<z_owned_str_array_t>,
+    locators_out: *mut MaybeUninit<z_owned_string_array_t>,
 ) {
     let this = this.transmute_ref();
     let mut locators = ZVector::with_capacity(this.locators.len());
@@ -190,7 +190,7 @@ pub extern "C" fn z_scout(
 #[no_mangle]
 pub extern "C" fn z_whatami_to_str(
     whatami: z_whatami_t,
-    str_out: *mut MaybeUninit<z_view_str_t>,
+    str_out: *mut MaybeUninit<z_view_string_t>,
 ) -> errors::z_error_t {
     match WhatAmIMatcher::try_from(whatami as u8) {
         Err(_) => errors::Z_EINVAL,
