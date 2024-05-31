@@ -243,12 +243,12 @@ typedef int8_t z_error_t;
 /**
  * A loaned SharedMemoryProvider specialization
  */
-#if defined(TARGET_ARCH_X86_64)
+#if (defined(__unix__) && defined(TARGET_ARCH_X86_64))
 typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
   uint64_t _0[26];
 } z_loaned_shared_memory_provider_t;
 #endif
-#if defined(TARGET_ARCH_X86_64)
+#if (defined(__win32__) && defined(TARGET_ARCH_X86_64))
 typedef struct ALIGN(8) z_loaned_shared_memory_provider_t {
   uint64_t _0[26];
 } z_loaned_shared_memory_provider_t;
@@ -860,12 +860,12 @@ typedef struct ALIGN(8) z_owned_shared_memory_client_t {
  *
  * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
  */
-#if defined(TARGET_ARCH_X86_64)
+#if (defined(__unix__) && defined(TARGET_ARCH_X86_64))
 typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
   uint64_t _0[26];
 } z_owned_shared_memory_provider_t;
 #endif
-#if defined(TARGET_ARCH_X86_64)
+#if (defined(__win32__) && defined(TARGET_ARCH_X86_64))
 typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
   uint64_t _0[32];
 } z_owned_shared_memory_provider_t;
