@@ -657,7 +657,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_shm(
     match shm.transmute_mut().take() {
         Some(shm) => {
             let this = this.transmute_uninit_ptr();
-            Inplace::init(this, Some(shm.into()));
+            Inplace::init(this, shm.into());
             Z_OK
         }
         None => Z_ENULL,
@@ -673,7 +673,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_shm_copy(
     shm: &z_loaned_shm_t,
 ) {
     let this = this.transmute_uninit_ptr();
-    Inplace::init(this, Some(shm.transmute_ref().to_owned().into()));
+    Inplace::init(this, shm.transmute_ref().to_owned().into());
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -687,7 +687,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_shm_mut(
     match shm.transmute_mut().take() {
         Some(shm) => {
             let this = this.transmute_uninit_ptr();
-            Inplace::init(this, Some(shm.into()));
+            Inplace::init(this, shm.into());
             Z_OK
         }
         None => Z_ENULL,

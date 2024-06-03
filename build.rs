@@ -77,23 +77,22 @@ fn produce_opaque_types_data() -> PathBuf {
     let mut feature_args = vec![];
     #[cfg(feature = "shared-memory")]
     {
+        feature_args.push("-F");
         feature_args.push("shared-memory");
     }
     #[cfg(feature = "unstable")]
     {
+        feature_args.push("-F");
         feature_args.push("unstable");
-    }
-    if !feature_args.is_empty() {
-        feature_args.insert(0, "--features")
     }
 
     let _ = Command::new("cargo")
         .arg("build")
+        .args(feature_args)
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
         .arg(manifest_path)
-        .args(feature_args)
         .stderr(stdio)
         .output()
         .unwrap();

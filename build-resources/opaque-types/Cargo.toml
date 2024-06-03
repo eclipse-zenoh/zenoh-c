@@ -7,11 +7,11 @@ edition = "2021"
 
 [features]
 shared-memory = ["zenoh/shared-memory", "zenoh-ext/shared-memory"]
-unstable = []
+unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
 default = ["zenoh/default", "unstable"]
 
 [dependencies]
 # shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
-zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", features = ["unstable"], default-features = false }
-zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", features = ["unstable"] }
+zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", default-features = false }
+zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0" }
 const_format = "0.2.32"
