@@ -1605,12 +1605,6 @@ ZENOHC_API
 enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_keyexpr_t *left,
                                                           const struct z_loaned_keyexpr_t *right);
 /**
- * Constructs a non-owned non-null-terminated string from key expression.
- */
-ZENOHC_API
-void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *this_,
-                         struct z_view_string_t *out_string);
-/**
  * Returns ``true`` if mutex is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_mutex_check(const struct z_owned_mutex_t *this_);
@@ -2621,6 +2615,12 @@ ZENOHC_API bool z_view_string_check(const struct z_view_string_t *this_);
  * Constructs an empty view string.
  */
 ZENOHC_API void z_view_string_empty(struct z_view_string_t *this_);
+/**
+ * Constructs a non-owned non-null-terminated string from key expression.
+ */
+ZENOHC_API
+z_error_t z_view_string_from_keyexpr(struct z_view_string_t *out_string,
+                                     const struct z_loaned_keyexpr_t *key_expr);
 /**
  * Constructs a view string to a specified substring of length `len`.
  *

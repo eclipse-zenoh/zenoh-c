@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     for (z_call(z_loan(channel.recv), &oquery); z_check(oquery); z_call(z_loan(channel.recv), &oquery)) {
         const z_loaned_query_t* query = z_loan(oquery);
         z_view_string_t key_string;
-        z_keyexpr_to_string(z_query_keyexpr(query), &key_string);
+        z_view_string_from_keyexpr(&key_string, z_query_keyexpr(query));
 
         z_view_string_t params;
         z_query_parameters(query, &params);
