@@ -51,7 +51,7 @@ macro_rules! get_opaque_type_data {
 /// A serialized Zenoh data.
 ///
 /// To minimize copies and reallocations, Zenoh may provide data in several separate buffers.
-get_opaque_type_data!(Option<ZBytes>, z_owned_bytes_t);
+get_opaque_type_data!(ZBytes, z_owned_bytes_t);
 /// A loaned serialized Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 

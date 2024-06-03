@@ -24,7 +24,7 @@ use crate::errors::Z_ENULL;
 use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
 
 pub use crate::opaque_types::z_owned_bytes_t;
-decl_transmute_owned!(Option<ZBytes>, z_owned_bytes_t);
+decl_transmute_owned!(ZBytes, z_owned_bytes_t);
 
 /// The gravestone value for `z_owned_bytes_t`.
 #[no_mangle]
@@ -37,7 +37,7 @@ extern "C" fn z_bytes_null(this: *mut MaybeUninit<z_owned_bytes_t>) {
 #[no_mangle]
 extern "C" fn z_bytes_empty(this: *mut MaybeUninit<z_owned_bytes_t>) {
     let this = this.transmute_uninit_ptr();
-    Inplace::init(this, Some(ZBytes::empty()));
+    Inplace::init(this, ZBytes::empty());
 }
 
 /// Drops `this_`, resetting it to gravestone value. If there are any shallow copies
@@ -51,14 +51,13 @@ extern "C" fn z_bytes_drop(this: &mut z_owned_bytes_t) {
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
 extern "C" fn z_bytes_check(this: &z_owned_bytes_t) -> bool {
-    this.transmute_ref().is_some()
+    !this.transmute_ref().is_empty()
 }
 
 /// Borrows data.
 #[no_mangle]
 extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
     let payload = this.transmute_ref();
-    let payload = unwrap_ref_unchecked(payload);
     payload.transmute_handle()
 }
 
@@ -66,7 +65,6 @@ extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
 #[no_mangle]
 extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
     let payload = this.transmute_mut();
-    let payload = unwrap_ref_unchecked_mut(payload);
     payload.transmute_handle_mut()
 }
 
@@ -85,8 +83,7 @@ extern "C" fn z_bytes_is_empty(this: &z_loaned_bytes_t) -> bool {
 #[no_mangle]
 extern "C" fn z_bytes_clone(this: &z_loaned_bytes_t, dst: *mut MaybeUninit<z_owned_bytes_t>) {
     let dst = dst.transmute_uninit_ptr();
-    let src = this.transmute_ref();
-    let src = Some(src.clone());
+    let src = this.transmute_ref().clone();
     Inplace::init(dst, src);
 }
 
@@ -278,7 +275,7 @@ where
 {
     let this = this.transmute_uninit_ptr();
     let payload = ZBytes::serialize(val);
-    Inplace::init(this, Some(payload));
+    Inplace::init(this, payload);
 }
 
 fn z_bytes_decode_into_arithmetic<T>(this: &z_loaned_bytes_t, val: &mut T) -> z_error_t
@@ -438,7 +435,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice(
     let s = CSlice::new_borrowed(data, len);
     let this = this.transmute_uninit_ptr();
     let payload = ZBytes::from(ZSlice::from(s));
-    Inplace::init(this, Some(payload));
+    Inplace::init(this, payload);
 }
 
 /// Encodes a slice by copying.
@@ -452,7 +449,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_copy(
     let s = CSlice::new_borrowed(data, len).clone();
     let this = this.transmute_uninit_ptr();
     let payload = ZBytes::from(ZSlice::from(s));
-    Inplace::init(this, Some(payload));
+    Inplace::init(this, payload);
 }
 
 /// Encodes slice map by aliasing.
@@ -470,7 +467,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
             CSlice::new_borrowed(v.data(), v.len()),
         )
     }));
-    Inplace::init(dst, Some(payload));
+    Inplace::init(dst, payload);
 }
 
 /// Encodes slice map by copying.
@@ -488,7 +485,7 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_map_copy(
             CSlice::new_borrowed(v.data(), v.len()).clone(),
         )
     }));
-    Inplace::init(dst, Some(payload));
+    Inplace::init(dst, payload);
 }
 
 /// Encodes a null-terminated string by aliasing.
@@ -519,16 +516,18 @@ pub extern "C" fn z_bytes_encode_from_pair(
     first: &mut z_owned_bytes_t,
     second: &mut z_owned_bytes_t,
 ) -> z_error_t {
-    let first = match first.transmute_mut().extract() {
-        Some(z) => z,
-        None => return Z_EINVAL,
-    };
-    let second = match second.transmute_mut().extract() {
-        Some(z) => z,
-        None => return Z_EINVAL,
-    };
+    let first = first.transmute_mut().extract();
+    if first.is_empty() {
+        return Z_EINVAL;
+    }
+
+    let second = second.transmute_mut().extract();
+    if second.is_empty() {
+        return Z_EINVAL;
+    }
+
     let b = ZBytes::serialize((first, second));
-    Inplace::init(this.transmute_uninit_ptr(), Some(b));
+    Inplace::init(this.transmute_uninit_ptr(), b);
     Z_OK
 }
 
@@ -542,8 +541,8 @@ pub extern "C" fn z_bytes_decode_into_pair(
 ) -> z_error_t {
     match this.transmute_ref().deserialize::<(ZBytes, ZBytes)>() {
         Ok((a, b)) => {
-            Inplace::init(first.transmute_uninit_ptr(), Some(a));
-            Inplace::init(second.transmute_uninit_ptr(), Some(b));
+            Inplace::init(first.transmute_uninit_ptr(), a);
+            Inplace::init(second.transmute_uninit_ptr(), b);
             Z_OK
         }
         Err(e) => {
@@ -565,7 +564,13 @@ impl Iterator for ZBytesInIterator {
         let mut data = MaybeUninit::<z_owned_bytes_t>::uninit();
 
         (self.body)(&mut data, self.context);
-        unsafe { data.assume_init().transmute_mut().extract() }.map(|b| b.into())
+        let mut data = unsafe { data.assume_init() };
+
+        let buf = data.transmute_mut();
+        match buf.is_empty() {
+            true => None,
+            false => Some(buf.extract().into())
+        }
     }
 }
 
@@ -586,7 +591,7 @@ pub extern "C" fn z_bytes_encode_from_iter(
     };
 
     let b = ZBytes::from_iter(it);
-    Inplace::init(this.transmute_uninit_ptr(), Some(b));
+    Inplace::init(this.transmute_uninit_ptr(), b);
     Z_OK
 }
 
@@ -602,20 +607,22 @@ pub extern "C" fn z_bytes_get_iterator(data: &z_loaned_bytes_t) -> z_bytes_itera
 
 /// Constructs `z_owned_bytes` object corresponding to the next element of encoded data.
 ///
-/// Will construct `z_owned_bytes` when iterator reaches the end.
+/// Will construct null-state `z_owned_bytes` when iterator reaches the end.
 /// @return ``false`` when iterator reaches the end,  ``true`` otherwise
 #[no_mangle]
 pub extern "C" fn z_bytes_iterator_next(
     iter: &mut z_bytes_iterator_t,
     out: *mut MaybeUninit<z_owned_bytes_t>,
 ) -> bool {
-    let res = iter.transmute_mut().next().map(|z| z.into());
-    if res.is_none() {
-        Inplace::empty(out.transmute_uninit_ptr());
-        false
-    } else {
-        Inplace::init(out.transmute_uninit_ptr(), res);
-        true
+    match iter.transmute_mut().next() {
+        Some(buf) => {
+            Inplace::init(out.transmute_uninit_ptr(), buf.into());
+            true
+        }
+        None => {
+            Inplace::empty(out.transmute_uninit_ptr());
+            false
+        }
     }
 }
 

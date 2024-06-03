@@ -1360,7 +1360,7 @@ z_error_t z_bytes_iter(const struct z_loaned_bytes_t *this_,
 /**
  * Constructs `z_owned_bytes` object corresponding to the next element of encoded data.
  *
- * Will construct `z_owned_bytes` when iterator reaches the end.
+ * Will construct null-state `z_owned_bytes` when iterator reaches the end.
  * @return ``false`` when iterator reaches the end,  ``true`` otherwise
  */
 ZENOHC_API bool z_bytes_iterator_next(struct z_bytes_iterator_t *iter, struct z_owned_bytes_t *out);
