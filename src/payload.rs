@@ -14,7 +14,9 @@ use std::os::raw::c_void;
 use std::slice::from_raw_parts;
 use std::slice::from_raw_parts_mut;
 use zenoh::buffers::{ZBuf, ZSlice, ZSliceBuffer};
-use zenoh::bytes::{ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter};
+use zenoh::bytes::{
+    Deserialize, Serialize, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter, ZSerde,
+};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::errors::Z_ENULL;
@@ -268,6 +270,161 @@ impl From<CSlice> for ZBytes {
     fn from(value: CSlice) -> Self {
         ZBytes::new(value)
     }
+}
+
+fn z_bytes_encode_from_arithmetic<T>(this: *mut MaybeUninit<z_owned_bytes_t>, val: T)
+where
+    ZSerde: Serialize<T, Output = ZBytes>,
+{
+    let this = this.transmute_uninit_ptr();
+    let payload = ZBytes::serialize(val);
+    Inplace::init(this, Some(payload));
+}
+
+fn z_bytes_decode_into_arithmetic<T>(this: &z_loaned_bytes_t, val: &mut T) -> z_error_t
+where
+    ZSerde: Deserialize<'static, T, Input = &'static ZBytes>,
+    <ZSerde as Deserialize<'static, T>>::Error: fmt::Debug,
+{
+    match this.transmute_ref().deserialize::<T>() {
+        Ok(v) => {
+            *val = v;
+            errors::Z_OK
+        }
+        Err(e) => {
+            log::error!("Failed to decode the payload: {}", e);
+            errors::Z_EPARSE
+        }
+    }
+}
+
+/// Encodes an unsigned integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_uint8(this: *mut MaybeUninit<z_owned_bytes_t>, val: u8) {
+    z_bytes_encode_from_arithmetic::<u8>(this, val);
+}
+
+/// Encodes an unsigned integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_uint16(this: *mut MaybeUninit<z_owned_bytes_t>, val: u16) {
+    z_bytes_encode_from_arithmetic::<u16>(this, val);
+}
+
+/// Encodes an unsigned integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_uint32(this: *mut MaybeUninit<z_owned_bytes_t>, val: u32) {
+    z_bytes_encode_from_arithmetic::<u32>(this, val);
+}
+
+/// Encodes an unsigned integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_uint64(this: *mut MaybeUninit<z_owned_bytes_t>, val: u64) {
+    z_bytes_encode_from_arithmetic::<u64>(this, val);
+}
+
+/// Encodes a signed integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_int8(this: *mut MaybeUninit<z_owned_bytes_t>, val: i8) {
+    z_bytes_encode_from_arithmetic::<i8>(this, val);
+}
+
+/// Encodes a signed integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_int16(this: *mut MaybeUninit<z_owned_bytes_t>, val: i16) {
+    z_bytes_encode_from_arithmetic::<i16>(this, val);
+}
+
+/// Encodes a signed integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_int32(this: *mut MaybeUninit<z_owned_bytes_t>, val: i32) {
+    z_bytes_encode_from_arithmetic::<i32>(this, val);
+}
+
+/// Encodes a signed integer.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_int64(this: *mut MaybeUninit<z_owned_bytes_t>, val: i64) {
+    z_bytes_encode_from_arithmetic::<i64>(this, val);
+}
+
+/// Encodes a float.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_float(this: *mut MaybeUninit<z_owned_bytes_t>, val: f32) {
+    z_bytes_encode_from_arithmetic::<f32>(this, val);
+}
+
+/// Encodes a double.
+#[no_mangle]
+pub extern "C" fn z_bytes_encode_from_double(this: *mut MaybeUninit<z_owned_bytes_t>, val: f64) {
+    z_bytes_encode_from_arithmetic::<f64>(this, val);
+}
+/// Decodes into an unsigned integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_uint8(this: &z_loaned_bytes_t, dst: &mut u8) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<u8>(this, dst)
+}
+
+/// Decodes into an unsigned integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_uint16(this: &z_loaned_bytes_t, dst: &mut u16) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<u16>(this, dst)
+}
+
+/// Decodes into an unsigned integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_uint32(this: &z_loaned_bytes_t, dst: &mut u32) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<u32>(this, dst)
+}
+
+/// Decodes into an unsigned integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_uint64(this: &z_loaned_bytes_t, dst: &mut u64) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<u64>(this, dst)
+}
+
+/// Decodes into a signed integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_int8(this: &z_loaned_bytes_t, dst: &mut i8) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<i8>(this, dst)
+}
+
+/// Decodes into a signed integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_int16(this: &z_loaned_bytes_t, dst: &mut i16) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<i16>(this, dst)
+}
+
+/// Decodes into a signed integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_int32(this: &z_loaned_bytes_t, dst: &mut i32) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<i32>(this, dst)
+}
+
+/// Decodes into a signed integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_int64(this: &z_loaned_bytes_t, dst: &mut i64) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<i64>(this, dst)
+}
+
+/// Decodes into a float.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_float(this: &z_loaned_bytes_t, dst: &mut f32) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<f32>(this, dst)
+}
+
+/// Decodes into a signed integer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_decode_into_double(this: &z_loaned_bytes_t, dst: &mut f64) -> z_error_t {
+    z_bytes_decode_into_arithmetic::<f64>(this, dst)
 }
 
 /// Encodes a slice by aliasing.
@@ -571,15 +728,21 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 ) -> z_error_t {
     let reader = this.transmute_mut();
     let pos = match origin {
-        libc::SEEK_SET => offset.try_into().map(SeekFrom::Start),
-        libc::SEEK_CUR => Ok(SeekFrom::Current(offset)),
-        libc::SEEK_END => Ok(SeekFrom::End(offset)),
+        libc::SEEK_SET => match offset.try_into() {
+            Ok(o) => SeekFrom::Start(o),
+            Err(_) => {
+                return errors::Z_EINVAL;
+            }
+        },
+        libc::SEEK_CUR => SeekFrom::Current(offset),
+        libc::SEEK_END => SeekFrom::End(offset),
         _ => {
             return errors::Z_EINVAL;
         }
     };
-    match pos.map(|p| reader.seek(p)) {
-        Ok(_) => 0,
+
+    match reader.seek(pos) {
+        Ok(_) => errors::Z_OK,
         Err(_) => errors::Z_EINVAL,
     }
 }
