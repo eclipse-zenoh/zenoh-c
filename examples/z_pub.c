@@ -78,8 +78,12 @@ int main(int argc, char **argv) {
 
         z_owned_bytes_t payload;
         z_bytes_encode_from_string(&payload, buf);
-        
+
         z_publisher_put(z_loan(pub), z_move(payload), &options);
+    }
+
+    if (add_matching_listener) {
+        zcu_publisher_matching_listener_undeclare(z_move(listener));
     }
 
     z_undeclare_publisher(z_move(pub));
