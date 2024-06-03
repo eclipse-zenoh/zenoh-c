@@ -73,12 +73,27 @@ fn produce_opaque_types_data() -> PathBuf {
     let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = Stdio::from(out_file);
+
+    let mut feature_args = vec![];
+    #[cfg(feature = "shared-memory")]
+    {
+        feature_args.push("shared-memory");
+    }
+    #[cfg(feature = "unstable")]
+    {
+        feature_args.push("unstable");
+    }
+    if !feature_args.is_empty() {
+        feature_args.insert(0, "--features")
+    }
+
     let _ = Command::new("cargo")
         .arg("build")
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
         .arg(manifest_path)
+        .args(feature_args)
         .stderr(stdio)
         .output()
         .unwrap();
@@ -184,6 +199,11 @@ fn configure() {
         .unwrap();
     file.lock_exclusive().unwrap();
     file.write_all(content.as_bytes()).unwrap();
+    #[cfg(feature = "shared-memory")]
+    file.write_all("#define SHARED_MEMORY\n".as_bytes())
+        .unwrap();
+    #[cfg(feature = "unstable")]
+    file.write_all("#define UNSTABLE\n".as_bytes()).unwrap();
     file.unlock().unwrap();
 }
 

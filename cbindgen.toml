@@ -59,6 +59,8 @@ usize_is_size_t = true
 "target_arch = arm" = "TARGET_ARCH_ARM"
 "target_os = windows" = "_WIN32"
 "target_os = linux" = "__unix__"
+"feature = shared-memory" = "SHARED_MEMORY"
+"feature = unstable" = "UNSTABLE"
 
 [export]
 include = []
