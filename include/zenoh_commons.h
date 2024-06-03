@@ -2904,6 +2904,13 @@ z_error_t zcu_publisher_matching_listener_callback(struct zcu_owned_matching_lis
                                                    const struct z_loaned_publisher_t *publisher,
                                                    struct zcu_owned_closure_matching_status_t *callback);
 /**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t zcu_publisher_matching_listener_undeclare(struct zcu_owned_matching_listener_t *this_);
+/**
  * Returns the default value of #zcu_reply_keyexpr_t.
  */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);

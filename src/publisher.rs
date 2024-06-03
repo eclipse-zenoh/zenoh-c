@@ -289,6 +289,23 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     }
 }
 
+/// Undeclares the given matching listener, droping and invalidating it.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zcu_publisher_matching_listener_undeclare(
+    this: &mut zcu_owned_matching_listener_t,
+) -> errors::z_error_t {
+    if let Some(p) = this.transmute_mut().extract().take() {
+        if let Err(e) = p.undeclare().wait() {
+            log::error!("{}", e);
+            return errors::Z_EGENERIC;
+        }
+    }
+    errors::Z_OK
+}
+
 /// Undeclares the given publisher, droping and invalidating it.
 ///
 /// @return 0 in case of success, negative error code otherwise.
