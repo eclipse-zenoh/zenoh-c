@@ -1,4 +1,4 @@
-use crate::errors::{self, z_error_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK};
+use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
 use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
@@ -433,14 +433,8 @@ pub extern "C" fn z_bytes_encode_from_pair(
     second: &mut z_owned_bytes_t,
 ) -> z_error_t {
     let first = first.transmute_mut().extract();
-    if first.is_empty() {
-        return Z_EINVAL;
-    }
 
     let second = second.transmute_mut().extract();
-    if second.is_empty() {
-        return Z_EINVAL;
-    }
 
     let b = ZBytes::serialize((first, second));
     Inplace::init(this.transmute_uninit_ptr(), b);
@@ -469,7 +463,7 @@ pub extern "C" fn z_bytes_decode_into_pair(
 }
 
 struct ZBytesInIterator {
-    body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void),
+    body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void) -> bool,
     context: *mut c_void,
 }
 
@@ -479,26 +473,25 @@ impl Iterator for ZBytesInIterator {
     fn next(&mut self) -> Option<ZBuf> {
         let mut data = MaybeUninit::<z_owned_bytes_t>::uninit();
 
-        (self.body)(&mut data, self.context);
-        let mut data = unsafe { data.assume_init() };
-
-        let buf = data.transmute_mut();
-        match buf.is_empty() {
-            true => None,
-            false => Some(buf.extract().into()),
+        if !(self.body)(&mut data, self.context) {
+            return None;
         }
+
+        let mut data = unsafe { data.assume_init() };
+        let buf = data.transmute_mut();
+        Some(buf.extract().into())
     }
 }
 
 /// Constructs payload from an iterator to `z_owned_bytes_t`.
 /// @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
-/// @param iterator_body: Iterator body function, providing data items. Returning NULL
+/// @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
 /// @param context: Arbitrary context that will be passed to iterator_body.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_bytes_encode_from_iter(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    iterator_body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void),
+    iterator_body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void) -> bool,
     context: *mut c_void,
 ) -> z_error_t {
     let it = ZBytesInIterator {

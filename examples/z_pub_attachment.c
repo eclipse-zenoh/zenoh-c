@@ -27,16 +27,17 @@ typedef struct kv_pairs_t {
     size_t current_idx;
 } kv_pairs_t;
 
-void create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
+bool create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
     kv_pairs_t *kvs = (kv_pairs_t*)(context);
     z_owned_bytes_t k, v;
     if (kvs->current_idx >= kvs->len) {
-        z_null(kv_pair);
+        return false;
     } else {
         z_bytes_encode_from_string(&k, kvs->data[kvs->current_idx].key);
         z_bytes_encode_from_string(&v, kvs->data[kvs->current_idx].value);
         z_bytes_encode_from_pair(kv_pair, z_move(k), z_move(v));
         kvs->current_idx++;
+        return true;
     }
 };
 
