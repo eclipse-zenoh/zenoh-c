@@ -485,7 +485,7 @@ impl Iterator for ZBytesInIterator {
         let buf = data.transmute_mut();
         match buf.is_empty() {
             true => None,
-            false => Some(buf.extract().into())
+            false => Some(buf.extract().into()),
         }
     }
 }
