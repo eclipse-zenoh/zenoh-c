@@ -1656,6 +1656,10 @@ ZENOHC_API
 z_error_t z_open(struct z_owned_session_t *this_,
                  struct z_owned_config_t *config);
 /**
+ * Returns the default value of #z_priority_t.
+ */
+ZENOHC_API enum z_priority_t z_priority_default(void);
+/**
  * Returns ``true`` if publisher is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *this_);

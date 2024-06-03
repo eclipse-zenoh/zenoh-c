@@ -538,6 +538,12 @@ impl From<z_priority_t> for Priority {
     }
 }
 
+/// Returns the default value of #z_priority_t.
+#[no_mangle]
+pub extern "C" fn z_priority_default() -> z_priority_t {
+    Priority::default().into()
+}
+
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
