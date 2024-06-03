@@ -19,7 +19,7 @@ const char *kind_to_str(z_sample_kind_t kind);
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     z_view_string_t key_string;
-    z_view_string_from_keyexpr(&key_string, z_sample_keyexpr(sample));
+    z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
     z_owned_string_t payload_string;
     z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);

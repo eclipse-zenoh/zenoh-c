@@ -222,7 +222,7 @@ Functions
 .. doxygenfunction:: z_view_keyexpr_check
 .. doxygenfunction:: z_keyexpr_drop
 
-.. doxygenfunction:: z_keyexpr_to_string
+.. doxygenfunction:: z_keyexpr_as_view_string
 
 .. doxygenfunction:: z_keyexpr_canonize
 .. doxygenfunction:: z_keyexpr_canonize_null_terminated
