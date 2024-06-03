@@ -153,16 +153,16 @@ pub unsafe extern "C" fn z_get(
     let mut get = session.get(Selector::new(key_expr, p));
     if let Some(options) = options {
         if !options.payload.is_null() {
-            if let Some(payload) = unsafe { *options.payload }.transmute_mut().extract() {
+            if let Some(payload) = unsafe { options.payload.as_mut() }.unwrap().transmute_mut().extract() {
                 get = get.payload(payload);
             }
         }
         if !options.encoding.is_null() {
-            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            let encoding = unsafe { options.encoding.as_mut() }.unwrap().transmute_mut().extract();
             get = get.encoding(encoding);
         }
         if !options.attachment.is_null() {
-            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            let attachment = unsafe { options.attachment.as_mut() }.unwrap().transmute_mut().extract();
             get = get.attachment(attachment);
         }
 
