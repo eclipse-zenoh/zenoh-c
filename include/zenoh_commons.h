@@ -301,20 +301,6 @@ typedef struct ALIGN(8) z_owned_shm_mut_t {
   uint8_t _0[80];
 } z_owned_shm_mut_t;
 /**
- * A serialized Zenoh data.
- *
- * To minimize copies and reallocations, Zenoh may provide data in several separate buffers.
- */
-typedef struct ALIGN(8) z_owned_bytes_t {
-  uint8_t _0[40];
-} z_owned_bytes_t;
-/**
- * A loaned serialized Zenoh data.
- */
-typedef struct ALIGN(8) z_loaned_bytes_t {
-  uint8_t _0[40];
-} z_loaned_bytes_t;
-/**
  * A loaned ZShm slice
  */
 typedef struct ALIGN(8) z_loaned_shm_t {
@@ -326,56 +312,6 @@ typedef struct ALIGN(8) z_loaned_shm_t {
 typedef struct ALIGN(8) z_owned_shm_t {
   uint8_t _0[80];
 } z_owned_shm_t;
-/**
- * A contiguous owned sequence of bytes allocated by Zenoh.
- */
-typedef struct ALIGN(8) z_owned_slice_t {
-  uint8_t _0[16];
-} z_owned_slice_t;
-/**
- * A map of maybe-owned slices to maybe-owned slices.
- *
- * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher.
- */
-typedef struct ALIGN(8) z_owned_slice_map_t {
-  uint8_t _0[48];
-} z_owned_slice_map_t;
-/**
- * The wrapper type for strings allocated by Zenoh.
- */
-typedef struct ALIGN(8) z_owned_string_t {
-  uint8_t _0[16];
-} z_owned_string_t;
-/**
- * A loaned slice map.
- */
-typedef struct ALIGN(8) z_loaned_slice_map_t {
-  uint8_t _0[48];
-} z_loaned_slice_map_t;
-/**
- * An iterator over multi-element serialized data
- */
-typedef struct ALIGN(8) z_bytes_iterator_t {
-  uint8_t _0[24];
-} z_bytes_iterator_t;
-/**
- * A reader for serialized data.
- */
-typedef struct ALIGN(8) z_bytes_reader_t {
-  uint8_t _0[24];
-} z_bytes_reader_t;
-/**
- * A writer for serialized data.
- */
-typedef struct ALIGN(8) z_owned_bytes_writer_t {
-  uint8_t _0[16];
-} z_owned_bytes_writer_t;
-/**
- * A loaned writer for serialized data.
- */
-typedef struct ALIGN(8) z_loaned_bytes_writer_t {
-  uint8_t _0[16];
-} z_loaned_bytes_writer_t;
 /**
  * An owned ChunkAllocResult
  */
@@ -419,18 +355,6 @@ typedef struct z_clock_t {
   const void *t_base;
 } z_clock_t;
 /**
- * Loaned closure.
- */
-typedef struct z_loaned_closure_hello_t {
-  size_t _0[3];
-} z_loaned_closure_hello_t;
-/**
- * A loaned hello message.
- */
-typedef struct ALIGN(8) z_loaned_hello_t {
-  uint8_t _0[48];
-} z_loaned_hello_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -456,20 +380,6 @@ typedef struct z_owned_closure_hello_t {
   void (*drop)(void *context);
 } z_owned_closure_hello_t;
 /**
- * Loaned closure.
- */
-typedef struct z_loaned_closure_owned_query_t {
-  size_t _0[3];
-} z_loaned_closure_owned_query_t;
-/**
- * An owned Zenoh query received by a queryable.
- *
- * Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.
- */
-typedef struct ALIGN(8) z_owned_query_t {
-  uint8_t _0[144];
-} z_owned_query_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
@@ -490,12 +400,6 @@ typedef struct z_owned_closure_owned_query_t {
   void (*call)(struct z_owned_query_t*, void *context);
   void (*drop)(void*);
 } z_owned_closure_owned_query_t;
-/**
- * Loaned closure.
- */
-typedef struct z_loaned_closure_query_t {
-  size_t _0[3];
-} z_loaned_closure_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -521,18 +425,6 @@ typedef struct z_owned_closure_query_t {
   void (*drop)(void *context);
 } z_owned_closure_query_t;
 /**
- * Loaned closure.
- */
-typedef struct z_loaned_closure_reply_t {
-  size_t _0[3];
-} z_loaned_closure_reply_t;
-/**
- * A loaned reply.
- */
-typedef struct ALIGN(8) z_loaned_reply_t {
-  uint8_t _0[256];
-} z_loaned_reply_t;
-/**
  * A structure that contains all the elements for stateful, memory-leak-free callbacks.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -556,18 +448,6 @@ typedef struct z_owned_closure_reply_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_reply_t;
-/**
- * Loaned closure.
- */
-typedef struct z_loaned_closure_sample_t {
-  size_t _0[3];
-} z_loaned_closure_sample_t;
-/**
- * A loaned Zenoh sample.
- */
-typedef struct ALIGN(8) z_loaned_sample_t {
-  uint8_t _0[240];
-} z_loaned_sample_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
  *
@@ -593,20 +473,6 @@ typedef struct z_owned_closure_sample_t {
   void (*drop)(void *context);
 } z_owned_closure_sample_t;
 /**
- * Loaned closure.
- */
-typedef struct z_loaned_closure_zid_t {
-  size_t _0[3];
-} z_loaned_closure_zid_t;
-/**
- * A Zenoh ID.
- *
- * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
- */
-typedef struct ALIGN(1) z_id_t {
-  uint8_t id[16];
-} z_id_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -630,79 +496,6 @@ typedef struct z_owned_closure_zid_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_zid_t;
-/**
- * An owned conditional variable.
- *
- * Used in combination with `z_owned_mutex_t` to wake up thread when certain conditions are met.
- */
-typedef struct ALIGN(4) z_owned_condvar_t {
-  uint8_t _0[8];
-} z_owned_condvar_t;
-/**
- * A loaned conditional variable.
- */
-typedef struct ALIGN(4) z_loaned_condvar_t {
-  uint8_t _0[4];
-} z_loaned_condvar_t;
-/**
- * A loaned mutex.
- */
-typedef struct ALIGN(8) z_loaned_mutex_t {
-  uint8_t _0[24];
-} z_loaned_mutex_t;
-/**
- * An owned Zenoh configuration.
- */
-typedef struct ALIGN(8) z_owned_config_t {
-  uint8_t _0[1544];
-} z_owned_config_t;
-/**
- * A loaned Zenoh configuration.
- */
-typedef struct ALIGN(8) z_loaned_config_t {
-  uint8_t _0[1544];
-} z_loaned_config_t;
-/**
- * A Zenoh-allocated <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
- *
- * Key expressions can identify a single key or a set of keys.
- *
- * Examples :
- *    - ``"key/expression"``.
- *    - ``"key/ex*"``.
- *
- * Key expressions can be mapped to numerical ids through `z_declare_keyexpr`
- * for wire and computation efficiency.
- *
- * Internally key expressiobn can be either:
- *   - A plain string expression.
- *   - A pure numerical id.
- *   - The combination of a numerical prefix and a string suffix.
- */
-typedef struct ALIGN(8) z_owned_keyexpr_t {
-  uint8_t _0[32];
-} z_owned_keyexpr_t;
-/**
- * A loaned key expression.
- *
- * Key expressions can identify a single key or a set of keys.
- *
- * Examples :
- *    - ``"key/expression"``.
- *    - ``"key/ex*"``.
- *
- * Using `z_declare_keyexpr` allows Zenoh to optimize a key expression,
- * both for local processing and network-wise.
- */
-typedef struct ALIGN(8) z_loaned_keyexpr_t {
-  uint8_t _0[32];
-} z_loaned_keyexpr_t;
-/**
- * An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#publisher"> publisher </a>.
- */
-typedef struct ALIGN(8) z_owned_publisher_t {
-  uint8_t _0[56];
-} z_owned_publisher_t;
 /**
  * Options passed to the `z_declare_publisher()` function.
  */
@@ -756,18 +549,6 @@ typedef struct z_delete_options_t {
   bool is_express;
 } z_delete_options_t;
 /**
- * The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
- */
-typedef struct ALIGN(8) z_owned_encoding_t {
-  uint8_t _0[48];
-} z_owned_encoding_t;
-/**
- * A loaned Zenoh encoding.
- */
-typedef struct ALIGN(8) z_loaned_encoding_t {
-  uint8_t _0[48];
-} z_loaned_encoding_t;
-/**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
  */
 typedef struct z_query_consolidation_t {
@@ -803,25 +584,6 @@ typedef struct z_get_options_t {
   uint64_t timeout_ms;
 } z_get_options_t;
 /**
- * An owned Zenoh-allocated hello message returned by a Zenoh entity to a scout message sent with `z_scout()`.
- */
-typedef struct ALIGN(8) z_owned_hello_t {
-  uint8_t _0[48];
-} z_owned_hello_t;
-/**
- * An array of maybe-owned non-null terminated strings.
- *
- */
-typedef struct ALIGN(8) z_owned_string_array_t {
-  uint8_t _0[24];
-} z_owned_string_array_t;
-/**
- * The view over a string.
- */
-typedef struct ALIGN(8) z_view_string_t {
-  uint8_t _0[16];
-} z_view_string_t;
-/**
  * An owned MemoryLayout
  */
 typedef struct ALIGN(8) z_owned_memory_layout_t {
@@ -833,12 +595,6 @@ typedef struct ALIGN(8) z_owned_memory_layout_t {
 typedef struct ALIGN(8) z_loaned_memory_layout_t {
   uint8_t _0[16];
 } z_loaned_memory_layout_t;
-/**
- * An owned mutex.
- */
-typedef struct ALIGN(8) z_owned_mutex_t {
-  uint8_t _0[24];
-} z_owned_mutex_t;
 /**
  * A loaned SHM Client Storage
  */
@@ -880,12 +636,6 @@ typedef struct ALIGN(8) z_owned_shared_memory_provider_t {
   uint64_t _0[26];
 } z_owned_shared_memory_provider_t;
 #endif
-/**
- * A loaned Zenoh publisher.
- */
-typedef struct ALIGN(8) z_loaned_publisher_t {
-  uint8_t _0[56];
-} z_loaned_publisher_t;
 /**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
  * whenever issued via `z_publisher_delete()`.
@@ -969,12 +719,6 @@ typedef struct z_owned_query_channel_t {
   struct z_owned_query_channel_closure_t recv;
 } z_owned_query_channel_t;
 /**
- * Loaned closure.
- */
-typedef struct z_loaned_query_channel_closure_t {
-  size_t _0[3];
-} z_loaned_query_channel_closure_t;
-/**
  * Represents the set of options that can be applied to a query reply,
  * sent via `z_query_reply()`.
  */
@@ -999,29 +743,11 @@ typedef struct z_query_reply_err_options_t {
   struct z_owned_encoding_t *encoding;
 } z_query_reply_err_options_t;
 /**
- * A loaned Zenoh value.
- */
-typedef struct ALIGN(8) z_loaned_value_t {
-  uint8_t _0[88];
-} z_loaned_value_t;
-/**
- * A loaned Zenoh queryable.
- */
-typedef struct ALIGN(8) z_loaned_queryable_t {
-  uint8_t _0[32];
-} z_loaned_queryable_t;
-/**
  * An owned SHM Client Storage
  */
 typedef struct ALIGN(8) z_owned_shared_memory_client_storage_t {
   uint8_t _0[8];
 } z_owned_shared_memory_client_storage_t;
-/**
- * An owned reply from a Queryable to a `z_get()`.
- */
-typedef struct ALIGN(8) z_owned_reply_t {
-  uint8_t _0[256];
-} z_owned_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -1059,29 +785,6 @@ typedef struct z_owned_reply_channel_t {
    */
   struct z_owned_reply_channel_closure_t recv;
 } z_owned_reply_channel_t;
-/**
- * Loaned closure.
- */
-typedef struct z_loaned_reply_channel_closure_t {
-  size_t _0[3];
-} z_loaned_reply_channel_closure_t;
-/**
- * An owned Zenoh sample.
- *
- * This is a read only type that can only be constructed by cloning a `z_loaned_sample_t`.
- * Like all owned types, it should be freed using z_drop or z_sample_drop.
- */
-typedef struct ALIGN(8) z_owned_sample_t {
-  uint8_t _0[240];
-} z_owned_sample_t;
-/**
- * A Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#timestamp"> timestamp </a>.
- *
- * It consists of a time generated by a Hybrid Logical Clock (HLC) in NPT64 format and a unique zenoh identifier.
- */
-typedef struct ALIGN(8) z_timestamp_t {
-  uint8_t _0[24];
-} z_timestamp_t;
 /**
  * Options to pass to `z_scout()`.
  */
@@ -1170,30 +873,6 @@ typedef struct zc_shared_memory_provider_backend_callbacks_t {
 typedef struct ALIGN(8) z_loaned_shm_mut_t {
   uint8_t _0[80];
 } z_loaned_shm_mut_t;
-/**
- * A loaned sequence of bytes.
- */
-typedef struct ALIGN(8) z_loaned_slice_t {
-  uint8_t _0[16];
-} z_loaned_slice_t;
-/**
- * A loaned string.
- */
-typedef struct ALIGN(8) z_loaned_string_t {
-  uint8_t _0[16];
-} z_loaned_string_t;
-/**
- * A loaned string array.
- */
-typedef struct ALIGN(8) z_loaned_string_array_t {
-  uint8_t _0[24];
-} z_loaned_string_array_t;
-/**
- * An owned Zenoh task.
- */
-typedef struct ALIGN(8) z_owned_task_t {
-  uint8_t _0[24];
-} z_owned_task_t;
 typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
@@ -1203,24 +882,6 @@ typedef struct z_task_attr_t {
 typedef struct z_time_t {
   uint64_t t;
 } z_time_t;
-/**
- * A Zenoh value - a compination of payload and its encoding.
- */
-typedef struct ALIGN(8) z_owned_value_t {
-  uint8_t _0[88];
-} z_owned_value_t;
-/**
- * A user allocated string, viewed as a key expression.
- */
-typedef struct ALIGN(8) z_view_keyexpr_t {
-  uint8_t _0[32];
-} z_view_keyexpr_t;
-/**
- * A contiguous sequence of bytes owned by some other entity.
- */
-typedef struct ALIGN(8) z_view_slice_t {
-  uint8_t _0[16];
-} z_view_slice_t;
 /**
  * The options for `zc_liveliness_declare_token()`.
  */
@@ -1234,16 +895,6 @@ typedef struct zc_liveliness_declare_subscriber_options_t {
   uint8_t _dummy;
 } zc_liveliness_declare_subscriber_options_t;
 /**
- * A liveliness token that can be used to provide the network with information about connectivity to its
- * declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
- * expressions.
- *
- * A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
- */
-typedef struct ALIGN(8) zc_owned_liveliness_token_t {
-  uint8_t _0[32];
-} zc_owned_liveliness_token_t;
-/**
  * The options for `zc_liveliness_get()`
  */
 typedef struct zc_liveliness_get_options_t {
@@ -1255,12 +906,6 @@ typedef struct zc_liveliness_get_options_t {
 typedef struct ALIGN(8) zc_owned_shared_memory_client_list_t {
   uint8_t _0[24];
 } zc_owned_shared_memory_client_list_t;
-/**
- * Loaned closure.
- */
-typedef struct zcu_loaned_closure_matching_status_t {
-  size_t _0[3];
-} zcu_loaned_closure_matching_status_t;
 /**
  * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
  */
@@ -1294,15 +939,6 @@ typedef struct zcu_owned_closure_matching_status_t {
    */
   void (*drop)(void *context);
 } zcu_owned_closure_matching_status_t;
-/**
- * An owned Zenoh matching listener.
- *
- * A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
- * Dropping the corresponding publisher, also drops matching listener.
- */
-typedef struct ALIGN(8) zcu_owned_matching_listener_t {
-  uint8_t _0[40];
-} zcu_owned_matching_listener_t;
 /**
  * Options passed to the `ze_declare_publication_cache()` function.
  */
