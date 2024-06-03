@@ -1475,6 +1475,12 @@ z_error_t z_info_routers_zid(const struct z_loaned_session_t *session,
  */
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
+ * Constructs a non-owned non-null-terminated string from key expression.
+ */
+ZENOHC_API
+void z_keyexpr_as_view_string(const struct z_loaned_keyexpr_t *this_,
+                              struct z_view_string_t *out_string);
+/**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
@@ -2615,12 +2621,6 @@ ZENOHC_API bool z_view_string_check(const struct z_view_string_t *this_);
  * Constructs an empty view string.
  */
 ZENOHC_API void z_view_string_empty(struct z_view_string_t *this_);
-/**
- * Constructs a non-owned non-null-terminated string from key expression.
- */
-ZENOHC_API
-z_error_t z_view_string_from_keyexpr(struct z_view_string_t *out_string,
-                                     const struct z_loaned_keyexpr_t *key_expr);
 /**
  * Constructs a view string to a specified substring of length `len`.
  *

@@ -16,7 +16,7 @@
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
     z_view_string_t key_string;
-    z_view_string_from_keyexpr(&key_string, z_sample_keyexpr(sample));
+    z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
     switch (z_sample_kind(sample)) {
         case Z_SAMPLE_KIND_PUT:
             printf(">> [LivelinessSubscriber] New alive token ('%.*s')\n",

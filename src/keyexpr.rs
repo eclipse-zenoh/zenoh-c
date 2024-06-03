@@ -416,19 +416,18 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
 /// Constructs a non-owned non-null-terminated string from key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_string_from_keyexpr(
+pub unsafe extern "C" fn z_keyexpr_as_view_string(
+    this: &z_loaned_keyexpr_t,
     out_string: *mut MaybeUninit<z_view_string_t>,
-    key_expr: &z_loaned_keyexpr_t,
-) -> z_error_t {
-    let key_expr = key_expr.transmute_ref();
+) {
+    let this = this.transmute_ref();
     unsafe {
         z_view_string_from_substring(
             out_string,
-            key_expr.as_bytes().as_ptr() as _,
-            key_expr.as_bytes().len(),
+            this.as_bytes().as_ptr() as _,
+            this.as_bytes().len(),
         )
     };
-    errors::Z_OK
 }
 
 /// Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,

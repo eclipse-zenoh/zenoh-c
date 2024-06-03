@@ -54,7 +54,7 @@ Subscribe
 
   void data_handler(const z_loaned_sample_t *sample, const void *arg) {
       z_view_str_t key_string;
-      z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
+      z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
       z_owned_str_t payload_string;
       z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
       printf(">> Received (%.*s, %.*s)\n", 
@@ -126,7 +126,7 @@ Query
           if (z_reply_is_ok(&reply)) {
               const z_loaned_sample_t* sample = z_reply_ok(&reply);
               z_view_str_t key_string;
-              z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
+              z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
               z_owned_str_t payload_string;
               z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
               printf(">> Received (%.*s, %.*s)\n",
@@ -154,7 +154,7 @@ Queryable
 
   void query_handler(const z_loaned_query_t *query, void *context) {
       z_view_str_t key_string;
-      z_keyexpr_to_string(z_query_keyexpr(query), &key_string);
+      z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
 
       const z_loaned_bytes_t* payload =  z_value_payload(z_query_value(query));
       if (z_bytes_len(payload) > 0) {
