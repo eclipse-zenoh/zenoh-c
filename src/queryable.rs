@@ -249,11 +249,17 @@ pub unsafe extern "C" fn z_query_reply(
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
         if !options.encoding.is_null() {
-            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            let encoding = unsafe { options.encoding.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             reply = reply.encoding(encoding);
         };
         if !options.attachment.is_null() {
-            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            let attachment = unsafe { options.attachment.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             reply = reply.attachment(attachment);
         }
     }
