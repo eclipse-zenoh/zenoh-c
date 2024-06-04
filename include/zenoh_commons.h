@@ -1225,13 +1225,13 @@ ZENOHC_API void z_bytes_encode_from_int8(struct z_owned_bytes_t *this_, int8_t v
 /**
  * Constructs payload from an iterator to `z_owned_bytes_t`.
  * @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
- * @param iterator_body: Iterator body function, providing data items. Returning NULL
+ * @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
  * @param context: Arbitrary context that will be passed to iterator_body.
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_error_t z_bytes_encode_from_iter(struct z_owned_bytes_t *this_,
-                                   void (*iterator_body)(struct z_owned_bytes_t *data, void *context),
+                                   bool (*iterator_body)(struct z_owned_bytes_t *data, void *context),
                                    void *context);
 /**
  * Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
