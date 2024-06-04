@@ -394,6 +394,12 @@ typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 /**
+ * An owned Zenoh-allocated source info`.
+ */
+typedef struct ALIGN(8) z_owned_source_info_t {
+  uint8_t _0[40];
+} z_owned_source_info_t;
+/**
  * Options passed to the `z_get()` function.
  */
 typedef struct z_get_options_t {
@@ -413,6 +419,10 @@ typedef struct z_get_options_t {
    * An optional encoding of the query payload and or attachment.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The source info for the query.
+   */
+  struct z_owned_source_info_t *source_info;
   /**
    * An optional attachment to attach to the query.
    */
@@ -437,6 +447,10 @@ typedef struct z_publisher_put_options_t {
    *  The encoding of the data to publish.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The source info for the publication.
+   */
+  struct z_owned_source_info_t *source_info;
   /**
    * The attachment to attach to the publication.
    */
@@ -463,6 +477,10 @@ typedef struct z_put_options_t {
    */
   bool is_express;
   /**
+   * The source info for the message.
+   */
+  struct z_owned_source_info_t *source_info;
+  /**
    * The attachment to this message.
    */
   struct z_owned_bytes_t *attachment;
@@ -476,6 +494,10 @@ typedef struct z_query_reply_options_t {
    * The encoding of the reply payload.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The source info for the reply.
+   */
+  struct z_owned_source_info_t *source_info;
   /**
    * The attachment to this reply.
    */
@@ -491,6 +513,12 @@ typedef struct z_query_reply_err_options_t {
    */
   struct z_owned_encoding_t *encoding;
 } z_query_reply_err_options_t;
+/**
+ * A loaned hello message.
+ */
+typedef struct ALIGN(8) z_loaned_source_info_t {
+  uint8_t _0[40];
+} z_loaned_source_info_t;
 /**
  * Options to pass to `z_scout()`.
  */
@@ -2161,6 +2189,11 @@ ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned
  * Returns sample qos priority value.
  */
 ZENOHC_API enum z_priority_t z_sample_priority(const struct z_loaned_sample_t *this_);
+/**
+ * Returns the sample source_info.
+ */
+ZENOHC_API
+const struct z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
 /**
  * Returns the sample timestamp.
  *

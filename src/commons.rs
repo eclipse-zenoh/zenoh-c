@@ -43,6 +43,7 @@ use zenoh::query::ReplyKeyExpr;
 use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh::sample::SampleKind;
+use zenoh::sample::SourceInfo;
 use zenoh::time::Timestamp;
 use zenoh::value::Value;
 use zenoh_protocol::zenoh::Consolidation;
@@ -138,6 +139,12 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
         Some(attachment) => attachment.transmute_handle() as *const _,
         None => null(),
     }
+}
+
+/// Returns the sample source_info.
+#[no_mangle]
+pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_source_info_t {
+    this.transmute_ref().source_info().transmute_handle()
 }
 
 pub use crate::opaque_types::z_owned_sample_t;
@@ -571,3 +578,10 @@ impl From<z_congestion_control_t> for CongestionControl {
         }
     }
 }
+
+pub use crate::opaque_types::z_loaned_source_info_t;
+decl_transmute_handle!(SourceInfo, z_loaned_source_info_t);
+pub use crate::opaque_types::z_owned_source_info_t;
+decl_transmute_owned!(SourceInfo, z_owned_source_info_t);
+
+validate_equivalence!(z_owned_source_info_t, z_loaned_source_info_t);
