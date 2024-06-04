@@ -134,7 +134,10 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
             .query_consolidation(options.query_consolidation)
             .query_accept_replies(options.query_accept_replies.into());
         if !options.query_selector.is_null() {
-            let query_selector = unsafe { options.query_selector.as_ref() }.unwrap().transmute_ref().clone();
+            let query_selector = unsafe { options.query_selector.as_ref() }
+                .unwrap()
+                .transmute_ref()
+                .clone();
             sub = sub.query_selector(query_selector)
         }
         if options.query_timeout_ms != 0 {

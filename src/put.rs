@@ -86,11 +86,17 @@ pub extern "C" fn z_put(
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
         if !options.encoding.is_null() {
-            let encoding = unsafe { options.encoding.as_mut() }.unwrap().transmute_mut().extract();
+            let encoding = unsafe { options.encoding.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             put = put.encoding(encoding);
         };
         if !options.attachment.is_null() {
-            let attachment = unsafe { options.attachment.as_mut() }.unwrap().transmute_mut().extract();
+            let attachment = unsafe { options.attachment.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             put = put.attachment(attachment);
         }
         put = put.priority(options.priority.into());
