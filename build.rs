@@ -35,7 +35,7 @@ const HEADER: &str = r"//
 ";
 
 fn preprocess_header(input: &str, output: &str) {
-    let mut feature_args = vec![];
+    let mut feature_args: Vec<&str> = vec![];
     #[cfg(feature = "shared-memory")]
     {
         feature_args.push("-D");
@@ -116,7 +116,7 @@ fn produce_opaque_types_data() -> PathBuf {
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = Stdio::from(out_file);
 
-    let mut feature_args = vec![];
+    let mut feature_args: Vec<&str> = vec![];
     #[cfg(feature = "shared-memory")]
     {
         feature_args.push("-F");
