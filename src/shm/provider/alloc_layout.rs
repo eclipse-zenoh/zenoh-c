@@ -21,7 +21,7 @@ use crate::{
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
-    z_owned_buf_alloc_result_t,
+    z_loaned_shared_memory_provider_t, z_owned_buf_alloc_result_t,
 };
 use libc::c_void;
 use zenoh::shm::{
@@ -32,7 +32,6 @@ use crate::context::Context;
 
 use super::{
     alloc_layout_impl::{alloc, alloc_async, alloc_layout_new},
-    shared_memory_provider::z_loaned_shared_memory_provider_t,
     shared_memory_provider_backend::DynamicSharedMemoryProviderBackend,
     types::z_alloc_alignment_t,
 };

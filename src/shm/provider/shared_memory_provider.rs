@@ -30,7 +30,8 @@ use crate::{
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
-    z_owned_buf_alloc_result_t, z_owned_shm_mut_t,
+    z_loaned_shared_memory_provider_t, z_owned_buf_alloc_result_t,
+    z_owned_shared_memory_provider_t, z_owned_shm_mut_t,
 };
 
 use super::{
@@ -43,46 +44,6 @@ use super::{
     },
     types::z_alloc_alignment_t,
 };
-
-/// A loaned SharedMemoryProvider specialization
-#[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
-#[repr(C, align(8))]
-pub struct z_loaned_shared_memory_provider_t([u64; 26]);
-
-#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-#[repr(C, align(8))]
-pub struct z_loaned_shared_memory_provider_t([u64; 32]);
-
-#[cfg(target_arch = "aarch64")]
-#[repr(C, align(8))]
-pub struct z_loaned_shared_memory_provider_t([u64; 28]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_loaned_shared_memory_provider_t([u64; 26]);
-
-/// An owned SharedMemoryProvider specialization
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
-#[repr(C, align(8))]
-pub struct z_owned_shared_memory_provider_t([u64; 26]);
-
-#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-#[repr(C, align(8))]
-pub struct z_owned_shared_memory_provider_t([u64; 32]);
-
-#[cfg(target_arch = "aarch64")]
-#[repr(C, align(8))]
-pub struct z_owned_shared_memory_provider_t([u64; 28]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_owned_shared_memory_provider_t([u64; 26]);
 
 pub type DynamicSharedMemoryProvider =
     SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>;
@@ -97,7 +58,6 @@ pub enum CSHMProvider {
 }
 
 decl_transmute_owned!(Option<CSHMProvider>, z_owned_shared_memory_provider_t);
-
 decl_transmute_handle!(CSHMProvider, z_loaned_shared_memory_provider_t);
 
 /// Creates a new SHM Provider

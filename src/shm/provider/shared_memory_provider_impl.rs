@@ -24,10 +24,9 @@ use zenoh::shm::{
 use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
 use crate::transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteUninitPtr};
-use crate::{z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
+use crate::{z_loaned_shared_memory_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
 use super::chunk::z_allocated_chunk_t;
-use super::shared_memory_provider::z_loaned_shared_memory_provider_t;
 use super::shared_memory_provider_backend::DynamicSharedMemoryProviderBackend;
 use super::types::z_alloc_alignment_t;
 

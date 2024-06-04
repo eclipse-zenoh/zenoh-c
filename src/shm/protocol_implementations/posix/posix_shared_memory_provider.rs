@@ -21,9 +21,9 @@ use zenoh::shm::{
 
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    shm::provider::shared_memory_provider::{z_owned_shared_memory_provider_t, CSHMProvider},
+    shm::provider::shared_memory_provider::CSHMProvider,
     transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr},
-    z_loaned_memory_layout_t,
+    z_loaned_memory_layout_t, z_owned_shared_memory_provider_t,
 };
 
 pub type PosixSharedMemoryProvider =
