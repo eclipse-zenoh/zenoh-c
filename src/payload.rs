@@ -491,7 +491,10 @@ impl Iterator for ZBytesInIterator {
 #[no_mangle]
 pub extern "C" fn z_bytes_encode_from_iter(
     this: *mut MaybeUninit<z_owned_bytes_t>,
-    iterator_body: extern "C" fn(data: &mut MaybeUninit<z_owned_bytes_t>, context: *mut c_void) -> bool,
+    iterator_body: extern "C" fn(
+        data: &mut MaybeUninit<z_owned_bytes_t>,
+        context: *mut c_void,
+    ) -> bool,
     context: *mut c_void,
 ) -> z_error_t {
     let it = ZBytesInIterator {
