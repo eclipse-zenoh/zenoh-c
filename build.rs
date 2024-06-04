@@ -38,20 +38,17 @@ fn preprocess_header(input: &str, output: &str) {
     let mut feature_args: Vec<&str> = vec![];
     #[cfg(feature = "shared-memory")]
     {
-        feature_args.push("-D");
-        feature_args.push("SHARED_MEMORY");
+        feature_args.push("-DSHARED_MEMORY");
     }
     #[cfg(feature = "unstable")]
     {
-        feature_args.push("-D");
-        feature_args.push("UNSTABLE");
+        feature_args.push("-DUNSTABLE");
     }
 
     let cpp = Command::new("cpp")
-        .arg("-D")
-        .arg("ZENOHC_API= ")
-        .arg("-D")
-        .arg("_Bool=bool")
+        .arg("-E")
+        .arg("-DZENOHC_API= ")
+        .arg("-D_Bool=bool")
         .args(feature_args)
         .arg(input)
         .stdout(Stdio::piped())
@@ -66,6 +63,7 @@ fn preprocess_header(input: &str, output: &str) {
         .unwrap();
 
     let sed_out = sed.wait_with_output().unwrap();
+    assert!(!sed_out.stdout.is_empty());
 
     let mut out = File::create(output).expect("failed to open output");
     out.write_all(&sed_out.stdout).unwrap();
