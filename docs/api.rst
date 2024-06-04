@@ -51,8 +51,8 @@ String
 ------
 Types
 ^^^^^
-.. doxygenstruct:: z_owned_str_t
-.. doxygenstruct:: z_view_str_t
+.. doxygenstruct:: z_owned_string_t
+.. doxygenstruct:: z_view_string_t
 .. doxygenstruct:: z_loaned_str_t
 
 Functions

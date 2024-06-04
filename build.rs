@@ -2,6 +2,7 @@ use fs2::FileExt;
 use regex::Regex;
 use std::collections::HashSet;
 use std::env;
+use std::fs::File;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 use std::{
@@ -12,6 +13,7 @@ use std::{
 };
 
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
+const PREPROCESS_PATH: &str = "include/zenoh-cpp.h";
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
 const HEADER: &str = r"//
 // Copyright (c) 2022 ZettaScale Technology
@@ -32,13 +34,53 @@ const HEADER: &str = r"//
 #endif
 ";
 
+fn preprocess_header(input: &str, output: &str) {
+    let mut feature_args = vec![];
+    #[cfg(feature = "shared-memory")]
+    {
+        feature_args.push("-D");
+        feature_args.push("SHARED_MEMORY");
+    }
+    #[cfg(feature = "unstable")]
+    {
+        feature_args.push("-D");
+        feature_args.push("UNSTABLE");
+    }
+
+    let cpp = Command::new("cpp")
+        .arg("-D")
+        .arg("ZENOHC_API= ")
+        .arg("-D")
+        .arg("_Bool=bool")
+        .args(feature_args)
+        .arg(input)
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let sed = Command::new("sed")
+        .arg("/^#/d")
+        .stdin(Stdio::from(cpp.stdout.unwrap()))
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let sed_out = sed.wait_with_output().unwrap();
+
+    let mut out = File::create(output).expect("failed to open output");
+    out.write_all(&sed_out.stdout).unwrap();
+}
+
 fn main() {
     generate_opaque_types();
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
         .expect("Unable to generate bindings")
         .write_to_file(GENERATION_PATH);
 
-    create_generics_header(GENERATION_PATH, "include/zenoh_macros.h");
+    preprocess_header(GENERATION_PATH, PREPROCESS_PATH);
+    create_generics_header(PREPROCESS_PATH, "include/zenoh_macros.h");
+    std::fs::remove_file(PREPROCESS_PATH).unwrap();
+
     configure();
     let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
     split_bindings(&split_guide).unwrap();

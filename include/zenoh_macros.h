@@ -6,7 +6,6 @@
 
 #define z_loan(x) \
     _Generic((x), \
-        z_owned_alloc_layout_t : z_alloc_layout_loan, \
         z_owned_bytes_t : z_bytes_loan, \
         z_owned_bytes_writer_t : z_bytes_writer_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
@@ -28,7 +27,6 @@
         z_owned_reply_t : z_reply_loan, \
         z_owned_sample_t : z_sample_loan, \
         z_owned_session_t : z_session_loan, \
-        z_owned_shared_memory_provider_t : z_shared_memory_provider_loan, \
         z_owned_slice_t : z_slice_loan, \
         z_owned_slice_map_t : z_slice_map_loan, \
         z_owned_string_array_t : z_string_array_loan, \
@@ -55,7 +53,6 @@
 
 #define z_drop(x) \
     _Generic((x), \
-        z_owned_alloc_layout_t* : z_alloc_layout_drop, \
         z_owned_bytes_t* : z_bytes_drop, \
         z_owned_bytes_writer_t* : z_bytes_writer_drop, \
         z_owned_closure_hello_t* : z_closure_hello_drop, \
@@ -80,7 +77,6 @@
         z_owned_reply_t* : z_reply_drop, \
         z_owned_sample_t* : z_sample_drop, \
         z_owned_session_t* : z_session_drop, \
-        z_owned_shared_memory_provider_t* : z_shared_memory_provider_drop, \
         z_owned_slice_t* : z_slice_drop, \
         z_owned_slice_map_t* : z_slice_map_drop, \
         z_owned_string_array_t* : z_string_array_drop, \
@@ -97,7 +93,6 @@
 
 #define z_null(x) \
     _Generic((x), \
-        z_owned_alloc_layout_t* : z_alloc_layout_null, \
         z_owned_bytes_t* : z_bytes_null, \
         z_owned_bytes_writer_t* : z_bytes_writer_null, \
         z_owned_closure_hello_t* : z_closure_hello_null, \
@@ -120,7 +115,6 @@
         z_owned_reply_t* : z_reply_null, \
         z_owned_sample_t* : z_sample_null, \
         z_owned_session_t* : z_session_null, \
-        z_owned_shared_memory_provider_t* : z_shared_memory_provider_null, \
         z_owned_slice_map_t* : z_slice_map_null, \
         z_owned_slice_t* : z_slice_null, \
         z_owned_string_array_t* : z_string_array_null, \
@@ -139,7 +133,6 @@
 
 #define z_check(x) \
     _Generic((x), \
-        z_owned_alloc_layout_t : z_alloc_layout_check, \
         z_owned_bytes_t : z_bytes_check, \
         z_owned_bytes_writer_t : z_bytes_writer_check, \
         z_owned_closure_hello_t : z_closure_hello_check, \
@@ -163,7 +156,6 @@
         z_owned_reply_t : z_reply_check, \
         z_owned_sample_t : z_sample_check, \
         z_owned_session_t : z_session_check, \
-        z_owned_shared_memory_provider_t : z_shared_memory_provider_check, \
         z_owned_slice_t : z_slice_check, \
         z_owned_slice_map_t : z_slice_map_check, \
         z_owned_string_array_t : z_string_array_check, \
@@ -199,7 +191,6 @@
 
 
 
-inline const z_loaned_alloc_layout_t* z_loan(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_loan(&this_); };
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
 inline const z_loaned_bytes_writer_t* z_loan(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan(&this_); };
 inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t& closure) { return z_closure_hello_loan(&closure); };
@@ -221,7 +212,6 @@ inline const z_loaned_reply_channel_closure_t* z_loan(const z_owned_reply_channe
 inline const z_loaned_reply_t* z_loan(const z_owned_reply_t& this_) { return z_reply_loan(&this_); };
 inline const z_loaned_sample_t* z_loan(const z_owned_sample_t& this_) { return z_sample_loan(&this_); };
 inline const z_loaned_session_t* z_loan(const z_owned_session_t& this_) { return z_session_loan(&this_); };
-inline const z_loaned_shared_memory_provider_t* z_loan(const z_owned_shared_memory_provider_t& this_) { return z_shared_memory_provider_loan(&this_); };
 inline const z_loaned_slice_t* z_loan(const z_owned_slice_t& this_) { return z_slice_loan(&this_); };
 inline const z_loaned_slice_map_t* z_loan(const z_owned_slice_map_t& this_) { return z_slice_map_loan(&this_); };
 inline const z_loaned_string_array_t* z_loan(const z_owned_string_array_t& this_) { return z_string_array_loan(&this_); };
@@ -244,7 +234,6 @@ inline z_loaned_slice_map_t* z_loan_mut(z_owned_slice_map_t& this_) { return z_s
 inline z_loaned_string_array_t* z_loan_mut(z_owned_string_array_t& this_) { return z_string_array_loan_mut(&this_); };
 
 
-inline void z_drop(z_owned_alloc_layout_t* this_) { return z_alloc_layout_drop(this_); };
 inline void z_drop(z_owned_bytes_t* this_) { return z_bytes_drop(this_); };
 inline void z_drop(z_owned_bytes_writer_t* this_) { return z_bytes_writer_drop(this_); };
 inline void z_drop(z_owned_closure_hello_t* closure) { return z_closure_hello_drop(closure); };
@@ -269,7 +258,6 @@ inline void z_drop(z_owned_reply_channel_t* channel) { return z_reply_channel_dr
 inline void z_drop(z_owned_reply_t* this_) { return z_reply_drop(this_); };
 inline void z_drop(z_owned_sample_t* this_) { return z_sample_drop(this_); };
 inline void z_drop(z_owned_session_t* this_) { return z_session_drop(this_); };
-inline void z_drop(z_owned_shared_memory_provider_t* this_) { return z_shared_memory_provider_drop(this_); };
 inline void z_drop(z_owned_slice_t* this_) { return z_slice_drop(this_); };
 inline void z_drop(z_owned_slice_map_t* this_) { return z_slice_map_drop(this_); };
 inline void z_drop(z_owned_string_array_t* this_) { return z_string_array_drop(this_); };
@@ -282,7 +270,6 @@ inline void z_drop(ze_owned_publication_cache_t* this_) { return ze_publication_
 inline void z_drop(ze_owned_querying_subscriber_t* this_) { return ze_querying_subscriber_drop(this_); };
 
 
-inline z_owned_alloc_layout_t* z_move(z_owned_alloc_layout_t& this_) { return (&this_); };
 inline z_owned_bytes_t* z_move(z_owned_bytes_t& this_) { return (&this_); };
 inline z_owned_bytes_writer_t* z_move(z_owned_bytes_writer_t& this_) { return (&this_); };
 inline z_owned_closure_hello_t* z_move(z_owned_closure_hello_t& closure) { return (&closure); };
@@ -307,7 +294,6 @@ inline z_owned_reply_channel_t* z_move(z_owned_reply_channel_t& channel) { retur
 inline z_owned_reply_t* z_move(z_owned_reply_t& this_) { return (&this_); };
 inline z_owned_sample_t* z_move(z_owned_sample_t& this_) { return (&this_); };
 inline z_owned_session_t* z_move(z_owned_session_t& this_) { return (&this_); };
-inline z_owned_shared_memory_provider_t* z_move(z_owned_shared_memory_provider_t& this_) { return (&this_); };
 inline z_owned_slice_t* z_move(z_owned_slice_t& this_) { return (&this_); };
 inline z_owned_slice_map_t* z_move(z_owned_slice_map_t& this_) { return (&this_); };
 inline z_owned_string_array_t* z_move(z_owned_string_array_t& this_) { return (&this_); };
@@ -320,7 +306,6 @@ inline ze_owned_publication_cache_t* z_move(ze_owned_publication_cache_t& this_)
 inline ze_owned_querying_subscriber_t* z_move(ze_owned_querying_subscriber_t& this_) { return (&this_); };
 
 
-inline void z_null(z_owned_alloc_layout_t* this_) { return z_alloc_layout_null(this_); };
 inline void z_null(z_owned_bytes_t* this_) { return z_bytes_null(this_); };
 inline void z_null(z_owned_bytes_writer_t* this_) { return z_bytes_writer_null(this_); };
 inline void z_null(z_owned_closure_hello_t* this_) { return z_closure_hello_null(this_); };
@@ -343,7 +328,6 @@ inline void z_null(z_owned_reply_channel_t* this_) { return z_reply_channel_null
 inline void z_null(z_owned_reply_t* this_) { return z_reply_null(this_); };
 inline void z_null(z_owned_sample_t* this_) { return z_sample_null(this_); };
 inline void z_null(z_owned_session_t* this_) { return z_session_null(this_); };
-inline void z_null(z_owned_shared_memory_provider_t* this_) { return z_shared_memory_provider_null(this_); };
 inline void z_null(z_owned_slice_map_t* this_) { return z_slice_map_null(this_); };
 inline void z_null(z_owned_slice_t* this_) { return z_slice_null(this_); };
 inline void z_null(z_owned_string_array_t* this_) { return z_string_array_null(this_); };
@@ -360,7 +344,6 @@ inline void z_null(ze_owned_publication_cache_t* this_) { return ze_publication_
 inline void z_null(ze_owned_querying_subscriber_t* this_) { return ze_querying_subscriber_null(this_); };
 
 
-inline bool z_check(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_check(&this_); };
 inline bool z_check(const z_owned_bytes_t& this_) { return z_bytes_check(&this_); };
 inline bool z_check(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_check(&this_); };
 inline bool z_check(const z_owned_closure_hello_t& this_) { return z_closure_hello_check(&this_); };
@@ -384,7 +367,6 @@ inline bool z_check(const z_owned_reply_channel_closure_t& this_) { return z_rep
 inline bool z_check(const z_owned_reply_t& this_) { return z_reply_check(&this_); };
 inline bool z_check(const z_owned_sample_t& this_) { return z_sample_check(&this_); };
 inline bool z_check(const z_owned_session_t& this_) { return z_session_check(&this_); };
-inline bool z_check(const z_owned_shared_memory_provider_t& this_) { return z_shared_memory_provider_check(&this_); };
 inline bool z_check(const z_owned_slice_t& this_) { return z_slice_check(&this_); };
 inline bool z_check(const z_owned_slice_map_t& map) { return z_slice_map_check(&map); };
 inline bool z_check(const z_owned_string_array_t& this_) { return z_string_array_check(&this_); };
@@ -514,8 +496,6 @@ inline void z_closure(
 
 template<class T> struct z_loaned_to_owned_type_t {};
 template<class T> struct z_owned_to_loaned_type_t {};
-template<> struct z_loaned_to_owned_type_t<z_loaned_alloc_layout_t> { typedef z_owned_alloc_layout_t type; };
-template<> struct z_owned_to_loaned_type_t<z_owned_alloc_layout_t> { typedef z_loaned_alloc_layout_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_t> { typedef z_owned_bytes_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_bytes_t> { typedef z_loaned_bytes_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_writer_t> { typedef z_owned_bytes_writer_t type; };
@@ -558,8 +538,6 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_sample_t> { typedef z_owned_
 template<> struct z_owned_to_loaned_type_t<z_owned_sample_t> { typedef z_loaned_sample_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_session_t> { typedef z_owned_session_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_session_t> { typedef z_loaned_session_t type; };
-template<> struct z_loaned_to_owned_type_t<z_loaned_shared_memory_provider_t> { typedef z_owned_shared_memory_provider_t type; };
-template<> struct z_owned_to_loaned_type_t<z_owned_shared_memory_provider_t> { typedef z_loaned_shared_memory_provider_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_slice_t> { typedef z_owned_slice_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_slice_t> { typedef z_loaned_slice_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_slice_map_t> { typedef z_owned_slice_map_t type; };

@@ -53,9 +53,9 @@ Subscribe
   #include "zenoh.h"
 
   void data_handler(const z_loaned_sample_t *sample, const void *arg) {
-      z_view_str_t key_string;
+      z_view_string_t key_string;
       z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
-      z_owned_str_t payload_string;
+      z_owned_string_t payload_string;
       z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
       printf(">> Received (%.*s, %.*s)\n", 
           (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)), 
@@ -125,9 +125,9 @@ Query
       for (z_call(z_loan(channel.recv), &reply); z_check(reply); z_call(z_loan(channel.recv), &reply)) {
           if (z_reply_is_ok(&reply)) {
               const z_loaned_sample_t* sample = z_reply_ok(&reply);
-              z_view_str_t key_string;
+              z_view_string_t key_string;
               z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
-              z_owned_str_t payload_string;
+              z_owned_string_t payload_string;
               z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
               printf(">> Received (%.*s, %.*s)\n",
                   (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)),
@@ -153,12 +153,12 @@ Queryable
   #include "zenoh.h"
 
   void query_handler(const z_loaned_query_t *query, void *context) {
-      z_view_str_t key_string;
+      z_view_string_t key_string;
       z_keyexpr_to_string(z_query_keyexpr(query), &key_string);
 
       const z_loaned_bytes_t* payload =  z_value_payload(z_query_value(query));
       if (z_bytes_len(payload) > 0) {
-          z_owned_str_t payload_string;
+          z_owned_string_t payload_string;
           z_bytes_decode_into_string(payload, &payload_string);
 
           printf(">> [Queryable ] Received Query '%.*s' with value '%.*s'\n", 

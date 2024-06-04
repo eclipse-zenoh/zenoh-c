@@ -101,14 +101,14 @@ int main(int argc, char** argv) {
         if (z_reply_is_ok(z_loan(reply))) {
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
 
-            z_view_str_t key_str;
+            z_view_string_t key_str;
             z_keyexpr_to_string(z_sample_keyexpr(sample), &key_str);
 
-            z_owned_str_t reply_str;
+            z_owned_string_t reply_str;
             z_bytes_decode_into_string(z_sample_payload(sample), &reply_str);
 
-            printf(">> Received ('%.*s': '%.*s')\n", (int)z_str_len(z_loan(key_str)), z_str_data(z_loan(key_str)),
-                   (int)z_str_len(z_loan(reply_str)), z_str_data(z_loan(reply_str)));
+            printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
+                   (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));
             z_drop(z_move(reply_str));
         } else {
             printf("Received an error\n");
