@@ -86,7 +86,7 @@ fn test_no_default_features() {
             // " zenoh/auth_pubkey",
             // " zenoh/auth_usrpwd",
             // " zenoh/complete_n",
-            " zenoh/shared-memory",
+            //" zenoh/shared-memory",
             // " zenoh/stats",
             // " zenoh/transport_multilink",
             // " zenoh/transport_quic",
