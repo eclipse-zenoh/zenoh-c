@@ -157,11 +157,17 @@ pub unsafe extern "C" fn z_get(
             get = get.payload(payload);
         }
         if !options.encoding.is_null() {
-            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            let encoding = unsafe { options.encoding.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             get = get.encoding(encoding);
         }
         if !options.attachment.is_null() {
-            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            let attachment = unsafe { options.attachment.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             get = get.attachment(attachment);
         }
 

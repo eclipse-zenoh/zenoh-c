@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
 
             z_view_string_t key_str;
-            z_keyexpr_to_string(z_sample_keyexpr(sample), &key_str);
+            z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
 
             z_owned_string_t reply_str;
             z_bytes_decode_into_string(z_sample_payload(sample), &reply_str);

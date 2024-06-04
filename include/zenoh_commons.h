@@ -1827,6 +1827,12 @@ z_error_t z_info_routers_zid(const struct z_loaned_session_t *session,
  */
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
+ * Constructs a non-owned non-null-terminated string from key expression.
+ */
+ZENOHC_API
+void z_keyexpr_as_view_string(const struct z_loaned_keyexpr_t *this_,
+                              struct z_view_string_t *out_string);
+/**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
@@ -1957,12 +1963,6 @@ ZENOHC_API
 enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_keyexpr_t *left,
                                                           const struct z_loaned_keyexpr_t *right);
 /**
- * Constructs a non-owned non-null-terminated string from key expression.
- */
-ZENOHC_API
-void z_keyexpr_to_string(const struct z_loaned_keyexpr_t *this_,
-                         struct z_view_string_t *out_string);
-/**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
@@ -2075,6 +2075,10 @@ ZENOHC_API
 z_error_t z_posix_shared_memory_provider_new(z_owned_shared_memory_provider_t *this_,
                                              const z_loaned_memory_layout_t *layout);
 #endif
+/**
+ * Returns the default value of #z_priority_t.
+ */
+ZENOHC_API enum z_priority_t z_priority_default(void);
 /**
  * Returns ``true`` if publisher is valid, ``false`` otherwise.
  */
@@ -3653,6 +3657,13 @@ ZENOHC_API
 z_error_t zcu_publisher_matching_listener_callback(struct zcu_owned_matching_listener_t *this_,
                                                    const struct z_loaned_publisher_t *publisher,
                                                    struct zcu_owned_closure_matching_status_t *callback);
+/**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t zcu_publisher_matching_listener_undeclare(struct zcu_owned_matching_listener_t *this_);
 /**
  * Returns the default value of #zcu_reply_keyexpr_t.
  */

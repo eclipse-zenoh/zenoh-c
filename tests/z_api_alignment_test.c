@@ -45,7 +45,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
 
     const z_loaned_keyexpr_t* query_ke = z_query_keyexpr(query);
     z_view_string_t k_str;
-    z_keyexpr_to_string(query_ke, &k_str);
+    z_keyexpr_as_view_string(query_ke, &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
         k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, z_query_keyexpr(query));
@@ -73,7 +73,7 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
         const z_loaned_sample_t* sample = z_reply_ok(reply);
 
         z_view_string_t k_str;
-        z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
+        z_keyexpr_as_view_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
         if (k_str == NULL) {
             k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, sample.keyexpr);
@@ -90,7 +90,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     datas++;
 
     z_view_string_t k_str;
-    z_keyexpr_to_string(z_sample_keyexpr(sample), &k_str);
+    z_keyexpr_as_view_string(z_sample_keyexpr(sample), &k_str);
 #ifdef ZENOH_PICO
     if (k_str == NULL) {
         k_str = zp_keyexpr_resolve(*(z_loaned_session_t *)arg, sample->keyexpr);

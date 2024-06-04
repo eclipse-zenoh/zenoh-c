@@ -416,7 +416,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
 /// Constructs a non-owned non-null-terminated string from key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_to_string(
+pub unsafe extern "C" fn z_keyexpr_as_view_string(
     this: &z_loaned_keyexpr_t,
     out_string: *mut MaybeUninit<z_view_string_t>,
 ) {

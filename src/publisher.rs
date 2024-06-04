@@ -174,11 +174,17 @@ pub unsafe extern "C" fn z_publisher_put(
     let mut put = publisher.put(payload);
     if let Some(options) = options {
         if !options.encoding.is_null() {
-            let encoding = unsafe { *options.encoding }.transmute_mut().extract();
+            let encoding = unsafe { options.encoding.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             put = put.encoding(encoding);
         };
         if !options.attachment.is_null() {
-            let attachment = unsafe { *options.attachment }.transmute_mut().extract();
+            let attachment = unsafe { options.attachment.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
             put = put.attachment(attachment);
         }
     }
@@ -281,6 +287,23 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
             errors::Z_EGENERIC
         }
     }
+}
+
+/// Undeclares the given matching listener, droping and invalidating it.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zcu_publisher_matching_listener_undeclare(
+    this: &mut zcu_owned_matching_listener_t,
+) -> errors::z_error_t {
+    if let Some(p) = this.transmute_mut().extract().take() {
+        if let Err(e) = p.undeclare().wait() {
+            log::error!("{}", e);
+            return errors::Z_EGENERIC;
+        }
+    }
+    errors::Z_OK
 }
 
 /// Undeclares the given publisher, droping and invalidating it.
