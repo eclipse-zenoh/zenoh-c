@@ -28,8 +28,6 @@ extern "C" {
 #define ZENOHC_API
 #endif
 
-#include "zenoh_configure.h"
-
 // clang-format off
 // include order is important
 #include "zenoh_opaque.h"

@@ -21,17 +21,16 @@ use zenoh::shm::{
 };
 use zenoh::{prelude::*, shm::AsyncAllocPolicy};
 
-use crate::z_loaned_shared_memory_provider_t;
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteUninitPtr},
     z_owned_buf_alloc_result_t,
 };
+use crate::{z_loaned_alloc_layout_t, z_loaned_shared_memory_provider_t, z_owned_alloc_layout_t};
 
 use super::{
-    alloc_layout::{z_loaned_alloc_layout_t, z_owned_alloc_layout_t, CSHMLayout},
-    shared_memory_provider_backend::DynamicSharedMemoryProviderBackend,
+    alloc_layout::CSHMLayout, shared_memory_provider_backend::DynamicSharedMemoryProviderBackend,
     types::z_alloc_alignment_t,
 };
 

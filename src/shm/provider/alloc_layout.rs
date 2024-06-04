@@ -21,7 +21,8 @@ use crate::{
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
-    z_loaned_shared_memory_provider_t, z_owned_buf_alloc_result_t,
+    z_loaned_alloc_layout_t, z_loaned_shared_memory_provider_t, z_owned_alloc_layout_t,
+    z_owned_buf_alloc_result_t,
 };
 use libc::c_void;
 use zenoh::shm::{
@@ -36,32 +37,6 @@ use super::{
     types::z_alloc_alignment_t,
 };
 
-/// A loaned SharedMemoryProvider's AllocLayout
-#[cfg(target_arch = "x86_64")]
-#[repr(C, align(8))]
-pub struct z_loaned_alloc_layout_t([u64; 5]);
-
-#[cfg(target_arch = "aarch64")]
-#[repr(C, align(8))]
-pub struct z_loaned_alloc_layout_t([u64; 5]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_loaned_alloc_layout_t([u64; 5]);
-
-/// An owned SharedMemoryProvider's AllocLayout
-#[cfg(target_arch = "x86_64")]
-#[repr(C, align(8))]
-pub struct z_owned_alloc_layout_t([u64; 5]);
-
-#[cfg(target_arch = "aarch64")]
-#[repr(C, align(8))]
-pub struct z_owned_alloc_layout_t([u64; 5]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_owned_alloc_layout_t([u64; 5]);
-
 pub type DynamicAllocLayout =
     AllocLayout<'static, DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>;
 
@@ -75,7 +50,6 @@ pub enum CSHMLayout {
 }
 
 decl_transmute_owned!(Option<CSHMLayout>, z_owned_alloc_layout_t);
-
 decl_transmute_handle!(CSHMLayout, z_loaned_alloc_layout_t);
 
 /// Creates a new Alloc Layout for SHM Provider

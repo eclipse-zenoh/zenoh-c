@@ -375,3 +375,23 @@ get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shared_memory_provider_
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// A loaned SharedMemoryProvider
 get_opaque_type_data!(CDummySHMProvider, z_loaned_shared_memory_provider_t);
+
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+type PosixAllocLayout = AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSharedMemoryProviderBackend>;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+type DummyDynamicAllocLayout = AllocLayout<'static, DynamicProtocolID, DummySHMProviderBackend>;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+enum CSHMLayout {
+    Posix(PosixAllocLayout),
+    Dynamic(DummyDynamicAllocLayout),
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// An owned SharedMemoryProvider's AllocLayout
+get_opaque_type_data!(Option<CSHMLayout>, z_owned_alloc_layout_t);
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// A loaned SharedMemoryProvider's AllocLayout
+get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
