@@ -468,43 +468,6 @@ typedef struct z_put_options_t {
   struct z_owned_bytes_t *attachment;
 } z_put_options_t;
 /**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_query_channel_closure_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  bool (*call)(struct z_owned_query_t *query, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
-} z_owned_query_channel_closure_t;
-/**
- * A pair of send / receive ends of channel.
- */
-typedef struct z_owned_query_channel_t {
-  /**
-   * Send end of the channel.
-   */
-  struct z_owned_closure_query_t send;
-  /**
-   * Receive end of the channel.
-   */
-  struct z_owned_query_channel_closure_t recv;
-} z_owned_query_channel_t;
-/**
  * Represents the set of options that can be applied to a query reply,
  * sent via `z_query_reply()`.
  */
@@ -528,43 +491,6 @@ typedef struct z_query_reply_err_options_t {
    */
   struct z_owned_encoding_t *encoding;
 } z_query_reply_err_options_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_reply_channel_closure_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  bool (*call)(struct z_owned_reply_t *reply, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
-} z_owned_reply_channel_closure_t;
-/**
- * A pair of send / receive ends of channel.
- */
-typedef struct z_owned_reply_channel_t {
-  /**
-   * Send end of the channel.
-   */
-  struct z_owned_closure_reply_t send;
-  /**
-   * Receive end of the channel.
-   */
-  struct z_owned_reply_channel_closure_t recv;
-} z_owned_reply_channel_t;
 /**
  * Options to pass to `z_scout()`.
  */
@@ -1391,6 +1317,123 @@ ZENOHC_API
 void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
                           struct z_owned_string_t *out_str);
 /**
+ * Constructs send and recieve ends of the fifo channel
+ */
+ZENOHC_API
+void z_fifo_channel_query_new(struct z_owned_closure_query_t *callback,
+                              struct z_owned_fifo_handler_query_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the fifo channel
+ */
+ZENOHC_API
+void z_fifo_channel_reply_new(struct z_owned_closure_reply_t *callback,
+                              struct z_owned_fifo_handler_reply_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the fifo channel
+ */
+ZENOHC_API
+void z_fifo_channel_sample_new(struct z_owned_closure_sample_t *callback,
+                               struct z_owned_fifo_handler_sample_t *handler,
+                               size_t capacity);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_fifo_handler_query_check(const struct z_owned_fifo_handler_query_t *this_);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_query_drop(struct z_owned_fifo_handler_query_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_fifo_handler_query_t *z_fifo_handler_query_loan(const struct z_owned_fifo_handler_query_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_query_null(struct z_owned_fifo_handler_query_t *this_);
+/**
+ * Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
+ * the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
+ * in the gravestone state.
+ */
+ZENOHC_API
+bool z_fifo_handler_query_recv(const struct z_loaned_fifo_handler_query_t *this_,
+                               struct z_owned_query_t *query);
+/**
+ * Returns query from the fifo buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
+ * Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
+ */
+ZENOHC_API
+bool z_fifo_handler_query_try_recv(const struct z_loaned_fifo_handler_query_t *this_,
+                                   struct z_owned_query_t *query);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_fifo_handler_reply_check(const struct z_owned_fifo_handler_reply_t *this_);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_reply_drop(struct z_owned_fifo_handler_reply_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_fifo_handler_reply_t *z_fifo_handler_reply_loan(const struct z_owned_fifo_handler_reply_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_reply_null(struct z_owned_fifo_handler_reply_t *this_);
+/**
+ * Returns reply from the fifo buffer. If there are no more pending replies will block until next reply is received, or until
+ * the channel is dropped (normally when all replies are received). In the later case will return ``false`` and reply will be
+ * in the gravestone state.
+ */
+ZENOHC_API
+bool z_fifo_handler_reply_recv(const struct z_loaned_fifo_handler_reply_t *this_,
+                               struct z_owned_reply_t *reply);
+/**
+ * Returns reply from the fifo buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
+ * Will return false if the channel is dropped (normally when all replies are received) and there are no more replies in the fifo.
+ */
+ZENOHC_API
+bool z_fifo_handler_reply_try_recv(const struct z_loaned_fifo_handler_reply_t *this_,
+                                   struct z_owned_reply_t *reply);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_fifo_handler_sample_check(const struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_sample_drop(struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_fifo_handler_sample_t *z_fifo_handler_sample_loan(const struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_sample_null(struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
+ * the channel is dropped (normally when there are no more samples to receive). In the later case will return ``false`` and sample will be
+ * in the gravestone state.
+ */
+ZENOHC_API
+bool z_fifo_handler_sample_recv(const struct z_loaned_fifo_handler_sample_t *this_,
+                                struct z_owned_sample_t *sample);
+/**
+ * Returns sample from the fifo buffer. If there are no more pending replies will return immediately (with sample set to its gravestone state).
+ * Will return false if the channel is dropped (normally when there are no more samples to receive) and there are no more replies in the fifo.
+ */
+ZENOHC_API
+bool z_fifo_handler_sample_try_recv(const struct z_loaned_fifo_handler_sample_t *this_,
+                                    struct z_owned_sample_t *sample);
+/**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
@@ -1744,41 +1787,6 @@ ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *this_);
 /**
- * Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
- */
-ZENOHC_API bool z_query_channel_check(const struct z_owned_query_channel_t *this_);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-bool z_query_channel_closure_call(const struct z_loaned_query_channel_closure_t *closure,
-                                  struct z_owned_query_t *query);
-/**
- * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
- */
-ZENOHC_API bool z_query_channel_closure_check(const struct z_owned_query_channel_closure_t *this_);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API void z_query_channel_closure_drop(struct z_owned_query_channel_closure_t *closure);
-/**
- * Borrows closure.
- */
-ZENOHC_API
-const struct z_loaned_query_channel_closure_t *z_query_channel_closure_loan(const struct z_owned_query_channel_closure_t *closure);
-/**
- * Constructs a gravestone value for `z_owned_query_channel_closure_t` type.
- */
-ZENOHC_API void z_query_channel_closure_null(struct z_owned_query_channel_closure_t *this_);
-/**
- * Drops the channel and resets it to a gravestone state.
- */
-ZENOHC_API void z_query_channel_drop(struct z_owned_query_channel_t *channel);
-/**
- * Constructs a channel in gravestone state.
- */
-ZENOHC_API struct z_owned_query_channel_t z_query_channel_null(void);
-/**
  * Returns `false` if `this` is in a gravestone state, `true` otherwise.
  */
 ZENOHC_API bool z_query_check(const struct z_owned_query_t *query);
@@ -1941,41 +1949,6 @@ ZENOHC_API uint64_t z_random_u64(void);
  */
 ZENOHC_API uint8_t z_random_u8(void);
 /**
- * Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
- */
-ZENOHC_API bool z_reply_channel_check(const struct z_owned_reply_channel_t *this_);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-bool z_reply_channel_closure_call(const struct z_loaned_reply_channel_closure_t *closure,
-                                  struct z_owned_reply_t *reply);
-/**
- * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
- */
-ZENOHC_API bool z_reply_channel_closure_check(const struct z_owned_reply_channel_closure_t *this_);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
-/**
- * Borrows closure.
- */
-ZENOHC_API
-const struct z_loaned_reply_channel_closure_t *z_reply_channel_closure_loan(const struct z_owned_reply_channel_closure_t *closure);
-/**
- * Constructs a gravestone value `z_owned_reply_channel_closure_t` type.
- */
-ZENOHC_API void z_reply_channel_closure_null(struct z_owned_reply_channel_closure_t *this_);
-/**
- * Drops the channel and resets it to a gravestone state.
- */
-ZENOHC_API void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
-/**
- * Constructs a channel in gravestone state.
- */
-ZENOHC_API void z_reply_channel_null(struct z_owned_reply_channel_t *this_);
-/**
  * Returns ``true`` if `reply` is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_reply_check(const struct z_owned_reply_t *this_);
@@ -2012,6 +1985,123 @@ ZENOHC_API void z_reply_null(struct z_owned_reply_t *this_);
  * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
  */
 ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *this_);
+/**
+ * Constructs send and recieve ends of the ring channel
+ */
+ZENOHC_API
+void z_ring_channel_query_new(struct z_owned_closure_query_t *callback,
+                              struct z_owned_ring_handler_query_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the ring channel
+ */
+ZENOHC_API
+void z_ring_channel_reply_new(struct z_owned_closure_reply_t *callback,
+                              struct z_owned_ring_handler_reply_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the ring channel
+ */
+ZENOHC_API
+void z_ring_channel_sample_new(struct z_owned_closure_sample_t *callback,
+                               struct z_owned_ring_handler_sample_t *handler,
+                               size_t capacity);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_ring_handler_query_check(const struct z_owned_ring_handler_query_t *this_);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_ring_handler_query_drop(struct z_owned_ring_handler_query_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_ring_handler_query_t *z_ring_handler_query_loan(const struct z_owned_ring_handler_query_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_ring_handler_query_null(struct z_owned_ring_handler_query_t *this_);
+/**
+ * Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until
+ * the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
+ * in the gravestone state.
+ */
+ZENOHC_API
+bool z_ring_handler_query_recv(const struct z_loaned_ring_handler_query_t *this_,
+                               struct z_owned_query_t *query);
+/**
+ * Returns query from the ring buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
+ * Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
+ */
+ZENOHC_API
+bool z_ring_handler_query_try_recv(const struct z_loaned_ring_handler_query_t *this_,
+                                   struct z_owned_query_t *query);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_ring_handler_reply_check(const struct z_owned_ring_handler_reply_t *this_);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_ring_handler_reply_drop(struct z_owned_ring_handler_reply_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_ring_handler_reply_t *z_ring_handler_reply_loan(const struct z_owned_ring_handler_reply_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_ring_handler_reply_null(struct z_owned_ring_handler_reply_t *this_);
+/**
+ * Returns reply from the ring buffer. If there are no more pending replies will block until next reply is received, or until
+ * the channel is dropped (normally when all replies are received). In the later case will return ``false`` and reply will be
+ * in the gravestone state.
+ */
+ZENOHC_API
+bool z_ring_handler_reply_recv(const struct z_loaned_ring_handler_reply_t *this_,
+                               struct z_owned_reply_t *reply);
+/**
+ * Returns reply from the ring buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
+ * Will return false if the channel is dropped (normally when all replies are received) and there are no more replies in the fifo.
+ */
+ZENOHC_API
+bool z_ring_handler_reply_try_recv(const struct z_loaned_ring_handler_reply_t *this_,
+                                   struct z_owned_reply_t *reply);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_ring_handler_sample_check(const struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_ring_handler_sample_drop(struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_ring_handler_sample_t *z_ring_handler_sample_loan(const struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_ring_handler_sample_null(struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until
+ * the channel is dropped (normally when there are no more samples to receive). In the later case will return ``false`` and sample will be
+ * in the gravestone state.
+ */
+ZENOHC_API
+bool z_ring_handler_sample_recv(const struct z_loaned_ring_handler_sample_t *this_,
+                                struct z_owned_sample_t *sample);
+/**
+ * Returns sample from the ring buffer. If there are no more pending replies will return immediately (with sample set to its gravestone state).
+ * Will return false if the channel is dropped (normally when there are no more samples to receive) and there are no more replies in the fifo.
+ */
+ZENOHC_API
+bool z_ring_handler_sample_try_recv(const struct z_loaned_ring_handler_sample_t *this_,
+                                    struct z_owned_sample_t *sample);
 /**
  * Returns sample attachment.
  *
@@ -2803,62 +2893,6 @@ ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *thi
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
 ZENOHC_API z_error_t zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *this_);
-/**
- * Constructs a new blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_declare_queryable()` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
- * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
- * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- */
-ZENOHC_API
-void zc_query_fifo_new(struct z_owned_query_channel_t *this_,
-                       size_t bound);
-/**
- * Constructs a new non-blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_declare_queryable()` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
- * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
- * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
- */
-ZENOHC_API
-void zc_query_non_blocking_fifo_new(struct z_owned_query_channel_t *this_,
-                                    size_t bound);
-/**
- * Creates a new blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get()` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
- * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
- * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
- */
-ZENOHC_API
-void zc_reply_fifo_new(struct z_owned_reply_channel_t *this_,
-                       size_t bound);
-/**
- * Creates a new non-blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get()` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
- * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
- * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
- */
-ZENOHC_API
-void zc_reply_non_blocking_fifo_new(struct z_owned_reply_channel_t *this_,
-                                    size_t bound);
 /**
  * Constructs an owned shallow copy of the session in provided uninitialized memory location.
  */

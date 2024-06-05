@@ -55,8 +55,9 @@ int main(int argc, char **argv) {
     }
 
     printf("Sending Query '%s'...\n", expr);
-    z_owned_reply_channel_t channel;
-    zc_reply_fifo_new(&channel, 16);
+    z_owned_fifo_handler_reply_t handler;
+    z_owned_closure_reply_t closure;
+    z_fifo_channel_reply_new(&closure, &handler, 16);
 
     z_get_options_t opts;
     z_get_options_default(&opts);
@@ -66,11 +67,11 @@ int main(int argc, char **argv) {
         z_bytes_encode_from_string(&payload, value);
         opts.payload = &payload;
     }
-    z_get(z_loan(s), z_loan(keyexpr), "", z_move(channel.send),
+    z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
           z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
 
-    for (z_call(z_loan(channel.recv), &reply); z_check(reply); z_call(z_loan(channel.recv), &reply)) {
+    for (z_recv(z_loan(handler), &reply); z_check(reply); z_recv(z_loan(handler), &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
 
@@ -89,7 +90,7 @@ int main(int argc, char **argv) {
         z_drop(z_move(reply));
     }
 
-    z_drop(z_move(channel));
+    z_drop(z_move(handler));
     z_close(z_move(s));
     return 0;
 }

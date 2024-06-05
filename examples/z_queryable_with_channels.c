@@ -20,13 +20,6 @@ const char *keyexpr = "demo/example/zenoh-c-queryable";
 const char *value = "Queryable from C!";
 z_view_keyexpr_t ke;
 
-void query_handler(const z_loaned_query_t *query, void *context) {
-    z_owned_closure_owned_query_t *channel = (z_owned_closure_owned_query_t *)context;
-    z_owned_query_t oquery;
-    z_query_clone(query, &oquery);
-    z_call(z_loan(*channel), &oquery);
-}
-
 int main(int argc, char **argv) {
     if (argc > 1) {
         keyexpr = argv[1];
@@ -56,20 +49,20 @@ int main(int argc, char **argv) {
     }
 
     printf("Declaring Queryable on '%s'...\n", keyexpr);
-    z_owned_query_channel_t channel;
-    zc_query_fifo_new(&channel, 16);
+    z_owned_fifo_handler_query_t handler;
+    z_owned_closure_query_t closure;
+    z_fifo_channel_query_new(&closure, &handler, 16);
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, (void*)&channel.send);
     z_owned_queryable_t qable;
     
-    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(closure), NULL) < 0) {
         printf("Unable to create queryable.\n");
         exit(-1);
     }
 
     printf("^C to quit...\n");
     z_owned_query_t oquery;
-    for (z_call(z_loan(channel.recv), &oquery); z_check(oquery); z_call(z_loan(channel.recv), &oquery)) {
+    for (z_recv(z_loan(handler), &oquery); z_check(oquery); z_recv(z_loan(handler), &oquery)) {
         const z_loaned_query_t* query = z_loan(oquery);
         z_view_string_t key_string;
         z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
@@ -104,7 +97,7 @@ int main(int argc, char **argv) {
     }
 
     z_undeclare_queryable(z_move(qable));
-    z_drop(z_move(channel));
+    z_drop(z_move(handler));
     z_close(z_move(s));
     return 0;
 }
