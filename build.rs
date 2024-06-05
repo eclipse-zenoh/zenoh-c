@@ -358,6 +358,16 @@ impl SplitGuide {
                         name,
                         rules
                             .into_iter()
+                            .filter_map(|s| {
+                                let mut split = s.split('#');
+                                let val = split.next().unwrap();
+                                for feature in split {
+                                    if !Self::test_feature(feature) {
+                                        return None;
+                                    }
+                                }
+                                Some(val.to_owned())
+                            })
                             .map(|mut s| match s.as_str() {
                                 ":functions" => SplitRule::Brand(RecordType::Function),
                                 ":typedefs" => SplitRule::Brand(RecordType::Typedef),
@@ -405,6 +415,15 @@ impl SplitGuide {
                 SplitRule::Exclusive(s) | SplitRule::Shared(s) => Some(s.as_str()),
             })
         })
+    }
+    fn test_feature(feature: &str) -> bool {
+        match feature {
+            #[cfg(feature = "shared-memory")]
+            "shared-memory" => true,
+            #[cfg(feature = "unstable")]
+            "unstable" => true,
+            _ => false,
+        }
     }
 }
 

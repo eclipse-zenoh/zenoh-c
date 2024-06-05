@@ -255,8 +255,6 @@ get_opaque_type_data!(Hello, z_loaned_hello_t);
 /// An owned SHM Client
 get_opaque_type_data!(Option<Arc<dyn SharedMemoryClient>>, z_owned_shared_memory_client_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// A loaned SHM Client
-get_opaque_type_data!(Arc<dyn SharedMemoryClient>, z_loaned_shared_memory_client_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned list of SHM Clients
