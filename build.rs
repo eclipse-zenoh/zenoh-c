@@ -49,6 +49,7 @@ fn preprocess_header(input: &str, output: &str) {
         .arg("-E")
         .arg("-DZENOHC_API= ")
         .arg("-D_Bool=bool")
+        .arg("-D__const=const")
         .args(feature_args)
         .arg(input)
         .stdout(Stdio::piped())
