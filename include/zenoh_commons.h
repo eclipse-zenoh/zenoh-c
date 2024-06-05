@@ -388,6 +388,12 @@ typedef struct z_delete_options_t {
   bool is_express;
 } z_delete_options_t;
 /**
+ * An entity gloabal id.
+ */
+typedef struct ALIGN(4) z_entity_global_id_t {
+  uint8_t _0[20];
+} z_entity_global_id_t;
+/**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
  */
 typedef struct z_query_consolidation_t {
@@ -514,7 +520,7 @@ typedef struct z_query_reply_err_options_t {
   struct z_owned_encoding_t *encoding;
 } z_query_reply_err_options_t;
 /**
- * A loaned hello message.
+ * A loaned source info.
  */
 typedef struct ALIGN(8) z_loaned_source_info_t {
   uint8_t _0[40];
@@ -1344,6 +1350,14 @@ ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *this_);
 ZENOHC_API
 void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
                           struct z_owned_string_t *out_str);
+/**
+ * Returns the entity id of the entity global id.
+ */
+ZENOHC_API uint32_t z_entity_global_id_eid(const struct z_entity_global_id_t *this_);
+/**
+ * Returns the zenoh id of entity global id.
+ */
+ZENOHC_API struct z_id_t z_entity_global_id_zid(const struct z_entity_global_id_t *this_);
 /**
  * Constructs send and recieve ends of the fifo channel
  */
@@ -2369,6 +2383,15 @@ ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
  * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
  */
 ZENOHC_API z_error_t z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *start, size_t len);
+/**
+ * Returns the source_id of the source info.
+ */
+ZENOHC_API
+const struct z_entity_global_id_t *z_source_info_id(const struct z_loaned_source_info_t *this_);
+/**
+ * Returns the source_sn of the source info.
+ */
+ZENOHC_API const uint64_t *z_source_info_sn(const struct z_loaned_source_info_t *this_);
 /**
  * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
  */

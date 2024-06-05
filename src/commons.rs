@@ -27,6 +27,7 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::z_entity_global_id_t;
 use crate::z_id_t;
 use crate::z_loaned_bytes_t;
 use crate::z_loaned_keyexpr_t;
@@ -46,6 +47,7 @@ use zenoh::sample::SampleKind;
 use zenoh::sample::SourceInfo;
 use zenoh::time::Timestamp;
 use zenoh::value::Value;
+use zenoh_protocol::core::EntityGlobalId;
 use zenoh_protocol::zenoh::Consolidation;
 
 /// A zenoh unsigned integer
@@ -585,3 +587,33 @@ pub use crate::opaque_types::z_owned_source_info_t;
 decl_transmute_owned!(SourceInfo, z_owned_source_info_t);
 
 validate_equivalence!(z_owned_source_info_t, z_loaned_source_info_t);
+
+/// Returns the source_id of the source info.
+#[no_mangle]
+pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> *const z_entity_global_id_t {
+    match this.transmute_ref().source_id {
+        Some(source_id) => &source_id.transmute_copy(),
+        None => null(),
+    }
+}
+/// Returns the source_sn of the source info.
+#[no_mangle]
+pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> *const u64 {
+    match this.transmute_ref().source_sn {
+        Some(source_sn) => &source_sn,
+        None => null(),
+    }
+}
+
+decl_transmute_copy!(EntityGlobalId, z_entity_global_id_t);
+
+/// Returns the zenoh id of entity global id.
+#[no_mangle]
+pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
+    this.transmute_ref().zid.transmute_copy()
+}
+/// Returns the entity id of the entity global id.
+#[no_mangle]
+pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
+    this.transmute_ref().eid
+}
