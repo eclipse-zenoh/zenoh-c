@@ -531,6 +531,11 @@ Types
 .. doxygenstruct:: z_subscriber_options_t
     :members:
 
+.. doxygenstruct:: z_owned_fifo_handler_sample_t
+.. doxygenstruct:: z_loaned_fifo_handler_sample_t
+.. doxygenstruct:: z_owned_ring_handler_sample_t
+.. doxygenstruct:: z_loaned_ring_handler_sample_t
+
 Functions
 ---------
 
@@ -547,6 +552,23 @@ Functions
 .. doxygenfunction:: z_closure_sample_check
 
 .. doxygenfunction:: z_subscriber_options_default
+
+.. doxygenfunction:: z_fifo_channel_sample_new
+.. doxygenfunction:: z_ring_channel_sample_new
+
+.. doxygenfunction:: z_fifo_handler_sample_check
+.. doxygenfunction:: z_fifo_handler_sample_null
+.. doxygenfunction:: z_fifo_handler_sample_drop
+.. doxygenfunction:: z_fifo_handler_sample_loan
+.. doxygenfunction:: z_fifo_handler_sample_recv
+.. doxygenfunction:: z_fifo_handler_sample_try_recv
+
+.. doxygenfunction:: z_ring_handler_sample_check
+.. doxygenfunction:: z_ring_handler_sample_null
+.. doxygenfunction:: z_ring_handler_sample_drop
+.. doxygenfunction:: z_ring_handler_sample_loan
+.. doxygenfunction:: z_ring_handler_sample_recv
+.. doxygenfunction:: z_ring_handler_sample_try_recv  
 
 Queryable
 =========
@@ -569,10 +591,10 @@ Types
 .. doxygenstruct:: z_query_reply_err_options_t
     :members:
 
-.. doxygenstruct:: z_owned_query_channel_t
-    :members:
-.. doxygenstruct:: z_owned_query_channel_closure_t
-    :members:
+.. doxygenstruct:: z_owned_fifo_handler_query_t
+.. doxygenstruct:: z_loaned_fifo_handler_query_t
+.. doxygenstruct:: z_owned_ring_handler_query_t
+.. doxygenstruct:: z_loaned_ring_handler_query_t
 
 Functions
 ---------
@@ -606,17 +628,22 @@ Functions
 .. doxygenfunction:: z_closure_query_call
 .. doxygenfunction:: z_closure_query_drop
 
-.. doxygenfunction:: zc_query_fifo_new
-.. doxygenfunction:: zc_query_non_blocking_fifo_new
+.. doxygenfunction:: z_fifo_channel_query_new
+.. doxygenfunction:: z_ring_channel_query_new
 
-.. doxygenfunction:: z_query_channel_null
-.. doxygenfunction:: z_query_channel_check
-.. doxygenfunction:: z_query_channel_drop
+.. doxygenfunction:: z_fifo_handler_query_check
+.. doxygenfunction:: z_fifo_handler_query_null
+.. doxygenfunction:: z_fifo_handler_query_drop
+.. doxygenfunction:: z_fifo_handler_query_loan
+.. doxygenfunction:: z_fifo_handler_query_recv
+.. doxygenfunction:: z_fifo_handler_query_try_recv
 
-.. doxygenfunction:: z_query_channel_closure_null
-.. doxygenfunction:: z_query_channel_closure_check
-.. doxygenfunction:: z_query_channel_closure_call
-.. doxygenfunction:: z_query_channel_closure_drop
+.. doxygenfunction:: z_ring_handler_query_check
+.. doxygenfunction:: z_ring_handler_query_null
+.. doxygenfunction:: z_ring_handler_query_drop
+.. doxygenfunction:: z_ring_handler_query_loan
+.. doxygenfunction:: z_ring_handler_query_recv
+.. doxygenfunction:: z_ring_handler_query_try_recv  
 
 Query
 =====
@@ -634,10 +661,11 @@ Types
 .. doxygenenum:: z_consolidation_mode_t
 .. doxygenstruct:: z_query_consolidation_t
 
-.. doxygenstruct:: z_owned_reply_channel_t
-    :members:
-.. doxygenstruct:: z_owned_reply_channel_closure_t
-    :members:
+.. doxygenstruct:: z_owned_fifo_handler_reply_t
+.. doxygenstruct:: z_loaned_fifo_handler_reply_t
+.. doxygenstruct:: z_owned_ring_handler_reply_t
+.. doxygenstruct:: z_loaned_ring_handler_reply_t
+
 
 Functions
 ---------
@@ -665,17 +693,22 @@ Functions
 .. doxygenfunction:: z_closure_reply_call
 .. doxygenfunction:: z_closure_reply_drop
 
-.. doxygenfunction:: zc_reply_fifo_new
-.. doxygenfunction:: zc_reply_non_blocking_fifo_new
+.. doxygenfunction:: z_fifo_channel_reply_new
+.. doxygenfunction:: z_ring_channel_reply_new
 
-.. doxygenfunction:: z_reply_channel_null
-.. doxygenfunction:: z_reply_channel_check
-.. doxygenfunction:: z_reply_channel_drop
+.. doxygenfunction:: z_fifo_handler_reply_check
+.. doxygenfunction:: z_fifo_handler_reply_null
+.. doxygenfunction:: z_fifo_handler_reply_drop
+.. doxygenfunction:: z_fifo_handler_reply_loan
+.. doxygenfunction:: z_fifo_handler_reply_recv
+.. doxygenfunction:: z_fifo_handler_reply_try_recv
 
-.. doxygenfunction:: z_reply_channel_closure_null
-.. doxygenfunction:: z_reply_channel_closure_check
-.. doxygenfunction:: z_reply_channel_closure_call
-.. doxygenfunction:: z_reply_channel_closure_drop
+.. doxygenfunction:: z_ring_handler_reply_check
+.. doxygenfunction:: z_ring_handler_reply_null
+.. doxygenfunction:: z_ring_handler_reply_drop
+.. doxygenfunction:: z_ring_handler_reply_loan
+.. doxygenfunction:: z_ring_handler_reply_recv
+.. doxygenfunction:: z_ring_handler_reply_try_recv  
 
 Scouting
 ========
