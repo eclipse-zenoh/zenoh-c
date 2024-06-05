@@ -1355,6 +1355,13 @@ void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
  */
 ZENOHC_API uint32_t z_entity_global_id_eid(const struct z_entity_global_id_t *this_);
 /**
+ * Create entity global id
+ */
+ZENOHC_API
+z_error_t z_entity_global_id_new(struct z_entity_global_id_t *this_,
+                                 const struct z_id_t *zid,
+                                 uint32_t eid);
+/**
  * Returns the zenoh id of entity global id.
  */
 ZENOHC_API struct z_id_t z_entity_global_id_zid(const struct z_entity_global_id_t *this_);
@@ -2386,12 +2393,18 @@ ZENOHC_API z_error_t z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *
 /**
  * Returns the source_id of the source info.
  */
+ZENOHC_API struct z_entity_global_id_t z_source_info_id(const struct z_loaned_source_info_t *this_);
+/**
+ * Create source info
+ */
 ZENOHC_API
-const struct z_entity_global_id_t *z_source_info_id(const struct z_loaned_source_info_t *this_);
+z_error_t z_source_info_new(struct z_owned_source_info_t *this_,
+                            const struct z_entity_global_id_t *source_id,
+                            uint64_t source_sn);
 /**
  * Returns the source_sn of the source info.
  */
-ZENOHC_API const uint64_t *z_source_info_sn(const struct z_loaned_source_info_t *this_);
+ZENOHC_API uint64_t z_source_info_sn(const struct z_loaned_source_info_t *this_);
 /**
  * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
  */

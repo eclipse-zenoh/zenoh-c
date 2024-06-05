@@ -279,6 +279,6 @@ get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
 get_opaque_type_data!(Option<SourceInfo>, z_owned_source_info_t);
 /// A loaned source info.
 get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
- 
+
 /// An entity gloabal id.
 get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);

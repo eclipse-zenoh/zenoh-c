@@ -38,6 +38,8 @@ int run_publisher() {
         return -1;
     }
 
+    z_id_t self_id = z_info_zid(z_loan(s));
+
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_string(&ke, keyexpr);
     z_publisher_options_t publisher_options;
@@ -52,8 +54,15 @@ int run_publisher() {
     }
 
     for (int i = 0; i < values_count; ++i) {
+        z_entity_global_id_t entity_global_id;
+        z_entity_global_id_new(&entity_global_id, &self_id, 42);
+        z_owned_source_info_t source_info;
+        z_source_info_new(&source_info, &entity_global_id, 24);
+
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
+        options.source_info = &source_info;
+
         z_owned_bytes_t payload;
         z_bytes_encode_from_string(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
@@ -88,6 +97,22 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         exit(-1);
     }
 
+    const z_loaned_source_info_t *source_info = z_sample_source_info(sample);
+    if (source_info == NULL) {
+        perror("Unexpected null source_info");
+        exit(-1);
+    }
+    const uint64_t sn = z_source_info_sn(source_info);
+    if (sn != 24) {
+        perror("Unexpected sn value");
+        exit(-1);
+    }
+    const z_entity_global_id_t id = z_source_info_id(source_info);
+    uint32_t eid = z_entity_global_id_eid(&id);
+    if (eid != 42) {
+        perror("Unexpected eid value");
+        exit(-1);
+    }
     if (++val_num == values_count) {
         exit(0);
     };
