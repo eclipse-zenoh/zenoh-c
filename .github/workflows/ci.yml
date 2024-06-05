@@ -76,7 +76,7 @@ jobs:
           cmake --build . --config Release
 
       - name: Run rust tests
-        run: cargo test --verbose --release --features=logger-autoinit --features=shared-memory
+        run: cargo test --verbose --release --features=logger-autoinit
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3

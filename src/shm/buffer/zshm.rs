@@ -53,12 +53,12 @@ pub extern "C" fn z_shm_check(this: &z_owned_shm_t) -> bool {
     this.transmute_ref().is_some()
 }
 
-/// Converts borrowed ZShm slice as owned ZShm slice by performing shared memory handle copy
+/// Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy
 #[no_mangle]
-pub extern "C" fn z_shm_copy(this: *mut MaybeUninit<z_owned_shm_t>, loaned: &z_loaned_shm_t) {
-    let loaned = loaned.transmute_ref();
-    let owned = loaned.to_owned();
-    Inplace::init(this.transmute_uninit_ptr(), Some(owned));
+pub extern "C" fn z_shm_clone(this: &z_loaned_shm_t, out: *mut MaybeUninit<z_owned_shm_t>) {
+    let this = this.transmute_ref();
+    let copy = this.to_owned();
+    Inplace::init(out.transmute_uninit_ptr(), Some(copy));
 }
 
 /// Borrows ZShm slice

@@ -2716,10 +2716,10 @@ void z_shared_memory_provider_threadsafe_new(z_owned_shared_memory_provider_t *t
 ZENOHC_API bool z_shm_check(const z_owned_shm_t *this_);
 #endif
 /**
- * Converts borrowed ZShm slice as owned ZShm slice by performing shared memory handle copy
+ * Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_copy(z_owned_shm_t *this_, const z_loaned_shm_t *loaned);
+ZENOHC_API void z_shm_clone(const z_loaned_shm_t *this_, z_owned_shm_t *out);
 #endif
 /**
  * @return the pointer of the ZShm slice
