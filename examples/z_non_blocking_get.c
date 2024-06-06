@@ -49,14 +49,15 @@ int main(int argc, char **argv) {
     z_get_options_t opts;
     z_get_options_default(&opts);
     opts.target = Z_QUERY_TARGET_ALL;
-    z_owned_reply_channel_t channel;
-    zc_reply_non_blocking_fifo_new(&channel, 16);
-    z_get(z_loan(s), z_loan(keyexpr), "", z_move(channel.send),
-          z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
+    z_owned_fifo_handler_reply_t handler;
+    z_owned_closure_reply_t closure;
+    z_fifo_channel_reply_new(&closure, &handler, 16);
+    z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
+          z_move(opts));  // here, the closure is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
-    for (bool call_success = z_call(z_loan(channel.recv), &reply); !call_success || z_check(reply);
-        call_success = z_call(z_loan(channel.recv), &reply)) {
-        if (!call_success) {
+    for (bool has_more = z_try_recv(z_loan(handler), &reply); has_more; has_more = z_try_recv(z_loan(handler), &reply)) {
+        if (!z_check(reply)) {
+            z_sleep_ms(50);
             continue;
         }
         if (z_reply_is_ok(z_loan(reply))) {
@@ -75,7 +76,7 @@ int main(int argc, char **argv) {
         }
     }
     z_drop(z_move(reply));
-    z_drop(z_move(channel));
+    z_drop(z_move(handler));
     z_close(z_move(s));
     return 0;
 }

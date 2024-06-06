@@ -16,11 +16,11 @@ use libc::c_void;
 #[repr(C)]
 pub struct z_owned_closure_reply_t {
     /// An optional pointer to a context representing a closure state.
-    context: *mut c_void,
+    pub context: *mut c_void,
     /// A closure body.
-    call: Option<extern "C" fn(reply: *const z_loaned_reply_t, context: *mut c_void)>,
+    pub(crate) call: Option<extern "C" fn(reply: *const z_loaned_reply_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
-    drop: Option<extern "C" fn(context: *mut c_void)>,
+    pub drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
 /// Loaned closure.

@@ -29,6 +29,9 @@ mod response_channel;
 pub use query_channel::*;
 mod query_channel;
 
+pub use sample_channel::*;
+mod sample_channel;
+
 pub use hello_closure::*;
 mod hello_closure;
 
