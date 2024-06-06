@@ -36,6 +36,7 @@ use crate::z_loaned_sample_t;
 use crate::z_loaned_value_t;
 use crate::z_owned_bytes_t;
 use crate::z_owned_encoding_t;
+use crate::z_owned_source_info_t;
 use crate::z_query_target_t;
 use crate::{
     z_closure_reply_call, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t,
@@ -103,6 +104,8 @@ pub struct z_get_options_t {
     pub payload: *mut z_owned_bytes_t,
     /// An optional encoding of the query payload and or attachment.
     pub encoding: *mut z_owned_encoding_t,
+    /// The source info for the query.
+    pub source_info: *mut z_owned_source_info_t,
     /// An optional attachment to attach to the query.
     pub attachment: *mut z_owned_bytes_t,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
@@ -118,6 +121,7 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
         timeout_ms: 0,
         payload: null_mut(),
         encoding: null_mut(),
+        source_info: null_mut(),
         attachment: null_mut(),
     };
 }
@@ -167,6 +171,13 @@ pub unsafe extern "C" fn z_get(
                 .transmute_mut()
                 .extract();
             get = get.encoding(encoding);
+        }
+        if !options.source_info.is_null() {
+            let source_info = unsafe { options.source_info.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
+            get = get.source_info(source_info);
         }
         if !options.attachment.is_null() {
             let attachment = unsafe { options.attachment.as_mut() }

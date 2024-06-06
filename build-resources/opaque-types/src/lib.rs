@@ -15,17 +15,19 @@ use zenoh::handlers::DefaultHandler;
 use zenoh::handlers::RingChannelHandler;
 use zenoh::key_expr::KeyExpr;
 use zenoh::liveliness::LivelinessToken;
-use zenoh::publication::MatchingListener;
-use zenoh::publication::Publisher;
+use zenoh::publisher::MatchingListener;
+use zenoh::publisher::Publisher;
 use zenoh::query::Reply;
 use zenoh::queryable::Query;
 use zenoh::queryable::Queryable;
 use zenoh::sample::Sample;
+use zenoh::sample::SourceInfo;
 use zenoh::scouting::Hello;
 use zenoh::session::Session;
 use zenoh::subscriber::Subscriber;
 use zenoh::time::Timestamp;
 use zenoh::value::Value;
+use zenoh_protocol::core::EntityGlobalId;
 
 #[macro_export]
 macro_rules! get_opaque_type_data {
@@ -243,7 +245,6 @@ get_opaque_type_data!(Option<Hello>, z_owned_hello_t);
 /// A loaned hello message.
 get_opaque_type_data!(Hello, z_loaned_hello_t);
 
-
 /// An owned Zenoh fifo sample handler.
 get_opaque_type_data!(Option<flume::Receiver<Sample>>, z_owned_fifo_handler_sample_t);
 /// An loaned Zenoh fifo sample handler.
@@ -273,3 +274,11 @@ get_opaque_type_data!(flume::Receiver<Reply>, z_loaned_fifo_handler_reply_t);
 get_opaque_type_data!(Option<RingChannelHandler<Reply>>, z_owned_ring_handler_reply_t);
 /// An loaned Zenoh ring reply handler.
 get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
+
+/// An owned Zenoh-allocated source info`.
+get_opaque_type_data!(Option<SourceInfo>, z_owned_source_info_t);
+/// A loaned source info.
+get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
+
+/// An entity gloabal id.
+get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);
