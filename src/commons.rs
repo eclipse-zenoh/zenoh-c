@@ -642,8 +642,5 @@ pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_gl
 /// Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> u64 {
-    match this.transmute_ref().source_sn {
-        Some(source_sn) => source_sn,
-        None => 0,
-    }
+    this.transmute_ref().source_sn.unwrap_or(0)
 }
