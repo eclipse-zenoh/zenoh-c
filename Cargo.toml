@@ -32,8 +32,9 @@ build = "build.rs"
 
 [features]
 logger-autoinit = []
-shared-memory = ["zenoh/shared-memory"]
-default = ["zenoh/default"]
+shared-memory = ["zenoh/shared-memory", "zenoh-ext/shared-memory", "zenoh-protocol/shared-memory"]
+unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
+default = ["zenoh/default", "unstable"]
 
 [badges]
 maintenance = { status = "actively-developed" }
@@ -52,11 +53,10 @@ rand = "0.8.5"
 spin = "0.9.5"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-# shared-memory enabled for zenoh even if zenoh-c "shared-memory" feature is disabled. This is to make "std::mem::transmute" work for `ZSLice`
-zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", features = ["shared-memory", "unstable"], default-features = false }
-zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", features = ["shared-memory"] }
+zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", default-features = false }
+zenoh-protocol = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0" }
 zenoh-util = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0" }
-zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", features = ["unstable"] }
+zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0" }
 flume = "*"
 
 [build-dependencies]
@@ -68,7 +68,7 @@ fs_extra = "1.3.0"
 
 [lib]
 path="src/lib.rs"
-name = "zenohc"
+name = "zenohcd"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 

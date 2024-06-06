@@ -67,6 +67,25 @@ zenoh_opaque.h:
   - z_loaned_closure_sample_t!
   - z_loaned_closure_zid_t!
   - zcu_loaned_closure_matching_status_t!
+  - z_owned_shared_memory_client_t!#shared-memory#unstable
+  - zc_owned_shared_memory_client_list_t!#shared-memory#unstable
+  - zc_loaned_shared_memory_client_list_t!#shared-memory#unstable
+  - z_owned_shared_memory_client_storage_t!#shared-memory#unstable
+  - z_loaned_shared_memory_client_storage_t!#shared-memory#unstable
+  - z_owned_memory_layout_t!#shared-memory#unstable
+  - z_loaned_memory_layout_t!#shared-memory#unstable
+  - z_owned_chunk_alloc_result_t!#shared-memory#unstable
+  - z_loaned_chunk_alloc_result_t!#shared-memory#unstable
+  - z_owned_buf_alloc_result_t!#shared-memory#unstable
+  - z_loaned_buf_alloc_result_t!#shared-memory#unstable
+  - z_owned_shm_t!#shared-memory#unstable
+  - z_loaned_shm_t!#shared-memory#unstable
+  - z_owned_shm_mut_t!#shared-memory#unstable
+  - z_loaned_shm_mut_t!#shared-memory#unstable
+  - z_owned_shared_memory_provider_t!#shared-memory#unstable
+  - z_loaned_shared_memory_provider_t!#shared-memory#unstable
+  - z_owned_alloc_layout_t!#shared-memory#unstable
+  - z_loaned_alloc_layout_t!#shared-memory#unstable
   - z_owned_fifo_handler_sample_t!
   - z_loaned_fifo_handler_sample_t!
   - z_owned_ring_handler_sample_t!

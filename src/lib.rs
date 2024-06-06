@@ -61,9 +61,11 @@ pub use publication_cache::*;
 mod querying_subscriber;
 pub use platform::*;
 pub use querying_subscriber::*;
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+pub mod context;
 pub mod platform;
-// #[cfg(feature = "shared-memory")]
-// mod shm;
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+pub mod shm;
 
 /// Initialises the zenoh runtime logger.
 ///
@@ -84,7 +86,7 @@ fn test_no_default_features() {
             // " zenoh/auth_pubkey",
             // " zenoh/auth_usrpwd",
             // " zenoh/complete_n",
-            " zenoh/shared-memory",
+            //" zenoh/shared-memory",
             // " zenoh/stats",
             // " zenoh/transport_multilink",
             // " zenoh/transport_quic",

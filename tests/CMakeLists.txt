@@ -6,6 +6,13 @@ file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 foreach(file ${files})
     get_filename_component(target ${file} NAME_WE)
     
+    # Exclude SHM tests if SHM feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY))
+	    if(${target} MATCHES "^.*_shm.*$")
+            continue()
+        endif()
+    endif()
+
     # Check the filename prefix to determine the test type
     if (${file} MATCHES "^.*z_api_.*$")
         set(test_type "unit")

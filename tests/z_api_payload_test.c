@@ -153,14 +153,15 @@ void test_arithmetic() {
     TEST_ARITHMETIC(double, double, -105.001);
 }
 
-void iter_body(z_owned_bytes_t* b, void* context) {
+bool iter_body(z_owned_bytes_t* b, void* context) {
     uint8_t* val = (uint8_t*)context;
     if (*val >= 10) {
-        z_null(b);
+        return false;
     } else {
         z_bytes_encode_from_uint8(b, *val);
     }
     *val = *val + 1;
+    return true;
 }
 
 

@@ -2,6 +2,7 @@ use fs2::FileExt;
 use regex::Regex;
 use std::collections::HashSet;
 use std::env;
+use std::fs::File;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 use std::{
@@ -12,6 +13,7 @@ use std::{
 };
 
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
+const PREPROCESS_PATH: &str = "include/zenoh-cpp.h";
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
 const HEADER: &str = r"//
 // Copyright (c) 2022 ZettaScale Technology
@@ -32,13 +34,52 @@ const HEADER: &str = r"//
 #endif
 ";
 
+fn preprocess_header(input: &str, output: &str) {
+    let mut feature_args: Vec<&str> = vec![];
+    #[cfg(feature = "shared-memory")]
+    {
+        feature_args.push("-DSHARED_MEMORY");
+    }
+    #[cfg(feature = "unstable")]
+    {
+        feature_args.push("-DUNSTABLE");
+    }
+
+    let cpp = Command::new("cpp")
+        .arg("-E")
+        .arg("-DZENOHC_API= ")
+        .arg("-D_Bool=bool")
+        .arg("-D__const=const")
+        .args(feature_args)
+        .arg(input)
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let sed = Command::new("sed")
+        .arg("/^#/d")
+        .stdin(Stdio::from(cpp.stdout.unwrap()))
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let sed_out = sed.wait_with_output().unwrap();
+    assert!(!sed_out.stdout.is_empty());
+
+    let mut out = File::create(output).expect("failed to open output");
+    out.write_all(&sed_out.stdout).unwrap();
+}
+
 fn main() {
     generate_opaque_types();
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
         .expect("Unable to generate bindings")
         .write_to_file(GENERATION_PATH);
 
-    create_generics_header(GENERATION_PATH, "include/zenoh_macros.h");
+    preprocess_header(GENERATION_PATH, PREPROCESS_PATH);
+    create_generics_header(PREPROCESS_PATH, "include/zenoh_macros.h");
+    std::fs::remove_file(PREPROCESS_PATH).unwrap();
+
     configure();
     let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
     split_bindings(&split_guide).unwrap();
@@ -73,8 +114,22 @@ fn produce_opaque_types_data() -> PathBuf {
     let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = Stdio::from(out_file);
+
+    let mut feature_args: Vec<&str> = vec![];
+    #[cfg(feature = "shared-memory")]
+    {
+        feature_args.push("-F");
+        feature_args.push("shared-memory");
+    }
+    #[cfg(feature = "unstable")]
+    {
+        feature_args.push("-F");
+        feature_args.push("unstable");
+    }
+
     let _ = Command::new("cargo")
         .arg("build")
+        .args(feature_args)
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
@@ -116,9 +171,11 @@ pub struct {type_name} {{
         }
         data_out += &s;
     }
-    for d in docs.keys() {
-        panic!("Failed to find type information for opaque type: {d}");
-    }
+    // todo: in order to support rust features in opaque_types, we should respect features here.
+    // I will remove it for a while, maybe we'll implement this later
+    //for d in docs.keys() {
+    //    panic!("Failed to find type information for opaque type: {d}");
+    //}
     std::fs::write(path_out, data_out).unwrap();
 }
 
@@ -182,6 +239,11 @@ fn configure() {
         .unwrap();
     file.lock_exclusive().unwrap();
     file.write_all(content.as_bytes()).unwrap();
+    #[cfg(feature = "shared-memory")]
+    file.write_all("#define SHARED_MEMORY\n".as_bytes())
+        .unwrap();
+    #[cfg(feature = "unstable")]
+    file.write_all("#define UNSTABLE\n".as_bytes()).unwrap();
     file.unlock().unwrap();
 }
 
@@ -296,6 +358,16 @@ impl SplitGuide {
                         name,
                         rules
                             .into_iter()
+                            .filter_map(|s| {
+                                let mut split = s.split('#');
+                                let val = split.next().unwrap();
+                                for feature in split {
+                                    if !Self::test_feature(feature) {
+                                        return None;
+                                    }
+                                }
+                                Some(val.to_owned())
+                            })
                             .map(|mut s| match s.as_str() {
                                 ":functions" => SplitRule::Brand(RecordType::Function),
                                 ":typedefs" => SplitRule::Brand(RecordType::Typedef),
@@ -343,6 +415,15 @@ impl SplitGuide {
                 SplitRule::Exclusive(s) | SplitRule::Shared(s) => Some(s.as_str()),
             })
         })
+    }
+    fn test_feature(feature: &str) -> bool {
+        match feature {
+            #[cfg(feature = "shared-memory")]
+            "shared-memory" => true,
+            #[cfg(feature = "unstable")]
+            "unstable" => true,
+            _ => false,
+        }
     }
 }
 

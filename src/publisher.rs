@@ -173,13 +173,7 @@ pub unsafe extern "C" fn z_publisher_put(
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
     let publisher = this.transmute_ref();
-    let payload = match payload.transmute_mut().extract() {
-        Some(p) => p,
-        None => {
-            log::debug!("Attempted to put with a null payload");
-            return errors::Z_EINVAL;
-        }
-    };
+    let payload = payload.transmute_mut().extract();
 
     let mut put = publisher.put(payload);
     if let Some(options) = options {

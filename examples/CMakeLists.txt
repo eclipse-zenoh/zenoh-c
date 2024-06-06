@@ -17,6 +17,13 @@ file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 foreach(file ${files})
     get_filename_component(target ${file} NAME_WE)
 
+    # Exclude SHM examples if SHM feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY))
+        if(${target} MATCHES "^.*_shm.*$")
+            continue()
+        endif()
+    endif()
+
     # FIXME: remove once zenoh time primitives are available and examples updated
     if(NOT(UNIX) AND(${target} STREQUAL "z_ping" OR ${target} STREQUAL "z_pong" OR ${target} STREQUAL "z_sub_thr"))
         continue()

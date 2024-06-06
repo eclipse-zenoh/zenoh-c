@@ -36,12 +36,11 @@ typedef struct attachement_context_t {
     size_t iteration_index;
 } attachement_context_t;
 
-void create_attachement_it(z_owned_bytes_t* kv_pair, void* context) {
+bool create_attachement_it(z_owned_bytes_t* kv_pair, void* context) {
     attachement_context_t *ctx = (attachement_context_t*)(context);
     z_owned_bytes_t k, v;
     if (ctx->iteration_index >= ctx->num_items) {
-        z_null(kv_pair);
-        return;
+        return false;
     } else {
         z_bytes_encode_from_string(&k, ctx->keys[ctx->iteration_index]);
         z_bytes_encode_from_string(&v, ctx->values[ctx->iteration_index]);
@@ -49,6 +48,7 @@ void create_attachement_it(z_owned_bytes_t* kv_pair, void* context) {
 
     z_bytes_encode_from_pair(kv_pair, z_move(k), z_move(v));
     ctx->iteration_index++;
+    return true;
 };
 
 z_error_t check_attachement(const z_loaned_bytes_t* attachement, const attachement_context_t* ctx) {

@@ -240,14 +240,7 @@ pub unsafe extern "C" fn z_query_reply(
 ) -> errors::z_error_t {
     let query = this.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-
-    let payload = match payload.transmute_mut().extract() {
-        Some(p) => p,
-        None => {
-            log::debug!("Attempted to reply with a null payload");
-            return errors::Z_EINVAL;
-        }
-    };
+    let payload = payload.transmute_mut().extract();
 
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
@@ -301,14 +294,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     options: Option<&mut z_query_reply_err_options_t>,
 ) -> errors::z_error_t {
     let query = this.transmute_ref();
-
-    let payload = match payload.transmute_mut().extract() {
-        Some(p) => p,
-        None => {
-            log::debug!("Attempted to reply_err with a null payload");
-            return errors::Z_EINVAL;
-        }
-    };
+    let payload = payload.transmute_mut().extract();
 
     let reply = query.reply_err(payload).encoding(
         options

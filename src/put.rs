@@ -78,13 +78,7 @@ pub extern "C" fn z_put(
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    let payload = match payload.transmute_mut().extract() {
-        Some(p) => p,
-        None => {
-            log::debug!("Attempted to put with a null payload");
-            return errors::Z_EINVAL;
-        }
-    };
+    let payload = payload.transmute_mut().extract();
 
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
