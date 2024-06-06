@@ -1309,6 +1309,7 @@ name = "opaque-types"
 version = "0.1.0"
 dependencies = [
  "const_format",
+ "flume",
  "zenoh",
  "zenoh-ext",
 ]

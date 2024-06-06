@@ -12,6 +12,7 @@ use zenoh::config::Config;
 use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
 use zenoh::handlers::DefaultHandler;
+use zenoh::handlers::RingChannelHandler;
 use zenoh::key_expr::KeyExpr;
 use zenoh::liveliness::LivelinessToken;
 use zenoh::publication::MatchingListener;
@@ -393,3 +394,33 @@ get_opaque_type_data!(Option<CSHMLayout>, z_owned_alloc_layout_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// A loaned SharedMemoryProvider's AllocLayout
 get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
+
+/// An owned Zenoh fifo sample handler.
+get_opaque_type_data!(Option<flume::Receiver<Sample>>, z_owned_fifo_handler_sample_t);
+/// An loaned Zenoh fifo sample handler.
+get_opaque_type_data!(flume::Receiver<Sample>, z_loaned_fifo_handler_sample_t);
+
+/// An owned Zenoh ring sample handler.
+get_opaque_type_data!(Option<RingChannelHandler<Sample>>, z_owned_ring_handler_sample_t);
+/// An loaned Zenoh ring sample handler.
+get_opaque_type_data!(RingChannelHandler<Sample>, z_loaned_ring_handler_sample_t);
+
+/// An owned Zenoh fifo query handler.
+get_opaque_type_data!(Option<flume::Receiver<Query>>, z_owned_fifo_handler_query_t);
+/// An loaned Zenoh fifo query handler.
+get_opaque_type_data!(flume::Receiver<Query>, z_loaned_fifo_handler_query_t);
+
+/// An owned Zenoh ring query handler.
+get_opaque_type_data!(Option<RingChannelHandler<Query>>, z_owned_ring_handler_query_t);
+/// An loaned Zenoh ring query handler.
+get_opaque_type_data!(RingChannelHandler<Query>, z_loaned_ring_handler_query_t);
+
+/// An owned Zenoh fifo reply handler.
+get_opaque_type_data!(Option<flume::Receiver<Reply>>, z_owned_fifo_handler_reply_t);
+/// An loaned Zenoh fifo reply handler.
+get_opaque_type_data!(flume::Receiver<Reply>, z_loaned_fifo_handler_reply_t);
+
+/// An owned Zenoh ring reply handler.
+get_opaque_type_data!(Option<RingChannelHandler<Reply>>, z_owned_ring_handler_reply_t);
+/// An loaned Zenoh ring reply handler.
+get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);

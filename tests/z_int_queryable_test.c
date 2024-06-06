@@ -90,13 +90,14 @@ int run_get() {
     z_view_keyexpr_from_string(&ke, keyexpr);
 
     for (int val_num = 0; val_num < values_count; ++val_num) {
-        z_owned_reply_channel_t channel;
-        zc_reply_fifo_new(&channel, 16);
+        z_owned_fifo_handler_reply_t handler;
+        z_owned_closure_reply_t closure;
+        z_fifo_channel_reply_new(&closure, &handler, 16);
         z_get_options_t opts;
         z_get_options_default(&opts);
-        z_get(z_loan(s), z_loan(ke), "", z_move(channel.send), &opts);
+        z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
         z_owned_reply_t reply;
-        for (z_call(z_loan(channel.recv), &reply); z_check(reply); z_call(z_loan(channel.recv), &reply)) {
+        for (z_recv(z_loan(handler), &reply); z_check(reply); z_recv(z_loan(handler), &reply)) {
             assert(z_reply_is_ok(z_loan(reply)));
 
             const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
@@ -111,7 +112,7 @@ int run_get() {
             z_drop(z_move(payload_string));
             z_drop(z_move(reply));
         }
-        z_drop(z_move(channel));
+        z_drop(z_move(handler));
     }
     z_close(z_move(s));
 

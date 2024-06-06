@@ -3423,6 +3423,7 @@ dependencies = [
  "chrono",
  "const_format",
  "env_logger",
+ "flume",
  "fs2",
  "fs_extra",
  "futures",

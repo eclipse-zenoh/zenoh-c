@@ -66,8 +66,6 @@ zenoh_opaque.h:
   - z_loaned_closure_reply_t!
   - z_loaned_closure_sample_t!
   - z_loaned_closure_zid_t!
-  - z_loaned_query_channel_closure_t!
-  - z_loaned_reply_channel_closure_t!
   - zcu_loaned_closure_matching_status_t!
   - z_owned_shared_memory_client_t!#shared-memory#unstable
   - zc_owned_shared_memory_client_list_t!#shared-memory#unstable
@@ -88,3 +86,16 @@ zenoh_opaque.h:
   - z_loaned_shared_memory_provider_t!#shared-memory#unstable
   - z_owned_alloc_layout_t!#shared-memory#unstable
   - z_loaned_alloc_layout_t!#shared-memory#unstable
+  - z_owned_fifo_handler_sample_t!
+  - z_loaned_fifo_handler_sample_t!
+  - z_owned_ring_handler_sample_t!
+  - z_loaned_ring_handler_sample_t!
+  - z_owned_fifo_handler_query_t!
+  - z_loaned_fifo_handler_query_t!
+  - z_owned_ring_handler_query_t!
+  - z_loaned_ring_handler_query_t!
+  - z_owned_fifo_handler_reply_t!
+  - z_loaned_fifo_handler_reply_t!
+  - z_owned_ring_handler_reply_t!
+  - z_loaned_ring_handler_reply_t!
+

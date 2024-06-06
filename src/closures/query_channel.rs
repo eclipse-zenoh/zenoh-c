@@ -1,258 +1,217 @@
 use crate::{
-    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
-    z_closure_query_drop, z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
-    z_query_clone, z_query_null,
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
+    },
+    z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
 use libc::c_void;
-use std::{
-    mem::MaybeUninit,
-    sync::mpsc::{Receiver, TryRecvError},
+use std::{mem::MaybeUninit, sync::Arc};
+use zenoh::{
+    handlers::{self, IntoHandler, RingChannelHandler},
+    queryable::Query,
 };
 
-/// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
-///
-/// Closures are not guaranteed not to be called concurrently.
-///
-/// We guarantee that:
-/// - `call` will never be called once `drop` has started.
-/// - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
-/// - The two previous guarantees imply that `call` and `drop` are never called concurrently.
-#[repr(C)]
-pub struct z_owned_query_channel_closure_t {
-    /// An optional pointer to a closure state.
-    context: *mut c_void,
-    /// A closure body.
-    call: Option<
-        extern "C" fn(query: *mut MaybeUninit<z_owned_query_t>, context: *mut c_void) -> bool,
-    >,
-    /// An optional drop function that will be called when the closure is dropped.
-    drop: Option<extern "C" fn(context: *mut c_void)>,
-}
+pub use crate::opaque_types::z_loaned_fifo_handler_query_t;
+pub use crate::opaque_types::z_owned_fifo_handler_query_t;
 
-/// Loaned closure.
-#[repr(C)]
-pub struct z_loaned_query_channel_closure_t {
-    _0: [usize; 3],
-}
+decl_transmute_owned!(Option<flume::Receiver<Query>>, z_owned_fifo_handler_query_t);
+decl_transmute_handle!(flume::Receiver<Query>, z_loaned_fifo_handler_query_t);
+validate_equivalence!(z_owned_fifo_handler_query_t, z_loaned_fifo_handler_query_t);
 
-decl_transmute_handle!(
-    z_owned_query_channel_closure_t,
-    z_loaned_query_channel_closure_t
-);
-
-/// A pair of send / receive ends of channel.
-#[repr(C)]
-pub struct z_owned_query_channel_t {
-    /// Send end of the channel.
-    pub send: z_owned_closure_query_t,
-    /// Receive end of the channel.
-    pub recv: z_owned_query_channel_closure_t,
-}
-
-/// Drops the channel and resets it to a gravestone state.
+/// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_query_channel_drop(channel: &mut z_owned_query_channel_t) {
-    z_closure_query_drop(&mut channel.send);
-    z_query_channel_closure_drop(&mut channel.recv);
+pub extern "C" fn z_fifo_handler_query_drop(this: &mut z_owned_fifo_handler_query_t) {
+    Inplace::drop(this.transmute_mut());
 }
 
-/// Constructs a channel in gravestone state.
+/// Constructs a handler in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_query_channel_null() -> z_owned_query_channel_t {
-    z_owned_query_channel_t {
-        send: z_owned_closure_query_t::empty(),
-        recv: z_owned_query_channel_closure_t::empty(),
+pub extern "C" fn z_fifo_handler_query_null(this: *mut MaybeUninit<z_owned_fifo_handler_query_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
+}
+
+/// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_fifo_handler_query_check(this: &z_owned_fifo_handler_query_t) -> bool {
+    this.transmute_ref().is_some()
+}
+
+extern "C" fn __z_handler_query_send(query: *const z_loaned_query_t, context: *mut c_void) {
+    unsafe {
+        let f = (context as *mut std::sync::Arc<dyn Fn(Query) + Send + Sync>)
+            .as_mut()
+            .unwrap_unchecked();
+        (f)(query.as_ref().unwrap().transmute_ref().clone());
     }
 }
 
-/// Returns ``true`` if channel is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_query_channel_check(this: &z_owned_query_channel_t) -> bool {
-    !this.send.is_empty() && !this.recv.is_empty()
-}
-
-unsafe fn get_send_recv_ends(bound: usize) -> (z_owned_closure_query_t, Receiver<z_owned_query_t>) {
-    if bound == 0 {
-        let (tx, rx) = std::sync::mpsc::channel();
-        (
-            From::from(move |query: &z_loaned_query_t| {
-                let mut this = MaybeUninit::<z_owned_query_t>::uninit();
-                z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
-                let this = this.assume_init();
-                if let Err(e) = tx.send(this) {
-                    log::error!("Attempted to push onto a closed reply_fifo: {}", e);
-                }
-            }),
-            rx,
-        )
-    } else {
-        let (tx, rx) = std::sync::mpsc::sync_channel(bound);
-        (
-            From::from(move |query: &z_loaned_query_t| {
-                let mut this = MaybeUninit::<z_owned_query_t>::uninit();
-                z_query_clone(query, &mut this as *mut MaybeUninit<z_owned_query_t>);
-                let this = this.assume_init();
-                if let Err(e) = tx.send(this) {
-                    log::error!("Attempted to push onto a closed reply_fifo: {}", e);
-                }
-            }),
-            rx,
-        )
+extern "C" fn __z_handler_query_drop(context: *mut c_void) {
+    unsafe {
+        let f = (context as *mut Arc<dyn Fn(Query) + Send + Sync>).read();
+        std::mem::drop(f);
     }
 }
 
-/// Constructs a new blocking fifo channel, returned as a pair of closures.
-///
-/// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
-///
-/// The `send` end should be passed as callback to a `z_declare_queryable()` call.
-///
-/// The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
-/// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
-/// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+/// Constructs send and recieve ends of the fifo channel
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_query_fifo_new(
-    this: *mut MaybeUninit<z_owned_query_channel_t>,
-    bound: usize,
+pub unsafe extern "C" fn z_fifo_channel_query_new(
+    callback: *mut MaybeUninit<z_owned_closure_query_t>,
+    handler: *mut MaybeUninit<z_owned_fifo_handler_query_t>,
+    capacity: usize,
 ) {
-    let (send, rx) = get_send_recv_ends(bound);
-    let c = z_owned_query_channel_t {
-        send,
-        recv: From::from(move |this: *mut MaybeUninit<z_owned_query_t>| {
-            if let Ok(val) = rx.recv() {
-                (*this).write(val);
-            } else {
-                z_query_null(this);
-            }
-            true
-        }),
-    };
-    (*this).write(c);
+    let fifo = handlers::FifoChannel::new(capacity);
+    let (cb, h) = fifo.into_handler();
+    let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
+    Inplace::init(handler.transmute_uninit_ptr(), Some(h));
+    (*callback).write(z_owned_closure_query_t {
+        call: Some(__z_handler_query_send),
+        context: cb_ptr,
+        drop: Some(__z_handler_query_drop),
+    });
 }
 
-/// Constructs a new non-blocking fifo channel, returned as a pair of closures.
-///
-/// If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
-///
-/// The `send` end should be passed as callback to a `z_declare_queryable()` call.
-///
-/// The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
-/// which it will then return; or until the `send` closure is dropped and all queries have been consumed,
-/// at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+/// Borrows handler.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_query_non_blocking_fifo_new(
-    this: *mut MaybeUninit<z_owned_query_channel_t>,
-    bound: usize,
-) {
-    let (send, rx) = get_send_recv_ends(bound);
-    let c = z_owned_query_channel_t {
-        send,
-        recv: From::from(
-            move |this: *mut MaybeUninit<z_owned_query_t>| match rx.try_recv() {
-                Ok(val) => {
-                    (*this).write(val);
-                    true
-                }
-                Err(TryRecvError::Disconnected) => {
-                    z_query_null(this);
-                    true
-                }
-                Err(TryRecvError::Empty) => {
-                    z_query_null(this);
-                    false
-                }
-            },
-        ),
-    };
-    (*this).write(c);
+pub extern "C" fn z_fifo_handler_query_loan(
+    this: &z_owned_fifo_handler_query_t,
+) -> &z_loaned_fifo_handler_query_t {
+    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
 }
 
-impl z_owned_query_channel_closure_t {
-    pub fn empty() -> Self {
-        z_owned_query_channel_closure_t {
-            context: std::ptr::null_mut(),
-            call: None,
-            drop: None,
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.call.is_none() && self.drop.is_none() && self.context.is_null()
-    }
-}
-unsafe impl Send for z_owned_query_channel_closure_t {}
-unsafe impl Sync for z_owned_query_channel_closure_t {}
-impl Drop for z_owned_query_channel_closure_t {
-    fn drop(&mut self) {
-        if let Some(drop) = self.drop {
-            drop(self.context)
-        }
-    }
-}
-
-/// Constructs a gravestone value for `z_owned_query_channel_closure_t` type.
+/// Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
+/// the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
+/// in the gravestone state.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_channel_closure_null(
-    this: *mut MaybeUninit<z_owned_query_channel_closure_t>,
-) {
-    (*this).write(z_owned_query_channel_closure_t::empty());
-}
-
-/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_query_channel_closure_check(this: &z_owned_query_channel_closure_t) -> bool {
-    !this.is_empty()
-}
-
-/// Calls the closure. Calling an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_query_channel_closure_call(
-    closure: &z_loaned_query_channel_closure_t,
+pub extern "C" fn z_fifo_handler_query_recv(
+    this: &z_loaned_fifo_handler_query_t,
     query: *mut MaybeUninit<z_owned_query_t>,
 ) -> bool {
-    match closure.transmute_ref().call {
-        Some(call) => call(query, closure.transmute_ref().context),
-        None => {
-            log::error!("Attempted to call an uninitialized closure!");
+    match this.transmute_ref().recv() {
+        Ok(q) => {
+            Inplace::init(query.transmute_uninit_ptr(), Some(q));
             true
         }
-    }
-}
-/// Drops the closure. Droping an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_query_channel_closure_drop(closure: &mut z_owned_query_channel_closure_t) {
-    let mut empty_closure = z_owned_query_channel_closure_t::empty();
-    std::mem::swap(&mut empty_closure, closure);
-}
-
-impl<F: Fn(*mut MaybeUninit<z_owned_query_t>) -> bool> From<F> for z_owned_query_channel_closure_t {
-    fn from(f: F) -> Self {
-        let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(*mut MaybeUninit<z_owned_query_t>) -> bool>(
-            query: *mut MaybeUninit<z_owned_query_t>,
-            this: *mut c_void,
-        ) -> bool {
-            let this = unsafe { &*(this as *const F) };
-            this(query)
-        }
-        extern "C" fn drop<F>(this: *mut c_void) {
-            std::mem::drop(unsafe { Box::from_raw(this as *mut F) })
-        }
-        z_owned_query_channel_closure_t {
-            context: this,
-            call: Some(call::<F>),
-            drop: Some(drop::<F>),
+        Err(_) => {
+            Inplace::empty(query.transmute_uninit_ptr());
+            false
         }
     }
 }
 
-/// Borrows closure.
+/// Returns query from the fifo buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
+/// Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
 #[no_mangle]
-pub extern "C" fn z_query_channel_closure_loan(
-    closure: &z_owned_query_channel_closure_t,
-) -> &z_loaned_query_channel_closure_t {
-    closure.transmute_handle()
+pub extern "C" fn z_fifo_handler_query_try_recv(
+    this: &z_loaned_fifo_handler_query_t,
+    query: *mut MaybeUninit<z_owned_query_t>,
+) -> bool {
+    match this.transmute_ref().try_recv() {
+        Ok(q) => {
+            Inplace::init(query.transmute_uninit_ptr(), Some(q));
+            true
+        }
+        Err(e) => {
+            Inplace::empty(query.transmute_uninit_ptr());
+            match e {
+                flume::TryRecvError::Empty => true,
+                flume::TryRecvError::Disconnected => false,
+            }
+        }
+    }
+}
+
+pub use crate::opaque_types::z_loaned_ring_handler_query_t;
+pub use crate::opaque_types::z_owned_ring_handler_query_t;
+
+decl_transmute_owned!(
+    Option<RingChannelHandler<Query>>,
+    z_owned_ring_handler_query_t
+);
+decl_transmute_handle!(RingChannelHandler<Query>, z_loaned_ring_handler_query_t);
+validate_equivalence!(z_owned_fifo_handler_query_t, z_loaned_ring_handler_query_t);
+
+/// Drops the handler and resets it to a gravestone state.
+#[no_mangle]
+pub extern "C" fn z_ring_handler_query_drop(this: &mut z_owned_ring_handler_query_t) {
+    Inplace::drop(this.transmute_mut());
+}
+
+/// Constructs a handler in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_ring_handler_query_null(this: *mut MaybeUninit<z_owned_ring_handler_query_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
+}
+
+/// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_ring_handler_query_check(this: &z_owned_ring_handler_query_t) -> bool {
+    this.transmute_ref().is_some()
+}
+
+/// Constructs send and recieve ends of the ring channel
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_ring_channel_query_new(
+    callback: *mut MaybeUninit<z_owned_closure_query_t>,
+    handler: *mut MaybeUninit<z_owned_ring_handler_query_t>,
+    capacity: usize,
+) {
+    let ring = handlers::RingChannel::new(capacity);
+    let (cb, h) = ring.into_handler();
+    let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
+    Inplace::init(handler.transmute_uninit_ptr(), Some(h));
+    (*callback).write(z_owned_closure_query_t {
+        call: Some(__z_handler_query_send),
+        context: cb_ptr,
+        drop: Some(__z_handler_query_drop),
+    });
+}
+
+/// Borrows handler.
+#[no_mangle]
+pub extern "C" fn z_ring_handler_query_loan(
+    this: &z_owned_ring_handler_query_t,
+) -> &z_loaned_ring_handler_query_t {
+    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
+}
+
+/// Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until
+/// the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
+/// in the gravestone state.
+#[no_mangle]
+pub extern "C" fn z_ring_handler_query_recv(
+    this: &z_loaned_ring_handler_query_t,
+    query: *mut MaybeUninit<z_owned_query_t>,
+) -> bool {
+    match this.transmute_ref().recv() {
+        Ok(q) => {
+            Inplace::init(query.transmute_uninit_ptr(), Some(q));
+            true
+        }
+        Err(_) => {
+            Inplace::empty(query.transmute_uninit_ptr());
+            false
+        }
+    }
+}
+
+/// Returns query from the ring buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
+/// Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
+#[no_mangle]
+pub extern "C" fn z_ring_handler_query_try_recv(
+    this: &z_loaned_ring_handler_query_t,
+    query: *mut MaybeUninit<z_owned_query_t>,
+) -> bool {
+    match this.transmute_ref().try_recv() {
+        Ok(q) => {
+            Inplace::init(query.transmute_uninit_ptr(), q);
+            true
+        }
+        Err(_) => {
+            Inplace::empty(query.transmute_uninit_ptr());
+            false
+        }
+    }
 }

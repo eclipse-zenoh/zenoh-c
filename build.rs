@@ -924,6 +924,11 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
 
     let out = generate_generic_closure_c(&type_name_to_call_func);
     file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let recv_funcs = find_recv_functions(path_in);
+    let out = generate_generic_recv_c(&recv_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
 
     file_out
         .write_all("\n#else  // #ifndef __cplusplus\n".as_bytes())
@@ -960,8 +965,12 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
 
     let out = generate_generic_closure_cpp(&type_name_to_call_func);
     file_out.write_all(out.as_bytes()).unwrap();
-
     file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_recv_cpp(&recv_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_loan_to_owned_type_cpp(
         &[type_name_to_loan_func, type_name_to_loan_mut_func].concat(),
     );
@@ -1091,6 +1100,27 @@ pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
+pub fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(r"(\w+)\s+z_(\w+)_handler_(\w+)_recv\(const\s+struct\s+(\w+)\s+\*(\w+),\s+struct\s+(\w+)\s+\*(\w+)\);").unwrap();
+    let mut res = Vec::<FunctionSignature>::new();
+
+    for (_, [return_type, handler_type, value_type, arg1_type, arg1_name, arg2_type, arg2_name]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
+    {
+        let f = FunctionSignature {
+            return_type: Ctype::new(return_type),
+            func_name: "z_".to_string() + handler_type + "_handler_" + value_type + "_recv",
+            args: vec![
+                FuncArg::new(&("const ".to_string() + arg1_type + "*"), arg1_name),
+                FuncArg::new(&(arg2_type.to_string() + "*"), arg2_name),
+            ],
+        };
+        res.push(f);
+    }
+    res
+}
+
 pub fn generate_generic_c(
     macro_func: &[FunctionSignature],
     generic_name: &str,
@@ -1156,6 +1186,22 @@ pub fn generate_generic_check_c(macro_func: &[FunctionSignature]) -> String {
 
 pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_call", false)
+}
+
+pub fn generate_generic_recv_c(macro_func: &[FunctionSignature]) -> String {
+    let try_recv_funcs: Vec<FunctionSignature> = macro_func
+        .iter()
+        .filter(|f| f.func_name.contains("try_recv"))
+        .cloned()
+        .collect();
+    let recv_funcs: Vec<FunctionSignature> = macro_func
+        .iter()
+        .filter(|f| !f.func_name.contains("try_recv"))
+        .cloned()
+        .collect();
+    generate_generic_c(&try_recv_funcs, "z_try_recv", false)
+        + "\n\n"
+        + generate_generic_c(&recv_funcs, "z_recv", false).as_str()
 }
 
 pub fn generate_generic_closure_c(_macro_func: &[FunctionSignature]) -> String {
@@ -1269,6 +1315,22 @@ pub fn generate_generic_check_cpp(macro_func: &[FunctionSignature]) -> String {
 
 pub fn generate_generic_call_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_call", false)
+}
+
+pub fn generate_generic_recv_cpp(macro_func: &[FunctionSignature]) -> String {
+    let try_recv_funcs: Vec<FunctionSignature> = macro_func
+        .iter()
+        .filter(|f| f.func_name.contains("try_recv"))
+        .cloned()
+        .collect();
+    let recv_funcs: Vec<FunctionSignature> = macro_func
+        .iter()
+        .filter(|f| !f.func_name.contains("try_recv"))
+        .cloned()
+        .collect();
+    generate_generic_cpp(&try_recv_funcs, "z_try_recv", false)
+        + "\n\n"
+        + generate_generic_cpp(&recv_funcs, "z_recv", false).as_str()
 }
 
 pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {

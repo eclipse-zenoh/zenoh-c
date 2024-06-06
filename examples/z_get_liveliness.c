@@ -48,11 +48,12 @@ int main(int argc, char **argv) {
     }
 
     printf("Sending liveliness query '%s'...\n", expr);
-    z_owned_reply_channel_t channel;
-    zc_reply_fifo_new(&channel, 16);
-    zc_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(channel.send), NULL);
+    z_owned_fifo_handler_reply_t handler;
+    z_owned_closure_reply_t closure;
+    z_fifo_channel_reply_new(&closure, &handler, 16);
+    zc_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(closure), NULL);
     z_owned_reply_t reply;
-    for (z_call(z_loan(channel.recv), &reply); z_check(reply); z_call(z_loan(channel.recv), &reply)) {
+    for (z_recv(z_loan(handler), &reply); z_check(reply); z_recv(z_loan(handler), &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
             z_view_string_t key_str;
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
     }
 
     z_drop(z_move(reply));
-    z_drop(z_move(channel));
+    z_drop(z_move(handler));
     z_close(z_move(s));
     return 0;
 }
