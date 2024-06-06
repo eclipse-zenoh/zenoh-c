@@ -156,26 +156,20 @@ pub unsafe extern "C" fn z_get(
     let key_expr = key_expr.transmute_ref();
     let mut get = session.get(Selector::new(key_expr, p));
     if let Some(options) = options {
-        if let Some(payload) = options.payload.as_mut() {
+        if let Some(payload) = unsafe { options.payload.as_mut() } {
             let payload = payload.transmute_mut().extract();
             get = get.payload(payload);
         }
-        if let Some(encoding) = options.encoding.as_mut() {
+        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
             let encoding = encoding.transmute_mut().extract();
             get = get.encoding(encoding);
         }
-        if !options.source_info.is_null() {
-            let source_info = unsafe { options.source_info.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
+            let source_info = source_info.transmute_mut().extract();
             get = get.source_info(source_info);
         }
-        if !options.attachment.is_null() {
-            let attachment = unsafe { options.attachment.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
+            let attachment = attachment.transmute_mut().extract();
             get = get.attachment(attachment);
         }
 
