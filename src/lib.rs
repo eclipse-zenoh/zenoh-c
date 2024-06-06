@@ -97,7 +97,7 @@ fn test_no_default_features() {
             // " zenoh/transport_udp",
             // " zenoh/transport_unixsock-stream",
             // " zenoh/transport_ws",
-            // " zenoh/unstable",
+            " zenoh/unstable",
             // " zenoh/default",
         )
     );
