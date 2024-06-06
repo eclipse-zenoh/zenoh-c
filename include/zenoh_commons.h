@@ -470,11 +470,23 @@ typedef struct z_delete_options_t {
   bool is_express;
 } z_delete_options_t;
 /**
+ * An entity gloabal id.
+ */
+typedef struct ALIGN(4) z_entity_global_id_t {
+  uint8_t _0[20];
+} z_entity_global_id_t;
+/**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
  */
 typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
+/**
+ * An owned Zenoh-allocated source info`.
+ */
+typedef struct ALIGN(8) z_owned_source_info_t {
+  uint8_t _0[40];
+} z_owned_source_info_t;
 /**
  * Options passed to the `z_get()` function.
  */
@@ -495,6 +507,10 @@ typedef struct z_get_options_t {
    * An optional encoding of the query payload and or attachment.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The source info for the query.
+   */
+  struct z_owned_source_info_t *source_info;
   /**
    * An optional attachment to attach to the query.
    */
@@ -519,6 +535,10 @@ typedef struct z_publisher_put_options_t {
    *  The encoding of the data to publish.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The source info for the publication.
+   */
+  struct z_owned_source_info_t *source_info;
   /**
    * The attachment to attach to the publication.
    */
@@ -545,6 +565,10 @@ typedef struct z_put_options_t {
    */
   bool is_express;
   /**
+   * The source info for the message.
+   */
+  struct z_owned_source_info_t *source_info;
+  /**
    * The attachment to this message.
    */
   struct z_owned_bytes_t *attachment;
@@ -558,6 +582,10 @@ typedef struct z_query_reply_options_t {
    * The encoding of the reply payload.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The source info for the reply.
+   */
+  struct z_owned_source_info_t *source_info;
   /**
    * The attachment to this reply.
    */
@@ -573,6 +601,12 @@ typedef struct z_query_reply_err_options_t {
    */
   struct z_owned_encoding_t *encoding;
 } z_query_reply_err_options_t;
+/**
+ * A loaned source info.
+ */
+typedef struct ALIGN(8) z_loaned_source_info_t {
+  uint8_t _0[40];
+} z_loaned_source_info_t;
 /**
  * Options to pass to `z_scout()`.
  */
@@ -1669,6 +1703,21 @@ ZENOHC_API
 void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
                           struct z_owned_string_t *out_str);
 /**
+ * Returns the entity id of the entity global id.
+ */
+ZENOHC_API uint32_t z_entity_global_id_eid(const struct z_entity_global_id_t *this_);
+/**
+ * Create entity global id
+ */
+ZENOHC_API
+z_error_t z_entity_global_id_new(struct z_entity_global_id_t *this_,
+                                 const struct z_id_t *zid,
+                                 uint32_t eid);
+/**
+ * Returns the zenoh id of entity global id.
+ */
+ZENOHC_API struct z_id_t z_entity_global_id_zid(const struct z_entity_global_id_t *this_);
+/**
  * Constructs send and recieve ends of the fifo channel
  */
 ZENOHC_API
@@ -2586,6 +2635,11 @@ ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned
  */
 ZENOHC_API enum z_priority_t z_sample_priority(const struct z_loaned_sample_t *this_);
 /**
+ * Returns the sample source_info.
+ */
+ZENOHC_API
+const struct z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
+/**
  * Returns the sample timestamp.
  *
  * Will return `NULL`, if sample is not associated with a timestamp.
@@ -3041,6 +3095,21 @@ ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
  * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
  */
 ZENOHC_API z_error_t z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *start, size_t len);
+/**
+ * Returns the source_id of the source info.
+ */
+ZENOHC_API struct z_entity_global_id_t z_source_info_id(const struct z_loaned_source_info_t *this_);
+/**
+ * Create source info
+ */
+ZENOHC_API
+z_error_t z_source_info_new(struct z_owned_source_info_t *this_,
+                            const struct z_entity_global_id_t *source_id,
+                            uint64_t source_sn);
+/**
+ * Returns the source_sn of the source info.
+ */
+ZENOHC_API uint64_t z_source_info_sn(const struct z_loaned_source_info_t *this_);
 /**
  * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
  */

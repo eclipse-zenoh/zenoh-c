@@ -20,6 +20,7 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_owned_encoding_t;
+use crate::z_owned_source_info_t;
 use crate::zcu_closure_matching_status_call;
 use crate::zcu_closure_matching_status_loan;
 use crate::zcu_owned_closure_matching_status_t;
@@ -136,6 +137,8 @@ pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publ
 pub struct z_publisher_put_options_t {
     ///  The encoding of the data to publish.
     pub encoding: *mut z_owned_encoding_t,
+    /// The source info for the publication.
+    pub source_info: *mut z_owned_source_info_t,
     /// The attachment to attach to the publication.
     pub attachment: *mut z_owned_bytes_t,
 }
@@ -146,6 +149,7 @@ pub struct z_publisher_put_options_t {
 pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_options_t) {
     *this = z_publisher_put_options_t {
         encoding: ptr::null_mut(),
+        source_info: ptr::null_mut(),
         attachment: ptr::null_mut(),
     }
 }
@@ -180,6 +184,13 @@ pub unsafe extern "C" fn z_publisher_put(
                 .extract();
             put = put.encoding(encoding);
         };
+        if !options.source_info.is_null() {
+            let source_info = unsafe { options.source_info.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
+            put = put.source_info(source_info);
+        }
         if !options.attachment.is_null() {
             let attachment = unsafe { options.attachment.as_mut() }
                 .unwrap()

@@ -28,7 +28,7 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 
 The project maintains the following source code repositories:
 
- * https://github.com/ZettaScaleLabs/zenoh.git
+ * https://github.com/eclipse-zenoh/zenoh.git
  * https://github.com/eclipse-zenoh/zenoh-c.git
  * https://github.com/eclipse-zenoh/zenoh-java.git
  * https://github.com/eclipse-zenoh/zenoh-go.git

@@ -18,7 +18,7 @@ use crate::transmute::{
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_loaned_bytes_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t,
-    z_owned_encoding_t, z_view_string_from_substring, z_view_string_t,
+    z_owned_encoding_t, z_owned_source_info_t, z_view_string_from_substring, z_view_string_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
@@ -110,6 +110,8 @@ pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) 
 pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
     pub encoding: *mut z_owned_encoding_t,
+    /// The source info for the reply.
+    pub source_info: *mut z_owned_source_info_t,
     /// The attachment to this reply.
     pub attachment: *mut z_owned_bytes_t,
 }
@@ -120,6 +122,7 @@ pub struct z_query_reply_options_t {
 pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
     *this = z_query_reply_options_t {
         encoding: null_mut(),
+        source_info: null_mut(),
         attachment: null_mut(),
     };
 }
@@ -247,6 +250,13 @@ pub unsafe extern "C" fn z_query_reply(
                 .transmute_mut()
                 .extract();
             reply = reply.encoding(encoding);
+        };
+        if !options.source_info.is_null() {
+            let source_info = unsafe { options.source_info.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
+            reply = reply.source_info(source_info);
         };
         if !options.attachment.is_null() {
             let attachment = unsafe { options.attachment.as_mut() }

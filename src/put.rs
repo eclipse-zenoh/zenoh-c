@@ -40,6 +40,8 @@ pub struct z_put_options_t {
     pub priority: z_priority_t,
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
+    /// The source info for the message.
+    pub source_info: *mut z_owned_source_info_t,
     /// The attachment to this message.
     pub attachment: *mut z_owned_bytes_t,
 }
@@ -53,6 +55,7 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
+        source_info: null_mut(),
         attachment: null_mut(),
     };
 }
@@ -85,6 +88,13 @@ pub extern "C" fn z_put(
                 .transmute_mut()
                 .extract();
             put = put.encoding(encoding);
+        };
+        if !options.source_info.is_null() {
+            let source_info = unsafe { options.source_info.as_mut() }
+                .unwrap()
+                .transmute_mut()
+                .extract();
+            put = put.source_info(source_info);
         };
         if !options.attachment.is_null() {
             let attachment = unsafe { options.attachment.as_mut() }
