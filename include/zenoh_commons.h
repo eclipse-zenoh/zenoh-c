@@ -565,6 +565,14 @@ typedef struct z_put_options_t {
    */
   bool is_express;
   /**
+   * The timestamp of this message.
+   */
+  struct z_timestamp_t *timestamp;
+  /**
+   * The allowed destination of this message.
+   */
+  enum zcu_locality_t allowed_destination;
+  /**
    * The source info for the message.
    */
   struct z_owned_source_info_t *source_info;

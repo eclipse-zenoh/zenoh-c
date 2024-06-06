@@ -21,11 +21,13 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
+use crate::z_timestamp_t;
 use zenoh::core::Wait;
 use zenoh::publisher::CongestionControl;
 use zenoh::publisher::Priority;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::TimestampBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 
 /// Options passed to the `z_put()` function.
@@ -40,6 +42,10 @@ pub struct z_put_options_t {
     pub priority: z_priority_t,
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
+    /// The timestamp of this message.
+    pub timestamp: *mut z_timestamp_t,
+    /// The allowed destination of this message.
+    pub allowed_destination: zcu_locality_t,
     /// The source info for the message.
     pub source_info: *mut z_owned_source_info_t,
     /// The attachment to this message.
@@ -55,6 +61,8 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
+        timestamp: null_mut(),
+        allowed_destination: zcu_locality_default(),
         source_info: null_mut(),
         attachment: null_mut(),
     };
@@ -103,9 +111,17 @@ pub extern "C" fn z_put(
                 .extract();
             put = put.attachment(attachment);
         }
+        if !options.timestamp.is_null() {
+            let timestamp = (*unsafe { options.timestamp.as_mut() }
+                .unwrap()
+                .transmute_ref())
+            .into();
+            put = put.timestamp(Some(timestamp));
+        }
         put = put.priority(options.priority.into());
         put = put.congestion_control(options.congestion_control.into());
         put = put.express(options.is_express);
+        put = put.allowed_destination(options.allowed_destination.into());
     }
 
     if let Err(e) = put.wait() {
