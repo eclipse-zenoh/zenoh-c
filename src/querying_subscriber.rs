@@ -28,9 +28,11 @@ use crate::z_owned_closure_sample_t;
 use crate::z_reliability_t;
 use crate::{
     z_closure_sample_call, z_get_options_t, z_loaned_session_t, z_query_consolidation_none,
-    z_query_consolidation_t, z_query_target_default, z_query_target_t, zcu_locality_default,
-    zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
+    z_query_consolidation_t, z_query_target_default, z_query_target_t, zcu_reply_keyexpr_default,
+    zcu_reply_keyexpr_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{zcu_locality_default, zcu_locality_t};
 use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::session::Session;
@@ -72,6 +74,7 @@ pub struct ze_querying_subscriber_options_t {
     /// The subscription reliability.
     reliability: z_reliability_t,
     /// The restriction for the matching publications that will be receive by this subscriber.
+    #[cfg(feature = "unstable")]
     allowed_origin: zcu_locality_t,
     /// The selector to be used for queries.
     query_selector: *const z_loaned_keyexpr_t,
@@ -92,6 +95,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
 ) {
     *this = ze_querying_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
+        #[cfg(feature = "unstable")]
         allowed_origin: zcu_locality_default(),
         query_selector: null(),
         query_target: z_query_target_default(),
@@ -129,10 +133,13 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     if let Some(options) = options {
         sub = sub
             .reliability(options.reliability.into())
-            .allowed_origin(options.allowed_origin.into())
             .query_target(options.query_target.into())
             .query_consolidation(options.query_consolidation)
             .query_accept_replies(options.query_accept_replies.into());
+        #[cfg(feature = "unstable")]
+        {
+            sub = sub.allowed_origin(options.allowed_origin.into());
+        }
         if !options.query_selector.is_null() {
             let query_selector = unsafe { options.query_selector.as_ref() }
                 .unwrap()

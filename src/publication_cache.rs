@@ -18,7 +18,9 @@ use std::ptr::null;
 use zenoh_ext::SessionExt;
 
 use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
-use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t, zcu_locality_default, zcu_locality_t};
+use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t};
+#[cfg(feature = "unstable")]
+use crate::{zcu_locality_default, zcu_locality_t};
 use zenoh::core::Wait;
 
 /// Options passed to the `ze_declare_publication_cache()` function.
@@ -27,6 +29,7 @@ pub struct ze_publication_cache_options_t {
     /// The prefix used for queryable.
     pub queryable_prefix: *const z_loaned_keyexpr_t,
     /// The restriction for the matching queries that will be receive by this publication cache.
+    #[cfg(feature = "unstable")]
     pub queryable_origin: zcu_locality_t,
     /// The `complete` option for the queryable.
     pub queryable_complete: bool,
@@ -41,6 +44,7 @@ pub struct ze_publication_cache_options_t {
 pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication_cache_options_t) {
     *this = ze_publication_cache_options_t {
         queryable_prefix: null(),
+        #[cfg(feature = "unstable")]
         queryable_origin: zcu_locality_default(),
         queryable_complete: false,
         history: 1,
@@ -83,7 +87,10 @@ pub extern "C" fn ze_declare_publication_cache(
     let mut p = session.declare_publication_cache(key_expr);
     if let Some(options) = options {
         p = p.history(options.history);
-        p = p.queryable_allowed_origin(options.queryable_origin.into());
+        #[cfg(feature = "unstable")]
+        {
+            p = p.queryable_allowed_origin(options.queryable_origin.into());
+        }
         p = p.queryable_complete(options.queryable_complete);
         if options.resources_limit != 0 {
             p = p.resources_limit(options.resources_limit)
