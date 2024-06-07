@@ -232,7 +232,7 @@ pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_query_reply(
+pub extern "C" fn z_query_reply(
     this: &z_loaned_query_t,
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
@@ -244,25 +244,16 @@ pub unsafe extern "C" fn z_query_reply(
 
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
-        if !options.encoding.is_null() {
-            let encoding = unsafe { options.encoding.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
+            let encoding = encoding.transmute_mut().extract();
             reply = reply.encoding(encoding);
         };
-        if !options.source_info.is_null() {
-            let source_info = unsafe { options.source_info.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
+            let source_info = source_info.transmute_mut().extract();
             reply = reply.source_info(source_info);
         };
-        if !options.attachment.is_null() {
-            let attachment = unsafe { options.attachment.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
+            let attachment = attachment.transmute_mut().extract();
             reply = reply.attachment(attachment);
         }
     }

@@ -188,25 +188,16 @@ pub unsafe extern "C" fn z_publisher_put(
 
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        if !options.encoding.is_null() {
-            let encoding = unsafe { options.encoding.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
+            let encoding = encoding.transmute_mut().extract();
             put = put.encoding(encoding);
         };
-        if !options.source_info.is_null() {
-            let source_info = unsafe { options.source_info.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
+            let source_info = source_info.transmute_mut().extract();
             put = put.source_info(source_info);
-        }
-        if !options.attachment.is_null() {
-            let attachment = unsafe { options.attachment.as_mut() }
-                .unwrap()
-                .transmute_mut()
-                .extract();
+        };
+        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
+            let attachment = attachment.transmute_mut().extract();
             put = put.attachment(attachment);
         }
         if !options.timestamp.is_null() {

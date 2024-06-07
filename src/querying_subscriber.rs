@@ -35,6 +35,8 @@ use crate::{
 use crate::{zcu_locality_default, zcu_locality_t};
 use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
+use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::ValueBuilderTrait;
 use zenoh::session::Session;
 use zenoh::subscriber::Reliability;
 use zenoh_ext::*;
@@ -140,12 +142,9 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
         {
             sub = sub.allowed_origin(options.allowed_origin.into());
         }
-        if !options.query_selector.is_null() {
-            let query_selector = unsafe { options.query_selector.as_ref() }
-                .unwrap()
-                .transmute_ref()
-                .clone();
-            sub = sub.query_selector(query_selector)
+        if let Some(query_selector) = unsafe { options.query_selector.as_ref() } {
+            let query_selector = query_selector.transmute_ref().clone();
+            sub = sub.query_selector(query_selector);
         }
         if options.query_timeout_ms != 0 {
             sub = sub.query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
@@ -185,15 +184,37 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     if let Err(e) = sub
         .0
         .fetch({
-            move |cb| match options {
-                Some(options) => session
-                    .get(selector)
-                    .target(options.target.into())
-                    .consolidation(options.consolidation)
-                    .timeout(std::time::Duration::from_millis(options.timeout_ms))
-                    .callback(cb)
-                    .wait(),
-                None => session.get(selector).callback(cb).wait(),
+            move |cb| {
+                let mut get = session.get(selector).callback(cb);
+
+                if let Some(options) = options {
+                    if let Some(payload) = unsafe { options.payload.as_mut() } {
+                        let payload = payload.transmute_mut().extract();
+                        get = get.payload(payload);
+                    }
+                    if let Some(encoding) = unsafe { options.encoding.as_mut() } {
+                        let encoding = encoding.transmute_mut().extract();
+                        get = get.encoding(encoding);
+                    }
+                    if let Some(source_info) = unsafe { options.source_info.as_mut() } {
+                        let source_info = source_info.transmute_mut().extract();
+                        get = get.source_info(source_info);
+                    }
+                    if let Some(attachment) = unsafe { options.attachment.as_mut() } {
+                        let attachment = attachment.transmute_mut().extract();
+                        get = get.attachment(attachment);
+                    }
+
+                    get = get
+                        .consolidation(options.consolidation)
+                        .target(options.target.into());
+
+                    if options.timeout_ms != 0 {
+                        get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
+                    }
+                }
+
+                get.wait()
             }
         })
         .wait()

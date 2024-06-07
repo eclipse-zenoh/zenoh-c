@@ -95,10 +95,8 @@ pub extern "C" fn ze_declare_publication_cache(
         if options.resources_limit != 0 {
             p = p.resources_limit(options.resources_limit)
         }
-        if !options.queryable_prefix.is_null() {
-            let queryable_prefix = unsafe { options.queryable_prefix.as_ref() }
-                .unwrap()
-                .transmute_ref();
+        if let Some(queryable_prefix) = unsafe { options.queryable_prefix.as_ref() } {
+            let queryable_prefix = queryable_prefix.transmute_ref();
             p = p.queryable_prefix(queryable_prefix.clone());
         }
     }
