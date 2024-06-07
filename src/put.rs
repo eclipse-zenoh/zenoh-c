@@ -112,10 +112,9 @@ pub extern "C" fn z_put(
             put = put.attachment(attachment);
         }
         if !options.timestamp.is_null() {
-            let timestamp = (*unsafe { options.timestamp.as_mut() }
+            let timestamp = *unsafe { options.timestamp.as_mut() }
                 .unwrap()
-                .transmute_ref())
-            .into();
+                .transmute_ref();
             put = put.timestamp(Some(timestamp));
         }
         put = put.priority(options.priority.into());
@@ -142,6 +141,10 @@ pub struct z_delete_options_t {
     pub priority: z_priority_t,
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
+    /// The timestamp of this message.
+    pub timestamp: *mut z_timestamp_t,
+    /// The allowed destination of this message.
+    pub allowed_destination: zcu_locality_t,
 }
 
 /// Constructs the default value for `z_delete_options_t`.
@@ -152,6 +155,8 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
+        timestamp: null_mut(),
+        allowed_destination: zcu_locality_default(),
     };
 }
 
@@ -173,10 +178,17 @@ pub extern "C" fn z_delete(
     let key_expr = key_expr.transmute_ref();
     let mut del = session.delete(key_expr);
     if let Some(options) = options {
+        if !options.timestamp.is_null() {
+            let timestamp = *unsafe { options.timestamp.as_mut() }
+                .unwrap()
+                .transmute_ref();
+            del = del.timestamp(Some(timestamp));
+        }
         del = del
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express);
+            .express(options.is_express)
+            .allowed_destination(options.allowed_destination.into());
     }
 
     match del.wait() {
