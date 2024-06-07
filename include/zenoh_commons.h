@@ -610,6 +610,22 @@ typedef struct z_query_reply_options_t {
    */
   struct z_owned_encoding_t *encoding;
   /**
+   * The congestion control to apply when routing the reply.
+   */
+  enum z_congestion_control_t congestion_control;
+  /**
+   * The priority of the reply.
+   */
+  enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
+  /**
+   * The timestamp of the reply.
+   */
+  struct z_timestamp_t *timestamp;
+  /**
    * The source info for the reply.
    */
   struct z_owned_source_info_t *source_info;

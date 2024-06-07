@@ -16,17 +16,22 @@ use crate::transmute::{
     TransmuteUninitPtr,
 };
 use crate::{
-    errors, z_closure_query_call, z_closure_query_loan, z_loaned_bytes_t, z_loaned_keyexpr_t,
-    z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t, z_owned_closure_query_t,
-    z_owned_encoding_t, z_owned_source_info_t, z_view_string_from_substring, z_view_string_t,
+    errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t,
+    z_owned_closure_query_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t,
+    z_timestamp_t, z_view_string_from_substring, z_view_string_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 use zenoh::core::Wait;
 use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
+use zenoh::publisher::CongestionControl;
+use zenoh::publisher::Priority;
 use zenoh::queryable::{Query, Queryable};
-use zenoh::sample::{SampleBuilderTrait, ValueBuilderTrait};
+use zenoh::sample::{
+    QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait, ValueBuilderTrait,
+};
 
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
@@ -110,6 +115,14 @@ pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) 
 pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
     pub encoding: *mut z_owned_encoding_t,
+    /// The congestion control to apply when routing the reply.
+    pub congestion_control: z_congestion_control_t,
+    /// The priority of the reply.
+    pub priority: z_priority_t,
+    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    pub is_express: bool,
+    /// The timestamp of the reply.
+    pub timestamp: *mut z_timestamp_t,
     /// The source info for the reply.
     pub source_info: *mut z_owned_source_info_t,
     /// The attachment to this reply.
@@ -122,6 +135,10 @@ pub struct z_query_reply_options_t {
 pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
     *this = z_query_reply_options_t {
         encoding: null_mut(),
+        congestion_control: CongestionControl::default().into(),
+        priority: Priority::default().into(),
+        is_express: false,
+        timestamp: null_mut(),
         source_info: null_mut(),
         attachment: null_mut(),
     };
@@ -256,6 +273,15 @@ pub extern "C" fn z_query_reply(
             let attachment = attachment.transmute_mut().extract();
             reply = reply.attachment(attachment);
         }
+        if !options.timestamp.is_null() {
+            let timestamp = *unsafe { options.timestamp.as_mut() }
+                .unwrap()
+                .transmute_ref();
+            reply = reply.timestamp(Some(timestamp));
+        }
+        reply = reply.priority(options.priority.into());
+        reply = reply.congestion_control(options.congestion_control.into());
+        reply = reply.express(options.is_express);
     }
 
     if let Err(e) = reply.wait() {
