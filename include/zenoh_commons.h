@@ -767,9 +767,8 @@ typedef struct ze_publication_cache_options_t {
   /**
    * The restriction for the matching queries that will be receive by this publication cache.
    */
-  enum zcu_locality_t queryable_origin
+  enum zcu_locality_t queryable_origin;
 #endif
-  ;
   /**
    * The `complete` option for the queryable.
    */
@@ -797,9 +796,8 @@ typedef struct ze_querying_subscriber_options_t {
   /**
    * The restriction for the matching publications that will be receive by this subscriber.
    */
-  enum zcu_locality_t allowed_origin
+  enum zcu_locality_t allowed_origin;
 #endif
-  ;
   /**
    * The selector to be used for queries.
    */
