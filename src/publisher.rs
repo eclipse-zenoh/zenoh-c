@@ -21,8 +21,11 @@ use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;
+use crate::z_timestamp_t;
 use crate::zcu_closure_matching_status_call;
 use crate::zcu_closure_matching_status_loan;
+use crate::zcu_locality_default;
+use crate::zcu_locality_t;
 use crate::zcu_owned_closure_matching_status_t;
 use std::mem::MaybeUninit;
 use std::ptr;
@@ -32,6 +35,7 @@ use zenoh::prelude::SessionDeclarations;
 use zenoh::publisher::CongestionControl;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
+use zenoh::sample::TimestampBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 use zenoh::{publisher::MatchingListener, publisher::Priority, publisher::Publisher};
 
@@ -48,6 +52,8 @@ pub struct z_publisher_options_t {
     pub priority: z_priority_t,
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith
     pub is_express: bool,
+    /// The allowed destination for thsi publisher.
+    pub allowed_destination: zcu_locality_t,
 }
 
 /// Constructs the default value for `z_publisher_options_t`.
@@ -57,6 +63,7 @@ pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) 
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
+        allowed_destination: zcu_locality_default(),
     };
 }
 
@@ -94,7 +101,8 @@ pub extern "C" fn z_declare_publisher(
         p = p
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express);
+            .express(options.is_express)
+            .allowed_destination(options.allowed_destination.into());
     }
     match p.wait() {
         Err(e) => {
@@ -137,6 +145,8 @@ pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publ
 pub struct z_publisher_put_options_t {
     ///  The encoding of the data to publish.
     pub encoding: *mut z_owned_encoding_t,
+    /// The timestamp of the publication.
+    pub timestamp: *mut z_timestamp_t,
     /// The source info for the publication.
     pub source_info: *mut z_owned_source_info_t,
     /// The attachment to attach to the publication.
@@ -149,6 +159,7 @@ pub struct z_publisher_put_options_t {
 pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_options_t) {
     *this = z_publisher_put_options_t {
         encoding: ptr::null_mut(),
+        timestamp: ptr::null_mut(),
         source_info: ptr::null_mut(),
         attachment: ptr::null_mut(),
     }
@@ -198,6 +209,12 @@ pub unsafe extern "C" fn z_publisher_put(
                 .extract();
             put = put.attachment(attachment);
         }
+        if !options.timestamp.is_null() {
+            let timestamp = *unsafe { options.timestamp.as_mut() }
+                .unwrap()
+                .transmute_ref();
+            put = put.timestamp(Some(timestamp));
+        }
     }
 
     if let Err(e) = put.wait() {
@@ -212,14 +229,17 @@ pub unsafe extern "C" fn z_publisher_put(
 /// whenever issued via `z_publisher_delete()`.
 #[repr(C)]
 pub struct z_publisher_delete_options_t {
-    __dummy: u8,
+    /// The timestamp of this message.
+    pub timestamp: *mut z_timestamp_t,
 }
 
 /// Constructs the default values for the delete operation via a publisher entity.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_delete_options_t) {
-    *this = z_publisher_delete_options_t { __dummy: 0 }
+    *this = z_publisher_delete_options_t {
+        timestamp: ptr::null_mut(),
+    }
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
@@ -228,10 +248,19 @@ pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_dele
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
-    _options: Option<&z_publisher_delete_options_t>,
+    options: Option<&z_publisher_delete_options_t>,
 ) -> errors::z_error_t {
     let publisher = publisher.transmute_ref();
-    if let Err(e) = publisher.delete().wait() {
+    let mut del = publisher.delete();
+    if let Some(options) = options {
+        if !options.timestamp.is_null() {
+            let timestamp = *unsafe { options.timestamp.as_mut() }
+                .unwrap()
+                .transmute_ref();
+            del = del.timestamp(Some(timestamp));
+        }
+    }
+    if let Err(e) = del.wait() {
         log::error!("{}", e);
         errors::Z_EGENERIC
     } else {

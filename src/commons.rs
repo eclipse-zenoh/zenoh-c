@@ -83,6 +83,21 @@ impl From<z_sample_kind_t> for SampleKind {
 use crate::opaque_types::z_timestamp_t;
 decl_transmute_copy!(Timestamp, z_timestamp_t);
 
+/// Create timestamp
+#[no_mangle]
+pub extern "C" fn z_timestamp_new(
+    this: &mut z_timestamp_t,
+    zid: &z_id_t,
+    npt64_time: u64,
+) -> errors::z_error_t {
+    let timestamp = Timestamp::new(
+        zenoh::time::NTP64(npt64_time),
+        (&zid.transmute_copy()).into(),
+    );
+    *this = timestamp.transmute_copy();
+    errors::Z_OK
+}
+
 /// Returns NPT64 time associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_npt64_time(this: &z_timestamp_t) -> u64 {

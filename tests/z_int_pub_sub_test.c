@@ -29,6 +29,7 @@ const size_t values_count = sizeof(values) / sizeof(values[0]);
 
 const uint32_t TEST_EID = 42;
 const uint64_t TEST_SN = 24;
+const uint64_t TEST_TS = 401706000;
 
 int run_publisher() {
     SEM_WAIT(sem);
@@ -62,9 +63,13 @@ int run_publisher() {
         z_owned_source_info_t source_info;
         z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
+        z_timestamp_t ts;
+        z_timestamp_new(&ts, &self_id, TEST_TS + i);
+
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
         options.source_info = &source_info;
+        options.timestamp = &ts;
 
         z_owned_bytes_t payload;
         z_bytes_encode_from_string(&payload, values[i]);
@@ -116,6 +121,26 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected eid value");
         exit(-1);
     }
+
+    const z_timestamp_t *ts = z_sample_timestamp(sample);
+    if (ts == NULL) {
+        perror("Unexpected null timestamp");
+        exit(-1);
+    }
+    const uint64_t time = z_timestamp_npt64_time(ts);
+    if (time != TEST_TS + val_num) {
+        perror("Unexpected timestamp value");
+        exit(-1);
+    }
+
+    z_id_t ts_id = z_timestamp_id(ts);
+    z_id_t gloabl_id = z_entity_global_id_zid(&id);
+
+    if (memcmp(ts_id.id, gloabl_id.id, sizeof(ts_id.id)) != 0) {
+        perror("Timestamp id and global id differ");
+        exit(-1);
+    }
+
     if (++val_num == values_count) {
         exit(0);
     };

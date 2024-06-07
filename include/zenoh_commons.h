@@ -433,6 +433,10 @@ typedef struct z_publisher_options_t {
    * If true, Zenoh will not wait to batch this message with others to reduce the bandwith
    */
   bool is_express;
+  /**
+   * The allowed destination for thsi publisher.
+   */
+  enum zcu_locality_t allowed_destination;
 } z_publisher_options_t;
 /**
  * Options passed to the `z_declare_queryable()` function.
@@ -468,6 +472,14 @@ typedef struct z_delete_options_t {
    * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
    */
   bool is_express;
+  /**
+   * The timestamp of this message.
+   */
+  struct z_timestamp_t *timestamp;
+  /**
+   * The allowed destination of this message.
+   */
+  enum zcu_locality_t allowed_destination;
 } z_delete_options_t;
 /**
  * An entity gloabal id.
@@ -525,7 +537,10 @@ typedef struct z_get_options_t {
  * whenever issued via `z_publisher_delete()`.
  */
 typedef struct z_publisher_delete_options_t {
-  uint8_t __dummy;
+  /**
+   * The timestamp of this message.
+   */
+  struct z_timestamp_t *timestamp;
 } z_publisher_delete_options_t;
 /**
  * Options passed to the `z_publisher_put()` function.
@@ -535,6 +550,10 @@ typedef struct z_publisher_put_options_t {
    *  The encoding of the data to publish.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The timestamp of the publication.
+   */
+  struct z_timestamp_t *timestamp;
   /**
    * The source info for the publication.
    */
@@ -564,6 +583,14 @@ typedef struct z_put_options_t {
    * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
    */
   bool is_express;
+  /**
+   * The timestamp of this message.
+   */
+  struct z_timestamp_t *timestamp;
+  /**
+   * The allowed destination of this message.
+   */
+  enum zcu_locality_t allowed_destination;
   /**
    * The source info for the message.
    */
@@ -2186,7 +2213,7 @@ ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *this_);
  */
 ZENOHC_API
 z_error_t z_publisher_delete(const struct z_loaned_publisher_t *publisher,
-                             const struct z_publisher_delete_options_t *_options);
+                             const struct z_publisher_delete_options_t *options);
 /**
  * Constructs the default values for the delete operation via a publisher entity.
  */
@@ -3311,6 +3338,13 @@ const char *z_time_now_as_str(const char *buf,
  * Returns id associated with this timestamp.
  */
 ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
+/**
+ * Create timestamp
+ */
+ZENOHC_API
+z_error_t z_timestamp_new(struct z_timestamp_t *this_,
+                          const struct z_id_t *zid,
+                          uint64_t npt64_time);
 /**
  * Returns NPT64 time associated with this timestamp.
  */
