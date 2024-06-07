@@ -22,7 +22,6 @@ use crate::transmute::TransmuteRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
 use zenoh::core::Wait;
-use zenoh::encoding;
 use zenoh::publisher::CongestionControl;
 use zenoh::publisher::Priority;
 use zenoh::sample::QoSBuilderTrait;
