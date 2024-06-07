@@ -270,10 +270,39 @@ pub extern "C" fn z_publisher_delete(
 
 /// Returns the key expression of the publisher.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_loaned_keyexpr_t {
     let publisher = publisher.transmute_ref();
     publisher.key_expr().transmute_handle()
+}
+
+/// Sets congestion control for the publisher
+#[no_mangle]
+pub extern "C" fn z_publisher_set_congestion_control(
+    publisher: &mut z_loaned_publisher_t,
+    congestion_control: z_congestion_control_t,
+) {
+    let publisher = publisher.transmute_mut();
+    publisher.set_congestion_control(congestion_control.into())
+}
+
+/// Sets priority for the publisher
+#[no_mangle]
+pub extern "C" fn z_publisher_set_priority(
+    publisher: &mut z_loaned_publisher_t,
+    priority: z_priority_t,
+) {
+    let publisher = publisher.transmute_mut();
+    publisher.set_priority(priority.into())
+}
+
+/// Sets allowed destination for the publisher
+#[no_mangle]
+pub extern "C" fn z_publisher_set_allowed_destination(
+    publisher: &mut z_loaned_publisher_t,
+    destination: zcu_locality_t,
+) {
+    let publisher = publisher.transmute_mut();
+    publisher.set_allowed_destination(destination.into())
 }
 
 pub use crate::opaque_types::zcu_owned_matching_listener_t;
