@@ -11,7 +11,7 @@ use std::{
     io::BufWriter,
     path::{Path, PathBuf},
 };
-
+const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
 const PREPROCESS_PATH: &str = "include/zenoh-cpp.h";
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
@@ -34,7 +34,21 @@ const HEADER: &str = r"//
 #endif
 ";
 
+fn fix_cbindgen(input: &str, output: &str) {
+    let _ = Command::new("awk")
+        .arg("-v")
+        .arg("RS='{ \"do stuffs\" }'")
+        .arg("{gsub(\"\\n#endif\\n  ;\", \";\\n#endif\"); print}")
+        .arg(input)
+        .stdout(File::create(output).unwrap())
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+}
+
 fn preprocess_header(input: &str, output: &str) {
+    #[allow(unused_mut)]
     let mut feature_args: Vec<&str> = vec![];
     #[cfg(feature = "shared-memory")]
     {
@@ -74,7 +88,10 @@ fn main() {
     generate_opaque_types();
     cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
         .expect("Unable to generate bindings")
-        .write_to_file(GENERATION_PATH);
+        .write_to_file(BUGGY_GENERATION_PATH);
+
+    fix_cbindgen(BUGGY_GENERATION_PATH, GENERATION_PATH);
+    std::fs::remove_file(BUGGY_GENERATION_PATH).unwrap();
 
     preprocess_header(GENERATION_PATH, PREPROCESS_PATH);
     create_generics_header(PREPROCESS_PATH, "include/zenoh_macros.h");
@@ -115,6 +132,7 @@ fn produce_opaque_types_data() -> PathBuf {
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = Stdio::from(out_file);
 
+    #[allow(unused_mut)]
     let mut feature_args: Vec<&str> = vec![];
     #[cfg(feature = "shared-memory")]
     {
