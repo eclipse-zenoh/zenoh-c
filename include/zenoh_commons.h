@@ -3339,6 +3339,13 @@ const char *z_time_now_as_str(const char *buf,
  */
 ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
 /**
+ * Create timestamp
+ */
+ZENOHC_API
+z_error_t z_timestamp_new(struct z_timestamp_t *this_,
+                          const struct z_id_t *zid,
+                          uint64_t npt64_time);
+/**
  * Returns NPT64 time associated with this timestamp.
  */
 ZENOHC_API uint64_t z_timestamp_npt64_time(const struct z_timestamp_t *this_);
