@@ -21,7 +21,9 @@ use zenoh::{
 use crate::transmute::TransmuteIntoHandle;
 use crate::{
     errors,
-    transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr, unwrap_ref_unchecked},
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
+    },
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
@@ -72,7 +74,9 @@ pub extern "C" fn zc_liveliness_declaration_options_default(
 
 /// Borrows token.
 #[no_mangle]
-extern "C" fn zc_liveliness_token_loan(this: &zc_owned_liveliness_token_t) -> &zc_loaned_liveliness_token_t {
+extern "C" fn zc_liveliness_token_loan(
+    this: &zc_owned_liveliness_token_t,
+) -> &zc_loaned_liveliness_token_t {
     unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
 }
 
