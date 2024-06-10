@@ -16,7 +16,7 @@
 #include "zenoh.h"
 
 int main(int argc, char **argv) {
-    char *expr = "group1/zenoh-rs";
+    char *expr = "group1/zenoh-c";
     if (argc > 1) {
         expr = argv[1];
     }

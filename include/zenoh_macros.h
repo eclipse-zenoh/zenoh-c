@@ -41,6 +41,7 @@
         z_view_keyexpr_t : z_view_keyexpr_loan, \
         z_view_slice_t : z_view_slice_loan, \
         z_view_string_t : z_view_string_loan, \
+        zc_owned_liveliness_token_t : zc_liveliness_token_loan, \
         zcu_owned_closure_matching_status_t : zcu_closure_matching_status_loan, \
         ze_owned_querying_subscriber_t : ze_querying_subscriber_loan \
     )(&x)
@@ -259,6 +260,7 @@ inline const z_loaned_value_t* z_loan(const z_owned_value_t& this_) { return z_v
 inline const z_loaned_keyexpr_t* z_loan(const z_view_keyexpr_t& this_) { return z_view_keyexpr_loan(&this_); };
 inline const z_loaned_slice_t* z_loan(const z_view_slice_t& this_) { return z_view_slice_loan(&this_); };
 inline const z_loaned_string_t* z_loan(const z_view_string_t& this_) { return z_view_string_loan(&this_); };
+inline const zc_loaned_liveliness_token_t* z_loan(const zc_owned_liveliness_token_t& this_) { return zc_liveliness_token_loan(&this_); };
 inline const zcu_loaned_closure_matching_status_t* z_loan(const zcu_owned_closure_matching_status_t& closure) { return zcu_closure_matching_status_loan(&closure); };
 inline const ze_loaned_querying_subscriber_t* z_loan(const ze_owned_querying_subscriber_t& this_) { return ze_querying_subscriber_loan(&this_); };
 
@@ -627,6 +629,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_subscriber_t> { typedef z_ow
 template<> struct z_owned_to_loaned_type_t<z_owned_subscriber_t> { typedef z_loaned_subscriber_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_value_t> { typedef z_owned_value_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_value_t> { typedef z_loaned_value_t type; };
+template<> struct z_loaned_to_owned_type_t<zc_loaned_liveliness_token_t> { typedef zc_owned_liveliness_token_t type; };
+template<> struct z_owned_to_loaned_type_t<zc_owned_liveliness_token_t> { typedef zc_loaned_liveliness_token_t type; };
 template<> struct z_loaned_to_owned_type_t<zcu_loaned_closure_matching_status_t> { typedef zcu_owned_closure_matching_status_t type; };
 template<> struct z_owned_to_loaned_type_t<zcu_owned_closure_matching_status_t> { typedef zcu_loaned_closure_matching_status_t type; };
 template<> struct z_loaned_to_owned_type_t<ze_loaned_querying_subscriber_t> { typedef ze_owned_querying_subscriber_t type; };

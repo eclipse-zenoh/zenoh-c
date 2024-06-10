@@ -21,7 +21,9 @@ use zenoh::{
 use crate::transmute::TransmuteIntoHandle;
 use crate::{
     errors,
-    transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr},
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
+    },
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
@@ -68,6 +70,14 @@ pub extern "C" fn zc_liveliness_declaration_options_default(
     this: &mut zc_liveliness_declaration_options_t,
 ) {
     *this = zc_liveliness_declaration_options_t { _dummy: 0 };
+}
+
+/// Borrows token.
+#[no_mangle]
+extern "C" fn zc_liveliness_token_loan(
+    this: &zc_owned_liveliness_token_t,
+) -> &zc_loaned_liveliness_token_t {
+    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
 }
 
 /// Constructs and declares a liveliness token on the network.
@@ -119,16 +129,16 @@ pub extern "C" fn zc_liveliness_undeclare_token(
 
 /// The options for `zc_liveliness_declare_subscriber()`
 #[repr(C)]
-pub struct zc_liveliness_declare_subscriber_options_t {
+pub struct zc_liveliness_subscriber_options_t {
     _dummy: u8,
 }
 
 /// Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_default(
-    this: &mut zc_liveliness_declare_subscriber_options_t,
+    this: &mut zc_liveliness_subscriber_options_t,
 ) {
-    *this = zc_liveliness_declare_subscriber_options_t { _dummy: 0 };
+    *this = zc_liveliness_subscriber_options_t { _dummy: 0 };
 }
 
 /// Declares a subscriber on liveliness tokens that intersect `key_expr`.
@@ -146,7 +156,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
-    _options: Option<&mut zc_liveliness_declare_subscriber_options_t>,
+    _options: Option<&mut zc_liveliness_subscriber_options_t>,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
@@ -185,7 +195,7 @@ pub extern "C" fn zc_liveliness_get_options_default(this: &mut zc_liveliness_get
     *this = zc_liveliness_get_options_t { timeout_ms: 10000 };
 }
 
-/// @Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+/// Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
 ///
 /// @param session: The Zenoh session.
 /// @param key_expr: The key expression to query liveliness tokens for.
