@@ -44,6 +44,9 @@ zenoh_opaque.h:
   - z_loaned_session_t!
   - z_owned_config_t!
   - z_loaned_config_t!
+  - z_owned_source_info_t!
+  - z_loaned_source_info_t!
+  - z_entity_global_id_t!
   - z_id_t!
   - z_timestamp_t!
   - z_owned_publisher_t!

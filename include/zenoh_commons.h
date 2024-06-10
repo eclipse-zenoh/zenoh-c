@@ -482,23 +482,11 @@ typedef struct z_delete_options_t {
   enum zcu_locality_t allowed_destination;
 } z_delete_options_t;
 /**
- * An entity gloabal id.
- */
-typedef struct ALIGN(4) z_entity_global_id_t {
-  uint8_t _0[20];
-} z_entity_global_id_t;
-/**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
  */
 typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
-/**
- * An owned Zenoh-allocated source info`.
- */
-typedef struct ALIGN(8) z_owned_source_info_t {
-  uint8_t _0[40];
-} z_owned_source_info_t;
 /**
  * Options passed to the `z_get()` function.
  */
@@ -644,12 +632,6 @@ typedef struct z_query_reply_err_options_t {
    */
   struct z_owned_encoding_t *encoding;
 } z_query_reply_err_options_t;
-/**
- * A loaned source info.
- */
-typedef struct ALIGN(8) z_loaned_source_info_t {
-  uint8_t _0[40];
-} z_loaned_source_info_t;
 /**
  * Options to pass to `z_scout()`.
  */
