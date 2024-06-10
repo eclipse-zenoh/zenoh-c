@@ -33,6 +33,7 @@
         z_owned_session_t : z_session_loan, \
         z_owned_slice_t : z_slice_loan, \
         z_owned_slice_map_t : z_slice_map_loan, \
+        z_owned_source_info_t : z_source_info_loan, \
         z_owned_string_array_t : z_string_array_loan, \
         z_owned_string_t : z_string_loan, \
         z_owned_subscriber_t : z_subscriber_loan, \
@@ -85,6 +86,7 @@
         z_owned_session_t* : z_session_drop, \
         z_owned_slice_t* : z_slice_drop, \
         z_owned_slice_map_t* : z_slice_map_drop, \
+        z_owned_source_info_t* : z_source_info_drop, \
         z_owned_string_array_t* : z_string_array_drop, \
         z_owned_string_t* : z_string_drop, \
         z_owned_subscriber_t* : z_subscriber_drop, \
@@ -126,6 +128,7 @@
         z_owned_session_t* : z_session_null, \
         z_owned_slice_map_t* : z_slice_map_null, \
         z_owned_slice_t* : z_slice_null, \
+        z_owned_source_info_t* : z_source_info_null, \
         z_owned_string_array_t* : z_string_array_null, \
         z_owned_string_t* : z_string_null, \
         z_owned_subscriber_t* : z_subscriber_null, \
@@ -169,6 +172,7 @@
         z_owned_session_t : z_session_check, \
         z_owned_slice_t : z_slice_check, \
         z_owned_slice_map_t : z_slice_map_check, \
+        z_owned_source_info_t : z_source_info_check, \
         z_owned_string_array_t : z_string_array_check, \
         z_owned_string_t : z_string_check, \
         z_owned_subscriber_t : z_subscriber_check, \
@@ -247,6 +251,7 @@ inline const z_loaned_sample_t* z_loan(const z_owned_sample_t& this_) { return z
 inline const z_loaned_session_t* z_loan(const z_owned_session_t& this_) { return z_session_loan(&this_); };
 inline const z_loaned_slice_t* z_loan(const z_owned_slice_t& this_) { return z_slice_loan(&this_); };
 inline const z_loaned_slice_map_t* z_loan(const z_owned_slice_map_t& this_) { return z_slice_map_loan(&this_); };
+inline const z_loaned_source_info_t* z_loan(const z_owned_source_info_t& this_) { return z_source_info_loan(&this_); };
 inline const z_loaned_string_array_t* z_loan(const z_owned_string_array_t& this_) { return z_string_array_loan(&this_); };
 inline const z_loaned_string_t* z_loan(const z_owned_string_t& this_) { return z_string_loan(&this_); };
 inline const z_loaned_subscriber_t* z_loan(const z_owned_subscriber_t& this_) { return z_subscriber_loan(&this_); };
@@ -295,6 +300,7 @@ inline void z_drop(z_owned_sample_t* this_) { return z_sample_drop(this_); };
 inline void z_drop(z_owned_session_t* this_) { return z_session_drop(this_); };
 inline void z_drop(z_owned_slice_t* this_) { return z_slice_drop(this_); };
 inline void z_drop(z_owned_slice_map_t* this_) { return z_slice_map_drop(this_); };
+inline void z_drop(z_owned_source_info_t* this_) { return z_source_info_drop(this_); };
 inline void z_drop(z_owned_string_array_t* this_) { return z_string_array_drop(this_); };
 inline void z_drop(z_owned_string_t* this_) { return z_string_drop(this_); };
 inline void z_drop(z_owned_subscriber_t* this_) { return z_subscriber_drop(this_); };
@@ -333,6 +339,7 @@ inline z_owned_sample_t* z_move(z_owned_sample_t& this_) { return (&this_); };
 inline z_owned_session_t* z_move(z_owned_session_t& this_) { return (&this_); };
 inline z_owned_slice_t* z_move(z_owned_slice_t& this_) { return (&this_); };
 inline z_owned_slice_map_t* z_move(z_owned_slice_map_t& this_) { return (&this_); };
+inline z_owned_source_info_t* z_move(z_owned_source_info_t& this_) { return (&this_); };
 inline z_owned_string_array_t* z_move(z_owned_string_array_t& this_) { return (&this_); };
 inline z_owned_string_t* z_move(z_owned_string_t& this_) { return (&this_); };
 inline z_owned_subscriber_t* z_move(z_owned_subscriber_t& this_) { return (&this_); };
@@ -370,6 +377,7 @@ inline void z_null(z_owned_sample_t* this_) { return z_sample_null(this_); };
 inline void z_null(z_owned_session_t* this_) { return z_session_null(this_); };
 inline void z_null(z_owned_slice_map_t* this_) { return z_slice_map_null(this_); };
 inline void z_null(z_owned_slice_t* this_) { return z_slice_null(this_); };
+inline void z_null(z_owned_source_info_t* this_) { return z_source_info_null(this_); };
 inline void z_null(z_owned_string_array_t* this_) { return z_string_array_null(this_); };
 inline void z_null(z_owned_string_t* this_) { return z_string_null(this_); };
 inline void z_null(z_owned_subscriber_t* this_) { return z_subscriber_null(this_); };
@@ -411,6 +419,7 @@ inline bool z_check(const z_owned_sample_t& this_) { return z_sample_check(&this
 inline bool z_check(const z_owned_session_t& this_) { return z_session_check(&this_); };
 inline bool z_check(const z_owned_slice_t& this_) { return z_slice_check(&this_); };
 inline bool z_check(const z_owned_slice_map_t& map) { return z_slice_map_check(&map); };
+inline bool z_check(const z_owned_source_info_t& this_) { return z_source_info_check(&this_); };
 inline bool z_check(const z_owned_string_array_t& this_) { return z_string_array_check(&this_); };
 inline bool z_check(const z_owned_string_t& this_) { return z_string_check(&this_); };
 inline bool z_check(const z_owned_subscriber_t& this_) { return z_subscriber_check(&this_); };
@@ -608,6 +617,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_slice_t> { typedef z_owned_s
 template<> struct z_owned_to_loaned_type_t<z_owned_slice_t> { typedef z_loaned_slice_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_slice_map_t> { typedef z_owned_slice_map_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_slice_map_t> { typedef z_loaned_slice_map_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_source_info_t> { typedef z_owned_source_info_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_source_info_t> { typedef z_loaned_source_info_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_string_array_t> { typedef z_owned_string_array_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_string_array_t> { typedef z_loaned_string_array_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_string_t> { typedef z_owned_string_t type; };

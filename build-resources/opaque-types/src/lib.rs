@@ -428,7 +428,7 @@ get_opaque_type_data!(Option<RingChannelHandler<Reply>>, z_owned_ring_handler_re
 get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
 
 /// An owned Zenoh-allocated source info`.
-get_opaque_type_data!(Option<SourceInfo>, z_owned_source_info_t);
+get_opaque_type_data!(SourceInfo, z_owned_source_info_t);
 /// A loaned source info.
 get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
 

@@ -654,8 +654,33 @@ pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_gl
         None => EntityGlobalId::default().transmute_copy(),
     }
 }
+
 /// Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> u64 {
     this.transmute_ref().source_sn.unwrap_or(0)
+}
+
+/// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
+#[no_mangle]
+pub extern "C" fn z_source_info_check(this: &z_owned_source_info_t) -> bool {
+    this.transmute_ref().source_id.is_some() || this.transmute_ref().source_sn.is_some()
+}
+
+/// Borrows source info.
+#[no_mangle]
+pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_source_info_t {
+    this.transmute_ref().transmute_handle()
+}
+
+/// Frees the memory and invalidates the source info, resetting it to a gravestone state.
+#[no_mangle]
+pub extern "C" fn z_source_info_drop(this: &mut z_owned_source_info_t) {
+    Inplace::drop(this.transmute_mut());
+}
+
+/// Constructs source info in its gravestone state.
+#[no_mangle]
+pub extern "C" fn z_source_info_null(this: *mut MaybeUninit<z_owned_source_info_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
 }
