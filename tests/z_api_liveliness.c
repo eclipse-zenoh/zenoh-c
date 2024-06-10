@@ -134,6 +134,17 @@ void test_liveliness_get() {
 
     z_drop(z_move(reply));
     assert(!z_recv(z_loan(handler), &reply));
+
+    z_drop(z_move(t1));
+    z_drop(z_move(handler));
+    z_sleep_s(1);
+    z_fifo_channel_reply_new(&cb, &handler, 3);
+
+    zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
+    assert(!z_recv(z_loan(handler), &reply));
+
+
+    z_drop(z_move(handler));
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
