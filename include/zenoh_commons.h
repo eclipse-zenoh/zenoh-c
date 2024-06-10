@@ -3145,9 +3145,22 @@ ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
  */
 ZENOHC_API z_error_t z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *start, size_t len);
 /**
+ * Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_source_info_check(const struct z_owned_source_info_t *this_);
+/**
+ * Frees the memory and invalidates the source info, resetting it to a gravestone state.
+ */
+ZENOHC_API void z_source_info_drop(struct z_owned_source_info_t *this_);
+/**
  * Returns the source_id of the source info.
  */
 ZENOHC_API struct z_entity_global_id_t z_source_info_id(const struct z_loaned_source_info_t *this_);
+/**
+ * Borrows source info.
+ */
+ZENOHC_API
+const struct z_loaned_source_info_t *z_source_info_loan(const struct z_owned_source_info_t *this_);
 /**
  * Create source info
  */
@@ -3155,6 +3168,10 @@ ZENOHC_API
 z_error_t z_source_info_new(struct z_owned_source_info_t *this_,
                             const struct z_entity_global_id_t *source_id,
                             uint64_t source_sn);
+/**
+ * Constructs source info in its gravestone state.
+ */
+ZENOHC_API void z_source_info_null(struct z_owned_source_info_t *this_);
 /**
  * Returns the source_sn of the source info.
  */
