@@ -740,9 +740,9 @@ typedef struct zc_liveliness_declaration_options_t {
 /**
  * The options for `zc_liveliness_declare_subscriber()`
  */
-typedef struct zc_liveliness_declare_subscriber_options_t {
+typedef struct zc_liveliness_subscriber_options_t {
   uint8_t _dummy;
-} zc_liveliness_declare_subscriber_options_t;
+} zc_liveliness_subscriber_options_t;
 /**
  * The options for `zc_liveliness_get()`
  */
@@ -3650,7 +3650,7 @@ z_error_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
                                            const struct z_loaned_session_t *session,
                                            const struct z_loaned_keyexpr_t *key_expr,
                                            struct z_owned_closure_sample_t *callback,
-                                           struct zc_liveliness_declare_subscriber_options_t *_options);
+                                           struct zc_liveliness_subscriber_options_t *_options);
 /**
  * Constructs and declares a liveliness token on the network.
  *
@@ -3668,7 +3668,7 @@ z_error_t zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_,
                                       const struct z_loaned_keyexpr_t *key_expr,
                                       const struct zc_liveliness_declaration_options_t *_options);
 /**
- * @Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+ * Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
  *
  * @param session: The Zenoh session.
  * @param key_expr: The key expression to query liveliness tokens for.
@@ -3688,7 +3688,7 @@ ZENOHC_API void zc_liveliness_get_options_default(struct zc_liveliness_get_optio
  * Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
  */
 ZENOHC_API
-void zc_liveliness_subscriber_options_default(struct zc_liveliness_declare_subscriber_options_t *this_);
+void zc_liveliness_subscriber_options_default(struct zc_liveliness_subscriber_options_t *this_);
 /**
  * Returns ``true`` if liveliness token is valid, ``false`` otherwise.
  */
@@ -3697,6 +3697,11 @@ ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token
  * Undeclares liveliness token, frees memory and resets it to a gravestone state.
  */
 ZENOHC_API void zc_liveliness_token_drop(struct zc_owned_liveliness_token_t *this_);
+/**
+ * Borrows token.
+ */
+ZENOHC_API
+const struct zc_loaned_liveliness_token_t *zc_liveliness_token_loan(const struct zc_owned_liveliness_token_t *this_);
 /**
  * Constructs liveliness token in its gravestone state.
  */
