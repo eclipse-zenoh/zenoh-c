@@ -623,6 +623,36 @@ typedef struct z_query_reply_options_t {
   struct z_owned_bytes_t *attachment;
 } z_query_reply_options_t;
 /**
+ * Represents the set of options that can be applied to a query delete reply,
+ * sent via `z_query_reply_del()`.
+ */
+typedef struct z_query_reply_del_options_t {
+  /**
+   * The congestion control to apply when routing the reply.
+   */
+  enum z_congestion_control_t congestion_control;
+  /**
+   * The priority of the reply.
+   */
+  enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
+  /**
+   * The timestamp of the reply.
+   */
+  struct z_timestamp_t *timestamp;
+  /**
+   * The source info for the reply.
+   */
+  struct z_owned_source_info_t *source_info;
+  /**
+   * The attachment to this reply.
+   */
+  struct z_owned_bytes_t *attachment;
+} z_query_reply_del_options_t;
+/**
  * Represents the set of options that can be applied to a query reply error,
  * sent via `z_query_reply_err()`.
  */
@@ -2389,6 +2419,28 @@ z_error_t z_query_reply(const struct z_loaned_query_t *this_,
                         const struct z_loaned_keyexpr_t *key_expr,
                         struct z_owned_bytes_t *payload,
                         struct z_query_reply_options_t *options);
+/**
+ * Sends a delete reply to a query.
+ *
+ * This function must be called inside of a Queryable callback passing the
+ * query received as parameters of the callback function. This function can
+ * be called multiple times to send multiple replies to a query. The reply
+ * will be considered complete when the Queryable callback returns.
+ *
+ * @param this: The query to reply to.
+ * @param key_expr: The key of this delete reply.
+ * @param options: The options of this delete reply. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t z_query_reply_del(const struct z_loaned_query_t *this_,
+                            const struct z_loaned_keyexpr_t *key_expr,
+                            struct z_query_reply_del_options_t *options);
+/**
+ * Constructs the default value for `z_query_reply_del_options_t`.
+ */
+ZENOHC_API void z_query_reply_del_options_default(struct z_query_reply_del_options_t *this_);
 /**
  * Sends a error reply to a query.
  *
