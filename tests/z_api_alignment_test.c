@@ -83,8 +83,8 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
         }
 #endif
     } else {
-        const z_loaned_bytes_t *_ret_zpayload = z_reply_err_payload(reply);
-        (void)(_ret_zpayload);
+        const z_loaned_reply_err_t *_ret_zerr = z_reply_err(reply);
+        (void)(_ret_zerr);
     }
 }
 
