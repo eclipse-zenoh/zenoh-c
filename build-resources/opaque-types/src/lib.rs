@@ -120,11 +120,6 @@ get_opaque_type_data!(Option<Reply>, z_owned_reply_t);
 /// A loaned reply.
 get_opaque_type_data!(Reply, z_loaned_reply_t);
 
-/// A Zenoh value - a compination of payload and its encoding.
-get_opaque_type_data!(Value, z_owned_value_t);
-/// A loaned Zenoh value.
-get_opaque_type_data!(Value, z_loaned_value_t);
-
 /// An owned Zenoh query received by a queryable.
 ///
 /// Queries are atomically reference-counted, letting you extract them from the callback that handed them to you by cloning.

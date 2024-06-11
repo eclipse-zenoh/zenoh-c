@@ -89,7 +89,6 @@ void query_handler(const z_loaned_query_t *query, void *context) {
 
     z_view_string_t params;
     z_query_parameters(query, &params);
-    const z_loaned_value_t *payload_value = z_query_value(query);
 
     const z_loaned_bytes_t *attachment = z_query_attachment(query);
     if (attachment == NULL) {

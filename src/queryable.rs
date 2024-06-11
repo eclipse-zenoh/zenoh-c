@@ -17,7 +17,7 @@ use crate::transmute::{
 };
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
-    z_loaned_keyexpr_t, z_loaned_session_t, z_loaned_value_t, z_owned_bytes_t,
+    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
     z_owned_closure_query_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t,
     z_timestamp_t, z_view_string_from_substring, z_view_string_t,
 };
@@ -428,12 +428,22 @@ pub unsafe extern "C" fn z_query_parameters(
     unsafe { z_view_string_from_substring(parameters, params.as_ptr() as _, params.len()) };
 }
 
-/// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload value</a>.
+/// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
 ///
-/// Returns NULL if query does not contain a value.
+/// Returns NULL if query does not contain a payload.
 #[no_mangle]
-pub extern "C" fn z_query_value(this: &z_loaned_query_t) -> Option<&z_loaned_value_t> {
-    this.transmute_ref().value().map(|v| v.transmute_handle())
+pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
+    this.transmute_ref().payload().map(|v| v.transmute_handle())
+}
+
+/// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
+///
+/// Returns NULL if query does not hame an encoding.
+#[no_mangle]
+pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
+    this.transmute_ref()
+        .encoding()
+        .map(|v| v.transmute_handle())
 }
 
 /// Gets query attachment.

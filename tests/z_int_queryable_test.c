@@ -35,7 +35,6 @@ void query_handler(const z_loaned_query_t *query, void *context) {
 
     z_view_string_t params;
     z_query_parameters(query, &params);
-    const z_loaned_value_t *payload_value = z_query_value(query);
 
     z_query_reply_options_t options;
     z_query_reply_options_default(&options);
