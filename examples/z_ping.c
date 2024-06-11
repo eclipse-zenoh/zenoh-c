@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
         data[i] = i % 10;
     }
     z_owned_bytes_t payload;
-    
+
     z_mutex_lock(z_loan_mut(mutex));
     if (args.warmup_ms) {
         printf("Warming up for %dms...\n", args.warmup_ms);

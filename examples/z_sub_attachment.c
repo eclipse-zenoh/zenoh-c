@@ -13,6 +13,7 @@
 //
 #include <stdint.h>
 #include <stdio.h>
+
 #include "zenoh.h"
 
 const char *kind_to_str(z_sample_kind_t kind);
@@ -25,11 +26,10 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
 
     printf(">> [Subscriber] Received %s ('%.*s': '%.*s')\n", kind_to_str(z_sample_kind(sample)),
-        (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
-        (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string))
-    );
+           (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+           (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
 
-   const z_loaned_bytes_t* attachment = z_sample_attachment(sample);
+    const z_loaned_bytes_t *attachment = z_sample_attachment(sample);
     // checks if attachment exists
     if (attachment != NULL) {
         // reads full attachment
@@ -44,8 +44,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
             z_bytes_decode_into_string(z_loan(v), &value);
 
             printf("   attachment: %.*s: '%.*s'\n", (int)z_string_len(z_loan(key)), z_string_data(z_loan(key)),
-                (int)z_string_len(z_loan(value)), z_string_data(z_loan(value))
-            );
+                   (int)z_string_len(z_loan(value)), z_string_data(z_loan(value)));
             z_drop(z_move(kv));
             z_drop(z_move(k));
             z_drop(z_move(v));

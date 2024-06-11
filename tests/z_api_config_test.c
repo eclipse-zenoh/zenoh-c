@@ -24,7 +24,8 @@ void config_client() {
     z_config_client(&config, peers, 3);
     z_owned_string_t endpoints;
     zc_config_get_from_string(z_loan(config), "connect/endpoints", &endpoints);
-    assert(strncmp(z_string_data(z_loan(endpoints)), "[\"tcp/127.0.0.1\",\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]", z_string_len(z_loan(endpoints))) == 0);
+    assert(strncmp(z_string_data(z_loan(endpoints)), "[\"tcp/127.0.0.1\",\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]",
+                   z_string_len(z_loan(endpoints))) == 0);
     z_drop(z_move(endpoints));
     z_drop(z_move(config));
 }

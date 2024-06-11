@@ -17,6 +17,7 @@
 
 #undef NDEBUG
 #include <assert.h>
+
 #include "zenoh.h"
 
 #define SLEEP 1
@@ -43,7 +44,7 @@ volatile unsigned int queries = 0;
 void query_handler(const z_loaned_query_t *query, void *arg) {
     queries++;
 
-    const z_loaned_keyexpr_t* query_ke = z_query_keyexpr(query);
+    const z_loaned_keyexpr_t *query_ke = z_query_keyexpr(query);
     z_view_string_t k_str;
     z_keyexpr_as_view_string(query_ke, &k_str);
 #ifdef ZENOH_PICO
@@ -55,7 +56,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     z_view_string_t params;
     z_query_parameters(query, &params);
     (void)(params);
-    const z_loaned_value_t* payload_value = z_query_value(query);
+    const z_loaned_value_t *payload_value = z_query_value(query);
     (void)(payload_value);
     z_query_reply_options_t _ret_qreply_opt;
     z_query_reply_options_default(&_ret_qreply_opt);
@@ -70,7 +71,7 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
     replies++;
 
     if (z_reply_is_ok(reply)) {
-        const z_loaned_sample_t* sample = z_reply_ok(reply);
+        const z_loaned_sample_t *sample = z_reply_ok(reply);
 
         z_view_string_t k_str;
         z_keyexpr_as_view_string(z_sample_keyexpr(sample), &k_str);
@@ -80,7 +81,7 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
         }
 #endif
     } else {
-        const z_loaned_value_t* _ret_zvalue = z_reply_err(reply);
+        const z_loaned_value_t *_ret_zvalue = z_reply_err(reply);
         (void)(_ret_zvalue);
     }
 }
@@ -168,7 +169,6 @@ int main(int argc, char **argv) {
     assert(strncmp(_ret_cstr, argv[1], strlen(_ret_cstr)) == 0);
 #endif
 
-
 #ifdef ZENOH_PICO
     z_owned_scouting_config_t _ret_sconfig;
     z_scouting_config_default(&_ret_sconfig);
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
 
-    const z_loaned_session_t* ls1 = z_loan(s1);
+    const z_loaned_session_t *ls1 = z_loan(s1);
     z_owned_closure_sample_t _ret_closure_sample;
     z_closure(&_ret_closure_sample, data_handler, NULL, ls1);
     z_subscriber_options_t _ret_sub_opt;
@@ -313,7 +313,7 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
 
-    const z_loaned_session_t* ls2 = z_loan(s2);
+    const z_loaned_session_t *ls2 = z_loan(s2);
     z_owned_closure_reply_t _ret_closure_reply;
     z_closure(&_ret_closure_reply, reply_handler, NULL, &ls2);
     z_get_options_t _ret_get_opt;

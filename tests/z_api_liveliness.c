@@ -19,7 +19,7 @@
 #include "zenoh.h"
 
 #undef NDEBUG
-#include <assert.h> 
+#include <assert.h>
 typedef struct context_t {
     bool token1_put;
     bool token2_put;
@@ -31,11 +31,11 @@ const char* token1_expr = "zenoh/liveliness/test/1";
 const char* token2_expr = "zenoh/liveliness/test/2";
 
 void on_receive(const z_loaned_sample_t* s, void* context) {
-    context_t *c = (context_t*)context;
-    const z_loaned_keyexpr_t *k = z_sample_keyexpr(s);
+    context_t* c = (context_t*)context;
+    const z_loaned_keyexpr_t* k = z_sample_keyexpr(s);
     z_view_string_t ks;
     z_keyexpr_as_view_string(k, &ks);
-    
+
     if (z_sample_kind(s) == Z_SAMPLE_KIND_PUT) {
         if (strncmp(token1_expr, z_string_data(z_loan(ks)), z_string_len(z_loan(ks))) == 0) {
             c->token1_put = true;
@@ -62,7 +62,7 @@ void test_liveliness_sub() {
     z_view_keyexpr_from_string(&k, expr);
     z_view_keyexpr_from_string(&k1, token1_expr);
     z_view_keyexpr_from_string(&k2, token2_expr);
-    
+
     z_open(&s1, z_move(c1));
     z_open(&s2, z_move(c2));
 
@@ -94,7 +94,6 @@ void test_liveliness_sub() {
     assert(context.token2_drop);
 }
 
-
 void test_liveliness_get() {
     const char* expr = "zenoh/liveliness/test/*";
 
@@ -105,7 +104,7 @@ void test_liveliness_get() {
     z_view_keyexpr_t k, k1;
     z_view_keyexpr_from_string(&k, expr);
     z_view_keyexpr_from_string(&k1, token1_expr);
-    
+
     z_open(&s1, z_move(c1));
     z_open(&s2, z_move(c2));
 
@@ -126,11 +125,7 @@ void test_liveliness_get() {
     const z_loaned_keyexpr_t* reply_keyexpr = z_sample_keyexpr(z_reply_ok(z_loan(reply)));
     z_view_string_t reply_keyexpr_s;
     z_keyexpr_as_view_string(reply_keyexpr, &reply_keyexpr_s);
-    assert(
-        strncmp(
-            token1_expr, z_string_data(z_loan(reply_keyexpr_s)), z_string_len(z_loan(reply_keyexpr_s))
-        ) == 0
-    );
+    assert(strncmp(token1_expr, z_string_data(z_loan(reply_keyexpr_s)), z_string_len(z_loan(reply_keyexpr_s))) == 0);
 
     z_drop(z_move(reply));
     assert(!z_recv(z_loan(handler), &reply));
@@ -143,15 +138,12 @@ void test_liveliness_get() {
     zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
     assert(!z_recv(z_loan(handler), &reply));
 
-
     z_drop(z_move(handler));
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
 
-
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     test_liveliness_sub();
     test_liveliness_get();
 }

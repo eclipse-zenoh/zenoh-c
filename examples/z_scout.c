@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #include <stdio.h>
+
 #include "zenoh.h"
 
 void fprintpid(FILE *stream, z_id_t pid) {
@@ -52,7 +53,7 @@ void fprintlocators(FILE *stream, const z_loaned_string_array_t *locs) {
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, const z_loaned_hello_t* hello) {
+void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
     fprintf(stream, "Hello { pid: ");
     fprintpid(stream, z_hello_zid(hello));
     fprintf(stream, ", whatami: ");

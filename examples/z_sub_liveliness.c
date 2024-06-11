@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
+
 #include "zenoh.h"
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {
@@ -19,14 +20,12 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
     switch (z_sample_kind(sample)) {
         case Z_SAMPLE_KIND_PUT:
-            printf(">> [LivelinessSubscriber] New alive token ('%.*s')\n",
-                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string))
-            );
+            printf(">> [LivelinessSubscriber] New alive token ('%.*s')\n", (int)z_string_len(z_loan(key_string)),
+                   z_string_data(z_loan(key_string)));
             break;
         case Z_SAMPLE_KIND_DELETE:
-            printf(">> [LivelinessSubscriber] Dropped token ('%.*s')\n", 
-                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string))
-            );
+            printf(">> [LivelinessSubscriber] Dropped token ('%.*s')\n", (int)z_string_len(z_loan(key_string)),
+                   z_string_data(z_loan(key_string)));
             break;
     }
 }

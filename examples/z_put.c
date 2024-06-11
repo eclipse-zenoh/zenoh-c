@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
     z_owned_bytes_t payload;
     z_bytes_encode_from_string(&payload, value);
-    
+
     z_owned_bytes_t attachment, key, val;
     z_bytes_encode_from_string(&key, "hello");
     z_bytes_encode_from_string(&val, "there");
@@ -58,8 +58,8 @@ int main(int argc, char **argv) {
 
     z_put_options_t options;
     z_put_options_default(&options);
-    options.attachment = &attachment; // attachement is going to be consumed by z_put, so no need to drop it manually
-    
+    options.attachment = &attachment;  // attachement is going to be consumed by z_put, so no need to drop it manually
+
     int res = z_put(z_loan(s), z_loan(ke), z_move(payload), &options);
     if (res < 0) {
         printf("Put failed...\n");
