@@ -43,6 +43,49 @@ use crate::{
     z_closure_reply_call, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t,
 };
 use ::zenoh::core::Wait;
+use zenoh::value::Value;
+
+pub use crate::opaque_types::z_owned_reply_err_t;
+decl_transmute_owned!(Value, z_owned_reply_err_t);
+pub use crate::opaque_types::z_loaned_reply_err_t;
+decl_transmute_handle!(Value, z_loaned_reply_err_t);
+
+/// Constructs an empty `z_owned_reply_err_t`.
+#[no_mangle]
+pub extern "C" fn z_reply_err_null(this: *mut MaybeUninit<z_owned_reply_err_t>) {
+    Inplace::empty(this.transmute_uninit_ptr());
+}
+
+/// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_reply_err_check(this: &'static z_owned_reply_err_t) -> bool {
+    !this.transmute_ref().is_empty()
+}
+
+/// Returns reply error payload.
+#[no_mangle]
+pub extern "C" fn z_reply_err_payload(this: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
+    this.transmute_ref().payload().transmute_handle()
+}
+
+/// Returns reply error encoding.
+#[no_mangle]
+pub extern "C" fn z_reply_err_encoding(this: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
+    this.transmute_ref().encoding().transmute_handle()
+}
+
+/// Borrows reply error.
+#[no_mangle]
+pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
+    this.transmute_ref().transmute_handle()
+}
+
+/// Frees the memory and resets the reply error it to its default value.
+#[no_mangle]
+pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
+    Inplace::drop(this.transmute_mut());
+}
 
 pub use crate::opaque_types::z_owned_reply_t;
 decl_transmute_owned!(Option<Reply>, z_owned_reply_t);
@@ -73,24 +116,10 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err_payload(this: &z_loaned_reply_t) -> *const z_loaned_bytes_t {
+pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
     match this.transmute_ref().result() {
         Ok(_) => null(),
-        Err(v) => v.payload().transmute_handle(),
-    }
-}
-
-/// Yields the encoding of the contents of the reply by asserting it indicates a failure.
-///
-/// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err_encoding(
-    this: &z_loaned_reply_t,
-) -> *const z_loaned_encoding_t {
-    match this.transmute_ref().result() {
-        Ok(_) => null(),
-        Err(v) => v.encoding().transmute_handle(),
+        Err(v) => v.transmute_handle(),
     }
 }
 

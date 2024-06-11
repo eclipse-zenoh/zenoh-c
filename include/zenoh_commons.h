@@ -2541,18 +2541,38 @@ ZENOHC_API void z_reply_clone(const struct z_loaned_reply_t *this_, struct z_own
  */
 ZENOHC_API void z_reply_drop(struct z_owned_reply_t *this_);
 /**
- * Yields the encoding of the contents of the reply by asserting it indicates a failure.
- *
- * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
- */
-ZENOHC_API
-const struct z_loaned_encoding_t *z_reply_err_encoding(const struct z_loaned_reply_t *this_);
-/**
  * Yields the contents of the reply by asserting it indicates a failure.
  *
  * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
  */
-ZENOHC_API const struct z_loaned_bytes_t *z_reply_err_payload(const struct z_loaned_reply_t *this_);
+ZENOHC_API const struct z_loaned_reply_err_t *z_reply_err(const struct z_loaned_reply_t *this_);
+/**
+ * Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
+ */
+ZENOHC_API bool z_reply_err_check(const struct z_owned_reply_err_t *this_);
+/**
+ * Frees the memory and resets the reply error it to its default value.
+ */
+ZENOHC_API void z_reply_err_drop(struct z_owned_reply_err_t *this_);
+/**
+ * Returns reply error encoding.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_reply_err_encoding(const struct z_loaned_reply_err_t *this_);
+/**
+ * Borrows reply error.
+ */
+ZENOHC_API
+const struct z_loaned_reply_err_t *z_reply_err_loan(const struct z_owned_reply_err_t *this_);
+/**
+ * Constructs an empty `z_owned_reply_err_t`.
+ */
+ZENOHC_API void z_reply_err_null(struct z_owned_reply_err_t *this_);
+/**
+ * Returns reply error payload.
+ */
+ZENOHC_API
+const struct z_loaned_bytes_t *z_reply_err_payload(const struct z_loaned_reply_err_t *this_);
 /**
  * Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
  */

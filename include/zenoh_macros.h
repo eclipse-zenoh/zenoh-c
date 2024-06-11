@@ -25,6 +25,7 @@
         z_owned_publisher_t : z_publisher_loan, \
         z_owned_query_t : z_query_loan, \
         z_owned_queryable_t : z_queryable_loan, \
+        z_owned_reply_err_t : z_reply_err_loan, \
         z_owned_reply_t : z_reply_loan, \
         z_owned_ring_handler_query_t : z_ring_handler_query_loan, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_loan, \
@@ -79,6 +80,7 @@
         z_owned_query_t* : z_query_drop, \
         z_owned_queryable_t* : z_queryable_drop, \
         z_owned_reply_t* : z_reply_drop, \
+        z_owned_reply_err_t* : z_reply_err_drop, \
         z_owned_ring_handler_query_t* : z_ring_handler_query_drop, \
         z_owned_ring_handler_reply_t* : z_ring_handler_reply_drop, \
         z_owned_ring_handler_sample_t* : z_ring_handler_sample_drop, \
@@ -119,6 +121,7 @@
         z_owned_publisher_t* : z_publisher_null, \
         z_owned_query_t* : z_query_null, \
         z_owned_queryable_t* : z_queryable_null, \
+        z_owned_reply_err_t* : z_reply_err_null, \
         z_owned_reply_t* : z_reply_null, \
         z_owned_ring_handler_query_t* : z_ring_handler_query_null, \
         z_owned_ring_handler_reply_t* : z_ring_handler_reply_null, \
@@ -163,6 +166,7 @@
         z_owned_query_t : z_query_check, \
         z_owned_queryable_t : z_queryable_check, \
         z_owned_reply_t : z_reply_check, \
+        z_owned_reply_err_t : z_reply_err_check, \
         z_owned_ring_handler_query_t : z_ring_handler_query_check, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_check, \
         z_owned_ring_handler_sample_t : z_ring_handler_sample_check, \
@@ -240,6 +244,7 @@ inline const z_loaned_keyexpr_t* z_loan(const z_owned_keyexpr_t& this_) { return
 inline const z_loaned_publisher_t* z_loan(const z_owned_publisher_t& this_) { return z_publisher_loan(&this_); };
 inline const z_loaned_query_t* z_loan(const z_owned_query_t& this_) { return z_query_loan(&this_); };
 inline const z_loaned_queryable_t* z_loan(const z_owned_queryable_t& this_) { return z_queryable_loan(&this_); };
+inline const z_loaned_reply_err_t* z_loan(const z_owned_reply_err_t& this_) { return z_reply_err_loan(&this_); };
 inline const z_loaned_reply_t* z_loan(const z_owned_reply_t& this_) { return z_reply_loan(&this_); };
 inline const z_loaned_ring_handler_query_t* z_loan(const z_owned_ring_handler_query_t& this_) { return z_ring_handler_query_loan(&this_); };
 inline const z_loaned_ring_handler_reply_t* z_loan(const z_owned_ring_handler_reply_t& this_) { return z_ring_handler_reply_loan(&this_); };
@@ -290,6 +295,7 @@ inline void z_drop(z_owned_publisher_t* this_) { return z_publisher_drop(this_);
 inline void z_drop(z_owned_query_t* this_) { return z_query_drop(this_); };
 inline void z_drop(z_owned_queryable_t* this_) { return z_queryable_drop(this_); };
 inline void z_drop(z_owned_reply_t* this_) { return z_reply_drop(this_); };
+inline void z_drop(z_owned_reply_err_t* this_) { return z_reply_err_drop(this_); };
 inline void z_drop(z_owned_ring_handler_query_t* this_) { return z_ring_handler_query_drop(this_); };
 inline void z_drop(z_owned_ring_handler_reply_t* this_) { return z_ring_handler_reply_drop(this_); };
 inline void z_drop(z_owned_ring_handler_sample_t* this_) { return z_ring_handler_sample_drop(this_); };
@@ -328,6 +334,7 @@ inline z_owned_publisher_t* z_move(z_owned_publisher_t& this_) { return (&this_)
 inline z_owned_query_t* z_move(z_owned_query_t& this_) { return (&this_); };
 inline z_owned_queryable_t* z_move(z_owned_queryable_t& this_) { return (&this_); };
 inline z_owned_reply_t* z_move(z_owned_reply_t& this_) { return (&this_); };
+inline z_owned_reply_err_t* z_move(z_owned_reply_err_t& this_) { return (&this_); };
 inline z_owned_ring_handler_query_t* z_move(z_owned_ring_handler_query_t& this_) { return (&this_); };
 inline z_owned_ring_handler_reply_t* z_move(z_owned_ring_handler_reply_t& this_) { return (&this_); };
 inline z_owned_ring_handler_sample_t* z_move(z_owned_ring_handler_sample_t& this_) { return (&this_); };
@@ -364,6 +371,7 @@ inline void z_null(z_owned_mutex_t* this_) { return z_mutex_null(this_); };
 inline void z_null(z_owned_publisher_t* this_) { return z_publisher_null(this_); };
 inline void z_null(z_owned_query_t* this_) { return z_query_null(this_); };
 inline void z_null(z_owned_queryable_t* this_) { return z_queryable_null(this_); };
+inline void z_null(z_owned_reply_err_t* this_) { return z_reply_err_null(this_); };
 inline void z_null(z_owned_reply_t* this_) { return z_reply_null(this_); };
 inline void z_null(z_owned_ring_handler_query_t* this_) { return z_ring_handler_query_null(this_); };
 inline void z_null(z_owned_ring_handler_reply_t* this_) { return z_ring_handler_reply_null(this_); };
@@ -406,6 +414,7 @@ inline bool z_check(const z_owned_publisher_t& this_) { return z_publisher_check
 inline bool z_check(const z_owned_query_t& query) { return z_query_check(&query); };
 inline bool z_check(const z_owned_queryable_t& this_) { return z_queryable_check(&this_); };
 inline bool z_check(const z_owned_reply_t& this_) { return z_reply_check(&this_); };
+inline bool z_check(const z_owned_reply_err_t& this_) { return z_reply_err_check(&this_); };
 inline bool z_check(const z_owned_ring_handler_query_t& this_) { return z_ring_handler_query_check(&this_); };
 inline bool z_check(const z_owned_ring_handler_reply_t& this_) { return z_ring_handler_reply_check(&this_); };
 inline bool z_check(const z_owned_ring_handler_sample_t& this_) { return z_ring_handler_sample_check(&this_); };
@@ -594,6 +603,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_query_t> { typedef z_owned_q
 template<> struct z_owned_to_loaned_type_t<z_owned_query_t> { typedef z_loaned_query_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_queryable_t> { typedef z_owned_queryable_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_queryable_t> { typedef z_loaned_queryable_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_reply_err_t> { typedef z_owned_reply_err_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_reply_err_t> { typedef z_loaned_reply_err_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_reply_t> { typedef z_owned_reply_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_reply_t> { typedef z_loaned_reply_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_ring_handler_query_t> { typedef z_owned_ring_handler_query_t type; };
