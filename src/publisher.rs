@@ -14,6 +14,7 @@
 
 use crate::errors;
 use crate::transmute::unwrap_ref_unchecked;
+use crate::transmute::unwrap_ref_unchecked_mut;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
@@ -138,6 +139,16 @@ pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publ
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
+}
+
+/// Mutably borrows publisher.
+#[no_mangle]
+pub extern "C" fn z_publisher_loan_mut(
+    this: &mut z_owned_publisher_t,
+) -> &mut z_loaned_publisher_t {
+    let this = this.transmute_mut();
+    let this = unwrap_ref_unchecked_mut(this);
+    this.transmute_handle_mut()
 }
 
 /// Options passed to the `z_publisher_put()` function.

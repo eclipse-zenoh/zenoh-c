@@ -2262,6 +2262,10 @@ const struct z_loaned_keyexpr_t *z_publisher_keyexpr(const struct z_loaned_publi
 ZENOHC_API
 const struct z_loaned_publisher_t *z_publisher_loan(const struct z_owned_publisher_t *this_);
 /**
+ * Mutably borrows publisher.
+ */
+ZENOHC_API struct z_loaned_publisher_t *z_publisher_loan_mut(struct z_owned_publisher_t *this_);
+/**
  * Constructs a publisher in a gravestone state.
  */
 ZENOHC_API void z_publisher_null(struct z_owned_publisher_t *this_);
