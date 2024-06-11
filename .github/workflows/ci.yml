@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run clang-format dry-run
-        run: find include/ src/ tests/ examples/ -iname -o -iname "*.h" -o -iname "*.c" | xargs clang-format -n -Werror
+        run: find include/ src/ tests/ examples/ -iname "*.h" -o -iname "*.c" | xargs clang-format -n -Werror
 
   build:
     name: Build on ${{ matrix.os }}
