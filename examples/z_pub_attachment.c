@@ -28,7 +28,7 @@ typedef struct kv_pairs_t {
 } kv_pairs_t;
 
 bool create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
-    kv_pairs_t *kvs = (kv_pairs_t*)(context);
+    kv_pairs_t* kvs = (kv_pairs_t*)(context);
     z_owned_bytes_t k, v;
     if (kvs->current_idx >= kvs->len) {
         return false;
@@ -41,10 +41,9 @@ bool create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
     }
 };
 
-
-int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-pub";
-    char *value = "Pub from C!";
+int main(int argc, char** argv) {
+    char* keyexpr = "demo/example/zenoh-c-pub";
+    char* value = "Pub from C!";
 
     if (argc > 1) keyexpr = argv[1];
     if (argc > 2) value = argv[2];
@@ -82,7 +81,7 @@ int main(int argc, char **argv) {
 
     // allocate attachment data
     kv_pair_t kvs[2];
-    kvs[0] = (kv_pair_t){ .key = "source", .value = "C" };
+    kvs[0] = (kv_pair_t){.key = "source", .value = "C"};
     // allocate attachment and payload
     z_owned_bytes_t attachment;
     z_owned_bytes_t payload;
@@ -94,14 +93,14 @@ int main(int argc, char **argv) {
 
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
-        kvs[1] = (kv_pair_t){ .key = "index", .value = buf_ind };
-        kv_pairs_t ctx = (kv_pairs_t) { .data = kvs, .current_idx = 0, .len = 2 };
+        kvs[1] = (kv_pair_t){.key = "index", .value = buf_ind};
+        kv_pairs_t ctx = (kv_pairs_t){.data = kvs, .current_idx = 0, .len = 2};
         z_bytes_encode_from_iter(&attachment, create_attachment_iter, (void*)&ctx);
         options.attachment = &attachment;
 
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-        
+
         z_bytes_encode_from_string(&payload, buf);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }

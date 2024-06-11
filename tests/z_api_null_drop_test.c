@@ -75,7 +75,6 @@ int main(int argc, char **argv) {
     assert(!z_check(slice_map_null_1));
     assert(!z_check(bytes_null_1));
 
-
     //
     // Test that z_null macro defined for all types
     //
@@ -152,7 +151,6 @@ int main(int argc, char **argv) {
         z_drop(z_move(str_null_1));
         z_drop(z_move(slice_map_null_1));
         z_drop(z_move(bytes_null_1));
-
 
         z_drop(z_move(session_null_2));
         z_undeclare_publisher(z_move(publisher_null_2));

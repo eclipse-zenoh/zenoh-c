@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <zenoh_macros.h>
+
 #include "zenoh.h"
 
 const char *keyexpr = "demo/example/zenoh-c-queryable";
@@ -42,7 +43,7 @@ int main(int argc, char **argv) {
         printf("Unable to open session!\n");
         exit(-1);
     }
-    
+
     if (z_view_keyexpr_from_string(&ke, keyexpr) < 0) {
         printf("%s is not a valid key expression", keyexpr);
         exit(-1);
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
     z_fifo_channel_query_new(&closure, &handler, 16);
     z_owned_closure_query_t callback;
     z_owned_queryable_t qable;
-    
+
     if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(closure), NULL) < 0) {
         printf("Unable to create queryable.\n");
         exit(-1);
@@ -63,29 +64,26 @@ int main(int argc, char **argv) {
     printf("^C to quit...\n");
     z_owned_query_t oquery;
     for (z_recv(z_loan(handler), &oquery); z_check(oquery); z_recv(z_loan(handler), &oquery)) {
-        const z_loaned_query_t* query = z_loan(oquery);
+        const z_loaned_query_t *query = z_loan(oquery);
         z_view_string_t key_string;
         z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
 
         z_view_string_t params;
         z_query_parameters(query, &params);
 
-        const z_loaned_bytes_t* payload = z_value_payload(z_query_value(query));
+        const z_loaned_bytes_t *payload = z_value_payload(z_query_value(query));
         if (z_bytes_len(payload) > 0) {
             z_owned_string_t payload_string;
             z_bytes_decode_into_string(payload, &payload_string);
 
-            printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n", 
-                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
-                (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)), 
-                (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string))
-            );
+            printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n",
+                   (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+                   (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)),
+                   (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
             z_drop(z_move(payload_string));
         } else {
-            printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", 
-                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
-                (int)z_string_len(z_loan(params)), z_string_data(z_loan(params))
-            );
+            printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", (int)z_string_len(z_loan(key_string)),
+                   z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)));
         }
         z_query_reply_options_t options;
         z_query_reply_options_default(&options);

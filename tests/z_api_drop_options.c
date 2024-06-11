@@ -37,7 +37,7 @@ void put() {
     z_put_options_default(&opts);
     z_owned_bytes_t payload, attachment;
     z_bytes_encode_from_int32(&attachment, 16);
-    opts.attachment = &attachment;  
+    opts.attachment = &attachment;
     z_bytes_encode_from_int32(&payload, 16);
     z_put(z_loan(s), z_loan(ke), z_move(payload), &opts);
     assert(!z_check(payload));
@@ -61,7 +61,7 @@ void get() {
     z_get_options_default(&opts);
     z_owned_bytes_t payload, attachment;
     z_bytes_encode_from_int32(&attachment, 16);
-    opts.payload = &payload;  
+    opts.payload = &payload;
     z_bytes_encode_from_int32(&payload, 16);
     opts.attachment = &attachment;
     z_owned_closure_reply_t closure;

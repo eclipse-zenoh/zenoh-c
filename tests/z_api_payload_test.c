@@ -19,7 +19,7 @@
 #include "zenoh.h"
 
 #undef NDEBUG
-#include <assert.h> 
+#include <assert.h>
 
 void test_reader_seek() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -128,15 +128,15 @@ void test_slice() {
     z_drop(z_move(out2));
 }
 
-#define TEST_ARITHMETIC(TYPE, EXT, VAL) \
-{ \
-    TYPE in = VAL, out; \
-    z_owned_bytes_t payload; \
-    z_bytes_encode_from_##EXT (&payload, in); \
-    z_bytes_decode_into_##EXT (z_loan(payload), &out); \
-    assert(in == out); \
-    z_drop(z_move(payload)); \
-} \
+#define TEST_ARITHMETIC(TYPE, EXT, VAL)                   \
+    {                                                     \
+        TYPE in = VAL, out;                               \
+        z_owned_bytes_t payload;                          \
+        z_bytes_encode_from_##EXT(&payload, in);          \
+        z_bytes_decode_into_##EXT(z_loan(payload), &out); \
+        assert(in == out);                                \
+        z_drop(z_move(payload));                          \
+    }
 
 void test_arithmetic() {
     TEST_ARITHMETIC(uint8_t, uint8, 5);
@@ -163,7 +163,6 @@ bool iter_body(z_owned_bytes_t* b, void* context) {
     *val = *val + 1;
     return true;
 }
-
 
 void test_iter() {
     uint8_t data_out[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -204,7 +203,7 @@ void test_pair() {
     assert(d == 123.45);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     test_reader_seek();
     test_reader_read();
     test_writer();

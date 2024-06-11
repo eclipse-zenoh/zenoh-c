@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include "zenoh.h"
 
 const char *keyexpr = "demo/example/zenoh-c-queryable";
@@ -26,24 +27,22 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_view_string_t params;
     z_query_parameters(query, &params);
 
-    const z_loaned_bytes_t* payload =  z_value_payload(z_query_value(query));
+    const z_loaned_bytes_t *payload = z_value_payload(z_query_value(query));
     if (z_bytes_len(payload) > 0) {
         z_owned_string_t payload_string;
         z_bytes_decode_into_string(payload, &payload_string);
 
-        printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n", 
-            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
-            (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)),
-            (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
+        printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n", (int)z_string_len(z_loan(key_string)),
+               z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)),
+               (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
         z_drop(z_move(payload_string));
     } else {
-        printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", 
-        (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
-        (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)));
+        printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", (int)z_string_len(z_loan(key_string)),
+               z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)));
     }
     z_query_reply_options_t options;
     z_query_reply_options_default(&options);
-    
+
     z_owned_bytes_t reply_payload;
     z_bytes_encode_from_string(&reply_payload, value);
 
@@ -83,7 +82,7 @@ int main(int argc, char **argv) {
 
     printf("Declaring Queryable on '%s'...\n", keyexpr);
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, (void*)keyexpr);
+    z_closure(&callback, query_handler, NULL, (void *)keyexpr);
     z_owned_queryable_t qable;
 
     if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {

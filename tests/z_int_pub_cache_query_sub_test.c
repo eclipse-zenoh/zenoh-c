@@ -39,7 +39,7 @@ int run_publisher() {
     }
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) , 0) {
+    if (z_open(&s, z_move(config)), 0) {
         perror("Unable to open session!");
         return -1;
     }
@@ -133,7 +133,7 @@ int run_subscriber() {
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
-    ze_owned_querying_subscriber_t sub ;
+    ze_owned_querying_subscriber_t sub;
     ze_declare_querying_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL);
     if (!z_check(sub)) {
         perror("Unable to declare subscriber!");

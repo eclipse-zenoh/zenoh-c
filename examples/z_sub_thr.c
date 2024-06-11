@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
+#include <zenoh_macros.h>
 
 #include "zenoh.h"
-#include <zenoh_macros.h>
 
 #define N 1000000
 
@@ -34,7 +34,7 @@ z_stats_t *z_stats_make() {
     return stats;
 }
 
-void on_sample(const z_loaned_sample_t* sample, void *context) {
+void on_sample(const z_loaned_sample_t *sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
         stats->start = z_clock_now();
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     }
 
     z_owned_session_t s;
-    
+
     if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
