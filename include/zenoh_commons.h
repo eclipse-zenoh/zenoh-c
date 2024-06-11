@@ -2295,6 +2295,14 @@ ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
  */
 ZENOHC_API void z_query_drop(struct z_owned_query_t *this_);
 /**
+ * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload
+ * encoding</a>.
+ *
+ * Returns NULL if query does not hame an encoding.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_query_encoding(const struct z_loaned_query_t *this_);
+/**
  * Gets query key expression.
  */
 ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loaned_query_t *this_);
@@ -2311,6 +2319,13 @@ ZENOHC_API void z_query_null(struct z_owned_query_t *this_);
  */
 ZENOHC_API
 void z_query_parameters(const struct z_loaned_query_t *this_, struct z_view_string_t *parameters);
+/**
+ * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
+ *
+ * Returns NULL if query does not contain a payload.
+ */
+ZENOHC_API
+const struct z_loaned_bytes_t *z_query_payload(const struct z_loaned_query_t *this_);
 /**
  * Sends a reply to a query.
  *
@@ -2380,14 +2395,6 @@ ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *th
  */
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
 /**
- * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload
- * value</a>.
- *
- * Returns NULL if query does not contain a value.
- */
-ZENOHC_API
-const struct z_loaned_value_t *z_query_value(const struct z_loaned_query_t *this_);
-/**
  * Returns ``true`` if queryable is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *this_);
@@ -2442,11 +2449,18 @@ ZENOHC_API void z_reply_clone(const struct z_loaned_reply_t *this_, struct z_own
  */
 ZENOHC_API void z_reply_drop(struct z_owned_reply_t *this_);
 /**
+ * Yields the encoding of the contents of the reply by asserting it indicates a failure.
+ *
+ * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_reply_err_encoding(const struct z_loaned_reply_t *this_);
+/**
  * Yields the contents of the reply by asserting it indicates a failure.
  *
  * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
  */
-ZENOHC_API const struct z_loaned_value_t *z_reply_err(const struct z_loaned_reply_t *this_);
+ZENOHC_API const struct z_loaned_bytes_t *z_reply_err_payload(const struct z_loaned_reply_t *this_);
 /**
  * Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
  */
@@ -3336,30 +3350,6 @@ ZENOHC_API z_error_t z_undeclare_queryable(struct z_owned_queryable_t *this_);
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API z_error_t z_undeclare_subscriber(struct z_owned_subscriber_t *this_);
-/**
- * Returns ``true`` if value is in non-default state, ``false`` otherwise.
- */
-ZENOHC_API bool z_value_check(const struct z_owned_value_t *this_);
-/**
- * Frees the memory and resets the value it to its default value.
- */
-ZENOHC_API void z_value_drop(struct z_owned_value_t *this_);
-/**
- * Returns value encoding.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_value_encoding(const struct z_loaned_value_t *this_);
-/**
- * Borrows value.
- */
-ZENOHC_API const struct z_loaned_value_t *z_value_loan(const struct z_owned_value_t *this_);
-/**
- * Constructs an empty `z_owned_value_t`.
- */
-ZENOHC_API void z_value_null(struct z_owned_value_t *this_);
-/**
- * Returns value payload.
- */
-ZENOHC_API const struct z_loaned_bytes_t *z_value_payload(const struct z_loaned_value_t *this_);
 /**
  * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
  */

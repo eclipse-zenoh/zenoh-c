@@ -32,8 +32,9 @@ use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::z_closure_reply_loan;
 use crate::z_consolidation_mode_t;
+use crate::z_loaned_bytes_t;
+use crate::z_loaned_encoding_t;
 use crate::z_loaned_sample_t;
-use crate::z_loaned_value_t;
 use crate::z_owned_bytes_t;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;
@@ -72,10 +73,24 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_value_t {
+pub unsafe extern "C" fn z_reply_err_payload(this: &z_loaned_reply_t) -> *const z_loaned_bytes_t {
     match this.transmute_ref().result() {
         Ok(_) => null(),
-        Err(v) => v.transmute_handle(),
+        Err(v) => v.payload().transmute_handle(),
+    }
+}
+
+/// Yields the encoding of the contents of the reply by asserting it indicates a failure.
+///
+/// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_err_encoding(
+    this: &z_loaned_reply_t,
+) -> *const z_loaned_encoding_t {
+    match this.transmute_ref().result() {
+        Ok(_) => null(),
+        Err(v) => v.encoding().transmute_handle(),
     }
 }
 

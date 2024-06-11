@@ -45,7 +45,6 @@ use zenoh::sample::Sample;
 use zenoh::sample::SampleKind;
 use zenoh::sample::SourceInfo;
 use zenoh::time::Timestamp;
-use zenoh::value::Value;
 use zenoh_protocol::core::EntityGlobalId;
 use zenoh_protocol::zenoh::Consolidation;
 
@@ -310,48 +309,6 @@ pub extern "C" fn z_encoding_check(this: &'static z_owned_encoding_t) -> bool {
 #[no_mangle]
 pub extern "C" fn z_encoding_loan(this: &z_owned_encoding_t) -> &z_loaned_encoding_t {
     this.transmute_ref().transmute_handle()
-}
-
-pub use crate::opaque_types::z_owned_value_t;
-decl_transmute_owned!(Value, z_owned_value_t);
-pub use crate::opaque_types::z_loaned_value_t;
-decl_transmute_handle!(Value, z_loaned_value_t);
-
-/// Constructs an empty `z_owned_value_t`.
-#[no_mangle]
-pub extern "C" fn z_value_null(this: *mut MaybeUninit<z_owned_value_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
-}
-
-/// Returns ``true`` if value is in non-default state, ``false`` otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_value_check(this: &'static z_owned_value_t) -> bool {
-    !this.transmute_ref().is_empty()
-}
-
-/// Returns value payload.
-#[no_mangle]
-pub extern "C" fn z_value_payload(this: &z_loaned_value_t) -> &z_loaned_bytes_t {
-    this.transmute_ref().payload().transmute_handle()
-}
-
-/// Returns value encoding.
-#[no_mangle]
-pub extern "C" fn z_value_encoding(this: &z_loaned_value_t) -> &z_loaned_encoding_t {
-    this.transmute_ref().encoding().transmute_handle()
-}
-
-/// Borrows value.
-#[no_mangle]
-pub extern "C" fn z_value_loan(this: &z_owned_value_t) -> &z_loaned_value_t {
-    this.transmute_ref().transmute_handle()
-}
-
-/// Frees the memory and resets the value it to its default value.
-#[no_mangle]
-pub extern "C" fn z_value_drop(this: &mut z_owned_value_t) {
-    Inplace::drop(this.transmute_mut());
 }
 
 /// The locality of samples to be received by subscribers or targeted by publishers.
