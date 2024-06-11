@@ -16,7 +16,7 @@ const GENERATION_PATH: &str = "include/zenoh-gen.h";
 const PREPROCESS_PATH: &str = "include/zenoh-cpp.h";
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
 const HEADER: &str = r"//
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -28,6 +28,7 @@ const HEADER: &str = r"//
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+// clang-format off
 #ifdef DOCS
 #define ALIGN(n)
 #define ZENOHC_API
