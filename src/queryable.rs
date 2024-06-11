@@ -135,7 +135,7 @@ pub struct z_query_reply_options_t {
 pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
     *this = z_query_reply_options_t {
         encoding: null_mut(),
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: null_mut(),
