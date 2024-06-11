@@ -53,7 +53,7 @@ pub struct z_publisher_options_t {
     pub priority: z_priority_t,
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith
     pub is_express: bool,
-    /// The allowed destination for thsi publisher.
+    /// The allowed destination for this publisher.
     pub allowed_destination: zcu_locality_t,
 }
 

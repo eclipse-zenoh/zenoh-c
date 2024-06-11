@@ -435,7 +435,7 @@ typedef struct z_publisher_options_t {
    */
   bool is_express;
   /**
-   * The allowed destination for thsi publisher.
+   * The allowed destination for this publisher.
    */
   enum zcu_locality_t allowed_destination;
 } z_publisher_options_t;
@@ -508,6 +508,22 @@ typedef struct z_get_options_t {
    * An optional encoding of the query payload and or attachment.
    */
   struct z_owned_encoding_t *encoding;
+  /**
+   * The congestion control to apply when routing the query.
+   */
+  enum z_congestion_control_t congestion_control;
+  /**
+   * The allowed destination for the query.
+   */
+  enum zcu_locality_t allowed_destination;
+  /**
+   * The accepted replies for the query.
+   */
+  enum zcu_reply_keyexpr_t accept_replies;
+  /**
+   * The priority of the query.
+   */
+  enum z_priority_t priority;
   /**
    * The source info for the query.
    */
