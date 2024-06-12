@@ -498,6 +498,7 @@ Functions
 .. doxygenfunction:: z_publisher_delete
 .. doxygenfunction:: z_undeclare_publisher
 .. doxygenfunction:: z_publisher_keyexpr
+.. doxygenfunction:: z_publisher_id
 
 .. doxygenfunction:: z_publisher_null
 .. doxygenfunction:: z_publisher_loan
