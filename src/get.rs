@@ -31,6 +31,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
+use crate::z_id_t;
 use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
@@ -117,6 +118,13 @@ pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned
         Ok(_) => null(),
         Err(v) => v.transmute_handle(),
     }
+}
+
+/// Gets the id of the zenoh instance that answered this Reply.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_replier_id(this: &z_loaned_reply_t) -> z_id_t {
+    this.transmute_ref().replier_id().to_le_bytes().into()
 }
 
 /// Constructs the reply in its gravestone state.
