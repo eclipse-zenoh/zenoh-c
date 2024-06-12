@@ -17,30 +17,26 @@ use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::ptr::null;
 use std::ptr::null_mut;
+use zenoh::publisher::Priority;
+use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::ValueBuilderTrait;
 use zenoh::selector::Selector;
+use zenoh_protocol::core::CongestionControl;
 
 use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
-use crate::z_closure_reply_loan;
-use crate::z_consolidation_mode_t;
-use crate::z_loaned_bytes_t;
-use crate::z_loaned_encoding_t;
-use crate::z_loaned_sample_t;
-use crate::z_owned_bytes_t;
-use crate::z_owned_encoding_t;
-use crate::z_owned_source_info_t;
-use crate::z_query_target_t;
+use crate::transmute::{
+    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+    TransmuteUninitPtr,
+};
 use crate::{
-    z_closure_reply_call, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t,
+    z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
+    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
+    z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t,
+    z_owned_source_info_t, z_priority_t, z_query_target_t, zcu_locality_default, zcu_locality_t,
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 use ::zenoh::core::Wait;
 use zenoh::value::Value;
@@ -148,6 +144,14 @@ pub struct z_get_options_t {
     pub payload: *mut z_owned_bytes_t,
     /// An optional encoding of the query payload and or attachment.
     pub encoding: *mut z_owned_encoding_t,
+    /// The congestion control to apply when routing the query.
+    pub congestion_control: z_congestion_control_t,
+    /// The allowed destination for the query.
+    pub allowed_destination: zcu_locality_t,
+    /// The accepted replies for the query.
+    pub accept_replies: zcu_reply_keyexpr_t,
+    /// The priority of the query.
+    pub priority: z_priority_t,
     /// The source info for the query.
     pub source_info: *mut z_owned_source_info_t,
     /// An optional attachment to attach to the query.
@@ -162,6 +166,10 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
     *this = z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
+        congestion_control: CongestionControl::default().into(),
+        allowed_destination: zcu_locality_default(),
+        accept_replies: zcu_reply_keyexpr_default(),
+        priority: Priority::default().into(),
         timeout_ms: 0,
         payload: null_mut(),
         encoding: null_mut(),
@@ -219,7 +227,11 @@ pub unsafe extern "C" fn z_get(
 
         get = get
             .consolidation(options.consolidation)
-            .target(options.target.into());
+            .target(options.target.into())
+            .congestion_control(options.congestion_control.into())
+            .allowed_destination(options.allowed_destination.into())
+            .accept_replies(options.accept_replies.into())
+            .priority(options.priority.into());
 
         if options.timeout_ms != 0 {
             get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
