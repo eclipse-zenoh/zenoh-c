@@ -2311,24 +2311,6 @@ z_error_t z_publisher_put(const struct z_loaned_publisher_t *this_,
  */
 ZENOHC_API void z_publisher_put_options_default(struct z_publisher_put_options_t *this_);
 /**
- * Sets allowed destination for the publisher
- */
-ZENOHC_API
-void z_publisher_set_allowed_destination(struct z_loaned_publisher_t *publisher,
-                                         enum zcu_locality_t destination);
-/**
- * Sets congestion control for the publisher
- */
-ZENOHC_API
-void z_publisher_set_congestion_control(struct z_loaned_publisher_t *publisher,
-                                        enum z_congestion_control_t congestion_control);
-/**
- * Sets priority for the publisher
- */
-ZENOHC_API
-void z_publisher_set_priority(struct z_loaned_publisher_t *publisher,
-                              enum z_priority_t priority);
-/**
  * Publishes data on specified key expression.
  *
  * @param session: The Zenoh session.
