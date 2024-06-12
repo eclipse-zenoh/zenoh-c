@@ -2268,6 +2268,10 @@ ZENOHC_API void z_publisher_delete_options_default(struct z_publisher_delete_opt
  */
 ZENOHC_API void z_publisher_drop(struct z_owned_publisher_t *this_);
 /**
+ * Returns the ID of the publisher.
+ */
+ZENOHC_API struct z_entity_global_id_t z_publisher_id(const struct z_loaned_publisher_t *publisher);
+/**
  * Returns the key expression of the publisher.
  */
 ZENOHC_API
