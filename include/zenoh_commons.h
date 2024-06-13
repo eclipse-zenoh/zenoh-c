@@ -2595,6 +2595,10 @@ ZENOHC_API void z_reply_null(struct z_owned_reply_t *this_);
  */
 ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *this_);
 /**
+ * Gets the id of the zenoh instance that answered this Reply.
+ */
+ZENOHC_API struct z_id_t z_reply_replier_id(const struct z_loaned_reply_t *this_);
+/**
  * Constructs send and recieve ends of the ring channel
  */
 ZENOHC_API
