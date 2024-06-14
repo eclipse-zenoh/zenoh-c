@@ -180,7 +180,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_owned_shm(
     let payload = this.transmute_ref();
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
-            Inplace::init(dst.transmute_uninit_ptr(), Some(s.clone().to_owned()));
+            Inplace::init(dst.transmute_uninit_ptr(), Some(s.to_owned()));
             errors::Z_OK
         }
         Err(e) => {
