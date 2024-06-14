@@ -35,8 +35,8 @@ use crate::{
 use crate::{zcu_locality_default, zcu_locality_t};
 use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
+use zenoh::sample::EncodingBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::ValueBuilderTrait;
 use zenoh::session::Session;
 use zenoh::subscriber::Reliability;
 use zenoh_ext::*;

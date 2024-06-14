@@ -4,12 +4,10 @@ use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 use std::thread::JoinHandle;
-use zenoh::buffers::ZBuf;
 use zenoh::bytes::ZBytesIterator;
 use zenoh::bytes::ZBytesWriter;
 use zenoh::bytes::{ZBytes, ZBytesReader};
 use zenoh::config::Config;
-use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
 use zenoh::handlers::DefaultHandler;
 use zenoh::handlers::RingChannelHandler;
@@ -17,8 +15,8 @@ use zenoh::key_expr::KeyExpr;
 use zenoh::liveliness::LivelinessToken;
 use zenoh::publisher::MatchingListener;
 use zenoh::publisher::Publisher;
-use zenoh::query::Reply;
-use zenoh::queryable::Query;
+use zenoh::query::{Reply, ReplyError};
+use zenoh::query::Query;
 use zenoh::queryable::Queryable;
 use zenoh::sample::Sample;
 use zenoh::sample::SourceInfo;
@@ -26,11 +24,10 @@ use zenoh::scouting::Hello;
 use zenoh::session::Session;
 use zenoh::subscriber::Subscriber;
 use zenoh::time::Timestamp;
-use zenoh::value::Value;
-use zenoh_protocol::core::EntityGlobalId;
+use zenoh::info::{ZenohId, EntityGlobalId};
 
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use core::ffi::c_void;
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::shm::{
     SharedMemoryClient, ProtocolID, SharedMemoryClientStorage, AllocLayout,DynamicProtocolID, BufAllocResult,
@@ -108,7 +105,7 @@ get_opaque_type_data!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
 get_opaque_type_data!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);
 
 /// An iterator over multi-element serialized data
-get_opaque_type_data!(ZBytesIterator<'static, ZBuf>, z_bytes_iterator_t);
+get_opaque_type_data!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
 
 /// The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
@@ -121,9 +118,9 @@ get_opaque_type_data!(Option<Reply>, z_owned_reply_t);
 get_opaque_type_data!(Reply, z_loaned_reply_t);
 
 /// A Zenoh reply error a compination of reply error payload and its encoding.
-get_opaque_type_data!(Value, z_owned_reply_err_t);
+get_opaque_type_data!(ReplyError, z_owned_reply_err_t);
 /// A loaned Zenoh reply error.
-get_opaque_type_data!(Value, z_loaned_reply_err_t);
+get_opaque_type_data!(ReplyError, z_loaned_reply_err_t);
 
 /// An owned Zenoh query received by a queryable.
 ///

@@ -16,8 +16,8 @@ use crate::{
     errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_owned_closure_zid_t,
 };
 use std::mem::MaybeUninit;
-use zenoh::config::ZenohId;
 use zenoh::core::Wait;
+use zenoh::info::ZenohId;
 use zenoh::session::SessionDeclarations;
 
 pub use crate::opaque_types::z_id_t;

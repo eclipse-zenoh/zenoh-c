@@ -22,13 +22,13 @@ use crate::transmute::TransmuteRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
 use crate::z_timestamp_t;
+use zenoh::core::Priority;
 use zenoh::core::Wait;
 use zenoh::publisher::CongestionControl;
-use zenoh::publisher::Priority;
+use zenoh::sample::EncodingBuilderTrait;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::TimestampBuilderTrait;
-use zenoh::sample::ValueBuilderTrait;
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]

@@ -9,7 +9,7 @@ use libc::c_void;
 use std::{mem::MaybeUninit, sync::Arc};
 use zenoh::{
     handlers::{self, IntoHandler, RingChannelHandler},
-    queryable::Query,
+    query::Query,
 };
 
 pub use crate::opaque_types::z_loaned_fifo_handler_query_t;

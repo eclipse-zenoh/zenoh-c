@@ -13,10 +13,10 @@ use std::mem::MaybeUninit;
 use std::os::raw::c_void;
 use std::slice::from_raw_parts;
 use std::slice::from_raw_parts_mut;
-use zenoh::buffers::{ZBuf, ZSlice, ZSliceBuffer};
 use zenoh::bytes::{
     Deserialize, Serialize, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter, ZSerde,
 };
+use zenoh::internal::buffers::{ZBuf, ZSlice, ZSliceBuffer};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::errors::Z_ENULL;
@@ -131,6 +131,8 @@ pub unsafe extern "C" fn z_bytes_decode_into_slice_map(
     let payload = this.transmute_ref();
     let iter = payload.iter::<(Vec<u8>, Vec<u8>)>();
     let mut hm = ZHashMap::new();
+
+    let iter = iter.filter_map(|val| val.ok());
     for (k, v) in iter {
         hm.insert(k.into(), v.into());
     }
@@ -592,13 +594,13 @@ pub extern "C" fn z_bytes_encode_from_iter(
 }
 
 pub use crate::z_bytes_iterator_t;
-decl_transmute_handle!(ZBytesIterator<'static, ZBuf>, z_bytes_iterator_t);
+decl_transmute_handle!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
 /// Returns an iterator for multi-piece serialized data.
 ///
 /// The `data` should outlive the iterator.
 #[no_mangle]
 pub extern "C" fn z_bytes_get_iterator(data: &z_loaned_bytes_t) -> z_bytes_iterator_t {
-    *data.transmute_ref().iter::<ZBuf>().transmute_handle()
+    *data.transmute_ref().iter::<ZBytes>().transmute_handle()
 }
 
 /// Constructs `z_owned_bytes` object corresponding to the next element of encoded data.
@@ -612,7 +614,10 @@ pub extern "C" fn z_bytes_iterator_next(
 ) -> bool {
     match iter.transmute_mut().next() {
         Some(buf) => {
-            Inplace::init(out.transmute_uninit_ptr(), buf.into());
+            // this is safe because anything is convertible to ZBytes
+            Inplace::init(out.transmute_uninit_ptr(), unsafe {
+                buf.unwrap_unchecked()
+            });
             true
         }
         None => {
@@ -631,8 +636,9 @@ pub extern "C" fn z_bytes_iter(
     context: *mut c_void,
 ) -> z_error_t {
     let mut res = Z_OK;
-    for zb in this.transmute_ref().iter::<ZBuf>() {
-        let b = ZBytes::new(zb);
+    for zb in this.transmute_ref().iter::<ZBytes>() {
+        // this is safe because literally any payload is convertable into ZBuf
+        let b = unsafe { zb.unwrap_unchecked() };
         res = iterator_body(b.transmute_handle(), context);
         if res != Z_OK {
             break;
