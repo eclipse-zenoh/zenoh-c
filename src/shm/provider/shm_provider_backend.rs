@@ -16,8 +16,8 @@ use std::fmt::Debug;
 
 use libc::c_void;
 use zenoh::core::Result;
-use zenoh::shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, SharedMemoryProviderBackend};
-use zenoh_util::core::zerror;
+use zenoh::internal::zerror;
+use zenoh::shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend};
 
 use crate::context::DroppableContext;
 use crate::transmute::{TransmuteIntoHandle, TransmuteRef};
@@ -25,10 +25,10 @@ use crate::{z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memo
 
 use super::chunk::z_chunk_descriptor_t;
 
-/// A callbacks for SharedMemoryProviderBackend
+/// A callbacks for ShmProviderBackend
 #[derive(Debug)]
 #[repr(C)]
-pub struct zc_shared_memory_provider_backend_callbacks_t {
+pub struct zc_shm_provider_backend_callbacks_t {
     alloc_fn: unsafe extern "C" fn(
         out_result: *mut z_owned_chunk_alloc_result_t,
         layout: &z_loaned_memory_layout_t,
@@ -41,27 +41,24 @@ pub struct zc_shared_memory_provider_backend_callbacks_t {
 }
 
 #[derive(Debug)]
-pub struct DynamicSharedMemoryProviderBackend<TContext>
+pub struct DynamicShmProviderBackend<TContext>
 where
     TContext: DroppableContext,
 {
     context: TContext,
-    callbacks: zc_shared_memory_provider_backend_callbacks_t,
+    callbacks: zc_shm_provider_backend_callbacks_t,
 }
 
-impl<TContext> DynamicSharedMemoryProviderBackend<TContext>
+impl<TContext> DynamicShmProviderBackend<TContext>
 where
     TContext: DroppableContext,
 {
-    pub fn new(
-        context: TContext,
-        callbacks: zc_shared_memory_provider_backend_callbacks_t,
-    ) -> Self {
+    pub fn new(context: TContext, callbacks: zc_shm_provider_backend_callbacks_t) -> Self {
         Self { context, callbacks }
     }
 }
 
-impl<TContext> SharedMemoryProviderBackend for DynamicSharedMemoryProviderBackend<TContext>
+impl<TContext> ShmProviderBackend for DynamicShmProviderBackend<TContext>
 where
     TContext: DroppableContext,
 {

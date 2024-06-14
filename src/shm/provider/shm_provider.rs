@@ -16,8 +16,8 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::shm::{
-    BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc,
-    SharedMemoryProvider, SharedMemoryProviderBuilder,
+    BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc, ShmProvider,
+    ShmProviderBuilder,
 };
 
 use crate::{
@@ -25,51 +25,45 @@ use crate::{
     errors::z_error_t,
     shm::{
         common::types::z_protocol_id_t,
-        protocol_implementations::posix::posix_shared_memory_provider::PosixSharedMemoryProvider,
+        protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
     },
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
-    z_loaned_shared_memory_provider_t, z_owned_buf_alloc_result_t,
-    z_owned_shared_memory_provider_t, z_owned_shm_mut_t,
+    z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
 use super::{
     chunk::z_allocated_chunk_t,
-    shared_memory_provider_backend::{
-        zc_shared_memory_provider_backend_callbacks_t, DynamicSharedMemoryProviderBackend,
-    },
-    shared_memory_provider_impl::{
-        alloc, alloc_async, available, defragment, garbage_collect, map,
-    },
+    shm_provider_backend::{zc_shm_provider_backend_callbacks_t, DynamicShmProviderBackend},
+    shm_provider_impl::{alloc, alloc_async, available, defragment, garbage_collect, map},
     types::z_alloc_alignment_t,
 };
 
-pub type DynamicSharedMemoryProvider =
-    SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>;
+pub type DynamicShmProvider = ShmProvider<DynamicProtocolID, DynamicShmProviderBackend<Context>>;
 
-pub type DynamicSharedMemoryProviderThreadsafe =
-    SharedMemoryProvider<DynamicProtocolID, DynamicSharedMemoryProviderBackend<ThreadsafeContext>>;
+pub type DynamicShmProviderThreadsafe =
+    ShmProvider<DynamicProtocolID, DynamicShmProviderBackend<ThreadsafeContext>>;
 
 pub enum CSHMProvider {
-    Posix(PosixSharedMemoryProvider),
-    Dynamic(DynamicSharedMemoryProvider),
-    DynamicThreadsafe(DynamicSharedMemoryProviderThreadsafe),
+    Posix(PosixShmProvider),
+    Dynamic(DynamicShmProvider),
+    DynamicThreadsafe(DynamicShmProviderThreadsafe),
 }
 
-decl_transmute_owned!(Option<CSHMProvider>, z_owned_shared_memory_provider_t);
-decl_transmute_handle!(CSHMProvider, z_loaned_shared_memory_provider_t);
+decl_transmute_owned!(Option<CSHMProvider>, z_owned_shm_provider_t);
+decl_transmute_handle!(CSHMProvider, z_loaned_shm_provider_t);
 
 /// Creates a new SHM Provider
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_new(
-    this: *mut MaybeUninit<z_owned_shared_memory_provider_t>,
+pub extern "C" fn z_shm_provider_new(
+    this: *mut MaybeUninit<z_owned_shm_provider_t>,
     id: z_protocol_id_t,
     context: zc_context_t,
-    callbacks: zc_shared_memory_provider_backend_callbacks_t,
+    callbacks: zc_shm_provider_backend_callbacks_t,
 ) {
-    let backend = DynamicSharedMemoryProviderBackend::new(context.into(), callbacks);
-    let provider = SharedMemoryProviderBuilder::builder()
+    let backend = DynamicShmProviderBackend::new(context.into(), callbacks);
+    let provider = ShmProviderBuilder::builder()
         .dynamic_protocol_id(id)
         .backend(backend)
         .res();
@@ -82,14 +76,14 @@ pub extern "C" fn z_shared_memory_provider_new(
 
 /// Creates a new threadsafe SHM Provider
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_threadsafe_new(
-    this: *mut MaybeUninit<z_owned_shared_memory_provider_t>,
+pub extern "C" fn z_shm_provider_threadsafe_new(
+    this: *mut MaybeUninit<z_owned_shm_provider_t>,
     id: z_protocol_id_t,
     context: zc_threadsafe_context_t,
-    callbacks: zc_shared_memory_provider_backend_callbacks_t,
+    callbacks: zc_shm_provider_backend_callbacks_t,
 ) {
-    let backend = DynamicSharedMemoryProviderBackend::new(context.into(), callbacks);
-    let provider = SharedMemoryProviderBuilder::builder()
+    let backend = DynamicShmProviderBackend::new(context.into(), callbacks);
+    let provider = ShmProviderBuilder::builder()
         .dynamic_protocol_id(id)
         .backend(backend)
         .res();
@@ -102,23 +96,19 @@ pub extern "C" fn z_shared_memory_provider_threadsafe_new(
 
 /// Constructs SHM Provider in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_null(
-    this: *mut MaybeUninit<z_owned_shared_memory_provider_t>,
-) {
+pub extern "C" fn z_shm_provider_null(this: *mut MaybeUninit<z_owned_shm_provider_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_check(this: &z_owned_shared_memory_provider_t) -> bool {
+pub extern "C" fn z_shm_provider_check(this: &z_owned_shm_provider_t) -> bool {
     this.transmute_ref().is_some()
 }
 
 /// Borrows SHM Provider
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_loan(
-    this: &z_owned_shared_memory_provider_t,
-) -> &z_loaned_shared_memory_provider_t {
+pub extern "C" fn z_shm_provider_loan(this: &z_owned_shm_provider_t) -> &z_loaned_shm_provider_t {
     let this = this.transmute_ref();
     let this = unwrap_ref_unchecked(this);
     this.transmute_handle()
@@ -126,14 +116,14 @@ pub extern "C" fn z_shared_memory_provider_loan(
 
 /// Deletes SHM Provider
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_drop(this: &mut z_owned_shared_memory_provider_t) {
+pub extern "C" fn z_shm_provider_drop(this: &mut z_owned_shm_provider_t) {
     let _ = this.transmute_mut().take();
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_alloc(
+pub extern "C" fn z_shm_provider_alloc(
     out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
@@ -141,9 +131,9 @@ pub extern "C" fn z_shared_memory_provider_alloc(
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_alloc_gc(
+pub extern "C" fn z_shm_provider_alloc_gc(
     out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
@@ -151,9 +141,9 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc(
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag(
+pub extern "C" fn z_shm_provider_alloc_gc_defrag(
     out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
@@ -161,9 +151,9 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag(
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_dealloc(
+pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
     out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
@@ -171,9 +161,9 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_dealloc(
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_blocking(
+pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
     out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
@@ -181,9 +171,9 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_blocking(
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_async(
+pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
     out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    provider: &'static z_loaned_shared_memory_provider_t,
+    provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
     result_context: zc_threadsafe_context_t,
@@ -204,30 +194,24 @@ pub extern "C" fn z_shared_memory_provider_alloc_gc_defrag_async(
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_defragment(
-    provider: &z_loaned_shared_memory_provider_t,
-) {
+pub extern "C" fn z_shm_provider_defragment(provider: &z_loaned_shm_provider_t) {
     defragment(provider);
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_garbage_collect(
-    provider: &z_loaned_shared_memory_provider_t,
-) {
+pub extern "C" fn z_shm_provider_garbage_collect(provider: &z_loaned_shm_provider_t) {
     garbage_collect(provider);
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_available(
-    provider: &z_loaned_shared_memory_provider_t,
-) -> usize {
+pub extern "C" fn z_shm_provider_available(provider: &z_loaned_shm_provider_t) -> usize {
     available(provider)
 }
 
 #[no_mangle]
-pub extern "C" fn z_shared_memory_provider_map(
+pub extern "C" fn z_shm_provider_map(
     out_result: *mut MaybeUninit<z_owned_shm_mut_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
 ) {

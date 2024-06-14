@@ -34,9 +34,10 @@ use crate::z_owned_string_t;
 use crate::z_string_from_substring;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
+use zenoh::core::Priority;
 use zenoh::encoding::Encoding;
+use zenoh::info::EntityGlobalId;
 use zenoh::publisher::CongestionControl;
-use zenoh::publisher::Priority;
 use zenoh::query::ConsolidationMode;
 use zenoh::query::QueryTarget;
 use zenoh::query::ReplyKeyExpr;
@@ -45,7 +46,7 @@ use zenoh::sample::Sample;
 use zenoh::sample::SampleKind;
 use zenoh::sample::SourceInfo;
 use zenoh::time::Timestamp;
-use zenoh_protocol::core::EntityGlobalId;
+use zenoh_protocol::core::EntityGlobalIdProto;
 use zenoh_protocol::zenoh::Consolidation;
 
 /// A zenoh unsigned integer
@@ -91,7 +92,7 @@ pub extern "C" fn z_timestamp_new(
 ) -> errors::z_error_t {
     let timestamp = Timestamp::new(
         zenoh::time::NTP64(npt64_time),
-        (&zid.transmute_copy()).into(),
+        (zid.transmute_copy()).into(),
     );
     *this = timestamp.transmute_copy();
     errors::Z_OK
@@ -562,10 +563,11 @@ pub extern "C" fn z_entity_global_id_new(
     zid: &z_id_t,
     eid: u32,
 ) -> errors::z_error_t {
-    let entity_global_id = EntityGlobalId {
-        zid: zid.transmute_copy(),
+    let entity_global_id: EntityGlobalId = EntityGlobalIdProto {
+        zid: zid.transmute_copy().into(),
         eid,
-    };
+    }
+    .into();
     *this = entity_global_id.transmute_copy();
     errors::Z_OK
 }
@@ -573,12 +575,12 @@ pub extern "C" fn z_entity_global_id_new(
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
-    this.transmute_ref().zid.transmute_copy()
+    this.transmute_ref().zid().transmute_copy()
 }
 /// Returns the entity id of the entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
-    this.transmute_ref().eid
+    this.transmute_ref().eid()
 }
 pub use crate::opaque_types::z_loaned_source_info_t;
 decl_transmute_handle!(SourceInfo, z_loaned_source_info_t);

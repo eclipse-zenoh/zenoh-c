@@ -14,8 +14,8 @@
 
 use std::mem::MaybeUninit;
 
+use zenoh::internal::zerror;
 use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError};
-use zenoh_util::core::zerror;
 
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},

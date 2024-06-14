@@ -60,10 +60,10 @@ int main(int argc, char** argv) {
     z_alloc_alignment_t alignment = {0};
     z_owned_memory_layout_t layout;
     z_memory_layout_new(&layout, value_len, alignment);
-    z_owned_shared_memory_provider_t provider;
-    z_posix_shared_memory_provider_new(&provider, z_loan(layout));
+    z_owned_shm_provider_t provider;
+    z_posix_shm_provider_new(&provider, z_loan(layout));
     z_owned_buf_alloc_result_t alloc;
-    z_shared_memory_provider_alloc(&alloc, z_loan(provider), value_len, alignment);
+    z_shm_provider_alloc(&alloc, z_loan(provider), value_len, alignment);
 
     // Allocate SHM Buffer
     z_owned_shm_mut_t shm_mut;

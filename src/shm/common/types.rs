@@ -13,8 +13,8 @@
 //
 
 /// Unique protocol identifier.
-/// Here is a contract: it is up to user to make sure that incompatible SharedMemoryClient
-/// and SharedMemoryProviderBackend implementations will never use the same ProtocolID
+/// Here is a contract: it is up to user to make sure that incompatible ShmClient
+/// and ShmProviderBackend implementations will never use the same ProtocolID
 #[allow(non_camel_case_types)]
 pub type z_protocol_id_t = u32;
 

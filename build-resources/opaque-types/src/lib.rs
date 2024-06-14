@@ -4,12 +4,10 @@ use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 use std::thread::JoinHandle;
-use zenoh::buffers::ZBuf;
 use zenoh::bytes::ZBytesIterator;
 use zenoh::bytes::ZBytesWriter;
 use zenoh::bytes::{ZBytes, ZBytesReader};
 use zenoh::config::Config;
-use zenoh::config::ZenohId;
 use zenoh::encoding::Encoding;
 use zenoh::handlers::DefaultHandler;
 use zenoh::handlers::RingChannelHandler;
@@ -17,8 +15,8 @@ use zenoh::key_expr::KeyExpr;
 use zenoh::liveliness::LivelinessToken;
 use zenoh::publisher::MatchingListener;
 use zenoh::publisher::Publisher;
-use zenoh::query::Reply;
-use zenoh::queryable::Query;
+use zenoh::query::{Reply, ReplyError};
+use zenoh::query::Query;
 use zenoh::queryable::Queryable;
 use zenoh::sample::Sample;
 use zenoh::sample::SourceInfo;
@@ -26,16 +24,15 @@ use zenoh::scouting::Hello;
 use zenoh::session::Session;
 use zenoh::subscriber::Subscriber;
 use zenoh::time::Timestamp;
-use zenoh::value::Value;
-use zenoh_protocol::core::EntityGlobalId;
-
-use core::ffi::c_void;
+use zenoh::info::{ZenohId, EntityGlobalId};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use core::ffi::c_void;
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::shm::{
-    SharedMemoryClient, ProtocolID, SharedMemoryClientStorage, AllocLayout,DynamicProtocolID, BufAllocResult,
-    ChunkAllocResult, MemoryLayout, ZShmMut, ZShm, zshm, zshmmut, SharedMemoryProvider, ChunkDescriptor,
-    SharedMemoryProviderBackend, PosixSharedMemoryProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID
+    ShmClient, ProtocolID, ShmClientStorage, AllocLayout,DynamicProtocolID, BufAllocResult,
+    ChunkAllocResult, MemoryLayout, ZShmMut, ZShm, zshm, zshmmut, ShmProvider, ChunkDescriptor,
+    ShmProviderBackend, PosixShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID
 };
 
 #[macro_export]
@@ -108,7 +105,7 @@ get_opaque_type_data!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
 get_opaque_type_data!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);
 
 /// An iterator over multi-element serialized data
-get_opaque_type_data!(ZBytesIterator<'static, ZBuf>, z_bytes_iterator_t);
+get_opaque_type_data!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
 
 /// The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
@@ -121,9 +118,9 @@ get_opaque_type_data!(Option<Reply>, z_owned_reply_t);
 get_opaque_type_data!(Reply, z_loaned_reply_t);
 
 /// A Zenoh reply error a compination of reply error payload and its encoding.
-get_opaque_type_data!(Value, z_owned_reply_err_t);
+get_opaque_type_data!(ReplyError, z_owned_reply_err_t);
 /// A loaned Zenoh reply error.
-get_opaque_type_data!(Value, z_loaned_reply_err_t);
+get_opaque_type_data!(ReplyError, z_loaned_reply_err_t);
 
 /// An owned Zenoh query received by a queryable.
 ///
@@ -256,22 +253,22 @@ get_opaque_type_data!(Hello, z_loaned_hello_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned SHM Client
-get_opaque_type_data!(Option<Arc<dyn SharedMemoryClient>>, z_owned_shared_memory_client_t);
+get_opaque_type_data!(Option<Arc<dyn ShmClient>>, z_owned_shm_client_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned list of SHM Clients
-get_opaque_type_data!(Option<Vec<(ProtocolID, Arc<dyn SharedMemoryClient>)>>, zc_owned_shared_memory_client_list_t);
+get_opaque_type_data!(Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>, zc_owned_shm_client_list_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// A loaned list of SHM Clients
-get_opaque_type_data!(Vec<(ProtocolID, Arc<dyn SharedMemoryClient>)>, zc_loaned_shared_memory_client_list_t);
+get_opaque_type_data!(Vec<(ProtocolID, Arc<dyn ShmClient>)>, zc_loaned_shm_client_list_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned SHM Client Storage
-get_opaque_type_data!(Option<Arc<SharedMemoryClientStorage>>, z_owned_shared_memory_client_storage_t);
+get_opaque_type_data!(Option<Arc<ShmClientStorage>>, z_owned_shm_client_storage_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// A loaned SHM Client Storage
-get_opaque_type_data!(Arc<SharedMemoryClientStorage>, z_loaned_shared_memory_client_storage_t);
+get_opaque_type_data!(Arc<ShmClientStorage>, z_loaned_shm_client_storage_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned MemoryLayout
@@ -335,7 +332,7 @@ struct DummySHMProviderBackend {
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-impl SharedMemoryProviderBackend for DummySHMProviderBackend {
+impl ShmProviderBackend for DummySHMProviderBackend {
     fn alloc(&self, layout: &MemoryLayout) -> ChunkAllocResult {
         todo!()
     }
@@ -358,11 +355,11 @@ impl SharedMemoryProviderBackend for DummySHMProviderBackend {
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type DummySHMProvider = SharedMemoryProvider<DynamicProtocolID, DummySHMProviderBackend>;
+type DummySHMProvider = ShmProvider<DynamicProtocolID, DummySHMProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 type PosixSHMProvider =
-    SharedMemoryProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSharedMemoryProviderBackend>;
+    ShmProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 enum CDummySHMProvider {
@@ -371,15 +368,15 @@ enum CDummySHMProvider {
 } 
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// An owned SharedMemoryProvider
-get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shared_memory_provider_t);
+/// An owned ShmProvider
+get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shm_provider_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// A loaned SharedMemoryProvider
-get_opaque_type_data!(CDummySHMProvider, z_loaned_shared_memory_provider_t);
+/// A loaned ShmProvider
+get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
 
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type PosixAllocLayout = AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSharedMemoryProviderBackend>;
+type PosixAllocLayout = AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 type DummyDynamicAllocLayout = AllocLayout<'static, DynamicProtocolID, DummySHMProviderBackend>;
@@ -391,10 +388,10 @@ enum CSHMLayout {
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// An owned SharedMemoryProvider's AllocLayout
+/// An owned ShmProvider's AllocLayout
 get_opaque_type_data!(Option<CSHMLayout>, z_owned_alloc_layout_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// A loaned SharedMemoryProvider's AllocLayout
+/// A loaned ShmProvider's AllocLayout
 get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
 
 /// An owned Zenoh fifo sample handler.

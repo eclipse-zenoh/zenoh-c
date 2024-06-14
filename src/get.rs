@@ -15,14 +15,20 @@
 use libc::c_char;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
+use std::ops::Deref;
+use std::ops::DerefMut;
 use std::ptr::null;
 use std::ptr::null_mut;
-use zenoh::publisher::Priority;
+use zenoh::bytes::ZBytes;
+use zenoh::core::Priority;
+use zenoh::encoding::Encoding;
+use zenoh::query::ReplyError;
+use zenoh::sample::EncodingBuilderTrait;
 use zenoh::sample::QoSBuilderTrait;
 use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::ValueBuilderTrait;
 use zenoh::selector::Selector;
 use zenoh_protocol::core::CongestionControl;
+use zenoh_protocol::core::ZenohIdProto;
 
 use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
@@ -40,12 +46,37 @@ use crate::{
     zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 use ::zenoh::core::Wait;
-use zenoh::value::Value;
+
+// we need to add Default to ReplyError
+#[repr(transparent)]
+struct ReplyErrorNewtype(ReplyError);
+impl Default for ReplyErrorNewtype {
+    fn default() -> Self {
+        Self(zenoh::internal::Value::new(ZBytes::empty(), Encoding::default()).into())
+    }
+}
+impl Deref for ReplyErrorNewtype {
+    type Target = ReplyError;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for ReplyErrorNewtype {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+impl From<&ReplyError> for &ReplyErrorNewtype {
+    fn from(value: &ReplyError) -> Self {
+        // SAFETY: ReplyErrorNewtype is repr(transparent) to ReplyError
+        unsafe { core::mem::transmute::<&ReplyError, Self>(value) }
+    }
+}
 
 pub use crate::opaque_types::z_owned_reply_err_t;
-decl_transmute_owned!(Value, z_owned_reply_err_t);
+decl_transmute_owned!(ReplyErrorNewtype, z_owned_reply_err_t);
 pub use crate::opaque_types::z_loaned_reply_err_t;
-decl_transmute_handle!(Value, z_loaned_reply_err_t);
+decl_transmute_handle!(ReplyErrorNewtype, z_loaned_reply_err_t);
 
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
@@ -57,7 +88,7 @@ pub extern "C" fn z_reply_err_null(this: *mut MaybeUninit<z_owned_reply_err_t>) 
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_reply_err_check(this: &'static z_owned_reply_err_t) -> bool {
-    !this.transmute_ref().is_empty()
+    !this.transmute_ref().payload().is_empty()
 }
 
 /// Returns reply error payload.
@@ -116,15 +147,29 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
     match this.transmute_ref().result() {
         Ok(_) => null(),
-        Err(v) => v.transmute_handle(),
+        Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).transmute_handle(),
     }
 }
 
 /// Gets the id of the zenoh instance that answered this Reply.
+/// Returns `true` if id is present
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_replier_id(this: &z_loaned_reply_t) -> z_id_t {
-    this.transmute_ref().replier_id().to_le_bytes().into()
+pub unsafe extern "C" fn z_reply_replier_id(
+    this: &z_loaned_reply_t,
+    out_id: &mut MaybeUninit<z_id_t>,
+) -> bool {
+    match this.transmute_ref().replier_id() {
+        Some(val) => {
+            out_id.write(
+                std::convert::Into::<ZenohIdProto>::into(val)
+                    .to_le_bytes()
+                    .into(),
+            );
+            true
+        }
+        None => false,
+    }
 }
 
 /// Constructs the reply in its gravestone state.
@@ -214,7 +259,7 @@ pub unsafe extern "C" fn z_get(
     };
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref();
-    let mut get = session.get(Selector::new(key_expr, p));
+    let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
         if let Some(payload) = unsafe { options.payload.as_mut() } {
             let payload = payload.transmute_mut().extract();

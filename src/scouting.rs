@@ -65,13 +65,13 @@ pub extern "C" fn z_hello_null(this: *mut MaybeUninit<z_owned_hello_t>) {
 /// Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
-    this.transmute_ref().zid.transmute_copy()
+    this.transmute_ref().zid().transmute_copy()
 }
 
 /// Returns type of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
-    match this.transmute_ref().whatami {
+    match this.transmute_ref().whatami() {
         WhatAmI::Router => z_whatami_t::ROUTER,
         WhatAmI::Peer => z_whatami_t::PEER,
         WhatAmI::Client => z_whatami_t::CLIENT,
@@ -87,8 +87,8 @@ pub extern "C" fn z_hello_locators(
     locators_out: *mut MaybeUninit<z_owned_string_array_t>,
 ) {
     let this = this.transmute_ref();
-    let mut locators = ZVector::with_capacity(this.locators.len());
-    for l in this.locators.iter() {
+    let mut locators = ZVector::with_capacity(this.locators().len());
+    for l in this.locators().iter() {
         locators.push(CSlice::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
     Inplace::init(locators_out.transmute_uninit_ptr(), Some(locators));

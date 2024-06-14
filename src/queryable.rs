@@ -23,14 +23,15 @@ use crate::{
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
+use zenoh::core::Priority;
 use zenoh::core::Wait;
 use zenoh::encoding::Encoding;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::publisher::CongestionControl;
-use zenoh::publisher::Priority;
-use zenoh::queryable::{Query, Queryable};
+use zenoh::query::Query;
+use zenoh::queryable::Queryable;
 use zenoh::sample::{
-    QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait, ValueBuilderTrait,
+    EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait,
 };
 
 pub use crate::opaque_types::z_owned_queryable_t;
