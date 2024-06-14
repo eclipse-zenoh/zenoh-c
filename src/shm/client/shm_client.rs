@@ -15,8 +15,8 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::core::Result;
-use zenoh::shm::{SegmentID, SharedMemoryClient, SharedMemorySegment};
-use zenoh_util::core::bail;
+use zenoh::internal::bail;
+use zenoh::shm::{SegmentID, ShmClient, ShmSegment};
 
 use crate::context::DroppableContext;
 use crate::transmute::TransmuteRef;
@@ -27,46 +27,41 @@ use crate::{
     transmute::{Inplace, TransmuteUninitPtr},
 };
 
-pub use crate::opaque_types::z_owned_shared_memory_client_t;
+pub use crate::opaque_types::z_owned_shm_client_t;
 
-use super::shared_memory_segment::{z_shared_memory_segment_t, DynamicSharedMemorySegment};
+use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
 
-/// A callbacks for SharedMemoryClient
+/// A callbacks for ShmClient
 #[derive(Debug)]
 #[repr(C)]
-pub struct zc_shared_memory_client_callbacks_t {
+pub struct zc_shm_client_callbacks_t {
     attach_fn: unsafe extern "C" fn(
-        out_segment: &mut MaybeUninit<z_shared_memory_segment_t>,
+        out_segment: &mut MaybeUninit<z_shm_segment_t>,
         segment_id: z_segment_id_t,
         context: *mut c_void,
     ) -> bool,
 }
 
-decl_transmute_owned!(
-    Option<Arc<dyn SharedMemoryClient>>,
-    z_owned_shared_memory_client_t
-);
+decl_transmute_owned!(Option<Arc<dyn ShmClient>>, z_owned_shm_client_t);
 
 #[derive(Debug)]
-pub struct DynamicSharedMemoryClient {
+pub struct DynamicShmClient {
     context: ThreadsafeContext,
-    callbacks: zc_shared_memory_client_callbacks_t,
+    callbacks: zc_shm_client_callbacks_t,
 }
 
-impl DynamicSharedMemoryClient {
-    pub fn new(context: ThreadsafeContext, callbacks: zc_shared_memory_client_callbacks_t) -> Self {
+impl DynamicShmClient {
+    pub fn new(context: ThreadsafeContext, callbacks: zc_shm_client_callbacks_t) -> Self {
         Self { context, callbacks }
     }
 }
 
-impl SharedMemoryClient for DynamicSharedMemoryClient {
-    fn attach(&self, segment: SegmentID) -> Result<Arc<dyn SharedMemorySegment>> {
+impl ShmClient for DynamicShmClient {
+    fn attach(&self, segment: SegmentID) -> Result<Arc<dyn ShmSegment>> {
         let mut segment_data = MaybeUninit::uninit();
         unsafe {
             match (self.callbacks.attach_fn)(&mut segment_data, segment, self.context.get()) {
-                true => Ok(Arc::new(DynamicSharedMemorySegment::new(
-                    segment_data.assume_init(),
-                ))),
+                true => Ok(Arc::new(DynamicShmSegment::new(segment_data.assume_init()))),
                 false => bail!("C Callback returned error"),
             }
         }
@@ -75,13 +70,12 @@ impl SharedMemoryClient for DynamicSharedMemoryClient {
 
 /// Creates a new SHM Client
 #[no_mangle]
-pub extern "C" fn z_shared_memory_client_new(
-    this: *mut MaybeUninit<z_owned_shared_memory_client_t>,
+pub extern "C" fn z_shm_client_new(
+    this: *mut MaybeUninit<z_owned_shm_client_t>,
     context: zc_threadsafe_context_t,
-    callbacks: zc_shared_memory_client_callbacks_t,
+    callbacks: zc_shm_client_callbacks_t,
 ) -> errors::z_error_t {
-    let client = Arc::new(DynamicSharedMemoryClient::new(context.into(), callbacks))
-        as Arc<dyn SharedMemoryClient>;
+    let client = Arc::new(DynamicShmClient::new(context.into(), callbacks)) as Arc<dyn ShmClient>;
 
     Inplace::init(this.transmute_uninit_ptr(), Some(client));
     errors::Z_OK
@@ -89,20 +83,18 @@ pub extern "C" fn z_shared_memory_client_new(
 
 /// Constructs SHM client in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shared_memory_client_null(
-    this: *mut MaybeUninit<z_owned_shared_memory_client_t>,
-) {
+pub extern "C" fn z_shm_client_null(this: *mut MaybeUninit<z_owned_shm_client_t>) {
     Inplace::empty(this.transmute_uninit_ptr());
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shared_memory_client_check(this: &z_owned_shared_memory_client_t) -> bool {
+pub extern "C" fn z_shm_client_check(this: &z_owned_shm_client_t) -> bool {
     this.transmute_ref().is_some()
 }
 
 /// Deletes SHM Client
 #[no_mangle]
-pub extern "C" fn z_shared_memory_client_drop(this: &mut z_owned_shared_memory_client_t) {
+pub extern "C" fn z_shm_client_drop(this: &mut z_owned_shm_client_t) {
     let _ = this.transmute_mut().take();
 }

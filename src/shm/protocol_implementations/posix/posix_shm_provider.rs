@@ -15,35 +15,35 @@
 use std::mem::MaybeUninit;
 
 use zenoh::shm::{
-    AllocLayout, PosixSharedMemoryProviderBackend, SharedMemoryProvider,
-    SharedMemoryProviderBuilder, StaticProtocolID, POSIX_PROTOCOL_ID,
+    AllocLayout, PosixShmProviderBackend, ShmProvider, ShmProviderBuilder, StaticProtocolID,
+    POSIX_PROTOCOL_ID,
 };
 
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    shm::provider::shared_memory_provider::CSHMProvider,
+    shm::provider::shm_provider::CSHMProvider,
     transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr},
-    z_loaned_memory_layout_t, z_owned_shared_memory_provider_t,
+    z_loaned_memory_layout_t, z_owned_shm_provider_t,
 };
 
-pub type PosixSharedMemoryProvider =
-    SharedMemoryProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSharedMemoryProviderBackend>;
+pub type PosixShmProvider =
+    ShmProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
 pub type PosixAllocLayout =
-    AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSharedMemoryProviderBackend>;
+    AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
 /// Creates a new threadsafe SHM Provider
 #[no_mangle]
-pub extern "C" fn z_posix_shared_memory_provider_new(
-    this: *mut MaybeUninit<z_owned_shared_memory_provider_t>,
+pub extern "C" fn z_posix_shm_provider_new(
+    this: *mut MaybeUninit<z_owned_shm_provider_t>,
     layout: &z_loaned_memory_layout_t,
 ) -> z_error_t {
-    match PosixSharedMemoryProviderBackend::builder()
+    match PosixShmProviderBackend::builder()
         .with_layout(layout.transmute_ref())
         .res()
     {
         Ok(backend) => {
-            let provider = SharedMemoryProviderBuilder::builder()
+            let provider = ShmProviderBuilder::builder()
                 .protocol_id::<POSIX_PROTOCOL_ID>()
                 .backend(backend)
                 .res();

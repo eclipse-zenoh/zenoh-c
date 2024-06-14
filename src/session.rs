@@ -23,7 +23,7 @@ use zenoh::core::Wait;
 use zenoh::session::Session;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::z_loaned_shared_memory_client_storage_t;
+use crate::z_loaned_shm_client_storage_t;
 
 use crate::opaque_types::z_owned_session_t;
 decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
@@ -90,7 +90,7 @@ pub extern "C" fn z_open(
 pub extern "C" fn z_open_with_custom_shm_clients(
     this: *mut MaybeUninit<z_owned_session_t>,
     config: &mut z_owned_config_t,
-    shm_clients: &z_loaned_shared_memory_client_storage_t,
+    shm_clients: &z_loaned_shm_client_storage_t,
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     if cfg!(feature = "logger-autoinit") {

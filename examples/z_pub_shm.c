@@ -76,14 +76,14 @@ int main(int argc, char **argv) {
     z_owned_memory_layout_t layout;
     z_memory_layout_new(&layout, total_size, alignment);
 
-    z_owned_shared_memory_provider_t provider;
-    z_posix_shared_memory_provider_new(&provider, z_loan(layout));
+    z_owned_shm_provider_t provider;
+    z_posix_shm_provider_new(&provider, z_loan(layout));
 
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
 
         z_owned_buf_alloc_result_t alloc;
-        z_shared_memory_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
+        z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
 
         z_owned_shm_mut_t shm_buf;
         z_alloc_error_t shm_error;

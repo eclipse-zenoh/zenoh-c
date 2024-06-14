@@ -17,11 +17,11 @@ use std::mem::MaybeUninit;
 use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
     errors::z_error_t,
-    shm::protocol_implementations::posix::posix_shared_memory_provider::PosixAllocLayout,
+    shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
-    z_loaned_alloc_layout_t, z_loaned_shared_memory_provider_t, z_owned_alloc_layout_t,
+    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
     z_owned_buf_alloc_result_t,
 };
 use libc::c_void;
@@ -33,15 +33,15 @@ use crate::context::Context;
 
 use super::{
     alloc_layout_impl::{alloc, alloc_async, alloc_layout_new},
-    shared_memory_provider_backend::DynamicSharedMemoryProviderBackend,
+    shm_provider_backend::DynamicShmProviderBackend,
     types::z_alloc_alignment_t,
 };
 
 pub type DynamicAllocLayout =
-    AllocLayout<'static, DynamicProtocolID, DynamicSharedMemoryProviderBackend<Context>>;
+    AllocLayout<'static, DynamicProtocolID, DynamicShmProviderBackend<Context>>;
 
 pub type DynamicAllocLayoutThreadsafe =
-    AllocLayout<'static, DynamicProtocolID, DynamicSharedMemoryProviderBackend<ThreadsafeContext>>;
+    AllocLayout<'static, DynamicProtocolID, DynamicShmProviderBackend<ThreadsafeContext>>;
 
 pub enum CSHMLayout {
     Posix(PosixAllocLayout),
@@ -56,7 +56,7 @@ decl_transmute_handle!(CSHMLayout, z_loaned_alloc_layout_t);
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_new(
     this: *mut MaybeUninit<z_owned_alloc_layout_t>,
-    provider: &z_loaned_shared_memory_provider_t,
+    provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
