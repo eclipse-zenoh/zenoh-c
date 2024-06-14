@@ -265,7 +265,7 @@ int run_c_provider() {
 
     // init callbacks
     zc_shm_provider_backend_callbacks_t callbacks = {&alloc_fn, &free_fn, &defragment_fn, &available_fn,
-                                                               &layout_for_fn};
+                                                     &layout_for_fn};
     // create provider
     z_owned_shm_provider_t provider;
     z_shm_provider_new(&provider, id, context, callbacks);
