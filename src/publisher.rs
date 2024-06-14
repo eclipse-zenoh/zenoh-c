@@ -16,10 +16,12 @@ use crate::errors;
 use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::unwrap_ref_unchecked_mut;
 use crate::transmute::Inplace;
+use crate::transmute::TransmuteCopy;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::z_entity_global_id_t;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;
 use crate::z_timestamp_t;
@@ -268,6 +270,13 @@ pub extern "C" fn z_publisher_delete(
     } else {
         errors::Z_OK
     }
+}
+
+/// Returns the ID of the publisher.
+#[no_mangle]
+pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {
+    let publisher = publisher.transmute_ref();
+    publisher.id().transmute_copy()
 }
 
 /// Returns the key expression of the publisher.
