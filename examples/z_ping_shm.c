@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_bytes_encode_from_shm_copy(&payload, loaned_shm);
+            z_bytes_serialize_from_shm_copy(&payload, loaned_shm);
             z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
             if (s != 0) {

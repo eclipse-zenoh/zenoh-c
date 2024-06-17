@@ -76,6 +76,7 @@ int test_shm_buffer(z_owned_shm_mut_t* buf) {
 
     z_drop(z_move(mut));
     ASSERT_CHECK_ERR(mut);
+    return 0;
 }
 
 bool test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {

@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         if (z_check(shm_buf)) {
             {
                 uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(shm_buf));
-                sprintf(buf, "SHM [%4d] %s", idx, value);
+                sprintf((char *)buf, "SHM [%4d] %s", idx, value);
                 printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
             }
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
             z_publisher_put_options_default(&options);
 
             z_owned_bytes_t payload;
-            z_bytes_encode_from_shm_mut(&payload, &shm_buf);
+            z_bytes_serialize_from_shm_mut(&payload, &shm_buf);
 
             z_publisher_put(z_loan(pub), z_move(payload), &options);
         } else {
