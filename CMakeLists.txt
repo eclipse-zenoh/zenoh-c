@@ -278,12 +278,13 @@ endif()
 # Define include directories for library targets
 status_print(source_include_dir)
 status_print(cargo_generated_include_dir)
-target_include_directories(zenohc_static INTERFACE ${source_include_dir})
-target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
 
 if(NOT(cargo_generated_include_dir STREQUAL ${source_include_dir}))
 	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
 	target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
+else()
+	target_include_directories(zenohc_static INTERFACE ${source_include_dir})
+	target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
 endif()
 
 set_target_properties(zenohc_shared zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
