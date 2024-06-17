@@ -44,11 +44,11 @@ bool create_attachement_it(z_owned_bytes_t *kv_pair, void *context) {
     if (ctx->iteration_index >= ctx->num_items) {
         return false;
     } else {
-        z_bytes_encode_from_string(&k, ctx->keys[ctx->iteration_index]);
-        z_bytes_encode_from_string(&v, ctx->values[ctx->iteration_index]);
+        z_bytes_serialize_from_string(&k, ctx->keys[ctx->iteration_index]);
+        z_bytes_serialize_from_string(&v, ctx->values[ctx->iteration_index]);
     }
 
-    z_bytes_encode_from_pair(kv_pair, z_move(k), z_move(v));
+    z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
     ctx->iteration_index++;
     return true;
 };
@@ -61,13 +61,13 @@ z_error_t check_attachement(const z_loaned_bytes_t *attachement, const attacheme
             perror("Not enough elements in the attachment\n");
             return -1;
         }
-        if (z_bytes_decode_into_pair(z_loan(kv), &k, &v) != 0) {
-            perror("Can not decode attachment elemnt into kv-pair\n");
+        if (z_bytes_deserialize_into_pair(z_loan(kv), &k, &v) != 0) {
+            perror("Can not deserialize attachment elemnt into kv-pair\n");
             return -1;
         }
         z_owned_string_t k_str, v_str;
-        z_bytes_decode_into_string(z_loan(k), &k_str);
-        z_bytes_decode_into_string(z_loan(v), &v_str);
+        z_bytes_deserialize_into_string(z_loan(k), &k_str);
+        z_bytes_deserialize_into_string(z_loan(v), &v_str);
 
         if (strncmp(ctx->keys[i], z_string_data(z_loan(k_str)), z_string_len(z_loan(k_str))) != 0) {
             perror("Incorrect attachment key\n");
@@ -113,14 +113,14 @@ int run_publisher() {
             .keys = {K_CONST, K_VAR}, .values = {V_CONST, values[i]}, .num_items = 2, .iteration_index = 0};
 
         z_owned_bytes_t attachment;
-        z_bytes_encode_from_iter(&attachment, create_attachement_it, (void *)&out_attachment_context);
+        z_bytes_serialize_from_iter(&attachment, create_attachement_it, (void *)&out_attachment_context);
 
         options.attachment = &attachment;
 
         z_view_slice_t v_var;
         z_view_slice_from_str(&v_var, values[i]);
         z_owned_bytes_t payload;
-        z_bytes_encode_from_slice(&payload, z_slice_data(z_loan(v_var)), z_slice_len(z_loan(v_var)));
+        z_bytes_serialize_from_slice(&payload, z_slice_data(z_loan(v_var)), z_slice_len(z_loan(v_var)));
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
@@ -139,7 +139,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     }
 
     z_owned_string_t payload_str;
-    z_bytes_decode_into_string(z_sample_payload(sample), &payload_str);
+    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_str);
     if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));

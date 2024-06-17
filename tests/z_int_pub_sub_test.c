@@ -72,7 +72,7 @@ int run_publisher() {
         options.timestamp = &ts;
 
         z_owned_bytes_t payload;
-        z_bytes_encode_from_string(&payload, values[i]);
+        z_bytes_serialize_from_string(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
@@ -91,7 +91,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     }
 
     z_owned_string_t payload_str;
-    z_bytes_decode_into_string(z_sample_payload(sample), &payload_str);
+    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_str);
     if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));

@@ -23,7 +23,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
     z_owned_string_t payload_string;
-    z_bytes_decode_into_string(z_sample_payload(sample), &payload_string);
+    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
 
     printf(">> [Subscriber] Received %s ('%.*s': '%.*s')\n", kind_to_str(z_sample_kind(sample)),
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
@@ -38,10 +38,10 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         while (z_bytes_iterator_next(&iter, &kv)) {
             z_owned_bytes_t k, v;
             z_owned_string_t key, value;
-            z_bytes_decode_into_pair(z_loan(kv), &k, &v);
+            z_bytes_deserialize_into_pair(z_loan(kv), &k, &v);
 
-            z_bytes_decode_into_string(z_loan(k), &key);
-            z_bytes_decode_into_string(z_loan(v), &value);
+            z_bytes_deserialize_into_string(z_loan(k), &key);
+            z_bytes_deserialize_into_string(z_loan(v), &value);
 
             printf("   attachment: %.*s: '%.*s'\n", (int)z_string_len(z_loan(key)), z_string_data(z_loan(key)),
                    (int)z_string_len(z_loan(value)), z_string_data(z_loan(value)));

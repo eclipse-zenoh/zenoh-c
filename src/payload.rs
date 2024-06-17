@@ -93,13 +93,13 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
     this.transmute_ref().len()
 }
 
-/// Decodes data into an owned non-null-terminated string.
+/// Deserializes data into an owned non-null-terminated string.
 ///
-/// @param this_: Data to decode.
-/// @param dst: An unitialized memory location where to construct a decoded string.
+/// @param this_: Data to deserialize.
+/// @param dst: An unitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_decode_into_string(
+pub unsafe extern "C" fn z_bytes_deserialize_into_string(
     this: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<z_owned_string_t>,
 ) -> z_error_t {
@@ -110,20 +110,20 @@ pub unsafe extern "C" fn z_bytes_decode_into_string(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to decode the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {}", e);
             Inplace::empty(dst.transmute_uninit_ptr());
             errors::Z_EIO
         }
     }
 }
 
-/// Decodes data into an owned bytes map.
+/// Deserializes data into an owned bytes map.
 ///
-/// @param this_: Data to decode.
-/// @param dst: An unitialized memory location where to construct a decoded map.
+/// @param this_: Data to deserialize.
+/// @param dst: An unitialized memory location where to construct a deserialized map.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_decode_into_slice_map(
+pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
     this: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<z_owned_slice_map_t>,
 ) -> z_error_t {
@@ -140,13 +140,13 @@ pub unsafe extern "C" fn z_bytes_decode_into_slice_map(
     errors::Z_OK
 }
 
-/// Decodes data into an owned slice.
+/// Deserializes data into an owned slice.
 ///
-/// @param this_: Data to decode.
+/// @param this_: Data to deserialize.
 /// @param dst: An unitialized memory location where to construct a slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_decode_into_slice(
+pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
     this: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<z_owned_slice_t>,
 ) -> z_error_t {
@@ -165,13 +165,13 @@ pub unsafe extern "C" fn z_bytes_decode_into_slice(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Decodes data into an owned SHM buffer by copying it's shared reference
+/// Deserializes data into an owned SHM buffer by copying it's shared reference
 ///
-/// @param this_: Data to decode.
-/// @param dst: An unitialized memory location where to construct a decoded string.
+/// @param this_: Data to deserialize.
+/// @param dst: An unitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_decode_into_owned_shm(
+pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
     this: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<z_owned_shm_t>,
 ) -> z_error_t {
@@ -184,7 +184,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_owned_shm(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to decode the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {}", e);
             Inplace::empty(dst.transmute_uninit_ptr());
             errors::Z_EIO
         }
@@ -192,13 +192,13 @@ pub unsafe extern "C" fn z_bytes_decode_into_owned_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Decodes data into a loaned SHM buffer
+/// Deserializes data into a loaned SHM buffer
 ///
-/// @param this_: Data to decode.
-/// @param dst: An unitialized memory location where to construct a decoded string.
+/// @param this_: Data to deserialize.
+/// @param dst: An unitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_decode_into_loaned_shm(
+pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
     this: &z_loaned_bytes_t,
     dst: *mut MaybeUninit<&'static z_loaned_shm_t>,
 ) -> z_error_t {
@@ -211,20 +211,20 @@ pub unsafe extern "C" fn z_bytes_decode_into_loaned_shm(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to decode the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {}", e);
             errors::Z_EIO
         }
     }
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Decodes data into a mutably loaned SHM buffer
+/// Deserializes data into a mutably loaned SHM buffer
 ///
-/// @param this_: Data to decode.
-/// @param dst: An unitialized memory location where to construct a decoded string.
+/// @param this_: Data to deserialize.
+/// @param dst: An unitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_decode_into_mut_loaned_shm(
+pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
     this: &mut z_loaned_bytes_t,
     dst: *mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_error_t {
@@ -237,7 +237,7 @@ pub unsafe extern "C" fn z_bytes_decode_into_mut_loaned_shm(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to decode the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {}", e);
             errors::Z_EIO
         }
     }
@@ -271,7 +271,7 @@ impl From<CSlice> for ZBytes {
     }
 }
 
-fn z_bytes_encode_from_arithmetic<T>(this: *mut MaybeUninit<z_owned_bytes_t>, val: T)
+fn z_bytes_serialize_from_arithmetic<T>(this: *mut MaybeUninit<z_owned_bytes_t>, val: T)
 where
     ZSerde: Serialize<T, Output = ZBytes>,
 {
@@ -280,7 +280,7 @@ where
     Inplace::init(this, payload);
 }
 
-fn z_bytes_decode_into_arithmetic<T>(this: &z_loaned_bytes_t, val: &mut T) -> z_error_t
+fn z_bytes_deserialize_into_arithmetic<T>(this: &z_loaned_bytes_t, val: &mut T) -> z_error_t
 where
     ZSerde: Deserialize<'static, T, Input = &'static ZBytes>,
     <ZSerde as Deserialize<'static, T>>::Error: fmt::Debug,
@@ -291,145 +291,145 @@ where
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to decode the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {}", e);
             errors::Z_EPARSE
         }
     }
 }
 
-/// Encodes an unsigned integer.
+/// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_uint8(this: *mut MaybeUninit<z_owned_bytes_t>, val: u8) {
-    z_bytes_encode_from_arithmetic::<u8>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint8(this: *mut MaybeUninit<z_owned_bytes_t>, val: u8) {
+    z_bytes_serialize_from_arithmetic::<u8>(this, val);
 }
 
-/// Encodes an unsigned integer.
+/// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_uint16(this: *mut MaybeUninit<z_owned_bytes_t>, val: u16) {
-    z_bytes_encode_from_arithmetic::<u16>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint16(this: *mut MaybeUninit<z_owned_bytes_t>, val: u16) {
+    z_bytes_serialize_from_arithmetic::<u16>(this, val);
 }
 
-/// Encodes an unsigned integer.
+/// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_uint32(this: *mut MaybeUninit<z_owned_bytes_t>, val: u32) {
-    z_bytes_encode_from_arithmetic::<u32>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint32(this: *mut MaybeUninit<z_owned_bytes_t>, val: u32) {
+    z_bytes_serialize_from_arithmetic::<u32>(this, val);
 }
 
-/// Encodes an unsigned integer.
+/// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_uint64(this: *mut MaybeUninit<z_owned_bytes_t>, val: u64) {
-    z_bytes_encode_from_arithmetic::<u64>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint64(this: *mut MaybeUninit<z_owned_bytes_t>, val: u64) {
+    z_bytes_serialize_from_arithmetic::<u64>(this, val);
 }
 
-/// Encodes a signed integer.
+/// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_int8(this: *mut MaybeUninit<z_owned_bytes_t>, val: i8) {
-    z_bytes_encode_from_arithmetic::<i8>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int8(this: *mut MaybeUninit<z_owned_bytes_t>, val: i8) {
+    z_bytes_serialize_from_arithmetic::<i8>(this, val);
 }
 
-/// Encodes a signed integer.
+/// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_int16(this: *mut MaybeUninit<z_owned_bytes_t>, val: i16) {
-    z_bytes_encode_from_arithmetic::<i16>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int16(this: *mut MaybeUninit<z_owned_bytes_t>, val: i16) {
+    z_bytes_serialize_from_arithmetic::<i16>(this, val);
 }
 
-/// Encodes a signed integer.
+/// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_int32(this: *mut MaybeUninit<z_owned_bytes_t>, val: i32) {
-    z_bytes_encode_from_arithmetic::<i32>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int32(this: *mut MaybeUninit<z_owned_bytes_t>, val: i32) {
+    z_bytes_serialize_from_arithmetic::<i32>(this, val);
 }
 
-/// Encodes a signed integer.
+/// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_int64(this: *mut MaybeUninit<z_owned_bytes_t>, val: i64) {
-    z_bytes_encode_from_arithmetic::<i64>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int64(this: *mut MaybeUninit<z_owned_bytes_t>, val: i64) {
+    z_bytes_serialize_from_arithmetic::<i64>(this, val);
 }
 
-/// Encodes a float.
+/// Serializes a float.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_float(this: *mut MaybeUninit<z_owned_bytes_t>, val: f32) {
-    z_bytes_encode_from_arithmetic::<f32>(this, val);
+pub extern "C" fn z_bytes_serialize_from_float(this: *mut MaybeUninit<z_owned_bytes_t>, val: f32) {
+    z_bytes_serialize_from_arithmetic::<f32>(this, val);
 }
 
-/// Encodes a double.
+/// Serializes a double.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_double(this: *mut MaybeUninit<z_owned_bytes_t>, val: f64) {
-    z_bytes_encode_from_arithmetic::<f64>(this, val);
+pub extern "C" fn z_bytes_serialize_from_double(this: *mut MaybeUninit<z_owned_bytes_t>, val: f64) {
+    z_bytes_serialize_from_arithmetic::<f64>(this, val);
 }
-/// Decodes into an unsigned integer.
+/// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_uint8(this: &z_loaned_bytes_t, dst: &mut u8) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<u8>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_uint8(this: &z_loaned_bytes_t, dst: &mut u8) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<u8>(this, dst)
 }
 
-/// Decodes into an unsigned integer.
+/// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_uint16(this: &z_loaned_bytes_t, dst: &mut u16) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<u16>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_uint16(this: &z_loaned_bytes_t, dst: &mut u16) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<u16>(this, dst)
 }
 
-/// Decodes into an unsigned integer.
+/// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_uint32(this: &z_loaned_bytes_t, dst: &mut u32) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<u32>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_uint32(this: &z_loaned_bytes_t, dst: &mut u32) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<u32>(this, dst)
 }
 
-/// Decodes into an unsigned integer.
+/// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_uint64(this: &z_loaned_bytes_t, dst: &mut u64) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<u64>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_uint64(this: &z_loaned_bytes_t, dst: &mut u64) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<u64>(this, dst)
 }
 
-/// Decodes into a signed integer.
+/// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_int8(this: &z_loaned_bytes_t, dst: &mut i8) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<i8>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_int8(this: &z_loaned_bytes_t, dst: &mut i8) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<i8>(this, dst)
 }
 
-/// Decodes into a signed integer.
+/// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_int16(this: &z_loaned_bytes_t, dst: &mut i16) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<i16>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_int16(this: &z_loaned_bytes_t, dst: &mut i16) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<i16>(this, dst)
 }
 
-/// Decodes into a signed integer.
+/// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_int32(this: &z_loaned_bytes_t, dst: &mut i32) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<i32>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_int32(this: &z_loaned_bytes_t, dst: &mut i32) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<i32>(this, dst)
 }
 
-/// Decodes into a signed integer.
+/// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_int64(this: &z_loaned_bytes_t, dst: &mut i64) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<i64>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_int64(this: &z_loaned_bytes_t, dst: &mut i64) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<i64>(this, dst)
 }
 
-/// Decodes into a float.
+/// Deserializes into a float.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_float(this: &z_loaned_bytes_t, dst: &mut f32) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<f32>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_float(this: &z_loaned_bytes_t, dst: &mut f32) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<f32>(this, dst)
 }
 
-/// Decodes into a signed integer.
+/// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_double(this: &z_loaned_bytes_t, dst: &mut f64) -> z_error_t {
-    z_bytes_decode_into_arithmetic::<f64>(this, dst)
+pub extern "C" fn z_bytes_deserialize_into_double(this: &z_loaned_bytes_t, dst: &mut f64) -> z_error_t {
+    z_bytes_deserialize_into_arithmetic::<f64>(this, dst)
 }
 
-/// Encodes a slice by aliasing.
+/// Serializes a slice by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_slice(
+pub unsafe extern "C" fn z_bytes_serialize_from_slice(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     data: *const u8,
     len: usize,
@@ -440,10 +440,10 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice(
     Inplace::init(this, payload);
 }
 
-/// Encodes a slice by copying.
+/// Serializes a slice by copying.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_slice_copy(
+pub unsafe extern "C" fn z_bytes_serialize_from_slice_copy(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     data: *const u8,
     len: usize,
@@ -454,10 +454,10 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_copy(
     Inplace::init(this, payload);
 }
 
-/// Encodes slice map by aliasing.
+/// Serializes slice map by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
+pub unsafe extern "C" fn z_bytes_serialize_from_slice_map(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     bytes_map: &z_loaned_slice_map_t,
 ) {
@@ -472,10 +472,10 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_map(
     Inplace::init(dst, payload);
 }
 
-/// Encodes slice map by copying.
+/// Serializes slice map by copying.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_slice_map_copy(
+pub unsafe extern "C" fn z_bytes_serialize_from_slice_map_copy(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     bytes_map: &z_loaned_slice_map_t,
 ) {
@@ -490,30 +490,30 @@ pub unsafe extern "C" fn z_bytes_encode_from_slice_map_copy(
     Inplace::init(dst, payload);
 }
 
-/// Encodes a null-terminated string by aliasing.
+/// Serializes a null-terminated string by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_string(
+pub unsafe extern "C" fn z_bytes_serialize_from_string(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     s: *const libc::c_char,
 ) {
-    z_bytes_encode_from_slice(this, s as *const u8, libc::strlen(s));
+    z_bytes_serialize_from_slice(this, s as *const u8, libc::strlen(s));
 }
 
-/// Encodes a null-terminated string by copying.
+/// Serializes a null-terminated string by copying.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_string_copy(
+pub unsafe extern "C" fn z_bytes_serialize_from_string_copy(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     s: *const libc::c_char,
 ) {
-    z_bytes_encode_from_slice_copy(this, s as *const u8, libc::strlen(s));
+    z_bytes_serialize_from_slice_copy(this, s as *const u8, libc::strlen(s));
 }
 
-/// Encodes a pair of `z_owned_bytes` objects which are consumed in the process.
+/// Serializes a pair of `z_owned_bytes_t` objects which are consumed in the process.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_pair(
+pub extern "C" fn z_bytes_serialize_from_pair(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     first: &mut z_owned_bytes_t,
     second: &mut z_owned_bytes_t,
@@ -527,10 +527,10 @@ pub extern "C" fn z_bytes_encode_from_pair(
     Z_OK
 }
 
-/// Decodes into a pair of `z_owned_bytes` objects.
+/// Deserializes into a pair of `z_owned_bytes_t` objects.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_decode_into_pair(
+pub extern "C" fn z_bytes_deserialize_into_pair(
     this: &z_loaned_bytes_t,
     first: *mut MaybeUninit<z_owned_bytes_t>,
     second: *mut MaybeUninit<z_owned_bytes_t>,
@@ -542,7 +542,7 @@ pub extern "C" fn z_bytes_decode_into_pair(
             Z_OK
         }
         Err(e) => {
-            log::error!("Failed to decode the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {}", e);
             Z_EPARSE
         }
     }
@@ -575,7 +575,7 @@ impl Iterator for ZBytesInIterator {
 /// @param context: Arbitrary context that will be passed to iterator_body.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_encode_from_iter(
+pub extern "C" fn z_bytes_serialize_from_iter(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     iterator_body: extern "C" fn(
         data: &mut MaybeUninit<z_owned_bytes_t>,
@@ -595,7 +595,7 @@ pub extern "C" fn z_bytes_encode_from_iter(
 
 pub use crate::z_bytes_iterator_t;
 decl_transmute_handle!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
-/// Returns an iterator for multi-piece serialized data.
+/// Returns an iterator for multi-element serialized data.
 ///
 /// The `data` should outlive the iterator.
 #[no_mangle]
@@ -603,9 +603,9 @@ pub extern "C" fn z_bytes_get_iterator(data: &z_loaned_bytes_t) -> z_bytes_itera
     *data.transmute_ref().iter::<ZBytes>().transmute_handle()
 }
 
-/// Constructs `z_owned_bytes` object corresponding to the next element of encoded data.
+/// Constructs `z_owned_bytes_t` object corresponding to the next element of serialized data.
 ///
-/// Will construct null-state `z_owned_bytes` when iterator reaches the end.
+/// Will construct null-state `z_owned_bytes_t` when iterator reaches the end.
 /// @return ``false`` when iterator reaches the end,  ``true`` otherwise
 #[no_mangle]
 pub extern "C" fn z_bytes_iterator_next(
@@ -627,8 +627,8 @@ pub extern "C" fn z_bytes_iterator_next(
     }
 }
 
-/// Returns an iterator for multi-piece serialized data.
-/// @param this_: Data to decode.
+/// Returns an iterator for multi-element serialized data.
+/// @param this_: Data to deserialize.
 #[no_mangle]
 pub extern "C" fn z_bytes_iter(
     this: &z_loaned_bytes_t,
@@ -649,10 +649,10 @@ pub extern "C" fn z_bytes_iter(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Encodes from an immutable SHM buffer consuming it
+/// Serializes from an immutable SHM buffer consuming it
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_shm(
+pub unsafe extern "C" fn z_bytes_serialize_from_shm(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     shm: &mut z_owned_shm_t,
 ) -> z_error_t {
@@ -667,10 +667,10 @@ pub unsafe extern "C" fn z_bytes_encode_from_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Encodes from an immutable SHM buffer copying it
+/// Serializes from an immutable SHM buffer copying it
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_shm_copy(
+pub unsafe extern "C" fn z_bytes_serialize_from_shm_copy(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     shm: &z_loaned_shm_t,
 ) {
@@ -679,10 +679,10 @@ pub unsafe extern "C" fn z_bytes_encode_from_shm_copy(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Encodes from a mutable SHM buffer consuming it
+/// Serializes from a mutable SHM buffer consuming it
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_encode_from_shm_mut(
+pub unsafe extern "C" fn z_bytes_serialize_from_shm_mut(
     this: *mut MaybeUninit<z_owned_bytes_t>,
     shm: &mut z_owned_shm_mut_t,
 ) -> z_error_t {

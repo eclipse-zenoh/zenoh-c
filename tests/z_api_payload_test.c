@@ -26,7 +26,7 @@ void test_reader_seek() {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_encode_from_slice(&payload, data, 10);
+    z_bytes_serialize_from_slice(&payload, data, 10);
 
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
     assert(z_bytes_reader_tell(&reader) == 0);
@@ -57,7 +57,7 @@ void test_reader_read() {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_encode_from_slice(&payload, data, 10);
+    z_bytes_serialize_from_slice(&payload, data, 10);
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
 
     assert(5 == z_bytes_reader_read(&reader, data_out, 5));
@@ -106,19 +106,19 @@ void test_slice() {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     z_owned_bytes_t payload;
-    z_bytes_encode_from_slice(&payload, data, 10);
+    z_bytes_serialize_from_slice(&payload, data, 10);
 
     z_owned_slice_t out;
     data[5] = 0;
-    z_bytes_decode_into_slice(z_loan(payload), &out);
+    z_bytes_deserialize_into_slice(z_loan(payload), &out);
 
     assert(!memcmp(data, z_slice_data(z_loan(out)), 10));
 
     z_owned_bytes_t payload2;
-    z_bytes_encode_from_slice_copy(&payload2, data, 10);
+    z_bytes_serialize_from_slice_copy(&payload2, data, 10);
     data[5] = 5;
     z_owned_slice_t out2;
-    z_bytes_decode_into_slice(z_loan(payload2), &out2);
+    z_bytes_deserialize_into_slice(z_loan(payload2), &out2);
     data[5] = 0;
     assert(!memcmp(data, z_slice_data(z_loan(out2)), 10));
 
@@ -132,8 +132,8 @@ void test_slice() {
     {                                                     \
         TYPE in = VAL, out;                               \
         z_owned_bytes_t payload;                          \
-        z_bytes_encode_from_##EXT(&payload, in);          \
-        z_bytes_decode_into_##EXT(z_loan(payload), &out); \
+        z_bytes_serialize_from_##EXT(&payload, in);          \
+        z_bytes_deserialize_into_##EXT(z_loan(payload), &out); \
         assert(in == out);                                \
         z_drop(z_move(payload));                          \
     }
@@ -158,7 +158,7 @@ bool iter_body(z_owned_bytes_t* b, void* context) {
     if (*val >= 10) {
         return false;
     } else {
-        z_bytes_encode_from_uint8(b, *val);
+        z_bytes_serialize_from_uint8(b, *val);
     }
     *val = *val + 1;
     return true;
@@ -169,7 +169,7 @@ void test_iter() {
 
     z_owned_bytes_t payload;
     uint8_t context = 0;
-    z_bytes_encode_from_iter(&payload, iter_body, (void*)(&context));
+    z_bytes_serialize_from_iter(&payload, iter_body, (void*)(&context));
 
     z_bytes_iterator_t it = z_bytes_get_iterator(z_loan(payload));
 
@@ -177,7 +177,7 @@ void test_iter() {
     z_owned_bytes_t out;
     while (z_bytes_iterator_next(&it, &out)) {
         uint8_t res;
-        z_bytes_decode_into_uint8(z_loan(out), &res);
+        z_bytes_deserialize_into_uint8(z_loan(out), &res);
         assert(res == data_out[i]);
         i++;
         z_drop(z_move(out));
@@ -188,16 +188,16 @@ void test_iter() {
 
 void test_pair() {
     z_owned_bytes_t payload, payload1, payload2, payload1_out, payload2_out;
-    z_bytes_encode_from_int16(&payload1, -500);
-    z_bytes_encode_from_double(&payload2, 123.45);
-    z_bytes_encode_from_pair(&payload, z_move(payload1), z_move(payload2));
+    z_bytes_serialize_from_int16(&payload1, -500);
+    z_bytes_serialize_from_double(&payload2, 123.45);
+    z_bytes_serialize_from_pair(&payload, z_move(payload1), z_move(payload2));
 
-    z_bytes_decode_into_pair(z_loan(payload), &payload1_out, &payload2_out);
+    z_bytes_deserialize_into_pair(z_loan(payload), &payload1_out, &payload2_out);
 
     int16_t i;
     double d;
-    z_bytes_decode_into_int16(z_loan(payload1_out), &i);
-    z_bytes_decode_into_double(z_loan(payload2_out), &d);
+    z_bytes_deserialize_into_int16(z_loan(payload1_out), &i);
+    z_bytes_deserialize_into_double(z_loan(payload2_out), &d);
 
     assert(i == -500);
     assert(d == 123.45);

@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
     z_owned_bytes_t payload;
     if (value != NULL) {
-        z_bytes_encode_from_string(&payload, value);
+        z_bytes_serialize_from_string(&payload, value);
         opts.payload = &payload;
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
             z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
 
             z_owned_string_t reply_str;
-            z_bytes_decode_into_string(z_sample_payload(sample), &reply_str);
+            z_bytes_deserialize_into_string(z_sample_payload(sample), &reply_str);
 
             printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
                    (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));
