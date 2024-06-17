@@ -359,70 +359,100 @@ pub extern "C" fn z_bytes_serialize_from_double(this: *mut MaybeUninit<z_owned_b
 /// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint8(this: &z_loaned_bytes_t, dst: &mut u8) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_uint8(
+    this: &z_loaned_bytes_t,
+    dst: &mut u8,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<u8>(this, dst)
 }
 
 /// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint16(this: &z_loaned_bytes_t, dst: &mut u16) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_uint16(
+    this: &z_loaned_bytes_t,
+    dst: &mut u16,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<u16>(this, dst)
 }
 
 /// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint32(this: &z_loaned_bytes_t, dst: &mut u32) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_uint32(
+    this: &z_loaned_bytes_t,
+    dst: &mut u32,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<u32>(this, dst)
 }
 
 /// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint64(this: &z_loaned_bytes_t, dst: &mut u64) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_uint64(
+    this: &z_loaned_bytes_t,
+    dst: &mut u64,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<u64>(this, dst)
 }
 
 /// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int8(this: &z_loaned_bytes_t, dst: &mut i8) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_int8(
+    this: &z_loaned_bytes_t,
+    dst: &mut i8,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<i8>(this, dst)
 }
 
 /// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int16(this: &z_loaned_bytes_t, dst: &mut i16) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_int16(
+    this: &z_loaned_bytes_t,
+    dst: &mut i16,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<i16>(this, dst)
 }
 
 /// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int32(this: &z_loaned_bytes_t, dst: &mut i32) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_int32(
+    this: &z_loaned_bytes_t,
+    dst: &mut i32,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<i32>(this, dst)
 }
 
 /// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int64(this: &z_loaned_bytes_t, dst: &mut i64) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_int64(
+    this: &z_loaned_bytes_t,
+    dst: &mut i64,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<i64>(this, dst)
 }
 
 /// Deserializes into a float.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_float(this: &z_loaned_bytes_t, dst: &mut f32) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_float(
+    this: &z_loaned_bytes_t,
+    dst: &mut f32,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<f32>(this, dst)
 }
 
 /// Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_double(this: &z_loaned_bytes_t, dst: &mut f64) -> z_error_t {
+pub extern "C" fn z_bytes_deserialize_into_double(
+    this: &z_loaned_bytes_t,
+    dst: &mut f64,
+) -> z_error_t {
     z_bytes_deserialize_into_arithmetic::<f64>(this, dst)
 }
 
