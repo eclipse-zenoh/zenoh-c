@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
     z_owned_bytes_t payload;
     while (1) {
-        z_bytes_encode_from_shm_copy(&payload, loaned_shm);
+        z_bytes_serialize_from_shm_copy(&payload, loaned_shm);
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 

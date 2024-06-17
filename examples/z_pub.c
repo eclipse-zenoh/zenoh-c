@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
         z_publisher_put_options_default(&options);
 
         z_owned_bytes_t payload;
-        z_bytes_encode_from_string(&payload, buf);
+        z_bytes_serialize_from_string(&payload, buf);
 
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }

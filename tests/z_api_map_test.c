@@ -34,7 +34,7 @@ void writting_by_alias_read_by_get() {
     z_slice_map_insert_by_alias(z_loan_mut(map), z_loan(k1), z_loan(v1));
     z_slice_map_insert_by_alias(z_loan_mut(map), z_loan(k2), z_loan(v2));
     z_owned_bytes_t attachment;
-    z_bytes_encode_from_slice_map(&attachment, z_loan(map));
+    z_bytes_serialize_from_slice_map(&attachment, z_loan(map));
 
     // Elements check
 
