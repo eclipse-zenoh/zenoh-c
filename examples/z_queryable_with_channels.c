@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
     z_owned_fifo_handler_query_t handler;
     z_owned_closure_query_t closure;
     z_fifo_channel_query_new(&closure, &handler, 16);
-    z_owned_closure_query_t callback;
     z_owned_queryable_t qable;
 
     if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(closure), NULL) < 0) {
