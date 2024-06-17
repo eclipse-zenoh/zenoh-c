@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         if (z_check(shm_buf)) {
             {
                 uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(shm_buf));
-                sprintf((char*)buf, "SHM [%4d] %s", idx, value);
+                sprintf((char *)buf, "SHM [%4d] %s", idx, value);
                 printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
             }
 

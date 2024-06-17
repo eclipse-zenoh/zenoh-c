@@ -128,14 +128,14 @@ void test_slice() {
     z_drop(z_move(out2));
 }
 
-#define TEST_ARITHMETIC(TYPE, EXT, VAL)                   \
-    {                                                     \
-        TYPE in = VAL, out;                               \
-        z_owned_bytes_t payload;                          \
-        z_bytes_serialize_from_##EXT(&payload, in);          \
+#define TEST_ARITHMETIC(TYPE, EXT, VAL)                        \
+    {                                                          \
+        TYPE in = VAL, out;                                    \
+        z_owned_bytes_t payload;                               \
+        z_bytes_serialize_from_##EXT(&payload, in);            \
         z_bytes_deserialize_into_##EXT(z_loan(payload), &out); \
-        assert(in == out);                                \
-        z_drop(z_move(payload));                          \
+        assert(in == out);                                     \
+        z_drop(z_move(payload));                               \
     }
 
 void test_arithmetic() {
