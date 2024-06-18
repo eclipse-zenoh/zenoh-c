@@ -118,6 +118,10 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			DESTINATION ${cargo_toml_dir})
+		file(COPY
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
+			DESTINATION ${cargo_toml_dir}/include/)
 	endif()	
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
 endfunction()
