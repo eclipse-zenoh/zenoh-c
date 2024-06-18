@@ -118,6 +118,10 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			DESTINATION ${cargo_toml_dir})
+		file(COPY
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
+			DESTINATION ${cargo_toml_dir}/include/)
 	endif()	
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
 endfunction()
@@ -278,12 +282,13 @@ endif()
 # Define include directories for library targets
 status_print(source_include_dir)
 status_print(cargo_generated_include_dir)
-target_include_directories(zenohc_static INTERFACE ${source_include_dir})
-target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
 
 if(NOT(cargo_generated_include_dir STREQUAL ${source_include_dir}))
 	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
 	target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
+else()
+	target_include_directories(zenohc_static INTERFACE ${source_include_dir})
+	target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
 endif()
 
 set_target_properties(zenohc_shared zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
