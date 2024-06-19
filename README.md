@@ -260,3 +260,16 @@ Available features can be found in Zenoh [Cargo.toml](https://github.com/eclipse
 ```bash
 cmake ../zenoh-c -DZENOHC_CARGO_FLAGS="--no-default-features;--features=zenoh/transport_tcp,zenoh/transport_udp"
 ```
+
+## Versioning
+
+Being a CMake project, zenoh-c is limited to the `MAJOR.MINOR.PATCH.TWEAK` version scheme [inherent
+to CMake](https://gitlab.kitware.com/cmake/cmake/-/issues/16716). However, zenoh-c also incorporates
+a Cargo package which cannot be versionned with the `MAJOR.MINOR.PATCH.TWEAK` version scheme (not
+SemVer compatible). Hence zenoh-c uses a one-to-one mapping between CMake versions and SemVer versions:
+
+| CMake version           | SemVer equivalent | Meaning              |
+|-------------------------|-------------------|----------------------|
+| `1.2.3`                 | `1.2.3`           | Release version      |
+| `1.2.3.0`               | `1.2.3-dev`       | Developement version |
+| `1.2.3.x if x >= 1`     | `1.2.3-pre.x`     | Pre-release version  |

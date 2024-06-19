@@ -43,7 +43,7 @@ if(NOT DEFINED PROJECT_VERSION_TWEAK)
 elseif(PROJECT_VERSION_TWEAK EQUAL 0)
 	set(project_version "${project_version}-dev")
 elseif(PROJECT_VERSION_TWEAK GREATER 1)
-	set(project_version "${project_version}-rc.${PROJECT_VERSION_TWEAK}")
+	set(project_version "${project_version}-pre.${PROJECT_VERSION_TWEAK}")
 endif()
 status_print(project_version)
 
