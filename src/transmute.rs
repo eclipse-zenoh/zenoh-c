@@ -28,9 +28,19 @@ pub fn unwrap_ref_unchecked_mut<T>(value: &mut Option<T>) -> &mut T {
     unsafe { value.as_mut().unwrap_unchecked() }
 }
 
-pub(crate) trait TransmuteRef<T: Sized>: Sized {
-    fn transmute_ref(&self) -> &T;
-    fn transmute_mut(&mut self) -> &mut T;
+pub(crate) trait TransmuteRef: Sized {
+    type DST: Sized;
+    fn transmute_ref(&self) -> &Self::DST;
+    fn transmute_mut(&mut self) -> &mut Self::DST;
+    fn transmute_uninit(
+        this: &mut std::mem::MaybeUninit<Self>,
+    ) -> &mut std::mem::MaybeUninit<Self::DST> {
+        unsafe {
+            let this = this.assume_init_mut();
+            let this = this.transmute_mut();
+            std::mem::transmute(this)
+        }
+    }
 }
 
 pub(crate) trait TransmuteFromHandle<T: Sized>: Sized {
@@ -49,6 +59,73 @@ pub(crate) trait TransmuteCopy<T: Copy> {
 
 pub(crate) trait TransmuteUninitPtr<T: Sized>: Sized {
     fn transmute_uninit_ptr(self) -> *mut std::mem::MaybeUninit<T>;
+}
+
+pub(crate) trait InplaceClear: Sized {
+    // Initialize the object in place with some "empty" state which doesn't require dropping. Drop previous value if needed
+    fn inplace_clear(&mut self) {
+        let this = self as *mut Self;
+        unsafe { std::ptr::drop_in_place(this) };
+        let this = this as *mut std::mem::MaybeUninit<Self>;
+        let this = unsafe { &mut *this };
+        Self::inplace_clear_uninit(this);
+    }
+    // Initialize the memory with some "empty" object state which doesn't require dropping
+    fn inplace_clear_uninit(this: &mut std::mem::MaybeUninit<Self>) -> &mut Self;
+}
+
+// Default implementation of `InplaceClear` trait for object implementing Default trait. May be less efficient than a custom implementation
+// because for `empty` operation it performs a copy of the default value from stack to provided memory
+pub(crate) trait InplaceClearDefault: Default {
+    fn inplace_clear_with_default(&mut self) {
+        *self = <Self as Default>::default();
+    }
+    fn inplace_clear_uninit_with_default(this: &mut std::mem::MaybeUninit<Self>) -> &mut Self {
+        this.write(<Self as Default>::default())
+    }
+}
+
+// For types implementing Default, we can use provide default implementation of `InplaceClear`
+// This should be done explicitly by implementing `InplaceClearDefault` trait. It's also possible to provide a custom implementation
+// of `InplaceClear` trait for more efficient inplace initialization if needed
+impl<T: InplaceClearDefault> InplaceClear for T {
+    fn inplace_clear(&mut self) {
+        InplaceClearDefault::inplace_clear_with_default(self);
+    }
+    fn inplace_clear_uninit(this: &mut std::mem::MaybeUninit<Self>) -> &mut Self {
+        InplaceClearDefault::inplace_clear_uninit_with_default(this)
+    }
+}
+
+pub(crate) trait CTypeUninit: Sized + TransmuteRef<DST = Self::RustType> {
+    type RustType: Sized + InplaceClear + TransmuteRef<DST = Self>;
+    // Initialize the object in place with a memcpy of the provided value. Assumes that the memory passed to the function is uninitialized
+    fn init(this: &mut std::mem::MaybeUninit<Self>, value: Self::RustType) -> &mut Self::RustType {
+        let this = this.write(*value.transmute_ref());
+        std::mem::forget(value);
+        this.transmute_mut()
+    }
+
+    // Initialize the object in place with an empty value
+    fn empty(this: &mut std::mem::MaybeUninit<Self>) -> &mut Self::RustType {
+        let this = TransmuteRef::transmute_uninit(this);
+        InplaceClear::inplace_clear_uninit(this)
+    }
+    // TODO: for effective inplace_init, we can provide a method that takes a closure that initializes the object in place
+}
+
+pub(crate) trait CTypeInit: Sized + TransmuteRef<DST = Self::RustType> {
+    type RustType: Sized + TransmuteRef<DST = Self> + InplaceClear;
+    // Move the object out of this, leaving it in empty state
+    fn extract(&mut self) -> Self {
+        let mut out: MaybeUninit<Self::RustType> = MaybeUninit::uninit();
+        let out = InplaceClear::inplace_clear_uninit(&mut out);
+        let this = self.transmute_mut();
+        // std::mem::swap(&mut out, self.transmute_mut());
+        // out
+        unimplemented!("extract")
+    }
+    // TODO: for effective inplace_init, we can provide a method that takes a closure that initializes the object in place
 }
 
 pub(crate) trait Inplace: Sized {
@@ -174,7 +251,8 @@ macro_rules! decl_transmute_handle {
 
 macro_rules! impl_transmute_ref {
     ($src_type:ty, $dst_type:ty) => {
-        impl $crate::transmute::TransmuteRef<$dst_type> for $src_type {
+        impl $crate::transmute::TransmuteRef for $src_type {
+            type DST = $dst_type;
             fn transmute_ref(&self) -> &$dst_type {
                 unsafe { std::mem::transmute::<&$src_type, &$dst_type>(self) }
             }
