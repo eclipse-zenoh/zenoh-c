@@ -17,6 +17,7 @@ use crate::{
         unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
         TransmuteRef, TransmuteUninitPtr,
     },
+    transmute2::RustTypeRef,
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CSlice, ZVector,
 };
@@ -157,11 +158,9 @@ pub extern "C" fn z_scout(
         WhatAmIMatcher::try_from(options.zc_what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.zc_timeout_ms as u64;
-    let config = match config.transmute_mut().extract().take() {
-        Some(c) => c,
-        None => {
-            return errors::Z_EINVAL;
-        }
+    let Some(config) = config.as_rust_type_mut().take() else {
+        log::error!("Config not provided");
+        return errors::Z_EINVAL;
     };
     let mut closure = z_owned_closure_hello_t::empty();
     std::mem::swap(&mut closure, callback);

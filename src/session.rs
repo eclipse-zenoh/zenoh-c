@@ -16,6 +16,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
+use crate::transmute2::RustTypeRef;
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
@@ -60,13 +61,10 @@ pub extern "C" fn z_open(
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let config = match config.transmute_mut().extract() {
-        Some(c) => c,
-        None => {
-            log::error!("Config not provided");
-            Inplace::empty(this);
-            return errors::Z_EINVAL;
-        }
+    let Some(config) = config.as_rust_type_mut().take() else {
+        log::error!("Config not provided");
+        Inplace::empty(this);
+        return errors::Z_EINVAL;
     };
     match zenoh::open(config).wait() {
         Ok(s) => {
@@ -96,13 +94,10 @@ pub extern "C" fn z_open_with_custom_shm_clients(
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let config = match config.transmute_mut().extract() {
-        Some(c) => c,
-        None => {
-            log::error!("Config not provided");
-            Inplace::empty(this);
-            return errors::Z_EINVAL;
-        }
+    let Some(config) = config.as_rust_type_mut().take() else {
+        log::error!("Config not provided");
+        Inplace::empty(this);
+        return errors::Z_EINVAL;
     };
     match zenoh::open(config)
         .with_shm_clients(shm_clients.transmute_ref().clone())

@@ -19,10 +19,7 @@ use std::str::from_utf8;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
 use crate::errors::z_error_t;
-use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-};
+use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_owned_string_t, z_string_from_substring, z_string_null};
 
 #[no_mangle]
@@ -66,53 +63,49 @@ pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"timestamping/enabled\0".as_ptr() as *const c_char) };
 
 pub use crate::opaque_types::z_loaned_config_t;
-decl_transmute_handle!(Config, z_loaned_config_t);
 pub use crate::opaque_types::z_owned_config_t;
-decl_transmute_owned!(Option<Config>, z_owned_config_t);
-
-validate_equivalence!(z_owned_config_t, z_loaned_config_t);
+decl_c_type!(
+    owned(z_owned_config_t, Option<Config>),
+    loaned(z_loaned_config_t, Config)
+);
 
 /// Borrows config.
 #[no_mangle]
 pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> &z_loaned_config_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    let this = this.as_rust_type_ref();
+    let this = unsafe { this.as_ref().unwrap_unchecked() };
+    this.as_loaned_ctype_ref()
 }
 
 /// Mutably borrows config.
 #[no_mangle]
 pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_loaned_config_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+    let this = this.as_rust_type_mut();
+    let this = unsafe { this.as_mut().unwrap_unchecked() };
+    this.as_loaned_ctype_mut()
 }
 
 /// Constructs a new empty configuration.
 #[no_mangle]
-pub extern "C" fn z_config_default(this: *mut MaybeUninit<z_owned_config_t>) {
-    let this = this.transmute_uninit_ptr();
-    let config = Config::default();
-    Inplace::init(this, Some(config));
+pub extern "C" fn z_config_default(this: &mut MaybeUninit<z_owned_config_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Constructs config in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_config_null(this: *mut MaybeUninit<z_owned_config_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn z_config_null(this: &mut MaybeUninit<z_owned_config_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Clones the config into provided uninitialized memory location.
 #[no_mangle]
 pub extern "C" fn z_config_clone(
     this: &z_loaned_config_t,
-    dst: *mut MaybeUninit<z_owned_config_t>,
+    dst: &mut MaybeUninit<z_owned_config_t>,
 ) {
-    let src = this.transmute_ref();
-    let src = src.clone();
-    let dst = dst.transmute_uninit_ptr();
-    Inplace::init(dst, Some(src));
+    let src = Some(this.as_rust_type_ref().clone());
+    let dst = dst.as_rust_type_mut_uninit();
+    dst.write(src);
 }
 
 /// Gets the property with the given path key from the configuration, and constructs and owned string from it.
@@ -121,7 +114,7 @@ pub extern "C" fn z_config_clone(
 pub unsafe extern "C" fn zc_config_get_from_string(
     this: &z_loaned_config_t,
     key: *const c_char,
-    out_value_string: *mut MaybeUninit<z_owned_string_t>,
+    out_value_string: &mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
     zc_config_get_from_substring(this, key, libc::strlen(key), out_value_string)
 }
@@ -133,9 +126,9 @@ pub unsafe extern "C" fn zc_config_get_from_substring(
     this: &z_loaned_config_t,
     key: *const c_char,
     key_len: usize,
-    out_value_string: *mut MaybeUninit<z_owned_string_t>,
+    out_value_string: &mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
-    let config = this.transmute_ref();
+    let config = this.as_rust_type_ref();
     if key.is_null() {
         z_string_null(out_value_string);
         return errors::Z_EINVAL;
@@ -190,7 +183,7 @@ pub unsafe extern "C" fn zc_config_insert_json_from_substring(
     value: *const c_char,
     value_len: usize,
 ) -> errors::z_error_t {
-    let config = this.transmute_mut();
+    let config = this.as_rust_type_mut();
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(_) => return errors::Z_EINVAL,
@@ -209,15 +202,13 @@ pub unsafe extern "C" fn zc_config_insert_json_from_substring(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_drop(this: &mut z_owned_config_t) {
-    let config = this.transmute_mut();
-    Inplace::drop(config);
+    *this.as_rust_type_mut() = None;
 }
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_config_check(this: &z_owned_config_t) -> bool {
-    let config = this.transmute_ref();
-    config.as_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
@@ -226,7 +217,7 @@ pub extern "C" fn z_config_check(this: &z_owned_config_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_config_from_str(
-    this: *mut MaybeUninit<z_owned_config_t>,
+    this: &mut MaybeUninit<z_owned_config_t>,
     s: *const c_char,
 ) -> errors::z_error_t {
     let mut res = errors::Z_OK;
@@ -239,7 +230,7 @@ pub unsafe extern "C" fn zc_config_from_str(
         if props.is_none() {
             res = errors::Z_EPARSE;
         }
-        Inplace::init(this.transmute_uninit_ptr(), props);
+        this.as_rust_type_mut_uninit().write(props);
     }
     res
 }
@@ -253,7 +244,7 @@ pub unsafe extern "C" fn zc_config_to_string(
     config: &z_loaned_config_t,
     out_config_string: *mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
-    let config: &Config = config.transmute_ref();
+    let config = config.as_rust_type_ref();
     match json5::to_string(config) {
         Ok(s) => {
             unsafe {
@@ -278,7 +269,7 @@ pub unsafe extern "C" fn zc_config_to_string(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn zc_config_from_file(
-    this: *mut MaybeUninit<z_owned_config_t>,
+    this: &mut MaybeUninit<z_owned_config_t>,
     path: *const c_char,
 ) -> errors::z_error_t {
     let path_str = CStr::from_ptr(path);
@@ -298,15 +289,16 @@ pub unsafe extern "C" fn zc_config_from_file(
             None
         }
     };
-    Inplace::init(this.transmute_uninit_ptr(), config);
+    this.as_rust_type_mut_uninit().write(config);
     res
 }
 
 /// Constructs a default peer mode configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_config_peer(this: *mut MaybeUninit<z_owned_config_t>) {
-    Inplace::init(this.transmute_uninit_ptr(), Some(zenoh::config::peer()));
+pub extern "C" fn z_config_peer(this: &mut MaybeUninit<z_owned_config_t>) {
+    this.as_rust_type_mut_uninit()
+        .write(Some(zenoh::config::peer()));
 }
 
 /// Constructs a default, zenoh-allocated, client mode configuration.
@@ -318,7 +310,7 @@ pub extern "C" fn z_config_peer(this: *mut MaybeUninit<z_owned_config_t>) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_config_client(
-    this: *mut MaybeUninit<z_owned_config_t>,
+    this: &mut MaybeUninit<z_owned_config_t>,
     peers: *const *const c_char,
     n_peers: usize,
 ) -> z_error_t {
@@ -348,9 +340,7 @@ pub unsafe extern "C" fn z_config_client(
         z_config_null(this);
         return res;
     };
-    Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(zenoh::config::client(locators)),
-    );
+    this.as_rust_type_mut_uninit()
+        .write(Some(zenoh::config::client(locators)));
     res
 }
