@@ -88,7 +88,8 @@ pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_loane
 /// Constructs a new empty configuration.
 #[no_mangle]
 pub extern "C" fn z_config_default(this: &mut MaybeUninit<z_owned_config_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+    this.as_rust_type_mut_uninit()
+        .write(Some(Config::default()));
 }
 
 /// Constructs config in its gravestone state.
