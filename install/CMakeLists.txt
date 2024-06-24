@@ -27,9 +27,9 @@ function(install_zenohc_lib configurations property_postfix package_name)
     # On Windows .dll need to be installed in ${CMAKE_INSTALL_BINDIR}, 
     # while on Linux and macOS .so and .dylib need to be installed in ${CMAKE_INSTALL_LIBDIR}
     if(WIN32)
-        set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_BINDIR}
+        set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_BINDIR})
     else()
-        set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_LIBDIR}
+        set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_LIBDIR})
     endif()
     install(FILES ${dylib_path} DESTINATION ${ZENOHC_INSTALL_DYLIBDIR} CONFIGURATIONS ${configurations})
     if(DEFINED implib_path)
