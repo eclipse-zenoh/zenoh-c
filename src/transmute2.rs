@@ -26,6 +26,12 @@ pub(crate) trait LoanedCTypeRef: Sized {
     fn as_loaned_ctype_mut(&mut self) -> &mut Self::LoanedCType;
 }
 
+pub(crate) trait ViewCTypeRef: Sized {
+    type ViewCType;
+    fn as_view_ctype_ref(&self) -> &Self::OwnedCType;
+    fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType;
+}
+
 pub(crate) trait RustTypeRef: Sized {
     type RustType;
     fn as_rust_type_ref(&self) -> &Self::RustType;

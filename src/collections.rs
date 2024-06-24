@@ -27,27 +27,47 @@ use crate::transmute::{
 };
 
 pub struct CSlice(*const u8, isize);
+#[derive(Default)]
+pub struct CSliceOwned(pub CSlice);
+#[derive(Default)]
+pub struct CSliceView(pub CSlice);
 
-impl CSlice {
+impl AsRef<CSlice> for CSliceOwned {
+    fn as_ref(&self) -> &CSlice {
+        &self.0
+    }
+}
+
+impl AsRef<CSlice> for CSliceView {
+    fn as_ref(&self) -> &CSlice {
+        &self.0
+    }
+}
+
+impl CSliceView {
     pub fn new_borrowed(data: *const u8, len: usize) -> Self {
         let len: isize = len as isize;
-        CSlice(data, -len)
+        Self(CSlice(data, -len))
     }
 
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
         Self::new_borrowed(slice.as_ptr(), slice.len())
     }
+}
 
+impl CSliceOwned {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned(data: *const u8, len: usize) -> Self {
         if len == 0 {
-            return CSlice::default();
+            return Self::default();
         }
         let b = unsafe { from_raw_parts(data, len).to_vec().into_boxed_slice() };
         let slice = Box::leak(b);
-        CSlice(slice.as_ptr(), slice.len() as isize)
+        Self(CSlice(slice.as_ptr(), slice.len() as isize))
     }
+}
 
+impl CSlice {
     pub fn slice(&self) -> &'static [u8] {
         if self.1 == 0 {
             return &[0u8; 0];
@@ -73,6 +93,10 @@ impl CSlice {
 
     pub fn shallow_copy(&self) -> Self {
         Self(self.0, self.1)
+    }
+
+    pub unsafe fn clone_to_owned(&self) -> CSliceOwned {
+        CSliceOwned::new_owned(self.data(), self.len())
     }
 }
 
@@ -104,9 +128,9 @@ impl PartialEq for CSlice {
     }
 }
 
-impl Clone for CSlice {
+impl Clone for CSliceOwned {
     fn clone(&self) -> Self {
-        unsafe { Self::new_owned(self.data(), self.len()) }
+        unsafe { Self::new_owned(self.0.data(), self.0.len()) }
     }
 }
 
@@ -130,9 +154,16 @@ pub use crate::opaque_types::z_loaned_slice_t;
 pub use crate::opaque_types::z_owned_slice_t;
 pub use crate::opaque_types::z_view_slice_t;
 
-decl_transmute_owned!(CSlice, z_owned_slice_t);
-decl_transmute_owned!(custom_inplace_init CSlice, z_view_slice_t);
-decl_transmute_handle!(CSlice, z_loaned_slice_t);
+
+// decl_c_type!(
+//     owned(z_owned_slice_t, CSlice),
+//     loaned(z_loaned_slice_t, CSlice),
+// )
+
+decl_transmute_owned!(CSliceOwned, z_owned_slice_t);
+decl_transmute_owned!(CSliceView, z_view_slice_t);
+decl_transmute_handle!(CSliceOwned, z_loaned_slice_t);
+decl_transmute_handle!(CSliceView, z_loaned_slice_t);
 
 validate_equivalence!(z_owned_slice_t, z_loaned_slice_t);
 validate_equivalence!(z_view_slice_t, z_loaned_slice_t);
@@ -140,13 +171,13 @@ validate_equivalence!(z_view_slice_t, z_loaned_slice_t);
 /// Constructs an empty view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_empty(this: *mut MaybeUninit<z_view_slice_t>) {
-    Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
+    Inplace::init(this.transmute_uninit_ptr(), CSliceView::default())
 }
 
 /// Constructs an empty view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_null(this: *mut MaybeUninit<z_view_slice_t>) {
-    Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
+    Inplace::init(this.transmute_uninit_ptr(), CSliceView::default())
 }
 
 /// Constructs a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
@@ -186,7 +217,7 @@ pub unsafe extern "C" fn z_view_slice_wrap(
     } else {
         Inplace::init(
             this.transmute_uninit_ptr(),
-            CSlice::new_borrowed(start, len),
+            CSliceView::new_borrowed(start, len),
         );
         errors::Z_OK
     }
@@ -201,13 +232,13 @@ pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> &z_loaned_slice_t 
 /// @return ``true`` if the slice is not empty, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_view_slice_check(this: &z_view_slice_t) -> bool {
-    !this.transmute_ref().is_empty()
+    !this.transmute_ref().as_ref().is_empty()
 }
 
 /// Constructs an empty `z_owned_slice_t`.
 #[no_mangle]
 pub extern "C" fn z_slice_empty(this: *mut MaybeUninit<z_owned_slice_t>) {
-    Inplace::init(this.transmute_uninit_ptr(), CSlice::default())
+    Inplace::init(this.transmute_uninit_ptr(), CSliceOwned::default())
 }
 
 /// Constructs an empty `z_owned_slice_t`.
@@ -251,7 +282,7 @@ pub unsafe extern "C" fn z_slice_wrap(
         z_slice_empty(this);
         errors::Z_EINVAL
     } else {
-        Inplace::init(this.transmute_uninit_ptr(), CSlice::new_owned(start, len));
+        Inplace::init(this.transmute_uninit_ptr(), CSliceOwned::new_owned(start, len));
         errors::Z_OK
     }
 }
