@@ -97,7 +97,7 @@ pub extern "C" fn z_timestamp_new(
         zenoh::time::NTP64(npt64_time),
         (zid.transmute_copy()).into(),
     );
-    *this.as_rust_type_mut_uninit().write(timestamp);
+    this.as_rust_type_mut_uninit().write(timestamp);
     errors::Z_OK
 }
 
