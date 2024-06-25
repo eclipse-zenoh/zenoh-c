@@ -27,6 +27,9 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::transmute2::CTypeRef;
+use crate::transmute2::RustTypeRef;
+use crate::transmute2::RustTypeRefUninit;
 use crate::z_id_t;
 use crate::z_loaned_bytes_t;
 use crate::z_loaned_keyexpr_t;
@@ -81,12 +84,12 @@ impl From<z_sample_kind_t> for SampleKind {
     }
 }
 use crate::opaque_types::z_timestamp_t;
-decl_transmute_copy!(Timestamp, z_timestamp_t);
+decl_c_type!(copy(z_timestamp_t, Timestamp));
 
 /// Create timestamp
 #[no_mangle]
 pub extern "C" fn z_timestamp_new(
-    this: &mut z_timestamp_t,
+    this: &mut MaybeUninit<z_timestamp_t>,
     zid: &z_id_t,
     npt64_time: u64,
 ) -> errors::z_error_t {
@@ -94,20 +97,20 @@ pub extern "C" fn z_timestamp_new(
         zenoh::time::NTP64(npt64_time),
         (zid.transmute_copy()).into(),
     );
-    *this = timestamp.transmute_copy();
+    *this.as_rust_type_mut_uninit().write(timestamp);
     errors::Z_OK
 }
 
 /// Returns NPT64 time associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_npt64_time(this: &z_timestamp_t) -> u64 {
-    this.transmute_copy().get_time().0
+    this.as_rust_type_ref().get_time().0
 }
 
 /// Returns id associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_id(this: &z_timestamp_t) -> z_id_t {
-    this.transmute_copy().get_id().to_le_bytes().into()
+    this.as_rust_type_ref().get_id().to_le_bytes().into()
 }
 
 use crate::opaque_types::z_loaned_sample_t;
@@ -140,7 +143,7 @@ pub extern "C" fn z_sample_kind(this: &z_loaned_sample_t) -> z_sample_kind_t {
 #[no_mangle]
 pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_timestamp_t> {
     if let Some(t) = this.transmute_ref().timestamp() {
-        Some(t.transmute_ref())
+        Some(t.as_ctype_ref())
     } else {
         None
     }

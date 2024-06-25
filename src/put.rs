@@ -19,6 +19,7 @@ use crate::keyexpr::*;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteRef;
+use crate::transmute2::RustTypeRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
 use crate::z_timestamp_t;
@@ -103,9 +104,9 @@ pub extern "C" fn z_put(
             put = put.attachment(attachment);
         }
         if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
+            let timestamp = *unsafe { options.timestamp.as_ref() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             put = put.timestamp(Some(timestamp));
         }
         put = put.priority(options.priority.into());
@@ -170,9 +171,9 @@ pub extern "C" fn z_delete(
     let mut del = session.delete(key_expr);
     if let Some(options) = options {
         if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
+            let timestamp = *unsafe { options.timestamp.as_ref() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             del = del.timestamp(Some(timestamp));
         }
         del = del

@@ -21,6 +21,7 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::transmute2::RustTypeRef;
 use crate::z_entity_global_id_t;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;
@@ -216,7 +217,7 @@ pub unsafe extern "C" fn z_publisher_put(
         if !options.timestamp.is_null() {
             let timestamp = *unsafe { options.timestamp.as_mut() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             put = put.timestamp(Some(timestamp));
         }
     }
@@ -260,7 +261,7 @@ pub extern "C" fn z_publisher_delete(
         if !options.timestamp.is_null() {
             let timestamp = *unsafe { options.timestamp.as_mut() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             del = del.timestamp(Some(timestamp));
         }
     }

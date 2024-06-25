@@ -15,6 +15,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
+use crate::transmute2::RustTypeRef;
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
@@ -310,7 +311,7 @@ pub extern "C" fn z_query_reply(
         if !options.timestamp.is_null() {
             let timestamp = *unsafe { options.timestamp.as_mut() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             reply = reply.timestamp(Some(timestamp));
         }
         reply = reply.priority(options.priority.into());
@@ -395,7 +396,7 @@ pub unsafe extern "C" fn z_query_reply_del(
         if !options.timestamp.is_null() {
             let timestamp = *unsafe { options.timestamp.as_mut() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             reply = reply.timestamp(Some(timestamp));
         }
         reply = reply.priority(options.priority.into());

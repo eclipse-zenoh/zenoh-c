@@ -14,22 +14,20 @@
 
 use std::mem::MaybeUninit;
 
-pub(crate) trait OwnedCTypeRef: Sized {
-    type OwnedCType;
-    fn as_owned_ctype_ref(&self) -> &Self::OwnedCType;
-    fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType;
+pub(crate) trait CTypeRef: Sized {
+    type CType;
+    fn as_ctype_ref(&self) -> &Self::CType;
+    fn as_ctype_mut(&mut self) -> &mut Self::CType;
 }
-
+// it's convenient to have a separate trait for loaned C types
+// because owned rust type usually provides Deref for corresponding loaned type.
+// E.g. Option<Config> is an owned type, Config is a loaned type.
+// So we can call `as_loaned_ctype_ref` on `Option<Config>` to get `z_loaned_config_t` reference
+// and at the same time call `as_ctype_ref` on it to get `z_owned_config_t` reference.
 pub(crate) trait LoanedCTypeRef: Sized {
     type LoanedCType;
     fn as_loaned_ctype_ref(&self) -> &Self::LoanedCType;
     fn as_loaned_ctype_mut(&mut self) -> &mut Self::LoanedCType;
-}
-
-pub(crate) trait ViewCTypeRef: Sized {
-    type ViewCType;
-    fn as_view_ctype_ref(&self) -> &Self::ViewCType;
-    fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType;
 }
 
 pub(crate) trait RustTypeRef: Sized {
@@ -43,16 +41,14 @@ pub(crate) trait RustTypeRefUninit: Sized {
     fn as_rust_type_mut_uninit(&mut self) -> &mut MaybeUninit<Self::RustType>;
 }
 
-/// Transmute value of C wrapper type into value of corresponding Rust type
-pub(crate) trait IntoCType: Sized + Copy {
+pub(crate) trait IntoRustType: Sized + Copy {
     type RustType;
-    fn into_ctype(self) -> Self::RustType;
+    fn into_rust_type(self) -> Self::RustType;
 }
 
-/// Transmute value of Rust type into value of corresponding C wrapper type
-pub(crate) trait IntoRustType: Sized + Copy {
+pub(crate) trait IntoCType: Sized + Copy {
     type CType;
-    fn into_rust_type(self) -> Self::CType;
+    fn into_c_type(self) -> Self::CType;
 }
 
 macro_rules! validate_equivalence2 {
@@ -97,25 +93,14 @@ macro_rules! validate_equivalence2 {
 
 #[macro_export]
 macro_rules! impl_transmute {
-    (as_c_owned ($rust_type:ty, $c_type:ty)) => {
-        impl $crate::transmute2::OwnedCTypeRef for $rust_type {
-            type OwnedCType = $c_type;
-            fn as_owned_ctype_ref(&self) -> &Self::OwnedCType {
-                unsafe { &*(self as *const Self as *const Self::OwnedCType) }
+    (as_c ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute2::CTypeRef for $rust_type {
+            type CType = $c_type;
+            fn as_ctype_ref(&self) -> &Self::CType {
+                unsafe { &*(self as *const Self as *const Self::CType) }
             }
-            fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType {
-                unsafe { &mut *(self as *mut Self as *mut Self::OwnedCType) }
-            }
-        }
-    };
-    (as_c_view ($rust_type:ty, $c_type:ty)) => {
-        impl $crate::transmute2::ViewCTypeRef for $rust_type {
-            type ViewCType = $c_type;
-            fn as_view_ctype_ref(&self) -> &Self::ViewCType {
-                unsafe { &*(self as *const Self as *const Self::ViewCType) }
-            }
-            fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType {
-                unsafe { &mut *(self as *mut Self as *mut Self::ViewCType) }
+            fn as_ctype_mut(&mut self) -> &mut Self::CType {
+                unsafe { &mut *(self as *mut Self as *mut Self::CType) }
             }
         }
     };
@@ -130,7 +115,6 @@ macro_rules! impl_transmute {
             }
         }
     };
-
     (as_rust ($c_type:ty, $rust_type:ty)) => {
         impl $crate::transmute2::RustTypeRef for $c_type {
             type RustType = $rust_type;
@@ -151,6 +135,22 @@ macro_rules! impl_transmute {
             }
         }
     };
+    (into_rust ($c_type:ty, $rust_type:ty)) => {
+        impl $crate::transmute2::IntoRustType for $c_type {
+            type RustType = $rust_type;
+            fn into_rust_type(self) -> Self::RustType {
+                unsafe { std::mem::transmute::<$c_type, $rust_type>(self) }
+            }
+        }
+    };
+    (into_c ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute2::IntoCType for $rust_type {
+            type CType = $c_type;
+            fn into_c_type(self) -> Self::CType {
+                unsafe { std::mem::transmute::<$rust_type, $c_type>(self) }
+            }
+        }
+    };
 }
 
 // Declare "owned" C type. This type can be converted in place to it's Rust counterpart
@@ -164,16 +164,23 @@ macro_rules! decl_c_type {
         );
         validate_equivalence2!($c_view_type, $rust_view_type);
         validate_equivalence2!($c_view_type, $c_loaned_type);
-        impl_transmute!(as_c_view($rust_view_type, $c_view_type));
+        impl_transmute!(as_c($rust_view_type, $c_view_type));
         impl_transmute!(as_rust($c_view_type, $rust_view_type));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty), loaned ($c_loaned_type:ty, $rust_loaned_type:ty) $(,)?) => {
         validate_equivalence2!($c_owned_type, $rust_owned_type);
         validate_equivalence2!($c_loaned_type, $rust_loaned_type);
         validate_equivalence2!($c_owned_type, $c_loaned_type);
-        impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
+        impl_transmute!(as_c($rust_owned_type, $c_owned_type));
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+    };
+    (copy ($c_type:ty, $rust_type:ty) $(,)?) => {
+        validate_equivalence2!($c_type, $rust_type);
+        impl_transmute!(as_c($rust_type, $c_type));
+        impl_transmute!(as_rust($c_type, $rust_type));
+        impl_transmute!(into_c($rust_type, $c_type));
+        impl_transmute!(into_rust($c_type, $rust_type));
     };
 }
