@@ -18,7 +18,7 @@ pub struct z_owned_closure_sample_t {
     /// An optional pointer to a context representing a closure state.
     pub context: *mut c_void,
     /// A closure body.
-    pub(crate) call: Option<extern "C" fn(sample: *const z_loaned_sample_t, context: *mut c_void)>,
+    pub(crate) call: Option<extern "C" fn(sample: &z_loaned_sample_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     pub drop: Option<extern "C" fn(context: *mut c_void)>,
 }
@@ -88,11 +88,11 @@ impl<F: Fn(&z_loaned_sample_t)> From<F> for z_owned_closure_sample_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
         extern "C" fn call<F: Fn(&z_loaned_sample_t)>(
-            sample: *const z_loaned_sample_t,
+            sample: &z_loaned_sample_t,
             this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };
-            unsafe { this(sample.as_ref().unwrap()) }
+            this(sample)
         }
         extern "C" fn drop<F>(this: *mut c_void) {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })

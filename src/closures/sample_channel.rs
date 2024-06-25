@@ -2,8 +2,7 @@ use crate::{
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
         TransmuteUninitPtr,
-    },
-    z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
+    }, transmute2::{RustTypeRef, RustTypeRefUninit}, z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t
 };
 use libc::c_void;
 use std::{mem::MaybeUninit, sync::Arc};
@@ -45,12 +44,12 @@ pub extern "C" fn z_fifo_handler_sample_check(this: &z_owned_fifo_handler_sample
     this.transmute_ref().is_some()
 }
 
-extern "C" fn __z_handler_sample_send(sample: *const z_loaned_sample_t, context: *mut c_void) {
+extern "C" fn __z_handler_sample_send(sample: &z_loaned_sample_t, context: *mut c_void) {
     unsafe {
         let f = (context as *mut std::sync::Arc<dyn Fn(Sample) + Send + Sync>)
             .as_mut()
             .unwrap_unchecked();
-        (f)(sample.as_ref().unwrap().transmute_ref().clone());
+        (f)(sample.as_rust_type_ref().clone());
     }
 }
 
@@ -94,15 +93,15 @@ pub extern "C" fn z_fifo_handler_sample_loan(
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_sample_recv(
     this: &z_loaned_fifo_handler_sample_t,
-    sample: *mut MaybeUninit<z_owned_sample_t>,
+    sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> bool {
     match this.transmute_ref().recv() {
         Ok(q) => {
-            Inplace::init(sample.transmute_uninit_ptr(), Some(q));
+            sample.as_rust_type_mut_uninit().write(Some(q));
             true
         }
         Err(_) => {
-            Inplace::empty(sample.transmute_uninit_ptr());
+            sample.as_rust_type_mut_uninit().write(None);
             false
         }
     }
@@ -113,15 +112,15 @@ pub extern "C" fn z_fifo_handler_sample_recv(
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_sample_try_recv(
     this: &z_loaned_fifo_handler_sample_t,
-    sample: *mut MaybeUninit<z_owned_sample_t>,
+    sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> bool {
     match this.transmute_ref().try_recv() {
         Ok(q) => {
-            Inplace::init(sample.transmute_uninit_ptr(), Some(q));
+            sample.as_rust_type_mut_uninit().write(Some(q));
             true
         }
         Err(e) => {
-            Inplace::empty(sample.transmute_uninit_ptr());
+            sample.as_rust_type_mut_uninit().write(None);
             match e {
                 flume::TryRecvError::Empty => true,
                 flume::TryRecvError::Disconnected => false,
@@ -196,15 +195,15 @@ pub extern "C" fn z_ring_handler_sample_loan(
 #[no_mangle]
 pub extern "C" fn z_ring_handler_sample_recv(
     this: &z_loaned_ring_handler_sample_t,
-    sample: *mut MaybeUninit<z_owned_sample_t>,
+    sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> bool {
     match this.transmute_ref().recv() {
         Ok(q) => {
-            Inplace::init(sample.transmute_uninit_ptr(), Some(q));
+            sample.as_rust_type_mut_uninit().write(Some(q));
             true
         }
         Err(_) => {
-            Inplace::empty(sample.transmute_uninit_ptr());
+            sample.as_rust_type_mut_uninit().write(None);
             false
         }
     }
@@ -215,15 +214,15 @@ pub extern "C" fn z_ring_handler_sample_recv(
 #[no_mangle]
 pub extern "C" fn z_ring_handler_sample_try_recv(
     this: &z_loaned_ring_handler_sample_t,
-    sample: *mut MaybeUninit<z_owned_sample_t>,
+    sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> bool {
     match this.transmute_ref().try_recv() {
         Ok(q) => {
-            Inplace::init(sample.transmute_uninit_ptr(), q);
+            sample.as_rust_type_mut_uninit().write(q);
             true
         }
         Err(_) => {
-            Inplace::empty(sample.transmute_uninit_ptr());
+            sample.as_rust_type_mut_uninit().write(None);
             false
         }
     }

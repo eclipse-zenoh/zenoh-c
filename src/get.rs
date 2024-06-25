@@ -37,6 +37,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
+use crate::transmute2::LoanedCTypeRef;
 use crate::z_id_t;
 use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
@@ -134,7 +135,7 @@ pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_sample_t {
     match this.transmute_ref().result() {
-        Ok(sample) => sample.transmute_handle(),
+        Ok(sample) => sample.as_loaned_ctype_ref() as _,
         Err(_) => null(),
     }
 }

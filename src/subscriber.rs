@@ -22,6 +22,7 @@ use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
+use crate::transmute2::LoanedCTypeRef;
 use crate::z_closure_sample_call;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_session_t;
@@ -126,7 +127,7 @@ pub extern "C" fn z_declare_subscriber(
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
-            let sample = sample.transmute_handle();
+            let sample = sample.as_loaned_ctype_ref();
             z_closure_sample_call(z_closure_sample_loan(&closure), sample)
         });
     if let Some(options) = options {

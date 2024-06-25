@@ -18,7 +18,7 @@ use zenoh::{
     prelude::SessionDeclarations,
 };
 
-use crate::transmute::TransmuteIntoHandle;
+use crate::{transmute::TransmuteIntoHandle, transmute2::LoanedCTypeRef};
 use crate::{
     errors,
     transmute::{
@@ -166,7 +166,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .liveliness()
         .declare_subscriber(key_expr)
         .callback(move |sample| {
-            let sample = sample.transmute_handle();
+            let sample = sample.as_loaned_ctype_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         })
         .wait()
