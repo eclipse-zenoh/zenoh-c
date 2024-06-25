@@ -13,15 +13,15 @@
 //
 
 use crate::errors;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::unwrap_ref_unchecked_mut;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::IntoCType;
+use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
+use crate::transmute2::RustTypeRefUninit;
 use crate::z_entity_global_id_t;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;
@@ -71,12 +71,13 @@ pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) 
     };
 }
 
-pub use crate::opaque_types::z_owned_publisher_t;
-decl_transmute_owned!(Option<Publisher<'static>>, z_owned_publisher_t);
 pub use crate::opaque_types::z_loaned_publisher_t;
-decl_transmute_handle!(Publisher<'static>, z_loaned_publisher_t);
+pub use crate::opaque_types::z_owned_publisher_t;
 
-validate_equivalence!(z_owned_publisher_t, z_loaned_publisher_t);
+decl_c_type!(
+    owned(z_owned_publisher_t, Option<Publisher<'static>>),
+    loaned(z_loaned_publisher_t, Publisher<'static>)
+);
 
 /// Constructs and declares a publisher for the given key expression.
 ///
@@ -92,12 +93,12 @@ validate_equivalence!(z_owned_publisher_t, z_loaned_publisher_t);
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_publisher(
-    this: *mut MaybeUninit<z_owned_publisher_t>,
+    this: &mut MaybeUninit<z_owned_publisher_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&z_publisher_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let session = session.transmute_ref();
     let key_expr = key_expr.transmute_ref().clone().into_owned();
     let mut p = session.declare_publisher(key_expr);
@@ -111,11 +112,11 @@ pub extern "C" fn z_declare_publisher(
     match p.wait() {
         Err(e) => {
             log::error!("{}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
         Ok(publisher) => {
-            Inplace::init(this, Some(publisher));
+            this.write(Some(publisher));
             errors::Z_OK
         }
     }
@@ -124,34 +125,37 @@ pub extern "C" fn z_declare_publisher(
 /// Constructs a publisher in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_null(this: *mut MaybeUninit<z_owned_publisher_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn z_publisher_null(this: &mut MaybeUninit<z_owned_publisher_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publisher is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_publisher_check(this: &z_owned_publisher_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows publisher.
 #[no_mangle]
-pub extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publisher_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loaned_publisher_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Mutably borrows publisher.
 #[no_mangle]
-pub extern "C" fn z_publisher_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_publisher_loan_mut(
     this: &mut z_owned_publisher_t,
 ) -> &mut z_loaned_publisher_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_ctype_mut()
 }
 
 /// Options passed to the `z_publisher_put()` function.
@@ -197,7 +201,7 @@ pub unsafe extern "C" fn z_publisher_put(
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
-    let publisher = this.transmute_ref();
+    let publisher = this.as_rust_type_ref();
     let payload = payload.transmute_mut().extract();
 
     let mut put = publisher.put(payload);
@@ -255,7 +259,7 @@ pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
     options: Option<&z_publisher_delete_options_t>,
 ) -> errors::z_error_t {
-    let publisher = publisher.transmute_ref();
+    let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
         if !options.timestamp.is_null() {
@@ -276,15 +280,13 @@ pub extern "C" fn z_publisher_delete(
 /// Returns the ID of the publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {
-    let publisher = publisher.transmute_ref();
-    publisher.id().into_c_type()
+    publisher.as_rust_type_ref().id().into_c_type()
 }
 
 /// Returns the key expression of the publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_loaned_keyexpr_t {
-    let publisher = publisher.transmute_ref();
-    publisher.key_expr().transmute_handle()
+    publisher.as_rust_type_ref().key_expr().transmute_handle()
 }
 
 pub use crate::opaque_types::zcu_owned_matching_listener_t;
@@ -318,7 +320,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     let this = this.transmute_uninit_ptr();
     let mut closure = zcu_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
-    let publisher = publisher.transmute_ref();
+    let publisher = publisher.as_rust_type_ref();
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
@@ -363,7 +365,7 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
-    if let Some(p) = this.transmute_mut().extract().take() {
+    if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

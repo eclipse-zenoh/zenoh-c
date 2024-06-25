@@ -178,12 +178,6 @@ macro_rules! decl_c_type {
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
     };
-    (owned_and_loaned($c_owned_type:ty, $c_loaned_type:ty, $rust_type:ty)) => {
-        decl_c_type!(
-            owned($c_owned_type, $rust_type),
-            loaned($c_loaned_type, $rust_type)
-        );
-    };
     (copy ($c_type:ty, $rust_type:ty) $(,)?) => {
         validate_equivalence2!($c_type, $rust_type);
         impl_transmute!(as_c($rust_type, $c_type));
