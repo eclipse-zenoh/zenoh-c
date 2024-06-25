@@ -5,7 +5,8 @@ use crate::transmute::{
 };
 use crate::transmute2::RustTypeRefUninit;
 use crate::{
-    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned, ZHashMap
+    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
+    CSliceOwned, CStringOwned, ZHashMap,
 };
 use core::fmt;
 use std::any::Any;

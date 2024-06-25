@@ -130,7 +130,7 @@ macro_rules! impl_transmute {
             }
         }
     };
- 
+
     (as_rust ($c_type:ty, $rust_type:ty)) => {
         impl $crate::transmute2::RustTypeRef for $c_type {
             type RustType = $rust_type;
@@ -158,7 +158,10 @@ macro_rules! impl_transmute {
 #[macro_export]
 macro_rules! decl_c_type {
     (owned ($c_owned_type:ty, $rust_owned_type:ty), view ($c_view_type:ty, $rust_view_type:ty), loaned ($c_loaned_type:ty, $rust_loaned_type:ty) $(,)?) => {
-        decl_c_type!(owned ($c_owned_type, $rust_owned_type), loaned ($c_loaned_type, $rust_loaned_type));
+        decl_c_type!(
+            owned($c_owned_type, $rust_owned_type),
+            loaned($c_loaned_type, $rust_loaned_type)
+        );
         validate_equivalence2!($c_view_type, $rust_view_type);
         validate_equivalence2!($c_view_type, $c_loaned_type);
         impl_transmute!(as_c_view($rust_view_type, $c_view_type));
