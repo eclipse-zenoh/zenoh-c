@@ -275,7 +275,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_to_string(
     this: &z_loaned_encoding_t,
-    out_str: *mut MaybeUninit<z_owned_string_t>,
+    out_str: &mut MaybeUninit<z_owned_string_t>,
 ) {
     let s: Cow<'static, str> = this.transmute_ref().into();
     z_string_from_substring(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());

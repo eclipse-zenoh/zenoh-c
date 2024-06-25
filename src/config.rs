@@ -243,7 +243,7 @@ pub unsafe extern "C" fn zc_config_from_str(
 #[no_mangle]
 pub unsafe extern "C" fn zc_config_to_string(
     config: &z_loaned_config_t,
-    out_config_string: *mut MaybeUninit<z_owned_string_t>,
+    out_config_string: &mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
     let config = config.as_rust_type_ref();
     match json5::to_string(config) {

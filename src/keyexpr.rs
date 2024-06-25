@@ -418,7 +418,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_as_view_string(
     this: &z_loaned_keyexpr_t,
-    out_string: *mut MaybeUninit<z_view_string_t>,
+    out_string: &mut MaybeUninit<z_view_string_t>,
 ) {
     let this = this.transmute_ref();
     unsafe {

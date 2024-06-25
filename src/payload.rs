@@ -3,8 +3,9 @@ use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
+use crate::transmute2::RustTypeRefUninit;
 use crate::{
-    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, ZHashMap,
+    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CSliceView, CString, CStringOwned, ZHashMap
 };
 use core::fmt;
 use std::any::Any;
@@ -101,17 +102,17 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_string(
     this: &z_loaned_bytes_t,
-    dst: *mut MaybeUninit<z_owned_string_t>,
+    dst: &mut MaybeUninit<z_owned_string_t>,
 ) -> z_error_t {
     let payload = this.transmute_ref();
     match payload.deserialize::<String>() {
         Ok(s) => {
-            Inplace::init(dst.transmute_uninit_ptr(), s.into());
+            dst.as_rust_type_mut_uninit().write(s.into());
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Failed to deserialize the payload: {}", e);
-            Inplace::empty(dst.transmute_uninit_ptr());
+            dst.as_rust_type_mut_uninit().write(CStringOwned::default());
             errors::Z_EIO
         }
     }
@@ -148,17 +149,17 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
     this: &z_loaned_bytes_t,
-    dst: *mut MaybeUninit<z_owned_slice_t>,
+    dst: &mut MaybeUninit<z_owned_slice_t>,
 ) -> z_error_t {
     let payload = this.transmute_ref();
     match payload.deserialize::<Vec<u8>>() {
         Ok(v) => {
-            Inplace::init(dst.transmute_uninit_ptr(), v.into());
+            dst.as_rust_type_mut_uninit().write(v.into());
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Failed to read the payload: {}", e);
-            Inplace::empty(dst.transmute_uninit_ptr());
+            dst.as_rust_type_mut_uninit().write(CSliceOwned::default());
             errors::Z_EIO
         }
     }
@@ -464,7 +465,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice(
     data: *const u8,
     len: usize,
 ) {
-    let s = CSlice::new_borrowed(data, len);
+    let s = CSliceView::new_borrowed(data, len);
     let this = this.transmute_uninit_ptr();
     let payload = ZBytes::from(ZSlice::from(s));
     Inplace::init(this, payload);
