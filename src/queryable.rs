@@ -15,7 +15,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
-use crate::transmute2::{LoanedCTypeRef, RustTypeRef};
+use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
@@ -35,24 +35,27 @@ use zenoh::sample::{
     EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait,
 };
 
-pub use crate::opaque_types::z_owned_queryable_t;
-decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 pub use crate::opaque_types::z_loaned_queryable_t;
-decl_transmute_handle!(Queryable<'static, ()>, z_loaned_queryable_t);
-validate_equivalence!(z_owned_queryable_t, z_loaned_queryable_t);
+pub use crate::opaque_types::z_owned_queryable_t;
+decl_c_type!(
+    owned(z_owned_queryable_t, Option<Queryable<'static, ()>>),
+    loaned(z_loaned_queryable_t, Queryable<'static, ()>)
+);
 
 /// Constructs a queryable in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_queryable_null(this: *mut MaybeUninit<z_owned_queryable_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_queryable_null(this: &mut MaybeUninit<z_owned_queryable_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 // Borrows Queryable
 #[no_mangle]
-pub extern "C" fn z_queryable_loan(this: &z_owned_queryable_t) -> &z_loaned_queryable_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_queryable_loan(this: &z_owned_queryable_t) -> &z_loaned_queryable_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 pub use crate::opaque_types::z_loaned_query_t;
@@ -209,13 +212,13 @@ pub extern "C" fn z_query_reply_del_options_default(this: &mut z_query_reply_del
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
-    this: *mut MaybeUninit<z_owned_queryable_t>,
+    this: &mut MaybeUninit<z_owned_queryable_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
     let session = session.transmute_ref();
@@ -231,11 +234,12 @@ pub extern "C" fn z_declare_queryable(
         .wait();
     match queryable {
         Ok(q) => {
-            Inplace::init(this, Some(q));
+            this.write(Some(q));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("{}", e);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -247,7 +251,7 @@ pub extern "C" fn z_declare_queryable(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> errors::z_error_t {
-    if let Some(qable) = this.transmute_mut().extract().take() {
+    if let Some(qable) = this.as_rust_type_mut().take() {
         if let Err(e) = qable.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -266,7 +270,7 @@ pub extern "C" fn z_queryable_drop(this: &mut z_owned_queryable_t) {
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Sends a reply to a query.
