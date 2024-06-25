@@ -3,6 +3,7 @@ use crate::{
         unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
         TransmuteUninitPtr,
     },
+    transmute2::{RustTypeRef, RustTypeRefUninit},
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
 use libc::c_void;
@@ -37,12 +38,12 @@ pub extern "C" fn z_fifo_handler_query_check(this: &z_owned_fifo_handler_query_t
     this.transmute_ref().is_some()
 }
 
-extern "C" fn __z_handler_query_send(query: *const z_loaned_query_t, context: *mut c_void) {
+extern "C" fn __z_handler_query_send(query: &z_loaned_query_t, context: *mut c_void) {
     unsafe {
         let f = (context as *mut std::sync::Arc<dyn Fn(Query) + Send + Sync>)
             .as_mut()
             .unwrap_unchecked();
-        (f)(query.as_ref().unwrap().transmute_ref().clone());
+        (f)(query.as_rust_type_ref().clone());
     }
 }
 
@@ -86,15 +87,15 @@ pub extern "C" fn z_fifo_handler_query_loan(
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_query_recv(
     this: &z_loaned_fifo_handler_query_t,
-    query: *mut MaybeUninit<z_owned_query_t>,
+    query: &mut MaybeUninit<z_owned_query_t>,
 ) -> bool {
     match this.transmute_ref().recv() {
         Ok(q) => {
-            Inplace::init(query.transmute_uninit_ptr(), Some(q));
+            query.as_rust_type_mut_uninit().write(Some(q));
             true
         }
         Err(_) => {
-            Inplace::empty(query.transmute_uninit_ptr());
+            query.as_rust_type_mut_uninit().write(None);
             false
         }
     }
@@ -105,15 +106,15 @@ pub extern "C" fn z_fifo_handler_query_recv(
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_query_try_recv(
     this: &z_loaned_fifo_handler_query_t,
-    query: *mut MaybeUninit<z_owned_query_t>,
+    query: &mut MaybeUninit<z_owned_query_t>,
 ) -> bool {
     match this.transmute_ref().try_recv() {
         Ok(q) => {
-            Inplace::init(query.transmute_uninit_ptr(), Some(q));
+            query.as_rust_type_mut_uninit().write(Some(q));
             true
         }
         Err(e) => {
-            Inplace::empty(query.transmute_uninit_ptr());
+            query.as_rust_type_mut_uninit().write(None);
             match e {
                 flume::TryRecvError::Empty => true,
                 flume::TryRecvError::Disconnected => false,
@@ -183,15 +184,15 @@ pub extern "C" fn z_ring_handler_query_loan(
 #[no_mangle]
 pub extern "C" fn z_ring_handler_query_recv(
     this: &z_loaned_ring_handler_query_t,
-    query: *mut MaybeUninit<z_owned_query_t>,
+    query: &mut MaybeUninit<z_owned_query_t>,
 ) -> bool {
     match this.transmute_ref().recv() {
         Ok(q) => {
-            Inplace::init(query.transmute_uninit_ptr(), Some(q));
+            query.as_rust_type_mut_uninit().write(Some(q));
             true
         }
         Err(_) => {
-            Inplace::empty(query.transmute_uninit_ptr());
+            query.as_rust_type_mut_uninit().write(None);
             false
         }
     }
@@ -202,15 +203,15 @@ pub extern "C" fn z_ring_handler_query_recv(
 #[no_mangle]
 pub extern "C" fn z_ring_handler_query_try_recv(
     this: &z_loaned_ring_handler_query_t,
-    query: *mut MaybeUninit<z_owned_query_t>,
+    query: &mut MaybeUninit<z_owned_query_t>,
 ) -> bool {
     match this.transmute_ref().try_recv() {
         Ok(q) => {
-            Inplace::init(query.transmute_uninit_ptr(), q);
+            query.as_rust_type_mut_uninit().write(q);
             true
         }
         Err(_) => {
-            Inplace::empty(query.transmute_uninit_ptr());
+            query.as_rust_type_mut_uninit().write(None);
             false
         }
     }

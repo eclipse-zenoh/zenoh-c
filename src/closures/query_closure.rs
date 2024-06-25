@@ -18,7 +18,7 @@ pub struct z_owned_closure_query_t {
     /// An optional pointer to a context representing a closure state.
     pub context: *mut c_void,
     /// A closure body.
-    pub call: Option<extern "C" fn(reply: *const z_loaned_query_t, context: *mut c_void)>,
+    pub call: Option<extern "C" fn(reply: &z_loaned_query_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     pub drop: Option<extern "C" fn(context: *mut c_void)>,
 }
@@ -85,12 +85,9 @@ pub extern "C" fn z_closure_query_drop(closure: &mut z_owned_closure_query_t) {
 impl<F: Fn(&z_loaned_query_t)> From<F> for z_owned_closure_query_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_loaned_query_t)>(
-            query: *const z_loaned_query_t,
-            this: *mut c_void,
-        ) {
+        extern "C" fn call<F: Fn(&z_loaned_query_t)>(query: &z_loaned_query_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
-            unsafe { this(query.as_ref().unwrap()) }
+            this(query)
         }
         extern "C" fn drop<F>(this: *mut c_void) {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })

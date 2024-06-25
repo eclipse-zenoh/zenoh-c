@@ -11,10 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
-};
+use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef};
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
@@ -59,44 +56,43 @@ pub unsafe extern "C" fn z_queryable_loan(this: &z_owned_queryable_t) -> &z_loan
 }
 
 pub use crate::opaque_types::z_loaned_query_t;
-decl_transmute_handle!(Query, z_loaned_query_t);
-
 pub use crate::opaque_types::z_owned_query_t;
-decl_transmute_owned!(Option<Query>, z_owned_query_t);
-
-validate_equivalence!(z_owned_query_t, z_loaned_query_t);
+decl_c_type!(
+    owned(z_owned_query_t, Option<Query>),
+    loaned(z_loaned_query_t, Query)
+);
 
 /// Constructs query in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_null(this: *mut MaybeUninit<z_owned_query_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_query_null(this: &mut MaybeUninit<z_owned_query_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
 #[no_mangle]
 pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
-    query.transmute_ref().is_some()
+    query.as_rust_type_ref().is_some()
 }
 /// Borrows the query.
 #[no_mangle]
-pub extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loaned_query_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loaned_query_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
-    Inplace::drop(this.transmute_mut())
+    *this.as_rust_type_mut() = None;
 }
 /// Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
-pub extern "C" fn z_query_clone(this: &z_loaned_query_t, dst: *mut MaybeUninit<z_owned_query_t>) {
-    let this = this.transmute_ref();
-    let this = this.clone();
-    let dst = dst.transmute_uninit_ptr();
-    Inplace::init(dst, Some(this));
+pub extern "C" fn z_query_clone(this: &z_loaned_query_t, dst: &mut MaybeUninit<z_owned_query_t>) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
 }
 
 /// Options passed to the `z_declare_queryable()` function.
@@ -229,7 +225,7 @@ pub extern "C" fn z_declare_queryable(
     }
     let queryable = builder
         .callback(move |query| {
-            z_closure_query_call(z_closure_query_loan(&closure), query.transmute_handle())
+            z_closure_query_call(z_closure_query_loan(&closure), query.as_loaned_ctype_ref())
         })
         .wait();
     match queryable {
@@ -294,7 +290,7 @@ pub extern "C" fn z_query_reply(
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_options_t>,
 ) -> errors::z_error_t {
-    let query = this.transmute_ref();
+    let query = this.as_rust_type_ref();
     let key_expr = key_expr.transmute_ref();
     let payload = payload.transmute_mut().extract();
 
@@ -349,7 +345,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_err_options_t>,
 ) -> errors::z_error_t {
-    let query = this.transmute_ref();
+    let query = this.as_rust_type_ref();
     let payload = payload.transmute_mut().extract();
 
     let reply = query.reply_err(payload).encoding(
@@ -388,7 +384,7 @@ pub unsafe extern "C" fn z_query_reply_del(
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_query_reply_del_options_t>,
 ) -> errors::z_error_t {
-    let query = this.transmute_ref();
+    let query = this.as_rust_type_ref();
     let key_expr = key_expr.transmute_ref();
 
     let mut reply = query.reply_del(key_expr);
@@ -423,7 +419,7 @@ pub unsafe extern "C" fn z_query_reply_del(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_keyexpr(this: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
-    this.transmute_ref().key_expr().transmute_handle()
+    this.as_rust_type_ref().key_expr().transmute_handle()
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
@@ -433,7 +429,7 @@ pub unsafe extern "C" fn z_query_parameters(
     this: &z_loaned_query_t,
     parameters: &mut MaybeUninit<z_view_string_t>,
 ) {
-    let query = this.transmute_ref();
+    let query = this.as_rust_type_ref();
     let params = query.parameters().as_str();
     unsafe { z_view_string_from_substring(parameters, params.as_ptr() as _, params.len()) };
 }
@@ -443,7 +439,9 @@ pub unsafe extern "C" fn z_query_parameters(
 /// Returns NULL if query does not contain a payload.
 #[no_mangle]
 pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
-    this.transmute_ref().payload().map(|v| v.transmute_handle())
+    this.as_rust_type_ref()
+        .payload()
+        .map(|v| v.transmute_handle())
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
@@ -451,7 +449,7 @@ pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_b
 /// Returns NULL if query does not hame an encoding.
 #[no_mangle]
 pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
-    this.transmute_ref()
+    this.as_rust_type_ref()
         .encoding()
         .map(|v| v.as_loaned_ctype_ref())
 }
@@ -461,7 +459,7 @@ pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_
 /// Returns NULL if query does not contain an attachment.
 #[no_mangle]
 pub extern "C" fn z_query_attachment(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
-    this.transmute_ref()
+    this.as_rust_type_ref()
         .attachment()
         .map(|a| a.transmute_handle())
 }
