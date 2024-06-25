@@ -1,3 +1,4 @@
+use std::mem::take;
 use std::ptr::null_mut;
 
 //
@@ -96,7 +97,7 @@ pub extern "C" fn z_put(
             put = put.encoding(encoding);
         };
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = source_info.transmute_mut().extract();
+            let source_info = std::mem::take(source_info.as_rust_type_mut());
             put = put.source_info(source_info);
         };
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {

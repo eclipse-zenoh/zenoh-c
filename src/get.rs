@@ -272,7 +272,7 @@ pub unsafe extern "C" fn z_get(
             get = get.encoding(encoding);
         }
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = source_info.transmute_mut().extract();
+            let source_info = std::mem::take(source_info.as_rust_type_mut());
             get = get.source_info(source_info);
         }
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {

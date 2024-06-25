@@ -301,7 +301,7 @@ pub extern "C" fn z_query_reply(
             reply = reply.encoding(encoding);
         };
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = source_info.transmute_mut().extract();
+            let source_info = std::mem::take(source_info.as_rust_type_mut());
             reply = reply.source_info(source_info);
         };
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {
@@ -390,7 +390,7 @@ pub unsafe extern "C" fn z_query_reply_del(
     let mut reply = query.reply_del(key_expr);
     if let Some(options) = options {
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = source_info.transmute_mut().extract();
+            let source_info = std::mem::take(source_info.as_rust_type_mut());
             reply = reply.source_info(source_info);
         };
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {

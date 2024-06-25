@@ -20,12 +20,8 @@ use std::str::from_utf8;
 use std::str::FromStr;
 
 use crate::errors;
-use crate::transmute::Inplace;
 use crate::transmute::TransmuteCopy;
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::CTypeRef;
 use crate::transmute2::IntoCType;
 use crate::transmute2::LoanedCTypeRef;
@@ -168,7 +164,7 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
 /// Returns the sample source_info.
 #[no_mangle]
 pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_source_info_t {
-    this.as_rust_type_ref().source_info().transmute_handle()
+    this.as_rust_type_ref().source_info().as_loaned_ctype_ref()
 }
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
@@ -589,32 +585,32 @@ pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
     this.as_rust_type_ref().eid()
 }
 pub use crate::opaque_types::z_loaned_source_info_t;
-decl_transmute_handle!(SourceInfo, z_loaned_source_info_t);
 pub use crate::opaque_types::z_owned_source_info_t;
-decl_transmute_owned!(SourceInfo, z_owned_source_info_t);
-
-validate_equivalence!(z_owned_source_info_t, z_loaned_source_info_t);
+decl_c_type!(
+    owned(z_owned_source_info_t, SourceInfo),
+    loaned(z_loaned_source_info_t, SourceInfo)
+);
 
 /// Create source info
 #[no_mangle]
 pub extern "C" fn z_source_info_new(
-    this: *mut MaybeUninit<z_owned_source_info_t>,
+    this: &mut MaybeUninit<z_owned_source_info_t>,
     source_id: &z_entity_global_id_t,
     source_sn: u64,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let source_info = SourceInfo {
         source_id: Some(*source_id.as_rust_type_ref()),
         source_sn: Some(source_sn),
     };
-    Inplace::init(this, source_info);
+    this.write(source_info);
     errors::Z_OK
 }
 
 /// Returns the source_id of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_global_id_t {
-    match this.transmute_ref().source_id {
+    match this.as_rust_type_ref().source_id {
         Some(source_id) => source_id,
         None => EntityGlobalId::default(),
     }
@@ -624,29 +620,29 @@ pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_gl
 /// Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> u64 {
-    this.transmute_ref().source_sn.unwrap_or(0)
+    this.as_rust_type_ref().source_sn.unwrap_or(0)
 }
 
 /// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_check(this: &z_owned_source_info_t) -> bool {
-    this.transmute_ref().source_id.is_some() || this.transmute_ref().source_sn.is_some()
+    this.as_rust_type_ref().source_id.is_some() || this.as_rust_type_ref().source_sn.is_some()
 }
 
 /// Borrows source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_source_info_t {
-    this.transmute_ref().transmute_handle()
+    this.as_rust_type_ref().as_loaned_ctype_ref()
 }
 
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_drop(this: &mut z_owned_source_info_t) {
-    Inplace::drop(this.transmute_mut());
+    *this.as_rust_type_mut() = SourceInfo::default();
 }
 
 /// Constructs source info in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_source_info_null(this: *mut MaybeUninit<z_owned_source_info_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_source_info_null(this: &mut MaybeUninit<z_owned_source_info_t>) {
+    this.as_rust_type_mut_uninit().write(SourceInfo::default());
 }
