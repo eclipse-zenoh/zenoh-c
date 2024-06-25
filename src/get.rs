@@ -39,6 +39,7 @@ use crate::transmute::{
 };
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
+use crate::transmute2::RustTypeRefUninit;
 use crate::z_id_t;
 use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
@@ -51,7 +52,7 @@ use ::zenoh::core::Wait;
 
 // we need to add Default to ReplyError
 #[repr(transparent)]
-struct ReplyErrorNewtype(ReplyError);
+pub(crate) struct ReplyErrorNewtype(ReplyError);
 impl Default for ReplyErrorNewtype {
     fn default() -> Self {
         Self(zenoh::internal::Value::new(ZBytes::empty(), Encoding::default()).into())
@@ -75,46 +76,49 @@ impl From<&ReplyError> for &ReplyErrorNewtype {
     }
 }
 
-pub use crate::opaque_types::z_owned_reply_err_t;
-decl_transmute_owned!(ReplyErrorNewtype, z_owned_reply_err_t);
 pub use crate::opaque_types::z_loaned_reply_err_t;
-decl_transmute_handle!(ReplyErrorNewtype, z_loaned_reply_err_t);
+pub use crate::opaque_types::z_owned_reply_err_t;
+decl_c_type!(
+    owned(z_owned_reply_err_t, ReplyErrorNewtype),
+    loaned(z_loaned_reply_err_t, ReplyErrorNewtype)
+);
 
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
-pub extern "C" fn z_reply_err_null(this: *mut MaybeUninit<z_owned_reply_err_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_reply_err_null(this: &mut MaybeUninit<z_owned_reply_err_t>) {
+    this.as_rust_type_mut_uninit()
+        .write(ReplyErrorNewtype::default());
 }
 
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_reply_err_check(this: &'static z_owned_reply_err_t) -> bool {
-    !this.transmute_ref().payload().is_empty()
+    !this.as_rust_type_ref().payload().is_empty()
 }
 
 /// Returns reply error payload.
 #[no_mangle]
 pub extern "C" fn z_reply_err_payload(this: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
-    this.transmute_ref().payload().transmute_handle()
+    this.as_rust_type_ref().payload().transmute_handle()
 }
 
 /// Returns reply error encoding.
 #[no_mangle]
 pub extern "C" fn z_reply_err_encoding(this: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
-    this.transmute_ref().encoding().as_loaned_ctype_ref()
+    this.as_rust_type_ref().encoding().as_loaned_ctype_ref()
 }
 
 /// Borrows reply error.
 #[no_mangle]
 pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
-    this.transmute_ref().transmute_handle()
+    this.as_rust_type_ref().as_loaned_ctype_ref()
 }
 
 /// Frees the memory and resets the reply error it to its default value.
 #[no_mangle]
 pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
-    Inplace::drop(this.transmute_mut());
+    std::mem::take(this.as_rust_type_mut());
 }
 
 pub use crate::opaque_types::z_owned_reply_t;
@@ -149,7 +153,7 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
     match this.transmute_ref().result() {
         Ok(_) => null(),
-        Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).transmute_handle(),
+        Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_ctype_ref(),
     }
 }
 
