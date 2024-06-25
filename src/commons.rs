@@ -27,6 +27,7 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::CTypeRef;
+use crate::transmute2::IntoCType;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -559,12 +560,12 @@ impl From<z_congestion_control_t> for CongestionControl {
 }
 
 use crate::z_entity_global_id_t;
-decl_transmute_copy!(EntityGlobalId, z_entity_global_id_t);
+decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 
 /// Create entity global id
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_new(
-    this: &mut z_entity_global_id_t,
+    this: &mut MaybeUninit<z_entity_global_id_t>,
     zid: &z_id_t,
     eid: u32,
 ) -> errors::z_error_t {
@@ -573,19 +574,19 @@ pub extern "C" fn z_entity_global_id_new(
         eid,
     }
     .into();
-    *this = entity_global_id.transmute_copy();
+    this.as_rust_type_mut_uninit().write(entity_global_id);
     errors::Z_OK
 }
 
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
-    this.transmute_ref().zid().transmute_copy()
+    this.as_rust_type_ref().zid().transmute_copy()
 }
 /// Returns the entity id of the entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
-    this.transmute_ref().eid()
+    this.as_rust_type_ref().eid()
 }
 pub use crate::opaque_types::z_loaned_source_info_t;
 decl_transmute_handle!(SourceInfo, z_loaned_source_info_t);
@@ -603,7 +604,7 @@ pub extern "C" fn z_source_info_new(
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let source_info = SourceInfo {
-        source_id: Some(source_id.transmute_copy()),
+        source_id: Some(*source_id.as_rust_type_ref()),
         source_sn: Some(source_sn),
     };
     Inplace::init(this, source_info);
@@ -614,9 +615,10 @@ pub extern "C" fn z_source_info_new(
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_global_id_t {
     match this.transmute_ref().source_id {
-        Some(source_id) => source_id.transmute_copy(),
-        None => EntityGlobalId::default().transmute_copy(),
+        Some(source_id) => source_id,
+        None => EntityGlobalId::default(),
     }
+    .into_c_type()
 }
 
 /// Returns the source_sn of the source info.
