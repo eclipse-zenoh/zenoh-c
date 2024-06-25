@@ -422,7 +422,7 @@ pub extern "C" fn z_query_keyexpr(this: &z_loaned_query_t) -> &z_loaned_keyexpr_
 #[no_mangle]
 pub unsafe extern "C" fn z_query_parameters(
     this: &z_loaned_query_t,
-    parameters: *mut MaybeUninit<z_view_string_t>,
+    parameters: &mut MaybeUninit<z_view_string_t>,
 ) {
     let query = this.transmute_ref();
     let params = query.parameters().as_str();

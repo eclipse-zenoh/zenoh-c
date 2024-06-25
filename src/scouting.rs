@@ -12,14 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    errors::{self, Z_OK},
-    transmute::{
+    errors::{self, Z_OK}, transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
         TransmuteRef, TransmuteUninitPtr,
-    },
-    transmute2::RustTypeRef,
-    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
-    z_owned_string_array_t, z_view_string_t, zc_init_logger, CSlice, ZVector,
+    }, transmute2::{RustTypeRef, RustTypeRefUninit}, z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t, z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector
 };
 use async_std::task;
 use libc::c_ulong;
@@ -90,7 +86,7 @@ pub extern "C" fn z_hello_locators(
     let this = this.transmute_ref();
     let mut locators = ZVector::with_capacity(this.locators().len());
     for l in this.locators().iter() {
-        locators.push(CSlice::new_borrowed_from_slice(l.as_str().as_bytes()));
+        locators.push(CString::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
     Inplace::init(locators_out.transmute_uninit_ptr(), Some(locators));
 }
@@ -189,14 +185,14 @@ pub extern "C" fn z_scout(
 #[no_mangle]
 pub extern "C" fn z_whatami_to_str(
     whatami: z_whatami_t,
-    str_out: *mut MaybeUninit<z_view_string_t>,
+    str_out: &mut MaybeUninit<z_view_string_t>,
 ) -> errors::z_error_t {
     match WhatAmIMatcher::try_from(whatami as u8) {
         Err(_) => errors::Z_EINVAL,
         Ok(w) => {
             let s = w.to_str();
-            let slice = CSlice::new_borrowed_from_slice(s.as_bytes());
-            Inplace::init(str_out.transmute_uninit_ptr(), slice);
+            let slice = CStringView::new_borrowed_from_slice(s.as_bytes());
+            str_out.as_rust_type_mut_uninit().write(slice);
             errors::Z_OK
         }
     }

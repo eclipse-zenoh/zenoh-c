@@ -22,14 +22,14 @@ use std::slice::from_raw_parts;
 use libc::{c_char, c_void, strlen};
 
 use crate::errors::{self, z_error_t};
-use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
+use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 
 pub struct CSlice(*const u8, isize);
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct CSliceOwned(CSlice);
 #[derive(Default)]
 pub struct CSliceView(CSlice);
@@ -72,32 +72,22 @@ impl From<CSliceView> for CSlice {
     }
 }
 
-// impl TryFrom<CSliceOwned> for CSlice {
-//     type Error = ();
-//     fn try_from(value: CSliceOwned) -> Result<Self, Self::Error> {
-//         if value.is_owned() {
-//             Ok(value.0)
-//         } else {
-//             Err(())
-//         }
-//     }
-// }
-
-// impl TryFrom<CSliceView> for CSlice {
-//     type Error = ();
-//     fn try_from(value: CSliceOwned) -> Result<Self, Self::Error> {
-//         if value.is_owned() {
-//             Err(())
-//         } else {
-//             Ok(value.0)
-//         }
-//     }
-// }
-
 impl CSliceView {
+    pub fn new(data: *const u8, len: usize) -> Result<Self, z_error_t> {
+        Ok(Self(CSlice::new_borrowed(data, len)?))
+    }
+}
+
+impl CSliceOwned {
+    pub unsafe fn new(data: *const u8, len: usize) -> Result<Self, z_error_t> {
+        Ok(Self(CSlice::new_owned(data, len)?))
+    }
+}
+
+impl CSlice {
     pub fn new_borrowed_unchecked(data: *const u8, len: usize) -> Self {
         let len: isize = len as isize;
-        Self(CSlice(data, -len))
+        Self(data, -len)
     }
 
     pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_error_t> {
@@ -111,9 +101,7 @@ impl CSliceView {
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
         Self::new_borrowed_unchecked(slice.as_ptr(), slice.len())
     }
-}
 
-impl CSliceOwned {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned_unchecked(data: *const u8, len: usize) -> Self {
         if len == 0 {
@@ -121,21 +109,18 @@ impl CSliceOwned {
         }
         let b = unsafe { from_raw_parts(data, len).to_vec().into_boxed_slice() };
         let slice = Box::leak(b);
-        Self(CSlice(slice.as_ptr(), slice.len() as isize))
+        Self(slice.as_ptr(), slice.len() as isize)
     }
-
 
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_error_t> {
-        if data.is_null() && len > 0{
+        if data.is_null() && len > 0 {
             Err(errors::Z_EINVAL)
         } else {
             Ok(Self::new_owned_unchecked(data, len))
         }
     }
-}
 
-impl CSlice {
     pub fn slice(&self) -> &'static [u8] {
         if self.1 == 0 {
             return &[0u8; 0];
@@ -164,7 +149,13 @@ impl CSlice {
     }
 
     pub fn clone_to_owned(&self) -> CSliceOwned {
-        unsafe { CSliceOwned::new_owned_unchecked(self.data(), self.len()) }
+        CSliceOwned(unsafe { Self::new_owned_unchecked(self.data(), self.len()) })
+    }
+}
+
+impl Clone for CSlice {
+    fn clone(&self) -> Self {
+        unsafe { Self::new_owned_unchecked(self.data(), self.len()) }
     }
 }
 
@@ -196,19 +187,12 @@ impl PartialEq for CSlice {
     }
 }
 
-impl Clone for CSliceOwned {
-    fn clone(&self) -> Self {
-        unsafe { Self::new_owned_unchecked(self.data(), self.len()) }
-    }
-}
-
 impl From<Vec<u8>> for CSliceOwned {
     fn from(value: Vec<u8>) -> Self {
         let slice = Box::leak(value.into_boxed_slice());
         CSliceOwned(CSlice(slice.as_ptr(), slice.len() as isize))
     }
 }
-
 
 impl From<Vec<u8>> for CSlice {
     fn from(value: Vec<u8>) -> Self {
@@ -269,7 +253,7 @@ pub unsafe extern "C" fn z_view_slice_wrap(
     start: *const u8,
     len: usize,
 ) -> z_error_t {
-    match CSliceView::new_borrowed(start, len) {
+    match CSliceView::new(start, len) {
         Ok(slice) => {
             this.as_rust_type_mut_uninit().write(slice);
             errors::Z_OK
@@ -330,7 +314,7 @@ pub unsafe extern "C" fn z_slice_wrap(
     start: *const u8,
     len: usize,
 ) -> z_error_t {
-    match CSliceOwned::new_owned(start, len) {
+    match CSliceOwned::new(start, len) {
         Ok(slice) => {
             this.as_rust_type_mut_uninit().write(slice);
             errors::Z_OK
@@ -355,7 +339,8 @@ pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> &z_loaned_slice_t {
 /// Constructs an owned copy of a slice.
 #[no_mangle]
 pub extern "C" fn z_slice_clone(this: &z_loaned_slice_t, dst: &mut MaybeUninit<z_owned_slice_t>) {
-    dst.as_rust_type_mut_uninit().write(this.as_rust_type_ref().clone_to_owned());
+    dst.as_rust_type_mut_uninit()
+        .write(this.as_rust_type_ref().clone_to_owned());
 }
 
 /// @return ``true`` if slice is not empty, ``false`` otherwise.
@@ -393,15 +378,26 @@ pub struct CStringOwned(CString);
 #[derive(Default)]
 pub struct CStringView(CString);
 
+impl CString {
+    pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
+        CString(CSlice::new_borrowed_from_slice(slice))
+    }
+}
+
 impl CStringOwned {
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned(data: *const libc::c_char, len: usize) -> Result<Self, z_error_t> {
-        CSliceOwned::new_owned(data as _, len).map(|s| Self(CString(s.0)))
+        Ok(CStringOwned(CString(CSlice::new_owned(data as _, len)?)))
     }
 }
 
 impl CStringView {
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_borrowed(data: *const libc::c_char, len: usize) -> Result<Self, z_error_t> {
-        CSliceView::new_borrowed(data as _, len).map(|s| Self(CString(s.0)))
+        Ok(CStringView(CString(CSlice::new_borrowed(data as _, len)?)))
+    }
+    pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
+        CStringView(CString::new_borrowed_from_slice(slice))
     }
 }
 
@@ -473,7 +469,8 @@ pub extern "C" fn z_string_check(this: &z_owned_string_t) -> bool {
 /// Constructs owned string in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_string_null(this: &mut MaybeUninit<z_owned_string_t>) {
-    this.as_rust_type_mut_uninit().write(CStringOwned::default());
+    this.as_rust_type_mut_uninit()
+        .write(CStringOwned::default());
 }
 
 /// @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
@@ -491,8 +488,9 @@ pub extern "C" fn z_view_string_null(this: &mut MaybeUninit<z_view_string_t>) {
 /// Constructs an empty owned string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_empty(this:&mut MaybeUninit<z_owned_string_t>) {
-    this.as_rust_type_mut_uninit().write(CStringOwned::default());
+pub unsafe extern "C" fn z_string_empty(this: &mut MaybeUninit<z_owned_string_t>) {
+    this.as_rust_type_mut_uninit()
+        .write(CStringOwned::default());
 }
 
 /// Constructs an empty view string.
@@ -601,14 +599,14 @@ pub extern "C" fn z_string_clone(
     dst: &mut MaybeUninit<z_owned_string_t>,
 ) {
     let slice = this.as_rust_type_ref().clone_to_owned();
-    dst.as_rust_type_mut_uninit().write(CStringOwned(CString(slice.0)));
+    dst.as_rust_type_mut_uninit()
+        .write(CStringOwned(CString(slice.0)));
 }
 
 // Converts loaned string into loaned slice (with terminating 0 character).
 #[no_mangle]
 pub extern "C" fn z_string_as_slice(this: &z_loaned_string_t) -> &z_loaned_slice_t {
     this.as_rust_type_ref().as_ref().as_loaned_ctype_ref()
-    
 }
 
 /// @return ``true`` if string is empty, ``false`` otherwise.
@@ -702,7 +700,11 @@ pub extern "C" fn z_slice_map_iterate(
 ) {
     let this = this.transmute_ref();
     for (key, value) in this {
-        if body(key.as_loaned_ctype_ref(), value.as_loaned_ctype_ref(), context) {
+        if body(
+            key.as_loaned_ctype_ref(),
+            value.as_loaned_ctype_ref(),
+            context,
+        ) {
             break;
         }
     }

@@ -5,7 +5,7 @@ use crate::transmute::{
 };
 use crate::transmute2::RustTypeRefUninit;
 use crate::{
-    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CSliceView, CString, CStringOwned, ZHashMap
+    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned, ZHashMap
 };
 use core::fmt;
 use std::any::Any;
@@ -465,7 +465,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice(
     data: *const u8,
     len: usize,
 ) {
-    let s = CSliceView::new_borrowed(data, len);
+    let s = CSlice::new_borrowed_unchecked(data, len);
     let this = this.transmute_uninit_ptr();
     let payload = ZBytes::from(ZSlice::from(s));
     Inplace::init(this, payload);
@@ -479,7 +479,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_copy(
     data: *const u8,
     len: usize,
 ) {
-    let s = CSlice::new_borrowed(data, len).clone();
+    let s = CSlice::new_owned_unchecked(data, len);
     let this = this.transmute_uninit_ptr();
     let payload = ZBytes::from(ZSlice::from(s));
     Inplace::init(this, payload);
@@ -496,8 +496,8 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_map(
     let hm = bytes_map.transmute_ref();
     let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
         (
-            CSlice::new_borrowed(k.data(), k.len()),
-            CSlice::new_borrowed(v.data(), v.len()),
+            CSlice::new_borrowed_unchecked(k.data(), k.len()),
+            CSlice::new_borrowed_unchecked(v.data(), v.len()),
         )
     }));
     Inplace::init(dst, payload);
@@ -514,8 +514,8 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_map_copy(
     let hm = bytes_map.transmute_ref();
     let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
         (
-            CSlice::new_borrowed(k.data(), k.len()).clone(),
-            CSlice::new_borrowed(v.data(), v.len()).clone(),
+            CSlice::new_owned_unchecked(k.data(), k.len()),
+            CSlice::new_owned_unchecked(v.data(), v.len()),
         )
     }));
     Inplace::init(dst, payload);
