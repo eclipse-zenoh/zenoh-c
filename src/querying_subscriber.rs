@@ -23,6 +23,7 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::LoanedCTypeRef;
+use crate::transmute2::RustTypeRef;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_keyexpr_t;
 use crate::z_owned_closure_sample_t;
@@ -194,7 +195,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                         get = get.payload(payload);
                     }
                     if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-                        let encoding = encoding.transmute_mut().extract();
+                        let encoding = std::mem::take(encoding.as_rust_type_mut());
                         get = get.encoding(encoding);
                     }
                     if let Some(source_info) = unsafe { options.source_info.as_mut() } {

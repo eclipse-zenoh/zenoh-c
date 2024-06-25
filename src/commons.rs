@@ -116,8 +116,8 @@ pub extern "C" fn z_timestamp_id(this: &z_timestamp_t) -> z_id_t {
 use crate::opaque_types::z_loaned_sample_t;
 pub use crate::opaque_types::z_owned_sample_t;
 decl_c_type!(
-    owned (z_owned_sample_t, Option<Sample>),
-    loaned (z_loaned_sample_t, Sample),
+    owned(z_owned_sample_t, Option<Sample>),
+    loaned(z_loaned_sample_t, Sample),
 );
 
 /// Returns the key expression of the sample.
@@ -128,7 +128,7 @@ pub extern "C" fn z_sample_keyexpr(this: &z_loaned_sample_t) -> &z_loaned_keyexp
 /// Returns the encoding associated with the sample data.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(this: &z_loaned_sample_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().encoding().transmute_handle()
+    this.as_rust_type_ref().encoding().as_loaned_ctype_ref()
 }
 /// Returns the sample payload data.
 #[no_mangle]
@@ -176,7 +176,8 @@ pub extern "C" fn z_sample_clone(
     this: &z_loaned_sample_t,
     dst: &mut MaybeUninit<z_owned_sample_t>,
 ) {
-    dst.as_rust_type_mut_uninit().write(Some(this.as_rust_type_ref().clone()));
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
 }
 
 /// Returns sample qos priority value.
@@ -207,7 +208,10 @@ pub extern "C" fn z_sample_check(this: &z_owned_sample_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sample_t {
-    this.as_rust_type_ref().as_ref().unwrap_unchecked().as_loaned_ctype_ref()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
@@ -222,37 +226,36 @@ pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
-validate_equivalence!(z_owned_sample_t, z_loaned_sample_t);
-
 pub use crate::opaque_types::z_loaned_encoding_t;
-decl_transmute_handle!(Encoding, z_loaned_encoding_t);
 pub use crate::opaque_types::z_owned_encoding_t;
-decl_transmute_owned!(Encoding, z_owned_encoding_t);
 
-validate_equivalence!(z_owned_encoding_t, z_loaned_encoding_t);
+decl_c_type!(
+    owned(z_owned_encoding_t, Encoding),
+    loaned(z_loaned_encoding_t, Encoding),
+);
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_substring(
-    this: *mut MaybeUninit<z_owned_encoding_t>,
+    this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
     len: usize,
 ) -> errors::z_error_t {
-    let encoding = this.transmute_uninit_ptr();
+    let encoding = this.as_rust_type_mut_uninit();
     if s.is_null() {
-        Inplace::empty(encoding);
+        encoding.write(Encoding::default());
         errors::Z_OK
     } else {
         let s = from_raw_parts(s as *const u8, len);
         match from_utf8(s) {
             Ok(s) => {
-                Inplace::init(encoding, Encoding::from_str(s).unwrap_infallible());
+                encoding.write(Encoding::from_str(s).unwrap_infallible());
                 errors::Z_OK
             }
             Err(e) => {
                 log::error!("Can not create encoding from non UTF-8 string: {}", e);
-                Inplace::empty(encoding);
+                encoding.write(Encoding::default());
                 errors::Z_EINVAL
             }
         }
@@ -263,7 +266,7 @@ pub unsafe extern "C" fn z_encoding_from_substring(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_str(
-    this: *mut MaybeUninit<z_owned_encoding_t>,
+    this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
 ) -> errors::z_error_t {
     z_encoding_from_substring(this, s, libc::strlen(s))
@@ -279,7 +282,7 @@ pub unsafe extern "C" fn z_encoding_to_string(
     this: &z_loaned_encoding_t,
     out_str: &mut MaybeUninit<z_owned_string_t>,
 ) {
-    let s: Cow<'static, str> = this.transmute_ref().into();
+    let s: Cow<'static, str> = this.as_rust_type_ref().into();
     z_string_from_substring(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
 }
 
@@ -287,31 +290,31 @@ pub unsafe extern "C" fn z_encoding_to_string(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan_default() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_BYTES.transmute_handle()
+    Encoding::ZENOH_BYTES.as_loaned_ctype_ref()
 }
 
 /// Constructs a default `z_owned_encoding_t`.
 #[no_mangle]
-pub extern "C" fn z_encoding_null(this: *mut MaybeUninit<z_owned_encoding_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_encoding_null(this: &mut MaybeUninit<z_owned_encoding_t>) {
+    this.as_rust_type_mut_uninit().write(Encoding::default());
 }
 
 /// Frees the memory and resets the encoding it to its default value.
 #[no_mangle]
 pub extern "C" fn z_encoding_drop(this: &mut z_owned_encoding_t) {
-    Inplace::drop(this.transmute_mut());
+    *this.as_rust_type_mut() = Encoding::default();
 }
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_encoding_check(this: &'static z_owned_encoding_t) -> bool {
-    *this.transmute_ref() != Encoding::default()
+    *this.as_rust_type_ref() != Encoding::default()
 }
 
 /// Borrows encoding.
 #[no_mangle]
 pub extern "C" fn z_encoding_loan(this: &z_owned_encoding_t) -> &z_loaned_encoding_t {
-    this.transmute_ref().transmute_handle()
+    this.as_rust_type_ref().as_loaned_ctype_ref()
 }
 
 /// The locality of samples to be received by subscribers or targeted by publishers.

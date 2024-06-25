@@ -19,8 +19,10 @@ pub(crate) trait CTypeRef: Sized {
     fn as_ctype_ref(&self) -> &Self::CType;
     fn as_ctype_mut(&mut self) -> &mut Self::CType;
 }
-// it's convenient to have a separate trait for loaned C types
-// because owned rust type usually provides Deref for corresponding loaned type.
+// it's necessary to have a separate trait for loaned C types
+// because owned rust type may be the same as loaned rust type, so same rust type should
+// provide both conversions
+// This also convenient when owned type usually provides Deref for corresponding loaned type.
 // E.g. Option<Config> is an owned type, Config is a loaned type.
 // So we can call `as_loaned_ctype_ref` on `Option<Config>` to get `z_loaned_config_t` reference
 // and at the same time call `as_ctype_ref` on it to get `z_owned_config_t` reference.
@@ -175,6 +177,12 @@ macro_rules! decl_c_type {
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+    };
+    (owned_and_loaned($c_owned_type:ty, $c_loaned_type:ty, $rust_type:ty)) => {
+        decl_c_type!(
+            owned($c_owned_type, $rust_type),
+            loaned($c_loaned_type, $rust_type)
+        );
     };
     (copy ($c_type:ty, $rust_type:ty) $(,)?) => {
         validate_equivalence2!($c_type, $rust_type);

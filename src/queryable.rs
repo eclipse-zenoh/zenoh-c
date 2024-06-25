@@ -15,7 +15,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
     TransmuteUninitPtr,
 };
-use crate::transmute2::RustTypeRef;
+use crate::transmute2::{LoanedCTypeRef, RustTypeRef};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
@@ -297,7 +297,7 @@ pub extern "C" fn z_query_reply(
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
         if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = encoding.transmute_mut().extract();
+            let encoding = std::mem::take(encoding.as_rust_type_mut());
             reply = reply.encoding(encoding);
         };
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
@@ -350,7 +350,11 @@ pub unsafe extern "C" fn z_query_reply_err(
 
     let reply = query.reply_err(payload).encoding(
         options
-            .and_then(|o| o.encoding.as_mut().map(|e| e.transmute_mut().extract()))
+            .and_then(|o| {
+                o.encoding
+                    .as_mut()
+                    .map(|e| std::mem::take(e.as_rust_type_mut()))
+            })
             .unwrap_or(Encoding::default()),
     );
 
@@ -445,7 +449,7 @@ pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_b
 pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
     this.transmute_ref()
         .encoding()
-        .map(|v| v.transmute_handle())
+        .map(|v| v.as_loaned_ctype_ref())
 }
 
 /// Gets query attachment.

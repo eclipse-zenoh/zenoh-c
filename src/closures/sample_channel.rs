@@ -2,7 +2,9 @@ use crate::{
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
         TransmuteUninitPtr,
-    }, transmute2::{RustTypeRef, RustTypeRefUninit}, z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t
+    },
+    transmute2::{RustTypeRef, RustTypeRefUninit},
+    z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
 };
 use libc::c_void;
 use std::{mem::MaybeUninit, sync::Arc};

@@ -38,6 +38,7 @@ use crate::transmute::{
     TransmuteUninitPtr,
 };
 use crate::transmute2::LoanedCTypeRef;
+use crate::transmute2::RustTypeRef;
 use crate::z_id_t;
 use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
@@ -101,7 +102,7 @@ pub extern "C" fn z_reply_err_payload(this: &z_loaned_reply_err_t) -> &z_loaned_
 /// Returns reply error encoding.
 #[no_mangle]
 pub extern "C" fn z_reply_err_encoding(this: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
-    this.transmute_ref().encoding().transmute_handle()
+    this.transmute_ref().encoding().as_loaned_ctype_ref()
 }
 
 /// Borrows reply error.
@@ -267,7 +268,7 @@ pub unsafe extern "C" fn z_get(
             get = get.payload(payload);
         }
         if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = encoding.transmute_mut().extract();
+            let encoding = std::mem::take(encoding.as_rust_type_mut());
             get = get.encoding(encoding);
         }
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {

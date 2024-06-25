@@ -18,7 +18,6 @@ use zenoh::{
     prelude::SessionDeclarations,
 };
 
-use crate::{transmute::TransmuteIntoHandle, transmute2::LoanedCTypeRef};
 use crate::{
     errors,
     transmute::{
@@ -27,6 +26,7 @@ use crate::{
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
+use crate::{transmute::TransmuteIntoHandle, transmute2::LoanedCTypeRef};
 use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use zenoh::core::Wait;
 

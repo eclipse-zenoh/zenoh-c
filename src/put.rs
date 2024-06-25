@@ -92,7 +92,7 @@ pub extern "C" fn z_put(
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
         if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = encoding.transmute_mut().extract();
+            let encoding = std::mem::take(encoding.as_rust_type_mut());
             put = put.encoding(encoding);
         };
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
