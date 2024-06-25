@@ -79,6 +79,7 @@ impl CSliceView {
 }
 
 impl CSliceOwned {
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new(data: *const u8, len: usize) -> Result<Self, z_error_t> {
         Ok(Self(CSlice::new_owned(data, len)?))
     }
