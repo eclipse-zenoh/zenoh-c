@@ -1,6 +1,3 @@
-use std::mem::take;
-use std::ptr::null_mut;
-
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -24,6 +21,7 @@ use crate::transmute2::RustTypeRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
 use crate::z_timestamp_t;
+use std::ptr::null_mut;
 use zenoh::core::Priority;
 use zenoh::core::Wait;
 use zenoh::publisher::CongestionControl;
