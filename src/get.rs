@@ -33,10 +33,7 @@ use zenoh_protocol::core::ZenohIdProto;
 use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
-use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
-};
+use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef};
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -121,16 +118,18 @@ pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
     std::mem::take(this.as_rust_type_mut());
 }
 
-pub use crate::opaque_types::z_owned_reply_t;
-decl_transmute_owned!(Option<Reply>, z_owned_reply_t);
 pub use crate::opaque_types::z_loaned_reply_t;
-decl_transmute_handle!(Reply, z_loaned_reply_t);
+pub use crate::opaque_types::z_owned_reply_t;
+decl_c_type!(
+    owned(z_owned_reply_t, Option<Reply>),
+    loaned(z_loaned_reply_t, Reply)
+);
 
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
-    this.transmute_ref().result().is_ok()
+    this.as_rust_type_ref().result().is_ok()
 }
 
 /// Yields the contents of the reply by asserting it indicates a success.
@@ -139,7 +138,7 @@ pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_sample_t {
-    match this.transmute_ref().result() {
+    match this.as_rust_type_ref().result() {
         Ok(sample) => sample.as_loaned_ctype_ref() as _,
         Err(_) => null(),
     }
@@ -151,7 +150,7 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
-    match this.transmute_ref().result() {
+    match this.as_rust_type_ref().result() {
         Ok(_) => null(),
         Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_ctype_ref(),
     }
@@ -165,7 +164,7 @@ pub unsafe extern "C" fn z_reply_replier_id(
     this: &z_loaned_reply_t,
     out_id: &mut MaybeUninit<z_id_t>,
 ) -> bool {
-    match this.transmute_ref().replier_id() {
+    match this.as_rust_type_ref().replier_id() {
         Some(val) => {
             out_id.write(
                 std::convert::Into::<ZenohIdProto>::into(val)
@@ -180,16 +179,14 @@ pub unsafe extern "C" fn z_reply_replier_id(
 
 /// Constructs the reply in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_reply_null(this: *mut MaybeUninit<z_owned_reply_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_reply_null(this: &mut MaybeUninit<z_owned_reply_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 /// Constructs an owned shallow copy of reply in provided uninitialized memory location.
 #[no_mangle]
-pub extern "C" fn z_reply_clone(this: &z_loaned_reply_t, dst: *mut MaybeUninit<z_owned_reply_t>) {
-    Inplace::init(
-        dst.transmute_uninit_ptr(),
-        Some(this.transmute_ref().clone()),
-    );
+pub extern "C" fn z_reply_clone(this: &z_loaned_reply_t, dst: &mut MaybeUninit<z_owned_reply_t>) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
 }
 
 /// Options passed to the `z_get()` function.
@@ -298,7 +295,10 @@ pub unsafe extern "C" fn z_get(
     }
     match get
         .callback(move |response| {
-            z_closure_reply_call(z_closure_reply_loan(&closure), response.transmute_handle())
+            z_closure_reply_call(
+                z_closure_reply_loan(&closure),
+                response.as_loaned_ctype_ref(),
+            )
         })
         .wait()
     {
@@ -313,21 +313,23 @@ pub unsafe extern "C" fn z_get(
 /// Frees reply, resetting it to its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
-    Inplace::drop(this.transmute_mut())
+    *this.as_rust_type_mut() = None;
 }
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_none()
 }
 
 /// Borrows reply.
 #[no_mangle]
-pub extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// The replies consolidation strategy to apply on replies to a `z_get()`.

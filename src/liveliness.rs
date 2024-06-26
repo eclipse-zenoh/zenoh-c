@@ -213,7 +213,10 @@ pub extern "C" fn zc_liveliness_get(
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
     let liveliness: Liveliness<'static> = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {
-        z_closure_reply_call(z_closure_reply_loan(&callback), response.transmute_handle())
+        z_closure_reply_call(
+            z_closure_reply_loan(&callback),
+            response.as_loaned_ctype_ref(),
+        )
     });
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
