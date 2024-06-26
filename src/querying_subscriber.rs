@@ -126,7 +126,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     std::mem::swap(callback, &mut closure);
     let session = session.transmute_ref();
     let mut sub = session
-        .declare_subscriber(key_expr.transmute_ref())
+        .declare_subscriber(key_expr.as_rust_type_ref())
         .querying();
     if let Some(options) = options {
         sub = sub
@@ -139,7 +139,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
             sub = sub.allowed_origin(options.allowed_origin.into());
         }
         if let Some(query_selector) = unsafe { options.query_selector.as_ref() } {
-            let query_selector = query_selector.transmute_ref().clone();
+            let query_selector = query_selector.as_rust_type_ref().clone();
             sub = sub.query_selector(query_selector);
         }
         if options.query_timeout_ms != 0 {
@@ -176,7 +176,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     unsafe impl Sync for z_get_options_t {}
     let sub = this.as_rust_type_ref();
     let session = sub.1;
-    let selector = selector.transmute_ref().clone();
+    let selector = selector.as_rust_type_ref().clone();
     if let Err(e) = sub
         .0
         .fetch({

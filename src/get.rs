@@ -261,7 +261,7 @@ pub unsafe extern "C" fn z_get(
         CStr::from_ptr(parameters).to_str().unwrap()
     };
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
         if let Some(payload) = unsafe { options.payload.as_mut() } {

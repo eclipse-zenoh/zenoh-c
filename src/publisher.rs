@@ -15,7 +15,6 @@
 use crate::errors;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::IntoCType;
@@ -100,7 +99,7 @@ pub extern "C" fn z_declare_publisher(
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref().clone().into_owned();
+    let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
     let mut p = session.declare_publisher(key_expr);
     if let Some(options) = options {
         p = p
@@ -286,7 +285,10 @@ pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_g
 /// Returns the key expression of the publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_loaned_keyexpr_t {
-    publisher.as_rust_type_ref().key_expr().transmute_handle()
+    publisher
+        .as_rust_type_ref()
+        .key_expr()
+        .as_loaned_ctype_ref()
 }
 
 pub use crate::opaque_types::zcu_owned_matching_listener_t;

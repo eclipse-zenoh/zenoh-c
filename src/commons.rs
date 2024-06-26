@@ -120,7 +120,7 @@ decl_c_type!(
 /// Returns the key expression of the sample.
 #[no_mangle]
 pub extern "C" fn z_sample_keyexpr(this: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref().key_expr().transmute_handle()
+    this.as_rust_type_ref().key_expr().as_loaned_ctype_ref()
 }
 /// Returns the encoding associated with the sample data.
 #[no_mangle]

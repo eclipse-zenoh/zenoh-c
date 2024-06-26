@@ -218,7 +218,7 @@ pub extern "C" fn z_declare_queryable(
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
     let session = session.transmute_ref();
-    let keyexpr = key_expr.transmute_ref();
+    let keyexpr = key_expr.as_rust_type_ref();
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
         builder = builder.complete(options.complete);
@@ -291,7 +291,7 @@ pub extern "C" fn z_query_reply(
     options: Option<&mut z_query_reply_options_t>,
 ) -> errors::z_error_t {
     let query = this.as_rust_type_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let payload = payload.transmute_mut().extract();
 
     let mut reply = query.reply(key_expr, payload);
@@ -385,7 +385,7 @@ pub unsafe extern "C" fn z_query_reply_del(
     options: Option<&mut z_query_reply_del_options_t>,
 ) -> errors::z_error_t {
     let query = this.as_rust_type_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
 
     let mut reply = query.reply_del(key_expr);
     if let Some(options) = options {
@@ -419,7 +419,7 @@ pub unsafe extern "C" fn z_query_reply_del(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_keyexpr(this: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref().key_expr().transmute_handle()
+    this.as_rust_type_ref().key_expr().as_loaned_ctype_ref()
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.

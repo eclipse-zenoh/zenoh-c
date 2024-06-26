@@ -19,9 +19,9 @@ pub(crate) trait CTypeRef: Sized {
     fn as_ctype_ref(&self) -> &Self::CType;
     fn as_ctype_mut(&mut self) -> &mut Self::CType;
 }
-// it's necessary to have a separate trait for loaned C types
-// because owned rust type may be the same as loaned rust type, so same rust type should
-// provide both conversions
+// it's necessary to have a separate trait for owned, loaned, and view C types
+// because owned rust type may be the same as loaned/view rust type. So the same rust type should
+// provide all conversions.
 // This also convenient when owned type usually provides Deref for corresponding loaned type.
 // E.g. Option<Config> is an owned type, Config is a loaned type.
 // So we can call `as_loaned_ctype_ref` on `Option<Config>` to get `z_loaned_config_t` reference
@@ -30,6 +30,11 @@ pub(crate) trait LoanedCTypeRef: Sized {
     type LoanedCType;
     fn as_loaned_ctype_ref(&self) -> &Self::LoanedCType;
     fn as_loaned_ctype_mut(&mut self) -> &mut Self::LoanedCType;
+}
+pub(crate) trait ViewCTypeRef: Sized {
+    type ViewCType;
+    fn as_view_ctype_ref(&self) -> &Self::ViewCType;
+    fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType;
 }
 
 pub(crate) trait RustTypeRef: Sized {
@@ -117,6 +122,17 @@ macro_rules! impl_transmute {
             }
         }
     };
+    (as_c_view ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute2::ViewCTypeRef for $rust_type {
+            type ViewCType = $c_type;
+            fn as_view_ctype_ref(&self) -> &Self::ViewCType {
+                unsafe { &*(self as *const Self as *const Self::ViewCType) }
+            }
+            fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType {
+                unsafe { &mut *(self as *mut Self as *mut Self::ViewCType) }
+            }
+        }
+    };
     (as_rust ($c_type:ty, $rust_type:ty)) => {
         impl $crate::transmute2::RustTypeRef for $c_type {
             type RustType = $rust_type;
@@ -166,7 +182,7 @@ macro_rules! decl_c_type {
         );
         validate_equivalence2!($c_view_type, $rust_view_type);
         validate_equivalence2!($c_view_type, $c_loaned_type);
-        impl_transmute!(as_c($rust_view_type, $c_view_type));
+        impl_transmute!(as_c_view($rust_view_type, $c_view_type));
         impl_transmute!(as_rust($c_view_type, $rust_view_type));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {

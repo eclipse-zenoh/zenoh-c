@@ -18,6 +18,7 @@ use std::ptr::null;
 use zenoh_ext::SessionExt;
 
 use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
+use crate::transmute2::RustTypeRef;
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t};
 #[cfg(feature = "unstable")]
 use crate::{zcu_locality_default, zcu_locality_t};
@@ -83,7 +84,7 @@ pub extern "C" fn ze_declare_publication_cache(
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let mut p = session.declare_publication_cache(key_expr);
     if let Some(options) = options {
         p = p.history(options.history);
@@ -96,7 +97,7 @@ pub extern "C" fn ze_declare_publication_cache(
             p = p.resources_limit(options.resources_limit)
         }
         if let Some(queryable_prefix) = unsafe { options.queryable_prefix.as_ref() } {
-            let queryable_prefix = queryable_prefix.transmute_ref();
+            let queryable_prefix = queryable_prefix.as_rust_type_ref();
             p = p.queryable_prefix(queryable_prefix.clone());
         }
     }

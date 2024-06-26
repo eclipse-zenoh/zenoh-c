@@ -23,6 +23,7 @@ use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::LoanedCTypeRef;
+use crate::transmute2::RustTypeRef;
 use crate::z_closure_sample_call;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_session_t;
@@ -123,7 +124,7 @@ pub extern "C" fn z_declare_subscriber(
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
@@ -151,7 +152,7 @@ pub extern "C" fn z_declare_subscriber(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z_loaned_keyexpr_t {
     let subscriber = subscriber.transmute_ref();
-    subscriber.key_expr().transmute_handle()
+    subscriber.key_expr().as_loaned_ctype_ref()
 }
 
 /// Undeclares subscriber and drops subscriber.

@@ -23,6 +23,7 @@ use crate::{
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
     },
+    transmute2::RustTypeRef,
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
@@ -98,7 +99,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 ) -> errors::z_error_t {
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     match session.liveliness().declare_token(key_expr).wait() {
         Ok(token) => {
             Inplace::init(this, Some(token));
@@ -161,7 +162,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     let this = this.transmute_uninit_ptr();
     let session = session.transmute_ref();
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     match session
         .liveliness()
         .declare_subscriber(key_expr)
@@ -209,7 +210,7 @@ pub extern "C" fn zc_liveliness_get(
     options: Option<&mut zc_liveliness_get_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
     let liveliness: Liveliness<'static> = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {

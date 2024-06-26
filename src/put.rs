@@ -85,7 +85,7 @@ pub extern "C" fn z_put(
     options: Option<&mut z_put_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let payload = payload.transmute_mut().extract();
 
     let mut put = session.put(key_expr, payload);
@@ -166,7 +166,7 @@ pub extern "C" fn z_delete(
     options: Option<&mut z_delete_options_t>,
 ) -> errors::z_error_t {
     let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);
     if let Some(options) = options {
         if !options.timestamp.is_null() {

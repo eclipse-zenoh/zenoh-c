@@ -11,43 +11,44 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
-
 use crate::errors;
 use crate::errors::z_error_t;
 use crate::errors::Z_OK;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
+use crate::transmute2::LoanedCTypeRef;
+use crate::transmute2::RustTypeRef;
+use crate::transmute2::RustTypeRefUninit;
 use crate::z_loaned_session_t;
 use crate::z_view_string_from_substring;
 use crate::z_view_string_t;
 use libc::c_char;
 use std::error::Error;
+use std::mem::MaybeUninit;
 use zenoh::core::Wait;
 use zenoh::key_expr::keyexpr;
 use zenoh::key_expr::KeyExpr;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh_protocol::core::key_expr::canon::Canonizable;
 
+pub use crate::opaque_types::z_loaned_keyexpr_t;
 pub use crate::opaque_types::z_owned_keyexpr_t;
 pub use crate::opaque_types::z_view_keyexpr_t;
-decl_transmute_owned!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
-decl_transmute_owned!(custom_inplace_init Option<KeyExpr<'static>>, z_view_keyexpr_t);
+decl_c_type! {
+    owned(z_owned_keyexpr_t, Option<KeyExpr<'static>>),
+    view(z_view_keyexpr_t, Option<KeyExpr<'static>>),
+    loaned(z_loaned_keyexpr_t, KeyExpr<'static>),
+}
 
 /// Constructs an owned key expression in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_null(this: *mut MaybeUninit<z_owned_keyexpr_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_keyexpr_null(this: &mut MaybeUninit<z_owned_keyexpr_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Constructs a view key expression in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_view_keyexpr_null(this: *mut MaybeUninit<z_view_keyexpr_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_view_keyexpr_null(this: &mut MaybeUninit<z_view_keyexpr_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 fn keyexpr_create_inner(
@@ -97,7 +98,7 @@ unsafe fn keyexpr_create(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_from_string(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> errors::z_error_t {
     z_keyexpr_from_substring(this, expr, libc::strlen(expr))
@@ -109,7 +110,7 @@ pub unsafe extern "C" fn z_keyexpr_from_string(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_from_string_autocanonize(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> z_error_t {
     let mut len = libc::strlen(expr);
@@ -118,39 +119,41 @@ pub unsafe extern "C" fn z_keyexpr_from_string_autocanonize(
 
 /// Borrows `z_owned_keyexpr_t`.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_loan(this: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
-    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_keyexpr_loan(this: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Borrows `z_view_keyexpr_t`.
 #[no_mangle]
-pub extern "C" fn z_view_keyexpr_loan(this: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
-    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_view_keyexpr_loan(this: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Frees key expression and resets it to its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_drop(this: &mut z_owned_keyexpr_t) {
-    Inplace::drop(this.transmute_mut());
+    *this.as_rust_type_mut() = None;
 }
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_check(this: &z_owned_keyexpr_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_view_keyexpr_check(this: &z_view_keyexpr_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
-
-pub use crate::opaque_types::z_loaned_keyexpr_t;
-decl_transmute_handle!(KeyExpr<'static>, z_loaned_keyexpr_t);
-
-validate_equivalence!(z_owned_keyexpr_t, z_loaned_keyexpr_t);
-validate_equivalence!(z_view_keyexpr_t, z_loaned_keyexpr_t);
 
 /// Returns 0 if the passed string is a valid (and canon) key expression.
 /// Otherwise returns negative error value.
@@ -210,23 +213,23 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_substring(
-    this: *mut MaybeUninit<z_view_keyexpr_t>,
+    this: &mut MaybeUninit<z_view_keyexpr_t>,
     expr: *const c_char,
     len: usize,
 ) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     if expr.is_null() {
-        Inplace::empty(this);
+        this.write(None);
         return errors::Z_EINVAL;
     }
     let expr = std::slice::from_raw_parts_mut(expr as _, len);
     match keyexpr_create(expr, false, false) {
         Ok(ke) => {
-            Inplace::init(this, Some(ke));
+            this.write(Some(ke));
             errors::Z_OK
         }
         Err(e) => {
-            Inplace::empty(this);
+            this.write(None);
             e
         }
     }
@@ -241,23 +244,23 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_from_substring(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
     len: usize,
 ) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     if expr.is_null() {
-        Inplace::empty(this);
+        this.write(None);
         return errors::Z_EINVAL;
     }
     let expr = std::slice::from_raw_parts_mut(expr as _, len);
     match keyexpr_create(expr, false, true) {
         Ok(ke) => {
-            Inplace::init(this, Some(ke));
+            this.write(Some(ke));
             errors::Z_OK
         }
         Err(e) => {
-            Inplace::empty(this);
+            this.write(None);
             e
         }
     }
@@ -274,13 +277,13 @@ pub unsafe extern "C" fn z_keyexpr_from_substring(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_substring_autocanonize(
-    this: *mut MaybeUninit<z_view_keyexpr_t>,
+    this: &mut MaybeUninit<z_view_keyexpr_t>,
     start: *mut c_char,
     len: &mut usize,
 ) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     if start.is_null() {
-        Inplace::empty(this);
+        this.write(None);
         return errors::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
@@ -288,11 +291,11 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring_autocanonize(
     match keyexpr_create(name, true, false) {
         Ok(ke) => {
             *len = ke.len();
-            Inplace::init(this, Some(ke));
+            this.write(Some(ke));
             errors::Z_OK
         }
         Err(e) => {
-            Inplace::empty(this);
+            this.write(None);
             e
         }
     }
@@ -307,13 +310,13 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring_autocanonize(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_from_substring_autocanonize(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     start: *const c_char,
     len: &mut usize,
 ) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     if start.is_null() {
-        Inplace::empty(this);
+        this.write(None);
         return errors::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
@@ -321,11 +324,11 @@ pub unsafe extern "C" fn z_keyexpr_from_substring_autocanonize(
     match keyexpr_create(name, true, true) {
         Ok(ke) => {
             *len = ke.len();
-            Inplace::init(this, Some(ke));
+            this.write(Some(ke));
             errors::Z_OK
         }
         Err(e) => {
-            Inplace::empty(this);
+            this.write(None);
             e
         }
     }
@@ -338,11 +341,11 @@ pub unsafe extern "C" fn z_keyexpr_from_substring_autocanonize(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_string(
-    this: *mut MaybeUninit<z_view_keyexpr_t>,
+    this: &mut MaybeUninit<z_view_keyexpr_t>,
     expr: *const c_char,
 ) -> z_error_t {
     if expr.is_null() {
-        Inplace::empty(this.transmute_uninit_ptr());
+        this.as_rust_type_mut_uninit().write(None);
         errors::Z_EINVAL
     } else {
         let len = libc::strlen(expr);
@@ -357,11 +360,11 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
-    this: *mut MaybeUninit<z_view_keyexpr_t>,
+    this: &mut MaybeUninit<z_view_keyexpr_t>,
     expr: *mut c_char,
 ) -> z_error_t {
     if expr.is_null() {
-        Inplace::empty(this.transmute_uninit_ptr());
+        this.as_rust_type_mut_uninit().write(None);
         errors::Z_EINVAL
     } else {
         let mut len = libc::strlen(expr);
@@ -385,14 +388,14 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_substring_unchecked(
-    this: *mut MaybeUninit<z_view_keyexpr_t>,
+    this: &mut MaybeUninit<z_view_keyexpr_t>,
     start: *const c_char,
     len: usize,
 ) {
     let name = std::slice::from_raw_parts(start as _, len);
     let name = std::str::from_utf8_unchecked(name);
     let name: KeyExpr = keyexpr::from_str_unchecked(name).into();
-    Inplace::init(this.transmute_uninit_ptr(), Some(name))
+    this.as_rust_type_mut_uninit().write(Some(name));
 }
 
 /// Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
@@ -407,7 +410,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring_unchecked(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
-    this: *mut MaybeUninit<z_view_keyexpr_t>,
+    this: &mut MaybeUninit<z_view_keyexpr_t>,
     s: *const c_char,
 ) {
     z_view_keyexpr_from_substring_unchecked(this, s, libc::strlen(s))
@@ -420,7 +423,7 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
     this: &z_loaned_keyexpr_t,
     out_string: &mut MaybeUninit<z_view_string_t>,
 ) {
-    let this = this.transmute_ref();
+    let this = this.as_rust_type_ref();
     unsafe {
         z_view_string_from_substring(
             out_string,
@@ -439,21 +442,21 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_declare_keyexpr(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
 ) -> z_error_t {
-    let this = this.transmute_uninit_ptr();
-    let key_expr = key_expr.transmute_ref();
+    let this = this.as_rust_type_mut_uninit();
+    let key_expr = key_expr.as_rust_type_ref();
     let session = session.transmute_ref();
     match session.declare_keyexpr(key_expr).wait() {
         Ok(id) => {
-            Inplace::init(this, Some(id.into_owned()));
+            this.write(Some(id.into_owned()));
             errors::Z_OK
         }
         Err(e) => {
             log::debug!("{}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -467,7 +470,7 @@ pub extern "C" fn z_undeclare_keyexpr(
     this: &mut z_owned_keyexpr_t,
     session: &z_loaned_session_t,
 ) -> errors::z_error_t {
-    let Some(kexpr) = this.transmute_mut().take() else {
+    let Some(kexpr) = this.as_rust_type_mut().take() else {
         log::debug!("Attempted to undeclare dropped keyexpr");
         return errors::Z_EINVAL;
     };
@@ -484,8 +487,8 @@ pub extern "C" fn z_undeclare_keyexpr(
 /// Returns ``true`` if both ``left`` and ``right`` are equal, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_equals(left: &z_loaned_keyexpr_t, right: &z_loaned_keyexpr_t) -> bool {
-    let l = left.transmute_ref();
-    let r = right.transmute_ref();
+    let l = left.as_rust_type_ref();
+    let r = right.as_rust_type_ref();
     *l == *r
 }
 
@@ -496,8 +499,8 @@ pub extern "C" fn z_keyexpr_intersects(
     left: &z_loaned_keyexpr_t,
     right: &z_loaned_keyexpr_t,
 ) -> bool {
-    let l = left.transmute_ref();
-    let r = right.transmute_ref();
+    let l = left.as_rust_type_ref();
+    let r = right.as_rust_type_ref();
     l.intersects(r)
 }
 
@@ -508,8 +511,8 @@ pub extern "C" fn z_keyexpr_includes(
     left: &z_loaned_keyexpr_t,
     right: &z_loaned_keyexpr_t,
 ) -> bool {
-    let l = left.transmute_ref();
-    let r = right.transmute_ref();
+    let l = left.as_rust_type_ref();
+    let r = right.as_rust_type_ref();
     l.includes(r)
 }
 
@@ -522,13 +525,13 @@ pub extern "C" fn z_keyexpr_includes(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_concat(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     left: &z_loaned_keyexpr_t,
     right_start: *const c_char,
     right_len: usize,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
-    let left = left.transmute_ref();
+    let this = this.as_rust_type_mut_uninit();
+    let left = left.as_rust_type_ref();
     let right = std::slice::from_raw_parts(right_start as _, right_len);
     let right = match std::str::from_utf8(right) {
         Ok(r) => r,
@@ -539,18 +542,18 @@ pub unsafe extern "C" fn z_keyexpr_concat(
                 left,
                 e
             );
-            Inplace::empty(this);
+            this.write(None);
             return errors::Z_EINVAL;
         }
     };
     match left.concat(right) {
         Ok(result) => {
-            Inplace::init(this, Some(result));
+            this.write(Some(result));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("{}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -560,21 +563,21 @@ pub unsafe extern "C" fn z_keyexpr_concat(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_join(
-    this: *mut MaybeUninit<z_owned_keyexpr_t>,
+    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     left: &z_loaned_keyexpr_t,
     right: &z_loaned_keyexpr_t,
 ) -> errors::z_error_t {
-    let left = left.transmute_ref();
-    let right = right.transmute_ref();
-    let this = this.transmute_uninit_ptr();
+    let left = left.as_rust_type_ref();
+    let right = right.as_rust_type_ref();
+    let this = this.as_rust_type_mut_uninit();
     match left.join(right.as_str()) {
         Ok(result) => {
-            Inplace::init(this, Some(result));
+            this.write(Some(result));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("{}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -613,7 +616,7 @@ pub extern "C" fn z_keyexpr_relation_to(
     left: &z_loaned_keyexpr_t,
     right: &z_loaned_keyexpr_t,
 ) -> z_keyexpr_intersection_level_t {
-    let l = left.transmute_ref();
-    let r = right.transmute_ref();
+    let l = left.as_rust_type_ref();
+    let r = right.as_rust_type_ref();
     l.relation_to(r).into()
 }
