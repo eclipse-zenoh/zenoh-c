@@ -3,7 +3,7 @@ use crate::transmute::{
     unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
     TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
 use crate::{
     z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
     CSliceOwned, CStringOwned, ZHashMap,
@@ -127,9 +127,9 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_string(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
     this: &z_loaned_bytes_t,
-    dst: *mut MaybeUninit<z_owned_slice_map_t>,
+    dst: &mut MaybeUninit<z_owned_slice_map_t>,
 ) -> z_error_t {
-    let dst = dst.transmute_uninit_ptr();
+    let dst = dst.as_rust_type_mut_uninit();
     let payload = this.transmute_ref();
     let iter = payload.iter::<(Vec<u8>, Vec<u8>)>();
     let mut hm = ZHashMap::new();
@@ -138,7 +138,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
     for (k, v) in iter {
         hm.insert(k.into(), v.into());
     }
-    Inplace::init(dst, Some(hm));
+    dst.write(Some(hm));
     errors::Z_OK
 }
 
@@ -494,7 +494,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_map(
     bytes_map: &z_loaned_slice_map_t,
 ) {
     let dst = this.transmute_uninit_ptr();
-    let hm = bytes_map.transmute_ref();
+    let hm = bytes_map.as_rust_type_ref();
     let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
         (
             CSlice::new_borrowed_unchecked(k.data(), k.len()),
@@ -512,7 +512,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_map_copy(
     bytes_map: &z_loaned_slice_map_t,
 ) {
     let dst = this.transmute_uninit_ptr();
-    let hm = bytes_map.transmute_ref();
+    let hm = bytes_map.as_rust_type_ref();
     let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
         (
             CSlice::new_owned_unchecked(k.data(), k.len()),

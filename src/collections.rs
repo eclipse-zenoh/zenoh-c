@@ -618,64 +618,62 @@ pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
 
 pub use crate::opaque_types::z_loaned_slice_map_t;
 pub use crate::opaque_types::z_owned_slice_map_t;
-
 pub type ZHashMap = HashMap<CSlice, CSlice>;
-decl_transmute_handle!(HashMap<CSlice, CSlice>, z_loaned_slice_map_t);
-decl_transmute_owned!(Option<HashMap<CSlice, CSlice>>, z_owned_slice_map_t);
-
-validate_equivalence!(z_owned_slice_map_t, z_loaned_slice_map_t);
+decl_c_type!(
+    owned(z_owned_slice_map_t, Option<ZHashMap>),
+    loaned(z_loaned_slice_map_t, ZHashMap),
+);
 
 /// Constructs a new empty map.
 #[no_mangle]
-pub extern "C" fn z_slice_map_new(this: *mut MaybeUninit<z_owned_slice_map_t>) {
-    let this = this.transmute_uninit_ptr();
-    let map = ZHashMap::new();
-    Inplace::init(this, Some(map));
+pub extern "C" fn z_slice_map_new(this: &mut MaybeUninit<z_owned_slice_map_t>) {
+    this.as_rust_type_mut_uninit().write(Some(ZHashMap::new()));
 }
 
 /// Constructs the gravestone value for `z_owned_slice_map_t`.
 #[no_mangle]
-pub extern "C" fn z_slice_map_null(this: *mut MaybeUninit<z_owned_slice_map_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn z_slice_map_null(this: &mut MaybeUninit<z_owned_slice_map_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// @return ``true`` if the map is not in its gravestone state, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_slice_map_check(map: &z_owned_slice_map_t) -> bool {
-    let map = map.transmute_ref();
-    map.as_ref().is_some()
+    map.as_rust_type_ref().is_some()
 }
 
 /// Destroys the map, resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
-    let this = this.transmute_mut();
-    Inplace::drop(this);
+    *this.as_rust_type_mut() = None;
 }
 
 /// Borrows slice map.
 #[no_mangle]
-pub extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loaned_slice_map_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loaned_slice_map_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Mutably borrows slice map.
 #[no_mangle]
-pub extern "C" fn z_slice_map_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_slice_map_loan_mut(
     this: &mut z_owned_slice_map_t,
 ) -> &mut z_loaned_slice_map_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_ctype_mut()
 }
 
 /// @return number of key-value pairs in the map.
 #[no_mangle]
 pub extern "C" fn z_slice_map_len(this: &z_loaned_slice_map_t) -> usize {
-    this.transmute_ref().len()
+    this.as_rust_type_ref().len()
 }
 
 /// @return ``true`` if the map is empty, ``false`` otherwise.
@@ -699,7 +697,7 @@ pub extern "C" fn z_slice_map_iterate(
     ) -> bool,
     context: *mut c_void,
 ) {
-    let this = this.transmute_ref();
+    let this = this.as_rust_type_ref();
     for (key, value) in this {
         if body(
             key.as_loaned_ctype_ref(),
@@ -713,11 +711,11 @@ pub extern "C" fn z_slice_map_iterate(
 
 /// @return the value associated with `key` (`NULL` if the key is not present in the map.).
 #[no_mangle]
-pub extern "C" fn z_slice_map_get(
-    this: &z_loaned_slice_map_t,
+pub extern "C" fn z_slice_map_get<'a>(
+    this: &'a z_loaned_slice_map_t,
     key: &z_loaned_slice_t,
-) -> Option<&'static z_loaned_slice_t> {
-    let m = this.transmute_ref();
+) -> Option<&'a z_loaned_slice_t> {
+    let m = this.as_rust_type_ref();
     let key = key.as_rust_type_ref();
     m.get(key).map(|s| s.as_loaned_ctype_ref())
 }
@@ -732,7 +730,7 @@ pub extern "C" fn z_slice_map_insert_by_copy(
     key: &z_loaned_slice_t,
     value: &z_loaned_slice_t,
 ) -> u8 {
-    let this = this.transmute_mut();
+    let this = this.as_rust_type_mut();
     let key = key.as_rust_type_ref();
     let value = value.as_rust_type_ref();
     match this.insert(key.clone_to_owned().into(), value.clone_to_owned().into()) {
@@ -751,7 +749,7 @@ pub extern "C" fn z_slice_map_insert_by_alias(
     key: &z_loaned_slice_t,
     value: &z_loaned_slice_t,
 ) -> errors::z_error_t {
-    let this = this.transmute_mut();
+    let this = this.as_rust_type_mut();
     let key = key.as_rust_type_ref();
     let value = value.as_rust_type_ref();
     match this.insert(key.shallow_copy(), value.shallow_copy()) {
