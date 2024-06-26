@@ -22,10 +22,6 @@ use std::slice::from_raw_parts;
 use libc::{c_char, c_void, strlen};
 
 use crate::errors::{self, z_error_t};
-use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-};
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 
 pub struct CSlice(*const u8, isize);
@@ -760,70 +756,70 @@ pub extern "C" fn z_slice_map_insert_by_alias(
 
 pub use crate::opaque_types::z_loaned_string_array_t;
 pub use crate::opaque_types::z_owned_string_array_t;
-
 pub type ZVector = Vec<CString>;
-decl_transmute_handle!(Vec<CString>, z_loaned_string_array_t);
-decl_transmute_owned!(Option<Vec<CString>>, z_owned_string_array_t);
-
-validate_equivalence!(z_owned_string_array_t, z_loaned_string_array_t);
+decl_c_type!(
+    owned(z_owned_string_array_t, Option<ZVector>),
+    loaned(z_loaned_string_array_t, ZVector),
+);
 
 /// Constructs a new empty string array.
 #[no_mangle]
-pub extern "C" fn z_string_array_new(this: *mut MaybeUninit<z_owned_string_array_t>) {
-    let this: *mut MaybeUninit<Option<Vec<CString>>> = this.transmute_uninit_ptr();
-    let a = ZVector::new();
-    Inplace::init(this, Some(a));
+pub extern "C" fn z_string_array_new(this: &mut MaybeUninit<z_owned_string_array_t>) {
+    this.as_rust_type_mut_uninit().write(Some(ZVector::new()));
 }
 
 /// Constructs string array in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_string_array_null(this: *mut MaybeUninit<z_owned_string_array_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn z_string_array_null(this: &mut MaybeUninit<z_owned_string_array_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_string_array_check(this: &z_owned_string_array_t) -> bool {
-    let this = this.transmute_ref();
-    this.as_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Destroys the string array, resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_string_array_drop(this: &mut z_owned_string_array_t) {
-    let this = this.transmute_mut();
-    Inplace::drop(this);
+    *this.as_rust_type_mut() = None;
 }
 
 /// Borrows string array.
 #[no_mangle]
-pub extern "C" fn z_string_array_loan(this: &z_owned_string_array_t) -> &z_loaned_string_array_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_string_array_loan(
+    this: &z_owned_string_array_t,
+) -> &z_loaned_string_array_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Mutably borrows string array.
 #[no_mangle]
-pub extern "C" fn z_string_array_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_string_array_loan_mut(
     this: &mut z_owned_string_array_t,
 ) -> &mut z_loaned_string_array_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_ctype_mut()
 }
 
 /// @return number of elements in the array.
 #[no_mangle]
 pub extern "C" fn z_string_array_len(this: &z_loaned_string_array_t) -> usize {
-    this.transmute_ref().len()
+    this.as_rust_type_ref().len()
 }
 
 /// @return ``true`` if the array is empty, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_string_array_is_empty(this: &z_loaned_string_array_t) -> bool {
-    z_string_array_len(this) == 0
+    this.as_rust_type_ref().is_empty()
 }
 
 /// @return the value at the position of index in the string array.
@@ -834,7 +830,7 @@ pub extern "C" fn z_string_array_get(
     this: &z_loaned_string_array_t,
     index: usize,
 ) -> Option<&z_loaned_string_t> {
-    let a = this.transmute_ref();
+    let a = this.as_rust_type_ref();
     if index >= a.len() {
         return None;
     }
@@ -850,7 +846,7 @@ pub extern "C" fn z_string_array_push_by_copy(
     this: &mut z_loaned_string_array_t,
     value: &z_loaned_string_t,
 ) -> usize {
-    let this = this.transmute_mut();
+    let this = this.as_rust_type_mut();
     let v = value.as_rust_type_ref();
     this.push(CString(v.clone_to_owned().into()));
 
@@ -865,7 +861,7 @@ pub extern "C" fn z_string_array_push_by_alias(
     this: &mut z_loaned_string_array_t,
     value: &z_loaned_string_t,
 ) -> usize {
-    let this = this.transmute_mut();
+    let this = this.as_rust_type_mut();
     let v = value.as_rust_type_ref();
     this.push(CString(v.shallow_copy()));
 

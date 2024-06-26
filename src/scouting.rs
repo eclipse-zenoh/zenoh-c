@@ -85,14 +85,14 @@ pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
 #[no_mangle]
 pub extern "C" fn z_hello_locators(
     this: &z_loaned_hello_t,
-    locators_out: *mut MaybeUninit<z_owned_string_array_t>,
+    locators_out: &mut MaybeUninit<z_owned_string_array_t>,
 ) {
     let this = this.transmute_ref();
     let mut locators = ZVector::with_capacity(this.locators().len());
     for l in this.locators().iter() {
         locators.push(CString::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
-    Inplace::init(locators_out.transmute_uninit_ptr(), Some(locators));
+    locators_out.as_rust_type_mut_uninit().write(Some(locators));
 }
 
 /// Options to pass to `z_scout()`.
