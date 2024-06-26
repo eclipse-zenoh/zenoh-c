@@ -17,8 +17,8 @@ use std::ptr::null;
 
 use zenoh_ext::SessionExt;
 
-use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr};
-use crate::transmute2::RustTypeRef;
+use crate::transmute::TransmuteFromHandle;
+use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t};
 #[cfg(feature = "unstable")]
 use crate::{zcu_locality_default, zcu_locality_t};
@@ -55,16 +55,10 @@ pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication
 
 pub use crate::opaque_types::ze_loaned_publication_cache_t;
 pub use crate::opaque_types::ze_owned_publication_cache_t;
-decl_transmute_owned!(
-    Option<zenoh_ext::PublicationCache<'static>>,
-    ze_owned_publication_cache_t
+decl_c_type!(
+    owned(ze_owned_publication_cache_t, Option<zenoh_ext::PublicationCache<'static>>),
+    loaned(ze_loaned_publication_cache_t, zenoh_ext::PublicationCache<'static>)
 );
-decl_transmute_handle!(
-    zenoh_ext::PublicationCache<'static>,
-    ze_loaned_publication_cache_t
-);
-
-validate_equivalence!(ze_owned_publication_cache_t, ze_loaned_publication_cache_t);
 
 /// Constructs and declares a publication cache.
 ///
@@ -77,12 +71,12 @@ validate_equivalence!(ze_owned_publication_cache_t, ze_loaned_publication_cache_
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_declare_publication_cache(
-    this: *mut MaybeUninit<ze_owned_publication_cache_t>,
+    this: &mut MaybeUninit<ze_owned_publication_cache_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let session = session.transmute_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut p = session.declare_publication_cache(key_expr);
@@ -103,12 +97,12 @@ pub extern "C" fn ze_declare_publication_cache(
     }
     match p.wait() {
         Ok(publication_cache) => {
-            Inplace::init(this, Some(publication_cache));
+            this.write(Some(publication_cache));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("{}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -117,16 +111,15 @@ pub extern "C" fn ze_declare_publication_cache(
 /// Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_null(this: *mut MaybeUninit<ze_owned_publication_cache_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn ze_publication_cache_null(this: &mut MaybeUninit<ze_owned_publication_cache_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Undeclares and drops publication cache.
@@ -136,7 +129,7 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 pub extern "C" fn ze_undeclare_publication_cache(
     this: &mut ze_owned_publication_cache_t,
 ) -> errors::z_error_t {
-    if let Some(p) = this.transmute_mut().extract().take() {
+    if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
