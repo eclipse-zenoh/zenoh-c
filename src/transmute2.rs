@@ -159,7 +159,7 @@ macro_rules! impl_transmute {
 // but can't be copied
 #[macro_export]
 macro_rules! decl_c_type {
-    (owned ($c_owned_type:ty, $rust_owned_type:ty), view ($c_view_type:ty, $rust_view_type:ty), loaned ($c_loaned_type:ty, $rust_loaned_type:ty) $(,)?) => {
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), view ($c_view_type:ty, $rust_view_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         decl_c_type!(
             owned($c_owned_type, $rust_owned_type),
             loaned($c_loaned_type, $rust_loaned_type)
@@ -169,7 +169,7 @@ macro_rules! decl_c_type {
         impl_transmute!(as_c($rust_view_type, $c_view_type));
         impl_transmute!(as_rust($c_view_type, $rust_view_type));
     };
-    (owned ($c_owned_type:ty, $rust_owned_type:ty), loaned ($c_loaned_type:ty, $rust_loaned_type:ty) $(,)?) => {
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         validate_equivalence2!($c_owned_type, $rust_owned_type);
         validate_equivalence2!($c_loaned_type, $rust_loaned_type);
         validate_equivalence2!($c_owned_type, $c_loaned_type);
@@ -178,7 +178,7 @@ macro_rules! decl_c_type {
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
     };
-    (copy ($c_type:ty, $rust_type:ty) $(,)?) => {
+    (copy ($c_type:ty, $rust_type:ty $(,)?) $(,)?) => {
         validate_equivalence2!($c_type, $rust_type);
         impl_transmute!(as_c($rust_type, $c_type));
         impl_transmute!(as_rust($c_type, $rust_type));

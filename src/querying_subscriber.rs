@@ -16,14 +16,12 @@ use std::mem::MaybeUninit;
 use std::ptr::null;
 
 use crate::errors;
-use crate::transmute::unwrap_ref_unchecked;
 use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
 use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
+use crate::transmute2::RustTypeRefUninit;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_keyexpr_t;
 use crate::z_owned_closure_sample_t;
@@ -45,28 +43,24 @@ use zenoh_ext::*;
 
 use crate::opaque_types::ze_loaned_querying_subscriber_t;
 use crate::opaque_types::ze_owned_querying_subscriber_t;
-decl_transmute_owned!(
-    Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
-    ze_owned_querying_subscriber_t
-);
-decl_transmute_handle!(
-    (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
-    ze_loaned_querying_subscriber_t
-);
-
-validate_equivalence!(
-    ze_owned_querying_subscriber_t,
-    ze_loaned_querying_subscriber_t
+decl_c_type!(
+    owned(
+        ze_owned_querying_subscriber_t,
+        Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
+    ),
+    loaned(
+        ze_loaned_querying_subscriber_t,
+        (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
+    )
 );
 
 /// Constructs a querying subscriber in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_querying_subscriber_null(
-    this: *mut MaybeUninit<ze_owned_querying_subscriber_t>,
+    this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
 ) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// A set of options that can be applied to a querying subscriber,
@@ -121,13 +115,13 @@ pub extern "C" fn ze_querying_subscriber_options_default(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_declare_querying_subscriber(
-    this: *mut MaybeUninit<ze_owned_querying_subscriber_t>,
+    this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
     let session = session.transmute_ref();
@@ -158,12 +152,12 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     });
     match sub.wait() {
         Ok(sub) => {
-            Inplace::init(this, Some((sub, session)));
+            this.write(Some((sub, session)));
             errors::Z_OK
         }
         Err(e) => {
             log::debug!("{}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -180,7 +174,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     options: Option<&z_get_options_t>,
 ) -> errors::z_error_t {
     unsafe impl Sync for z_get_options_t {}
-    let sub = this.transmute_ref();
+    let sub = this.as_rust_type_ref();
     let session = sub.1;
     let selector = selector.transmute_ref().clone();
     if let Err(e) = sub
@@ -234,7 +228,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 pub extern "C" fn ze_undeclare_querying_subscriber(
     this: &mut ze_owned_querying_subscriber_t,
 ) -> errors::z_error_t {
-    if let Some(s) = this.transmute_mut().extract().take() {
+    if let Some(s) = this.as_rust_type_mut().take() {
         if let Err(e) = s.0.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -252,15 +246,17 @@ pub extern "C" fn ze_querying_subscriber_drop(this: &mut ze_owned_querying_subsc
 /// Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscriber_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows querying subscriber.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_querying_subscriber_loan(
     this: &ze_owned_querying_subscriber_t,
 ) -> &ze_loaned_querying_subscriber_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
