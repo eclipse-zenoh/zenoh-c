@@ -20,9 +20,9 @@ use std::str::from_utf8;
 use std::str::FromStr;
 
 use crate::errors;
-use crate::transmute::TransmuteCopy;
 use crate::transmute2::CTypeRef;
 use crate::transmute2::IntoCType;
+use crate::transmute2::IntoRustType;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -91,7 +91,7 @@ pub extern "C" fn z_timestamp_new(
 ) -> errors::z_error_t {
     let timestamp = Timestamp::new(
         zenoh::time::NTP64(npt64_time),
-        (zid.transmute_copy()).into(),
+        (zid.into_rust_type()).into(),
     );
     this.as_rust_type_mut_uninit().write(timestamp);
     errors::Z_OK
@@ -565,7 +565,7 @@ pub extern "C" fn z_entity_global_id_new(
     eid: u32,
 ) -> errors::z_error_t {
     let entity_global_id: EntityGlobalId = EntityGlobalIdProto {
-        zid: zid.transmute_copy().into(),
+        zid: zid.into_rust_type().into(),
         eid,
     }
     .into();
@@ -576,7 +576,7 @@ pub extern "C" fn z_entity_global_id_new(
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
-    this.as_rust_type_ref().zid().transmute_copy()
+    this.as_rust_type_ref().zid().into_c_type()
 }
 /// Returns the entity id of the entity global id.
 #[no_mangle]
