@@ -18,46 +18,40 @@ use zenoh::{
     prelude::SessionDeclarations,
 };
 
+use crate::transmute2::LoanedCTypeRef;
 use crate::{
     errors,
-    transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
-    },
-    transmute2::RustTypeRef,
+    transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr},
+    transmute2::{RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
-use crate::{transmute::TransmuteIntoHandle, transmute2::LoanedCTypeRef};
 use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use zenoh::core::Wait;
 
 use crate::opaque_types::zc_loaned_liveliness_token_t;
 use crate::opaque_types::zc_owned_liveliness_token_t;
-decl_transmute_owned!(
-    Option<LivelinessToken<'static>>,
-    zc_owned_liveliness_token_t
+decl_c_type!(
+    owned(zc_owned_liveliness_token_t, Option<LivelinessToken<'static>>),
+    loaned(zc_loaned_liveliness_token_t, LivelinessToken<'static>)
 );
-decl_transmute_handle!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
-validate_equivalence!(zc_owned_liveliness_token_t, zc_loaned_liveliness_token_t);
 
 /// Constructs liveliness token in its gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_token_null(this: *mut MaybeUninit<zc_owned_liveliness_token_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn zc_liveliness_token_null(this: &mut MaybeUninit<zc_owned_liveliness_token_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_check(this: &zc_owned_liveliness_token_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_drop(this: &mut zc_owned_liveliness_token_t) {
-    let this = this.transmute_mut();
-    Inplace::drop(this);
+    *this.as_rust_type_mut() = None;
 }
 /// The options for `zc_liveliness_declare_token()`.
 #[repr(C)]
@@ -75,10 +69,14 @@ pub extern "C" fn zc_liveliness_declaration_options_default(
 
 /// Borrows token.
 #[no_mangle]
-extern "C" fn zc_liveliness_token_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_liveliness_token_loan(
     this: &zc_owned_liveliness_token_t,
 ) -> &zc_loaned_liveliness_token_t {
-    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Constructs and declares a liveliness token on the network.
@@ -92,22 +90,22 @@ extern "C" fn zc_liveliness_token_loan(
 /// @param _options: Liveliness token declaration properties.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
-    this: *mut MaybeUninit<zc_owned_liveliness_token_t>,
+    this: &mut MaybeUninit<zc_owned_liveliness_token_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     _options: Option<&zc_liveliness_declaration_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let session = session.transmute_ref();
     let key_expr = key_expr.as_rust_type_ref();
     match session.liveliness().declare_token(key_expr).wait() {
         Ok(token) => {
-            Inplace::init(this, Some(token));
+            this.write(Some(token));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Failed to undeclare token: {e}");
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -118,8 +116,8 @@ pub extern "C" fn zc_liveliness_declare_token(
 pub extern "C" fn zc_liveliness_undeclare_token(
     this: &mut zc_owned_liveliness_token_t,
 ) -> errors::z_error_t {
-    let this = this.transmute_mut();
-    if let Some(token) = this.extract().take() {
+    let this = this.as_rust_type_mut();
+    if let Some(token) = this.take() {
         if let Err(e) = token.undeclare().wait() {
             log::error!("Failed to undeclare token: {e}");
             return errors::Z_EGENERIC;
