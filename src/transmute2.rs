@@ -171,8 +171,6 @@ macro_rules! impl_transmute {
     };
 }
 
-// Declare "owned" C type. This type can be converted in place to it's Rust counterpart
-// but can't be copied
 #[macro_export]
 macro_rules! decl_c_type {
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), view ($c_view_type:ty, $rust_view_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
@@ -186,12 +184,15 @@ macro_rules! decl_c_type {
         impl_transmute!(as_rust($c_view_type, $rust_view_type));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        decl_c_type!(loaned($c_loaned_type, $rust_loaned_type));
         validate_equivalence2!($c_owned_type, $rust_owned_type);
-        validate_equivalence2!($c_loaned_type, $rust_loaned_type);
         validate_equivalence2!($c_owned_type, $c_loaned_type);
         impl_transmute!(as_c($rust_owned_type, $c_owned_type));
-        impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
+    };
+    (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        validate_equivalence2!($c_loaned_type, $rust_loaned_type);
+        impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
     };
     (copy ($c_type:ty, $rust_type:ty $(,)?) $(,)?) => {

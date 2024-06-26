@@ -713,13 +713,14 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm_mut(
 }
 
 pub use crate::z_bytes_reader_t;
-decl_transmute_handle!(ZBytesReader<'static>, z_bytes_reader_t);
+decl_c_type!(loaned(z_bytes_reader_t, ZBytesReader<'static>));
+
 /// Returns a reader for the data.
 ///
 /// The `data` should outlive the reader.
 #[no_mangle]
 pub extern "C" fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes_reader_t {
-    *data.as_rust_type_ref().reader().transmute_handle()
+    *data.as_rust_type_ref().reader().as_loaned_ctype_ref()
 }
 
 /// Reads data into specified destination.
@@ -735,7 +736,7 @@ pub unsafe extern "C" fn z_bytes_reader_read(
     dst: *mut u8,
     len: usize,
 ) -> usize {
-    let reader = this.transmute_mut();
+    let reader = this.as_rust_type_mut();
     let buf = unsafe { from_raw_parts_mut(dst, len) };
     reader.read(buf).unwrap_or(0)
 }
@@ -751,7 +752,7 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
     offset: i64,
     origin: libc::c_int,
 ) -> z_error_t {
-    let reader = this.transmute_mut();
+    let reader = this.as_rust_type_mut();
     let pos = match origin {
         libc::SEEK_SET => match offset.try_into() {
             Ok(o) => SeekFrom::Start(o),
@@ -777,7 +778,7 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64 {
-    let reader = this.transmute_mut();
+    let reader = this.as_rust_type_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
 
