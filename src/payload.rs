@@ -1,7 +1,6 @@
 use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
 use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
 };
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
@@ -785,56 +784,61 @@ pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64
 pub use crate::opaque_types::z_loaned_bytes_writer_t;
 pub use crate::opaque_types::z_owned_bytes_writer_t;
 
-decl_transmute_owned!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
-decl_transmute_handle!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);
-validate_equivalence!(z_loaned_bytes_writer_t, z_owned_bytes_writer_t);
+decl_c_type! {
+    owned(z_owned_bytes_writer_t, Option<ZBytesWriter<'static>>),
+    loaned(z_loaned_bytes_writer_t, ZBytesWriter<'static>),
+}
 
 /// The gravestone value for `z_owned_bytes_reader_t`.
 #[no_mangle]
-extern "C" fn z_bytes_writer_null(this: *mut MaybeUninit<z_owned_bytes_writer_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+extern "C" fn z_bytes_writer_null(this: &mut MaybeUninit<z_owned_bytes_writer_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Drops `this_`, resetting it to gravestone value.
 #[no_mangle]
 extern "C" fn z_bytes_writer_drop(this: &mut z_owned_bytes_writer_t) {
-    let this = this.transmute_mut();
-    Inplace::drop(this);
+    *this.as_rust_type_mut() = None;
 }
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
 extern "C" fn z_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows writer.
 #[no_mangle]
-extern "C" fn z_bytes_writer_loan(this: &z_owned_bytes_writer_t) -> &z_loaned_bytes_writer_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+unsafe extern "C" fn z_bytes_writer_loan(
+    this: &z_owned_bytes_writer_t,
+) -> &z_loaned_bytes_writer_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Muatably borrows writer.
 #[no_mangle]
-extern "C" fn z_bytes_writer_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+unsafe extern "C" fn z_bytes_writer_loan_mut(
     this: &mut z_owned_bytes_writer_t,
 ) -> &mut z_loaned_bytes_writer_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_ctype_mut()
 }
 
 /// Gets writer for `this_`.
 #[no_mangle]
 extern "C" fn z_bytes_get_writer(
     this: &'static mut z_loaned_bytes_t,
-    out: *mut MaybeUninit<z_owned_bytes_writer_t>,
+    out: &mut MaybeUninit<z_owned_bytes_writer_t>,
 ) {
-    let out = out.transmute_uninit_ptr();
-    Inplace::init(out, Some(this.as_rust_type_mut().writer()));
+    out.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_mut().writer()));
 }
 
 /// Writes `len` bytes from `src` into underlying data
@@ -847,7 +851,7 @@ unsafe extern "C" fn z_bytes_writer_write(
     src: *const u8,
     len: usize,
 ) -> z_error_t {
-    match this.transmute_mut().write(from_raw_parts(src, len)) {
+    match this.as_rust_type_mut().write(from_raw_parts(src, len)) {
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,
     }
