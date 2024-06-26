@@ -201,7 +201,7 @@ pub unsafe extern "C" fn z_publisher_put(
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
     let publisher = this.as_rust_type_ref();
-    let payload = payload.transmute_mut().extract();
+    let payload = std::mem::take(payload.as_rust_type_mut());
 
     let mut put = publisher.put(payload);
     if let Some(options) = options {
@@ -214,7 +214,7 @@ pub unsafe extern "C" fn z_publisher_put(
             put = put.source_info(source_info);
         };
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = attachment.transmute_mut().extract();
+            let attachment = std::mem::take(attachment.as_rust_type_mut());
             put = put.attachment(attachment);
         }
         if !options.timestamp.is_null() {

@@ -21,7 +21,6 @@ use std::str::FromStr;
 
 use crate::errors;
 use crate::transmute::TransmuteCopy;
-use crate::transmute::TransmuteIntoHandle;
 use crate::transmute2::CTypeRef;
 use crate::transmute2::IntoCType;
 use crate::transmute2::LoanedCTypeRef;
@@ -130,7 +129,7 @@ pub extern "C" fn z_sample_encoding(this: &z_loaned_sample_t) -> &z_loaned_encod
 /// Returns the sample payload data.
 #[no_mangle]
 pub extern "C" fn z_sample_payload(this: &z_loaned_sample_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().payload().transmute_handle()
+    this.as_rust_type_ref().payload().as_loaned_ctype_ref()
 }
 
 /// Returns the sample kind.
@@ -156,7 +155,7 @@ pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_time
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
     match this.as_rust_type_ref().attachment() {
-        Some(attachment) => attachment.transmute_handle() as *const _,
+        Some(attachment) => attachment.as_loaned_ctype_ref() as *const _,
         None => null(),
     }
 }

@@ -16,9 +16,7 @@ use std::mem::MaybeUninit;
 use std::ptr::null;
 
 use crate::errors;
-use crate::transmute::Inplace;
 use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteRef;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -185,7 +183,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 
                 if let Some(options) = options {
                     if let Some(payload) = unsafe { options.payload.as_mut() } {
-                        let payload = payload.transmute_mut().extract();
+                        let payload = std::mem::take(payload.as_rust_type_mut());
                         get = get.payload(payload);
                     }
                     if let Some(encoding) = unsafe { options.encoding.as_mut() } {
@@ -197,7 +195,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                         get = get.source_info(source_info);
                     }
                     if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-                        let attachment = attachment.transmute_mut().extract();
+                        let attachment = std::mem::take(attachment.as_rust_type_mut());
                         get = get.attachment(attachment);
                     }
 

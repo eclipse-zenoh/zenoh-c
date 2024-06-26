@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef};
+use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
@@ -292,7 +292,7 @@ pub extern "C" fn z_query_reply(
 ) -> errors::z_error_t {
     let query = this.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let payload = payload.transmute_mut().extract();
+    let payload = std::mem::take(payload.as_rust_type_mut());
 
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
@@ -305,7 +305,7 @@ pub extern "C" fn z_query_reply(
             reply = reply.source_info(source_info);
         };
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = attachment.transmute_mut().extract();
+            let attachment = std::mem::take(attachment.as_rust_type_mut());
             reply = reply.attachment(attachment);
         }
         if !options.timestamp.is_null() {
@@ -346,7 +346,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     options: Option<&mut z_query_reply_err_options_t>,
 ) -> errors::z_error_t {
     let query = this.as_rust_type_ref();
-    let payload = payload.transmute_mut().extract();
+    let payload = std::mem::take(payload.as_rust_type_mut());
 
     let reply = query.reply_err(payload).encoding(
         options
@@ -394,7 +394,7 @@ pub unsafe extern "C" fn z_query_reply_del(
             reply = reply.source_info(source_info);
         };
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = attachment.transmute_mut().extract();
+            let attachment = std::mem::take(attachment.as_rust_type_mut());
             reply = reply.attachment(attachment);
         }
         if !options.timestamp.is_null() {
@@ -441,7 +441,7 @@ pub unsafe extern "C" fn z_query_parameters(
 pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
     this.as_rust_type_ref()
         .payload()
-        .map(|v| v.transmute_handle())
+        .map(|v| v.as_loaned_ctype_ref())
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
@@ -461,5 +461,5 @@ pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_
 pub extern "C" fn z_query_attachment(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
     this.as_rust_type_ref()
         .attachment()
-        .map(|a| a.transmute_handle())
+        .map(|a| a.as_loaned_ctype_ref())
 }

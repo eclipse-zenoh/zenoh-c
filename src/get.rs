@@ -33,7 +33,7 @@ use zenoh_protocol::core::ZenohIdProto;
 use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
-use crate::transmute::{Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef};
+use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -97,7 +97,7 @@ pub extern "C" fn z_reply_err_check(this: &'static z_owned_reply_err_t) -> bool 
 /// Returns reply error payload.
 #[no_mangle]
 pub extern "C" fn z_reply_err_payload(this: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().payload().transmute_handle()
+    this.as_rust_type_ref().payload().as_loaned_ctype_ref()
 }
 
 /// Returns reply error encoding.
@@ -265,7 +265,7 @@ pub unsafe extern "C" fn z_get(
     let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
         if let Some(payload) = unsafe { options.payload.as_mut() } {
-            let payload = payload.transmute_mut().extract();
+            let payload = std::mem::take(payload.as_rust_type_mut());
             get = get.payload(payload);
         }
         if let Some(encoding) = unsafe { options.encoding.as_mut() } {
@@ -277,7 +277,7 @@ pub unsafe extern "C" fn z_get(
             get = get.source_info(source_info);
         }
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = attachment.transmute_mut().extract();
+            let attachment = std::mem::take(attachment.as_rust_type_mut());
             get = get.attachment(attachment);
         }
 
