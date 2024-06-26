@@ -613,13 +613,17 @@ pub extern "C" fn z_bytes_serialize_from_iter(
 }
 
 pub use crate::z_bytes_iterator_t;
-decl_transmute_handle!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
+decl_c_type!(loaned(z_bytes_iterator_t, ZBytesIterator<'static, ZBytes>));
+
 /// Returns an iterator for multi-element serialized data.
 ///
 /// The `data` should outlive the iterator.
 #[no_mangle]
 pub extern "C" fn z_bytes_get_iterator(data: &'static z_loaned_bytes_t) -> z_bytes_iterator_t {
-    *data.as_rust_type_ref().iter::<ZBytes>().transmute_handle()
+    *data
+        .as_rust_type_ref()
+        .iter::<ZBytes>()
+        .as_loaned_ctype_ref()
 }
 
 /// Constructs `z_owned_bytes_t` object corresponding to the next element of serialized data.
@@ -631,7 +635,7 @@ pub extern "C" fn z_bytes_iterator_next(
     iter: &mut z_bytes_iterator_t,
     out: &mut MaybeUninit<z_owned_bytes_t>,
 ) -> bool {
-    match iter.transmute_mut().next() {
+    match iter.as_rust_type_mut().next() {
         Some(buf) => {
             // this is safe because anything is convertible to ZBytes
             out.as_rust_type_mut_uninit()
