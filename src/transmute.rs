@@ -18,10 +18,10 @@
 
 use std::mem::MaybeUninit;
 
-pub fn unwrap_ref_unchecked<T>(value: &Option<T>) -> &T {
-    debug_assert!(value.is_some());
-    unsafe { value.as_ref().unwrap_unchecked() }
-}
+// pub fn unwrap_ref_unchecked<T>(value: &Option<T>) -> &T {
+//     debug_assert!(value.is_some());
+//     unsafe { value.as_ref().unwrap_unchecked() }
+// }
 
 // pub fn unwrap_ref_unchecked_mut<T>(value: &mut Option<T>) -> &mut T {
 //     debug_assert!(value.is_some());
@@ -95,45 +95,45 @@ impl<T: InplaceDefault> Inplace for T {
     }
 }
 
-macro_rules! validate_equivalence {
-    ($type_a:ty, $type_b:ty) => {
-        const _: () = {
-            use const_format::concatcp;
-            const TYPE_NAME_A: &str = stringify!($type_a);
-            const TYPE_NAME_B: &str = stringify!($type_b);
-            const ALIGN_A: usize = std::mem::align_of::<$type_a>();
-            const ALIGN_B: usize = std::mem::align_of::<$type_b>();
-            if ALIGN_A != ALIGN_B {
-                const ERR_MESSAGE: &str = concatcp!(
-                    "Alingment mismatch: type ",
-                    TYPE_NAME_A,
-                    " has alignment ",
-                    ALIGN_A,
-                    " while type ",
-                    TYPE_NAME_B,
-                    " has alignment ",
-                    ALIGN_B
-                );
-                panic!("{}", ERR_MESSAGE);
-            }
-            const SIZE_A: usize = std::mem::size_of::<$type_a>();
-            const SIZE_B: usize = std::mem::size_of::<$type_b>();
-            if SIZE_A != SIZE_B {
-                const ERR_MESSAGE: &str = concatcp!(
-                    "Size mismatch: type ",
-                    TYPE_NAME_A,
-                    " has size ",
-                    SIZE_A,
-                    " while type ",
-                    TYPE_NAME_B,
-                    " has size ",
-                    SIZE_B
-                );
-                panic!("{}", ERR_MESSAGE);
-            }
-        };
-    };
-}
+// macro_rules! validate_equivalence {
+//     ($type_a:ty, $type_b:ty) => {
+//         const _: () = {
+//             use const_format::concatcp;
+//             const TYPE_NAME_A: &str = stringify!($type_a);
+//             const TYPE_NAME_B: &str = stringify!($type_b);
+//             const ALIGN_A: usize = std::mem::align_of::<$type_a>();
+//             const ALIGN_B: usize = std::mem::align_of::<$type_b>();
+//             if ALIGN_A != ALIGN_B {
+//                 const ERR_MESSAGE: &str = concatcp!(
+//                     "Alingment mismatch: type ",
+//                     TYPE_NAME_A,
+//                     " has alignment ",
+//                     ALIGN_A,
+//                     " while type ",
+//                     TYPE_NAME_B,
+//                     " has alignment ",
+//                     ALIGN_B
+//                 );
+//                 panic!("{}", ERR_MESSAGE);
+//             }
+//             const SIZE_A: usize = std::mem::size_of::<$type_a>();
+//             const SIZE_B: usize = std::mem::size_of::<$type_b>();
+//             if SIZE_A != SIZE_B {
+//                 const ERR_MESSAGE: &str = concatcp!(
+//                     "Size mismatch: type ",
+//                     TYPE_NAME_A,
+//                     " has size ",
+//                     SIZE_A,
+//                     " while type ",
+//                     TYPE_NAME_B,
+//                     " has size ",
+//                     SIZE_B
+//                 );
+//                 panic!("{}", ERR_MESSAGE);
+//             }
+//         };
+//     };
+// }
 
 #[macro_export]
 macro_rules! decl_transmute_owned {
@@ -172,18 +172,18 @@ macro_rules! decl_transmute_handle {
     };
 }
 
-macro_rules! impl_transmute_ref {
-    ($src_type:ty, $dst_type:ty) => {
-        impl $crate::transmute::TransmuteRef<$dst_type> for $src_type {
-            fn transmute_ref(&self) -> &$dst_type {
-                unsafe { std::mem::transmute::<&$src_type, &$dst_type>(self) }
-            }
-            fn transmute_mut(&mut self) -> &mut $dst_type {
-                unsafe { std::mem::transmute::<&mut $src_type, &mut $dst_type>(self) }
-            }
-        }
-    };
-}
+// macro_rules! impl_transmute_ref {
+//     ($src_type:ty, $dst_type:ty) => {
+//         impl $crate::transmute::TransmuteRef<$dst_type> for $src_type {
+//             fn transmute_ref(&self) -> &$dst_type {
+//                 unsafe { std::mem::transmute::<&$src_type, &$dst_type>(self) }
+//             }
+//             fn transmute_mut(&mut self) -> &mut $dst_type {
+//                 unsafe { std::mem::transmute::<&mut $src_type, &mut $dst_type>(self) }
+//             }
+//         }
+//     };
+// }
 
 // macro_rules! impl_transmute_copy {
 //     ($src_type:ty, $dst_type:ty) => {
@@ -195,37 +195,37 @@ macro_rules! impl_transmute_ref {
 //     };
 // }
 
-macro_rules! impl_transmute_uninit_ptr {
-    ($src_type:ty, $dst_type:ty) => {
-        impl $crate::transmute::TransmuteUninitPtr<$dst_type> for *mut MaybeUninit<$src_type> {
-            fn transmute_uninit_ptr(self) -> *mut std::mem::MaybeUninit<$dst_type> {
-                self as *mut std::mem::MaybeUninit<$dst_type>
-            }
-        }
-    };
-}
+// macro_rules! impl_transmute_uninit_ptr {
+//     ($src_type:ty, $dst_type:ty) => {
+//         impl $crate::transmute::TransmuteUninitPtr<$dst_type> for *mut MaybeUninit<$src_type> {
+//             fn transmute_uninit_ptr(self) -> *mut std::mem::MaybeUninit<$dst_type> {
+//                 self as *mut std::mem::MaybeUninit<$dst_type>
+//             }
+//         }
+//     };
+// }
 
-macro_rules! impl_transmute_handle {
-    ($c_type:ty, $zenoh_type:ty) => {
-        impl $crate::transmute::TransmuteFromHandle<$zenoh_type> for $c_type {
-            fn transmute_ref(&self) -> &'static $zenoh_type {
-                unsafe {
-                    (self as *const Self as *const $zenoh_type)
-                        .as_ref()
-                        .unwrap()
-                }
-            }
-            fn transmute_mut(&mut self) -> &'static mut $zenoh_type {
-                unsafe { (self as *mut Self as *mut $zenoh_type).as_mut().unwrap() }
-            }
-        }
-        impl $crate::transmute::TransmuteIntoHandle<$c_type> for $zenoh_type {
-            fn transmute_handle(&self) -> &'static $c_type {
-                unsafe { (self as *const Self as *const $c_type).as_ref().unwrap() }
-            }
-            fn transmute_handle_mut(&mut self) -> &'static mut $c_type {
-                unsafe { (self as *mut Self as *mut $c_type).as_mut().unwrap() }
-            }
-        }
-    };
-}
+// macro_rules! impl_transmute_handle {
+//     ($c_type:ty, $zenoh_type:ty) => {
+//         impl $crate::transmute::TransmuteFromHandle<$zenoh_type> for $c_type {
+//             fn transmute_ref(&self) -> &'static $zenoh_type {
+//                 unsafe {
+//                     (self as *const Self as *const $zenoh_type)
+//                         .as_ref()
+//                         .unwrap()
+//                 }
+//             }
+//             fn transmute_mut(&mut self) -> &'static mut $zenoh_type {
+//                 unsafe { (self as *mut Self as *mut $zenoh_type).as_mut().unwrap() }
+//             }
+//         }
+//         impl $crate::transmute::TransmuteIntoHandle<$c_type> for $zenoh_type {
+//             fn transmute_handle(&self) -> &'static $c_type {
+//                 unsafe { (self as *const Self as *const $c_type).as_ref().unwrap() }
+//             }
+//             fn transmute_handle_mut(&mut self) -> &'static mut $c_type {
+//                 unsafe { (self as *mut Self as *mut $c_type).as_mut().unwrap() }
+//             }
+//         }
+//     };
+// }

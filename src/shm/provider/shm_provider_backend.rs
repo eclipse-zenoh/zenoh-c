@@ -20,8 +20,7 @@ use zenoh::internal::zerror;
 use zenoh::shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend};
 
 use crate::context::DroppableContext;
-use crate::transmute::TransmuteRef;
-use crate::transmute2::{LoanedCTypeRef, OwnedCTypeRef};
+use crate::transmute2::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef};
 use crate::{z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t};
 
 use super::chunk::z_chunk_descriptor_t;
@@ -71,7 +70,7 @@ where
                 layout.as_loaned_ctype_ref(),
                 self.context.get(),
             );
-            match result.assume_init().transmute_mut().take() {
+            match result.assume_init().as_rust_type_mut().take() {
                 Some(val) => val,
                 None => Err(zenoh::shm::ZAllocError::Other(
                     "Callback returned empty result".into(),

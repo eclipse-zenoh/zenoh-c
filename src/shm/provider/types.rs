@@ -20,9 +20,6 @@ use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout,
 use crate::transmute2::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-    },
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
@@ -141,57 +138,59 @@ pub extern "C" fn z_memory_layout_get_data(
     out_alignment.write(layout.alignment().into_c_type());
 }
 
-decl_transmute_owned!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
-
-decl_transmute_handle!(ChunkAllocResult, z_loaned_chunk_alloc_result_t);
+decl_c_type!(
+    owned(z_owned_chunk_alloc_result_t, Option<ChunkAllocResult>),
+    loaned(z_loaned_chunk_alloc_result_t, ChunkAllocResult)
+);
 
 /// Creates a new Chunk Alloc Result with Ok value
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_new_ok(
-    this: *mut MaybeUninit<z_owned_chunk_alloc_result_t>,
+    this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
     allocated_chunk: z_allocated_chunk_t,
 ) {
-    Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(Ok(allocated_chunk.into())),
-    );
+    this.as_rust_type_mut_uninit()
+        .write(Some(Ok(allocated_chunk.into())));
 }
 
 /// Creates a new Chunk Alloc Result with Error value
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_new_error(
-    this: *mut MaybeUninit<z_owned_chunk_alloc_result_t>,
+    this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
     alloc_error: z_alloc_error_t,
 ) {
-    Inplace::init(this.transmute_uninit_ptr(), Some(Err(alloc_error.into())));
+    this.as_rust_type_mut_uninit()
+        .write(Some(Err(alloc_error.into())));
 }
 
 /// Constructs Chunk Alloc Result in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_null(this: *mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_chunk_alloc_result_null(this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_check(this: &z_owned_chunk_alloc_result_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows Chunk Alloc Result
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_chunk_alloc_result_loan(
     this: &z_owned_chunk_alloc_result_t,
 ) -> &z_loaned_chunk_alloc_result_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Deletes Chunk Alloc Result
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_drop(this: &mut z_owned_chunk_alloc_result_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }
 
 decl_c_type!(
