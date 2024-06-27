@@ -13,9 +13,6 @@
 //
 
 use crate::errors;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::IntoCType;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
@@ -32,7 +29,6 @@ use crate::zcu_owned_closure_matching_status_t;
 use std::mem::MaybeUninit;
 use std::ptr;
 use zenoh::core::Wait;
-use zenoh::handlers::DefaultHandler;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::publisher::CongestionControl;
 use zenoh::sample::EncodingBuilderTrait;
@@ -291,10 +287,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 }
 
 pub use crate::opaque_types::zcu_owned_matching_listener_t;
-decl_transmute_owned!(
-    Option<MatchingListener<'static, DefaultHandler>>,
-    zcu_owned_matching_listener_t
-);
+decl_c_type!(owned(zcu_owned_matching_listener_t, Option<MatchingListener<'static, ()>>));
 
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
@@ -314,11 +307,11 @@ pub struct zcu_matching_status_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_callback(
-    this: *mut MaybeUninit<zcu_owned_matching_listener_t>,
-    publisher: &z_loaned_publisher_t,
+    this: &mut MaybeUninit<zcu_owned_matching_listener_t>,
+    publisher: &'static z_loaned_publisher_t,
     callback: &mut zcu_owned_closure_matching_status_t,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let mut closure = zcu_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
     let publisher = publisher.as_rust_type_ref();
@@ -332,8 +325,8 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
         })
         .wait();
     match listener {
-        Ok(_) => {
-            Inplace::empty(this);
+        Ok(listener) => {
+            this.write(Some(listener));
             errors::Z_OK
         }
         Err(e) => {
@@ -351,7 +344,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 pub extern "C" fn zcu_publisher_matching_listener_undeclare(
     this: &mut zcu_owned_matching_listener_t,
 ) -> errors::z_error_t {
-    if let Some(p) = this.transmute_mut().extract().take() {
+    if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

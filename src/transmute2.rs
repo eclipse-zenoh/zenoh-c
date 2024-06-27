@@ -185,8 +185,11 @@ macro_rules! decl_c_type {
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         decl_c_type!(loaned($c_loaned_type, $rust_loaned_type));
-        validate_equivalence2!($c_owned_type, $rust_owned_type);
+        decl_c_type!(owned($c_owned_type, $rust_owned_type));
         validate_equivalence2!($c_owned_type, $c_loaned_type);
+    };
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?) $(,)?) => {
+        validate_equivalence2!($c_owned_type, $rust_owned_type);
         impl_transmute!(as_c($rust_owned_type, $c_owned_type));
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
     };
