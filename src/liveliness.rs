@@ -21,7 +21,6 @@ use zenoh::{
 use crate::transmute2::LoanedCTypeRef;
 use crate::{
     errors,
-    transmute::{Inplace, TransmuteUninitPtr},
     transmute2::{RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
@@ -151,13 +150,13 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
-    this: *mut MaybeUninit<z_owned_subscriber_t>,
+    this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     _options: Option<&mut zc_liveliness_subscriber_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
     let key_expr = key_expr.as_rust_type_ref();
@@ -171,12 +170,12 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .wait()
     {
         Ok(subscriber) => {
-            Inplace::init(this, Some(subscriber));
+            this.write(Some(subscriber));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Failed to subscribe to liveliness: {e}");
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
