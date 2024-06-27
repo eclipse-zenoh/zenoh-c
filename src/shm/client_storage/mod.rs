@@ -16,6 +16,7 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
+use super::common::types::z_protocol_id_t;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
@@ -25,8 +26,6 @@ use crate::{
     z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
     zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,
 };
-
-use super::common::types::z_protocol_id_t;
 
 decl_transmute_owned!(
     Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,

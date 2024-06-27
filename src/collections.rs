@@ -12,18 +12,22 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::mem::MaybeUninit;
-use std::ptr::{null, slice_from_raw_parts};
-use std::slice::from_raw_parts;
+use std::{
+    collections::HashMap,
+    hash::Hash,
+    mem::MaybeUninit,
+    ptr::{null, slice_from_raw_parts},
+    slice::from_raw_parts,
+};
 
 use libc::{c_char, c_void, strlen};
 
-use crate::errors::{self, z_error_t};
-use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+use crate::{
+    errors::{self, z_error_t},
+    transmute::{
+        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    },
 };
 
 pub struct CSlice(*const u8, isize);
@@ -126,9 +130,7 @@ impl From<String> for CSlice {
 
 impl std::cmp::Eq for CSlice {}
 
-pub use crate::opaque_types::z_loaned_slice_t;
-pub use crate::opaque_types::z_owned_slice_t;
-pub use crate::opaque_types::z_view_slice_t;
+pub use crate::opaque_types::{z_loaned_slice_t, z_owned_slice_t, z_view_slice_t};
 
 decl_transmute_owned!(CSlice, z_owned_slice_t);
 decl_transmute_owned!(custom_inplace_init CSlice, z_view_slice_t);
@@ -300,9 +302,7 @@ pub extern "C" fn z_slice_is_empty(this: &z_loaned_slice_t) -> bool {
     this.transmute_ref().is_empty()
 }
 
-pub use crate::opaque_types::z_loaned_string_t;
-pub use crate::opaque_types::z_owned_string_t;
-pub use crate::opaque_types::z_view_string_t;
+pub use crate::opaque_types::{z_loaned_string_t, z_owned_string_t, z_view_string_t};
 
 decl_transmute_owned!(custom_inplace_init CSlice, z_owned_string_t);
 decl_transmute_owned!(custom_inplace_init CSlice, z_view_string_t);
@@ -451,8 +451,7 @@ pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
     z_string_len(this) == 0
 }
 
-pub use crate::opaque_types::z_loaned_slice_map_t;
-pub use crate::opaque_types::z_owned_slice_map_t;
+pub use crate::opaque_types::{z_loaned_slice_map_t, z_owned_slice_map_t};
 
 pub type ZHashMap = HashMap<CSlice, CSlice>;
 decl_transmute_handle!(HashMap<CSlice, CSlice>, z_loaned_slice_map_t);
@@ -591,8 +590,7 @@ pub extern "C" fn z_slice_map_insert_by_alias(
     }
 }
 
-pub use crate::opaque_types::z_loaned_string_array_t;
-pub use crate::opaque_types::z_owned_string_array_t;
+pub use crate::opaque_types::{z_loaned_string_array_t, z_owned_string_array_t};
 
 pub type ZVector = Vec<CSlice>;
 decl_transmute_handle!(Vec<CSlice>, z_loaned_string_array_t);

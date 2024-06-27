@@ -12,8 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use libc::c_void;
 use std::fmt::Debug;
+
+use libc::c_void;
 
 /// A trait for implementing droppable contexts
 pub trait DroppableContext: Debug {

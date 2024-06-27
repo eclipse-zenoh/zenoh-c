@@ -11,30 +11,24 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
+use std::{error::Error, mem::MaybeUninit};
 
-use crate::errors;
-use crate::errors::z_error_t;
-use crate::errors::Z_OK;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
-use crate::z_loaned_session_t;
-use crate::z_view_string_from_substring;
-use crate::z_view_string_t;
 use libc::c_char;
-use std::error::Error;
-use zenoh::core::Wait;
-use zenoh::key_expr::keyexpr;
-use zenoh::key_expr::KeyExpr;
-use zenoh::key_expr::SetIntersectionLevel;
-use zenoh_protocol::core::key_expr::canon::Canonizable;
+use zenoh::{
+    key_expr::{keyexpr, KeyExpr, SetIntersectionLevel},
+    prelude::*,
+};
 
-pub use crate::opaque_types::z_owned_keyexpr_t;
-pub use crate::opaque_types::z_view_keyexpr_t;
+pub use crate::opaque_types::{z_owned_keyexpr_t, z_view_keyexpr_t};
+use crate::{
+    errors,
+    errors::{z_error_t, Z_OK},
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
+    },
+    z_loaned_session_t, z_view_string_from_substring, z_view_string_t,
+};
 decl_transmute_owned!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
 decl_transmute_owned!(custom_inplace_init Option<KeyExpr<'static>>, z_view_keyexpr_t);
 
@@ -51,21 +45,15 @@ pub extern "C" fn z_view_keyexpr_null(this: *mut MaybeUninit<z_view_keyexpr_t>) 
 }
 
 fn keyexpr_create_inner(
-    mut name: &'static mut str,
+    name: &'static mut str,
     should_auto_canonize: bool,
     should_copy: bool,
 ) -> Result<KeyExpr<'static>, Box<dyn Error + Send + Sync>> {
-    if should_copy {
-        let s = name.to_string();
-        match should_auto_canonize {
-            true => KeyExpr::<'static>::autocanonize(s),
-            false => KeyExpr::<'static>::try_from(s),
-        }
-    } else {
-        if should_auto_canonize {
-            name.canonize();
-        }
-        return keyexpr::new(name).map(|k| k.into());
+    match (should_copy, should_auto_canonize) {
+        (true, true) => KeyExpr::autocanonize(name.to_string()),
+        (true, false) => KeyExpr::try_from(name.to_string()),
+        (false, true) => KeyExpr::autocanonize(name),
+        (false, false) => KeyExpr::try_from(name),
     }
 }
 

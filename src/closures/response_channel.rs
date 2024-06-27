@@ -1,3 +1,12 @@
+use std::{mem::MaybeUninit, sync::Arc};
+
+use libc::c_void;
+use zenoh::{
+    handlers::{self, IntoHandler, RingChannelHandler},
+    query::Reply,
+};
+
+pub use crate::opaque_types::{z_loaned_fifo_handler_reply_t, z_owned_fifo_handler_reply_t};
 use crate::{
     transmute::{
         unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
@@ -5,15 +14,6 @@ use crate::{
     },
     z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
 };
-use libc::c_void;
-use std::{mem::MaybeUninit, sync::Arc};
-use zenoh::{
-    handlers::{self, IntoHandler, RingChannelHandler},
-    query::Reply,
-};
-
-pub use crate::opaque_types::z_loaned_fifo_handler_reply_t;
-pub use crate::opaque_types::z_owned_fifo_handler_reply_t;
 
 decl_transmute_owned!(Option<flume::Receiver<Reply>>, z_owned_fifo_handler_reply_t);
 decl_transmute_handle!(flume::Receiver<Reply>, z_loaned_fifo_handler_reply_t);
@@ -122,8 +122,7 @@ pub extern "C" fn z_fifo_handler_reply_try_recv(
     }
 }
 
-pub use crate::opaque_types::z_loaned_ring_handler_reply_t;
-pub use crate::opaque_types::z_owned_ring_handler_reply_t;
+pub use crate::opaque_types::{z_loaned_ring_handler_reply_t, z_owned_ring_handler_reply_t};
 
 decl_transmute_owned!(
     Option<RingChannelHandler<Reply>>,

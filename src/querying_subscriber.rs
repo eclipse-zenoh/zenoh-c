@@ -12,37 +12,25 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
-use std::ptr::null;
+use std::{mem::MaybeUninit, ptr::null};
 
-use crate::errors;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
-use crate::z_closure_sample_loan;
-use crate::z_loaned_keyexpr_t;
-use crate::z_owned_closure_sample_t;
-use crate::z_reliability_t;
+use zenoh::{prelude::*, pubsub::Reliability, Session};
+use zenoh_ext::*;
+
 use crate::{
-    z_closure_sample_call, z_get_options_t, z_loaned_session_t, z_query_consolidation_none,
-    z_query_consolidation_t, z_query_target_default, z_query_target_t, zcu_reply_keyexpr_default,
-    zcu_reply_keyexpr_t,
+    errors,
+    opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
+    },
+    z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
+    z_loaned_session_t, z_owned_closure_sample_t, z_query_consolidation_none,
+    z_query_consolidation_t, z_query_target_default, z_query_target_t, z_reliability_t,
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{zcu_locality_default, zcu_locality_t};
-use zenoh::core::Wait;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::session::Session;
-use zenoh::subscriber::Reliability;
-use zenoh_ext::*;
-
-use crate::opaque_types::ze_loaned_querying_subscriber_t;
-use crate::opaque_types::ze_owned_querying_subscriber_t;
 decl_transmute_owned!(
     Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
     ze_owned_querying_subscriber_t

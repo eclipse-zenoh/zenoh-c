@@ -12,38 +12,25 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::errors;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::unwrap_ref_unchecked_mut;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteCopy;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
-use crate::z_entity_global_id_t;
-use crate::z_owned_encoding_t;
-use crate::z_owned_source_info_t;
-use crate::z_timestamp_t;
-use crate::zcu_closure_matching_status_call;
-use crate::zcu_closure_matching_status_loan;
-use crate::zcu_locality_default;
-use crate::zcu_locality_t;
-use crate::zcu_owned_closure_matching_status_t;
-use std::mem::MaybeUninit;
-use std::ptr;
-use zenoh::core::Wait;
-use zenoh::handlers::DefaultHandler;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::publisher::CongestionControl;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::TimestampBuilderTrait;
-use zenoh::{core::Priority, publisher::MatchingListener, publisher::Publisher};
+use std::{mem::MaybeUninit, ptr};
+
+use zenoh::{
+    handlers::DefaultHandler,
+    prelude::*,
+    pubsub::{MatchingListener, Publisher},
+    qos::{CongestionControl, Priority},
+};
 
 use crate::{
-    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t, z_priority_t,
+    errors,
+    transmute::{
+        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteCopy,
+        TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    },
+    z_congestion_control_t, z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t, z_timestamp_t,
+    zcu_closure_matching_status_call, zcu_closure_matching_status_loan, zcu_locality_default,
+    zcu_locality_t, zcu_owned_closure_matching_status_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.

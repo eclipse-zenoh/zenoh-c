@@ -1796,13 +1796,6 @@ void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
  */
 ZENOHC_API uint32_t z_entity_global_id_eid(const struct z_entity_global_id_t *this_);
 /**
- * Create entity global id
- */
-ZENOHC_API
-z_error_t z_entity_global_id_new(struct z_entity_global_id_t *this_,
-                                 const struct z_id_t *zid,
-                                 uint32_t eid);
-/**
  * Returns the zenoh id of entity global id.
  */
 ZENOHC_API struct z_id_t z_entity_global_id_zid(const struct z_entity_global_id_t *this_);

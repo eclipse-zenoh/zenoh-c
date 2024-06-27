@@ -6,8 +6,7 @@ use std::{
 
 use libc::c_void;
 
-pub use crate::opaque_types::z_loaned_mutex_t;
-pub use crate::opaque_types::z_owned_mutex_t;
+pub use crate::opaque_types::{z_loaned_mutex_t, z_owned_mutex_t};
 use crate::{
     errors,
     transmute::{
@@ -110,8 +109,7 @@ pub unsafe extern "C" fn z_mutex_try_lock(this: &mut z_loaned_mutex_t) -> errors
     errors::Z_OK
 }
 
-pub use crate::opaque_types::z_loaned_condvar_t;
-pub use crate::opaque_types::z_owned_condvar_t;
+pub use crate::opaque_types::{z_loaned_condvar_t, z_owned_condvar_t};
 
 decl_transmute_owned!(Option<Condvar>, z_owned_condvar_t);
 decl_transmute_handle!(Condvar, z_loaned_condvar_t);

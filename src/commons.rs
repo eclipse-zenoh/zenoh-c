@@ -12,42 +12,33 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::borrow::Cow;
-use std::mem::MaybeUninit;
-use std::ptr::null;
-use std::slice::from_raw_parts;
-use std::str::from_utf8;
-use std::str::FromStr;
+use std::{
+    borrow::Cow,
+    mem::MaybeUninit,
+    ptr::null,
+    slice::from_raw_parts,
+    str::{from_utf8, FromStr},
+};
 
-use crate::errors;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteCopy;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
-use crate::z_id_t;
-use crate::z_loaned_bytes_t;
-use crate::z_loaned_keyexpr_t;
-use crate::z_owned_string_t;
-use crate::z_string_from_substring;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
-use zenoh::core::Priority;
-use zenoh::encoding::Encoding;
-use zenoh::info::EntityGlobalId;
-use zenoh::publisher::CongestionControl;
-use zenoh::query::ConsolidationMode;
-use zenoh::query::QueryTarget;
-use zenoh::query::ReplyKeyExpr;
-use zenoh::sample::Locality;
-use zenoh::sample::Sample;
-use zenoh::sample::SampleKind;
-use zenoh::sample::SourceInfo;
-use zenoh::time::Timestamp;
-use zenoh_protocol::core::EntityGlobalIdProto;
-use zenoh_protocol::zenoh::Consolidation;
+use zenoh::{
+    bytes::Encoding,
+    qos::{CongestionControl, Priority},
+    query::{ConsolidationMode, QueryTarget, ReplyKeyExpr},
+    sample::{Locality, Sample, SampleKind, SourceInfo},
+    session::EntityGlobalId,
+    time::Timestamp,
+};
+
+use crate::{
+    errors,
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
+        TransmuteRef, TransmuteUninitPtr,
+    },
+    z_id_t, z_loaned_bytes_t, z_loaned_keyexpr_t, z_owned_string_t, z_string_from_substring,
+};
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -462,7 +453,7 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
     #[inline]
     fn from(val: z_consolidation_mode_t) -> Self {
         match val {
-            z_consolidation_mode_t::AUTO => Consolidation::Auto,
+            z_consolidation_mode_t::AUTO => ConsolidationMode::Auto,
             z_consolidation_mode_t::NONE => ConsolidationMode::None,
             z_consolidation_mode_t::MONOTONIC => ConsolidationMode::Monotonic,
             z_consolidation_mode_t::LATEST => ConsolidationMode::Latest,
@@ -555,22 +546,6 @@ impl From<z_congestion_control_t> for CongestionControl {
 
 use crate::z_entity_global_id_t;
 decl_transmute_copy!(EntityGlobalId, z_entity_global_id_t);
-
-/// Create entity global id
-#[no_mangle]
-pub extern "C" fn z_entity_global_id_new(
-    this: &mut z_entity_global_id_t,
-    zid: &z_id_t,
-    eid: u32,
-) -> errors::z_error_t {
-    let entity_global_id: EntityGlobalId = EntityGlobalIdProto {
-        zid: zid.transmute_copy().into(),
-        eid,
-    }
-    .into();
-    *this = entity_global_id.transmute_copy();
-    errors::Z_OK
-}
 
 /// Returns the zenoh id of entity global id.
 #[no_mangle]

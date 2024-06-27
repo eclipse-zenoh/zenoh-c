@@ -11,30 +11,27 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
+use std::{mem::MaybeUninit, ptr::null_mut};
+
+use zenoh::{
+    bytes::Encoding,
+    prelude::*,
+    qos::{CongestionControl, Priority},
+    query::{Query, Queryable},
 };
+
+pub use crate::opaque_types::z_owned_queryable_t;
 use crate::{
-    errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
+    errors,
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
+    },
+    z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
     z_owned_closure_query_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t,
     z_timestamp_t, z_view_string_from_substring, z_view_string_t,
 };
-use std::mem::MaybeUninit;
-use std::ptr::null_mut;
-use zenoh::core::Priority;
-use zenoh::core::Wait;
-use zenoh::encoding::Encoding;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::publisher::CongestionControl;
-use zenoh::query::Query;
-use zenoh::queryable::Queryable;
-use zenoh::sample::{
-    EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait,
-};
-
-pub use crate::opaque_types::z_owned_queryable_t;
 decl_transmute_owned!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 pub use crate::opaque_types::z_loaned_queryable_t;
 decl_transmute_handle!(Queryable<'static, ()>, z_loaned_queryable_t);

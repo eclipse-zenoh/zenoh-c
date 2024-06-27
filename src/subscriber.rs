@@ -14,22 +14,20 @@
 
 use std::mem::MaybeUninit;
 
-use crate::errors;
-use crate::keyexpr::*;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
-use crate::z_closure_sample_call;
-use crate::z_closure_sample_loan;
-use crate::z_loaned_session_t;
-use crate::z_owned_closure_sample_t;
-use zenoh::core::Wait;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::subscriber::Reliability;
-use zenoh::subscriber::Subscriber;
+use zenoh::{
+    prelude::*,
+    pubsub::{Reliability, Subscriber},
+};
+
+use crate::{
+    errors,
+    keyexpr::*,
+    transmute::{
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
+    },
+    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_owned_closure_sample_t,
+};
 
 /// The subscription reliability.
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
@@ -62,8 +60,7 @@ impl From<z_reliability_t> for Reliability {
     }
 }
 
-pub use crate::opaque_types::z_loaned_subscriber_t;
-pub use crate::opaque_types::z_owned_subscriber_t;
+pub use crate::opaque_types::{z_loaned_subscriber_t, z_owned_subscriber_t};
 decl_transmute_owned!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
 decl_transmute_handle!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 

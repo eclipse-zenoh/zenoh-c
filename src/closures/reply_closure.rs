@@ -1,10 +1,11 @@
 use std::mem::MaybeUninit;
 
+use libc::c_void;
+
 use crate::{
     transmute::{TransmuteFromHandle, TransmuteIntoHandle},
     z_loaned_reply_t,
 };
-use libc::c_void;
 /// A structure that contains all the elements for stateful, memory-leak-free callbacks.
 ///
 /// Closures are not guaranteed not to be called concurrently.
