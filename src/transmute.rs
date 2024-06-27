@@ -185,15 +185,15 @@ macro_rules! impl_transmute_ref {
     };
 }
 
-macro_rules! impl_transmute_copy {
-    ($src_type:ty, $dst_type:ty) => {
-        impl $crate::transmute::TransmuteCopy<$dst_type> for $src_type {
-            fn transmute_copy(self) -> $dst_type {
-                unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
-            }
-        }
-    };
-}
+// macro_rules! impl_transmute_copy {
+//     ($src_type:ty, $dst_type:ty) => {
+//         impl $crate::transmute::TransmuteCopy<$dst_type> for $src_type {
+//             fn transmute_copy(self) -> $dst_type {
+//                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
+//             }
+//         }
+//     };
+// }
 
 macro_rules! impl_transmute_uninit_ptr {
     ($src_type:ty, $dst_type:ty) => {

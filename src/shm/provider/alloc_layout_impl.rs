@@ -21,11 +21,10 @@ use zenoh::shm::{
 };
 use zenoh::{prelude::*, shm::AsyncAllocPolicy};
 
-use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
+use crate::transmute2::{IntoRustType, RustTypeRef, RustTypeRefUninit};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    transmute::TransmuteCopy,
     z_owned_buf_alloc_result_t,
 };
 use crate::{z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t};
@@ -45,7 +44,7 @@ pub(crate) fn alloc_layout_new(
         super::shm_provider::CSHMProvider::Posix(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.transmute_copy())
+                .with_alignment(alignment.into_rust_type())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::Posix(layout),
@@ -58,7 +57,7 @@ pub(crate) fn alloc_layout_new(
         super::shm_provider::CSHMProvider::Dynamic(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.transmute_copy())
+                .with_alignment(alignment.into_rust_type())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
@@ -71,7 +70,7 @@ pub(crate) fn alloc_layout_new(
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.transmute_copy())
+                .with_alignment(alignment.into_rust_type())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),

@@ -23,8 +23,7 @@ use zenoh::shm::{
 
 use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
-use crate::transmute::TransmuteCopy;
-use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
+use crate::transmute2::{IntoRustType, RustTypeRef, RustTypeRefUninit};
 use crate::{z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
 use super::chunk::z_allocated_chunk_t;
@@ -173,7 +172,7 @@ fn alloc_impl<Policy: AllocPolicy, TProtocolID: ProtocolIDSource, TBackend: ShmP
 ) -> z_error_t {
     let result = provider
         .alloc(size)
-        .with_alignment(alignment.transmute_copy())
+        .with_alignment(alignment.into_rust_type())
         .with_policy::<Policy>()
         .wait();
 
@@ -200,7 +199,7 @@ pub(crate) fn alloc_async_impl<
     async_std::task::spawn(async move {
         let result = provider
             .alloc(size)
-            .with_alignment(alignment.transmute_copy())
+            .with_alignment(alignment.into_rust_type())
             .with_policy::<Policy>()
             .await;
         let error = parse_result(out_result, result);

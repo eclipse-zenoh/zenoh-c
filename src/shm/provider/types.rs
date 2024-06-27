@@ -17,12 +17,12 @@ use std::mem::MaybeUninit;
 use zenoh::internal::zerror;
 use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError};
 
-use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute2::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
-        TransmuteRef, TransmuteUninitPtr,
+        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
+        TransmuteUninitPtr,
     },
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
@@ -73,7 +73,7 @@ pub struct z_alloc_alignment_t {
     pow: u8,
 }
 
-decl_transmute_copy!(AllocAlignment, z_alloc_alignment_t);
+decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 
 decl_transmute_owned!(Option<MemoryLayout>, z_owned_memory_layout_t);
 decl_transmute_handle!(MemoryLayout, z_loaned_memory_layout_t);
@@ -134,7 +134,7 @@ pub extern "C" fn z_memory_layout_get_data(
 ) {
     let layout = this.transmute_ref();
     out_size.write(layout.size());
-    out_alignment.write(layout.alignment().transmute_copy());
+    out_alignment.write(layout.alignment().into_c_type());
 }
 
 decl_transmute_owned!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
