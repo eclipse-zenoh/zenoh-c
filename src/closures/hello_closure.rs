@@ -1,10 +1,16 @@
-use std::mem::MaybeUninit;
-
-use crate::{
-    transmute2::{LoanedCTypeRef, OwnedCTypeRef},
-    z_loaned_hello_t,
-};
-use libc::c_void;
+//
+// Copyright (c) 2017, 2024 ZettaScale Technology.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh team, <zenoh@zettascale.tech>
+//
 
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
@@ -15,6 +21,14 @@ use libc::c_void;
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+
+use std::mem::MaybeUninit;
+use crate::{
+    transmute2::{LoanedCTypeRef, OwnedCTypeRef},
+    z_loaned_hello_t,
+};
+use libc::c_void;
+
 #[repr(C)]
 pub struct z_owned_closure_hello_t {
     /// An optional pointer to a closure state.
