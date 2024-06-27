@@ -14,7 +14,6 @@
 use crate::errors;
 use crate::errors::z_error_t;
 use crate::errors::Z_OK;
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -448,7 +447,7 @@ pub extern "C" fn z_declare_keyexpr(
 ) -> z_error_t {
     let this = this.as_rust_type_mut_uninit();
     let key_expr = key_expr.as_rust_type_ref();
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     match session.declare_keyexpr(key_expr).wait() {
         Ok(id) => {
             this.write(Some(id.into_owned()));
@@ -474,7 +473,7 @@ pub extern "C" fn z_undeclare_keyexpr(
         log::debug!("Attempted to undeclare dropped keyexpr");
         return errors::Z_EINVAL;
     };
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     match session.undeclare(kexpr).wait() {
         Ok(()) => errors::Z_OK,
         Err(e) => {

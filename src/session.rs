@@ -12,11 +12,8 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::{
-    unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-    TransmuteUninitPtr,
-};
-use crate::transmute2::RustTypeRef;
+use crate::transmute::TransmuteFromHandle;
+use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
@@ -26,26 +23,28 @@ use zenoh::session::Session;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::z_loaned_shm_client_storage_t;
 
-use crate::opaque_types::z_owned_session_t;
-decl_transmute_owned!(Option<Arc<Session>>, z_owned_session_t);
-
 use crate::opaque_types::z_loaned_session_t;
-decl_transmute_handle!(Arc<Session>, z_loaned_session_t);
-validate_equivalence!(z_owned_session_t, z_loaned_session_t);
+use crate::opaque_types::z_owned_session_t;
+decl_c_type!(
+    owned(z_owned_session_t, Option<Arc<Session>>),
+    loaned(z_loaned_session_t, Arc<Session>)
+);
 
 /// Borrows session.
 #[no_mangle]
-pub extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_loaned_session_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_loaned_session_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Constructs a Zenoh session in its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_session_null(this: *mut MaybeUninit<z_owned_session_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_session_null(this: &mut MaybeUninit<z_owned_session_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Constructs and opens a new Zenoh session.
@@ -54,26 +53,26 @@ pub extern "C" fn z_session_null(this: *mut MaybeUninit<z_owned_session_t>) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_open(
-    this: *mut MaybeUninit<z_owned_session_t>,
+    this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_owned_config_t,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
     let Some(config) = config.as_rust_type_mut().take() else {
         log::error!("Config not provided");
-        Inplace::empty(this);
+        this.write(None);
         return errors::Z_EINVAL;
     };
     match zenoh::open(config).wait() {
         Ok(s) => {
-            Inplace::init(this, Some(Arc::new(s)));
+            this.write(Some(Arc::new(s)));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Error opening session: {}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_ENETWORK
         }
     }
@@ -86,17 +85,17 @@ pub extern "C" fn z_open(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_open_with_custom_shm_clients(
-    this: *mut MaybeUninit<z_owned_session_t>,
+    this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_owned_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
     let Some(config) = config.as_rust_type_mut().take() else {
         log::error!("Config not provided");
-        Inplace::empty(this);
+        this.write(None);
         return errors::Z_EINVAL;
     };
     match zenoh::open(config)
@@ -104,12 +103,12 @@ pub extern "C" fn z_open_with_custom_shm_clients(
         .wait()
     {
         Ok(s) => {
-            Inplace::init(this, Some(Arc::new(s)));
+            this.write(Some(Arc::new(s)));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Error opening session: {}", e);
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_ENETWORK
         }
     }
@@ -119,7 +118,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Closes a zenoh session. This alos drops and invalidates `session`.
@@ -128,7 +127,7 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
 pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
-    let session = this.transmute_mut();
+    let session = this.as_rust_type_mut();
     let Some(s) = session.take() else {
         return errors::Z_EINVAL;
     };
@@ -152,7 +151,7 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
 /// This will also close the session if it does not have any clones left.
 #[no_mangle]
 pub extern "C" fn z_session_drop(this: &mut z_owned_session_t) {
-    let _ = this.transmute_mut().extract().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// Constructs an owned shallow copy of the session in provided uninitialized memory location.
@@ -160,9 +159,8 @@ pub extern "C" fn z_session_drop(this: &mut z_owned_session_t) {
 #[no_mangle]
 pub extern "C" fn zc_session_clone(
     this: &z_loaned_session_t,
-    dst: *mut MaybeUninit<z_owned_session_t>,
+    dst: &mut MaybeUninit<z_owned_session_t>,
 ) {
-    let dst = dst.transmute_uninit_ptr();
-    let src = this.transmute_ref();
-    Inplace::init(dst, Some(src.clone()));
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
 }

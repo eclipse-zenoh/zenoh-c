@@ -16,7 +16,6 @@ use std::mem::MaybeUninit;
 use std::ptr::null;
 
 use crate::errors;
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -114,7 +113,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
-    session: &z_loaned_session_t,
+    session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
@@ -122,7 +121,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let mut sub = session
         .declare_subscriber(key_expr.as_rust_type_ref())
         .querying();

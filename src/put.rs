@@ -14,7 +14,6 @@
 use crate::commons::*;
 use crate::errors;
 use crate::keyexpr::*;
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::RustTypeRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
@@ -82,7 +81,7 @@ pub extern "C" fn z_put(
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_put_options_t>,
 ) -> errors::z_error_t {
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let payload = std::mem::take(payload.as_rust_type_mut());
 
@@ -163,7 +162,7 @@ pub extern "C" fn z_delete(
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,
 ) -> errors::z_error_t {
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);
     if let Some(options) = options {

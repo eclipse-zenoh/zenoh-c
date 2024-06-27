@@ -14,7 +14,6 @@
 
 use crate::errors;
 use crate::transmute::Inplace;
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute::TransmuteRef;
 use crate::transmute::TransmuteUninitPtr;
 use crate::transmute2::IntoCType;
@@ -98,7 +97,7 @@ pub extern "C" fn z_declare_publisher(
     options: Option<&z_publisher_options_t>,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
     let mut p = session.declare_publisher(key_expr);
     if let Some(options) = options {

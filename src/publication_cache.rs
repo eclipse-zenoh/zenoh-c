@@ -17,7 +17,6 @@ use std::ptr::null;
 
 use zenoh_ext::SessionExt;
 
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t};
 #[cfg(feature = "unstable")]
@@ -77,7 +76,7 @@ pub extern "C" fn ze_declare_publication_cache(
     options: Option<&mut ze_publication_cache_options_t>,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut p = session.declare_publication_cache(key_expr);
     if let Some(options) = options {

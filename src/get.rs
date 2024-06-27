@@ -33,7 +33,6 @@ use zenoh_protocol::core::ZenohIdProto;
 use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::LoanedCTypeRef;
 use crate::transmute2::RustTypeRef;
 use crate::transmute2::RustTypeRefUninit;
@@ -260,7 +259,7 @@ pub unsafe extern "C" fn z_get(
     } else {
         CStr::from_ptr(parameters).to_str().unwrap()
     };
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {

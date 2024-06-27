@@ -11,8 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute2::{CTypeRef, IntoCType};
+use crate::transmute2::{CTypeRef, IntoCType, RustTypeRef};
 use crate::{
     errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_owned_closure_zid_t,
 };
@@ -37,7 +36,7 @@ impl From<[u8; 16]> for z_id_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     session.info().zid().wait().into_c_type()
 }
 
@@ -55,7 +54,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 ) -> errors::z_error_t {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     for id in session.info().peers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&closure), id.as_ctype_ref());
     }
@@ -76,7 +75,7 @@ pub unsafe extern "C" fn z_info_routers_zid(
 ) -> errors::z_error_t {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     for id in session.info().routers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&closure), id.as_ctype_ref());
     }

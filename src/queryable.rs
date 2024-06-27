@@ -11,7 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
@@ -217,7 +216,7 @@ pub extern "C" fn z_declare_queryable(
     let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let keyexpr = key_expr.as_rust_type_ref();
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {

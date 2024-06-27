@@ -123,7 +123,7 @@ pub extern "C" fn z_declare_subscriber(
     let this = this.transmute_uninit_ptr();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut subscriber = session
         .declare_subscriber(key_expr)
