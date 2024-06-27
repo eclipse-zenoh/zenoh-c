@@ -19,12 +19,11 @@ use zenoh::internal::bail;
 use zenoh::shm::{SegmentID, ShmClient, ShmSegment};
 
 use crate::context::DroppableContext;
-use crate::transmute::TransmuteRef;
+use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
 use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
     errors,
     shm::common::types::z_segment_id_t,
-    transmute::{Inplace, TransmuteUninitPtr},
 };
 
 pub use crate::opaque_types::z_owned_shm_client_t;
@@ -42,7 +41,7 @@ pub struct zc_shm_client_callbacks_t {
     ) -> bool,
 }
 
-decl_transmute_owned!(Option<Arc<dyn ShmClient>>, z_owned_shm_client_t);
+decl_c_type!(owned(z_owned_shm_client_t, Option<Arc<dyn ShmClient>>));
 
 #[derive(Debug)]
 pub struct DynamicShmClient {
@@ -71,30 +70,29 @@ impl ShmClient for DynamicShmClient {
 /// Creates a new SHM Client
 #[no_mangle]
 pub extern "C" fn z_shm_client_new(
-    this: *mut MaybeUninit<z_owned_shm_client_t>,
+    this: &mut MaybeUninit<z_owned_shm_client_t>,
     context: zc_threadsafe_context_t,
     callbacks: zc_shm_client_callbacks_t,
 ) -> errors::z_error_t {
     let client = Arc::new(DynamicShmClient::new(context.into(), callbacks)) as Arc<dyn ShmClient>;
-
-    Inplace::init(this.transmute_uninit_ptr(), Some(client));
+    this.as_rust_type_mut_uninit().write(Some(client));
     errors::Z_OK
 }
 
 /// Constructs SHM client in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_client_null(this: *mut MaybeUninit<z_owned_shm_client_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_shm_client_null(this: &mut MaybeUninit<z_owned_shm_client_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_shm_client_check(this: &z_owned_shm_client_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Deletes SHM Client
 #[no_mangle]
 pub extern "C" fn z_shm_client_drop(this: &mut z_owned_shm_client_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }

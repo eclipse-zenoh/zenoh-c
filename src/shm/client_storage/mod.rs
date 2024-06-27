@@ -22,6 +22,7 @@ use crate::{
         unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
         TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
+    transmute2::RustTypeRef,
     z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
     zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,
 };
@@ -92,7 +93,7 @@ pub extern "C" fn zc_shm_client_list_add_client(
     client: &mut z_owned_shm_client_t,
     list: &mut zc_loaned_shm_client_list_t,
 ) -> z_error_t {
-    match client.transmute_mut().extract() {
+    match client.as_rust_type_mut().take() {
         Some(client) => {
             list.transmute_mut().push((id, client));
             Z_OK
