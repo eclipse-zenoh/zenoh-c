@@ -23,10 +23,10 @@ pub fn unwrap_ref_unchecked<T>(value: &Option<T>) -> &T {
     unsafe { value.as_ref().unwrap_unchecked() }
 }
 
-pub fn unwrap_ref_unchecked_mut<T>(value: &mut Option<T>) -> &mut T {
-    debug_assert!(value.is_some());
-    unsafe { value.as_mut().unwrap_unchecked() }
-}
+// pub fn unwrap_ref_unchecked_mut<T>(value: &mut Option<T>) -> &mut T {
+//     debug_assert!(value.is_some());
+//     unsafe { value.as_mut().unwrap_unchecked() }
+// }
 
 pub(crate) trait TransmuteRef<T: Sized>: Sized {
     fn transmute_ref(&self) -> &T;

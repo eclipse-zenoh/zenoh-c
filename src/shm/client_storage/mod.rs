@@ -19,72 +19,70 @@ use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE}
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
-        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
-    transmute2::RustTypeRef,
+    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
     zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,
 };
 
 use super::common::types::z_protocol_id_t;
 
-decl_transmute_owned!(
-    Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,
-    zc_owned_shm_client_list_t
-);
-
-decl_transmute_handle!(
-    Vec<(ProtocolID, Arc<dyn ShmClient>)>,
-    zc_loaned_shm_client_list_t
+decl_c_type!(
+    owned(zc_owned_shm_client_list_t, Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>),
+    loaned(zc_loaned_shm_client_list_t, Vec<(ProtocolID, Arc<dyn ShmClient>)>)
 );
 
 /// Creates a new empty list of SHM Clients
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_new(
-    this: *mut MaybeUninit<zc_owned_shm_client_list_t>,
+    this: &mut MaybeUninit<zc_owned_shm_client_list_t>,
 ) -> z_error_t {
     let client_list: Vec<(ProtocolID, Arc<dyn ShmClient>)> = Vec::default();
-    Inplace::init(this.transmute_uninit_ptr(), Some(client_list));
+    this.as_rust_type_mut_uninit().write(Some(client_list));
     Z_OK
 }
 
 /// Constructs SHM client list in its gravestone value.
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_null(this: *mut MaybeUninit<zc_owned_shm_client_list_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn zc_shm_client_list_null(this: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_check(this: &zc_owned_shm_client_list_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Deletes list of SHM Clients
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_drop(this: &mut zc_owned_shm_client_list_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// Borrows list of SHM Clients
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_shm_client_list_loan(
     this: &zc_owned_shm_client_list_t,
 ) -> &zc_loaned_shm_client_list_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Mutably borrows list of SHM Clients
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
     this: &mut zc_owned_shm_client_list_t,
 ) -> &mut zc_loaned_shm_client_list_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_ctype_mut()
 }
 
 #[no_mangle]
@@ -95,7 +93,7 @@ pub extern "C" fn zc_shm_client_list_add_client(
 ) -> z_error_t {
     match client.as_rust_type_mut().take() {
         Some(client) => {
-            list.transmute_mut().push((id, client));
+            list.as_rust_type_mut().push((id, client));
             Z_OK
         }
         None => Z_EINVAL,
@@ -138,7 +136,7 @@ pub extern "C" fn z_shm_client_storage_new(
     clients: &zc_loaned_shm_client_list_t,
     add_default_client_set: bool,
 ) -> z_error_t {
-    let clients = clients.transmute_ref();
+    let clients = clients.as_rust_type_ref();
     if clients.is_empty() {
         return Z_EINVAL;
     }
