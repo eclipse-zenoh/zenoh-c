@@ -21,6 +21,7 @@ use crate::{
         unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
         TransmuteUninitPtr,
     },
+    transmute2::RustTypeRef,
     z_loaned_shm_mut_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 
@@ -35,8 +36,8 @@ pub extern "C" fn z_shm_mut_try_from_immut(
     that: &mut z_owned_shm_t,
 ) {
     let shm: Option<ZShmMut> = that
-        .transmute_mut()
-        .extract()
+        .as_rust_type_mut()
+        .take()
         .and_then(|val| val.try_into().ok());
     Inplace::init(this.transmute_uninit_ptr(), shm);
 }

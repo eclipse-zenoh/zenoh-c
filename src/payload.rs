@@ -1,7 +1,19 @@
+//
+// Copyright (c) 2023 ZettaScale Technology
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+//
+
 use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
-use crate::transmute::{
-    Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-};
+use crate::transmute::TransmuteRef;
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
@@ -167,19 +179,19 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
     this: &z_loaned_bytes_t,
-    dst: *mut MaybeUninit<z_owned_shm_t>,
+    dst: &mut MaybeUninit<z_owned_shm_t>,
 ) -> z_error_t {
     use zenoh::shm::zshm;
 
     let payload = this.as_rust_type_ref();
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
-            Inplace::init(dst.transmute_uninit_ptr(), Some(s.to_owned()));
+            dst.as_rust_type_mut_uninit().write(Some(s.to_owned()));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Failed to deserialize the payload: {}", e);
-            Inplace::empty(dst.transmute_uninit_ptr());
+            dst.as_rust_type_mut_uninit().write(None);
             errors::Z_EIO
         }
     }
@@ -193,15 +205,15 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
-    this: &z_loaned_bytes_t,
-    dst: *mut MaybeUninit<&'static z_loaned_shm_t>,
+    this: &'static z_loaned_bytes_t,
+    dst: &'static mut MaybeUninit<&'static z_loaned_shm_t>,
 ) -> z_error_t {
     use zenoh::shm::zshm;
 
     let payload = this.as_rust_type_ref();
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
-            (*dst).write(s.transmute_handle());
+            dst.write(s.as_loaned_ctype_ref());
             errors::Z_OK
         }
         Err(e) => {
@@ -219,15 +231,15 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
-    this: &mut z_loaned_bytes_t,
-    dst: *mut MaybeUninit<&'static mut z_loaned_shm_t>,
+    this: &'static mut z_loaned_bytes_t,
+    dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_error_t {
     use zenoh::shm::zshm;
 
     let payload = this.as_rust_type_mut();
     match payload.deserialize_mut::<&mut zshm>() {
         Ok(s) => {
-            (*dst).write(s.transmute_handle_mut());
+            dst.write(s.as_loaned_ctype_mut());
             errors::Z_OK
         }
         Err(e) => {
@@ -678,7 +690,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     shm: &mut z_owned_shm_t,
 ) -> z_error_t {
-    match shm.transmute_mut().take() {
+    match shm.as_rust_type_mut().take() {
         Some(shm) => {
             this.as_rust_type_mut_uninit().write(shm.into());
             Z_OK
@@ -696,7 +708,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm_copy(
     shm: &z_loaned_shm_t,
 ) {
     this.as_rust_type_mut_uninit()
-        .write(shm.transmute_ref().to_owned().into());
+        .write(shm.as_rust_type_ref().to_owned().into());
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
