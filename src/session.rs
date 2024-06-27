@@ -12,7 +12,6 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::TransmuteFromHandle;
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
@@ -99,7 +98,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
         return errors::Z_EINVAL;
     };
     match zenoh::open(config)
-        .with_shm_clients(shm_clients.transmute_ref().clone())
+        .with_shm_clients(shm_clients.as_rust_type_ref().clone())
         .wait()
     {
         Ok(s) => {

@@ -12,21 +12,15 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::Arc};
-
-use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
-
+use super::common::types::z_protocol_id_t;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-    },
     transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
     zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,
 };
-
-use super::common::types::z_protocol_id_t;
+use std::{mem::MaybeUninit, sync::Arc};
+use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
 decl_c_type!(
     owned(zc_owned_shm_client_list_t, Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>),
@@ -100,39 +94,35 @@ pub extern "C" fn zc_shm_client_list_add_client(
     }
 }
 
-decl_transmute_owned!(Option<Arc<ShmClientStorage>>, z_owned_shm_client_storage_t);
-
-decl_transmute_handle!(Arc<ShmClientStorage>, z_loaned_shm_client_storage_t);
+decl_c_type!(
+    owned(z_owned_shm_client_storage_t, Option<Arc<ShmClientStorage>>),
+    loaned(z_loaned_shm_client_storage_t, Arc<ShmClientStorage>),
+);
 
 #[no_mangle]
 pub extern "C" fn z_ref_shm_client_storage_global(
-    this: *mut MaybeUninit<z_owned_shm_client_storage_t>,
+    this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
 ) -> z_error_t {
-    Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(GLOBAL_CLIENT_STORAGE.clone()),
-    );
+    this.as_rust_type_mut_uninit()
+        .write(Some(GLOBAL_CLIENT_STORAGE.clone()));
     Z_OK
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_new_default(
-    this: *mut MaybeUninit<z_owned_shm_client_storage_t>,
+    this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
 ) -> z_error_t {
-    Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(Arc::new(
-            ShmClientStorage::builder()
-                .with_default_client_set()
-                .build(),
-        )),
-    );
+    this.as_rust_type_mut_uninit().write(Some(Arc::new(
+        ShmClientStorage::builder()
+            .with_default_client_set()
+            .build(),
+    )));
     Z_OK
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_new(
-    this: *mut MaybeUninit<z_owned_shm_client_storage_t>,
+    this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
     clients: &zc_loaned_shm_client_list_t,
     add_default_client_set: bool,
 ) -> z_error_t {
@@ -147,34 +137,37 @@ pub extern "C" fn z_shm_client_storage_new(
             .with_clients(clients),
         false => ShmClientStorage::builder().with_clients(clients),
     };
-    Inplace::init(this.transmute_uninit_ptr(), Some(Arc::new(builder.build())));
+    this.as_rust_type_mut_uninit()
+        .write(Some(Arc::new(builder.build())));
     Z_OK
 }
 
 /// Constructs SHM Client Storage in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_null(this: *mut MaybeUninit<z_owned_shm_client_storage_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_shm_client_storage_null(this: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_check(this: &z_owned_shm_client_storage_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Derefs SHM Client Storage
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_drop(this: &mut z_owned_shm_client_storage_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// Borrows SHM Client Storage
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_shm_client_storage_loan(
     this: &z_owned_shm_client_storage_t,
 ) -> &z_loaned_shm_client_storage_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
