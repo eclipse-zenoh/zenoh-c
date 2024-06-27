@@ -19,13 +19,11 @@ pub(crate) trait CTypeRef: Sized {
     fn as_ctype_ref(&self) -> &Self::CType;
     fn as_ctype_mut(&mut self) -> &mut Self::CType;
 }
-// it's necessary to have a separate trait for owned, loaned, and view C types
-// because owned rust type may be the same as loaned/view rust type. So the same rust type should
-// provide all conversions.
-// This also convenient when owned type usually provides Deref for corresponding loaned type.
-// E.g. Option<Config> is an owned type, Config is a loaned type.
-// So we can call `as_loaned_ctype_ref` on `Option<Config>` to get `z_loaned_config_t` reference
-// and at the same time call `as_ctype_ref` on it to get `z_owned_config_t` reference.
+pub(crate) trait OwnedCTypeRef: Sized {
+    type OwnedCType;
+    fn as_owned_ctype_ref(&self) -> &Self::OwnedCType;
+    fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType;
+}
 pub(crate) trait LoanedCTypeRef: Sized {
     type LoanedCType;
     fn as_loaned_ctype_ref(&self) -> &Self::LoanedCType;
@@ -36,7 +34,6 @@ pub(crate) trait ViewCTypeRef: Sized {
     fn as_view_ctype_ref(&self) -> &Self::ViewCType;
     fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType;
 }
-
 pub(crate) trait RustTypeRef: Sized {
     type RustType;
     fn as_rust_type_ref(&self) -> &Self::RustType;
@@ -111,6 +108,18 @@ macro_rules! impl_transmute {
             }
         }
     };
+    (as_c_owned ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute2::OwnedCTypeRef for $rust_type {
+            type OwnedCType = $c_type;
+            fn as_owned_ctype_ref(&self) -> &Self::OwnedCType {
+                unsafe { &*(self as *const Self as *const Self::OwnedCType) }
+            }
+            fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType {
+                unsafe { &mut *(self as *mut Self as *mut Self::OwnedCType) }
+            }
+        }
+    };
+
     (as_c_loaned ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute2::LoanedCTypeRef for $rust_type {
             type LoanedCType = $c_type;
@@ -190,7 +199,7 @@ macro_rules! decl_c_type {
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?) $(,)?) => {
         validate_equivalence2!($c_owned_type, $rust_owned_type);
-        impl_transmute!(as_c($rust_owned_type, $c_owned_type));
+        impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
     };
     (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
@@ -204,5 +213,10 @@ macro_rules! decl_c_type {
         impl_transmute!(as_rust($c_type, $rust_type));
         impl_transmute!(into_c($rust_type, $c_type));
         impl_transmute!(into_rust($c_type, $rust_type));
+    };
+    (owned($c_owned_type:ty$ (,)?), loaned($c_loaned_type:ty $(,)?) $(,)?) => {
+        validate_equivalence2!($c_owned_type, $c_loaned_type);
+        impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
+        impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));
     };
 }
