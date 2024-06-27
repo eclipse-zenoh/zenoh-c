@@ -1,29 +1,30 @@
-use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
-use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-};
-use crate::{
-    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, ZHashMap,
-};
 use core::fmt;
-use std::any::Any;
-use std::io::{Read, Seek, SeekFrom, Write};
-use std::mem::MaybeUninit;
-use std::os::raw::c_void;
-use std::slice::from_raw_parts;
-use std::slice::from_raw_parts_mut;
-use zenoh::bytes::{
-    Deserialize, Serialize, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter, ZSerde,
+use std::{
+    any::Any,
+    io::{Read, Seek, SeekFrom, Write},
+    mem::MaybeUninit,
+    os::raw::c_void,
+    slice::{from_raw_parts, from_raw_parts_mut},
 };
-use zenoh::internal::buffers::{ZBuf, ZSlice, ZSliceBuffer};
+
+use zenoh::{
+    bytes::{Deserialize, Serialize, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter, ZSerde},
+    internal::buffers::{ZBuf, ZSlice, ZSliceBuffer},
+};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::errors::Z_ENULL;
+pub use crate::opaque_types::z_owned_bytes_t;
+use crate::{
+    errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK},
+    transmute::{
+        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    },
+    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice, ZHashMap,
+};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
-
-pub use crate::opaque_types::z_owned_bytes_t;
 decl_transmute_owned!(ZBytes, z_owned_bytes_t);
 
 /// The gravestone value for `z_owned_bytes_t`.
@@ -795,8 +796,7 @@ pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
 
-pub use crate::opaque_types::z_loaned_bytes_writer_t;
-pub use crate::opaque_types::z_owned_bytes_writer_t;
+pub use crate::opaque_types::{z_loaned_bytes_writer_t, z_owned_bytes_writer_t};
 
 decl_transmute_owned!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
 decl_transmute_handle!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);

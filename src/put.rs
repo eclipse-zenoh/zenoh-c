@@ -1,5 +1,10 @@
 use std::ptr::null_mut;
 
+use zenoh::{
+    prelude::*,
+    qos::{CongestionControl, Priority},
+};
+
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -14,21 +19,12 @@ use std::ptr::null_mut;
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::commons::*;
-use crate::errors;
-use crate::keyexpr::*;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteRef;
-use crate::z_loaned_session_t;
-use crate::z_owned_bytes_t;
-use crate::z_timestamp_t;
-use zenoh::core::Priority;
-use zenoh::core::Wait;
-use zenoh::publisher::CongestionControl;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::TimestampBuilderTrait;
+use crate::{
+    errors,
+    keyexpr::*,
+    transmute::{Inplace, TransmuteFromHandle, TransmuteRef},
+    z_loaned_session_t, z_owned_bytes_t, z_timestamp_t,
+};
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]

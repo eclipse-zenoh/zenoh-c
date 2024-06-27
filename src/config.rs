@@ -11,19 +11,20 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use libc::{c_char, c_uint};
-use std::ffi::CStr;
-use std::mem::MaybeUninit;
-use std::slice::from_raw_parts;
-use std::str::from_utf8;
-use zenoh::config::{Config, ValidatedMap, WhatAmI};
+use std::{ffi::CStr, mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
 
-use crate::errors::z_error_t;
-use crate::transmute::{
-    unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-    TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+use libc::{c_char, c_uint};
+use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
+
+use crate::{
+    errors,
+    errors::z_error_t,
+    transmute::{
+        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
+        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
+    },
+    z_owned_string_t, z_string_from_substring, z_string_null,
 };
-use crate::{errors, z_owned_string_t, z_string_from_substring, z_string_null};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -328,20 +329,17 @@ pub unsafe extern "C" fn z_config_client(
     } else if let Ok(locators) = std::slice::from_raw_parts(peers, n_peers)
         .iter()
         .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
-        .try_fold(
-            Vec::<zenoh_protocol::core::Locator>::new(),
-            |mut acc, it| match it {
-                Err(e) => {
-                    log::error!("Error parsing peer address: {}", e);
-                    res = errors::Z_EPARSE;
-                    Err(())
-                }
-                Ok(loc) => {
-                    acc.push(loc);
-                    Ok(acc)
-                }
-            },
-        )
+        .try_fold(Vec::<Locator>::new(), |mut acc, it| match it {
+            Err(e) => {
+                log::error!("Error parsing peer address: {}", e);
+                res = errors::Z_EPARSE;
+                Err(())
+            }
+            Ok(loc) => {
+                acc.push(loc);
+                Ok(acc)
+            }
+        })
     {
         locators
     } else {
