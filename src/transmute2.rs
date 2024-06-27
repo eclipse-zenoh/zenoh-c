@@ -180,9 +180,16 @@ macro_rules! impl_transmute {
     };
 }
 
+// This macro declares conversions between Rust and C types.
+// Typically the "owned" and "loaned" types are have the same size and alignment.
+// This is necessary for C++ wrapper library to work correctly.
+// But for some types which are not covered by C++ this restriction can be relaxed.
+// In this case the "inequal" keyword should be used.
 #[macro_export]
 macro_rules! decl_c_type {
-    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), view ($c_view_type:ty, $rust_view_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
+     view ($c_view_type:ty, $rust_view_type:ty $(,)?),
+     loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         decl_c_type!(
             owned($c_owned_type, $rust_owned_type),
             loaned($c_loaned_type, $rust_loaned_type)
@@ -192,10 +199,19 @@ macro_rules! decl_c_type {
         impl_transmute!(as_c_view($rust_view_type, $c_view_type));
         impl_transmute!(as_rust($c_view_type, $rust_view_type));
     };
-    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?), loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
+     loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        decl_c_type!( inequal
+            owned($c_owned_type, $rust_owned_type),
+            loaned($c_loaned_type, $rust_loaned_type)
+        );
+        validate_equivalence2!($c_owned_type, $c_loaned_type);
+    };
+    (inequal
+     owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
+     loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         decl_c_type!(loaned($c_loaned_type, $rust_loaned_type));
         decl_c_type!(owned($c_owned_type, $rust_owned_type));
-        validate_equivalence2!($c_owned_type, $c_loaned_type);
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?) $(,)?) => {
         validate_equivalence2!($c_owned_type, $rust_owned_type);
@@ -214,7 +230,8 @@ macro_rules! decl_c_type {
         impl_transmute!(into_c($rust_type, $c_type));
         impl_transmute!(into_rust($c_type, $rust_type));
     };
-    (owned($c_owned_type:ty$ (,)?), loaned($c_loaned_type:ty $(,)?) $(,)?) => {
+    (owned ($c_owned_type:ty$ (,)?),
+     loaned ($c_loaned_type:ty $(,)?) $(,)?) => {
         validate_equivalence2!($c_owned_type, $c_loaned_type);
         impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
         impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));

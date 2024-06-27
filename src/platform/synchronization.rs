@@ -10,10 +10,7 @@ pub use crate::opaque_types::z_loaned_mutex_t;
 pub use crate::opaque_types::z_owned_mutex_t;
 use crate::{
     errors,
-    transmute::{
-        unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
-        TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-    },
+    transmute::{Inplace, TransmuteRef, TransmuteUninitPtr},
     transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
@@ -114,57 +111,63 @@ pub unsafe extern "C" fn z_mutex_try_lock(
 
 pub use crate::opaque_types::z_loaned_condvar_t;
 pub use crate::opaque_types::z_owned_condvar_t;
-
-decl_transmute_owned!(Option<Condvar>, z_owned_condvar_t);
-decl_transmute_handle!(Condvar, z_loaned_condvar_t);
+decl_c_type!(
+    inequal
+    owned(z_owned_condvar_t, Option<Condvar>),
+    loaned(z_loaned_condvar_t, Condvar)
+);
 
 /// Constructs conditional variable.
 #[no_mangle]
-pub extern "C" fn z_condvar_init(this: *mut MaybeUninit<z_owned_condvar_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::init(this, Some(Condvar::new()));
+pub extern "C" fn z_condvar_init(this: &mut MaybeUninit<z_owned_condvar_t>) {
+    this.as_rust_type_mut_uninit().write(Some(Condvar::new()));
 }
 
 /// Constructs conditional variable in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_condvar_null(this: *mut MaybeUninit<z_owned_condvar_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn z_condvar_null(this: &mut MaybeUninit<z_owned_condvar_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Drops conditional variable.
 #[no_mangle]
 pub extern "C" fn z_condvar_drop(this: &mut z_owned_condvar_t) {
-    let _ = this.transmute_mut().extract().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_condvar_check(this: &z_owned_condvar_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows conditional variable.
 #[no_mangle]
-pub extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_loaned_condvar_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_loaned_condvar_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Mutably borrows conditional variable.
 #[no_mangle]
-pub extern "C" fn z_condvar_loan_mut(this: &mut z_owned_condvar_t) -> &mut z_loaned_condvar_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_condvar_loan_mut(
+    this: &mut z_owned_condvar_t,
+) -> &mut z_loaned_condvar_t {
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_ctype_mut()
 }
 
 /// Wakes up one blocked thread waiting on this condiitonal variable.
 /// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
 pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_error_t {
-    let this = this.transmute_ref();
+    let this = this.as_rust_type_ref();
     this.notify_one();
     errors::Z_OK
 }
@@ -180,7 +183,7 @@ pub unsafe extern "C" fn z_condvar_wait(
     this: &z_loaned_condvar_t,
     m: &mut z_loaned_mutex_t,
 ) -> errors::z_error_t {
-    let this = this.transmute_ref();
+    let this = this.as_rust_type_ref();
     let m = m.as_rust_type_mut();
     if m.1.is_none() {
         return errors::Z_EINVAL_MUTEX; // lock was not aquired prior to wait call
