@@ -11,7 +11,12 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
+use crate::{
+    transmute2::{LoanedCTypeRef, OwnedCTypeRef},
+    zcu_matching_status_t,
+};
+use libc::c_void;
+use std::mem::MaybeUninit;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -20,15 +25,9 @@
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
-/// 
-/// 
-/// 
-use std::mem::MaybeUninit;
-use libc::c_void;
-use crate::{
-    transmute2::{LoanedCTypeRef, OwnedCTypeRef}, zcu_matching_status_t
-};
-
+///
+///
+///
 #[repr(C)]
 pub struct zcu_owned_closure_matching_status_t {
     /// An optional pointer to a closure state.
