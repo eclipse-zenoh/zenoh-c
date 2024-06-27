@@ -23,7 +23,7 @@ use zenoh::shm::{
 
 use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
-use crate::transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteUninitPtr};
+use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
 use crate::transmute2::RustTypeRefUninit;
 use crate::{z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
@@ -32,7 +32,7 @@ use super::shm_provider_backend::DynamicShmProviderBackend;
 use super::types::z_alloc_alignment_t;
 
 pub(crate) fn alloc<Policy: AllocPolicy>(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -166,7 +166,7 @@ pub(crate) fn map(
 }
 
 fn alloc_impl<Policy: AllocPolicy, TProtocolID: ProtocolIDSource, TBackend: ShmProviderBackend>(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &ShmProvider<TProtocolID, TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -211,16 +211,16 @@ pub(crate) fn alloc_async_impl<
 }
 
 fn parse_result(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     result: BufLayoutAllocResult,
 ) -> z_error_t {
     match result {
         Ok(buf) => {
-            Inplace::init(out_result.transmute_uninit_ptr(), Some(Ok(buf)));
+            out_result.as_rust_type_mut_uninit().write(Some(Ok(buf)));
             Z_OK
         }
         Err(ZLayoutAllocError::Alloc(e)) => {
-            Inplace::init(out_result.transmute_uninit_ptr(), Some(Err(e)));
+            out_result.as_rust_type_mut_uninit().write(Some(Err(e)));
             Z_OK
         }
         Err(ZLayoutAllocError::Layout(_)) => Z_EINVAL,

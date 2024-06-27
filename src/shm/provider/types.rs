@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use zenoh::internal::zerror;
 use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError};
 
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
@@ -190,9 +190,11 @@ pub extern "C" fn z_chunk_alloc_result_drop(this: &mut z_owned_chunk_alloc_resul
     let _ = this.transmute_mut().take();
 }
 
-decl_transmute_owned!(Option<BufAllocResult>, z_owned_buf_alloc_result_t);
-
-decl_transmute_handle!(BufAllocResult, z_loaned_buf_alloc_result_t);
+decl_c_type!(
+    inequal
+    owned(z_owned_buf_alloc_result_t, Option<BufAllocResult>),
+    loaned(z_loaned_buf_alloc_result_t, BufAllocResult)
+);
 
 #[no_mangle]
 pub extern "C" fn z_buf_alloc_result_unwrap(
@@ -200,7 +202,7 @@ pub extern "C" fn z_buf_alloc_result_unwrap(
     out_buf: &mut MaybeUninit<z_owned_shm_mut_t>,
     out_error: &mut MaybeUninit<z_alloc_error_t>,
 ) -> z_error_t {
-    match alloc_result.transmute_mut().extract() {
+    match alloc_result.as_rust_type_mut().take() {
         Some(Ok(val)) => {
             out_buf.as_rust_type_mut_uninit().write(Some(val));
             Z_OK
@@ -216,28 +218,30 @@ pub extern "C" fn z_buf_alloc_result_unwrap(
 
 /// Constructs Buf Alloc Result in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_buf_alloc_result_null(this: *mut MaybeUninit<z_owned_buf_alloc_result_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_buf_alloc_result_null(this: &mut MaybeUninit<z_owned_buf_alloc_result_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_buf_alloc_result_check(this: &z_owned_buf_alloc_result_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows Buf Alloc Result
 #[no_mangle]
-pub extern "C" fn z_buf_alloc_result_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_buf_alloc_result_loan(
     this: &z_owned_buf_alloc_result_t,
 ) -> &z_loaned_buf_alloc_result_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Deletes Buf Alloc Result
 #[no_mangle]
 pub extern "C" fn z_buf_alloc_result_drop(this: &mut z_owned_buf_alloc_result_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }

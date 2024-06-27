@@ -122,7 +122,7 @@ pub extern "C" fn z_shm_provider_drop(this: &mut z_owned_shm_provider_t) {
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -132,7 +132,7 @@ pub extern "C" fn z_shm_provider_alloc(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -142,7 +142,7 @@ pub extern "C" fn z_shm_provider_alloc_gc(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -152,7 +152,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -162,7 +162,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
