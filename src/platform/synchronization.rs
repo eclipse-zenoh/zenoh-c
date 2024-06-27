@@ -10,7 +10,6 @@ pub use crate::opaque_types::z_loaned_mutex_t;
 pub use crate::opaque_types::z_owned_mutex_t;
 use crate::{
     errors,
-    transmute::{Inplace, TransmuteRef, TransmuteUninitPtr},
     transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
@@ -199,8 +198,7 @@ pub unsafe extern "C" fn z_condvar_wait(
 }
 
 pub use crate::opaque_types::z_owned_task_t;
-
-decl_transmute_owned!(Option<JoinHandle<()>>, z_owned_task_t);
+decl_c_type!(owned(z_owned_task_t, Option<JoinHandle<()>>));
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -208,21 +206,20 @@ pub struct z_task_attr_t(usize);
 
 /// Constructs task in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_task_null(this: *mut MaybeUninit<z_owned_task_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn z_task_null(this: &mut MaybeUninit<z_owned_task_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Detaches the task and releases all allocated resources.
 #[no_mangle]
 pub extern "C" fn z_task_detach(this: &mut z_owned_task_t) {
-    let _ = this.transmute_mut().extract().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// Joins the task and releases all allocated resources
 #[no_mangle]
 pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_error_t {
-    let this = this.transmute_mut().extract().take();
+    let this = this.as_rust_type_mut().take();
     if let Some(task) = this {
         match task.join() {
             Ok(_) => errors::Z_OK,
@@ -236,7 +233,7 @@ pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_error_t {
 /// Returns ``true`` if task is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_task_check(this: &z_owned_task_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 struct FunArgPair {
@@ -261,17 +258,17 @@ unsafe impl Send for FunArgPair {}
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_task_init(
-    this: *mut MaybeUninit<z_owned_task_t>,
+    this: &mut MaybeUninit<z_owned_task_t>,
     _attr: *const z_task_attr_t,
     fun: unsafe extern "C" fn(arg: *mut c_void),
     arg: *mut c_void,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let fun_arg_pair = FunArgPair { fun, arg };
 
     match thread::Builder::new().spawn(move || fun_arg_pair.call()) {
         Ok(join_handle) => {
-            Inplace::init(this, Some(join_handle));
+            this.write(Some(join_handle));
         }
         Err(_) => return errors::Z_EAGAIN_MUTEX,
     }
