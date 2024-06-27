@@ -24,6 +24,7 @@ use zenoh::shm::{
 use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
 use crate::transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteUninitPtr};
+use crate::transmute2::RustTypeRefUninit;
 use crate::{z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
 use super::chunk::z_allocated_chunk_t;
@@ -136,7 +137,7 @@ pub(crate) fn available(provider: &z_loaned_shm_provider_t) -> usize {
 
 #[no_mangle]
 pub(crate) fn map(
-    out_result: *mut MaybeUninit<z_owned_shm_mut_t>,
+    out_result: &mut MaybeUninit<z_owned_shm_mut_t>,
     provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
@@ -154,10 +155,12 @@ pub(crate) fn map(
     };
 
     match mapping {
-        Ok(buffer) => Inplace::init(out_result.transmute_uninit_ptr(), Some(buffer)),
+        Ok(buffer) => {
+            out_result.as_rust_type_mut_uninit().write(Some(buffer));
+        }
         Err(e) => {
             log::error!("{e}");
-            Inplace::init(out_result.transmute_uninit_ptr(), None)
+            out_result.as_rust_type_mut_uninit().write(None);
         }
     }
 }

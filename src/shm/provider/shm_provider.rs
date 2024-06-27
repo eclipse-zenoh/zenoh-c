@@ -210,7 +210,7 @@ pub extern "C" fn z_shm_provider_available(provider: &z_loaned_shm_provider_t) -
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_map(
-    out_result: *mut MaybeUninit<z_owned_shm_mut_t>,
+    out_result: &mut MaybeUninit<z_owned_shm_mut_t>,
     provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,

@@ -20,7 +20,6 @@ use std::{
 use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{
-    transmute::{unwrap_ref_unchecked_mut, Inplace, TransmuteIntoHandle, TransmuteRef},
     transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_mut_t, z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
@@ -36,7 +35,7 @@ pub extern "C" fn z_shm_from_mut(
     this: &mut MaybeUninit<z_owned_shm_t>,
     that: &mut z_owned_shm_mut_t,
 ) {
-    let shm: Option<ZShm> = that.transmute_mut().extract().map(|val| val.into());
+    let shm: Option<ZShm> = that.as_rust_type_mut().take().map(|val| val.into());
     this.as_rust_type_mut_uninit().write(shm);
 }
 
@@ -83,14 +82,14 @@ pub unsafe extern "C" fn z_shm_loan_mut(this: &mut z_owned_shm_t) -> &mut z_loan
 /// Mutably borrows ZShm slice as borrowed ZShmMut slice
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_shm_try_mut(this: &mut z_owned_shm_t) -> *mut z_loaned_shm_mut_t {
+pub unsafe extern "C" fn z_shm_try_mut(this: &mut z_owned_shm_t) -> *mut z_loaned_shm_mut_t {
     let this = this.as_rust_type_mut();
-    let this: &mut ZShm = unwrap_ref_unchecked_mut(this);
+    let this: &mut ZShm = this.as_mut().unwrap_unchecked();
     let shm: &mut zshm = this.borrow_mut();
     match shm.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.transmute_handle_mut()
+            v.as_loaned_ctype_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }
@@ -109,7 +108,7 @@ pub extern "C" fn z_shm_try_reloan_mut(this: &mut z_loaned_shm_t) -> *mut z_loan
     match this.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.transmute_handle_mut()
+            v.as_loaned_ctype_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }

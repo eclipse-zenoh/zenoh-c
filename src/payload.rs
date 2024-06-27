@@ -13,7 +13,6 @@
 //
 
 use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
-use crate::transmute::TransmuteRef;
 use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
@@ -719,7 +718,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm_mut(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     shm: &mut z_owned_shm_mut_t,
 ) -> z_error_t {
-    match shm.transmute_mut().take() {
+    match shm.as_rust_type_mut().take() {
         Some(shm) => {
             this.as_rust_type_mut_uninit().write(shm.into());
             Z_OK

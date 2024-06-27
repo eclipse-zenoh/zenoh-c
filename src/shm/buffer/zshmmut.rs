@@ -17,67 +17,68 @@ use std::{borrow::BorrowMut, mem::MaybeUninit};
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
-    transmute::{
-        unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-        TransmuteUninitPtr,
-    },
-    transmute2::RustTypeRef,
+    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_mut_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 
-decl_transmute_owned!(Option<ZShmMut>, z_owned_shm_mut_t);
-
-decl_transmute_handle!(zshmmut, z_loaned_shm_mut_t);
+decl_c_type!(
+    owned(z_owned_shm_mut_t, Option<ZShmMut>),
+    loaned(z_loaned_shm_mut_t, zshmmut)
+);
 
 /// Tries to construct ZShmMut slice from ZShm slice
 #[no_mangle]
 pub extern "C" fn z_shm_mut_try_from_immut(
-    this: *mut MaybeUninit<z_owned_shm_mut_t>,
+    this: &mut MaybeUninit<z_owned_shm_mut_t>,
     that: &mut z_owned_shm_t,
 ) {
     let shm: Option<ZShmMut> = that
         .as_rust_type_mut()
         .take()
         .and_then(|val| val.try_into().ok());
-    Inplace::init(this.transmute_uninit_ptr(), shm);
+    this.as_rust_type_mut_uninit().write(shm);
 }
 
 /// Constructs ZShmMut slice in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_mut_null(this: *mut MaybeUninit<z_owned_shm_mut_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_shm_mut_null(this: &mut MaybeUninit<z_owned_shm_mut_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_shm_mut_check(this: &z_owned_shm_mut_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows ZShmMut slice
 #[no_mangle]
-pub extern "C" fn z_shm_mut_loan_mut(this: &mut z_owned_shm_mut_t) -> &mut z_loaned_shm_mut_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    let shmmut: &mut zshmmut = this.borrow_mut();
-    shmmut.transmute_handle_mut()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_shm_mut_loan_mut(
+    this: &mut z_owned_shm_mut_t,
+) -> &mut z_loaned_shm_mut_t {
+    let shmmut: &mut zshmmut = this
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .borrow_mut();
+    shmmut.as_loaned_ctype_mut()
 }
 
 /// Deletes ZShmMut slice
 #[no_mangle]
 pub extern "C" fn z_shm_mut_drop(this: &mut z_owned_shm_mut_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// @return the length of the ZShmMut slice
 #[no_mangle]
 pub extern "C" fn z_shm_mut_len(this: &z_loaned_shm_mut_t) -> usize {
-    this.transmute_ref().len()
+    this.as_rust_type_ref().len()
 }
 
 /// @return the mutable pointer of the ZShmMut slice
 #[no_mangle]
 pub extern "C" fn z_shm_mut_data_mut(this: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
-    let s = this.transmute_mut();
-    s.as_mut().as_mut_ptr()
+    this.as_rust_type_mut().as_mut().as_mut_ptr()
 }

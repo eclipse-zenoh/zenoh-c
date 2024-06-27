@@ -17,6 +17,7 @@ use std::mem::MaybeUninit;
 use zenoh::internal::zerror;
 use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError};
 
+use crate::transmute2::RustTypeRefUninit;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
@@ -196,16 +197,16 @@ decl_transmute_handle!(BufAllocResult, z_loaned_buf_alloc_result_t);
 #[no_mangle]
 pub extern "C" fn z_buf_alloc_result_unwrap(
     alloc_result: &mut z_owned_buf_alloc_result_t,
-    out_buf: *mut MaybeUninit<z_owned_shm_mut_t>,
+    out_buf: &mut MaybeUninit<z_owned_shm_mut_t>,
     out_error: &mut MaybeUninit<z_alloc_error_t>,
 ) -> z_error_t {
     match alloc_result.transmute_mut().extract() {
         Some(Ok(val)) => {
-            Inplace::init(out_buf.transmute_uninit_ptr(), Some(val));
+            out_buf.as_rust_type_mut_uninit().write(Some(val));
             Z_OK
         }
         Some(Err(err)) => {
-            Inplace::init(out_buf.transmute_uninit_ptr(), None);
+            out_buf.as_rust_type_mut_uninit().write(None);
             out_error.write(err.into());
             Z_OK
         }
