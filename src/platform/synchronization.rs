@@ -14,58 +14,58 @@ use crate::{
         unwrap_ref_unchecked, unwrap_ref_unchecked_mut, Inplace, TransmuteFromHandle,
         TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
+    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
-decl_transmute_owned!(
-    Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>,
-    z_owned_mutex_t
-);
-decl_transmute_handle!(
-    (Mutex<()>, Option<MutexGuard<'static, ()>>),
-    z_loaned_mutex_t
+decl_c_type!(
+    owned(z_owned_mutex_t, Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>),
+    loaned(z_loaned_mutex_t, (Mutex<()>, Option<MutexGuard<'static, ()>>))
 );
 
 /// Constructs a mutex.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_mutex_init(this: *mut MaybeUninit<z_owned_mutex_t>) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
-    let m = (Mutex::<()>::new(()), None::<MutexGuard<'static, ()>>);
-    Inplace::init(this, Some(m));
+pub extern "C" fn z_mutex_init(this: &mut MaybeUninit<z_owned_mutex_t>) -> errors::z_error_t {
+    this.as_rust_type_mut_uninit().write(Some((
+        Mutex::<()>::new(()),
+        None::<MutexGuard<'static, ()>>,
+    )));
     errors::Z_OK
 }
 
 /// Drops mutex and resets it to its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_mutex_drop(this: &mut z_owned_mutex_t) {
-    let _ = this.transmute_mut().extract().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// Returns ``true`` if mutex is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_mutex_check(this: &z_owned_mutex_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Constructs mutex in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_mutex_null(this: *mut MaybeUninit<z_owned_mutex_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_mutex_null(this: &mut MaybeUninit<z_owned_mutex_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Mutably borrows mutex.
 #[no_mangle]
-pub extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
-    let this = this.transmute_mut();
-    let this = unwrap_ref_unchecked_mut(this);
-    this.transmute_handle_mut()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_ctype_mut()
 }
 
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
 /// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
-pub extern "C" fn z_mutex_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
-    let this = this.transmute_mut();
+pub extern "C" fn z_mutex_lock(this: &'static mut z_loaned_mutex_t) -> errors::z_error_t {
+    let this = this.as_rust_type_mut();
 
     match this.0.lock() {
         Ok(new_lock) => {
@@ -83,7 +83,7 @@ pub extern "C" fn z_mutex_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
-    let this = this.transmute_mut();
+    let this = this.as_rust_type_mut();
     if this.1.is_none() {
         return errors::Z_EINVAL_MUTEX;
     } else {
@@ -96,8 +96,10 @@ pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error
 /// @return 0 in case of success, negative value if failed to aquire the lock.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_try_lock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
-    let this = this.transmute_mut();
+pub unsafe extern "C" fn z_mutex_try_lock(
+    this: &'static mut z_loaned_mutex_t,
+) -> errors::z_error_t {
+    let this = this.as_rust_type_mut();
     match this.0.try_lock() {
         Ok(new_lock) => {
             let old_lock = this.1.replace(new_lock);
@@ -179,7 +181,7 @@ pub unsafe extern "C" fn z_condvar_wait(
     m: &mut z_loaned_mutex_t,
 ) -> errors::z_error_t {
     let this = this.transmute_ref();
-    let m = m.transmute_mut();
+    let m = m.as_rust_type_mut();
     if m.1.is_none() {
         return errors::Z_EINVAL_MUTEX; // lock was not aquired prior to wait call
     }
