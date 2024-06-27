@@ -25,7 +25,7 @@ use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    transmute::{TransmuteCopy, TransmuteFromHandle},
+    transmute::TransmuteCopy,
     z_owned_buf_alloc_result_t,
 };
 use crate::{z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t};
@@ -37,11 +37,11 @@ use super::{
 
 pub(crate) fn alloc_layout_new(
     this: &mut MaybeUninit<z_owned_alloc_layout_t>,
-    provider: &z_loaned_shm_provider_t,
+    provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    let layout = match provider.transmute_ref() {
+    let layout = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             match provider
                 .alloc(size)

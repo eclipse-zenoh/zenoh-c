@@ -23,8 +23,8 @@ use zenoh::shm::{
 
 use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
-use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute::TransmuteCopy;
+use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
 use crate::{z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
 use super::chunk::z_allocated_chunk_t;
@@ -37,7 +37,7 @@ pub(crate) fn alloc<Policy: AllocPolicy>(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    match provider.transmute_ref() {
+    match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             alloc_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
                 out_result, provider, size, alignment,
@@ -68,7 +68,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
         *mut MaybeUninit<z_owned_buf_alloc_result_t>,
     ),
 ) -> z_error_t {
-    match provider.transmute_ref() {
+    match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             alloc_async_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
                 out_result,
@@ -100,7 +100,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
 }
 
 pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) {
-    match provider.transmute_ref() {
+    match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             provider.defragment();
         }
@@ -114,7 +114,7 @@ pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) {
 }
 
 pub(crate) fn garbage_collect(provider: &z_loaned_shm_provider_t) {
-    match provider.transmute_ref() {
+    match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             provider.garbage_collect();
         }
@@ -128,7 +128,7 @@ pub(crate) fn garbage_collect(provider: &z_loaned_shm_provider_t) {
 }
 
 pub(crate) fn available(provider: &z_loaned_shm_provider_t) -> usize {
-    match provider.transmute_ref() {
+    match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => provider.available(),
         super::shm_provider::CSHMProvider::Dynamic(provider) => provider.available(),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.available(),
@@ -142,7 +142,7 @@ pub(crate) fn map(
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
 ) {
-    let mapping = match provider.transmute_ref() {
+    let mapping = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             provider.map(allocated_chunk.into(), len)
         }

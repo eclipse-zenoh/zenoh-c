@@ -56,7 +56,7 @@ decl_c_type!(
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_new(
     this: &mut MaybeUninit<z_owned_alloc_layout_t>,
-    provider: &z_loaned_shm_provider_t,
+    provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
