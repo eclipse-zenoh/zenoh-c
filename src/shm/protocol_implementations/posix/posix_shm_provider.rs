@@ -22,8 +22,7 @@ use zenoh::shm::{
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     shm::provider::shm_provider::CSHMProvider,
-    transmute::TransmuteFromHandle,
-    transmute2::RustTypeRefUninit,
+    transmute2::{RustTypeRef, RustTypeRefUninit},
     z_loaned_memory_layout_t, z_owned_shm_provider_t,
 };
 
@@ -40,7 +39,7 @@ pub extern "C" fn z_posix_shm_provider_new(
     layout: &z_loaned_memory_layout_t,
 ) -> z_error_t {
     match PosixShmProviderBackend::builder()
-        .with_layout(layout.transmute_ref())
+        .with_layout(layout.as_rust_type_ref())
         .res()
     {
         Ok(backend) => {

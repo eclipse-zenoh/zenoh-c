@@ -21,8 +21,7 @@ use crate::transmute2::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUnini
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteIntoHandle, TransmuteRef,
-        TransmuteUninitPtr,
+        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
     },
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
@@ -75,19 +74,22 @@ pub struct z_alloc_alignment_t {
 
 decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 
-decl_transmute_owned!(Option<MemoryLayout>, z_owned_memory_layout_t);
-decl_transmute_handle!(MemoryLayout, z_loaned_memory_layout_t);
+decl_c_type!(
+    inequal
+    owned(z_owned_memory_layout_t, Option<MemoryLayout>),
+    loaned(z_loaned_memory_layout_t, MemoryLayout)
+);
 
 /// Creates a new Memory Layout
 #[no_mangle]
 pub extern "C" fn z_memory_layout_new(
-    this: *mut MaybeUninit<z_owned_memory_layout_t>,
+    this: &mut MaybeUninit<z_owned_memory_layout_t>,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
     match MemoryLayout::new(size, AllocAlignment::new(alignment.pow)) {
         Ok(layout) => {
-            Inplace::init(this.transmute_uninit_ptr(), Some(layout));
+            this.as_rust_type_mut_uninit().write(Some(layout));
             Z_OK
         }
         Err(e) => {
@@ -99,30 +101,32 @@ pub extern "C" fn z_memory_layout_new(
 
 /// Constructs Memory Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_memory_layout_null(this: *mut MaybeUninit<z_owned_memory_layout_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_memory_layout_null(this: &mut MaybeUninit<z_owned_memory_layout_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_check(this: &z_owned_memory_layout_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows Memory Layout
 #[no_mangle]
-pub extern "C" fn z_memory_layout_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_memory_layout_loan(
     this: &z_owned_memory_layout_t,
 ) -> &z_loaned_memory_layout_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_ctype_ref()
 }
 
 /// Deletes Memory Layout
 #[no_mangle]
 pub extern "C" fn z_memory_layout_drop(this: &mut z_owned_memory_layout_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }
 
 /// Deletes Memory Layout
@@ -132,7 +136,7 @@ pub extern "C" fn z_memory_layout_get_data(
     out_alignment: &mut MaybeUninit<z_alloc_alignment_t>,
     this: &z_loaned_memory_layout_t,
 ) {
-    let layout = this.transmute_ref();
+    let layout = this.as_rust_type_ref();
     out_size.write(layout.size());
     out_alignment.write(layout.alignment().into_c_type());
 }

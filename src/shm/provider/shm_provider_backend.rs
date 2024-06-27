@@ -20,7 +20,8 @@ use zenoh::internal::zerror;
 use zenoh::shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend};
 
 use crate::context::DroppableContext;
-use crate::transmute::{TransmuteIntoHandle, TransmuteRef};
+use crate::transmute::TransmuteRef;
+use crate::transmute2::{LoanedCTypeRef, OwnedCTypeRef};
 use crate::{z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t};
 
 use super::chunk::z_chunk_descriptor_t;
@@ -67,7 +68,7 @@ where
         unsafe {
             (self.callbacks.alloc_fn)(
                 result.as_mut_ptr(),
-                layout.transmute_handle(),
+                layout.as_loaned_ctype_ref(),
                 self.context.get(),
             );
             match result.assume_init().transmute_mut().take() {
@@ -94,7 +95,7 @@ where
     fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout> {
         let mut layout = Some(layout);
         unsafe {
-            (self.callbacks.layout_for_fn)(layout.transmute_mut(), self.context.get());
+            (self.callbacks.layout_for_fn)(layout.as_owned_ctype_mut(), self.context.get());
         }
         layout.ok_or_else(|| zerror!("{:?}: unsupported layout", self).into())
     }
