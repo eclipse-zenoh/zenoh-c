@@ -25,9 +25,6 @@ use std::mem::MaybeUninit;
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
-///
-///
-///
 #[repr(C)]
 pub struct zcu_owned_closure_matching_status_t {
     /// An optional pointer to a closure state.

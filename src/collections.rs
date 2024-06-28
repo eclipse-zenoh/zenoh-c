@@ -250,12 +250,16 @@ pub unsafe extern "C" fn z_view_slice_wrap(
     start: *const u8,
     len: usize,
 ) -> z_error_t {
+    let this = this.as_rust_type_mut_uninit();
     match CSliceView::new(start, len) {
         Ok(slice) => {
-            this.as_rust_type_mut_uninit().write(slice);
+            this.write(slice);
             errors::Z_OK
         }
-        Err(e) => e,
+        Err(e) => {
+            this.write(CSliceView::default());
+            e
+        }
     }
 }
 
@@ -311,12 +315,16 @@ pub unsafe extern "C" fn z_slice_wrap(
     start: *const u8,
     len: usize,
 ) -> z_error_t {
+    let this = this.as_rust_type_mut_uninit();
     match CSliceOwned::new(start, len) {
         Ok(slice) => {
-            this.as_rust_type_mut_uninit().write(slice);
+            this.write(slice);
             errors::Z_OK
         }
-        Err(e) => e,
+        Err(e) => {
+            this.write(CSliceOwned::default());
+            e
+        }
     }
 }
 
@@ -531,12 +539,16 @@ pub unsafe extern "C" fn z_string_from_substring(
     str: *const libc::c_char,
     len: usize,
 ) -> z_error_t {
+    let this = this.as_rust_type_mut_uninit();
     match CStringOwned::new_owned(str, len) {
         Ok(slice) => {
-            this.as_rust_type_mut_uninit().write(slice);
+            this.write(slice);
             errors::Z_OK
         }
-        Err(e) => e,
+        Err(e) => {
+            this.write(CStringOwned::default());
+            e
+        }
     }
 }
 
@@ -549,12 +561,16 @@ pub unsafe extern "C" fn z_view_string_wrap(
     this: &mut MaybeUninit<z_view_string_t>,
     str: *const libc::c_char,
 ) -> z_error_t {
+    let this = this.as_rust_type_mut_uninit();
     match CStringView::new_borrowed(str, strlen(str)) {
         Ok(slice) => {
-            this.as_rust_type_mut_uninit().write(slice);
+            this.write(slice);
             errors::Z_OK
         }
-        Err(e) => e,
+        Err(e) => {
+            this.write(CStringView::default());
+            e
+        }
     }
 }
 
@@ -568,12 +584,16 @@ pub unsafe extern "C" fn z_view_string_from_substring(
     str: *const libc::c_char,
     len: usize,
 ) -> z_error_t {
+    let this = this.as_rust_type_mut_uninit();
     match CStringView::new_borrowed(str, len) {
         Ok(slice) => {
-            this.as_rust_type_mut_uninit().write(slice);
+            this.write(slice);
             errors::Z_OK
         }
-        Err(e) => e,
+        Err(e) => {
+            this.write(CStringView::default());
+            e
+        }
     }
 }
 
