@@ -288,7 +288,7 @@ fn z_bytes_deserialize_into_arithmetic<'a, T>(
     val: &'a mut T,
 ) -> z_error_t
 where
-    ZSerde: Deserialize<T, Input<'static> = &'static ZBytes>,
+    ZSerde: Deserialize<T, Input<'a> = &'a ZBytes>,
     <ZSerde as Deserialize<T>>::Error: fmt::Debug,
 {
     match this.as_rust_type_ref().deserialize::<T>() {
