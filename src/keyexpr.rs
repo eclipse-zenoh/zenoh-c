@@ -100,7 +100,12 @@ pub unsafe extern "C" fn z_keyexpr_from_string(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> errors::z_error_t {
-    z_keyexpr_from_substring(this, expr, libc::strlen(expr))
+    let len = if expr.is_null() {
+        0
+    } else {
+        libc::strlen(expr)
+    };
+    z_keyexpr_from_substring(this, expr, len)
 }
 
 /// Constructs `z_owned_keyexpr_t` from a string, copying the passed string. The copied string is canonized.
@@ -112,7 +117,11 @@ pub unsafe extern "C" fn z_keyexpr_from_string_autocanonize(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> z_error_t {
-    let mut len = libc::strlen(expr);
+    let mut len = if expr.is_null() {
+        0
+    } else {
+        libc::strlen(expr)
+    };
     z_keyexpr_from_substring_autocanonize(this, expr, &mut len)
 }
 
@@ -174,7 +183,11 @@ pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) ->
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) -> z_error_t {
-    let mut len = libc::strlen(start);
+    let mut len = if start.is_null() {
+        0
+    } else {
+        libc::strlen(start)
+    };
     match z_keyexpr_canonize(start, &mut len) {
         Z_OK => {
             *start.add(len) = 0;
@@ -192,6 +205,9 @@ pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) 
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize) -> z_error_t {
+    if start.is_null() {
+        return errors::Z_EINVAL;
+    }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
     match keyexpr_create(name, true, false) {
         Ok(ke) => {
@@ -347,7 +363,11 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string(
         this.as_rust_type_mut_uninit().write(None);
         errors::Z_EINVAL
     } else {
-        let len = libc::strlen(expr);
+        let len = if expr.is_null() {
+            0
+        } else {
+            libc::strlen(expr)
+        };
         z_view_keyexpr_from_substring(this, expr, len)
     }
 }
@@ -391,6 +411,10 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring_unchecked(
     start: *const c_char,
     len: usize,
 ) {
+    if start.is_null() {
+        this.as_rust_type_mut_uninit().write(None);
+        return;
+    }
     let name = std::slice::from_raw_parts(start as _, len);
     let name = std::str::from_utf8_unchecked(name);
     let name: KeyExpr = keyexpr::from_str_unchecked(name).into();
@@ -412,7 +436,8 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     s: *const c_char,
 ) {
-    z_view_keyexpr_from_substring_unchecked(this, s, libc::strlen(s))
+    let len = if s.is_null() { 0 } else { libc::strlen(s) };
+    z_view_keyexpr_from_substring_unchecked(this, s, len)
 }
 
 /// Constructs a non-owned non-null-terminated string from key expression.

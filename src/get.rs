@@ -318,7 +318,7 @@ pub extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
-    this.as_rust_type_ref().is_none()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows reply.
