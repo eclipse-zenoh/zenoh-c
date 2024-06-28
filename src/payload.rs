@@ -189,7 +189,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {:?}", e);
             dst.as_rust_type_mut_uninit().write(None);
             errors::Z_EIO
         }
@@ -216,7 +216,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {:?}", e);
             errors::Z_EIO
         }
     }
@@ -242,7 +242,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {:?}", e);
             errors::Z_EIO
         }
     }
@@ -288,8 +288,8 @@ fn z_bytes_deserialize_into_arithmetic<'a, T>(
     val: &'a mut T,
 ) -> z_error_t
 where
-    ZSerde: Deserialize<'a, T, Input = &'a ZBytes>,
-    <ZSerde as Deserialize<'a, T>>::Error: fmt::Debug,
+    ZSerde: Deserialize<T, Input<'static> = &'static ZBytes>,
+    <ZSerde as Deserialize<T>>::Error: fmt::Debug,
 {
     match this.as_rust_type_ref().deserialize::<T>() {
         Ok(v) => {
@@ -297,7 +297,7 @@ where
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {:?}", e);
             errors::Z_EPARSE
         }
     }
@@ -572,7 +572,7 @@ pub extern "C" fn z_bytes_deserialize_into_pair(
             Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {}", e);
+            log::error!("Failed to deserialize the payload: {:?}", e);
             Z_EPARSE
         }
     }
