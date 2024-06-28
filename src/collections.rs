@@ -22,7 +22,7 @@ use std::slice::from_raw_parts;
 use libc::{c_char, c_void, strlen};
 
 use crate::errors::{self, z_error_t};
-use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 
 pub struct CSlice(*const u8, isize);
 #[derive(Default, Clone)]

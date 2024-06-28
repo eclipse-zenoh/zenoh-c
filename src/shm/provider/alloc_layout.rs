@@ -18,7 +18,7 @@ use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
     errors::z_error_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
     z_owned_buf_alloc_result_t,
 };

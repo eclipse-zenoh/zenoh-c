@@ -22,7 +22,7 @@ use zenoh::shm::{
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     shm::provider::shm_provider::CSHMProvider,
-    transmute2::{RustTypeRef, RustTypeRefUninit},
+    transmute::{RustTypeRef, RustTypeRefUninit},
     z_loaned_memory_layout_t, z_owned_shm_provider_t,
 };
 

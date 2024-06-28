@@ -23,7 +23,7 @@ use zenoh::shm::{
 
 use crate::context::{Context, DroppableContext, ThreadsafeContext};
 use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
-use crate::transmute2::{IntoRustType, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit};
 use crate::{z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
 
 use super::chunk::z_allocated_chunk_t;

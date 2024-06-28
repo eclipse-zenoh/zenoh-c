@@ -14,7 +14,7 @@
 use crate::commons::*;
 use crate::errors;
 use crate::keyexpr::*;
-use crate::transmute2::RustTypeRef;
+use crate::transmute::RustTypeRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
 use crate::z_timestamp_t;

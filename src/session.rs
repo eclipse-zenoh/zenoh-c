@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_owned_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;

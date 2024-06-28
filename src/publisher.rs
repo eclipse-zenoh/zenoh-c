@@ -13,10 +13,10 @@
 //
 
 use crate::errors;
-use crate::transmute2::IntoCType;
-use crate::transmute2::LoanedCTypeRef;
-use crate::transmute2::RustTypeRef;
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute::IntoCType;
+use crate::transmute::LoanedCTypeRef;
+use crate::transmute::RustTypeRef;
+use crate::transmute::RustTypeRefUninit;
 use crate::z_entity_global_id_t;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;

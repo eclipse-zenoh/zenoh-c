@@ -13,7 +13,7 @@
 //
 
 use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
-use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
     CSliceOwned, CStringOwned, ZHashMap,

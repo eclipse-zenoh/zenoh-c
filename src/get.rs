@@ -33,9 +33,9 @@ use zenoh_protocol::core::ZenohIdProto;
 use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
-use crate::transmute2::LoanedCTypeRef;
-use crate::transmute2::RustTypeRef;
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute::LoanedCTypeRef;
+use crate::transmute::RustTypeRef;
+use crate::transmute::RustTypeRefUninit;
 use crate::z_id_t;
 use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,

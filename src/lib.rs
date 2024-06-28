@@ -20,8 +20,6 @@ use std::slice;
 
 #[macro_use]
 mod transmute;
-#[macro_use]
-mod transmute2;
 pub mod opaque_types;
 pub use crate::opaque_types::*;
 

@@ -14,9 +14,9 @@
 use crate::errors;
 use crate::errors::z_error_t;
 use crate::errors::Z_OK;
-use crate::transmute2::LoanedCTypeRef;
-use crate::transmute2::RustTypeRef;
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute::LoanedCTypeRef;
+use crate::transmute::RustTypeRef;
+use crate::transmute::RustTypeRefUninit;
 use crate::z_loaned_session_t;
 use crate::z_view_string_from_substring;
 use crate::z_view_string_t;

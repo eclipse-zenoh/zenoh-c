@@ -12,220 +12,228 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-// pub fn as_static_ref<'a, T: 'a>(value: &'a T) -> &'static T {
-//     unsafe { std::mem::transmute::<&'a T, &'static T>(value) }
-// }
-
 use std::mem::MaybeUninit;
 
-// pub fn unwrap_ref_unchecked<T>(value: &Option<T>) -> &T {
-//     debug_assert!(value.is_some());
-//     unsafe { value.as_ref().unwrap_unchecked() }
-// }
-
-// pub fn unwrap_ref_unchecked_mut<T>(value: &mut Option<T>) -> &mut T {
-//     debug_assert!(value.is_some());
-//     unsafe { value.as_mut().unwrap_unchecked() }
-// }
-
-pub(crate) trait TransmuteRef<T: Sized>: Sized {
-    fn transmute_ref(&self) -> &T;
-    fn transmute_mut(&mut self) -> &mut T;
+pub(crate) trait CTypeRef: Sized {
+    type CType;
+    fn as_ctype_ref(&self) -> &Self::CType;
+    fn as_ctype_mut(&mut self) -> &mut Self::CType;
+}
+pub(crate) trait OwnedCTypeRef: Sized {
+    type OwnedCType;
+    fn as_owned_ctype_ref(&self) -> &Self::OwnedCType;
+    fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType;
+}
+pub(crate) trait LoanedCTypeRef: Sized {
+    type LoanedCType;
+    fn as_loaned_ctype_ref(&self) -> &Self::LoanedCType;
+    fn as_loaned_ctype_mut(&mut self) -> &mut Self::LoanedCType;
+}
+pub(crate) trait ViewCTypeRef: Sized {
+    type ViewCType;
+    fn as_view_ctype_ref(&self) -> &Self::ViewCType;
+    fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType;
+}
+pub(crate) trait RustTypeRef: Sized {
+    type RustType;
+    fn as_rust_type_ref(&self) -> &Self::RustType;
+    fn as_rust_type_mut(&mut self) -> &mut Self::RustType;
 }
 
-pub(crate) trait TransmuteFromHandle<T: Sized>: Sized {
-    fn transmute_ref(&self) -> &'static T;
-    fn transmute_mut(&mut self) -> &'static mut T;
+pub(crate) trait RustTypeRefUninit: Sized {
+    type RustType;
+    fn as_rust_type_mut_uninit(&mut self) -> &mut MaybeUninit<Self::RustType>;
 }
 
-pub(crate) trait TransmuteIntoHandle<T: Sized>: Sized {
-    fn transmute_handle(&self) -> &'static T;
-    fn transmute_handle_mut(&mut self) -> &'static mut T;
+pub(crate) trait IntoRustType: Sized + Copy {
+    type RustType;
+    fn into_rust_type(self) -> Self::RustType;
 }
 
-pub(crate) trait TransmuteCopy<T: Copy> {
-    fn transmute_copy(self) -> T;
+pub(crate) trait IntoCType: Sized + Copy {
+    type CType;
+    fn into_c_type(self) -> Self::CType;
 }
 
-pub(crate) trait TransmuteUninitPtr<T: Sized>: Sized {
-    fn transmute_uninit_ptr(self) -> *mut std::mem::MaybeUninit<T>;
-}
-
-pub(crate) trait Inplace: Sized {
-    // Initialize the object in place with a memcpy of the provided value. Assumes that the memory passed to the function is uninitialized
-    fn init(this: *mut std::mem::MaybeUninit<Self>, value: Self) {
-        let this = this as *mut Self;
-        unsafe { std::ptr::write(this, value) };
-    }
-
-    // Initialize the object in place with an empty value
-    fn empty(this: *mut std::mem::MaybeUninit<Self>);
-
-    // Drop the object in place and replaces it with empty value
-    fn drop(this: &mut Self) {
-        let this = this as *mut Self;
-        unsafe { std::ptr::drop_in_place(this) };
-        Inplace::empty(this as *mut std::mem::MaybeUninit<Self>);
-    }
-
-    // Move the object out of this, leaving it in empty state
-    fn extract(&mut self) -> Self {
-        let mut out: MaybeUninit<Self> = MaybeUninit::uninit();
-        Self::empty(&mut out);
-        let mut out = unsafe { out.assume_init() };
-        std::mem::swap(&mut out, self);
-        out
-    }
-    // TODO: for effective inplace_init, we can provide a method that takes a closure that initializes the object in place
-}
-
-pub(crate) trait InplaceDefault: Default {
-    // Default implementation of inplace_init for object implementing Default trait. May be less efficient than a custom implementation
-    // because for `empty` operation it performs a copy of the default value from stack to provided memory
-    fn default(this: *mut std::mem::MaybeUninit<Self>) {
-        let this = this as *mut Self;
-        unsafe { std::ptr::write(this, <Self as Default>::default()) };
-    }
-}
-
-// For types implementing Default, we can use provide default implementation of InplaceInit through InplaceInitDefault
-impl<T: InplaceDefault> Inplace for T {
-    fn empty(this: *mut std::mem::MaybeUninit<Self>) {
-        InplaceDefault::default(this);
-    }
-}
-
-// macro_rules! validate_equivalence {
-//     ($type_a:ty, $type_b:ty) => {
-//         const _: () = {
-//             use const_format::concatcp;
-//             const TYPE_NAME_A: &str = stringify!($type_a);
-//             const TYPE_NAME_B: &str = stringify!($type_b);
-//             const ALIGN_A: usize = std::mem::align_of::<$type_a>();
-//             const ALIGN_B: usize = std::mem::align_of::<$type_b>();
-//             if ALIGN_A != ALIGN_B {
-//                 const ERR_MESSAGE: &str = concatcp!(
-//                     "Alingment mismatch: type ",
-//                     TYPE_NAME_A,
-//                     " has alignment ",
-//                     ALIGN_A,
-//                     " while type ",
-//                     TYPE_NAME_B,
-//                     " has alignment ",
-//                     ALIGN_B
-//                 );
-//                 panic!("{}", ERR_MESSAGE);
-//             }
-//             const SIZE_A: usize = std::mem::size_of::<$type_a>();
-//             const SIZE_B: usize = std::mem::size_of::<$type_b>();
-//             if SIZE_A != SIZE_B {
-//                 const ERR_MESSAGE: &str = concatcp!(
-//                     "Size mismatch: type ",
-//                     TYPE_NAME_A,
-//                     " has size ",
-//                     SIZE_A,
-//                     " while type ",
-//                     TYPE_NAME_B,
-//                     " has size ",
-//                     SIZE_B
-//                 );
-//                 panic!("{}", ERR_MESSAGE);
-//             }
-//         };
-//     };
-// }
-
-#[macro_export]
-macro_rules! decl_transmute_owned {
-    ($zenoh_type:ty, $c_type:ty) => {
-        impl $crate::transmute::InplaceDefault for $zenoh_type {}
-        decl_transmute_owned!(custom_inplace_init $zenoh_type, $c_type);
-
-    };
-    (custom_inplace_init $zenoh_type:ty, $c_type:ty) => {
-        validate_equivalence!($zenoh_type, $c_type);
-        impl_transmute_ref!($zenoh_type, $c_type);
-        impl_transmute_ref!($c_type, $zenoh_type);
-        impl_transmute_uninit_ptr!($zenoh_type, $c_type);
-        impl_transmute_uninit_ptr!($c_type, $zenoh_type);
-    }
-}
-
-#[macro_export]
-macro_rules! decl_transmute_copy {
-    ($zenoh_type:ty, $c_type:ty) => {
-        validate_equivalence!($zenoh_type, $c_type);
-        impl_transmute_copy!($zenoh_type, $c_type);
-        impl_transmute_copy!($c_type, $zenoh_type);
-        impl_transmute_ref!($zenoh_type, $c_type);
-        impl_transmute_ref!($c_type, $zenoh_type);
-        impl_transmute_uninit_ptr!($zenoh_type, $c_type);
-        impl_transmute_uninit_ptr!($c_type, $zenoh_type);
+macro_rules! validate_equivalence2 {
+    ($type_a:ty, $type_b:ty) => {
+        const _: () = {
+            use const_format::concatcp;
+            const TYPE_NAME_A: &str = stringify!($type_a);
+            const TYPE_NAME_B: &str = stringify!($type_b);
+            const ALIGN_A: usize = std::mem::align_of::<$type_a>();
+            const ALIGN_B: usize = std::mem::align_of::<$type_b>();
+            if ALIGN_A != ALIGN_B {
+                const ERR_MESSAGE: &str = concatcp!(
+                    "Alingment mismatch: type ",
+                    TYPE_NAME_A,
+                    " has alignment ",
+                    ALIGN_A,
+                    " while type ",
+                    TYPE_NAME_B,
+                    " has alignment ",
+                    ALIGN_B
+                );
+                panic!("{}", ERR_MESSAGE);
+            }
+            const SIZE_A: usize = std::mem::size_of::<$type_a>();
+            const SIZE_B: usize = std::mem::size_of::<$type_b>();
+            if SIZE_A != SIZE_B {
+                const ERR_MESSAGE: &str = concatcp!(
+                    "Size mismatch: type ",
+                    TYPE_NAME_A,
+                    " has size ",
+                    SIZE_A,
+                    " while type ",
+                    TYPE_NAME_B,
+                    " has size ",
+                    SIZE_B
+                );
+                panic!("{}", ERR_MESSAGE);
+            }
+        };
     };
 }
 
 #[macro_export]
-macro_rules! decl_transmute_handle {
-    ($zenoh_type:ty, $c_type:ty) => {
-        validate_equivalence!($zenoh_type, $c_type);
-        impl_transmute_handle!($c_type, $zenoh_type);
+macro_rules! impl_transmute {
+    (as_c ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute::CTypeRef for $rust_type {
+            type CType = $c_type;
+            fn as_ctype_ref(&self) -> &Self::CType {
+                unsafe { &*(self as *const Self as *const Self::CType) }
+            }
+            fn as_ctype_mut(&mut self) -> &mut Self::CType {
+                unsafe { &mut *(self as *mut Self as *mut Self::CType) }
+            }
+        }
+    };
+    (as_c_owned ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute::OwnedCTypeRef for $rust_type {
+            type OwnedCType = $c_type;
+            fn as_owned_ctype_ref(&self) -> &Self::OwnedCType {
+                unsafe { &*(self as *const Self as *const Self::OwnedCType) }
+            }
+            fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType {
+                unsafe { &mut *(self as *mut Self as *mut Self::OwnedCType) }
+            }
+        }
+    };
+
+    (as_c_loaned ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute::LoanedCTypeRef for $rust_type {
+            type LoanedCType = $c_type;
+            fn as_loaned_ctype_ref(&self) -> &Self::LoanedCType {
+                unsafe { &*(self as *const Self as *const Self::LoanedCType) }
+            }
+            fn as_loaned_ctype_mut(&mut self) -> &mut Self::LoanedCType {
+                unsafe { &mut *(self as *mut Self as *mut Self::LoanedCType) }
+            }
+        }
+    };
+    (as_c_view ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute::ViewCTypeRef for $rust_type {
+            type ViewCType = $c_type;
+            fn as_view_ctype_ref(&self) -> &Self::ViewCType {
+                unsafe { &*(self as *const Self as *const Self::ViewCType) }
+            }
+            fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType {
+                unsafe { &mut *(self as *mut Self as *mut Self::ViewCType) }
+            }
+        }
+    };
+    (as_rust ($c_type:ty, $rust_type:ty)) => {
+        impl $crate::transmute::RustTypeRef for $c_type {
+            type RustType = $rust_type;
+            fn as_rust_type_ref(&self) -> &Self::RustType {
+                unsafe { &*(self as *const Self as *const Self::RustType) }
+            }
+            fn as_rust_type_mut(&mut self) -> &mut Self::RustType {
+                unsafe { &mut *(self as *mut Self as *mut Self::RustType) }
+            }
+        }
+        impl $crate::transmute::RustTypeRefUninit for std::mem::MaybeUninit<$c_type> {
+            type RustType = $rust_type;
+            fn as_rust_type_mut_uninit(&mut self) -> &mut std::mem::MaybeUninit<Self::RustType> {
+                unsafe {
+                    let this = self as *mut std::mem::MaybeUninit<$c_type>;
+                    &mut *(this as *mut std::mem::MaybeUninit<Self::RustType>)
+                }
+            }
+        }
+    };
+    (into_rust ($c_type:ty, $rust_type:ty)) => {
+        impl $crate::transmute::IntoRustType for $c_type {
+            type RustType = $rust_type;
+            fn into_rust_type(self) -> Self::RustType {
+                unsafe { std::mem::transmute::<$c_type, $rust_type>(self) }
+            }
+        }
+    };
+    (into_c ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute::IntoCType for $rust_type {
+            type CType = $c_type;
+            fn into_c_type(self) -> Self::CType {
+                unsafe { std::mem::transmute::<$rust_type, $c_type>(self) }
+            }
+        }
     };
 }
 
-// macro_rules! impl_transmute_ref {
-//     ($src_type:ty, $dst_type:ty) => {
-//         impl $crate::transmute::TransmuteRef<$dst_type> for $src_type {
-//             fn transmute_ref(&self) -> &$dst_type {
-//                 unsafe { std::mem::transmute::<&$src_type, &$dst_type>(self) }
-//             }
-//             fn transmute_mut(&mut self) -> &mut $dst_type {
-//                 unsafe { std::mem::transmute::<&mut $src_type, &mut $dst_type>(self) }
-//             }
-//         }
-//     };
-// }
-
-// macro_rules! impl_transmute_copy {
-//     ($src_type:ty, $dst_type:ty) => {
-//         impl $crate::transmute::TransmuteCopy<$dst_type> for $src_type {
-//             fn transmute_copy(self) -> $dst_type {
-//                 unsafe { std::mem::transmute::<$src_type, $dst_type>(self) }
-//             }
-//         }
-//     };
-// }
-
-// macro_rules! impl_transmute_uninit_ptr {
-//     ($src_type:ty, $dst_type:ty) => {
-//         impl $crate::transmute::TransmuteUninitPtr<$dst_type> for *mut MaybeUninit<$src_type> {
-//             fn transmute_uninit_ptr(self) -> *mut std::mem::MaybeUninit<$dst_type> {
-//                 self as *mut std::mem::MaybeUninit<$dst_type>
-//             }
-//         }
-//     };
-// }
-
-// macro_rules! impl_transmute_handle {
-//     ($c_type:ty, $zenoh_type:ty) => {
-//         impl $crate::transmute::TransmuteFromHandle<$zenoh_type> for $c_type {
-//             fn transmute_ref(&self) -> &'static $zenoh_type {
-//                 unsafe {
-//                     (self as *const Self as *const $zenoh_type)
-//                         .as_ref()
-//                         .unwrap()
-//                 }
-//             }
-//             fn transmute_mut(&mut self) -> &'static mut $zenoh_type {
-//                 unsafe { (self as *mut Self as *mut $zenoh_type).as_mut().unwrap() }
-//             }
-//         }
-//         impl $crate::transmute::TransmuteIntoHandle<$c_type> for $zenoh_type {
-//             fn transmute_handle(&self) -> &'static $c_type {
-//                 unsafe { (self as *const Self as *const $c_type).as_ref().unwrap() }
-//             }
-//             fn transmute_handle_mut(&mut self) -> &'static mut $c_type {
-//                 unsafe { (self as *mut Self as *mut $c_type).as_mut().unwrap() }
-//             }
-//         }
-//     };
-// }
+// This macro declares conversions between Rust and C types.
+// Typically the "owned" and "loaned" types have the same size and alignment.
+// This is necessary for C++ wrapper library to work correctly.
+// But for some types which are not covered by C++ this restriction can be relaxed.
+// In this case the "inequal" keyword should be used.
+#[macro_export]
+macro_rules! decl_c_type {
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
+     view ($c_view_type:ty, $rust_view_type:ty $(,)?),
+     loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        decl_c_type!(
+            owned($c_owned_type, $rust_owned_type),
+            loaned($c_loaned_type, $rust_loaned_type)
+        );
+        validate_equivalence2!($c_view_type, $rust_view_type);
+        validate_equivalence2!($c_view_type, $c_loaned_type);
+        impl_transmute!(as_c_view($rust_view_type, $c_view_type));
+        impl_transmute!(as_rust($c_view_type, $rust_view_type));
+    };
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
+     loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        decl_c_type!( inequal
+            owned($c_owned_type, $rust_owned_type),
+            loaned($c_loaned_type, $rust_loaned_type)
+        );
+        validate_equivalence2!($c_owned_type, $c_loaned_type);
+    };
+    (inequal
+     owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
+     loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        decl_c_type!(loaned($c_loaned_type, $rust_loaned_type));
+        decl_c_type!(owned($c_owned_type, $rust_owned_type));
+    };
+    (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?) $(,)?) => {
+        validate_equivalence2!($c_owned_type, $rust_owned_type);
+        impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
+        impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
+    };
+    (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        validate_equivalence2!($c_loaned_type, $rust_loaned_type);
+        impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+    };
+    (copy ($c_type:ty, $rust_type:ty $(,)?) $(,)?) => {
+        validate_equivalence2!($c_type, $rust_type);
+        impl_transmute!(as_c($rust_type, $c_type));
+        impl_transmute!(as_rust($c_type, $rust_type));
+        impl_transmute!(into_c($rust_type, $c_type));
+        impl_transmute!(into_rust($c_type, $rust_type));
+    };
+    (owned ($c_owned_type:ty$ (,)?),
+     loaned ($c_loaned_type:ty $(,)?) $(,)?) => {
+        validate_equivalence2!($c_owned_type, $c_loaned_type);
+        impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
+        impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));
+    };
+}

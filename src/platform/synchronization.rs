@@ -10,7 +10,7 @@ pub use crate::opaque_types::z_loaned_mutex_t;
 pub use crate::opaque_types::z_owned_mutex_t;
 use crate::{
     errors,
-    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
 decl_c_type!(

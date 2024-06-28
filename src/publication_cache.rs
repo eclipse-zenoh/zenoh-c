@@ -17,7 +17,7 @@ use std::ptr::null;
 
 use zenoh_ext::SessionExt;
 
-use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t};
 #[cfg(feature = "unstable")]
 use crate::{zcu_locality_default, zcu_locality_t};

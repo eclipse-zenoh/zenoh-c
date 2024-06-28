@@ -19,7 +19,7 @@ use zenoh::internal::bail;
 use zenoh::shm::{SegmentID, ShmClient, ShmSegment};
 
 use crate::context::DroppableContext;
-use crate::transmute2::{RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{RustTypeRef, RustTypeRefUninit};
 use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
     errors,

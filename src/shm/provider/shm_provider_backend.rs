@@ -20,7 +20,7 @@ use zenoh::internal::zerror;
 use zenoh::shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend};
 
 use crate::context::DroppableContext;
-use crate::transmute2::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef};
+use crate::transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef};
 use crate::{z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t};
 
 use super::chunk::z_chunk_descriptor_t;

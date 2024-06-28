@@ -13,7 +13,7 @@
 //
 
 use crate::{
-    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
 };
 use libc::c_void;

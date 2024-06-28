@@ -21,7 +21,7 @@ use zenoh::shm::{
 };
 use zenoh::{prelude::*, shm::AsyncAllocPolicy};
 
-use crate::transmute2::{IntoRustType, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     errors::{z_error_t, Z_EINVAL, Z_OK},

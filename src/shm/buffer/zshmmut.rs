@@ -17,7 +17,7 @@ use std::{borrow::BorrowMut, mem::MaybeUninit};
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
-    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_mut_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 

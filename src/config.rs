@@ -19,7 +19,7 @@ use std::str::from_utf8;
 use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
 use crate::errors::z_error_t;
-use crate::transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_owned_string_t, z_string_from_substring, z_string_null};
 
 #[no_mangle]

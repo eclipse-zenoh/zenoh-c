@@ -20,7 +20,7 @@ use std::{
 use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{
-    transmute2::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_mut_t, z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 

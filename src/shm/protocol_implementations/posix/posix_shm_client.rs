@@ -18,7 +18,7 @@ use zenoh::shm::{PosixShmClient, ShmClient};
 
 use crate::{
     errors::{z_error_t, Z_OK},
-    transmute2::RustTypeRefUninit,
+    transmute::RustTypeRefUninit,
     z_owned_shm_client_t,
 };
 

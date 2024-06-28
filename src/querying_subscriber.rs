@@ -16,9 +16,9 @@ use std::mem::MaybeUninit;
 use std::ptr::null;
 
 use crate::errors;
-use crate::transmute2::LoanedCTypeRef;
-use crate::transmute2::RustTypeRef;
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute::LoanedCTypeRef;
+use crate::transmute::RustTypeRef;
+use crate::transmute::RustTypeRefUninit;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_keyexpr_t;
 use crate::z_owned_closure_sample_t;

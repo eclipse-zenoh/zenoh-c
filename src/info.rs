@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute2::{CTypeRef, IntoCType, RustTypeRef};
+use crate::transmute::{CTypeRef, IntoCType, RustTypeRef};
 use crate::{
     errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_owned_closure_zid_t,
 };

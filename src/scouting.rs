@@ -13,7 +13,7 @@
 //
 use crate::{
     errors::{self, Z_OK},
-    transmute2::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };

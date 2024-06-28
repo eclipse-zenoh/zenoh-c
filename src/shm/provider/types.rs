@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use zenoh::internal::zerror;
 use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError};
 
-use crate::transmute2::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,

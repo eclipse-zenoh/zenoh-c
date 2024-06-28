@@ -20,12 +20,12 @@ use std::str::from_utf8;
 use std::str::FromStr;
 
 use crate::errors;
-use crate::transmute2::CTypeRef;
-use crate::transmute2::IntoCType;
-use crate::transmute2::IntoRustType;
-use crate::transmute2::LoanedCTypeRef;
-use crate::transmute2::RustTypeRef;
-use crate::transmute2::RustTypeRefUninit;
+use crate::transmute::CTypeRef;
+use crate::transmute::IntoCType;
+use crate::transmute::IntoRustType;
+use crate::transmute::LoanedCTypeRef;
+use crate::transmute::RustTypeRef;
+use crate::transmute::RustTypeRefUninit;
 use crate::z_id_t;
 use crate::z_loaned_bytes_t;
 use crate::z_loaned_keyexpr_t;
