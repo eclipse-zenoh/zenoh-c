@@ -92,7 +92,7 @@ pub unsafe extern "C" fn z_fifo_handler_query_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
@@ -190,7 +190,7 @@ pub unsafe extern "C" fn z_ring_handler_query_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until

@@ -111,7 +111,7 @@ pub unsafe extern "C" fn z_shm_provider_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Deletes SHM Provider

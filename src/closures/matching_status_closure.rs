@@ -94,7 +94,7 @@ pub extern "C" fn zcu_closure_matching_status_call(
     closure: &zcu_loaned_closure_matching_status_t,
     mathing_status: &zcu_matching_status_t,
 ) {
-    let closure = closure.as_owned_ctype_ref();
+    let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(mathing_status, closure.context),
         None => {
@@ -136,5 +136,5 @@ impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_statu
 pub extern "C" fn zcu_closure_matching_status_loan(
     closure: &zcu_owned_closure_matching_status_t,
 ) -> &zcu_loaned_closure_matching_status_t {
-    closure.as_loaned_ctype_ref()
+    closure.as_loaned_c_type_ref()
 }

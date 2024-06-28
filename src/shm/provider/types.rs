@@ -117,7 +117,7 @@ pub unsafe extern "C" fn z_memory_layout_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Deletes Memory Layout
@@ -184,7 +184,7 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Deletes Chunk Alloc Result
@@ -240,7 +240,7 @@ pub unsafe extern "C" fn z_buf_alloc_result_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Deletes Buf Alloc Result

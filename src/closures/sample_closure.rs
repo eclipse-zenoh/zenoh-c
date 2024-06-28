@@ -89,7 +89,7 @@ pub extern "C" fn z_closure_sample_call(
     closure: &z_loaned_closure_sample_t,
     sample: &z_loaned_sample_t,
 ) {
-    let closure = closure.as_owned_ctype_ref();
+    let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(sample, closure.context),
         None => log::error!("Attempted to call an uninitialized closure!"),
@@ -128,5 +128,5 @@ impl<F: Fn(&z_loaned_sample_t)> From<F> for z_owned_closure_sample_t {
 pub extern "C" fn z_closure_sample_loan(
     closure: &z_owned_closure_sample_t,
 ) -> &z_loaned_closure_sample_t {
-    closure.as_loaned_ctype_ref()
+    closure.as_loaned_c_type_ref()
 }

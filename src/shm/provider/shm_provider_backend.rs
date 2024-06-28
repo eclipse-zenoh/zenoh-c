@@ -67,7 +67,7 @@ where
         unsafe {
             (self.callbacks.alloc_fn)(
                 result.as_mut_ptr(),
-                layout.as_loaned_ctype_ref(),
+                layout.as_loaned_c_type_ref(),
                 self.context.get(),
             );
             match result.assume_init().as_rust_type_mut().take() {
@@ -94,7 +94,7 @@ where
     fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout> {
         let mut layout = Some(layout);
         unsafe {
-            (self.callbacks.layout_for_fn)(layout.as_owned_ctype_mut(), self.context.get());
+            (self.callbacks.layout_for_fn)(layout.as_owned_c_type_mut(), self.context.get());
         }
         layout.ok_or_else(|| zerror!("{:?}: unsupported layout", self).into())
     }

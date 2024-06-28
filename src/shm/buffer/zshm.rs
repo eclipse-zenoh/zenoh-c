@@ -64,7 +64,7 @@ pub extern "C" fn z_shm_clone(this: &z_loaned_shm_t, out: &mut MaybeUninit<z_own
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_loan(this: &z_owned_shm_t) -> &z_loaned_shm_t {
     let this: &zshm = this.as_rust_type_ref().as_ref().unwrap_unchecked().borrow();
-    this.as_loaned_ctype_ref()
+    this.as_loaned_c_type_ref()
 }
 
 /// Mutably borrows ZShm slice
@@ -76,7 +76,7 @@ pub unsafe extern "C" fn z_shm_loan_mut(this: &mut z_owned_shm_t) -> &mut z_loan
         .as_mut()
         .unwrap_unchecked()
         .borrow_mut();
-    this.as_loaned_ctype_mut()
+    this.as_loaned_c_type_mut()
 }
 
 /// Mutably borrows ZShm slice as borrowed ZShmMut slice
@@ -89,7 +89,7 @@ pub unsafe extern "C" fn z_shm_try_mut(this: &mut z_owned_shm_t) -> *mut z_loane
     match shm.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as_loaned_ctype_mut()
+            v.as_loaned_c_type_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }
@@ -108,7 +108,7 @@ pub extern "C" fn z_shm_try_reloan_mut(this: &mut z_loaned_shm_t) -> *mut z_loan
     match this.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as_loaned_ctype_mut()
+            v.as_loaned_c_type_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }

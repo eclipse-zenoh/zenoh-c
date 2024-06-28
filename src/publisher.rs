@@ -137,7 +137,7 @@ pub unsafe extern "C" fn z_publisher_loan(this: &z_owned_publisher_t) -> &z_loan
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Mutably borrows publisher.
@@ -149,7 +149,7 @@ pub unsafe extern "C" fn z_publisher_loan_mut(
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
-        .as_loaned_ctype_mut()
+        .as_loaned_c_type_mut()
 }
 
 /// Options passed to the `z_publisher_put()` function.
@@ -283,7 +283,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
     publisher
         .as_rust_type_ref()
         .key_expr()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 pub use crate::opaque_types::zcu_owned_matching_listener_t;

@@ -88,7 +88,7 @@ pub extern "C" fn z_closure_reply_call(
     closure: &z_loaned_closure_reply_t,
     reply: &z_loaned_reply_t,
 ) {
-    let closure = closure.as_owned_ctype_ref();
+    let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(reply, closure.context),
         None => {
@@ -128,5 +128,5 @@ impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
 pub extern "C" fn z_closure_reply_loan(
     closure: &z_owned_closure_reply_t,
 ) -> &z_loaned_closure_reply_t {
-    closure.as_loaned_ctype_ref()
+    closure.as_loaned_c_type_ref()
 }

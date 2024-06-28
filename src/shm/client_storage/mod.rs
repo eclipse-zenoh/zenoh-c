@@ -64,7 +64,7 @@ pub unsafe extern "C" fn zc_shm_client_list_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Mutably borrows list of SHM Clients
@@ -76,7 +76,7 @@ pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
-        .as_loaned_ctype_mut()
+        .as_loaned_c_type_mut()
 }
 
 #[no_mangle]
@@ -169,5 +169,5 @@ pub unsafe extern "C" fn z_shm_client_storage_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }

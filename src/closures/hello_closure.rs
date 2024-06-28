@@ -82,7 +82,7 @@ pub extern "C" fn z_closure_hello_call(
     closure: &z_loaned_closure_hello_t,
     hello: &z_loaned_hello_t,
 ) {
-    let closure = closure.as_owned_ctype_ref();
+    let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(hello, closure.context),
         None => {
@@ -128,5 +128,5 @@ pub extern "C" fn z_closure_hello_check(this: &z_owned_closure_hello_t) -> bool 
 pub extern "C" fn z_closure_hello_loan(
     closure: &z_owned_closure_hello_t,
 ) -> &z_loaned_closure_hello_t {
-    closure.as_loaned_ctype_ref()
+    closure.as_loaned_c_type_ref()
 }

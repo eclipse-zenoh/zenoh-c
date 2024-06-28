@@ -132,7 +132,7 @@ pub unsafe extern "C" fn z_keyexpr_loan(this: &z_owned_keyexpr_t) -> &z_loaned_k
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Borrows `z_view_keyexpr_t`.
@@ -142,7 +142,7 @@ pub unsafe extern "C" fn z_view_keyexpr_loan(this: &z_view_keyexpr_t) -> &z_loan
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Frees key expression and resets it to its gravestone state.

@@ -70,13 +70,13 @@ extern "C" fn z_bytes_check(this: &z_owned_bytes_t) -> bool {
 /// Borrows data.
 #[no_mangle]
 unsafe extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Muatably borrows data.
 #[no_mangle]
 extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
-    this.as_rust_type_mut().as_loaned_ctype_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Returns ``true`` if `this_` is empty, ``false`` otherwise.
@@ -212,7 +212,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
     let payload = this.as_rust_type_ref();
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
-            dst.write(s.as_loaned_ctype_ref());
+            dst.write(s.as_loaned_c_type_ref());
             errors::Z_OK
         }
         Err(e) => {
@@ -238,7 +238,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
     let payload = this.as_rust_type_mut();
     match payload.deserialize_mut::<&mut zshm>() {
         Ok(s) => {
-            dst.write(s.as_loaned_ctype_mut());
+            dst.write(s.as_loaned_c_type_mut());
             errors::Z_OK
         }
         Err(e) => {
@@ -634,7 +634,7 @@ pub extern "C" fn z_bytes_get_iterator(data: &'static z_loaned_bytes_t) -> z_byt
     *data
         .as_rust_type_ref()
         .iter::<ZBytes>()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Constructs `z_owned_bytes_t` object corresponding to the next element of serialized data.
@@ -672,7 +672,7 @@ pub extern "C" fn z_bytes_iter(
     for zb in this.as_rust_type_ref().iter::<ZBytes>() {
         // this is safe because literally any payload is convertable into ZBuf
         let b = unsafe { zb.unwrap_unchecked() };
-        res = iterator_body(b.as_loaned_ctype_ref(), context);
+        res = iterator_body(b.as_loaned_c_type_ref(), context);
         if res != Z_OK {
             break;
         }
@@ -735,7 +735,7 @@ decl_c_type!(loaned(z_bytes_reader_t, ZBytesReader<'static>));
 /// The `data` should outlive the reader.
 #[no_mangle]
 pub extern "C" fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes_reader_t {
-    *data.as_rust_type_ref().reader().as_loaned_ctype_ref()
+    *data.as_rust_type_ref().reader().as_loaned_c_type_ref()
 }
 
 /// Reads data into specified destination.
@@ -832,7 +832,7 @@ unsafe extern "C" fn z_bytes_writer_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Muatably borrows writer.
@@ -844,7 +844,7 @@ unsafe extern "C" fn z_bytes_writer_loan_mut(
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
-        .as_loaned_ctype_mut()
+        .as_loaned_c_type_mut()
 }
 
 /// Gets writer for `this_`.

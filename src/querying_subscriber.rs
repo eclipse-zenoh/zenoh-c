@@ -144,7 +144,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
         }
     }
     let sub = sub.callback(move |sample| {
-        let sample = sample.as_loaned_ctype_ref();
+        let sample = sample.as_loaned_c_type_ref();
         z_closure_sample_call(z_closure_sample_loan(&closure), sample);
     });
     match sub.wait() {
@@ -255,5 +255,5 @@ pub unsafe extern "C" fn ze_querying_subscriber_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }

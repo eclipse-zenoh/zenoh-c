@@ -21,18 +21,18 @@ pub(crate) trait CTypeRef: Sized {
 }
 pub(crate) trait OwnedCTypeRef: Sized {
     type OwnedCType;
-    fn as_owned_ctype_ref(&self) -> &Self::OwnedCType;
-    fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType;
+    fn as_owned_c_type_ref(&self) -> &Self::OwnedCType;
+    fn as_owned_c_type_mut(&mut self) -> &mut Self::OwnedCType;
 }
 pub(crate) trait LoanedCTypeRef: Sized {
     type LoanedCType;
-    fn as_loaned_ctype_ref(&self) -> &Self::LoanedCType;
-    fn as_loaned_ctype_mut(&mut self) -> &mut Self::LoanedCType;
+    fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType;
+    fn as_loaned_c_type_mut(&mut self) -> &mut Self::LoanedCType;
 }
 pub(crate) trait ViewCTypeRef: Sized {
     type ViewCType;
-    fn as_view_ctype_ref(&self) -> &Self::ViewCType;
-    fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType;
+    fn as_view_c_type_ref(&self) -> &Self::ViewCType;
+    fn as_view_c_type_mut(&mut self) -> &mut Self::ViewCType;
 }
 pub(crate) trait RustTypeRef: Sized {
     type RustType;
@@ -111,10 +111,10 @@ macro_rules! impl_transmute {
     (as_c_owned ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::OwnedCTypeRef for $rust_type {
             type OwnedCType = $c_type;
-            fn as_owned_ctype_ref(&self) -> &Self::OwnedCType {
+            fn as_owned_c_type_ref(&self) -> &Self::OwnedCType {
                 unsafe { &*(self as *const Self as *const Self::OwnedCType) }
             }
-            fn as_owned_ctype_mut(&mut self) -> &mut Self::OwnedCType {
+            fn as_owned_c_type_mut(&mut self) -> &mut Self::OwnedCType {
                 unsafe { &mut *(self as *mut Self as *mut Self::OwnedCType) }
             }
         }
@@ -123,10 +123,10 @@ macro_rules! impl_transmute {
     (as_c_loaned ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::LoanedCTypeRef for $rust_type {
             type LoanedCType = $c_type;
-            fn as_loaned_ctype_ref(&self) -> &Self::LoanedCType {
+            fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType {
                 unsafe { &*(self as *const Self as *const Self::LoanedCType) }
             }
-            fn as_loaned_ctype_mut(&mut self) -> &mut Self::LoanedCType {
+            fn as_loaned_c_type_mut(&mut self) -> &mut Self::LoanedCType {
                 unsafe { &mut *(self as *mut Self as *mut Self::LoanedCType) }
             }
         }
@@ -134,10 +134,10 @@ macro_rules! impl_transmute {
     (as_c_view ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::ViewCTypeRef for $rust_type {
             type ViewCType = $c_type;
-            fn as_view_ctype_ref(&self) -> &Self::ViewCType {
+            fn as_view_c_type_ref(&self) -> &Self::ViewCType {
                 unsafe { &*(self as *const Self as *const Self::ViewCType) }
             }
-            fn as_view_ctype_mut(&mut self) -> &mut Self::ViewCType {
+            fn as_view_c_type_mut(&mut self) -> &mut Self::ViewCType {
                 unsafe { &mut *(self as *mut Self as *mut Self::ViewCType) }
             }
         }

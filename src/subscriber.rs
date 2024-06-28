@@ -79,7 +79,7 @@ pub unsafe extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_lo
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Options passed to the `z_declare_subscriber()` function.
@@ -124,7 +124,7 @@ pub extern "C" fn z_declare_subscriber(
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
-            let sample = sample.as_loaned_ctype_ref();
+            let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&closure), sample)
         });
     if let Some(options) = options {
@@ -150,7 +150,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
     subscriber
         .as_rust_type_ref()
         .key_expr()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Undeclares subscriber and drops subscriber.

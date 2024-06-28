@@ -51,7 +51,7 @@ pub unsafe extern "C" fn z_queryable_loan(this: &z_owned_queryable_t) -> &z_loan
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 pub use crate::opaque_types::z_loaned_query_t;
@@ -78,7 +78,7 @@ pub unsafe extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loan
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
@@ -224,7 +224,7 @@ pub extern "C" fn z_declare_queryable(
     }
     let queryable = builder
         .callback(move |query| {
-            z_closure_query_call(z_closure_query_loan(&closure), query.as_loaned_ctype_ref())
+            z_closure_query_call(z_closure_query_loan(&closure), query.as_loaned_c_type_ref())
         })
         .wait();
     match queryable {
@@ -418,7 +418,7 @@ pub unsafe extern "C" fn z_query_reply_del(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_query_keyexpr(this: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref().key_expr().as_loaned_ctype_ref()
+    this.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
@@ -440,7 +440,7 @@ pub unsafe extern "C" fn z_query_parameters(
 pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
     this.as_rust_type_ref()
         .payload()
-        .map(|v| v.as_loaned_ctype_ref())
+        .map(|v| v.as_loaned_c_type_ref())
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
@@ -450,7 +450,7 @@ pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_b
 pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
     this.as_rust_type_ref()
         .encoding()
-        .map(|v| v.as_loaned_ctype_ref())
+        .map(|v| v.as_loaned_c_type_ref())
 }
 
 /// Gets query attachment.
@@ -460,5 +460,5 @@ pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_
 pub extern "C" fn z_query_attachment(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
     this.as_rust_type_ref()
         .attachment()
-        .map(|a| a.as_loaned_ctype_ref())
+        .map(|a| a.as_loaned_c_type_ref())
 }

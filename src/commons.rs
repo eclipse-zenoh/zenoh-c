@@ -119,17 +119,17 @@ decl_c_type!(
 /// Returns the key expression of the sample.
 #[no_mangle]
 pub extern "C" fn z_sample_keyexpr(this: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref().key_expr().as_loaned_ctype_ref()
+    this.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 /// Returns the encoding associated with the sample data.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(this: &z_loaned_sample_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().encoding().as_loaned_ctype_ref()
+    this.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 /// Returns the sample payload data.
 #[no_mangle]
 pub extern "C" fn z_sample_payload(this: &z_loaned_sample_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().payload().as_loaned_ctype_ref()
+    this.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
 /// Returns the sample kind.
@@ -155,7 +155,7 @@ pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_time
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
     match this.as_rust_type_ref().attachment() {
-        Some(attachment) => attachment.as_loaned_ctype_ref() as *const _,
+        Some(attachment) => attachment.as_loaned_c_type_ref() as *const _,
         None => null(),
     }
 }
@@ -163,7 +163,7 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
 /// Returns the sample source_info.
 #[no_mangle]
 pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_source_info_t {
-    this.as_rust_type_ref().source_info().as_loaned_ctype_ref()
+    this.as_rust_type_ref().source_info().as_loaned_c_type_ref()
 }
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
@@ -207,7 +207,7 @@ pub unsafe extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sam
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
@@ -286,7 +286,7 @@ pub unsafe extern "C" fn z_encoding_to_string(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan_default() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_BYTES.as_loaned_ctype_ref()
+    Encoding::ZENOH_BYTES.as_loaned_c_type_ref()
 }
 
 /// Constructs a default `z_owned_encoding_t`.
@@ -310,7 +310,7 @@ pub extern "C" fn z_encoding_check(this: &'static z_owned_encoding_t) -> bool {
 /// Borrows encoding.
 #[no_mangle]
 pub extern "C" fn z_encoding_loan(this: &z_owned_encoding_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// The locality of samples to be received by subscribers or targeted by publishers.
@@ -631,7 +631,7 @@ pub extern "C" fn z_source_info_check(this: &z_owned_source_info_t) -> bool {
 /// Borrows source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_source_info_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.

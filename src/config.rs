@@ -74,7 +74,7 @@ decl_c_type!(
 pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> &z_loaned_config_t {
     let this = this.as_rust_type_ref();
     let this = unsafe { this.as_ref().unwrap_unchecked() };
-    this.as_loaned_ctype_ref()
+    this.as_loaned_c_type_ref()
 }
 
 /// Mutably borrows config.
@@ -82,7 +82,7 @@ pub extern "C" fn z_config_loan(this: &'static z_owned_config_t) -> &z_loaned_co
 pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_loaned_config_t {
     let this = this.as_rust_type_mut();
     let this = unsafe { this.as_mut().unwrap_unchecked() };
-    this.as_loaned_ctype_mut()
+    this.as_loaned_c_type_mut()
 }
 
 /// Constructs a new empty configuration.

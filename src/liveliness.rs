@@ -75,7 +75,7 @@ pub unsafe extern "C" fn zc_liveliness_token_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Constructs and declares a liveliness token on the network.
@@ -164,7 +164,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .liveliness()
         .declare_subscriber(key_expr)
         .callback(move |sample| {
-            let sample = sample.as_loaned_ctype_ref();
+            let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         })
         .wait()
@@ -213,7 +213,7 @@ pub extern "C" fn zc_liveliness_get(
     let mut builder = liveliness.get(key_expr).callback(move |response| {
         z_closure_reply_call(
             z_closure_reply_loan(&callback),
-            response.as_loaned_ctype_ref(),
+            response.as_loaned_c_type_ref(),
         )
     });
     if let Some(options) = options {

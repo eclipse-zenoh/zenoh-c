@@ -44,7 +44,7 @@ pub unsafe extern "C" fn z_hello_loan(this: &z_owned_hello_t) -> &z_loaned_hello
     this.as_rust_type_ref()
         .as_ref()
         .unwrap()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
@@ -164,7 +164,7 @@ pub extern "C" fn z_scout(
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
-                z_closure_hello_call(z_closure_hello_loan(&closure), h.as_loaned_ctype_ref())
+                z_closure_hello_call(z_closure_hello_loan(&closure), h.as_loaned_c_type_ref())
             })
             .await
             .unwrap();

@@ -83,7 +83,7 @@ pub unsafe extern "C" fn z_closure_zid_null(this: &mut MaybeUninit<z_owned_closu
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
-    let closure = closure.as_owned_ctype_ref();
+    let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(z_id, closure.context),
         None => {
@@ -118,5 +118,5 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
 /// Vorrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
-    closure.as_loaned_ctype_ref()
+    closure.as_loaned_c_type_ref()
 }

@@ -94,7 +94,7 @@ pub unsafe extern "C" fn z_fifo_handler_sample_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
@@ -194,7 +194,7 @@ pub unsafe extern "C" fn z_ring_handler_sample_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until

@@ -262,7 +262,7 @@ pub unsafe extern "C" fn z_view_slice_wrap(
 /// Borrows view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> &z_loaned_slice_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// @return ``true`` if the slice is not empty, ``false`` otherwise.
@@ -330,7 +330,7 @@ pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
 /// Borrows slice.
 #[no_mangle]
 pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> &z_loaned_slice_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Constructs an owned copy of a slice.
@@ -500,13 +500,13 @@ pub unsafe extern "C" fn z_view_string_empty(this: &mut MaybeUninit<z_view_strin
 /// Borrows string.
 #[no_mangle]
 pub extern "C" fn z_string_loan(this: &z_owned_string_t) -> &z_loaned_string_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Borrows view string.
 #[no_mangle]
 pub extern "C" fn z_view_string_loan(this: &z_view_string_t) -> &z_loaned_string_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
@@ -603,7 +603,7 @@ pub extern "C" fn z_string_clone(
 // Converts loaned string into loaned slice (with terminating 0 character).
 #[no_mangle]
 pub extern "C" fn z_string_as_slice(this: &z_loaned_string_t) -> &z_loaned_slice_t {
-    this.as_rust_type_ref().as_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_ref().as_loaned_c_type_ref()
 }
 
 /// @return ``true`` if string is empty, ``false`` otherwise.
@@ -651,7 +651,7 @@ pub unsafe extern "C" fn z_slice_map_loan(this: &z_owned_slice_map_t) -> &z_loan
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Mutably borrows slice map.
@@ -663,7 +663,7 @@ pub unsafe extern "C" fn z_slice_map_loan_mut(
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
-        .as_loaned_ctype_mut()
+        .as_loaned_c_type_mut()
 }
 
 /// @return number of key-value pairs in the map.
@@ -696,8 +696,8 @@ pub extern "C" fn z_slice_map_iterate(
     let this = this.as_rust_type_ref();
     for (key, value) in this {
         if body(
-            key.as_loaned_ctype_ref(),
-            value.as_loaned_ctype_ref(),
+            key.as_loaned_c_type_ref(),
+            value.as_loaned_c_type_ref(),
             context,
         ) {
             break;
@@ -713,7 +713,7 @@ pub extern "C" fn z_slice_map_get<'a>(
 ) -> Option<&'a z_loaned_slice_t> {
     let m = this.as_rust_type_ref();
     let key = key.as_rust_type_ref();
-    m.get(key).map(|s| s.as_loaned_ctype_ref())
+    m.get(key).map(|s| s.as_loaned_c_type_ref())
 }
 
 /// Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
@@ -795,7 +795,7 @@ pub unsafe extern "C" fn z_string_array_loan(
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Mutably borrows string array.
@@ -807,7 +807,7 @@ pub unsafe extern "C" fn z_string_array_loan_mut(
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
-        .as_loaned_ctype_mut()
+        .as_loaned_c_type_mut()
 }
 
 /// @return number of elements in the array.
@@ -835,7 +835,7 @@ pub extern "C" fn z_string_array_get(
         return None;
     }
 
-    Some(a[index].as_loaned_ctype_ref())
+    Some(a[index].as_loaned_c_type_ref())
 }
 
 /// Appends specified value to the end of the string array by copying.

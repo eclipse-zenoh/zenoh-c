@@ -96,19 +96,19 @@ pub extern "C" fn z_reply_err_check(this: &'static z_owned_reply_err_t) -> bool 
 /// Returns reply error payload.
 #[no_mangle]
 pub extern "C" fn z_reply_err_payload(this: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().payload().as_loaned_ctype_ref()
+    this.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
 /// Returns reply error encoding.
 #[no_mangle]
 pub extern "C" fn z_reply_err_encoding(this: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().encoding().as_loaned_ctype_ref()
+    this.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 
 /// Borrows reply error.
 #[no_mangle]
 pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
-    this.as_rust_type_ref().as_loaned_ctype_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Frees the memory and resets the reply error it to its default value.
@@ -138,7 +138,7 @@ pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_sample_t {
     match this.as_rust_type_ref().result() {
-        Ok(sample) => sample.as_loaned_ctype_ref() as _,
+        Ok(sample) => sample.as_loaned_c_type_ref() as _,
         Err(_) => null(),
     }
 }
@@ -151,7 +151,7 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
     match this.as_rust_type_ref().result() {
         Ok(_) => null(),
-        Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_ctype_ref(),
+        Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_c_type_ref(),
     }
 }
 
@@ -296,7 +296,7 @@ pub unsafe extern "C" fn z_get(
         .callback(move |response| {
             z_closure_reply_call(
                 z_closure_reply_loan(&closure),
-                response.as_loaned_ctype_ref(),
+                response.as_loaned_c_type_ref(),
             )
         })
         .wait()
@@ -328,7 +328,7 @@ pub unsafe extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// The replies consolidation strategy to apply on replies to a `z_get()`.

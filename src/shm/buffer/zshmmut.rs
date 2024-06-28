@@ -62,7 +62,7 @@ pub unsafe extern "C" fn z_shm_mut_loan_mut(
         .as_mut()
         .unwrap_unchecked()
         .borrow_mut();
-    shmmut.as_loaned_ctype_mut()
+    shmmut.as_loaned_c_type_mut()
 }
 
 /// Deletes ZShmMut slice

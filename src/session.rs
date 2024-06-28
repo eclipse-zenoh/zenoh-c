@@ -36,7 +36,7 @@ pub unsafe extern "C" fn z_session_loan(this: &z_owned_session_t) -> &z_loaned_s
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Constructs a Zenoh session in its gravestone state.

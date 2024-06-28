@@ -88,7 +88,7 @@ pub extern "C" fn z_closure_query_call(
     closure: &z_loaned_closure_query_t,
     query: &z_loaned_query_t,
 ) {
-    let closure = closure.as_owned_ctype_ref();
+    let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(query, closure.context),
         None => log::error!("Attempted to call an uninitialized closure!"),
@@ -179,7 +179,7 @@ pub extern "C" fn z_closure_owned_query_call(
     closure: &z_loaned_closure_owned_query_t,
     query: &mut z_owned_query_t,
 ) {
-    let closure = closure.as_owned_ctype_ref();
+    let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(query, closure.context),
         None => log::error!("Attempted to call an uninitialized closure!"),
@@ -217,7 +217,7 @@ impl<F: Fn(&mut z_owned_query_t)> From<F> for z_owned_closure_owned_query_t {
 pub extern "C" fn z_closure_query_loan(
     closure: &z_owned_closure_query_t,
 ) -> &z_loaned_closure_query_t {
-    closure.as_loaned_ctype_ref()
+    closure.as_loaned_c_type_ref()
 }
 
 /// Borrows closure.
@@ -225,5 +225,5 @@ pub extern "C" fn z_closure_query_loan(
 pub extern "C" fn z_closure_owned_query_loan(
     closure: &z_owned_closure_owned_query_t,
 ) -> &z_loaned_closure_owned_query_t {
-    closure.as_loaned_ctype_ref()
+    closure.as_loaned_c_type_ref()
 }

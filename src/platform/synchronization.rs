@@ -54,7 +54,7 @@ pub unsafe extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
-        .as_loaned_ctype_mut()
+        .as_loaned_c_type_mut()
 }
 
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
@@ -147,7 +147,7 @@ pub unsafe extern "C" fn z_condvar_loan(this: &z_owned_condvar_t) -> &z_loaned_c
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
-        .as_loaned_ctype_ref()
+        .as_loaned_c_type_ref()
 }
 
 /// Mutably borrows conditional variable.
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn z_condvar_loan_mut(
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
-        .as_loaned_ctype_mut()
+        .as_loaned_c_type_mut()
 }
 
 /// Wakes up one blocked thread waiting on this condiitonal variable.
