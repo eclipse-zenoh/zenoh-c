@@ -13,12 +13,9 @@
 //
 use crate::{
     errors::{self, Z_OK},
-    transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteIntoHandle,
-        TransmuteRef, TransmuteUninitPtr,
-    },
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
-    z_owned_string_array_t, z_view_string_t, zc_init_logger, CSlice, ZVector,
+    z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
 use async_std::task;
 use libc::c_ulong;
@@ -28,50 +25,50 @@ use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
 
 pub use crate::opaque_types::z_loaned_hello_t;
 pub use crate::opaque_types::z_owned_hello_t;
-
-decl_transmute_owned!(Option<Hello>, z_owned_hello_t);
-decl_transmute_handle!(Hello, z_loaned_hello_t);
-
-validate_equivalence!(z_owned_hello_t, z_loaned_hello_t);
+decl_c_type!(
+    owned(z_owned_hello_t, Option<Hello>),
+    loaned(z_loaned_hello_t, Hello)
+);
 
 /// Frees memory and resets hello message to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_drop(this: &mut z_owned_hello_t) {
-    Inplace::drop(this.transmute_mut())
+    *this.as_rust_type_mut() = None;
 }
 
 /// Borrows hello message.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_loan(this: &z_owned_hello_t) -> &z_loaned_hello_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap()
+        .as_loaned_c_type_ref()
 }
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_hello_check(this: &z_owned_hello_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Constructs hello message in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_null(this: *mut MaybeUninit<z_owned_hello_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_hello_null(this: &mut MaybeUninit<z_owned_hello_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
-    this.transmute_ref().zid().transmute_copy()
+    this.as_rust_type_ref().zid().into_c_type()
 }
 
 /// Returns type of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
-    match this.transmute_ref().whatami() {
+    match this.as_rust_type_ref().whatami() {
         WhatAmI::Router => z_whatami_t::ROUTER,
         WhatAmI::Peer => z_whatami_t::PEER,
         WhatAmI::Client => z_whatami_t::CLIENT,
@@ -84,14 +81,14 @@ pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
 #[no_mangle]
 pub extern "C" fn z_hello_locators(
     this: &z_loaned_hello_t,
-    locators_out: *mut MaybeUninit<z_owned_string_array_t>,
+    locators_out: &mut MaybeUninit<z_owned_string_array_t>,
 ) {
-    let this = this.transmute_ref();
+    let this = this.as_rust_type_ref();
     let mut locators = ZVector::with_capacity(this.locators().len());
     for l in this.locators().iter() {
-        locators.push(CSlice::new_borrowed_from_slice(l.as_str().as_bytes()));
+        locators.push(CString::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
-    Inplace::init(locators_out.transmute_uninit_ptr(), Some(locators));
+    locators_out.as_rust_type_mut_uninit().write(Some(locators));
 }
 
 /// Options to pass to `z_scout()`.
@@ -157,11 +154,9 @@ pub extern "C" fn z_scout(
         WhatAmIMatcher::try_from(options.zc_what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.zc_timeout_ms as u64;
-    let config = match config.transmute_mut().extract().take() {
-        Some(c) => c,
-        None => {
-            return errors::Z_EINVAL;
-        }
+    let Some(config) = config.as_rust_type_mut().take() else {
+        log::error!("Config not provided");
+        return errors::Z_EINVAL;
     };
     let mut closure = z_owned_closure_hello_t::empty();
     std::mem::swap(&mut closure, callback);
@@ -169,7 +164,7 @@ pub extern "C" fn z_scout(
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
-                z_closure_hello_call(z_closure_hello_loan(&closure), h.transmute_handle())
+                z_closure_hello_call(z_closure_hello_loan(&closure), h.as_loaned_c_type_ref())
             })
             .await
             .unwrap();
@@ -190,14 +185,14 @@ pub extern "C" fn z_scout(
 #[no_mangle]
 pub extern "C" fn z_whatami_to_str(
     whatami: z_whatami_t,
-    str_out: *mut MaybeUninit<z_view_string_t>,
+    str_out: &mut MaybeUninit<z_view_string_t>,
 ) -> errors::z_error_t {
     match WhatAmIMatcher::try_from(whatami as u8) {
         Err(_) => errors::Z_EINVAL,
         Ok(w) => {
             let s = w.to_str();
-            let slice = CSlice::new_borrowed_from_slice(s.as_bytes());
-            Inplace::init(str_out.transmute_uninit_ptr(), slice);
+            let slice = CStringView::new_borrowed_from_slice(s.as_bytes());
+            str_out.as_rust_type_mut_uninit().write(slice);
             errors::Z_OK
         }
     }

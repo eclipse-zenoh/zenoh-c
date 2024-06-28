@@ -1,11 +1,22 @@
-use std::mem::MaybeUninit;
-
-use libc::c_void;
-
+//
+// Copyright (c) 2017, 2024 ZettaScale Technology.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh team, <zenoh@zettascale.tech>
+//
 use crate::{
-    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef},
     zcu_matching_status_t,
 };
+use libc::c_void;
+use std::mem::MaybeUninit;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -30,9 +41,9 @@ pub struct zcu_loaned_closure_matching_status_t {
     _0: [usize; 3],
 }
 
-decl_transmute_handle!(
-    zcu_owned_closure_matching_status_t,
-    zcu_loaned_closure_matching_status_t
+decl_c_type!(
+    owned(zcu_owned_closure_matching_status_t),
+    loaned(zcu_loaned_closure_matching_status_t)
 );
 
 impl zcu_owned_closure_matching_status_t {
@@ -80,8 +91,9 @@ pub extern "C" fn zcu_closure_matching_status_call(
     closure: &zcu_loaned_closure_matching_status_t,
     mathing_status: &zcu_matching_status_t,
 ) {
-    match closure.transmute_ref().call {
-        Some(call) => call(mathing_status, closure.transmute_ref().context),
+    let closure = closure.as_owned_c_type_ref();
+    match closure.call {
+        Some(call) => call(mathing_status, closure.context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
         }
@@ -121,5 +133,5 @@ impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_statu
 pub extern "C" fn zcu_closure_matching_status_loan(
     closure: &zcu_owned_closure_matching_status_t,
 ) -> &zcu_loaned_closure_matching_status_t {
-    closure.transmute_handle()
+    closure.as_loaned_c_type_ref()
 }

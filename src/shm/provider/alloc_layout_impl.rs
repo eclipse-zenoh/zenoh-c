@@ -21,10 +21,10 @@ use zenoh::shm::{
 };
 use zenoh::{prelude::*, shm::AsyncAllocPolicy};
 
+use crate::transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     errors::{z_error_t, Z_EINVAL, Z_OK},
-    transmute::{Inplace, TransmuteCopy, TransmuteFromHandle, TransmuteUninitPtr},
     z_owned_buf_alloc_result_t,
 };
 use crate::{z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t};
@@ -35,16 +35,16 @@ use super::{
 };
 
 pub(crate) fn alloc_layout_new(
-    this: *mut MaybeUninit<z_owned_alloc_layout_t>,
-    provider: &z_loaned_shm_provider_t,
+    this: &mut MaybeUninit<z_owned_alloc_layout_t>,
+    provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
-    let layout = match provider.transmute_ref() {
+    let layout = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.transmute_copy())
+                .with_alignment(alignment.into_rust_type())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::Posix(layout),
@@ -57,7 +57,7 @@ pub(crate) fn alloc_layout_new(
         super::shm_provider::CSHMProvider::Dynamic(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.transmute_copy())
+                .with_alignment(alignment.into_rust_type())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
@@ -70,7 +70,7 @@ pub(crate) fn alloc_layout_new(
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
             match provider
                 .alloc(size)
-                .with_alignment(alignment.transmute_copy())
+                .with_alignment(alignment.into_rust_type())
                 .into_layout()
             {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),
@@ -81,16 +81,15 @@ pub(crate) fn alloc_layout_new(
             }
         }
     };
-
-    Inplace::init(this.transmute_uninit_ptr(), Some(layout));
+    this.as_rust_type_mut_uninit().write(Some(layout));
     Z_OK
 }
 
 pub(crate) fn alloc<Policy: AllocPolicy>(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
-    let result = match layout.transmute_ref() {
+    let result = match layout.as_rust_type_ref() {
         super::alloc_layout::CSHMLayout::Posix(layout) => {
             layout.alloc().with_policy::<Policy>().wait()
         }
@@ -101,7 +100,7 @@ pub(crate) fn alloc<Policy: AllocPolicy>(
             layout.alloc().with_policy::<Policy>().wait()
         }
     };
-    Inplace::init(out_result.transmute_uninit_ptr(), Some(result));
+    out_result.as_rust_type_mut_uninit().write(Some(result));
 }
 
 pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
@@ -113,7 +112,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
         &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     ),
 ) -> z_error_t {
-    match layout.transmute_ref() {
+    match layout.as_rust_type_ref() {
         super::alloc_layout::CSHMLayout::Posix(layout) => {
             alloc_async_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
                 out_result,
@@ -152,10 +151,7 @@ pub fn alloc_async_impl<
     //todo: this should be ported to tokio with executor argument support
     async_std::task::spawn(async move {
         let result = layout.alloc().with_policy::<Policy>().await;
-        Inplace::init(
-            (out_result as *mut MaybeUninit<z_owned_buf_alloc_result_t>).transmute_uninit_ptr(),
-            Some(result),
-        );
+        out_result.as_rust_type_mut_uninit().write(Some(result));
         unsafe { (result_callback)(result_context.get(), out_result) };
     });
 }

@@ -22,7 +22,7 @@ use zenoh::shm::{
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     shm::provider::shm_provider::CSHMProvider,
-    transmute::{Inplace, TransmuteFromHandle, TransmuteUninitPtr},
+    transmute::{RustTypeRef, RustTypeRefUninit},
     z_loaned_memory_layout_t, z_owned_shm_provider_t,
 };
 
@@ -35,11 +35,11 @@ pub type PosixAllocLayout =
 /// Creates a new threadsafe SHM Provider
 #[no_mangle]
 pub extern "C" fn z_posix_shm_provider_new(
-    this: *mut MaybeUninit<z_owned_shm_provider_t>,
+    this: &mut MaybeUninit<z_owned_shm_provider_t>,
     layout: &z_loaned_memory_layout_t,
 ) -> z_error_t {
     match PosixShmProviderBackend::builder()
-        .with_layout(layout.transmute_ref())
+        .with_layout(layout.as_rust_type_ref())
         .res()
     {
         Ok(backend) => {
@@ -47,10 +47,8 @@ pub extern "C" fn z_posix_shm_provider_new(
                 .protocol_id::<POSIX_PROTOCOL_ID>()
                 .backend(backend)
                 .res();
-            Inplace::init(
-                this.transmute_uninit_ptr(),
-                Some(CSHMProvider::Posix(provider)),
-            );
+            this.as_rust_type_mut_uninit()
+                .write(Some(CSHMProvider::Posix(provider)));
             Z_OK
         }
         Err(e) => {

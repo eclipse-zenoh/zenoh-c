@@ -25,6 +25,7 @@
 void test_session() {
     z_owned_config_t config;
     z_config_default(&config);
+    assert(z_check(config));
     z_owned_session_t session;
     z_open(&session, z_move(config));
     assert(z_check(session));
@@ -119,6 +120,7 @@ void test_queryable() {
 }
 
 int main(int argc, char **argv) {
+    zc_init_logger();
     test_session();
     test_publisher();
     test_keyexpr();

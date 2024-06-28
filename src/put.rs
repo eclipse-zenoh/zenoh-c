@@ -1,5 +1,3 @@
-use std::ptr::null_mut;
-
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -16,12 +14,11 @@ use std::ptr::null_mut;
 use crate::commons::*;
 use crate::errors;
 use crate::keyexpr::*;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteRef;
+use crate::transmute::RustTypeRef;
 use crate::z_loaned_session_t;
 use crate::z_owned_bytes_t;
 use crate::z_timestamp_t;
+use std::ptr::null_mut;
 use zenoh::core::Priority;
 use zenoh::core::Wait;
 use zenoh::publisher::CongestionControl;
@@ -84,28 +81,28 @@ pub extern "C" fn z_put(
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_put_options_t>,
 ) -> errors::z_error_t {
-    let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
-    let payload = payload.transmute_mut().extract();
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    let payload = std::mem::take(payload.as_rust_type_mut());
 
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
         if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = encoding.transmute_mut().extract();
+            let encoding = std::mem::take(encoding.as_rust_type_mut());
             put = put.encoding(encoding);
         };
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = source_info.transmute_mut().extract();
+            let source_info = std::mem::take(source_info.as_rust_type_mut());
             put = put.source_info(source_info);
         };
         if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = attachment.transmute_mut().extract();
+            let attachment = std::mem::take(attachment.as_rust_type_mut());
             put = put.attachment(attachment);
         }
         if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
+            let timestamp = *unsafe { options.timestamp.as_ref() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             put = put.timestamp(Some(timestamp));
         }
         put = put.priority(options.priority.into());
@@ -165,14 +162,14 @@ pub extern "C" fn z_delete(
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,
 ) -> errors::z_error_t {
-    let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);
     if let Some(options) = options {
         if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
+            let timestamp = *unsafe { options.timestamp.as_ref() }
                 .unwrap()
-                .transmute_ref();
+                .as_rust_type_ref();
             del = del.timestamp(Some(timestamp));
         }
         del = del

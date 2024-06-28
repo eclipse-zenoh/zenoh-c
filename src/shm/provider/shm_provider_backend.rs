@@ -20,7 +20,7 @@ use zenoh::internal::zerror;
 use zenoh::shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend};
 
 use crate::context::DroppableContext;
-use crate::transmute::{TransmuteIntoHandle, TransmuteRef};
+use crate::transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef};
 use crate::{z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t};
 
 use super::chunk::z_chunk_descriptor_t;
@@ -67,10 +67,10 @@ where
         unsafe {
             (self.callbacks.alloc_fn)(
                 result.as_mut_ptr(),
-                layout.transmute_handle(),
+                layout.as_loaned_c_type_ref(),
                 self.context.get(),
             );
-            match result.assume_init().transmute_mut().take() {
+            match result.assume_init().as_rust_type_mut().take() {
                 Some(val) => val,
                 None => Err(zenoh::shm::ZAllocError::Other(
                     "Callback returned empty result".into(),
@@ -94,7 +94,7 @@ where
     fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout> {
         let mut layout = Some(layout);
         unsafe {
-            (self.callbacks.layout_for_fn)(layout.transmute_mut(), self.context.get());
+            (self.callbacks.layout_for_fn)(layout.as_owned_c_type_mut(), self.context.get());
         }
         layout.ok_or_else(|| zerror!("{:?}: unsupported layout", self).into())
     }

@@ -27,9 +27,7 @@ use crate::{
         common::types::z_protocol_id_t,
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
     },
-    transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-    },
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
@@ -51,13 +49,15 @@ pub enum CSHMProvider {
     DynamicThreadsafe(DynamicShmProviderThreadsafe),
 }
 
-decl_transmute_owned!(Option<CSHMProvider>, z_owned_shm_provider_t);
-decl_transmute_handle!(CSHMProvider, z_loaned_shm_provider_t);
+decl_c_type!(
+    owned(z_owned_shm_provider_t, Option<CSHMProvider>),
+    loaned(z_loaned_shm_provider_t, CSHMProvider),
+);
 
 /// Creates a new SHM Provider
 #[no_mangle]
 pub extern "C" fn z_shm_provider_new(
-    this: *mut MaybeUninit<z_owned_shm_provider_t>,
+    this: &mut MaybeUninit<z_owned_shm_provider_t>,
     id: z_protocol_id_t,
     context: zc_context_t,
     callbacks: zc_shm_provider_backend_callbacks_t,
@@ -68,16 +68,14 @@ pub extern "C" fn z_shm_provider_new(
         .backend(backend)
         .res();
 
-    Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(CSHMProvider::Dynamic(provider)),
-    );
+    this.as_rust_type_mut_uninit()
+        .write(Some(CSHMProvider::Dynamic(provider)));
 }
 
 /// Creates a new threadsafe SHM Provider
 #[no_mangle]
 pub extern "C" fn z_shm_provider_threadsafe_new(
-    this: *mut MaybeUninit<z_owned_shm_provider_t>,
+    this: &mut MaybeUninit<z_owned_shm_provider_t>,
     id: z_protocol_id_t,
     context: zc_threadsafe_context_t,
     callbacks: zc_shm_provider_backend_callbacks_t,
@@ -88,41 +86,43 @@ pub extern "C" fn z_shm_provider_threadsafe_new(
         .backend(backend)
         .res();
 
-    Inplace::init(
-        this.transmute_uninit_ptr(),
-        Some(CSHMProvider::DynamicThreadsafe(provider)),
-    );
+    this.as_rust_type_mut_uninit()
+        .write(Some(CSHMProvider::DynamicThreadsafe(provider)));
 }
 
 /// Constructs SHM Provider in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_provider_null(this: *mut MaybeUninit<z_owned_shm_provider_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_shm_provider_null(this: &mut MaybeUninit<z_owned_shm_provider_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_check(this: &z_owned_shm_provider_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows SHM Provider
 #[no_mangle]
-pub extern "C" fn z_shm_provider_loan(this: &z_owned_shm_provider_t) -> &z_loaned_shm_provider_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_shm_provider_loan(
+    this: &z_owned_shm_provider_t,
+) -> &z_loaned_shm_provider_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// Deletes SHM Provider
 #[no_mangle]
 pub extern "C" fn z_shm_provider_drop(this: &mut z_owned_shm_provider_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -132,7 +132,7 @@ pub extern "C" fn z_shm_provider_alloc(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -142,7 +142,7 @@ pub extern "C" fn z_shm_provider_alloc_gc(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -152,7 +152,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -162,7 +162,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -210,7 +210,7 @@ pub extern "C" fn z_shm_provider_available(provider: &z_loaned_shm_provider_t) -
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_map(
-    out_result: *mut MaybeUninit<z_owned_shm_mut_t>,
+    out_result: &mut MaybeUninit<z_owned_shm_mut_t>,
     provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,

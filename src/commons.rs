@@ -20,13 +20,12 @@ use std::str::from_utf8;
 use std::str::FromStr;
 
 use crate::errors;
-use crate::transmute::unwrap_ref_unchecked;
-use crate::transmute::Inplace;
-use crate::transmute::TransmuteCopy;
-use crate::transmute::TransmuteFromHandle;
-use crate::transmute::TransmuteIntoHandle;
-use crate::transmute::TransmuteRef;
-use crate::transmute::TransmuteUninitPtr;
+use crate::transmute::CTypeRef;
+use crate::transmute::IntoCType;
+use crate::transmute::IntoRustType;
+use crate::transmute::LoanedCTypeRef;
+use crate::transmute::RustTypeRef;
+use crate::transmute::RustTypeRefUninit;
 use crate::z_id_t;
 use crate::z_loaned_bytes_t;
 use crate::z_loaned_keyexpr_t;
@@ -81,66 +80,70 @@ impl From<z_sample_kind_t> for SampleKind {
     }
 }
 use crate::opaque_types::z_timestamp_t;
-decl_transmute_copy!(Timestamp, z_timestamp_t);
+decl_c_type!(copy(z_timestamp_t, Timestamp));
 
 /// Create timestamp
 #[no_mangle]
 pub extern "C" fn z_timestamp_new(
-    this: &mut z_timestamp_t,
+    this: &mut MaybeUninit<z_timestamp_t>,
     zid: &z_id_t,
     npt64_time: u64,
 ) -> errors::z_error_t {
     let timestamp = Timestamp::new(
         zenoh::time::NTP64(npt64_time),
-        (zid.transmute_copy()).into(),
+        (zid.into_rust_type()).into(),
     );
-    *this = timestamp.transmute_copy();
+    this.as_rust_type_mut_uninit().write(timestamp);
     errors::Z_OK
 }
 
 /// Returns NPT64 time associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_npt64_time(this: &z_timestamp_t) -> u64 {
-    this.transmute_copy().get_time().0
+    this.as_rust_type_ref().get_time().0
 }
 
 /// Returns id associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_id(this: &z_timestamp_t) -> z_id_t {
-    this.transmute_copy().get_id().to_le_bytes().into()
+    this.as_rust_type_ref().get_id().to_le_bytes().into()
 }
 
 use crate::opaque_types::z_loaned_sample_t;
-decl_transmute_handle!(Sample, z_loaned_sample_t);
+pub use crate::opaque_types::z_owned_sample_t;
+decl_c_type!(
+    owned(z_owned_sample_t, Option<Sample>),
+    loaned(z_loaned_sample_t, Sample),
+);
 
 /// Returns the key expression of the sample.
 #[no_mangle]
 pub extern "C" fn z_sample_keyexpr(this: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
-    this.transmute_ref().key_expr().transmute_handle()
+    this.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 /// Returns the encoding associated with the sample data.
 #[no_mangle]
 pub extern "C" fn z_sample_encoding(this: &z_loaned_sample_t) -> &z_loaned_encoding_t {
-    this.transmute_ref().encoding().transmute_handle()
+    this.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 /// Returns the sample payload data.
 #[no_mangle]
 pub extern "C" fn z_sample_payload(this: &z_loaned_sample_t) -> &z_loaned_bytes_t {
-    this.transmute_ref().payload().transmute_handle()
+    this.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
 /// Returns the sample kind.
 #[no_mangle]
 pub extern "C" fn z_sample_kind(this: &z_loaned_sample_t) -> z_sample_kind_t {
-    this.transmute_ref().kind().into()
+    this.as_rust_type_ref().kind().into()
 }
 /// Returns the sample timestamp.
 ///
 /// Will return `NULL`, if sample is not associated with a timestamp.
 #[no_mangle]
 pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_timestamp_t> {
-    if let Some(t) = this.transmute_ref().timestamp() {
-        Some(t.transmute_ref())
+    if let Some(t) = this.as_rust_type_ref().timestamp() {
+        Some(t.as_ctype_ref())
     } else {
         None
     }
@@ -151,8 +154,8 @@ pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_time
 /// Returns `NULL`, if sample does not contain any attachement.
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
-    match this.transmute_ref().attachment() {
-        Some(attachment) => attachment.transmute_handle() as *const _,
+    match this.as_rust_type_ref().attachment() {
+        Some(attachment) => attachment.as_loaned_c_type_ref() as *const _,
         None => null(),
     }
 }
@@ -160,97 +163,95 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
 /// Returns the sample source_info.
 #[no_mangle]
 pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_source_info_t {
-    this.transmute_ref().source_info().transmute_handle()
+    this.as_rust_type_ref().source_info().as_loaned_c_type_ref()
 }
-
-pub use crate::opaque_types::z_owned_sample_t;
-decl_transmute_owned!(Option<Sample>, z_owned_sample_t);
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
 #[no_mangle]
 pub extern "C" fn z_sample_clone(
     this: &z_loaned_sample_t,
-    dst: *mut MaybeUninit<z_owned_sample_t>,
+    dst: &mut MaybeUninit<z_owned_sample_t>,
 ) {
-    let src = this.transmute_ref();
-    let src = src.clone();
-    let dst = dst.transmute_uninit_ptr();
-    Inplace::init(dst, Some(src));
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
 }
 
 /// Returns sample qos priority value.
 #[no_mangle]
 pub extern "C" fn z_sample_priority(this: &z_loaned_sample_t) -> z_priority_t {
-    this.transmute_ref().priority().into()
+    this.as_rust_type_ref().priority().into()
 }
 
 /// Returns whether sample qos express flag was set or not.
 #[no_mangle]
 pub extern "C" fn z_sample_express(this: &z_loaned_sample_t) -> bool {
-    this.transmute_ref().express()
+    this.as_rust_type_ref().express()
 }
 
 /// Returns sample qos congestion control value.
 #[no_mangle]
 pub extern "C" fn z_sample_congestion_control(this: &z_loaned_sample_t) -> z_congestion_control_t {
-    this.transmute_ref().congestion_control().into()
+    this.as_rust_type_ref().congestion_control().into()
 }
 
 /// Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_sample_check(this: &z_owned_sample_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows sample.
 #[no_mangle]
-pub extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sample_t {
-    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sample_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_sample_drop(this: &mut z_owned_sample_t) {
-    Inplace::drop(this.transmute_mut());
+    *this.as_rust_type_mut() = None;
 }
 
 /// Constructs sample in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_sample_null(this: *mut MaybeUninit<z_owned_sample_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
-validate_equivalence!(z_owned_sample_t, z_loaned_sample_t);
-
 pub use crate::opaque_types::z_loaned_encoding_t;
-decl_transmute_handle!(Encoding, z_loaned_encoding_t);
 pub use crate::opaque_types::z_owned_encoding_t;
-decl_transmute_owned!(Encoding, z_owned_encoding_t);
 
-validate_equivalence!(z_owned_encoding_t, z_loaned_encoding_t);
+decl_c_type!(
+    owned(z_owned_encoding_t, Encoding),
+    loaned(z_loaned_encoding_t, Encoding),
+);
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_substring(
-    this: *mut MaybeUninit<z_owned_encoding_t>,
+    this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
     len: usize,
 ) -> errors::z_error_t {
-    let encoding = this.transmute_uninit_ptr();
+    let encoding = this.as_rust_type_mut_uninit();
     if s.is_null() {
-        Inplace::empty(encoding);
+        encoding.write(Encoding::default());
         errors::Z_OK
     } else {
         let s = from_raw_parts(s as *const u8, len);
         match from_utf8(s) {
             Ok(s) => {
-                Inplace::init(encoding, Encoding::from_str(s).unwrap_infallible());
+                encoding.write(Encoding::from_str(s).unwrap_infallible());
                 errors::Z_OK
             }
             Err(e) => {
                 log::error!("Can not create encoding from non UTF-8 string: {}", e);
-                Inplace::empty(encoding);
+                encoding.write(Encoding::default());
                 errors::Z_EINVAL
             }
         }
@@ -261,7 +262,7 @@ pub unsafe extern "C" fn z_encoding_from_substring(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_from_str(
-    this: *mut MaybeUninit<z_owned_encoding_t>,
+    this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
 ) -> errors::z_error_t {
     z_encoding_from_substring(this, s, libc::strlen(s))
@@ -275,9 +276,9 @@ pub unsafe extern "C" fn z_encoding_from_str(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_encoding_to_string(
     this: &z_loaned_encoding_t,
-    out_str: *mut MaybeUninit<z_owned_string_t>,
+    out_str: &mut MaybeUninit<z_owned_string_t>,
 ) {
-    let s: Cow<'static, str> = this.transmute_ref().into();
+    let s: Cow<'static, str> = this.as_rust_type_ref().into();
     z_string_from_substring(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
 }
 
@@ -285,31 +286,31 @@ pub unsafe extern "C" fn z_encoding_to_string(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_encoding_loan_default() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_BYTES.transmute_handle()
+    Encoding::ZENOH_BYTES.as_loaned_c_type_ref()
 }
 
 /// Constructs a default `z_owned_encoding_t`.
 #[no_mangle]
-pub extern "C" fn z_encoding_null(this: *mut MaybeUninit<z_owned_encoding_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_encoding_null(this: &mut MaybeUninit<z_owned_encoding_t>) {
+    this.as_rust_type_mut_uninit().write(Encoding::default());
 }
 
 /// Frees the memory and resets the encoding it to its default value.
 #[no_mangle]
 pub extern "C" fn z_encoding_drop(this: &mut z_owned_encoding_t) {
-    Inplace::drop(this.transmute_mut());
+    *this.as_rust_type_mut() = Encoding::default();
 }
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_encoding_check(this: &'static z_owned_encoding_t) -> bool {
-    *this.transmute_ref() != Encoding::default()
+    *this.as_rust_type_ref() != Encoding::default()
 }
 
 /// Borrows encoding.
 #[no_mangle]
 pub extern "C" fn z_encoding_loan(this: &z_owned_encoding_t) -> &z_loaned_encoding_t {
-    this.transmute_ref().transmute_handle()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// The locality of samples to be received by subscribers or targeted by publishers.
@@ -554,92 +555,93 @@ impl From<z_congestion_control_t> for CongestionControl {
 }
 
 use crate::z_entity_global_id_t;
-decl_transmute_copy!(EntityGlobalId, z_entity_global_id_t);
+decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 
 /// Create entity global id
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_new(
-    this: &mut z_entity_global_id_t,
+    this: &mut MaybeUninit<z_entity_global_id_t>,
     zid: &z_id_t,
     eid: u32,
 ) -> errors::z_error_t {
     let entity_global_id: EntityGlobalId = EntityGlobalIdProto {
-        zid: zid.transmute_copy().into(),
+        zid: zid.into_rust_type().into(),
         eid,
     }
     .into();
-    *this = entity_global_id.transmute_copy();
+    this.as_rust_type_mut_uninit().write(entity_global_id);
     errors::Z_OK
 }
 
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
-    this.transmute_ref().zid().transmute_copy()
+    this.as_rust_type_ref().zid().into_c_type()
 }
 /// Returns the entity id of the entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
-    this.transmute_ref().eid()
+    this.as_rust_type_ref().eid()
 }
 pub use crate::opaque_types::z_loaned_source_info_t;
-decl_transmute_handle!(SourceInfo, z_loaned_source_info_t);
 pub use crate::opaque_types::z_owned_source_info_t;
-decl_transmute_owned!(SourceInfo, z_owned_source_info_t);
-
-validate_equivalence!(z_owned_source_info_t, z_loaned_source_info_t);
+decl_c_type!(
+    owned(z_owned_source_info_t, SourceInfo),
+    loaned(z_loaned_source_info_t, SourceInfo)
+);
 
 /// Create source info
 #[no_mangle]
 pub extern "C" fn z_source_info_new(
-    this: *mut MaybeUninit<z_owned_source_info_t>,
+    this: &mut MaybeUninit<z_owned_source_info_t>,
     source_id: &z_entity_global_id_t,
     source_sn: u64,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
+    let this = this.as_rust_type_mut_uninit();
     let source_info = SourceInfo {
-        source_id: Some(source_id.transmute_copy()),
+        source_id: Some(*source_id.as_rust_type_ref()),
         source_sn: Some(source_sn),
     };
-    Inplace::init(this, source_info);
+    this.write(source_info);
     errors::Z_OK
 }
 
 /// Returns the source_id of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_global_id_t {
-    match this.transmute_ref().source_id {
-        Some(source_id) => source_id.transmute_copy(),
-        None => EntityGlobalId::default().transmute_copy(),
+    match this.as_rust_type_ref().source_id {
+        Some(source_id) => source_id,
+        None => EntityGlobalId::default(),
     }
+    .into_c_type()
 }
 
 /// Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> u64 {
-    this.transmute_ref().source_sn.unwrap_or(0)
+    this.as_rust_type_ref().source_sn.unwrap_or(0)
 }
 
 /// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_check(this: &z_owned_source_info_t) -> bool {
-    this.transmute_ref().source_id.is_some() || this.transmute_ref().source_sn.is_some()
+    this.as_rust_type_ref().source_id.is_some() || this.as_rust_type_ref().source_sn.is_some()
 }
 
 /// Borrows source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_source_info_t {
-    this.transmute_ref().transmute_handle()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_drop(this: &mut z_owned_source_info_t) {
-    Inplace::drop(this.transmute_mut());
+    *this.as_rust_type_mut() = SourceInfo::default();
 }
 
 /// Constructs source info in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_source_info_null(this: *mut MaybeUninit<z_owned_source_info_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_source_info_null(this: &mut MaybeUninit<z_owned_source_info_t>) {
+    this.as_rust_type_mut_uninit().write(SourceInfo::default());
 }

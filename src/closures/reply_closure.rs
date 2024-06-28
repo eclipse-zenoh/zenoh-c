@@ -1,10 +1,23 @@
-use std::mem::MaybeUninit;
+//
+// Copyright (c) 2017, 2024 ZettaScale Technology.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh team, <zenoh@zettascale.tech>
+//
 
 use crate::{
-    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef},
     z_loaned_reply_t,
 };
 use libc::c_void;
+use std::mem::MaybeUninit;
 /// A structure that contains all the elements for stateful, memory-leak-free callbacks.
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -18,7 +31,7 @@ pub struct z_owned_closure_reply_t {
     /// An optional pointer to a context representing a closure state.
     pub context: *mut c_void,
     /// A closure body.
-    pub(crate) call: Option<extern "C" fn(reply: *const z_loaned_reply_t, context: *mut c_void)>,
+    pub(crate) call: Option<extern "C" fn(reply: &z_loaned_reply_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     pub drop: Option<extern "C" fn(context: *mut c_void)>,
 }
@@ -28,7 +41,11 @@ pub struct z_owned_closure_reply_t {
 pub struct z_loaned_closure_reply_t {
     _0: [usize; 3],
 }
-decl_transmute_handle!(z_owned_closure_reply_t, z_loaned_closure_reply_t);
+
+decl_c_type!(
+    owned(z_owned_closure_reply_t),
+    loaned(z_loaned_closure_reply_t)
+);
 
 impl z_owned_closure_reply_t {
     pub(crate) fn empty() -> Self {
@@ -71,8 +88,9 @@ pub extern "C" fn z_closure_reply_call(
     closure: &z_loaned_closure_reply_t,
     reply: &z_loaned_reply_t,
 ) {
-    match closure.transmute_ref().call {
-        Some(call) => call(reply, closure.transmute_ref().context),
+    let closure = closure.as_owned_c_type_ref();
+    match closure.call {
+        Some(call) => call(reply, closure.context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
         }
@@ -88,11 +106,11 @@ impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
         extern "C" fn call<F: Fn(&z_loaned_reply_t)>(
-            response: *const z_loaned_reply_t,
+            response: &z_loaned_reply_t,
             this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };
-            unsafe { this(response.as_ref().unwrap()) }
+            this(response);
         }
         extern "C" fn drop<F>(this: *mut c_void) {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })
@@ -110,5 +128,5 @@ impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
 pub extern "C" fn z_closure_reply_loan(
     closure: &z_owned_closure_reply_t,
 ) -> &z_loaned_closure_reply_t {
-    closure.transmute_handle()
+    closure.as_loaned_c_type_ref()
 }

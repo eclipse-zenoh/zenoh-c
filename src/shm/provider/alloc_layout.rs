@@ -18,9 +18,7 @@ use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
     errors::z_error_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteIntoHandle, TransmuteRef, TransmuteUninitPtr,
-    },
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
     z_owned_buf_alloc_result_t,
 };
@@ -49,14 +47,16 @@ pub enum CSHMLayout {
     DynamicThreadsafe(DynamicAllocLayoutThreadsafe),
 }
 
-decl_transmute_owned!(Option<CSHMLayout>, z_owned_alloc_layout_t);
-decl_transmute_handle!(CSHMLayout, z_loaned_alloc_layout_t);
+decl_c_type!(
+    owned(z_owned_alloc_layout_t, Option<CSHMLayout>),
+    loaned(z_loaned_alloc_layout_t, CSHMLayout),
+);
 
 /// Creates a new Alloc Layout for SHM Provider
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_new(
-    this: *mut MaybeUninit<z_owned_alloc_layout_t>,
-    provider: &z_loaned_shm_provider_t,
+    this: &mut MaybeUninit<z_owned_alloc_layout_t>,
+    provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_error_t {
@@ -65,33 +65,37 @@ pub extern "C" fn z_alloc_layout_new(
 
 /// Constructs Alloc Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_null(this: *mut MaybeUninit<z_owned_alloc_layout_t>) {
-    Inplace::empty(this.transmute_uninit_ptr());
+pub extern "C" fn z_alloc_layout_null(this: &mut MaybeUninit<z_owned_alloc_layout_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_check(this: &z_owned_alloc_layout_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Borrows Alloc Layout
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_loan(this: &z_owned_alloc_layout_t) -> &z_loaned_alloc_layout_t {
-    let this = this.transmute_ref();
-    let this = unwrap_ref_unchecked(this);
-    this.transmute_handle()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_alloc_layout_loan(
+    this: &z_owned_alloc_layout_t,
+) -> &z_loaned_alloc_layout_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// Deletes Alloc Layout
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_drop(this: &mut z_owned_alloc_layout_t) {
-    let _ = this.transmute_mut().take();
+    *this.as_rust_type_mut() = None;
 }
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
     alloc::<JustAlloc>(out_result, layout);
@@ -99,7 +103,7 @@ pub extern "C" fn z_alloc_layout_alloc(
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc_gc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
     alloc::<GarbageCollect>(out_result, layout);
@@ -107,7 +111,7 @@ pub extern "C" fn z_alloc_layout_alloc_gc(
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc_gc_defrag(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
     alloc::<Defragment<GarbageCollect>>(out_result, layout);
@@ -115,7 +119,7 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag(
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc_gc_defrag_dealloc(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
     alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, layout);
@@ -123,7 +127,7 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag_dealloc(
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc_gc_defrag_blocking(
-    out_result: *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
     alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, layout);

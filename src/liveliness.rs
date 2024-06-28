@@ -18,12 +18,10 @@ use zenoh::{
     prelude::SessionDeclarations,
 };
 
-use crate::transmute::TransmuteIntoHandle;
+use crate::transmute::LoanedCTypeRef;
 use crate::{
     errors,
-    transmute::{
-        unwrap_ref_unchecked, Inplace, TransmuteFromHandle, TransmuteRef, TransmuteUninitPtr,
-    },
+    transmute::{RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
 };
@@ -32,31 +30,27 @@ use zenoh::core::Wait;
 
 use crate::opaque_types::zc_loaned_liveliness_token_t;
 use crate::opaque_types::zc_owned_liveliness_token_t;
-decl_transmute_owned!(
-    Option<LivelinessToken<'static>>,
-    zc_owned_liveliness_token_t
+decl_c_type!(
+    owned(zc_owned_liveliness_token_t, Option<LivelinessToken<'static>>),
+    loaned(zc_loaned_liveliness_token_t, LivelinessToken<'static>)
 );
-decl_transmute_handle!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
-validate_equivalence!(zc_owned_liveliness_token_t, zc_loaned_liveliness_token_t);
 
 /// Constructs liveliness token in its gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_token_null(this: *mut MaybeUninit<zc_owned_liveliness_token_t>) {
-    let this = this.transmute_uninit_ptr();
-    Inplace::empty(this);
+pub extern "C" fn zc_liveliness_token_null(this: &mut MaybeUninit<zc_owned_liveliness_token_t>) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_check(this: &zc_owned_liveliness_token_t) -> bool {
-    this.transmute_ref().is_some()
+    this.as_rust_type_ref().is_some()
 }
 
 /// Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_drop(this: &mut zc_owned_liveliness_token_t) {
-    let this = this.transmute_mut();
-    Inplace::drop(this);
+    *this.as_rust_type_mut() = None;
 }
 /// The options for `zc_liveliness_declare_token()`.
 #[repr(C)]
@@ -74,10 +68,14 @@ pub extern "C" fn zc_liveliness_declaration_options_default(
 
 /// Borrows token.
 #[no_mangle]
-extern "C" fn zc_liveliness_token_loan(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_liveliness_token_loan(
     this: &zc_owned_liveliness_token_t,
 ) -> &zc_loaned_liveliness_token_t {
-    unwrap_ref_unchecked(this.transmute_ref()).transmute_handle()
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// Constructs and declares a liveliness token on the network.
@@ -91,22 +89,22 @@ extern "C" fn zc_liveliness_token_loan(
 /// @param _options: Liveliness token declaration properties.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
-    this: *mut MaybeUninit<zc_owned_liveliness_token_t>,
+    this: &mut MaybeUninit<zc_owned_liveliness_token_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     _options: Option<&zc_liveliness_declaration_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
-    let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let this = this.as_rust_type_mut_uninit();
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     match session.liveliness().declare_token(key_expr).wait() {
         Ok(token) => {
-            Inplace::init(this, Some(token));
+            this.write(Some(token));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Failed to undeclare token: {e}");
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -117,8 +115,8 @@ pub extern "C" fn zc_liveliness_declare_token(
 pub extern "C" fn zc_liveliness_undeclare_token(
     this: &mut zc_owned_liveliness_token_t,
 ) -> errors::z_error_t {
-    let this = this.transmute_mut();
-    if let Some(token) = this.extract().take() {
+    let this = this.as_rust_type_mut();
+    if let Some(token) = this.take() {
         if let Err(e) = token.undeclare().wait() {
             log::error!("Failed to undeclare token: {e}");
             return errors::Z_EGENERIC;
@@ -152,32 +150,32 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_subscriber(
-    this: *mut MaybeUninit<z_owned_subscriber_t>,
+    this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     _options: Option<&mut zc_liveliness_subscriber_options_t>,
 ) -> errors::z_error_t {
-    let this = this.transmute_uninit_ptr();
-    let session = session.transmute_ref();
+    let this = this.as_rust_type_mut_uninit();
+    let session = session.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
-    let key_expr = key_expr.transmute_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     match session
         .liveliness()
         .declare_subscriber(key_expr)
         .callback(move |sample| {
-            let sample = sample.transmute_handle();
+            let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         })
         .wait()
     {
         Ok(subscriber) => {
-            Inplace::init(this, Some(subscriber));
+            this.write(Some(subscriber));
             errors::Z_OK
         }
         Err(e) => {
             log::error!("Failed to subscribe to liveliness: {e}");
-            Inplace::empty(this);
+            this.write(None);
             errors::Z_EGENERIC
         }
     }
@@ -208,12 +206,15 @@ pub extern "C" fn zc_liveliness_get(
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut zc_liveliness_get_options_t>,
 ) -> errors::z_error_t {
-    let session = session.transmute_ref();
-    let key_expr = key_expr.transmute_ref();
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
     let liveliness: Liveliness<'static> = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {
-        z_closure_reply_call(z_closure_reply_loan(&callback), response.transmute_handle())
+        z_closure_reply_call(
+            z_closure_reply_loan(&callback),
+            response.as_loaned_c_type_ref(),
+        )
     });
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));

@@ -1,11 +1,23 @@
-use std::mem::MaybeUninit;
-
-use libc::c_void;
+//
+// Copyright (c) 2017, 2024 ZettaScale Technology.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+// which is available at https://www.apache.org/licenses/LICENSE-2.0.
+//
+// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+//
+// Contributors:
+//   ZettaScale Zenoh team, <zenoh@zettascale.tech>
+//
 
 use crate::{
-    transmute::{TransmuteFromHandle, TransmuteIntoHandle},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef},
     z_id_t,
 };
+use libc::c_void;
+use std::mem::MaybeUninit;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -29,7 +41,8 @@ pub struct z_owned_closure_zid_t {
 pub struct z_loaned_closure_zid_t {
     _0: [usize; 3],
 }
-decl_transmute_handle!(z_owned_closure_zid_t, z_loaned_closure_zid_t);
+
+decl_c_type!(owned(z_owned_closure_zid_t), loaned(z_loaned_closure_zid_t));
 
 impl z_owned_closure_zid_t {
     pub fn empty() -> Self {
@@ -64,14 +77,15 @@ pub unsafe extern "C" fn z_closure_zid_check(this: &z_owned_closure_zid_t) -> bo
 /// Constructs a null closure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_zid_null(this: *mut MaybeUninit<z_owned_closure_zid_t>) {
-    (*this).write(z_owned_closure_zid_t::empty());
+pub unsafe extern "C" fn z_closure_zid_null(this: &mut MaybeUninit<z_owned_closure_zid_t>) {
+    this.write(z_owned_closure_zid_t::empty());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
-    match closure.transmute_ref().call {
-        Some(call) => call(z_id, closure.transmute_ref().context),
+    let closure = closure.as_owned_c_type_ref();
+    match closure.call {
+        Some(call) => call(z_id, closure.context),
         None => {
             log::error!("Attempted to call an uninitialized closure!");
         }
@@ -104,5 +118,5 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
 /// Vorrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
-    closure.transmute_handle()
+    closure.as_loaned_c_type_ref()
 }

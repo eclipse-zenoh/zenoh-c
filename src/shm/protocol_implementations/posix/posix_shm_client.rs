@@ -18,16 +18,16 @@ use zenoh::shm::{PosixShmClient, ShmClient};
 
 use crate::{
     errors::{z_error_t, Z_OK},
-    transmute::{Inplace, TransmuteUninitPtr},
+    transmute::RustTypeRefUninit,
     z_owned_shm_client_t,
 };
 
 /// Creates a new POSIX SHM Client
 #[no_mangle]
 pub extern "C" fn z_posix_shm_client_new(
-    this: *mut MaybeUninit<z_owned_shm_client_t>,
+    this: &mut MaybeUninit<z_owned_shm_client_t>,
 ) -> z_error_t {
     let client = Arc::new(PosixShmClient) as Arc<dyn ShmClient>;
-    Inplace::init(this.transmute_uninit_ptr(), Some(client));
+    this.as_rust_type_mut_uninit().write(Some(client));
     Z_OK
 }

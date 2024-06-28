@@ -11,17 +11,16 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{TransmuteCopy, TransmuteFromHandle};
+use crate::transmute::{CTypeRef, IntoCType, RustTypeRef};
 use crate::{
     errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_owned_closure_zid_t,
 };
-use std::mem::MaybeUninit;
 use zenoh::core::Wait;
 use zenoh::info::ZenohId;
 use zenoh::session::SessionDeclarations;
 
 pub use crate::opaque_types::z_id_t;
-decl_transmute_copy!(ZenohId, z_id_t);
+decl_c_type!(copy(z_id_t, ZenohId));
 
 impl From<[u8; 16]> for z_id_t {
     fn from(value: [u8; 16]) -> Self {
@@ -37,8 +36,8 @@ impl From<[u8; 16]> for z_id_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
-    let session = session.transmute_ref();
-    session.info().zid().wait().transmute_copy()
+    let session = session.as_rust_type_ref();
+    session.info().zid().wait().into_c_type()
 }
 
 /// Fetches the Zenoh IDs of all connected peers.
@@ -55,9 +54,9 @@ pub unsafe extern "C" fn z_info_peers_zid(
 ) -> errors::z_error_t {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     for id in session.info().peers_zid().wait() {
-        z_closure_zid_call(z_closure_zid_loan(&closure), &id.transmute_copy());
+        z_closure_zid_call(z_closure_zid_loan(&closure), id.as_ctype_ref());
     }
     errors::Z_OK
 }
@@ -76,9 +75,9 @@ pub unsafe extern "C" fn z_info_routers_zid(
 ) -> errors::z_error_t {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
-    let session = session.transmute_ref();
+    let session = session.as_rust_type_ref();
     for id in session.info().routers_zid().wait() {
-        z_closure_zid_call(z_closure_zid_loan(&closure), &id.transmute_copy());
+        z_closure_zid_call(z_closure_zid_loan(&closure), id.as_ctype_ref());
     }
     errors::Z_OK
 }
