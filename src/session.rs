@@ -13,7 +13,7 @@
 //
 
 use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
-use crate::{errors, z_owned_config_t, zc_init_logger};
+use crate::{errors, z_moved_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 use zenoh::core::Wait;
@@ -54,7 +54,7 @@ pub extern "C" fn z_session_null(this: &mut MaybeUninit<z_owned_session_t>) {
 #[no_mangle]
 pub extern "C" fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
-    config: &mut z_owned_config_t,
+    mut config: z_moved_config_t,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
@@ -86,7 +86,7 @@ pub extern "C" fn z_open(
 #[no_mangle]
 pub extern "C" fn z_open_with_custom_shm_clients(
     this: &mut MaybeUninit<z_owned_session_t>,
-    config: &mut z_owned_config_t,
+    mut config: z_moved_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
@@ -150,9 +150,8 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
 ///
 /// This will also close the session if it does not have any clones left.
 #[no_mangle]
-pub extern "C" fn z_session_drop(this: &mut z_owned_session_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_session_drop(this: z_moved_session_t) {}
 
 /// Constructs an owned shallow copy of the session in provided uninitialized memory location.
 #[allow(clippy::missing_safety_doc)]

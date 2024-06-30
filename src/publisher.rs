@@ -366,7 +366,7 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_publisher(mut this: z_moved_publisher_t) -> errors::z_error_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             log::error!("{}", e);
@@ -379,6 +379,6 @@ pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> error
 /// Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_drop(this: &mut z_owned_publisher_t) {
+pub extern "C" fn z_publisher_drop(this: z_moved_publisher_t) {
     z_undeclare_publisher(this);
 }

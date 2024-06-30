@@ -148,8 +148,8 @@ pub unsafe extern "C" fn z_view_keyexpr_loan(this: &z_view_keyexpr_t) -> &z_loan
 
 /// Frees key expression and resets it to its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_drop(this: &mut z_owned_keyexpr_t) {
-    *this.as_rust_type_mut() = None;
+#[allow(unused_variables)]
+pub extern "C" fn z_keyexpr_drop(this: z_moved_keyexpr_t) {
 }
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.

@@ -165,9 +165,8 @@ pub extern "C" fn z_shm_client_storage_check(this: &z_owned_shm_client_storage_t
 
 /// Derefs SHM Client Storage
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_drop(this: &mut z_owned_shm_client_storage_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_shm_client_storage_drop(this: z_moved_shm_client_storage_t) {}
 
 /// Borrows SHM Client Storage
 #[no_mangle]

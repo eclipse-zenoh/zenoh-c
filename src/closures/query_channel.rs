@@ -37,8 +37,8 @@ decl_c_type!(
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_query_drop(this: &mut z_owned_fifo_handler_query_t) {
-    *this.as_rust_type_mut() = None;
+#[allow(unused_variables)]
+pub extern "C" fn z_fifo_handler_query_drop(this: z_moved_fifo_handler_query_t) {
 }
 
 /// Constructs a handler in gravestone state.
@@ -156,8 +156,8 @@ decl_c_type!(
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_query_drop(this: &mut z_owned_ring_handler_query_t) {
-    *this.as_rust_type_mut() = None;
+#[allow(unused_variables)]
+pub extern "C" fn z_ring_handler_query_drop(this: z_moved_ring_handler_query_t) {
 }
 
 /// Constructs a handler in gravestone state.

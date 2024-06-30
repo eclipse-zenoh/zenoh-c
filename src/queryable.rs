@@ -84,9 +84,8 @@ pub unsafe extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loan
 }
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_query_drop(this: z_moved_query_t) {}
 /// Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
@@ -247,7 +246,7 @@ pub extern "C" fn z_declare_queryable(
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_queryable(mut this: z_moved_queryable_t) -> errors::z_error_t {
     if let Some(qable) = this.as_rust_type_mut().take() {
         if let Err(e) = qable.undeclare().wait() {
             log::error!("{}", e);
@@ -260,7 +259,7 @@ pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> error
 /// Frees memory and resets it to its gravesztone state. Will also attempt to undeclare queryable.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_queryable_drop(this: &mut z_owned_queryable_t) {
+pub extern "C" fn z_queryable_drop(this: z_moved_queryable_t) {
     z_undeclare_queryable(this);
 }
 

@@ -71,47 +71,12 @@
 
 #define z_drop(x) \
     _Generic((x), \
-        z_owned_alloc_layout_t* : z_alloc_layout_drop, \
-        z_owned_buf_alloc_result_t* : z_buf_alloc_result_drop, \
-        z_owned_bytes_t* : z_bytes_drop, \
-        z_owned_bytes_writer_t* : z_bytes_writer_drop, \
-        z_owned_chunk_alloc_result_t* : z_chunk_alloc_result_drop, \
         z_owned_closure_hello_t* : z_closure_hello_drop, \
         z_owned_closure_owned_query_t* : z_closure_owned_query_drop, \
         z_owned_closure_query_t* : z_closure_query_drop, \
         z_owned_closure_reply_t* : z_closure_reply_drop, \
         z_owned_closure_sample_t* : z_closure_sample_drop, \
         z_owned_closure_zid_t* : z_closure_zid_drop, \
-        z_owned_condvar_t* : z_condvar_drop, \
-        z_owned_encoding_t* : z_encoding_drop, \
-        z_owned_fifo_handler_query_t* : z_fifo_handler_query_drop, \
-        z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_drop, \
-        z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_drop, \
-        z_owned_hello_t* : z_hello_drop, \
-        z_owned_keyexpr_t* : z_keyexpr_drop, \
-        z_owned_memory_layout_t* : z_memory_layout_drop, \
-        z_owned_mutex_t* : z_mutex_drop, \
-        z_owned_publisher_t* : z_publisher_drop, \
-        z_owned_query_t* : z_query_drop, \
-        z_owned_queryable_t* : z_queryable_drop, \
-        z_owned_reply_t* : z_reply_drop, \
-        z_owned_reply_err_t* : z_reply_err_drop, \
-        z_owned_ring_handler_query_t* : z_ring_handler_query_drop, \
-        z_owned_ring_handler_reply_t* : z_ring_handler_reply_drop, \
-        z_owned_ring_handler_sample_t* : z_ring_handler_sample_drop, \
-        z_owned_sample_t* : z_sample_drop, \
-        z_owned_session_t* : z_session_drop, \
-        z_owned_shm_client_t* : z_shm_client_drop, \
-        z_owned_shm_client_storage_t* : z_shm_client_storage_drop, \
-        z_owned_shm_t* : z_shm_drop, \
-        z_owned_shm_mut_t* : z_shm_mut_drop, \
-        z_owned_shm_provider_t* : z_shm_provider_drop, \
-        z_owned_slice_t* : z_slice_drop, \
-        z_owned_slice_map_t* : z_slice_map_drop, \
-        z_owned_source_info_t* : z_source_info_drop, \
-        z_owned_string_array_t* : z_string_array_drop, \
-        z_owned_string_t* : z_string_drop, \
-        z_owned_subscriber_t* : z_subscriber_drop, \
         zc_owned_liveliness_token_t* : zc_liveliness_token_drop, \
         zc_owned_shm_client_list_t* : zc_shm_client_list_drop, \
         zcu_owned_closure_matching_status_t* : zcu_closure_matching_status_drop, \
@@ -119,90 +84,20 @@
         ze_owned_querying_subscriber_t* : ze_querying_subscriber_drop \
     )(x)
 
-#define z_alloc_layout_move(x) (z_moved_alloc_layout_t){&x}
-#define z_buf_alloc_result_move(x) (z_moved_buf_alloc_result_t){&x}
-#define z_bytes_move(x) (z_moved_bytes_t){&x}
-#define z_bytes_writer_move(x) (z_moved_bytes_writer_t){&x}
-#define z_chunk_alloc_result_move(x) (z_moved_chunk_alloc_result_t){&x}
 #define z_closure_hello_move(x) (z_moved_closure_hello_t){&x}
 #define z_closure_owned_query_move(x) (z_moved_closure_owned_query_t){&x}
 #define z_closure_query_move(x) (z_moved_closure_query_t){&x}
 #define z_closure_reply_move(x) (z_moved_closure_reply_t){&x}
 #define z_closure_sample_move(x) (z_moved_closure_sample_t){&x}
 #define z_closure_zid_move(x) (z_moved_closure_zid_t){&x}
-#define z_condvar_move(x) (z_moved_condvar_t){&x}
-#define z_encoding_move(x) (z_moved_encoding_t){&x}
-#define z_fifo_handler_query_move(x) (z_moved_fifo_handler_query_t){&x}
-#define z_fifo_handler_reply_move(x) (z_moved_fifo_handler_reply_t){&x}
-#define z_fifo_handler_sample_move(x) (z_moved_fifo_handler_sample_t){&x}
-#define z_hello_move(x) (z_moved_hello_t){&x}
-#define z_keyexpr_move(x) (z_moved_keyexpr_t){&x}
-#define z_memory_layout_move(x) (z_moved_memory_layout_t){&x}
-#define z_mutex_move(x) (z_moved_mutex_t){&x}
-#define z_publisher_move(x) (z_moved_publisher_t){&x}
-#define z_query_move(x) (z_moved_query_t){&x}
-#define z_queryable_move(x) (z_moved_queryable_t){&x}
-#define z_reply_move(x) (z_moved_reply_t){&x}
-#define z_reply_err_move(x) (z_moved_reply_err_t){&x}
-#define z_ring_handler_query_move(x) (z_moved_ring_handler_query_t){&x}
-#define z_ring_handler_reply_move(x) (z_moved_ring_handler_reply_t){&x}
-#define z_ring_handler_sample_move(x) (z_moved_ring_handler_sample_t){&x}
-#define z_sample_move(x) (z_moved_sample_t){&x}
-#define z_session_move(x) (z_moved_session_t){&x}
-#define z_shm_client_move(x) (z_moved_shm_client_t){&x}
-#define z_shm_client_storage_move(x) (z_moved_shm_client_storage_t){&x}
-#define z_shm_move(x) (z_moved_shm_t){&x}
-#define z_shm_mut_move(x) (z_moved_shm_mut_t){&x}
-#define z_shm_provider_move(x) (z_moved_shm_provider_t){&x}
-#define z_slice_move(x) (z_moved_slice_t){&x}
-#define z_slice_map_move(x) (z_moved_slice_map_t){&x}
-#define z_source_info_move(x) (z_moved_source_info_t){&x}
-#define z_string_array_move(x) (z_moved_string_array_t){&x}
-#define z_string_move(x) (z_moved_string_t){&x}
-#define z_subscriber_move(x) (z_moved_subscriber_t){&x}
 #define z_move_(x) \
     _Generic((x), \
-        z_owned_alloc_layout_t : (z_moved_alloc_layout_t){(z_owned_alloc_layout_t*)&x}, \
-        z_owned_buf_alloc_result_t : (z_moved_buf_alloc_result_t){(z_owned_buf_alloc_result_t*)&x}, \
-        z_owned_bytes_t : (z_moved_bytes_t){(z_owned_bytes_t*)&x}, \
-        z_owned_bytes_writer_t : (z_moved_bytes_writer_t){(z_owned_bytes_writer_t*)&x}, \
-        z_owned_chunk_alloc_result_t : (z_moved_chunk_alloc_result_t){(z_owned_chunk_alloc_result_t*)&x}, \
         z_owned_closure_hello_t : (z_moved_closure_hello_t){(z_owned_closure_hello_t*)&x}, \
         z_owned_closure_owned_query_t : (z_moved_closure_owned_query_t){(z_owned_closure_owned_query_t*)&x}, \
         z_owned_closure_query_t : (z_moved_closure_query_t){(z_owned_closure_query_t*)&x}, \
         z_owned_closure_reply_t : (z_moved_closure_reply_t){(z_owned_closure_reply_t*)&x}, \
         z_owned_closure_sample_t : (z_moved_closure_sample_t){(z_owned_closure_sample_t*)&x}, \
-        z_owned_closure_zid_t : (z_moved_closure_zid_t){(z_owned_closure_zid_t*)&x}, \
-        z_owned_condvar_t : (z_moved_condvar_t){(z_owned_condvar_t*)&x}, \
-        z_owned_encoding_t : (z_moved_encoding_t){(z_owned_encoding_t*)&x}, \
-        z_owned_fifo_handler_query_t : (z_moved_fifo_handler_query_t){(z_owned_fifo_handler_query_t*)&x}, \
-        z_owned_fifo_handler_reply_t : (z_moved_fifo_handler_reply_t){(z_owned_fifo_handler_reply_t*)&x}, \
-        z_owned_fifo_handler_sample_t : (z_moved_fifo_handler_sample_t){(z_owned_fifo_handler_sample_t*)&x}, \
-        z_owned_hello_t : (z_moved_hello_t){(z_owned_hello_t*)&x}, \
-        z_owned_keyexpr_t : (z_moved_keyexpr_t){(z_owned_keyexpr_t*)&x}, \
-        z_owned_memory_layout_t : (z_moved_memory_layout_t){(z_owned_memory_layout_t*)&x}, \
-        z_owned_mutex_t : (z_moved_mutex_t){(z_owned_mutex_t*)&x}, \
-        z_owned_publisher_t : (z_moved_publisher_t){(z_owned_publisher_t*)&x}, \
-        z_owned_query_t : (z_moved_query_t){(z_owned_query_t*)&x}, \
-        z_owned_queryable_t : (z_moved_queryable_t){(z_owned_queryable_t*)&x}, \
-        z_owned_reply_t : (z_moved_reply_t){(z_owned_reply_t*)&x}, \
-        z_owned_reply_err_t : (z_moved_reply_err_t){(z_owned_reply_err_t*)&x}, \
-        z_owned_ring_handler_query_t : (z_moved_ring_handler_query_t){(z_owned_ring_handler_query_t*)&x}, \
-        z_owned_ring_handler_reply_t : (z_moved_ring_handler_reply_t){(z_owned_ring_handler_reply_t*)&x}, \
-        z_owned_ring_handler_sample_t : (z_moved_ring_handler_sample_t){(z_owned_ring_handler_sample_t*)&x}, \
-        z_owned_sample_t : (z_moved_sample_t){(z_owned_sample_t*)&x}, \
-        z_owned_session_t : (z_moved_session_t){(z_owned_session_t*)&x}, \
-        z_owned_shm_client_t : (z_moved_shm_client_t){(z_owned_shm_client_t*)&x}, \
-        z_owned_shm_client_storage_t : (z_moved_shm_client_storage_t){(z_owned_shm_client_storage_t*)&x}, \
-        z_owned_shm_t : (z_moved_shm_t){(z_owned_shm_t*)&x}, \
-        z_owned_shm_mut_t : (z_moved_shm_mut_t){(z_owned_shm_mut_t*)&x}, \
-        z_owned_shm_provider_t : (z_moved_shm_provider_t){(z_owned_shm_provider_t*)&x}, \
-        z_owned_slice_t : (z_moved_slice_t){(z_owned_slice_t*)&x}, \
-        z_owned_slice_map_t : (z_moved_slice_map_t){(z_owned_slice_map_t*)&x}, \
-        z_owned_source_info_t : (z_moved_source_info_t){(z_owned_source_info_t*)&x}, \
-        z_owned_string_array_t : (z_moved_string_array_t){(z_owned_string_array_t*)&x}, \
-        z_owned_string_t : (z_moved_string_t){(z_owned_string_t*)&x}, \
-        z_owned_subscriber_t : (z_moved_subscriber_t){(z_owned_subscriber_t*)&x} \
+        z_owned_closure_zid_t : (z_moved_closure_zid_t){(z_owned_closure_zid_t*)&x} \
     )
 #define z_move(x) (&x)
 
@@ -412,47 +307,12 @@ inline z_loaned_string_array_t* z_loan_mut(z_owned_string_array_t& this_) { retu
 inline zc_loaned_shm_client_list_t* z_loan_mut(zc_owned_shm_client_list_t& this_) { return zc_shm_client_list_loan_mut(&this_); };
 
 
-inline void z_drop(z_owned_alloc_layout_t* this_) { return z_alloc_layout_drop(this_); };
-inline void z_drop(z_owned_buf_alloc_result_t* this_) { return z_buf_alloc_result_drop(this_); };
-inline void z_drop(z_owned_bytes_t* this_) { return z_bytes_drop(this_); };
-inline void z_drop(z_owned_bytes_writer_t* this_) { return z_bytes_writer_drop(this_); };
-inline void z_drop(z_owned_chunk_alloc_result_t* this_) { return z_chunk_alloc_result_drop(this_); };
 inline void z_drop(z_owned_closure_hello_t* closure) { return z_closure_hello_drop(closure); };
 inline void z_drop(z_owned_closure_owned_query_t* closure) { return z_closure_owned_query_drop(closure); };
 inline void z_drop(z_owned_closure_query_t* closure) { return z_closure_query_drop(closure); };
 inline void z_drop(z_owned_closure_reply_t* closure) { return z_closure_reply_drop(closure); };
 inline void z_drop(z_owned_closure_sample_t* closure) { return z_closure_sample_drop(closure); };
 inline void z_drop(z_owned_closure_zid_t* closure) { return z_closure_zid_drop(closure); };
-inline void z_drop(z_owned_condvar_t* this_) { return z_condvar_drop(this_); };
-inline void z_drop(z_owned_encoding_t* this_) { return z_encoding_drop(this_); };
-inline void z_drop(z_owned_fifo_handler_query_t* this_) { return z_fifo_handler_query_drop(this_); };
-inline void z_drop(z_owned_fifo_handler_reply_t* this_) { return z_fifo_handler_reply_drop(this_); };
-inline void z_drop(z_owned_fifo_handler_sample_t* this_) { return z_fifo_handler_sample_drop(this_); };
-inline void z_drop(z_owned_hello_t* this_) { return z_hello_drop(this_); };
-inline void z_drop(z_owned_keyexpr_t* this_) { return z_keyexpr_drop(this_); };
-inline void z_drop(z_owned_memory_layout_t* this_) { return z_memory_layout_drop(this_); };
-inline void z_drop(z_owned_mutex_t* this_) { return z_mutex_drop(this_); };
-inline void z_drop(z_owned_publisher_t* this_) { return z_publisher_drop(this_); };
-inline void z_drop(z_owned_query_t* this_) { return z_query_drop(this_); };
-inline void z_drop(z_owned_queryable_t* this_) { return z_queryable_drop(this_); };
-inline void z_drop(z_owned_reply_t* this_) { return z_reply_drop(this_); };
-inline void z_drop(z_owned_reply_err_t* this_) { return z_reply_err_drop(this_); };
-inline void z_drop(z_owned_ring_handler_query_t* this_) { return z_ring_handler_query_drop(this_); };
-inline void z_drop(z_owned_ring_handler_reply_t* this_) { return z_ring_handler_reply_drop(this_); };
-inline void z_drop(z_owned_ring_handler_sample_t* this_) { return z_ring_handler_sample_drop(this_); };
-inline void z_drop(z_owned_sample_t* this_) { return z_sample_drop(this_); };
-inline void z_drop(z_owned_session_t* this_) { return z_session_drop(this_); };
-inline void z_drop(z_owned_shm_client_t* this_) { return z_shm_client_drop(this_); };
-inline void z_drop(z_owned_shm_client_storage_t* this_) { return z_shm_client_storage_drop(this_); };
-inline void z_drop(z_owned_shm_t* this_) { return z_shm_drop(this_); };
-inline void z_drop(z_owned_shm_mut_t* this_) { return z_shm_mut_drop(this_); };
-inline void z_drop(z_owned_shm_provider_t* this_) { return z_shm_provider_drop(this_); };
-inline void z_drop(z_owned_slice_t* this_) { return z_slice_drop(this_); };
-inline void z_drop(z_owned_slice_map_t* this_) { return z_slice_map_drop(this_); };
-inline void z_drop(z_owned_source_info_t* this_) { return z_source_info_drop(this_); };
-inline void z_drop(z_owned_string_array_t* this_) { return z_string_array_drop(this_); };
-inline void z_drop(z_owned_string_t* this_) { return z_string_drop(this_); };
-inline void z_drop(z_owned_subscriber_t* this_) { return z_subscriber_drop(this_); };
 inline void z_drop(zc_owned_liveliness_token_t* this_) { return zc_liveliness_token_drop(this_); };
 inline void z_drop(zc_owned_shm_client_list_t* this_) { return zc_shm_client_list_drop(this_); };
 inline void z_drop(zcu_owned_closure_matching_status_t* closure) { return zcu_closure_matching_status_drop(closure); };
@@ -460,47 +320,12 @@ inline void z_drop(ze_owned_publication_cache_t* this_) { return ze_publication_
 inline void z_drop(ze_owned_querying_subscriber_t* this_) { return ze_querying_subscriber_drop(this_); };
 
 
-inline z_owned_alloc_layout_t* z_move(z_owned_alloc_layout_t& this_) { return (&this_); };
-inline z_owned_buf_alloc_result_t* z_move(z_owned_buf_alloc_result_t& this_) { return (&this_); };
-inline z_owned_bytes_t* z_move(z_owned_bytes_t& this_) { return (&this_); };
-inline z_owned_bytes_writer_t* z_move(z_owned_bytes_writer_t& this_) { return (&this_); };
-inline z_owned_chunk_alloc_result_t* z_move(z_owned_chunk_alloc_result_t& this_) { return (&this_); };
 inline z_owned_closure_hello_t* z_move(z_owned_closure_hello_t& closure) { return (&closure); };
 inline z_owned_closure_owned_query_t* z_move(z_owned_closure_owned_query_t& closure) { return (&closure); };
 inline z_owned_closure_query_t* z_move(z_owned_closure_query_t& closure) { return (&closure); };
 inline z_owned_closure_reply_t* z_move(z_owned_closure_reply_t& closure) { return (&closure); };
 inline z_owned_closure_sample_t* z_move(z_owned_closure_sample_t& closure) { return (&closure); };
 inline z_owned_closure_zid_t* z_move(z_owned_closure_zid_t& closure) { return (&closure); };
-inline z_owned_condvar_t* z_move(z_owned_condvar_t& this_) { return (&this_); };
-inline z_owned_encoding_t* z_move(z_owned_encoding_t& this_) { return (&this_); };
-inline z_owned_fifo_handler_query_t* z_move(z_owned_fifo_handler_query_t& this_) { return (&this_); };
-inline z_owned_fifo_handler_reply_t* z_move(z_owned_fifo_handler_reply_t& this_) { return (&this_); };
-inline z_owned_fifo_handler_sample_t* z_move(z_owned_fifo_handler_sample_t& this_) { return (&this_); };
-inline z_owned_hello_t* z_move(z_owned_hello_t& this_) { return (&this_); };
-inline z_owned_keyexpr_t* z_move(z_owned_keyexpr_t& this_) { return (&this_); };
-inline z_owned_memory_layout_t* z_move(z_owned_memory_layout_t& this_) { return (&this_); };
-inline z_owned_mutex_t* z_move(z_owned_mutex_t& this_) { return (&this_); };
-inline z_owned_publisher_t* z_move(z_owned_publisher_t& this_) { return (&this_); };
-inline z_owned_query_t* z_move(z_owned_query_t& this_) { return (&this_); };
-inline z_owned_queryable_t* z_move(z_owned_queryable_t& this_) { return (&this_); };
-inline z_owned_reply_t* z_move(z_owned_reply_t& this_) { return (&this_); };
-inline z_owned_reply_err_t* z_move(z_owned_reply_err_t& this_) { return (&this_); };
-inline z_owned_ring_handler_query_t* z_move(z_owned_ring_handler_query_t& this_) { return (&this_); };
-inline z_owned_ring_handler_reply_t* z_move(z_owned_ring_handler_reply_t& this_) { return (&this_); };
-inline z_owned_ring_handler_sample_t* z_move(z_owned_ring_handler_sample_t& this_) { return (&this_); };
-inline z_owned_sample_t* z_move(z_owned_sample_t& this_) { return (&this_); };
-inline z_owned_session_t* z_move(z_owned_session_t& this_) { return (&this_); };
-inline z_owned_shm_client_t* z_move(z_owned_shm_client_t& this_) { return (&this_); };
-inline z_owned_shm_client_storage_t* z_move(z_owned_shm_client_storage_t& this_) { return (&this_); };
-inline z_owned_shm_t* z_move(z_owned_shm_t& this_) { return (&this_); };
-inline z_owned_shm_mut_t* z_move(z_owned_shm_mut_t& this_) { return (&this_); };
-inline z_owned_shm_provider_t* z_move(z_owned_shm_provider_t& this_) { return (&this_); };
-inline z_owned_slice_t* z_move(z_owned_slice_t& this_) { return (&this_); };
-inline z_owned_slice_map_t* z_move(z_owned_slice_map_t& this_) { return (&this_); };
-inline z_owned_source_info_t* z_move(z_owned_source_info_t& this_) { return (&this_); };
-inline z_owned_string_array_t* z_move(z_owned_string_array_t& this_) { return (&this_); };
-inline z_owned_string_t* z_move(z_owned_string_t& this_) { return (&this_); };
-inline z_owned_subscriber_t* z_move(z_owned_subscriber_t& this_) { return (&this_); };
 inline zc_owned_liveliness_token_t* z_move(zc_owned_liveliness_token_t& this_) { return (&this_); };
 inline zc_owned_shm_client_list_t* z_move(zc_owned_shm_client_list_t& this_) { return (&this_); };
 inline zcu_owned_closure_matching_status_t* z_move(zcu_owned_closure_matching_status_t& closure) { return (&closure); };

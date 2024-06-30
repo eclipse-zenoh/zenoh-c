@@ -58,8 +58,8 @@ extern "C" fn z_bytes_empty(this: &mut MaybeUninit<z_owned_bytes_t>) {
 /// Drops `this_`, resetting it to gravestone value. If there are any shallow copies
 /// created by `z_bytes_clone()`, they would still stay valid.
 #[no_mangle]
-extern "C" fn z_bytes_drop(this: &mut z_owned_bytes_t) {
-    *this.as_rust_type_mut() = ZBytes::default();
+#[allow(unused_variables)]
+extern "C" fn z_bytes_drop(this: z_moved_bytes_t) {
 }
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
@@ -816,8 +816,8 @@ extern "C" fn z_bytes_writer_null(this: &mut MaybeUninit<z_owned_bytes_writer_t>
 
 /// Drops `this_`, resetting it to gravestone value.
 #[no_mangle]
-extern "C" fn z_bytes_writer_drop(this: &mut z_owned_bytes_writer_t) {
-    *this.as_rust_type_mut() = None;
+#[allow(unused_variables)]
+extern "C" fn z_bytes_writer_drop(this: z_moved_bytes_writer_t) {
 }
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.

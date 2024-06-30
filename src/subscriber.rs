@@ -171,8 +171,8 @@ pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> err
 
 /// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn z_subscriber_drop(this: &mut z_owned_subscriber_t) {
-    z_undeclare_subscriber(this);
+#[allow(unused_variables)]
+pub extern "C" fn z_subscriber_drop(this: z_moved_subscriber_t) {
 }
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.

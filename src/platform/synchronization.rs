@@ -33,9 +33,8 @@ pub extern "C" fn z_mutex_init(this: &mut MaybeUninit<z_owned_mutex_t>) -> error
 
 /// Drops mutex and resets it to its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_mutex_drop(this: &mut z_owned_mutex_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_mutex_drop(this: z_moved_mutex_t) {}
 
 /// Returns ``true`` if mutex is valid, ``false`` otherwise.
 #[no_mangle]
@@ -134,9 +133,8 @@ pub extern "C" fn z_condvar_null(this: &mut MaybeUninit<z_owned_condvar_t>) {
 
 /// Drops conditional variable.
 #[no_mangle]
-pub extern "C" fn z_condvar_drop(this: &mut z_owned_condvar_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_condvar_drop(this: z_moved_condvar_t) {}
 
 /// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
 #[no_mangle]

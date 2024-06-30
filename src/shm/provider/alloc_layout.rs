@@ -89,9 +89,8 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 
 /// Deletes Alloc Layout
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_drop(this: &mut z_owned_alloc_layout_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_alloc_layout_drop(this: z_moved_alloc_layout_t) {}
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc(

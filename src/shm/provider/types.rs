@@ -124,9 +124,8 @@ pub unsafe extern "C" fn z_memory_layout_loan(
 
 /// Deletes Memory Layout
 #[no_mangle]
-pub extern "C" fn z_memory_layout_drop(this: &mut z_owned_memory_layout_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_memory_layout_drop(this: z_moved_memory_layout_t) {}
 
 /// Deletes Memory Layout
 #[no_mangle]
@@ -191,9 +190,8 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
 
 /// Deletes Chunk Alloc Result
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_drop(this: &mut z_owned_chunk_alloc_result_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_chunk_alloc_result_drop(this: z_moved_chunk_alloc_result_t) {}
 
 decl_c_type!(
     inequal
@@ -248,6 +246,5 @@ pub unsafe extern "C" fn z_buf_alloc_result_loan(
 
 /// Deletes Buf Alloc Result
 #[no_mangle]
-pub extern "C" fn z_buf_alloc_result_drop(this: &mut z_owned_buf_alloc_result_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_buf_alloc_result_drop(this: z_moved_buf_alloc_result_t) {}

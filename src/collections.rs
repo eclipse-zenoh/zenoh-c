@@ -332,9 +332,8 @@ pub unsafe extern "C" fn z_slice_wrap(
 /// Frees the memory and invalidates the slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
-    *this.as_rust_type_mut() = CSliceOwned::default();
-}
+#[allow(unused_variables)]
+pub unsafe extern "C" fn z_slice_drop(this: z_moved_slice_t) {}
 
 /// Borrows slice.
 #[no_mangle]
@@ -463,9 +462,8 @@ decl_c_type!(
 /// Frees memory and invalidates `z_owned_string_t`, putting it in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_drop(this: &mut z_owned_string_t) {
-    *this.as_rust_type_mut() = CStringOwned::default();
-}
+#[allow(unused_variables)]
+pub unsafe extern "C" fn z_string_drop(this: z_moved_string_t) {}
 
 /// @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
 #[no_mangle]
@@ -663,9 +661,8 @@ pub extern "C" fn z_slice_map_check(map: &z_owned_slice_map_t) -> bool {
 
 /// Destroys the map, resetting it to its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_slice_map_drop(this: z_moved_slice_map_t) {}
 
 /// Borrows slice map.
 #[no_mangle]
@@ -806,9 +803,8 @@ pub extern "C" fn z_string_array_check(this: &z_owned_string_array_t) -> bool {
 
 /// Destroys the string array, resetting it to its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_string_array_drop(this: &mut z_owned_string_array_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_string_array_drop(this: z_moved_string_array_t) {}
 
 /// Borrows string array.
 #[no_mangle]

@@ -114,8 +114,8 @@ pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_repl
 
 /// Frees the memory and resets the reply error it to its default value.
 #[no_mangle]
-pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
-    std::mem::take(this.as_rust_type_mut());
+#[allow(unused_variables)]
+pub extern "C" fn z_reply_err_drop(this: z_moved_reply_err_t) {
 }
 
 pub use crate::opaque_types::z_loaned_reply_t;
@@ -313,8 +313,8 @@ pub unsafe extern "C" fn z_get(
 
 /// Frees reply, resetting it to its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
-    *this.as_rust_type_mut() = None;
+#[allow(unused_variables)]
+pub extern "C" fn z_reply_drop(this: z_moved_reply_t) {
 }
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
