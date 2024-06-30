@@ -73,9 +73,10 @@ impl From<&ReplyError> for &ReplyErrorNewtype {
 }
 
 pub use crate::opaque_types::z_loaned_reply_err_t;
+pub use crate::opaque_types::z_moved_reply_err_t;
 pub use crate::opaque_types::z_owned_reply_err_t;
 decl_c_type!(
-    owned(z_owned_reply_err_t, ReplyErrorNewtype),
+    owned(z_owned_reply_err_t, z_moved_reply_err_t, ReplyErrorNewtype),
     loaned(z_loaned_reply_err_t, ReplyErrorNewtype)
 );
 
@@ -118,9 +119,10 @@ pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
 }
 
 pub use crate::opaque_types::z_loaned_reply_t;
+pub use crate::opaque_types::z_moved_reply_t;
 pub use crate::opaque_types::z_owned_reply_t;
 decl_c_type!(
-    owned(z_owned_reply_t, Option<Reply>),
+    owned(z_owned_reply_t, z_owned_reply_t, Option<Reply>),
     loaned(z_loaned_reply_t, Reply)
 );
 

@@ -19,8 +19,8 @@ use crate::{
     errors::z_error_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
-    z_owned_buf_alloc_result_t,
+    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
+    z_owned_alloc_layout_t, z_owned_buf_alloc_result_t,
 };
 use libc::c_void;
 use zenoh::shm::{
@@ -48,7 +48,7 @@ pub enum CSHMLayout {
 }
 
 decl_c_type!(
-    owned(z_owned_alloc_layout_t, Option<CSHMLayout>),
+    owned(z_owned_alloc_layout_t, z_moved_alloc_layout_t, Option<CSHMLayout>),
     loaned(z_loaned_alloc_layout_t, CSHMLayout),
 );
 

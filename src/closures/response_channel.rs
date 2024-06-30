@@ -24,9 +24,14 @@ use zenoh::{
 };
 
 pub use crate::opaque_types::z_loaned_fifo_handler_reply_t;
+pub use crate::opaque_types::z_moved_fifo_handler_reply_t;
 pub use crate::opaque_types::z_owned_fifo_handler_reply_t;
 decl_c_type!(
-    owned(z_owned_fifo_handler_reply_t, Option<flume::Receiver<Reply>>),
+    owned(
+        z_owned_fifo_handler_reply_t,
+        z_moved_fifo_handler_reply_t,
+        Option<flume::Receiver<Reply>>,
+    ),
     loaned(z_loaned_fifo_handler_reply_t, flume::Receiver<Reply>)
 );
 
@@ -138,9 +143,14 @@ pub extern "C" fn z_fifo_handler_reply_try_recv(
 }
 
 pub use crate::opaque_types::z_loaned_ring_handler_reply_t;
+pub use crate::opaque_types::z_moved_ring_handler_reply_t;
 pub use crate::opaque_types::z_owned_ring_handler_reply_t;
 decl_c_type!(
-    owned(z_owned_ring_handler_reply_t, Option<RingChannelHandler<Reply>>),
+    owned(
+        z_owned_ring_handler_reply_t,
+        z_moved_ring_handler_reply_t,
+        Option<RingChannelHandler<Reply>>,
+    ),
     loaned(z_loaned_ring_handler_reply_t, RingChannelHandler<Reply>)
 );
 

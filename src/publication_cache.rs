@@ -53,9 +53,14 @@ pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication
 }
 
 pub use crate::opaque_types::ze_loaned_publication_cache_t;
+pub use crate::opaque_types::ze_moved_publication_cache_t;
 pub use crate::opaque_types::ze_owned_publication_cache_t;
 decl_c_type!(
-    owned(ze_owned_publication_cache_t, Option<zenoh_ext::PublicationCache<'static>>),
+    owned(
+        ze_owned_publication_cache_t,
+        ze_moved_publication_cache_t,
+        Option<zenoh_ext::PublicationCache<'static>>,
+    ),
     loaned(ze_loaned_publication_cache_t, zenoh_ext::PublicationCache<'static>)
 );
 

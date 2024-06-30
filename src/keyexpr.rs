@@ -30,10 +30,11 @@ use zenoh::key_expr::SetIntersectionLevel;
 use zenoh_protocol::core::key_expr::canon::Canonizable;
 
 pub use crate::opaque_types::z_loaned_keyexpr_t;
+pub use crate::opaque_types::z_moved_keyexpr_t;
 pub use crate::opaque_types::z_owned_keyexpr_t;
 pub use crate::opaque_types::z_view_keyexpr_t;
 decl_c_type! {
-    owned(z_owned_keyexpr_t, Option<KeyExpr<'static>>),
+    owned(z_owned_keyexpr_t, z_moved_keyexpr_t, Option<KeyExpr<'static>>),
     view(z_view_keyexpr_t, Option<KeyExpr<'static>>),
     loaned(z_loaned_keyexpr_t, KeyExpr<'static>),
 }

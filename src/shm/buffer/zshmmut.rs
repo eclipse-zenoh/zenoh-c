@@ -18,11 +18,11 @@ use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_mut_t, z_owned_shm_mut_t, z_owned_shm_t,
+    z_loaned_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 
 decl_c_type!(
-    owned(z_owned_shm_mut_t, Option<ZShmMut>),
+    owned(z_owned_shm_mut_t, z_moved_shm_t, Option<ZShmMut>),
     loaned(z_loaned_shm_mut_t, zshmmut)
 );
 

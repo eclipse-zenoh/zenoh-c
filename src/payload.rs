@@ -36,9 +36,10 @@ use crate::errors::Z_ENULL;
 use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
 
 pub use crate::opaque_types::z_loaned_bytes_t;
+pub use crate::opaque_types::z_moved_bytes_t;
 pub use crate::opaque_types::z_owned_bytes_t;
 decl_c_type! {
-    owned(z_owned_bytes_t, ZBytes),
+    owned(z_owned_bytes_t, z_moved_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t, ZBytes),
 }
 
@@ -798,10 +799,12 @@ pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64
 }
 
 pub use crate::opaque_types::z_loaned_bytes_writer_t;
+pub use crate::opaque_types::z_moved_bytes_writer_t;
 pub use crate::opaque_types::z_owned_bytes_writer_t;
 
 decl_c_type! {
-    owned(z_owned_bytes_writer_t, Option<ZBytesWriter<'static>>),
+    owned(z_owned_bytes_writer_t, z_moved_bytes_writer_t,
+        Option<ZBytesWriter<'static>>),
     loaned(z_loaned_bytes_writer_t, ZBytesWriter<'static>),
 }
 

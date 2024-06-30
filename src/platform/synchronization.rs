@@ -6,15 +6,17 @@ use std::{
 
 use libc::c_void;
 
-pub use crate::opaque_types::z_loaned_mutex_t;
-pub use crate::opaque_types::z_owned_mutex_t;
 use crate::{
     errors,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
+pub use crate::opaque_types::z_loaned_mutex_t;
+pub use crate::opaque_types::z_moved_mutex_t;
+pub use crate::opaque_types::z_owned_mutex_t;
+
 decl_c_type!(
-    owned(z_owned_mutex_t, Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>),
+    owned(z_owned_mutex_t, z_moved_mutex_t, Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>),
     loaned(z_loaned_mutex_t, (Mutex<()>, Option<MutexGuard<'static, ()>>))
 );
 
@@ -109,10 +111,12 @@ pub unsafe extern "C" fn z_mutex_try_lock(
 }
 
 pub use crate::opaque_types::z_loaned_condvar_t;
+pub use crate::opaque_types::z_moved_condvar_t;
 pub use crate::opaque_types::z_owned_condvar_t;
 decl_c_type!(
     inequal
-    owned(z_owned_condvar_t, Option<Condvar>),
+    owned(z_owned_condvar_t, z_moved_condvar_t,
+         Option<Condvar>),
     loaned(z_loaned_condvar_t, Condvar)
 );
 
@@ -197,8 +201,9 @@ pub unsafe extern "C" fn z_condvar_wait(
     errors::Z_OK
 }
 
+pub use crate::opaque_types::z_moved_task_t;
 pub use crate::opaque_types::z_owned_task_t;
-decl_c_type!(owned(z_owned_task_t, Option<JoinHandle<()>>));
+decl_c_type!(owned(z_owned_task_t, z_moved_task_t, Option<JoinHandle<()>>));
 
 #[repr(C)]
 #[derive(Clone, Copy)]

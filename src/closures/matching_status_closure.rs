@@ -41,8 +41,16 @@ pub struct zcu_loaned_closure_matching_status_t {
     _0: [usize; 3],
 }
 
+/// Moved closure.
+pub struct zcu_moved_closure_matching_status_t<'a> {
+    pub ptr: &'a zcu_owned_closure_matching_status_t,
+}
+
 decl_c_type!(
-    owned(zcu_owned_closure_matching_status_t),
+    owned(
+        zcu_owned_closure_matching_status_t,
+        zcu_moved_closure_matching_status_t
+    ),
     loaned(zcu_loaned_closure_matching_status_t)
 );
 

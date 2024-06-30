@@ -16,14 +16,19 @@ use super::common::types::z_protocol_id_t;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
-    zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,
+    z_loaned_shm_client_storage_t, z_moved_shm_client_storage_t, z_owned_shm_client_storage_t,
+    z_owned_shm_client_t, zc_loaned_shm_client_list_t, zc_moved_shm_client_list_t,
+    zc_owned_shm_client_list_t,
 };
 use std::{mem::MaybeUninit, sync::Arc};
 use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
 decl_c_type!(
-    owned(zc_owned_shm_client_list_t, Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>),
+    owned(
+        zc_owned_shm_client_list_t,
+        zc_moved_shm_client_list_t,
+        Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,
+    ),
     loaned(zc_loaned_shm_client_list_t, Vec<(ProtocolID, Arc<dyn ShmClient>)>)
 );
 
@@ -95,7 +100,11 @@ pub extern "C" fn zc_shm_client_list_add_client(
 }
 
 decl_c_type!(
-    owned(z_owned_shm_client_storage_t, Option<Arc<ShmClientStorage>>),
+    owned(
+        z_owned_shm_client_storage_t,
+        z_moved_shm_client_storage_t,
+        Option<Arc<ShmClientStorage>>,
+    ),
     loaned(z_loaned_shm_client_storage_t, Arc<ShmClientStorage>),
 );
 

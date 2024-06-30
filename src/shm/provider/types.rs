@@ -21,6 +21,7 @@ use crate::transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
+    z_moved_buf_alloc_result_t, z_moved_chunk_alloc_result_t, z_moved_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
 };
@@ -73,7 +74,8 @@ decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 
 decl_c_type!(
     inequal
-    owned(z_owned_memory_layout_t, Option<MemoryLayout>),
+    owned(z_owned_memory_layout_t, z_moved_memory_layout_t,
+         Option<MemoryLayout>),
     loaned(z_loaned_memory_layout_t, MemoryLayout)
 );
 
@@ -139,7 +141,7 @@ pub extern "C" fn z_memory_layout_get_data(
 }
 
 decl_c_type!(
-    owned(z_owned_chunk_alloc_result_t, Option<ChunkAllocResult>),
+    owned(z_owned_chunk_alloc_result_t, z_moved_chunk_alloc_result_t, Option<ChunkAllocResult>),
     loaned(z_loaned_chunk_alloc_result_t, ChunkAllocResult)
 );
 
@@ -195,7 +197,8 @@ pub extern "C" fn z_chunk_alloc_result_drop(this: &mut z_owned_chunk_alloc_resul
 
 decl_c_type!(
     inequal
-    owned(z_owned_buf_alloc_result_t, Option<BufAllocResult>),
+    owned(z_owned_buf_alloc_result_t, z_moved_buf_alloc_result_t,
+        Option<BufAllocResult>),
     loaned(z_loaned_buf_alloc_result_t, BufAllocResult)
 );
 

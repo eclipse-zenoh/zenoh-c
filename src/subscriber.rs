@@ -60,9 +60,10 @@ impl From<z_reliability_t> for Reliability {
 }
 
 pub use crate::opaque_types::z_loaned_subscriber_t;
+pub use crate::opaque_types::z_moved_subscriber_t;
 pub use crate::opaque_types::z_owned_subscriber_t;
 decl_c_type!(
-    owned(z_owned_subscriber_t, Option<Subscriber<'static, ()>>),
+    owned(z_owned_subscriber_t, z_moved_subscriber_t, Option<Subscriber<'static, ()>>),
     loaned(z_loaned_subscriber_t, Subscriber<'static, ()>)
 );
 

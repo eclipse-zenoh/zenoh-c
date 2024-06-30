@@ -23,9 +23,10 @@ use zenoh::session::Session;
 use crate::z_loaned_shm_client_storage_t;
 
 use crate::opaque_types::z_loaned_session_t;
+use crate::opaque_types::z_moved_session_t;
 use crate::opaque_types::z_owned_session_t;
 decl_c_type!(
-    owned(z_owned_session_t, Option<Arc<Session>>),
+    owned(z_owned_session_t, z_moved_session_t, Option<Arc<Session>>),
     loaned(z_loaned_session_t, Arc<Session>)
 );
 

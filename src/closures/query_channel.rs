@@ -24,9 +24,14 @@ use zenoh::{
 };
 
 pub use crate::opaque_types::z_loaned_fifo_handler_query_t;
+pub use crate::opaque_types::z_moved_fifo_handler_query_t;
 pub use crate::opaque_types::z_owned_fifo_handler_query_t;
 decl_c_type!(
-    owned(z_owned_fifo_handler_query_t, Option<flume::Receiver<Query>>),
+    owned(
+        z_owned_fifo_handler_query_t,
+        z_moved_fifo_handler_query_t,
+        Option<flume::Receiver<Query>>,
+    ),
     loaned(z_loaned_fifo_handler_query_t, flume::Receiver<Query>)
 );
 
@@ -138,9 +143,14 @@ pub extern "C" fn z_fifo_handler_query_try_recv(
 }
 
 pub use crate::opaque_types::z_loaned_ring_handler_query_t;
+pub use crate::opaque_types::z_moved_ring_handler_query_t;
 pub use crate::opaque_types::z_owned_ring_handler_query_t;
 decl_c_type!(
-    owned(z_owned_ring_handler_query_t, Option<RingChannelHandler<Query>>),
+    owned(
+        z_owned_ring_handler_query_t,
+        z_moved_ring_handler_query_t,
+        Option<RingChannelHandler<Query>>,
+    ),
     loaned(z_loaned_ring_handler_query_t, RingChannelHandler<Query>)
 );
 

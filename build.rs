@@ -173,7 +173,7 @@ fn generate_opaque_types() {
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
-        let s = format!(
+        let mut s = format!(
             "#[derive(Copy, Clone)]
 #[repr(C, align({align}))]
 pub struct {type_name} {{
@@ -181,6 +181,27 @@ pub struct {type_name} {{
 }}
 "
         );
+
+        if let Some(prefix_index) = type_name
+            .strip_prefix("z_owned_")
+            .or(type_name.strip_prefix("ze_owned_"))
+            .or(type_name.strip_prefix("zc_owned_"))
+            .or(type_name.strip_prefix("zcu_owned_"))
+            .map(|s| type_name.len() - s.len())
+        {
+            let (prefix, postfix) = type_name.split_at(prefix_index);
+            let moved_type_prefix = prefix.replace("owned", "moved");
+            let moved_type_name = format!("{}{}", moved_type_prefix, postfix);
+            s += format!(
+                "#[repr(C)]
+pub struct {moved_type_name}<'a> {{
+    pub ptr: &'a mut {type_name},
+}}
+"
+            )
+            .as_str();
+        }
+
         let doc = docs
             .remove(type_name)
             .unwrap_or_else(|| panic!("Failed to extract docs for opaque type: {type_name}"));
@@ -1229,13 +1250,6 @@ pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
 
 pub fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
-    for sig in macro_func {
-        let z_moved_type = &sig.return_type.typename;
-        let z_owned_type = &sig.args[0].typename.typename;
-        out += &format!(
-            "typedef struct {z_moved_type} {{ struct {z_owned_type}* ptr; }} {z_moved_type};\n"
-        );
-    }
     for sig in macro_func {
         out += &format!(
             "#define {}(x) ({}){{&x}}\n",

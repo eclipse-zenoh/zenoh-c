@@ -29,9 +29,14 @@ use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use zenoh::core::Wait;
 
 use crate::opaque_types::zc_loaned_liveliness_token_t;
+use crate::opaque_types::zc_moved_liveliness_token_t;
 use crate::opaque_types::zc_owned_liveliness_token_t;
 decl_c_type!(
-    owned(zc_owned_liveliness_token_t, Option<LivelinessToken<'static>>),
+    owned(
+        zc_owned_liveliness_token_t,
+        zc_moved_liveliness_token_t,
+        Option<LivelinessToken<'static>>,
+    ),
     loaned(zc_loaned_liveliness_token_t, LivelinessToken<'static>)
 );
 

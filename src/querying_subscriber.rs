@@ -39,10 +39,12 @@ use zenoh::subscriber::Reliability;
 use zenoh_ext::*;
 
 use crate::opaque_types::ze_loaned_querying_subscriber_t;
+use crate::opaque_types::ze_moved_querying_subscriber_t;
 use crate::opaque_types::ze_owned_querying_subscriber_t;
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
+        ze_moved_querying_subscriber_t,
         Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
     ),
     loaned(

@@ -43,8 +43,14 @@ pub struct z_loaned_closure_hello_t {
     _0: [usize; 3],
 }
 
+/// Moved closure.
+#[repr(C)]
+pub struct z_moved_closure_hello_t<'a> {
+    pub ptr: &'a z_owned_closure_hello_t,
+}
+
 decl_c_type!(
-    owned(z_owned_closure_hello_t),
+    owned(z_owned_closure_hello_t, z_moved_closure_hello_t),
     loaned(z_loaned_closure_hello_t)
 );
 

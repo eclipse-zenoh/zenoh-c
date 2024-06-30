@@ -26,6 +26,7 @@ use crate::{
     shm::common::types::z_segment_id_t,
 };
 
+pub use crate::opaque_types::z_moved_shm_client_t;
 pub use crate::opaque_types::z_owned_shm_client_t;
 
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
@@ -41,7 +42,7 @@ pub struct zc_shm_client_callbacks_t {
     ) -> bool,
 }
 
-decl_c_type!(owned(z_owned_shm_client_t, Option<Arc<dyn ShmClient>>));
+decl_c_type!(owned(z_owned_shm_client_t, z_moved_shm_client_t, Option<Arc<dyn ShmClient>>));
 
 #[derive(Debug)]
 pub struct DynamicShmClient {

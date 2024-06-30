@@ -110,9 +110,10 @@ pub extern "C" fn z_timestamp_id(this: &z_timestamp_t) -> z_id_t {
 }
 
 use crate::opaque_types::z_loaned_sample_t;
+pub use crate::opaque_types::z_moved_sample_t;
 pub use crate::opaque_types::z_owned_sample_t;
 decl_c_type!(
-    owned(z_owned_sample_t, Option<Sample>),
+    owned(z_owned_sample_t, z_moved_sample_t, Option<Sample>),
     loaned(z_loaned_sample_t, Sample),
 );
 
@@ -223,10 +224,11 @@ pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
 }
 
 pub use crate::opaque_types::z_loaned_encoding_t;
+pub use crate::opaque_types::z_moved_encoding_t;
 pub use crate::opaque_types::z_owned_encoding_t;
 
 decl_c_type!(
-    owned(z_owned_encoding_t, Encoding),
+    owned(z_owned_encoding_t, z_moved_encoding_t, Encoding),
     loaned(z_loaned_encoding_t, Encoding),
 );
 
@@ -584,9 +586,10 @@ pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
     this.as_rust_type_ref().eid()
 }
 pub use crate::opaque_types::z_loaned_source_info_t;
+pub use crate::opaque_types::z_moved_source_info_t;
 pub use crate::opaque_types::z_owned_source_info_t;
 decl_c_type!(
-    owned(z_owned_source_info_t, SourceInfo),
+    owned(z_owned_source_info_t, z_moved_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo)
 );
 

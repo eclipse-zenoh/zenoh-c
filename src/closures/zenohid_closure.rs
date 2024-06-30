@@ -42,7 +42,16 @@ pub struct z_loaned_closure_zid_t {
     _0: [usize; 3],
 }
 
-decl_c_type!(owned(z_owned_closure_zid_t), loaned(z_loaned_closure_zid_t));
+/// Moved closure.
+#[repr(C)]
+pub struct z_moved_closure_zid_t<'a> {
+    pub ptr: &'a z_owned_closure_zid_t,
+}
+
+decl_c_type!(
+    owned(z_owned_closure_zid_t, z_moved_closure_zid_t),
+    loaned(z_loaned_closure_zid_t)
+);
 
 impl z_owned_closure_zid_t {
     pub fn empty() -> Self {
