@@ -13,8 +13,8 @@
 //
 use crate::{
     errors::{self, Z_OK},
-    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
+    transmute::{IntoCType, LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_owned_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
 use async_std::task;
@@ -35,8 +35,7 @@ decl_c_type!(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 #[allow(unused_variables)]
-pub unsafe extern "C" fn z_hello_drop(this: z_moved_hello_t) {
-}
+pub unsafe extern "C" fn z_hello_drop(this: z_moved_hello_t) {}
 
 /// Borrows hello message.
 #[no_mangle]
@@ -144,7 +143,7 @@ pub extern "C" fn z_scout_options_default(this: &mut z_scout_options_t) {
 #[no_mangle]
 pub extern "C" fn z_scout(
     config: &mut z_owned_config_t,
-    callback: &mut z_owned_closure_hello_t,
+    callback: z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
 ) -> errors::z_error_t {
     if cfg!(feature = "logger-autoinit") {
@@ -159,13 +158,14 @@ pub extern "C" fn z_scout(
         log::error!("Config not provided");
         return errors::Z_EINVAL;
     };
-    let mut closure = z_owned_closure_hello_t::empty();
-    std::mem::swap(&mut closure, callback);
 
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
-                z_closure_hello_call(z_closure_hello_loan(&closure), h.as_loaned_c_type_ref())
+                z_closure_hello_call(
+                    z_closure_hello_loan(callback.as_owned_c_type_ref()),
+                    h.as_loaned_c_type_ref(),
+                )
             })
             .await
             .unwrap();

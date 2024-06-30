@@ -44,8 +44,8 @@ pub struct z_loaned_closure_zid_t {
 
 /// Moved closure.
 #[repr(C)]
-pub struct z_moved_closure_zid_t<'a> {
-    pub ptr: &'a z_owned_closure_zid_t,
+pub struct z_moved_closure_zid_t {
+    pub ptr: &'static mut z_owned_closure_zid_t,
 }
 
 decl_c_type!(
@@ -53,15 +53,17 @@ decl_c_type!(
     loaned(z_loaned_closure_zid_t)
 );
 
-impl z_owned_closure_zid_t {
-    pub fn empty() -> Self {
+impl Default for z_owned_closure_zid_t {
+    fn default() -> Self {
         z_owned_closure_zid_t {
             context: std::ptr::null_mut(),
             call: None,
             drop: None,
         }
     }
+}
 
+impl z_owned_closure_zid_t {
     pub fn is_empty(&self) -> bool {
         self.call.is_none() && self.drop.is_none() && self.context.is_null()
     }
@@ -87,7 +89,7 @@ pub unsafe extern "C" fn z_closure_zid_check(this: &z_owned_closure_zid_t) -> bo
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_zid_null(this: &mut MaybeUninit<z_owned_closure_zid_t>) {
-    this.write(z_owned_closure_zid_t::empty());
+    this.write(z_owned_closure_zid_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
@@ -102,10 +104,9 @@ pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_zid_drop(closure: &mut z_owned_closure_zid_t) {
-    let mut empty_closure = z_owned_closure_zid_t::empty();
-    std::mem::swap(&mut empty_closure, closure);
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_closure_zid_drop(closure: z_moved_closure_zid_t) {}
+
 impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;

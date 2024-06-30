@@ -17,11 +17,12 @@ use std::ptr::null;
 
 use crate::errors;
 use crate::transmute::LoanedCTypeRef;
+use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_keyexpr_t;
-use crate::z_owned_closure_sample_t;
+use crate::z_moved_closure_sample_t;
 use crate::z_reliability_t;
 use crate::{
     z_closure_sample_call, z_get_options_t, z_loaned_session_t, z_query_consolidation_none,
@@ -117,12 +118,10 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_sample_t,
+    callback: z_moved_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
-    let mut closure = z_owned_closure_sample_t::empty();
-    std::mem::swap(callback, &mut closure);
     let session = session.as_rust_type_ref();
     let mut sub = session
         .declare_subscriber(key_expr.as_rust_type_ref())
@@ -147,7 +146,10 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
     let sub = sub.callback(move |sample| {
         let sample = sample.as_loaned_c_type_ref();
-        z_closure_sample_call(z_closure_sample_loan(&closure), sample);
+        z_closure_sample_call(
+            z_closure_sample_loan(callback.as_owned_c_type_ref()),
+            sample,
+        );
     });
     match sub.wait() {
         Ok(sub) => {

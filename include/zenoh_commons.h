@@ -317,6 +317,12 @@ typedef struct z_owned_closure_hello_t {
   void (*drop)(void *context);
 } z_owned_closure_hello_t;
 /**
+ * Moved closure.
+ */
+typedef struct z_moved_closure_hello_t {
+  struct z_owned_closure_hello_t *ptr;
+} z_moved_closure_hello_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
@@ -337,6 +343,12 @@ typedef struct z_owned_closure_owned_query_t {
   void (*call)(struct z_owned_query_t*, void *context);
   void (*drop)(void*);
 } z_owned_closure_owned_query_t;
+/**
+ * Moved closure.
+ */
+typedef struct z_moved_closure_owned_query_t {
+  struct z_owned_closure_owned_query_t *ptr;
+} z_moved_closure_owned_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -362,6 +374,12 @@ typedef struct z_owned_closure_query_t {
   void (*drop)(void *context);
 } z_owned_closure_query_t;
 /**
+ * Moved closure.
+ */
+typedef struct z_moved_closure_query_t {
+  struct z_owned_closure_query_t *ptr;
+} z_moved_closure_query_t;
+/**
  * A structure that contains all the elements for stateful, memory-leak-free callbacks.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -385,6 +403,12 @@ typedef struct z_owned_closure_reply_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_reply_t;
+/**
+ * Moved closure.
+ */
+typedef struct z_moved_closure_reply_t {
+  struct z_owned_closure_reply_t *ptr;
+} z_moved_closure_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
  *
@@ -410,6 +434,12 @@ typedef struct z_owned_closure_sample_t {
   void (*drop)(void *context);
 } z_owned_closure_sample_t;
 /**
+ * Moved closure.
+ */
+typedef struct z_moved_closure_sample_t {
+  struct z_owned_closure_sample_t *ptr;
+} z_moved_closure_sample_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -433,6 +463,12 @@ typedef struct z_owned_closure_zid_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_zid_t;
+/**
+ * Moved closure.
+ */
+typedef struct z_moved_closure_zid_t {
+  struct z_owned_closure_zid_t *ptr;
+} z_moved_closure_zid_t;
 typedef struct z_moved_condvar_t {
   struct z_owned_condvar_t *ptr;
 } z_moved_condvar_t;
@@ -933,6 +969,12 @@ typedef struct zcu_owned_closure_matching_status_t {
    */
   void (*drop)(void *context);
 } zcu_owned_closure_matching_status_t;
+/**
+ * Moved closure.
+ */
+typedef struct zcu_moved_closure_matching_status_t {
+  struct zcu_owned_closure_matching_status_t *ptr;
+} zcu_moved_closure_matching_status_t;
 /**
  * Options passed to the `ze_declare_publication_cache()` function.
  */
@@ -1573,7 +1615,7 @@ ZENOHC_API bool z_closure_hello_check(const struct z_owned_closure_hello_t *this
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
+ZENOHC_API void z_closure_hello_drop(struct z_moved_closure_hello_t _closure);
 /**
  * Borrows closure.
  */
@@ -1590,9 +1632,13 @@ ZENOHC_API
 void z_closure_owned_query_call(const struct z_loaned_closure_owned_query_t *closure,
                                 struct z_owned_query_t *query);
 /**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_closure_owned_query_check(const struct z_owned_closure_owned_query_t *this_);
+/**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_closure_owned_query_drop(struct z_owned_closure_owned_query_t *closure);
+ZENOHC_API void z_closure_owned_query_drop(struct z_moved_closure_owned_query_t closure);
 /**
  * Borrows closure.
  */
@@ -1601,7 +1647,7 @@ const struct z_loaned_closure_owned_query_t *z_closure_owned_query_loan(const st
 /**
  * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
  */
-ZENOHC_API struct z_owned_closure_owned_query_t z_closure_owned_query_null(void);
+ZENOHC_API void z_closure_owned_query_null(struct z_owned_closure_owned_query_t *this_);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -1615,7 +1661,7 @@ ZENOHC_API bool z_closure_query_check(const struct z_owned_closure_query_t *this
 /**
  * Drops the closure, resetting it to its gravestone state.
  */
-ZENOHC_API void z_closure_query_drop(struct z_owned_closure_query_t *closure);
+ZENOHC_API void z_closure_query_drop(struct z_moved_closure_query_t closure);
 /**
  * Borrows closure.
  */
@@ -1639,7 +1685,7 @@ ZENOHC_API bool z_closure_reply_check(const struct z_owned_closure_reply_t *this
  * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_reply_drop(struct z_owned_closure_reply_t *closure);
+void z_closure_reply_drop(struct z_moved_closure_reply_t closure);
 /**
  * Borrows closure.
  */
@@ -1662,7 +1708,7 @@ ZENOHC_API bool z_closure_sample_check(const struct z_owned_closure_sample_t *th
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_closure_sample_drop(struct z_owned_closure_sample_t *closure);
+ZENOHC_API void z_closure_sample_drop(struct z_moved_closure_sample_t closure);
 /**
  * Borrows closure.
  */
@@ -1686,7 +1732,7 @@ ZENOHC_API bool z_closure_zid_check(const struct z_owned_closure_zid_t *this_);
  * Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
  */
 ZENOHC_API
-void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
+void z_closure_zid_drop(struct z_moved_closure_zid_t closure);
 /**
  * Vorrows closure.
  */
@@ -1825,7 +1871,7 @@ ZENOHC_API
 z_error_t z_declare_queryable(struct z_owned_queryable_t *this_,
                               const struct z_loaned_session_t *session,
                               const struct z_loaned_keyexpr_t *key_expr,
-                              struct z_owned_closure_query_t *callback,
+                              struct z_moved_closure_query_t callback,
                               struct z_queryable_options_t *options);
 /**
  * Constructs and declares a subscriber for a given key expression. Dropping subscriber
@@ -1842,7 +1888,7 @@ ZENOHC_API
 z_error_t z_declare_subscriber(struct z_owned_subscriber_t *this_,
                                const struct z_loaned_session_t *session,
                                const struct z_loaned_keyexpr_t *key_expr,
-                               struct z_owned_closure_sample_t *callback,
+                               struct z_moved_closure_sample_t callback,
                                struct z_subscriber_options_t *options);
 /**
  * Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).
@@ -2050,7 +2096,7 @@ ZENOHC_API
 z_error_t z_get(const struct z_loaned_session_t *session,
                 const struct z_loaned_keyexpr_t *key_expr,
                 const char *parameters,
-                struct z_owned_closure_reply_t *callback,
+                struct z_moved_closure_reply_t callback,
                 struct z_get_options_t *options);
 /**
  * Constructs default `z_get_options_t`
@@ -2098,7 +2144,7 @@ ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
  */
 ZENOHC_API
 z_error_t z_info_peers_zid(const struct z_loaned_session_t *session,
-                           struct z_owned_closure_zid_t *callback);
+                           struct z_moved_closure_zid_t callback);
 /**
  * Fetches the Zenoh IDs of all connected routers.
  *
@@ -2924,7 +2970,7 @@ ZENOHC_API const struct z_timestamp_t *z_sample_timestamp(const struct z_loaned_
  */
 ZENOHC_API
 z_error_t z_scout(struct z_owned_config_t *config,
-                  struct z_owned_closure_hello_t *callback,
+                  struct z_moved_closure_hello_t callback,
                   const struct z_scout_options_t *options);
 /**
  * Constructs the default values for the scouting operation.
@@ -3876,7 +3922,7 @@ ZENOHC_API
 z_error_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
                                            const struct z_loaned_session_t *session,
                                            const struct z_loaned_keyexpr_t *key_expr,
-                                           struct z_owned_closure_sample_t *callback,
+                                           struct z_moved_closure_sample_t callback,
                                            struct zc_liveliness_subscriber_options_t *_options);
 /**
  * Constructs and declares a liveliness token on the network.
@@ -3905,7 +3951,7 @@ z_error_t zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_,
 ZENOHC_API
 z_error_t zc_liveliness_get(const struct z_loaned_session_t *session,
                             const struct z_loaned_keyexpr_t *key_expr,
-                            struct z_owned_closure_reply_t *callback,
+                            struct z_moved_closure_reply_t callback,
                             struct zc_liveliness_get_options_t *options);
 /**
  * Constructs default value `zc_liveliness_get_options_t`.
@@ -4002,7 +4048,7 @@ bool zcu_closure_matching_status_check(const struct zcu_owned_closure_matching_s
  * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void zcu_closure_matching_status_drop(struct zcu_owned_closure_matching_status_t *closure);
+void zcu_closure_matching_status_drop(struct zcu_moved_closure_matching_status_t closure);
 /**
  * Borrows closure.
  */
@@ -4028,7 +4074,7 @@ ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
 ZENOHC_API
 z_error_t zcu_publisher_matching_listener_callback(struct zcu_owned_matching_listener_t *this_,
                                                    const struct z_loaned_publisher_t *publisher,
-                                                   struct zcu_owned_closure_matching_status_t *callback);
+                                                   struct zcu_moved_closure_matching_status_t callback);
 /**
  * Undeclares the given matching listener, droping and invalidating it.
  *
@@ -4070,7 +4116,7 @@ ZENOHC_API
 z_error_t ze_declare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_,
                                          const struct z_loaned_session_t *session,
                                          const struct z_loaned_keyexpr_t *key_expr,
-                                         struct z_owned_closure_sample_t *callback,
+                                         struct z_moved_closure_sample_t callback,
                                          struct ze_querying_subscriber_options_t *options);
 /**
  * Returns ``true`` if publication cache is valid, ``false`` otherwise.

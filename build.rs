@@ -1083,14 +1083,14 @@ pub fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(\w+)_drop\(struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
         let f = FunctionSignature {
             return_type: Ctype::new("void"),
             func_name: func_name.to_string() + "_drop",
-            args: vec![FuncArg::new(&(arg_type.to_string() + "*"), arg_name)],
+            args: vec![FuncArg::new(arg_type, arg_name)],
         };
         res.push(f);
     }

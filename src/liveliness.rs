@@ -18,12 +18,15 @@ use zenoh::{
     prelude::SessionDeclarations,
 };
 
-use crate::transmute::LoanedCTypeRef;
 use crate::{
     errors,
     transmute::{RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
+    z_moved_closure_reply_t, z_owned_subscriber_t,
+};
+use crate::{
+    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    z_moved_closure_sample_t,
 };
 use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use zenoh::core::Wait;
@@ -158,19 +161,21 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_sample_t,
+    callback: z_moved_closure_sample_t,
     _options: Option<&mut zc_liveliness_subscriber_options_t>,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
-    let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
     let key_expr = key_expr.as_rust_type_ref();
     match session
         .liveliness()
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
-            z_closure_sample_call(z_closure_sample_loan(&callback), sample)
+            z_closure_sample_call(
+                z_closure_sample_loan(callback.as_owned_c_type_ref()),
+                sample,
+            )
         })
         .wait()
     {
@@ -208,16 +213,15 @@ pub extern "C" fn zc_liveliness_get_options_default(this: &mut zc_liveliness_get
 pub extern "C" fn zc_liveliness_get(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_reply_t,
+    callback: z_moved_closure_reply_t,
     options: Option<&mut zc_liveliness_get_options_t>,
 ) -> errors::z_error_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
     let liveliness: Liveliness<'static> = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {
         z_closure_reply_call(
-            z_closure_reply_loan(&callback),
+            z_closure_reply_loan(callback.as_owned_c_type_ref()),
             response.as_loaned_c_type_ref(),
         )
     });

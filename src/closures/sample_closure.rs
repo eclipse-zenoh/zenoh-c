@@ -44,8 +44,8 @@ pub struct z_loaned_closure_sample_t {
 
 /// Moved closure.
 #[repr(C)]
-pub struct z_moved_closure_sample_t<'a> {
-    pub ptr: &'a z_owned_closure_sample_t,
+pub struct z_moved_closure_sample_t {
+    pub ptr: &'static mut z_owned_closure_sample_t,
 }
 
 decl_c_type!(
@@ -53,15 +53,17 @@ decl_c_type!(
     loaned(z_loaned_closure_sample_t)
 );
 
-impl z_owned_closure_sample_t {
-    pub const fn empty() -> Self {
+impl Default for z_owned_closure_sample_t {
+    fn default() -> Self {
         z_owned_closure_sample_t {
             context: std::ptr::null_mut(),
             call: None,
             drop: None,
         }
     }
+}
 
+impl z_owned_closure_sample_t {
     pub fn is_empty(&self) -> bool {
         self.call.is_none() && self.drop.is_none() && self.context.is_null()
     }
@@ -80,7 +82,7 @@ impl Drop for z_owned_closure_sample_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_sample_null(this: &mut MaybeUninit<z_owned_closure_sample_t>) {
-    this.write(z_owned_closure_sample_t::empty());
+    this.write(z_owned_closure_sample_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -104,10 +106,9 @@ pub extern "C" fn z_closure_sample_call(
 
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_sample_drop(closure: &mut z_owned_closure_sample_t) {
-    let mut empty_closure = z_owned_closure_sample_t::empty();
-    std::mem::swap(&mut empty_closure, closure);
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_closure_sample_drop(closure: z_moved_closure_sample_t) {}
+
 impl<F: Fn(&z_loaned_sample_t)> From<F> for z_owned_closure_sample_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;

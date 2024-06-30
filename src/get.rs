@@ -34,15 +34,17 @@ use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
 
 use crate::errors;
 use crate::transmute::LoanedCTypeRef;
+use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_id_t;
+use crate::z_moved_closure_reply_t;
 use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t,
-    z_owned_source_info_t, z_priority_t, z_query_target_t, zcu_locality_default, zcu_locality_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
+    z_loaned_session_t, z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t,
+    z_query_target_t, zcu_locality_default, zcu_locality_t, zcu_reply_keyexpr_default,
+    zcu_reply_keyexpr_t,
 };
 use ::zenoh::core::Wait;
 
@@ -115,8 +117,7 @@ pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_repl
 /// Frees the memory and resets the reply error it to its default value.
 #[no_mangle]
 #[allow(unused_variables)]
-pub extern "C" fn z_reply_err_drop(this: z_moved_reply_err_t) {
-}
+pub extern "C" fn z_reply_err_drop(this: z_moved_reply_err_t) {}
 
 pub use crate::opaque_types::z_loaned_reply_t;
 pub use crate::opaque_types::z_moved_reply_t;
@@ -251,11 +252,9 @@ pub unsafe extern "C" fn z_get(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,
-    callback: &mut z_owned_closure_reply_t,
+    callback: z_moved_closure_reply_t,
     options: Option<&mut z_get_options_t>,
 ) -> errors::z_error_t {
-    let mut closure = z_owned_closure_reply_t::empty();
-    std::mem::swap(callback, &mut closure);
     let p = if parameters.is_null() {
         ""
     } else {
@@ -297,7 +296,7 @@ pub unsafe extern "C" fn z_get(
     match get
         .callback(move |response| {
             z_closure_reply_call(
-                z_closure_reply_loan(&closure),
+                z_closure_reply_loan(callback.as_owned_c_type_ref()),
                 response.as_loaned_c_type_ref(),
             )
         })
@@ -314,8 +313,7 @@ pub unsafe extern "C" fn z_get(
 /// Frees reply, resetting it to its gravestone state.
 #[no_mangle]
 #[allow(unused_variables)]
-pub extern "C" fn z_reply_drop(this: z_moved_reply_t) {
-}
+pub extern "C" fn z_reply_drop(this: z_moved_reply_t) {}
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]

@@ -42,8 +42,9 @@ pub struct zcu_loaned_closure_matching_status_t {
 }
 
 /// Moved closure.
-pub struct zcu_moved_closure_matching_status_t<'a> {
-    pub ptr: &'a zcu_owned_closure_matching_status_t,
+#[repr(C)]
+pub struct zcu_moved_closure_matching_status_t {
+    pub ptr: &'static mut zcu_owned_closure_matching_status_t,
 }
 
 decl_c_type!(
@@ -54,15 +55,17 @@ decl_c_type!(
     loaned(zcu_loaned_closure_matching_status_t)
 );
 
-impl zcu_owned_closure_matching_status_t {
-    pub fn empty() -> Self {
+impl Default for zcu_owned_closure_matching_status_t {
+    fn default() -> Self {
         zcu_owned_closure_matching_status_t {
             context: std::ptr::null_mut(),
             call: None,
             drop: None,
         }
     }
+}
 
+impl zcu_owned_closure_matching_status_t {
     pub fn is_empty(&self) -> bool {
         self.call.is_none() && self.drop.is_none() && self.context.is_null()
     }
@@ -82,7 +85,7 @@ impl Drop for zcu_owned_closure_matching_status_t {
 pub unsafe extern "C" fn zcu_closure_matching_status_null(
     this: *mut MaybeUninit<zcu_owned_closure_matching_status_t>,
 ) {
-    (*this).write(zcu_owned_closure_matching_status_t::empty());
+    (*this).write(zcu_owned_closure_matching_status_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -109,12 +112,9 @@ pub extern "C" fn zcu_closure_matching_status_call(
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn zcu_closure_matching_status_drop(
-    closure: &mut zcu_owned_closure_matching_status_t,
-) {
-    let mut empty_closure = zcu_owned_closure_matching_status_t::empty();
-    std::mem::swap(&mut empty_closure, closure);
-}
+#[allow(unused_variables)]
+pub extern "C" fn zcu_closure_matching_status_drop(closure: zcu_moved_closure_matching_status_t) {}
+
 impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_status_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;

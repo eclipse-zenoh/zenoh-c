@@ -11,12 +11,12 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
-    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
-    z_owned_closure_query_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t,
-    z_timestamp_t, z_view_string_from_substring, z_view_string_t,
+    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_query_t,
+    z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t, z_timestamp_t,
+    z_view_string_from_substring, z_view_string_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
@@ -211,12 +211,10 @@ pub extern "C" fn z_declare_queryable(
     this: &mut MaybeUninit<z_owned_queryable_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_query_t,
+    callback: z_moved_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
-    let mut closure = z_owned_closure_query_t::empty();
-    std::mem::swap(&mut closure, callback);
     let session = session.as_rust_type_ref();
     let keyexpr = key_expr.as_rust_type_ref();
     let mut builder = session.declare_queryable(keyexpr);
@@ -225,7 +223,10 @@ pub extern "C" fn z_declare_queryable(
     }
     let queryable = builder
         .callback(move |query| {
-            z_closure_query_call(z_closure_query_loan(&closure), query.as_loaned_c_type_ref())
+            z_closure_query_call(
+                z_closure_query_loan(callback.as_owned_c_type_ref()),
+                query.as_loaned_c_type_ref(),
+            )
         })
         .wait();
     match queryable {

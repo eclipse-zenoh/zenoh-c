@@ -250,5 +250,20 @@ macro_rules! decl_c_type {
         validate_equivalence!($c_owned_type, $c_loaned_type);
         impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
         impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));
+        impl $crate::transmute::OwnedCTypeRef for $c_moved_type {
+            type OwnedCType = $c_owned_type;
+            fn as_owned_c_type_ref(&self) -> &Self::OwnedCType {
+                self.ptr
+            }
+            fn as_owned_c_type_mut(&mut self) -> &mut Self::OwnedCType {
+                self.ptr
+            }
+        }
+        impl Drop for $c_moved_type {
+            fn drop(&mut self) {
+                use $crate::transmute::OwnedCTypeRef;
+                std::mem::take(self.as_owned_c_type_mut());
+            }
+        }
     };
 }

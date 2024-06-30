@@ -15,6 +15,7 @@
 use crate::errors;
 use crate::transmute::IntoCType;
 use crate::transmute::LoanedCTypeRef;
+use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_entity_global_id_t;
@@ -25,7 +26,7 @@ use crate::zcu_closure_matching_status_call;
 use crate::zcu_closure_matching_status_loan;
 use crate::zcu_locality_default;
 use crate::zcu_locality_t;
-use crate::zcu_owned_closure_matching_status_t;
+use crate::zcu_moved_closure_matching_status_t;
 use std::mem::MaybeUninit;
 use std::ptr;
 use zenoh::core::Wait;
@@ -317,11 +318,9 @@ pub struct zcu_matching_status_t {
 pub extern "C" fn zcu_publisher_matching_listener_callback(
     this: &mut MaybeUninit<zcu_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
-    callback: &mut zcu_owned_closure_matching_status_t,
+    callback: zcu_moved_closure_matching_status_t,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
-    let mut closure = zcu_owned_closure_matching_status_t::empty();
-    std::mem::swap(callback, &mut closure);
     let publisher = publisher.as_rust_type_ref();
     let listener = publisher
         .matching_listener()
@@ -329,7 +328,10 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
             let status = zcu_matching_status_t {
                 matching: matching_status.matching_subscribers(),
             };
-            zcu_closure_matching_status_call(zcu_closure_matching_status_loan(&closure), &status);
+            zcu_closure_matching_status_call(
+                zcu_closure_matching_status_loan(callback.as_owned_c_type_ref()),
+                &status,
+            );
         })
         .wait();
     match listener {
