@@ -1186,7 +1186,7 @@ pub fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 pub fn generate_generic_c_move_macro(macro_func: &[FunctionSignature]) -> String {
-    let mut out = "#define z_move_(x) \\
+    let mut out = "#define z_move(x) \\
     _Generic((x)"
         .to_string();
     for func in macro_func {

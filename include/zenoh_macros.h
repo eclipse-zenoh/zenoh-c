@@ -159,7 +159,7 @@
 #define z_string_move(x) (z_moved_string_t){&x}
 #define z_subscriber_move(x) (z_moved_subscriber_t){&x}
 #define zcu_closure_matching_status_move(x) (zcu_moved_closure_matching_status_t){&x}
-#define z_move_(x) \
+#define z_move(x) \
     _Generic((x), \
         z_owned_alloc_layout_t : (z_moved_alloc_layout_t){(z_owned_alloc_layout_t*)&x}, \
         z_owned_buf_alloc_result_t : (z_moved_buf_alloc_result_t){(z_owned_buf_alloc_result_t*)&x}, \
