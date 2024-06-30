@@ -202,10 +202,8 @@ pub unsafe extern "C" fn zc_config_insert_json_from_substring(
 
 /// Frees `config`, and resets it to its gravestone state.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_config_drop(this: z_moved_config_t) {
-    *this.ptr.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_config_drop(this: z_moved_config_t) {}
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

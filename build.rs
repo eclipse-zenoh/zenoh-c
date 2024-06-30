@@ -194,8 +194,8 @@ pub struct {type_name} {{
             let moved_type_name = format!("{}{}", moved_type_prefix, postfix);
             s += format!(
                 "#[repr(C)]
-pub struct {moved_type_name}<'a> {{
-    pub ptr: &'a mut {type_name},
+pub struct {moved_type_name} {{
+    pub ptr: &'static mut {type_name},
 }}
 "
             )

@@ -217,6 +217,21 @@ macro_rules! decl_c_type {
         validate_equivalence!($c_owned_type, $rust_owned_type);
         impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
+        impl $crate::transmute::RustTypeRef for $c_moved_type {
+            type RustType = $rust_owned_type;
+            fn as_rust_type_ref(&self) -> &Self::RustType {
+                self.ptr.as_rust_type_ref()
+            }
+            fn as_rust_type_mut(&mut self) -> &mut Self::RustType {
+                self.ptr.as_rust_type_mut()
+            }
+        }
+        impl Drop for $c_moved_type {
+            fn drop(&mut self) {
+                use $crate::transmute::RustTypeRef;
+                std::mem::take(self.as_rust_type_mut());
+            }
+        }
     };
     (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         validate_equivalence!($c_loaned_type, $rust_loaned_type);

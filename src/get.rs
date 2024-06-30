@@ -122,7 +122,7 @@ pub use crate::opaque_types::z_loaned_reply_t;
 pub use crate::opaque_types::z_moved_reply_t;
 pub use crate::opaque_types::z_owned_reply_t;
 decl_c_type!(
-    owned(z_owned_reply_t, z_owned_reply_t, Option<Reply>),
+    owned(z_owned_reply_t, z_moved_reply_t, Option<Reply>),
     loaned(z_loaned_reply_t, Reply)
 );
 
