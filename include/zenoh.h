@@ -30,6 +30,7 @@ extern "C" {
 
 // clang-format off
 // include order is important
+#include "zenoh_macros.h"
 #include "zenoh_concrete.h"
 #include "zenoh_opaque.h"
 #include "zenoh_commons.h"
@@ -38,6 +39,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#include "zenoh_macros.h"
 #include "zenoh_memory.h"
 #endif
