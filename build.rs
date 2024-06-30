@@ -160,6 +160,18 @@ fn produce_opaque_types_data() -> PathBuf {
     output_file_path
 }
 
+fn split_type_name(type_name: &str) -> (&str, &str, &str) {
+    let mut split = type_name.split('_');
+    let prefix = split
+        .next()
+        .expect("Type should start from 'z_', 'zc_', etc.");
+    let category = split
+        .next()
+        .expect("Type should be in format `z_loaned_...`, `z_owned_...` etc.");
+    let remainder = &type_name[prefix.len() + 1 + category.len() + 1..];
+    (prefix, category, remainder)
+}
+
 fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
     let current_folder = get_build_rs_path();
@@ -182,16 +194,9 @@ pub struct {type_name} {{
 "
         );
 
-        if let Some(prefix_index) = type_name
-            .strip_prefix("z_owned_")
-            .or(type_name.strip_prefix("ze_owned_"))
-            .or(type_name.strip_prefix("zc_owned_"))
-            .or(type_name.strip_prefix("zcu_owned_"))
-            .map(|s| type_name.len() - s.len())
-        {
-            let (prefix, postfix) = type_name.split_at(prefix_index);
-            let moved_type_prefix = prefix.replace("owned", "moved");
-            let moved_type_name = format!("{}{}", moved_type_prefix, postfix);
+        let (prefix, category, remainder) = split_type_name(type_name);
+        if category == "owned" {
+            let moved_type_name = format!("{}_{}_{}", prefix, "moved", remainder);
             s += format!(
                 "#[repr(C)]
 pub struct {moved_type_name} {{
@@ -1024,17 +1029,15 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
 
 pub fn make_move_macros(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(\w+)_drop\(struct z_owned_(\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
-    for (_, [func_name_prefix, arg_type_suffix, arg_name]) in
-        re.captures_iter(&bindings).map(|c| c.extract())
-    {
-        let z_moved_type = "z_moved_".to_string() + arg_type_suffix;
-        let z_owned_type = "z_owned_".to_string() + arg_type_suffix;
+    for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
+        let (prefix, _, remainder) = split_type_name(arg_type);
+        let z_owned_type = format!("{}_{}_{}", prefix, "owned", remainder);
         let f = FunctionSignature {
-            return_type: Ctype::new(&z_moved_type),
-            func_name: func_name_prefix.to_string() + "_move",
+            return_type: Ctype::new(arg_type),
+            func_name: func_name.to_string() + "_move",
             args: vec![FuncArg::new(&z_owned_type, arg_name)],
         };
         res.push(f);
@@ -1257,10 +1260,8 @@ pub fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
         );
     }
     out += generate_generic_c_move_macro(macro_func).as_str();
-    out += "\n#define z_move(x) (&x)";
     out
 }
-
 pub fn generate_generic_null_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_null", false)
 }
