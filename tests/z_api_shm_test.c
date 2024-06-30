@@ -90,7 +90,7 @@ bool test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
 
     ASSERT_OK(z_buf_alloc_result_unwrap(z_move(alloc), &shm_buf, &shm_error));
     if (z_check(shm_buf)) {
-        ASSERT_OK(test_shm_buffer(z_move(shm_buf)));
+        ASSERT_OK(test_shm_buffer(&shm_buf));
         ASSERT_CHECK_ERR(shm_buf);
         return true;
     } else
@@ -108,7 +108,7 @@ bool test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_all
 
     ASSERT_OK(z_buf_alloc_result_unwrap(z_move(alloc), &shm_buf, &shm_error));
     if (z_check(shm_buf)) {
-        ASSERT_OK(test_shm_buffer(z_move(shm_buf)));
+        ASSERT_OK(test_shm_buffer(&shm_buf));
         ASSERT_CHECK_ERR(shm_buf);
         return true;
     } else

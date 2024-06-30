@@ -249,8 +249,8 @@ pub extern "C" fn z_declare_queryable(
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_queryable(mut this: z_moved_queryable_t) -> errors::z_error_t {
-    if let Some(qable) = this.as_rust_type_mut().take() {
+pub extern "C" fn z_undeclare_queryable(this: z_moved_queryable_t) -> errors::z_error_t {
+    if let Some(qable) = this.into_rust_type().take() {
         if let Err(e) = qable.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

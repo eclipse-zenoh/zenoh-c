@@ -20,8 +20,8 @@ use std::{
 use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_mut_t, z_loaned_shm_t, z_moved_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_shm_mut_t, z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t,
 };
 
 decl_c_type!(
@@ -31,11 +31,8 @@ decl_c_type!(
 
 /// Constructs ZShm slice from ZShmMut slice
 #[no_mangle]
-pub extern "C" fn z_shm_from_mut(
-    this: &mut MaybeUninit<z_owned_shm_t>,
-    that: &mut z_owned_shm_mut_t,
-) {
-    let shm: Option<ZShm> = that.as_rust_type_mut().take().map(|val| val.into());
+pub extern "C" fn z_shm_from_mut(this: &mut MaybeUninit<z_owned_shm_t>, that: z_moved_shm_mut_t) {
+    let shm: Option<ZShm> = that.into_rust_type().take().map(|val| val.into());
     this.as_rust_type_mut_uninit().write(shm);
 }
 

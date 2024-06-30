@@ -20,7 +20,7 @@ use zenoh::{
 
 use crate::{
     errors,
-    transmute::{RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_moved_closure_reply_t, z_owned_subscriber_t,
 };
@@ -57,9 +57,9 @@ pub extern "C" fn zc_liveliness_token_check(this: &zc_owned_liveliness_token_t) 
 
 /// Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_token_drop(this: &mut zc_owned_liveliness_token_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn zc_liveliness_token_drop(this: zc_moved_liveliness_token_t) {}
+
 /// The options for `zc_liveliness_declare_token()`.
 #[repr(C)]
 pub struct zc_liveliness_declaration_options_t {
@@ -121,10 +121,9 @@ pub extern "C" fn zc_liveliness_declare_token(
 /// Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(
-    this: &mut zc_owned_liveliness_token_t,
+    this: zc_moved_liveliness_token_t,
 ) -> errors::z_error_t {
-    let this = this.as_rust_type_mut();
-    if let Some(token) = this.take() {
+    if let Some(token) = this.into_rust_type().take() {
         if let Err(e) = token.undeclare().wait() {
             log::error!("Failed to undeclare token: {e}");
             return errors::Z_EGENERIC;

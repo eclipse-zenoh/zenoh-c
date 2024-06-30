@@ -16,6 +16,7 @@ use std::mem::MaybeUninit;
 
 use crate::errors;
 use crate::keyexpr::*;
+use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
 use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
@@ -161,8 +162,8 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> errors::z_error_t {
-    if let Some(s) = this.as_rust_type_mut().take() {
+pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> errors::z_error_t {
+    if let Some(s) = this.into_rust_type().take() {
         if let Err(e) = s.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

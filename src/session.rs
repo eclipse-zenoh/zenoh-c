@@ -126,9 +126,8 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 /// @return 0 in  case of success, a negative value if an error occured while closing the session,
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
-pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
-    let session = this.as_rust_type_mut();
-    let Some(s) = session.take() else {
+pub extern "C" fn z_close(session: z_moved_session_t) -> errors::z_error_t {
+    let Some(s) = session.into_rust_type().take() else {
         return errors::Z_EINVAL;
     };
     let s = match Arc::try_unwrap(s) {

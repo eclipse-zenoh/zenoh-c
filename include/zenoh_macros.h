@@ -113,6 +113,7 @@
         z_moved_string_array_t : z_string_array_drop, \
         z_moved_string_t : z_string_drop, \
         z_moved_subscriber_t : z_subscriber_drop, \
+        zc_moved_liveliness_token_t : zc_liveliness_token_drop, \
         zcu_moved_closure_matching_status_t : zcu_closure_matching_status_drop \
     )(x)
 
@@ -158,6 +159,7 @@
 #define z_string_array_move(x) (z_moved_string_array_t){&x}
 #define z_string_move(x) (z_moved_string_t){&x}
 #define z_subscriber_move(x) (z_moved_subscriber_t){&x}
+#define zc_liveliness_token_move(x) (zc_moved_liveliness_token_t){&x}
 #define zcu_closure_matching_status_move(x) (zcu_moved_closure_matching_status_t){&x}
 #define z_move(x) \
     _Generic((x), \
@@ -203,6 +205,7 @@
         z_owned_string_array_t : (z_moved_string_array_t){(z_owned_string_array_t*)&x}, \
         z_owned_string_t : (z_moved_string_t){(z_owned_string_t*)&x}, \
         z_owned_subscriber_t : (z_moved_subscriber_t){(z_owned_subscriber_t*)&x}, \
+        zc_owned_liveliness_token_t : (zc_moved_liveliness_token_t){(zc_owned_liveliness_token_t*)&x}, \
         zcu_owned_closure_matching_status_t : (zcu_moved_closure_matching_status_t){(zcu_owned_closure_matching_status_t*)&x} \
     )
 
@@ -456,6 +459,7 @@ inline void z_drop(z_moved_source_info_t this_) { return z_source_info_drop(this
 inline void z_drop(z_moved_string_array_t this_) { return z_string_array_drop(this_); };
 inline void z_drop(z_moved_string_t this_) { return z_string_drop(this_); };
 inline void z_drop(z_moved_subscriber_t this_) { return z_subscriber_drop(this_); };
+inline void z_drop(zc_moved_liveliness_token_t this_) { return zc_liveliness_token_drop(this_); };
 inline void z_drop(zcu_moved_closure_matching_status_t closure) { return zcu_closure_matching_status_drop(closure); };
 
 
@@ -501,6 +505,7 @@ inline z_moved_source_info_t z_move(z_moved_source_info_t this_) { return (&this
 inline z_moved_string_array_t z_move(z_moved_string_array_t this_) { return (&this_); };
 inline z_moved_string_t z_move(z_moved_string_t this_) { return (&this_); };
 inline z_moved_subscriber_t z_move(z_moved_subscriber_t this_) { return (&this_); };
+inline zc_moved_liveliness_token_t z_move(zc_moved_liveliness_token_t this_) { return (&this_); };
 inline zcu_moved_closure_matching_status_t z_move(zcu_moved_closure_matching_status_t closure) { return (&closure); };
 
 

@@ -13,8 +13,10 @@
 //
 use crate::{
     errors::{self, Z_OK},
-    transmute::{IntoCType, LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_owned_config_t,
+    transmute::{
+        IntoCType, IntoRustType, LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit,
+    },
+    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
 use async_std::task;
@@ -142,7 +144,7 @@ pub extern "C" fn z_scout_options_default(this: &mut z_scout_options_t) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_scout(
-    config: &mut z_owned_config_t,
+    config: z_moved_config_t,
     callback: z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
 ) -> errors::z_error_t {
@@ -154,7 +156,7 @@ pub extern "C" fn z_scout(
         WhatAmIMatcher::try_from(options.zc_what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.zc_timeout_ms as u64;
-    let Some(config) = config.as_rust_type_mut().take() else {
+    let Some(config) = config.into_rust_type().take() else {
         log::error!("Config not provided");
         return errors::Z_EINVAL;
     };
