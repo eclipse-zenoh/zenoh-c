@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_moved_config_t, zc_init_logger};
 use std::mem::MaybeUninit;
 use std::sync::Arc;
@@ -54,13 +54,13 @@ pub extern "C" fn z_session_null(this: &mut MaybeUninit<z_owned_session_t>) {
 #[no_mangle]
 pub extern "C" fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
-    mut config: z_moved_config_t,
+    config: z_moved_config_t,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let Some(config) = config.as_rust_type_mut().take() else {
+    let Some(config) = config.into_rust_type().take() else {
         log::error!("Config not provided");
         this.write(None);
         return errors::Z_EINVAL;
@@ -86,14 +86,14 @@ pub extern "C" fn z_open(
 #[no_mangle]
 pub extern "C" fn z_open_with_custom_shm_clients(
     this: &mut MaybeUninit<z_owned_session_t>,
-    mut config: z_moved_config_t,
+    config: z_moved_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
-    let Some(config) = config.as_rust_type_mut().take() else {
+    let Some(config) = config.into_rust_type().take() else {
         log::error!("Config not provided");
         this.write(None);
         return errors::Z_EINVAL;

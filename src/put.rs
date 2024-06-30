@@ -14,8 +14,10 @@
 use crate::commons::*;
 use crate::errors;
 use crate::keyexpr::*;
+use crate::transmute::IntoRustType;
 use crate::transmute::RustTypeRef;
 use crate::z_loaned_session_t;
+use crate::z_moved_bytes_t;
 use crate::z_owned_bytes_t;
 use crate::z_timestamp_t;
 use std::ptr::null_mut;
@@ -78,12 +80,12 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
 pub extern "C" fn z_put(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    payload: &mut z_owned_bytes_t,
+    payload: z_moved_bytes_t,
     options: Option<&mut z_put_options_t>,
 ) -> errors::z_error_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let payload = std::mem::take(payload.as_rust_type_mut());
+    let payload = payload.into_rust_type();
 
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {

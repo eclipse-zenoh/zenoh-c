@@ -1430,8 +1430,8 @@ z_error_t z_bytes_serialize_from_iter(struct z_owned_bytes_t *this_,
  */
 ZENOHC_API
 z_error_t z_bytes_serialize_from_pair(struct z_owned_bytes_t *this_,
-                                      struct z_owned_bytes_t *first,
-                                      struct z_owned_bytes_t *second);
+                                      struct z_moved_bytes_t first,
+                                      struct z_moved_bytes_t second);
 /**
  * Serializes from an immutable SHM buffer consuming it
  */
@@ -2478,7 +2478,7 @@ ZENOHC_API void z_publisher_options_default(struct z_publisher_options_t *this_)
  */
 ZENOHC_API
 z_error_t z_publisher_put(const struct z_loaned_publisher_t *this_,
-                          struct z_owned_bytes_t *payload,
+                          struct z_moved_bytes_t payload,
                           struct z_publisher_put_options_t *options);
 /**
  * Constructs the default value for `z_publisher_put_options_t`.
@@ -2497,7 +2497,7 @@ ZENOHC_API void z_publisher_put_options_default(struct z_publisher_put_options_t
 ZENOHC_API
 z_error_t z_put(const struct z_loaned_session_t *session,
                 const struct z_loaned_keyexpr_t *key_expr,
-                struct z_owned_bytes_t *payload,
+                struct z_moved_bytes_t payload,
                 struct z_put_options_t *options);
 /**
  * Constructs the default value for `z_put_options_t`.
@@ -2608,7 +2608,7 @@ const struct z_loaned_bytes_t *z_query_payload(const struct z_loaned_query_t *th
 ZENOHC_API
 z_error_t z_query_reply(const struct z_loaned_query_t *this_,
                         const struct z_loaned_keyexpr_t *key_expr,
-                        struct z_owned_bytes_t *payload,
+                        struct z_moved_bytes_t payload,
                         struct z_query_reply_options_t *options);
 /**
  * Sends a delete reply to a query.
@@ -2648,7 +2648,7 @@ ZENOHC_API void z_query_reply_del_options_default(struct z_query_reply_del_optio
  */
 ZENOHC_API
 z_error_t z_query_reply_err(const struct z_loaned_query_t *this_,
-                            struct z_owned_bytes_t *payload,
+                            struct z_moved_bytes_t payload,
                             struct z_query_reply_err_options_t *options);
 /**
  * Constructs the default value for `z_query_reply_err_options_t`.

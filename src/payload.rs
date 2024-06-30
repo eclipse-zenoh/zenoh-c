@@ -59,8 +59,7 @@ extern "C" fn z_bytes_empty(this: &mut MaybeUninit<z_owned_bytes_t>) {
 /// created by `z_bytes_clone()`, they would still stay valid.
 #[no_mangle]
 #[allow(unused_variables)]
-extern "C" fn z_bytes_drop(this: z_moved_bytes_t) {
-}
+extern "C" fn z_bytes_drop(this: z_moved_bytes_t) {}
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
@@ -548,11 +547,11 @@ pub unsafe extern "C" fn z_bytes_serialize_from_string_copy(
 #[no_mangle]
 pub extern "C" fn z_bytes_serialize_from_pair(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    first: &mut z_owned_bytes_t,
-    second: &mut z_owned_bytes_t,
+    first: z_moved_bytes_t,
+    second: z_moved_bytes_t,
 ) -> z_error_t {
-    let first = std::mem::take(first.as_rust_type_mut());
-    let second = std::mem::take(second.as_rust_type_mut());
+    let first = first.as_rust_type_ref();
+    let second = second.as_rust_type_ref();
     let b = ZBytes::serialize((first, second));
     this.as_rust_type_mut_uninit().write(b);
     Z_OK
@@ -817,8 +816,7 @@ extern "C" fn z_bytes_writer_null(this: &mut MaybeUninit<z_owned_bytes_writer_t>
 /// Drops `this_`, resetting it to gravestone value.
 #[no_mangle]
 #[allow(unused_variables)]
-extern "C" fn z_bytes_writer_drop(this: z_moved_bytes_writer_t) {
-}
+extern "C" fn z_bytes_writer_drop(this: z_moved_bytes_writer_t) {}
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]

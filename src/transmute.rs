@@ -45,12 +45,12 @@ pub(crate) trait RustTypeRefUninit: Sized {
     fn as_rust_type_mut_uninit(&mut self) -> &mut MaybeUninit<Self::RustType>;
 }
 
-pub(crate) trait IntoRustType: Sized + Copy {
+pub(crate) trait IntoRustType: Sized {
     type RustType;
     fn into_rust_type(self) -> Self::RustType;
 }
 
-pub(crate) trait IntoCType: Sized + Copy {
+pub(crate) trait IntoCType: Sized {
     type CType;
     fn into_c_type(self) -> Self::CType;
 }
@@ -224,6 +224,12 @@ macro_rules! decl_c_type {
             }
             fn as_rust_type_mut(&mut self) -> &mut Self::RustType {
                 self.ptr.as_rust_type_mut()
+            }
+        }
+        impl $crate::transmute::IntoRustType for $c_moved_type {
+            type RustType = $rust_owned_type;
+            fn into_rust_type(self) -> Self::RustType {
+                std::mem::take(self.ptr.as_rust_type_mut())
             }
         }
         impl Drop for $c_moved_type {

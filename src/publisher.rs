@@ -14,11 +14,13 @@
 
 use crate::errors;
 use crate::transmute::IntoCType;
+use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
 use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_entity_global_id_t;
+use crate::z_moved_bytes_t;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;
 use crate::z_timestamp_t;
@@ -194,11 +196,11 @@ pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_opt
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
-    payload: &mut z_owned_bytes_t,
+    payload: z_moved_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
     let publisher = this.as_rust_type_ref();
-    let payload = std::mem::take(payload.as_rust_type_mut());
+    let payload = payload.into_rust_type();
 
     let mut put = publisher.put(payload);
     if let Some(options) = options {
