@@ -56,9 +56,7 @@ pub extern "C" fn zc_shm_client_list_check(this: &zc_owned_shm_client_list_t) ->
 
 /// Deletes list of SHM Clients
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_drop(this: &mut zc_owned_shm_client_list_t) {
-    *this.as_rust_type_mut() = None;
-}
+pub extern "C" fn zc_shm_client_list_drop(this: zc_moved_shm_client_list_t) {}
 
 /// Borrows list of SHM Clients
 #[no_mangle]

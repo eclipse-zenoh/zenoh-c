@@ -16,6 +16,7 @@ use std::mem::MaybeUninit;
 use std::ptr::null;
 
 use crate::errors;
+use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
 use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
@@ -227,9 +228,9 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
-    this: &mut ze_owned_querying_subscriber_t,
+    this: ze_moved_querying_subscriber_t,
 ) -> errors::z_error_t {
-    if let Some(s) = this.as_rust_type_mut().take() {
+    if let Some(s) = this.into_rust_type().take() {
         if let Err(e) = s.0.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -240,7 +241,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 
 /// Drops querying subscriber. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_drop(this: &mut ze_owned_querying_subscriber_t) {
+pub extern "C" fn ze_querying_subscriber_drop(this: ze_moved_querying_subscriber_t) {
     ze_undeclare_querying_subscriber(this);
 }
 

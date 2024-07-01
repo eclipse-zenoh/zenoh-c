@@ -354,9 +354,9 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_undeclare(
-    this: &mut zcu_owned_matching_listener_t,
+    this: zcu_moved_matching_listener_t,
 ) -> errors::z_error_t {
-    if let Some(p) = this.as_rust_type_mut().take() {
+    if let Some(p) = this.into_rust_type().take() {
         if let Err(e) = p.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

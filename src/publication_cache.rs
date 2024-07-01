@@ -17,7 +17,7 @@ use std::ptr::null;
 
 use zenoh_ext::SessionExt;
 
-use crate::transmute::{RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit};
 use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t};
 #[cfg(feature = "unstable")]
 use crate::{zcu_locality_default, zcu_locality_t};
@@ -131,9 +131,9 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
-    this: &mut ze_owned_publication_cache_t,
+    this: ze_moved_publication_cache_t,
 ) -> errors::z_error_t {
-    if let Some(p) = this.as_rust_type_mut().take() {
+    if let Some(p) = this.into_rust_type().take() {
         if let Err(e) = p.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -145,6 +145,6 @@ pub extern "C" fn ze_undeclare_publication_cache(
 /// Drops publication cache. Also attempts to undeclare it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_drop(this: &mut ze_owned_publication_cache_t) {
+pub extern "C" fn ze_publication_cache_drop(this: ze_moved_publication_cache_t) {
     ze_undeclare_publication_cache(this);
 }
