@@ -13,7 +13,7 @@
 //
 
 use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
-use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
     CSliceOwned, CStringOwned, ZHashMap,
@@ -551,8 +551,8 @@ pub extern "C" fn z_bytes_serialize_from_pair(
     first: z_moved_bytes_t,
     second: z_moved_bytes_t,
 ) -> z_error_t {
-    let first = first.as_rust_type_ref();
-    let second = second.as_rust_type_ref();
+    let first = first.into_rust_type();
+    let second = second.into_rust_type();
     let b = ZBytes::serialize((first, second));
     this.as_rust_type_mut_uninit().write(b);
     Z_OK
