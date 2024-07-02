@@ -61,7 +61,7 @@ decl_c_type!(
         Option<zenoh_ext::PublicationCache<'static>>,
     ),
     loaned(ze_loaned_publication_cache_t, zenoh_ext::PublicationCache<'static>),
-    moved ze_moved_publication_cache_t
+moved(ze_moved_publication_cache_t)
 );
 
 /// Constructs and declares a publication cache.

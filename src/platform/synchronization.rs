@@ -18,7 +18,7 @@ pub use crate::opaque_types::z_owned_mutex_t;
 decl_c_type!(
     owned(z_owned_mutex_t, Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>),
     loaned(z_loaned_mutex_t, (Mutex<()>, Option<MutexGuard<'static, ()>>)),
-    moved z_moved_mutex_t
+moved(z_moved_mutex_t)
 );
 
 /// Constructs a mutex.
@@ -117,7 +117,7 @@ decl_c_type!(
     inequal
     owned(z_owned_condvar_t, Option<Condvar>),
     loaned(z_loaned_condvar_t, Condvar),
-    moved z_moved_condvar_t
+moved(z_moved_condvar_t)
 );
 
 /// Constructs conditional variable.

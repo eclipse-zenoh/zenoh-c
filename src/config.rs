@@ -68,7 +68,7 @@ pub use crate::opaque_types::z_owned_config_t;
 decl_c_type!(
     owned(z_owned_config_t, Option<Config>),
     loaned(z_loaned_config_t, Config),
-    moved z_moved_config_t
+moved(z_moved_config_t)
 );
 
 /// Borrows config.

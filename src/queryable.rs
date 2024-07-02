@@ -39,7 +39,7 @@ pub use crate::opaque_types::z_owned_queryable_t;
 decl_c_type!(
     owned(z_owned_queryable_t, Option<Queryable<'static, ()>>),
     loaned(z_loaned_queryable_t, Queryable<'static, ()>),
-    moved z_moved_queryable_t
+moved(z_moved_queryable_t)
 );
 
 /// Constructs a queryable in its gravestone value.
@@ -64,7 +64,7 @@ pub use crate::opaque_types::z_owned_query_t;
 decl_c_type!(
     owned(z_owned_query_t, Option<Query>),
     loaned(z_loaned_query_t, Query),
-    moved z_moved_query_t
+moved(z_moved_query_t)
 );
 
 /// Constructs query in its gravestone value.
@@ -297,7 +297,9 @@ pub extern "C" fn z_query_reply(
 ) -> errors::z_error_t {
     let query = this.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let payload = payload.into_rust_type();
+    let Some(payload) = payload.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
 
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
@@ -351,7 +353,9 @@ pub unsafe extern "C" fn z_query_reply_err(
     options: Option<&mut z_query_reply_err_options_t>,
 ) -> errors::z_error_t {
     let query = this.as_rust_type_ref();
-    let payload = payload.into_rust_type();
+    let Some(payload) = payload.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
 
     let reply = query.reply_err(payload).encoding(
         options

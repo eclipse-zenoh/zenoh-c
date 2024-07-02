@@ -75,7 +75,7 @@ pub use crate::opaque_types::z_owned_publisher_t;
 decl_c_type!(
     owned(z_owned_publisher_t, Option<Publisher<'static>>),
     loaned(z_loaned_publisher_t, Publisher<'static>),
-    moved z_moved_publisher_t
+moved(z_moved_publisher_t)
 );
 
 /// Constructs and declares a publisher for the given key expression.
@@ -201,7 +201,9 @@ pub unsafe extern "C" fn z_publisher_put(
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
     let publisher = this.as_rust_type_ref();
-    let payload = payload.into_rust_type();
+    let Some(payload) = payload.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
 
     let mut put = publisher.put(payload);
     if let Some(options) = options {

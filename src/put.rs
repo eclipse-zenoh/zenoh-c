@@ -85,7 +85,9 @@ pub extern "C" fn z_put(
 ) -> errors::z_error_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let payload = payload.into_rust_type();
+    let Some(payload) = payload.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
 
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {

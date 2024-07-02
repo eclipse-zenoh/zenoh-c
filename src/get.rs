@@ -80,7 +80,7 @@ pub use crate::opaque_types::z_owned_reply_err_t;
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyErrorNewtype),
     loaned(z_loaned_reply_err_t, ReplyErrorNewtype),
-    moved z_moved_reply_err_t
+moved(z_moved_reply_err_t)
 );
 
 /// Constructs an empty `z_owned_reply_err_t`.
@@ -126,7 +126,7 @@ pub use crate::opaque_types::z_owned_reply_t;
 decl_c_type!(
     owned(z_owned_reply_t, Option<Reply>),
     loaned(z_loaned_reply_t, Reply),
-    moved z_moved_reply_t
+moved(z_moved_reply_t)
 );
 
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).

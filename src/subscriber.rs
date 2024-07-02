@@ -67,7 +67,7 @@ pub use crate::opaque_types::z_owned_subscriber_t;
 decl_c_type!(
     owned(z_owned_subscriber_t, Option<Subscriber<'static, ()>>),
     loaned(z_loaned_subscriber_t, Subscriber<'static, ()>),
-    moved z_moved_subscriber_t
+moved(z_moved_subscriber_t)
 );
 
 /// Constructs a subscriber in a gravestone state.

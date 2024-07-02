@@ -38,7 +38,7 @@ decl_c_type! {
     owned(z_owned_keyexpr_t, Option<KeyExpr<'static>>),
     view(z_view_keyexpr_t, Option<KeyExpr<'static>>),
     loaned(z_loaned_keyexpr_t, KeyExpr<'static>),
-    moved z_moved_keyexpr_t
+moved(z_moved_keyexpr_t)
 }
 
 /// Constructs an owned key expression in a gravestone state.

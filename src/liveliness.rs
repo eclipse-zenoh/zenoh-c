@@ -40,7 +40,7 @@ decl_c_type!(
         Option<LivelinessToken<'static>>,
     ),
     loaned(zc_loaned_liveliness_token_t, LivelinessToken<'static>),
-    moved zc_moved_liveliness_token_t
+moved(zc_moved_liveliness_token_t)
 );
 
 /// Constructs liveliness token in its gravestone state.

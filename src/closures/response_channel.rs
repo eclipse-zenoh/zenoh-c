@@ -32,7 +32,7 @@ decl_c_type!(
         Option<flume::Receiver<Reply>>,
     ),
     loaned(z_loaned_fifo_handler_reply_t, flume::Receiver<Reply>),
-    moved z_moved_fifo_handler_reply_t
+moved(z_moved_fifo_handler_reply_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
@@ -150,7 +150,7 @@ decl_c_type!(
         Option<RingChannelHandler<Reply>>,
     ),
     loaned(z_loaned_ring_handler_reply_t, RingChannelHandler<Reply>),
-    moved z_moved_ring_handler_reply_t
+moved(z_moved_ring_handler_reply_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.

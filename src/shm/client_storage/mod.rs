@@ -29,7 +29,7 @@ decl_c_type!(
         Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,
     ),
     loaned(zc_loaned_shm_client_list_t, Vec<(ProtocolID, Arc<dyn ShmClient>)>),
-    moved zc_moved_shm_client_list_t
+moved(zc_moved_shm_client_list_t)
 );
 
 /// Creates a new empty list of SHM Clients
@@ -104,7 +104,7 @@ decl_c_type!(
         Option<Arc<ShmClientStorage>>,
     ),
     loaned(z_loaned_shm_client_storage_t, Arc<ShmClientStorage>),
-    moved z_moved_shm_client_storage_t
+moved(z_moved_shm_client_storage_t)
 );
 
 #[no_mangle]

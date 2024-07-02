@@ -200,7 +200,13 @@ pub struct {type_name} {{
             s += format!(
                 "#[repr(C)]
 pub struct {moved_type_name} {{
-    pub ptr: &'static mut {type_name},
+    pub ptr: Option<&'static mut {type_name}>,
+}}
+
+impl From<Option<&'static mut {type_name}>> for {moved_type_name} {{
+    fn from(ptr: Option<&'static mut {type_name}>) -> Self {{
+        Self {{ ptr }}
+    }}
 }}
 "
             )
