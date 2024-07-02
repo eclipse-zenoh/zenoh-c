@@ -2735,7 +2735,7 @@ bool z_ring_handler_sample_try_recv(const struct z_loaned_ring_handler_sample_t 
 /**
  * Returns sample attachment.
  *
- * Returns `NULL`, if sample does not contain any attachement.
+ * Returns `NULL`, if sample does not contain any attachment.
  */
 ZENOHC_API
 const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_t *this_);
