@@ -39,8 +39,9 @@ pub use crate::opaque_types::z_loaned_bytes_t;
 pub use crate::opaque_types::z_moved_bytes_t;
 pub use crate::opaque_types::z_owned_bytes_t;
 decl_c_type! {
-    owned(z_owned_bytes_t, z_moved_bytes_t, ZBytes),
+    owned(z_owned_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t, ZBytes),
+    moved z_moved_bytes_t
 }
 
 /// The gravestone value for `z_owned_bytes_t`.
@@ -802,9 +803,10 @@ pub use crate::opaque_types::z_moved_bytes_writer_t;
 pub use crate::opaque_types::z_owned_bytes_writer_t;
 
 decl_c_type! {
-    owned(z_owned_bytes_writer_t, z_moved_bytes_writer_t,
+    owned(z_owned_bytes_writer_t, 
         Option<ZBytesWriter<'static>>),
     loaned(z_loaned_bytes_writer_t, ZBytesWriter<'static>),
+    moved z_moved_bytes_writer_t
 }
 
 /// The gravestone value for `z_owned_bytes_reader_t`.

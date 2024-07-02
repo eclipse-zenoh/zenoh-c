@@ -206,9 +206,10 @@ pub use crate::opaque_types::z_owned_slice_t;
 pub use crate::opaque_types::z_view_slice_t;
 
 decl_c_type!(
-    owned(z_owned_slice_t, z_moved_slice_t, CSliceOwned),
+    owned(z_owned_slice_t, CSliceOwned),
     view(z_view_slice_t, CSliceView),
     loaned(z_loaned_slice_t, CSlice),
+    moved z_moved_slice_t
 );
 
 /// Constructs an empty view slice.
@@ -454,9 +455,10 @@ impl From<String> for CStringOwned {
 }
 
 decl_c_type!(
-    owned(z_owned_string_t, z_moved_string_t, CStringOwned),
+    owned(z_owned_string_t, CStringOwned),
     view(z_view_string_t, CStringView),
     loaned(z_loaned_string_t, CString),
+    moved z_moved_string_t
 );
 
 /// Frees memory and invalidates `z_owned_string_t`, putting it in gravestone state.
@@ -637,8 +639,9 @@ pub use crate::opaque_types::z_moved_slice_map_t;
 pub use crate::opaque_types::z_owned_slice_map_t;
 pub type ZHashMap = HashMap<CSlice, CSlice>;
 decl_c_type!(
-    owned(z_owned_slice_map_t, z_moved_slice_map_t, Option<ZHashMap>),
+    owned(z_owned_slice_map_t, Option<ZHashMap>),
     loaned(z_loaned_slice_map_t, ZHashMap),
+    moved z_moved_slice_map_t
 );
 
 /// Constructs a new empty map.
@@ -779,8 +782,9 @@ pub use crate::opaque_types::z_moved_string_array_t;
 pub use crate::opaque_types::z_owned_string_array_t;
 pub type ZVector = Vec<CString>;
 decl_c_type!(
-    owned(z_owned_string_array_t, z_moved_string_array_t, Option<ZVector>),
+    owned(z_owned_string_array_t, Option<ZVector>),
     loaned(z_loaned_string_array_t, ZVector),
+    moved z_moved_string_array_t
 );
 
 /// Constructs a new empty string array.

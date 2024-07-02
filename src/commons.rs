@@ -113,8 +113,9 @@ use crate::opaque_types::z_loaned_sample_t;
 pub use crate::opaque_types::z_moved_sample_t;
 pub use crate::opaque_types::z_owned_sample_t;
 decl_c_type!(
-    owned(z_owned_sample_t, z_moved_sample_t, Option<Sample>),
+    owned(z_owned_sample_t, Option<Sample>),
     loaned(z_loaned_sample_t, Sample),
+    moved z_moved_sample_t
 );
 
 /// Returns the key expression of the sample.
@@ -227,8 +228,9 @@ pub use crate::opaque_types::z_moved_encoding_t;
 pub use crate::opaque_types::z_owned_encoding_t;
 
 decl_c_type!(
-    owned(z_owned_encoding_t, z_moved_encoding_t, Encoding),
+    owned(z_owned_encoding_t, Encoding),
     loaned(z_loaned_encoding_t, Encoding),
+    moved z_moved_encoding_t
 );
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
@@ -587,8 +589,9 @@ pub use crate::opaque_types::z_loaned_source_info_t;
 pub use crate::opaque_types::z_moved_source_info_t;
 pub use crate::opaque_types::z_owned_source_info_t;
 decl_c_type!(
-    owned(z_owned_source_info_t, z_moved_source_info_t, SourceInfo),
-    loaned(z_loaned_source_info_t, SourceInfo)
+    owned(z_owned_source_info_t, SourceInfo),
+    loaned(z_loaned_source_info_t, SourceInfo),
+    moved z_moved_source_info_t
 );
 
 /// Create source info

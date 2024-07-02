@@ -42,7 +42,9 @@ pub struct zc_shm_client_callbacks_t {
     ) -> bool,
 }
 
-decl_c_type!(owned(z_owned_shm_client_t, z_moved_shm_client_t, Option<Arc<dyn ShmClient>>));
+decl_c_type!(owned(z_owned_shm_client_t, Option<Arc<dyn ShmClient>>),
+    moved (z_moved_shm_client_t, Arc<dyn ShmClient>)
+);
 
 #[derive(Debug)]
 pub struct DynamicShmClient {

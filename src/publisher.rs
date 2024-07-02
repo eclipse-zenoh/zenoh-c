@@ -73,8 +73,9 @@ pub use crate::opaque_types::z_moved_publisher_t;
 pub use crate::opaque_types::z_owned_publisher_t;
 
 decl_c_type!(
-    owned(z_owned_publisher_t, z_moved_publisher_t, Option<Publisher<'static>>),
-    loaned(z_loaned_publisher_t, Publisher<'static>)
+    owned(z_owned_publisher_t, Option<Publisher<'static>>),
+    loaned(z_loaned_publisher_t, Publisher<'static>),
+    moved z_moved_publisher_t
 );
 
 /// Constructs and declares a publisher for the given key expression.
@@ -293,11 +294,8 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 pub use crate::opaque_types::zcu_moved_matching_listener_t;
 pub use crate::opaque_types::zcu_owned_matching_listener_t;
 decl_c_type!(
-    owned(
-        zcu_owned_matching_listener_t,
-        zcu_moved_matching_listener_t,
-        Option<MatchingListener<'static, ()>>,
-    )
+    owned(zcu_owned_matching_listener_t, Option<MatchingListener<'static, ()>>),
+    moved(zcu_moved_matching_listener_t, MatchingListener<'static, ()>)
 );
 
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.

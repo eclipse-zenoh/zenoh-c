@@ -37,8 +37,9 @@ pub use crate::opaque_types::z_loaned_queryable_t;
 pub use crate::opaque_types::z_moved_queryable_t;
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_c_type!(
-    owned(z_owned_queryable_t, z_moved_queryable_t, Option<Queryable<'static, ()>>),
-    loaned(z_loaned_queryable_t, Queryable<'static, ()>)
+    owned(z_owned_queryable_t, Option<Queryable<'static, ()>>),
+    loaned(z_loaned_queryable_t, Queryable<'static, ()>),
+    moved z_moved_queryable_t
 );
 
 /// Constructs a queryable in its gravestone value.
@@ -61,8 +62,9 @@ pub use crate::opaque_types::z_loaned_query_t;
 pub use crate::opaque_types::z_moved_query_t;
 pub use crate::opaque_types::z_owned_query_t;
 decl_c_type!(
-    owned(z_owned_query_t, z_moved_query_t, Option<Query>),
-    loaned(z_loaned_query_t, Query)
+    owned(z_owned_query_t, Option<Query>),
+    loaned(z_loaned_query_t, Query),
+    moved z_moved_query_t
 );
 
 /// Constructs query in its gravestone value.

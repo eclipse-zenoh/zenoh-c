@@ -26,10 +26,10 @@ use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE}
 decl_c_type!(
     owned(
         zc_owned_shm_client_list_t,
-        zc_moved_shm_client_list_t,
         Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,
     ),
-    loaned(zc_loaned_shm_client_list_t, Vec<(ProtocolID, Arc<dyn ShmClient>)>)
+    loaned(zc_loaned_shm_client_list_t, Vec<(ProtocolID, Arc<dyn ShmClient>)>),
+    moved zc_moved_shm_client_list_t
 );
 
 /// Creates a new empty list of SHM Clients
@@ -56,6 +56,7 @@ pub extern "C" fn zc_shm_client_list_check(this: &zc_owned_shm_client_list_t) ->
 
 /// Deletes list of SHM Clients
 #[no_mangle]
+#[allow(unused_variables)]
 pub extern "C" fn zc_shm_client_list_drop(this: zc_moved_shm_client_list_t) {}
 
 /// Borrows list of SHM Clients
@@ -100,10 +101,10 @@ pub extern "C" fn zc_shm_client_list_add_client(
 decl_c_type!(
     owned(
         z_owned_shm_client_storage_t,
-        z_moved_shm_client_storage_t,
         Option<Arc<ShmClientStorage>>,
     ),
     loaned(z_loaned_shm_client_storage_t, Arc<ShmClientStorage>),
+    moved z_moved_shm_client_storage_t
 );
 
 #[no_mangle]

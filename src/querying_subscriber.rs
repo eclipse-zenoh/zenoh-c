@@ -46,13 +46,13 @@ use crate::opaque_types::ze_owned_querying_subscriber_t;
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
-        ze_moved_querying_subscriber_t,
         Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
     ),
     loaned(
         ze_loaned_querying_subscriber_t,
         (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
-    )
+    ),
+    moved ze_moved_querying_subscriber_t
 );
 
 /// Constructs a querying subscriber in a gravestone state.
