@@ -28,7 +28,8 @@ use crate::{
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
     },
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
+    z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t,
+    z_owned_shm_provider_t,
 };
 
 use super::{
@@ -52,6 +53,7 @@ pub enum CSHMProvider {
 decl_c_type!(
     owned(z_owned_shm_provider_t, Option<CSHMProvider>),
     loaned(z_loaned_shm_provider_t, CSHMProvider),
+moved(z_moved_shm_provider_t)
 );
 
 /// Creates a new SHM Provider
@@ -116,9 +118,8 @@ pub unsafe extern "C" fn z_shm_provider_loan(
 
 /// Deletes SHM Provider
 #[no_mangle]
-pub extern "C" fn z_shm_provider_drop(this: &mut z_owned_shm_provider_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_shm_provider_drop(this: z_moved_shm_provider_t) {}
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc(

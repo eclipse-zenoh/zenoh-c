@@ -42,20 +42,28 @@ pub struct z_loaned_closure_reply_t {
     _0: [usize; 3],
 }
 
+/// Moved closure.
+#[repr(C)]
+pub struct z_moved_closure_reply_t {
+    pub ptr: &'static mut z_owned_closure_reply_t,
+}
+
 decl_c_type!(
-    owned(z_owned_closure_reply_t),
+    owned(z_owned_closure_reply_t, z_moved_closure_reply_t),
     loaned(z_loaned_closure_reply_t)
 );
 
-impl z_owned_closure_reply_t {
-    pub(crate) fn empty() -> Self {
+impl Default for z_owned_closure_reply_t {
+    fn default() -> Self {
         z_owned_closure_reply_t {
             context: std::ptr::null_mut(),
             call: None,
             drop: None,
         }
     }
+}
 
+impl z_owned_closure_reply_t {
     pub(crate) fn is_empty(&self) -> bool {
         self.call.is_none() && self.drop.is_none() && self.context.is_null()
     }
@@ -73,7 +81,7 @@ impl Drop for z_owned_closure_reply_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_reply_null(this: *mut MaybeUninit<z_owned_closure_reply_t>) {
-    (*this).write(z_owned_closure_reply_t::empty());
+    (*this).write(z_owned_closure_reply_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -98,10 +106,9 @@ pub extern "C" fn z_closure_reply_call(
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_reply_drop(closure: &mut z_owned_closure_reply_t) {
-    let mut empty_closure = z_owned_closure_reply_t::empty();
-    std::mem::swap(&mut empty_closure, closure);
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_closure_reply_drop(closure: z_moved_closure_reply_t) {}
+
 impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;

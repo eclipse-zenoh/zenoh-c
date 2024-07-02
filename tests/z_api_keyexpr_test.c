@@ -93,7 +93,7 @@ void undeclare() {
     z_owned_keyexpr_t ke;
     z_declare_keyexpr(&ke, z_loan(s), z_loan(view_ke));
     assert(z_keyexpr_check(&ke));
-    z_undeclare_keyexpr(&ke, z_loan(s));
+    z_undeclare_keyexpr(z_move(ke), z_loan(s));
     assert(!z_keyexpr_check(&ke));
 }
 

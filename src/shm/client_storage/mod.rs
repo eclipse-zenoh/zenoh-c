@@ -16,15 +16,20 @@ use super::common::types::z_protocol_id_t;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
-    zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,
+    z_loaned_shm_client_storage_t, z_moved_shm_client_storage_t, z_owned_shm_client_storage_t,
+    z_owned_shm_client_t, zc_loaned_shm_client_list_t, zc_moved_shm_client_list_t,
+    zc_owned_shm_client_list_t,
 };
 use std::{mem::MaybeUninit, sync::Arc};
 use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
 decl_c_type!(
-    owned(zc_owned_shm_client_list_t, Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>),
-    loaned(zc_loaned_shm_client_list_t, Vec<(ProtocolID, Arc<dyn ShmClient>)>)
+    owned(
+        zc_owned_shm_client_list_t,
+        Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,
+    ),
+    loaned(zc_loaned_shm_client_list_t, Vec<(ProtocolID, Arc<dyn ShmClient>)>),
+moved(zc_moved_shm_client_list_t)
 );
 
 /// Creates a new empty list of SHM Clients
@@ -51,9 +56,8 @@ pub extern "C" fn zc_shm_client_list_check(this: &zc_owned_shm_client_list_t) ->
 
 /// Deletes list of SHM Clients
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_drop(this: &mut zc_owned_shm_client_list_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn zc_shm_client_list_drop(this: zc_moved_shm_client_list_t) {}
 
 /// Borrows list of SHM Clients
 #[no_mangle]
@@ -95,8 +99,12 @@ pub extern "C" fn zc_shm_client_list_add_client(
 }
 
 decl_c_type!(
-    owned(z_owned_shm_client_storage_t, Option<Arc<ShmClientStorage>>),
+    owned(
+        z_owned_shm_client_storage_t,
+        Option<Arc<ShmClientStorage>>,
+    ),
     loaned(z_loaned_shm_client_storage_t, Arc<ShmClientStorage>),
+moved(z_moved_shm_client_storage_t)
 );
 
 #[no_mangle]
@@ -156,9 +164,8 @@ pub extern "C" fn z_shm_client_storage_check(this: &z_owned_shm_client_storage_t
 
 /// Derefs SHM Client Storage
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_drop(this: &mut z_owned_shm_client_storage_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_shm_client_storage_drop(this: z_moved_shm_client_storage_t) {}
 
 /// Borrows SHM Client Storage
 #[no_mangle]

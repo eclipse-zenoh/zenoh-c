@@ -19,8 +19,8 @@ use crate::{
     errors::z_error_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
-    z_owned_buf_alloc_result_t,
+    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
+    z_owned_alloc_layout_t, z_owned_buf_alloc_result_t,
 };
 use libc::c_void;
 use zenoh::shm::{
@@ -50,6 +50,7 @@ pub enum CSHMLayout {
 decl_c_type!(
     owned(z_owned_alloc_layout_t, Option<CSHMLayout>),
     loaned(z_loaned_alloc_layout_t, CSHMLayout),
+moved(z_moved_alloc_layout_t)
 );
 
 /// Creates a new Alloc Layout for SHM Provider
@@ -89,9 +90,8 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 
 /// Deletes Alloc Layout
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_drop(this: &mut z_owned_alloc_layout_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_alloc_layout_drop(this: z_moved_alloc_layout_t) {}
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc(

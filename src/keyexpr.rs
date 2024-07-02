@@ -14,6 +14,7 @@
 use crate::errors;
 use crate::errors::z_error_t;
 use crate::errors::Z_OK;
+use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
@@ -30,12 +31,14 @@ use zenoh::key_expr::SetIntersectionLevel;
 use zenoh_protocol::core::key_expr::canon::Canonizable;
 
 pub use crate::opaque_types::z_loaned_keyexpr_t;
+pub use crate::opaque_types::z_moved_keyexpr_t;
 pub use crate::opaque_types::z_owned_keyexpr_t;
 pub use crate::opaque_types::z_view_keyexpr_t;
 decl_c_type! {
     owned(z_owned_keyexpr_t, Option<KeyExpr<'static>>),
     view(z_view_keyexpr_t, Option<KeyExpr<'static>>),
     loaned(z_loaned_keyexpr_t, KeyExpr<'static>),
+moved(z_moved_keyexpr_t)
 }
 
 /// Constructs an owned key expression in a gravestone state.
@@ -147,9 +150,8 @@ pub unsafe extern "C" fn z_view_keyexpr_loan(this: &z_view_keyexpr_t) -> &z_loan
 
 /// Frees key expression and resets it to its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_drop(this: &mut z_owned_keyexpr_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_keyexpr_drop(this: z_moved_keyexpr_t) {}
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
@@ -491,10 +493,10 @@ pub extern "C" fn z_declare_keyexpr(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(
-    this: &mut z_owned_keyexpr_t,
+    this: z_moved_keyexpr_t,
     session: &z_loaned_session_t,
 ) -> errors::z_error_t {
-    let Some(kexpr) = this.as_rust_type_mut().take() else {
+    let Some(kexpr) = this.into_rust_type().take() else {
         log::debug!("Attempted to undeclare dropped keyexpr");
         return errors::Z_EINVAL;
     };

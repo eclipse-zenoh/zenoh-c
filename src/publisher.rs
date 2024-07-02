@@ -14,10 +14,13 @@
 
 use crate::errors;
 use crate::transmute::IntoCType;
+use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
+use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_entity_global_id_t;
+use crate::z_moved_bytes_t;
 use crate::z_owned_encoding_t;
 use crate::z_owned_source_info_t;
 use crate::z_timestamp_t;
@@ -25,7 +28,7 @@ use crate::zcu_closure_matching_status_call;
 use crate::zcu_closure_matching_status_loan;
 use crate::zcu_locality_default;
 use crate::zcu_locality_t;
-use crate::zcu_owned_closure_matching_status_t;
+use crate::zcu_moved_closure_matching_status_t;
 use std::mem::MaybeUninit;
 use std::ptr;
 use zenoh::core::Wait;
@@ -66,11 +69,13 @@ pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) 
 }
 
 pub use crate::opaque_types::z_loaned_publisher_t;
+pub use crate::opaque_types::z_moved_publisher_t;
 pub use crate::opaque_types::z_owned_publisher_t;
 
 decl_c_type!(
     owned(z_owned_publisher_t, Option<Publisher<'static>>),
-    loaned(z_loaned_publisher_t, Publisher<'static>)
+    loaned(z_loaned_publisher_t, Publisher<'static>),
+moved(z_moved_publisher_t)
 );
 
 /// Constructs and declares a publisher for the given key expression.
@@ -192,11 +197,13 @@ pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_opt
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
-    payload: &mut z_owned_bytes_t,
+    payload: z_moved_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> errors::z_error_t {
     let publisher = this.as_rust_type_ref();
-    let payload = std::mem::take(payload.as_rust_type_mut());
+    let Some(payload) = payload.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
 
     let mut put = publisher.put(payload);
     if let Some(options) = options {
@@ -286,8 +293,12 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
         .as_loaned_c_type_ref()
 }
 
+pub use crate::opaque_types::zcu_moved_matching_listener_t;
 pub use crate::opaque_types::zcu_owned_matching_listener_t;
-decl_c_type!(owned(zcu_owned_matching_listener_t, Option<MatchingListener<'static, ()>>));
+decl_c_type!(
+    owned(zcu_owned_matching_listener_t, Option<MatchingListener<'static, ()>>),
+    moved(zcu_moved_matching_listener_t, MatchingListener<'static, ()>)
+);
 
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
@@ -309,11 +320,9 @@ pub struct zcu_matching_status_t {
 pub extern "C" fn zcu_publisher_matching_listener_callback(
     this: &mut MaybeUninit<zcu_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
-    callback: &mut zcu_owned_closure_matching_status_t,
+    callback: zcu_moved_closure_matching_status_t,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
-    let mut closure = zcu_owned_closure_matching_status_t::empty();
-    std::mem::swap(callback, &mut closure);
     let publisher = publisher.as_rust_type_ref();
     let listener = publisher
         .matching_listener()
@@ -321,7 +330,10 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
             let status = zcu_matching_status_t {
                 matching: matching_status.matching_subscribers(),
             };
-            zcu_closure_matching_status_call(zcu_closure_matching_status_loan(&closure), &status);
+            zcu_closure_matching_status_call(
+                zcu_closure_matching_status_loan(callback.as_owned_c_type_ref()),
+                &status,
+            );
         })
         .wait();
     match listener {
@@ -342,9 +354,9 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_undeclare(
-    this: &mut zcu_owned_matching_listener_t,
+    this: zcu_moved_matching_listener_t,
 ) -> errors::z_error_t {
-    if let Some(p) = this.as_rust_type_mut().take() {
+    if let Some(p) = this.into_rust_type().take() {
         if let Err(e) = p.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -358,8 +370,8 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
-    if let Some(p) = this.as_rust_type_mut().take() {
+pub extern "C" fn z_undeclare_publisher(this: z_moved_publisher_t) -> errors::z_error_t {
+    if let Some(p) = this.into_rust_type().take() {
         if let Err(e) = p.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -371,6 +383,6 @@ pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> error
 /// Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_drop(this: &mut z_owned_publisher_t) {
+pub extern "C" fn z_publisher_drop(this: z_moved_publisher_t) {
     z_undeclare_publisher(this);
 }

@@ -16,12 +16,14 @@ use std::mem::MaybeUninit;
 use std::ptr::null;
 
 use crate::errors;
+use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
+use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_keyexpr_t;
-use crate::z_owned_closure_sample_t;
+use crate::z_moved_closure_sample_t;
 use crate::z_reliability_t;
 use crate::{
     z_closure_sample_call, z_get_options_t, z_loaned_session_t, z_query_consolidation_none,
@@ -39,6 +41,7 @@ use zenoh::subscriber::Reliability;
 use zenoh_ext::*;
 
 use crate::opaque_types::ze_loaned_querying_subscriber_t;
+use crate::opaque_types::ze_moved_querying_subscriber_t;
 use crate::opaque_types::ze_owned_querying_subscriber_t;
 decl_c_type!(
     owned(
@@ -48,7 +51,8 @@ decl_c_type!(
     loaned(
         ze_loaned_querying_subscriber_t,
         (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
-    )
+    ),
+moved(ze_moved_querying_subscriber_t)
 );
 
 /// Constructs a querying subscriber in a gravestone state.
@@ -115,12 +119,10 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_sample_t,
+    callback: z_moved_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
-    let mut closure = z_owned_closure_sample_t::empty();
-    std::mem::swap(callback, &mut closure);
     let session = session.as_rust_type_ref();
     let mut sub = session
         .declare_subscriber(key_expr.as_rust_type_ref())
@@ -145,7 +147,10 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
     let sub = sub.callback(move |sample| {
         let sample = sample.as_loaned_c_type_ref();
-        z_closure_sample_call(z_closure_sample_loan(&closure), sample);
+        z_closure_sample_call(
+            z_closure_sample_loan(callback.as_owned_c_type_ref()),
+            sample,
+        );
     });
     match sub.wait() {
         Ok(sub) => {
@@ -223,9 +228,9 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
-    this: &mut ze_owned_querying_subscriber_t,
+    this: ze_moved_querying_subscriber_t,
 ) -> errors::z_error_t {
-    if let Some(s) = this.as_rust_type_mut().take() {
+    if let Some(s) = this.into_rust_type().take() {
         if let Err(e) = s.0.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;
@@ -236,7 +241,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 
 /// Drops querying subscriber. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_drop(this: &mut ze_owned_querying_subscriber_t) {
+pub extern "C" fn ze_querying_subscriber_drop(this: ze_moved_querying_subscriber_t) {
     ze_undeclare_querying_subscriber(this);
 }
 

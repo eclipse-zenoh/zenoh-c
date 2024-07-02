@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use crate::errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK};
-use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::errors::{self, z_error_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK};
+use crate::transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
     CSliceOwned, CStringOwned, ZHashMap,
@@ -36,10 +36,12 @@ use crate::errors::Z_ENULL;
 use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
 
 pub use crate::opaque_types::z_loaned_bytes_t;
+pub use crate::opaque_types::z_moved_bytes_t;
 pub use crate::opaque_types::z_owned_bytes_t;
 decl_c_type! {
     owned(z_owned_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t, ZBytes),
+moved(z_moved_bytes_t)
 }
 
 /// The gravestone value for `z_owned_bytes_t`.
@@ -57,9 +59,8 @@ extern "C" fn z_bytes_empty(this: &mut MaybeUninit<z_owned_bytes_t>) {
 /// Drops `this_`, resetting it to gravestone value. If there are any shallow copies
 /// created by `z_bytes_clone()`, they would still stay valid.
 #[no_mangle]
-extern "C" fn z_bytes_drop(this: &mut z_owned_bytes_t) {
-    *this.as_rust_type_mut() = ZBytes::default();
-}
+#[allow(unused_variables)]
+extern "C" fn z_bytes_drop(this: z_moved_bytes_t) {}
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
@@ -547,11 +548,15 @@ pub unsafe extern "C" fn z_bytes_serialize_from_string_copy(
 #[no_mangle]
 pub extern "C" fn z_bytes_serialize_from_pair(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    first: &mut z_owned_bytes_t,
-    second: &mut z_owned_bytes_t,
+    first: z_moved_bytes_t,
+    second: z_moved_bytes_t,
 ) -> z_error_t {
-    let first = std::mem::take(first.as_rust_type_mut());
-    let second = std::mem::take(second.as_rust_type_mut());
+    let Some(first) = first.into_rust_type() else {
+        return Z_EINVAL;
+    };
+    let Some(second) = second.into_rust_type() else {
+        return Z_EINVAL;
+    };
     let b = ZBytes::serialize((first, second));
     this.as_rust_type_mut_uninit().write(b);
     Z_OK
@@ -798,11 +803,14 @@ pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64
 }
 
 pub use crate::opaque_types::z_loaned_bytes_writer_t;
+pub use crate::opaque_types::z_moved_bytes_writer_t;
 pub use crate::opaque_types::z_owned_bytes_writer_t;
 
 decl_c_type! {
-    owned(z_owned_bytes_writer_t, Option<ZBytesWriter<'static>>),
+    owned(z_owned_bytes_writer_t, 
+        Option<ZBytesWriter<'static>>),
     loaned(z_loaned_bytes_writer_t, ZBytesWriter<'static>),
+moved(z_moved_bytes_writer_t)
 }
 
 /// The gravestone value for `z_owned_bytes_reader_t`.
@@ -813,9 +821,8 @@ extern "C" fn z_bytes_writer_null(this: &mut MaybeUninit<z_owned_bytes_writer_t>
 
 /// Drops `this_`, resetting it to gravestone value.
 #[no_mangle]
-extern "C" fn z_bytes_writer_drop(this: &mut z_owned_bytes_writer_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+extern "C" fn z_bytes_writer_drop(this: z_moved_bytes_writer_t) {}
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]

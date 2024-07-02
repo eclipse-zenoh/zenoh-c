@@ -201,6 +201,7 @@ impl From<Vec<u8>> for CSlice {
 impl std::cmp::Eq for CSlice {}
 
 pub use crate::opaque_types::z_loaned_slice_t;
+pub use crate::opaque_types::z_moved_slice_t;
 pub use crate::opaque_types::z_owned_slice_t;
 pub use crate::opaque_types::z_view_slice_t;
 
@@ -208,6 +209,7 @@ decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
     view(z_view_slice_t, CSliceView),
     loaned(z_loaned_slice_t, CSlice),
+moved(z_moved_slice_t)
 );
 
 /// Constructs an empty view slice.
@@ -331,9 +333,8 @@ pub unsafe extern "C" fn z_slice_wrap(
 /// Frees the memory and invalidates the slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
-    *this.as_rust_type_mut() = CSliceOwned::default();
-}
+#[allow(unused_variables)]
+pub unsafe extern "C" fn z_slice_drop(this: z_moved_slice_t) {}
 
 /// Borrows slice.
 #[no_mangle]
@@ -373,6 +374,7 @@ pub extern "C" fn z_slice_is_empty(this: &z_loaned_slice_t) -> bool {
 }
 
 pub use crate::opaque_types::z_loaned_string_t;
+pub use crate::opaque_types::z_moved_string_t;
 pub use crate::opaque_types::z_owned_string_t;
 pub use crate::opaque_types::z_view_string_t;
 
@@ -456,14 +458,14 @@ decl_c_type!(
     owned(z_owned_string_t, CStringOwned),
     view(z_view_string_t, CStringView),
     loaned(z_loaned_string_t, CString),
+moved(z_moved_string_t)
 );
 
 /// Frees memory and invalidates `z_owned_string_t`, putting it in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_drop(this: &mut z_owned_string_t) {
-    *this.as_rust_type_mut() = CStringOwned::default();
-}
+#[allow(unused_variables)]
+pub unsafe extern "C" fn z_string_drop(this: z_moved_string_t) {}
 
 /// @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
 #[no_mangle]
@@ -633,11 +635,13 @@ pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
 }
 
 pub use crate::opaque_types::z_loaned_slice_map_t;
+pub use crate::opaque_types::z_moved_slice_map_t;
 pub use crate::opaque_types::z_owned_slice_map_t;
 pub type ZHashMap = HashMap<CSlice, CSlice>;
 decl_c_type!(
     owned(z_owned_slice_map_t, Option<ZHashMap>),
     loaned(z_loaned_slice_map_t, ZHashMap),
+moved(z_moved_slice_map_t)
 );
 
 /// Constructs a new empty map.
@@ -660,9 +664,8 @@ pub extern "C" fn z_slice_map_check(map: &z_owned_slice_map_t) -> bool {
 
 /// Destroys the map, resetting it to its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_slice_map_drop(this: z_moved_slice_map_t) {}
 
 /// Borrows slice map.
 #[no_mangle]
@@ -775,11 +778,13 @@ pub extern "C" fn z_slice_map_insert_by_alias(
 }
 
 pub use crate::opaque_types::z_loaned_string_array_t;
+pub use crate::opaque_types::z_moved_string_array_t;
 pub use crate::opaque_types::z_owned_string_array_t;
 pub type ZVector = Vec<CString>;
 decl_c_type!(
     owned(z_owned_string_array_t, Option<ZVector>),
     loaned(z_loaned_string_array_t, ZVector),
+moved(z_moved_string_array_t)
 );
 
 /// Constructs a new empty string array.
@@ -802,9 +807,8 @@ pub extern "C" fn z_string_array_check(this: &z_owned_string_array_t) -> bool {
 
 /// Destroys the string array, resetting it to its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_string_array_drop(this: &mut z_owned_string_array_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_string_array_drop(this: z_moved_string_array_t) {}
 
 /// Borrows string array.
 #[no_mangle]

@@ -17,10 +17,11 @@ use std::mem::MaybeUninit;
 use zenoh::internal::zerror;
 use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError};
 
-use crate::transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
+    z_moved_buf_alloc_result_t, z_moved_chunk_alloc_result_t, z_moved_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
 };
@@ -73,8 +74,10 @@ decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 
 decl_c_type!(
     inequal
-    owned(z_owned_memory_layout_t, Option<MemoryLayout>),
-    loaned(z_loaned_memory_layout_t, MemoryLayout)
+    owned(z_owned_memory_layout_t, 
+         Option<MemoryLayout>),
+    loaned(z_loaned_memory_layout_t, MemoryLayout),
+moved(z_moved_memory_layout_t)
 );
 
 /// Creates a new Memory Layout
@@ -122,9 +125,8 @@ pub unsafe extern "C" fn z_memory_layout_loan(
 
 /// Deletes Memory Layout
 #[no_mangle]
-pub extern "C" fn z_memory_layout_drop(this: &mut z_owned_memory_layout_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_memory_layout_drop(this: z_moved_memory_layout_t) {}
 
 /// Deletes Memory Layout
 #[no_mangle]
@@ -140,7 +142,8 @@ pub extern "C" fn z_memory_layout_get_data(
 
 decl_c_type!(
     owned(z_owned_chunk_alloc_result_t, Option<ChunkAllocResult>),
-    loaned(z_loaned_chunk_alloc_result_t, ChunkAllocResult)
+    loaned(z_loaned_chunk_alloc_result_t, ChunkAllocResult),
+moved(z_moved_chunk_alloc_result_t)
 );
 
 /// Creates a new Chunk Alloc Result with Ok value
@@ -189,23 +192,24 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
 
 /// Deletes Chunk Alloc Result
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_drop(this: &mut z_owned_chunk_alloc_result_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_chunk_alloc_result_drop(this: z_moved_chunk_alloc_result_t) {}
 
 decl_c_type!(
     inequal
-    owned(z_owned_buf_alloc_result_t, Option<BufAllocResult>),
-    loaned(z_loaned_buf_alloc_result_t, BufAllocResult)
+    owned(z_owned_buf_alloc_result_t, 
+        Option<BufAllocResult>),
+    loaned(z_loaned_buf_alloc_result_t, BufAllocResult),
+moved(z_moved_buf_alloc_result_t)
 );
 
 #[no_mangle]
 pub extern "C" fn z_buf_alloc_result_unwrap(
-    alloc_result: &mut z_owned_buf_alloc_result_t,
+    alloc_result: z_moved_buf_alloc_result_t,
     out_buf: &mut MaybeUninit<z_owned_shm_mut_t>,
     out_error: &mut MaybeUninit<z_alloc_error_t>,
 ) -> z_error_t {
-    match alloc_result.as_rust_type_mut().take() {
+    match alloc_result.into_rust_type().take() {
         Some(Ok(val)) => {
             out_buf.as_rust_type_mut_uninit().write(Some(val));
             Z_OK
@@ -245,6 +249,5 @@ pub unsafe extern "C" fn z_buf_alloc_result_loan(
 
 /// Deletes Buf Alloc Result
 #[no_mangle]
-pub extern "C" fn z_buf_alloc_result_drop(this: &mut z_owned_buf_alloc_result_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_buf_alloc_result_drop(this: z_moved_buf_alloc_result_t) {}
