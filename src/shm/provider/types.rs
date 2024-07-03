@@ -72,12 +72,10 @@ pub struct z_alloc_alignment_t {
 
 decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 
-decl_c_type!(
-    inequal
-    owned(z_owned_memory_layout_t, 
-         Option<MemoryLayout>),
-    loaned(z_loaned_memory_layout_t, MemoryLayout),
-moved(z_moved_memory_layout_t)
+decl_c_type_inequal!(
+    owned(z_owned_memory_layout_t, option MemoryLayout),
+    loaned(z_loaned_memory_layout_t),
+    moved(z_moved_memory_layout_t)
 );
 
 /// Creates a new Memory Layout
@@ -141,9 +139,9 @@ pub extern "C" fn z_memory_layout_get_data(
 }
 
 decl_c_type!(
-    owned(z_owned_chunk_alloc_result_t, Option<ChunkAllocResult>),
-    loaned(z_loaned_chunk_alloc_result_t, ChunkAllocResult),
-moved(z_moved_chunk_alloc_result_t)
+    owned(z_owned_chunk_alloc_result_t, option ChunkAllocResult),
+    loaned(z_loaned_chunk_alloc_result_t),
+    moved(z_moved_chunk_alloc_result_t)
 );
 
 /// Creates a new Chunk Alloc Result with Ok value
@@ -195,12 +193,10 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
 #[allow(unused_variables)]
 pub extern "C" fn z_chunk_alloc_result_drop(this: z_moved_chunk_alloc_result_t) {}
 
-decl_c_type!(
-    inequal
-    owned(z_owned_buf_alloc_result_t, 
-        Option<BufAllocResult>),
-    loaned(z_loaned_buf_alloc_result_t, BufAllocResult),
-moved(z_moved_buf_alloc_result_t)
+decl_c_type_inequal!(
+    owned(z_owned_buf_alloc_result_t, option BufAllocResult),
+    loaned(z_loaned_buf_alloc_result_t),
+    moved(z_moved_buf_alloc_result_t)
 );
 
 #[no_mangle]

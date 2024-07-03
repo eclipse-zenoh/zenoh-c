@@ -48,8 +48,8 @@ pub enum CSHMLayout {
 }
 
 decl_c_type!(
-    owned(z_owned_alloc_layout_t, Option<CSHMLayout>),
-    loaned(z_loaned_alloc_layout_t, CSHMLayout),
+    owned(z_owned_alloc_layout_t, option CSHMLayout),
+    loaned(z_loaned_alloc_layout_t),
 moved(z_moved_alloc_layout_t)
 );
 
