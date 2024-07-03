@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    if (z_view_keyexpr_from_string(&ke, keyexpr) < 0) {
+    if (z_view_keyexpr_from_str(&ke, keyexpr) < 0) {
         printf("%s is not a valid key expression", keyexpr);
         exit(-1);
     }
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
         z_query_reply_options_default(&options);
 
         z_owned_bytes_t reply_payload;
-        z_bytes_serialize_from_string(&reply_payload, value);
+        z_bytes_serialize_from_str(&reply_payload, value);
         z_query_reply(query, z_loan(ke), z_move(reply_payload), &options);
         z_drop(z_move(oquery));
     }

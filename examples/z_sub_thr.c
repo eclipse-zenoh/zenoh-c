@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, "test/thr");
+    z_view_keyexpr_from_str(&ke, "test/thr");
     z_owned_keyexpr_t declared_ke;
     z_declare_keyexpr(&declared_ke, z_loan(s), z_loan(ke));
 

@@ -19,7 +19,7 @@ use crate::transmute::LoanedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_loaned_session_t;
-use crate::z_view_string_from_substring;
+use crate::z_view_string_from_substr;
 use crate::z_view_string_t;
 use libc::c_char;
 use std::error::Error;
@@ -99,7 +99,7 @@ unsafe fn keyexpr_create(
 /// not in canon form.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_from_string(
+pub unsafe extern "C" fn z_keyexpr_from_str(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> errors::z_error_t {
@@ -108,7 +108,7 @@ pub unsafe extern "C" fn z_keyexpr_from_string(
     } else {
         libc::strlen(expr)
     };
-    z_keyexpr_from_substring(this, expr, len)
+    z_keyexpr_from_substr(this, expr, len)
 }
 
 /// Constructs `z_owned_keyexpr_t` from a string, copying the passed string. The copied string is canonized.
@@ -116,7 +116,7 @@ pub unsafe extern "C" fn z_keyexpr_from_string(
 /// even despite canonization).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_from_string_autocanonize(
+pub unsafe extern "C" fn z_keyexpr_from_str_autocanonize(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> z_error_t {
@@ -125,7 +125,7 @@ pub unsafe extern "C" fn z_keyexpr_from_string_autocanonize(
     } else {
         libc::strlen(expr)
     };
-    z_keyexpr_from_substring_autocanonize(this, expr, &mut len)
+    z_keyexpr_from_substr_autocanonize(this, expr, &mut len)
 }
 
 /// Borrows `z_owned_keyexpr_t`.
@@ -229,7 +229,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_substring(
+pub unsafe extern "C" fn z_view_keyexpr_from_substr(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     expr: *const c_char,
     len: usize,
@@ -260,7 +260,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring(
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_from_substring(
+pub unsafe extern "C" fn z_keyexpr_from_substr(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
     len: usize,
@@ -293,7 +293,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substring(
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_substring_autocanonize(
+pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     start: *mut c_char,
     len: &mut usize,
@@ -326,7 +326,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring_autocanonize(
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_keyexpr_from_substring_autocanonize(
+pub unsafe extern "C" fn z_keyexpr_from_substr_autocanonize(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     start: *const c_char,
     len: &mut usize,
@@ -357,7 +357,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substring_autocanonize(
 /// `expr` must outlive the constucted key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_string(
+pub unsafe extern "C" fn z_view_keyexpr_from_str(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     expr: *const c_char,
 ) -> z_error_t {
@@ -370,7 +370,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string(
         } else {
             libc::strlen(expr)
         };
-        z_view_keyexpr_from_substring(this, expr, len)
+        z_view_keyexpr_from_substr(this, expr, len)
     }
 }
 
@@ -380,7 +380,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string(
 /// `expr` must outlive the constucted key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
+pub unsafe extern "C" fn z_view_keyexpr_from_str_autocanonize(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     expr: *mut c_char,
 ) -> z_error_t {
@@ -389,7 +389,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
         errors::Z_EINVAL
     } else {
         let mut len = libc::strlen(expr);
-        let res = z_view_keyexpr_from_substring_autocanonize(this, expr, &mut len);
+        let res = z_view_keyexpr_from_substr_autocanonize(this, expr, &mut len);
         if res == errors::Z_OK {
             *expr.add(len) = 0;
         }
@@ -408,7 +408,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_string_autocanonize(
 /// `start` must outlive constructed key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_substring_unchecked(
+pub unsafe extern "C" fn z_view_keyexpr_from_substr_unchecked(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     start: *const c_char,
     len: usize,
@@ -434,12 +434,12 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substring_unchecked(
 /// `s` must outlive constructed key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_view_keyexpr_from_string_unchecked(
+pub unsafe extern "C" fn z_view_keyexpr_from_str_unchecked(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     s: *const c_char,
 ) {
     let len = if s.is_null() { 0 } else { libc::strlen(s) };
-    z_view_keyexpr_from_substring_unchecked(this, s, len)
+    z_view_keyexpr_from_substr_unchecked(this, s, len)
 }
 
 /// Constructs a non-owned non-null-terminated string from key expression.
@@ -451,7 +451,7 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
 ) {
     let this = this.as_rust_type_ref();
     unsafe {
-        z_view_string_from_substring(
+        z_view_string_from_substr(
             out_string,
             this.as_bytes().as_ptr() as _,
             this.as_bytes().len(),

@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
     printf("Declaring Subscriber on '%s'...\n", expr);
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, expr);
+    z_view_keyexpr_from_str(&ke, expr);
     z_owned_subscriber_t sub;
 
     if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(closure), NULL) < 0) {

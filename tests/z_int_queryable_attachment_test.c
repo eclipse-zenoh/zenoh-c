@@ -42,8 +42,8 @@ bool create_attachement_it(z_owned_bytes_t *kv_pair, void *context) {
     if (ctx->iteration_index >= ctx->num_items) {
         return false;
     } else {
-        z_bytes_serialize_from_string(&k, ctx->keys[ctx->iteration_index]);
-        z_bytes_serialize_from_string(&v, ctx->values[ctx->iteration_index]);
+        z_bytes_serialize_from_str(&k, ctx->keys[ctx->iteration_index]);
+        z_bytes_serialize_from_str(&v, ctx->values[ctx->iteration_index]);
     }
 
     z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
@@ -114,10 +114,10 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     options.attachment = &reply_attachment;
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_string(&payload, values[value_num]);
+    z_bytes_serialize_from_str(&payload, values[value_num]);
 
     z_view_keyexpr_t reply_ke;
-    z_view_keyexpr_from_string(&reply_ke, (const char *)context);
+    z_view_keyexpr_from_str(&reply_ke, (const char *)context);
     z_query_reply(query, z_loan(reply_ke), z_move(payload), &options);
 
     if (++value_num == values_count) {
@@ -138,7 +138,7 @@ int run_queryable() {
     z_closure(&callback, query_handler, NULL, keyexpr);
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_queryable_t qable;
     if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
@@ -166,7 +166,7 @@ int run_get() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_get_options_t opts;
     z_get_options_default(&opts);

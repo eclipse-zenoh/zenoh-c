@@ -59,9 +59,9 @@ void test_liveliness_sub() {
     z_config_default(&c1);
     z_config_default(&c2);
     z_view_keyexpr_t k, k1, k2;
-    z_view_keyexpr_from_string(&k, expr);
-    z_view_keyexpr_from_string(&k1, token1_expr);
-    z_view_keyexpr_from_string(&k2, token2_expr);
+    z_view_keyexpr_from_str(&k, expr);
+    z_view_keyexpr_from_str(&k1, token1_expr);
+    z_view_keyexpr_from_str(&k2, token2_expr);
 
     z_open(&s1, z_move(c1));
     z_open(&s2, z_move(c2));
@@ -102,8 +102,8 @@ void test_liveliness_get() {
     z_config_default(&c1);
     z_config_default(&c2);
     z_view_keyexpr_t k, k1;
-    z_view_keyexpr_from_string(&k, expr);
-    z_view_keyexpr_from_string(&k1, token1_expr);
+    z_view_keyexpr_from_str(&k, expr);
+    z_view_keyexpr_from_str(&k1, token1_expr);
 
     z_open(&s1, z_move(c1));
     z_open(&s2, z_move(c2));

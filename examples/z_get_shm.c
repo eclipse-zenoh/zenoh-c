@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     size_t value_len = value ? strlen(value) : 0;
 
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr_from_string(&keyexpr, expr) < 0) {
+    if (z_view_keyexpr_from_str(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
     }

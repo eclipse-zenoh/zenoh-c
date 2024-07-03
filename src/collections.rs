@@ -524,11 +524,11 @@ pub extern "C" fn z_view_string_loan(this: &z_view_string_t) -> &z_loaned_string
 /// @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_wrap(
+pub unsafe extern "C" fn z_string_from_str(
     this: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
 ) -> z_error_t {
-    z_string_from_substring(this, str, strlen(str))
+    z_string_from_substr(this, str, strlen(str))
 }
 
 /// Constructs an owned string by copying a `str` substring of length `len`.
@@ -536,7 +536,7 @@ pub unsafe extern "C" fn z_string_wrap(
 /// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_from_substring(
+pub unsafe extern "C" fn z_string_from_substr(
     this: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
     len: usize,
@@ -581,7 +581,7 @@ pub unsafe extern "C" fn z_view_string_wrap(
 /// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_string_from_substring(
+pub unsafe extern "C" fn z_view_string_from_substr(
     this: &mut MaybeUninit<z_view_string_t>,
     str: *const libc::c_char,
     len: usize,

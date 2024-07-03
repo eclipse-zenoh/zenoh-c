@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     printf("Declaring Publisher on '%s'...\n", keyexpr);
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
     if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
         z_publisher_put_options_default(&options);
 
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_string(&payload, buf);
+        z_bytes_serialize_from_str(&payload, buf);
 
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
