@@ -169,8 +169,8 @@ pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_so
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
 #[no_mangle]
 pub extern "C" fn z_sample_clone(
-    this: &z_loaned_sample_t,
     dst: &mut MaybeUninit<z_owned_sample_t>,
+    this: &z_loaned_sample_t,
 ) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this.as_rust_type_ref().clone()));

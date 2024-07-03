@@ -183,7 +183,7 @@ pub extern "C" fn z_reply_null(this: &mut MaybeUninit<z_owned_reply_t>) {
 }
 /// Constructs an owned shallow copy of reply in provided uninitialized memory location.
 #[no_mangle]
-pub extern "C" fn z_reply_clone(this: &z_loaned_reply_t, dst: &mut MaybeUninit<z_owned_reply_t>) {
+pub extern "C" fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this: &z_loaned_reply_t) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this.as_rust_type_ref().clone()));
 }

@@ -7,7 +7,7 @@ void callback(const z_loaned_sample_t* sample, void* context) {
     const z_loaned_publisher_t* pub = z_loan(*(z_owned_publisher_t*)context);
 #ifdef ZENOH_C  // The z_owned_bytes_t API is exclusive to zenoh-c, but allows avoiding some copies.
     z_owned_bytes_t payload;
-    z_bytes_clone(z_sample_payload(sample), &payload);
+    z_bytes_clone(&payload, z_sample_payload(sample));
     z_publisher_put(pub, z_move(payload), NULL);
 #endif
 }

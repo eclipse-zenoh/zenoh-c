@@ -87,7 +87,7 @@ extern "C" fn z_bytes_is_empty(this: &z_loaned_bytes_t) -> bool {
 
 /// Constructs an owned shallow copy of data in provided uninitialized memory location.
 #[no_mangle]
-extern "C" fn z_bytes_clone(this: &z_loaned_bytes_t, dst: &mut MaybeUninit<z_owned_bytes_t>) {
+extern "C" fn z_bytes_clone(dst: &mut MaybeUninit<z_owned_bytes_t>, this: &z_loaned_bytes_t) {
     dst.as_rust_type_mut_uninit()
         .write(this.as_rust_type_ref().clone());
 }

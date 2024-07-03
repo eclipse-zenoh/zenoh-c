@@ -343,7 +343,7 @@ pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> &z_loaned_slice_t {
 
 /// Constructs an owned copy of a slice.
 #[no_mangle]
-pub extern "C" fn z_slice_clone(this: &z_loaned_slice_t, dst: &mut MaybeUninit<z_owned_slice_t>) {
+pub extern "C" fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this: &z_loaned_slice_t) {
     dst.as_rust_type_mut_uninit()
         .write(this.as_rust_type_ref().clone_to_owned());
 }
@@ -612,8 +612,8 @@ pub extern "C" fn z_string_data(this: &z_loaned_string_t) -> *const libc::c_char
 /// Constructs an owned copy of a string.
 #[no_mangle]
 pub extern "C" fn z_string_clone(
-    this: &z_loaned_string_t,
     dst: &mut MaybeUninit<z_owned_string_t>,
+    this: &z_loaned_string_t,
 ) {
     let slice = this.as_rust_type_ref().clone_to_owned();
     dst.as_rust_type_mut_uninit()
