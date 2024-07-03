@@ -14,7 +14,7 @@
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef},
-    z_loaned_query_t, z_owned_query_t,
+    z_loaned_query_t, z_moved_query_t,
 };
 use libc::c_void;
 use std::mem::MaybeUninit;
@@ -130,7 +130,7 @@ impl<F: Fn(&z_loaned_query_t)> From<F> for z_owned_closure_query_t {
 ///
 /// Members:
 ///   void *context: a pointer to an arbitrary state.
-///   void *call(const struct z_loaned_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+///   void *call(struct z_moved_query_t, const void *context): the typical callback function. `context` will be passed as its last argument.
 ///   void *drop(void*): allows the callback's state to be freed.
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -143,7 +143,7 @@ impl<F: Fn(&z_loaned_query_t)> From<F> for z_owned_closure_query_t {
 #[repr(C)]
 pub struct z_owned_closure_owned_query_t {
     context: *mut c_void,
-    call: Option<extern "C" fn(&mut z_owned_query_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(z_moved_query_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(*mut c_void)>,
 }
 
@@ -209,7 +209,7 @@ pub extern "C" fn z_closure_owned_query_check(this: &z_owned_closure_owned_query
 #[no_mangle]
 pub extern "C" fn z_closure_owned_query_call(
     closure: &z_loaned_closure_owned_query_t,
-    query: &mut z_owned_query_t,
+    query: z_moved_query_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
     match closure.call {
@@ -222,13 +222,10 @@ pub extern "C" fn z_closure_owned_query_call(
 #[allow(unused_variables)]
 pub extern "C" fn z_closure_owned_query_drop(closure: z_moved_closure_owned_query_t) {}
 
-impl<F: Fn(&mut z_owned_query_t)> From<F> for z_owned_closure_owned_query_t {
+impl<F: Fn(z_moved_query_t)> From<F> for z_owned_closure_owned_query_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&mut z_owned_query_t)>(
-            sample: &mut z_owned_query_t,
-            this: *mut c_void,
-        ) {
+        extern "C" fn call<F: Fn(z_moved_query_t)>(sample: z_moved_query_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
             this(sample)
         }

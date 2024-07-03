@@ -33,7 +33,7 @@ use zenoh::internal::buffers::{ZBuf, ZSlice, ZSliceBuffer};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::errors::Z_ENULL;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
+use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
 
 pub use crate::opaque_types::z_loaned_bytes_t;
 pub use crate::opaque_types::z_moved_bytes_t;
@@ -692,15 +692,13 @@ pub extern "C" fn z_bytes_iter(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_serialize_from_shm(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    shm: &mut z_owned_shm_t,
+    shm: z_moved_shm_t,
 ) -> z_error_t {
-    match shm.as_rust_type_mut().take() {
-        Some(shm) => {
-            this.as_rust_type_mut_uninit().write(shm.into());
-            Z_OK
-        }
-        None => Z_ENULL,
-    }
+    let Some(shm) = shm.into_rust_type() else {
+        return Z_ENULL;
+    };
+    this.as_rust_type_mut_uninit().write(shm.into());
+    Z_OK
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -721,15 +719,13 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm_copy(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_serialize_from_shm_mut(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    shm: &mut z_owned_shm_mut_t,
+    shm: z_moved_shm_mut_t,
 ) -> z_error_t {
-    match shm.as_rust_type_mut().take() {
-        Some(shm) => {
-            this.as_rust_type_mut_uninit().write(shm.into());
-            Z_OK
-        }
-        None => Z_ENULL,
-    }
+    let Some(shm) = shm.into_rust_type() else {
+        return Z_ENULL;
+    };
+    this.as_rust_type_mut_uninit().write(shm.into());
+    Z_OK
 }
 
 pub use crate::z_bytes_reader_t;

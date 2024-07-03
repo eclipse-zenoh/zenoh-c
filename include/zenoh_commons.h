@@ -247,6 +247,12 @@ typedef struct z_moved_buf_alloc_result_t {
 typedef struct z_moved_bytes_t {
   struct z_owned_bytes_t *ptr;
 } z_moved_bytes_t;
+typedef struct z_moved_shm_t {
+  struct z_owned_shm_t *ptr;
+} z_moved_shm_t;
+typedef struct z_moved_shm_mut_t {
+  struct z_owned_shm_mut_t *ptr;
+} z_moved_shm_mut_t;
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t *ptr;
 } z_moved_bytes_writer_t;
@@ -325,12 +331,15 @@ typedef struct z_owned_closure_hello_t {
 typedef struct z_moved_closure_hello_t {
   struct z_owned_closure_hello_t *ptr;
 } z_moved_closure_hello_t;
+typedef struct z_moved_query_t {
+  struct z_owned_query_t *ptr;
+} z_moved_query_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Members:
  *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_loaned_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
+ *   void *call(struct z_moved_query_t, const void *context): the typical callback function. `context` will be passed as its last argument.
  *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -343,7 +352,7 @@ typedef struct z_moved_closure_hello_t {
  */
 typedef struct z_owned_closure_owned_query_t {
   void *context;
-  void (*call)(struct z_owned_query_t*, void *context);
+  void (*call)(struct z_moved_query_t, void *context);
   void (*drop)(void*);
 } z_owned_closure_owned_query_t;
 /**
@@ -692,9 +701,6 @@ typedef struct z_put_options_t {
    */
   struct z_owned_bytes_t *attachment;
 } z_put_options_t;
-typedef struct z_moved_query_t {
-  struct z_owned_query_t *ptr;
-} z_moved_query_t;
 /**
  * Represents the set of options that can be applied to a query reply,
  * sent via `z_query_reply()`.
@@ -834,12 +840,6 @@ typedef struct zc_shm_client_callbacks_t {
 typedef struct z_moved_shm_client_storage_t {
   struct z_owned_shm_client_storage_t *ptr;
 } z_moved_shm_client_storage_t;
-typedef struct z_moved_shm_t {
-  struct z_owned_shm_t *ptr;
-} z_moved_shm_t;
-typedef struct z_moved_shm_mut_t {
-  struct z_owned_shm_mut_t *ptr;
-} z_moved_shm_mut_t;
 typedef struct z_moved_shm_provider_t {
   struct z_owned_shm_provider_t *ptr;
 } z_moved_shm_provider_t;
@@ -1453,7 +1453,7 @@ z_error_t z_bytes_serialize_from_pair(struct z_owned_bytes_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_,
-                                     struct z_owned_shm_t *shm);
+                                     struct z_moved_shm_t shm);
 #endif
 /**
  * Serializes from an immutable SHM buffer copying it
@@ -1469,7 +1469,7 @@ void z_bytes_serialize_from_shm_copy(struct z_owned_bytes_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t z_bytes_serialize_from_shm_mut(struct z_owned_bytes_t *this_,
-                                         struct z_owned_shm_mut_t *shm);
+                                         struct z_moved_shm_mut_t shm);
 #endif
 /**
  * Serializes a slice by aliasing.
@@ -1645,7 +1645,7 @@ ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
  */
 ZENOHC_API
 void z_closure_owned_query_call(const struct z_loaned_closure_owned_query_t *closure,
-                                struct z_owned_query_t *query);
+                                struct z_moved_query_t query);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */

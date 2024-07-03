@@ -1144,13 +1144,15 @@ pub fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
 pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+) (\w+)_call\(const struct (\w+) \*(\w+),\s+(\w*)\s*struct (\w+) \*(\w+)\);",
+        r"(\w+) (\w+)_call\(const struct (\w+) \*(\w+),\s+(\w*)\s*struct (\w+) (\*?)(\w+)\);",
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
-    for (_, [return_type, func_name, closure_type, closure_name, arg_cv, arg_type, arg_name]) in
-        re.captures_iter(&bindings).map(|c| c.extract())
+    for (
+        _,
+        [return_type, func_name, closure_type, closure_name, arg_cv, arg_type, arg_deref, arg_name],
+    ) in re.captures_iter(&bindings).map(|c| c.extract())
     {
         let arg_cv: String = if arg_cv.is_empty() {
             "".to_string()
@@ -1162,7 +1164,7 @@ pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
             func_name: func_name.to_string() + "_call",
             args: vec![
                 FuncArg::new(&("const ".to_string() + closure_type + "*"), closure_name),
-                FuncArg::new(&(arg_cv + arg_type + "*"), arg_name),
+                FuncArg::new(&(arg_cv + arg_type + arg_deref), arg_name),
             ],
         };
         res.push(f);

@@ -633,7 +633,7 @@ inline bool z_check(const ze_owned_querying_subscriber_t& this_) { return ze_que
 inline void z_call(const z_loaned_closure_hello_t* closure, const z_loaned_hello_t* hello) {
     return z_closure_hello_call(closure, hello);
 };
-inline void z_call(const z_loaned_closure_owned_query_t* closure, z_owned_query_t* query) {
+inline void z_call(const z_loaned_closure_owned_query_t* closure, z_moved_query_t query) {
     return z_closure_owned_query_call(closure, query);
 };
 inline void z_call(const z_loaned_closure_query_t* closure, const z_loaned_query_t* query) {
@@ -664,7 +664,7 @@ inline void z_closure(
 };
 inline void z_closure(
     z_owned_closure_owned_query_t* closure,
-    void (*call)(z_owned_query_t*, void*),
+    void (*call)(z_moved_query_t, void*),
     void (*drop)(void*),
     void *context) {
     closure->context = context;
