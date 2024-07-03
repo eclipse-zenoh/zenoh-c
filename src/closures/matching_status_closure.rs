@@ -44,15 +44,13 @@ pub struct zcu_loaned_closure_matching_status_t {
 /// Moved closure.
 #[repr(C)]
 pub struct zcu_moved_closure_matching_status_t {
-    pub ptr: &'static mut zcu_owned_closure_matching_status_t,
+    pub ptr: Option<&'static mut zcu_owned_closure_matching_status_t>,
 }
 
 decl_c_type!(
-    owned(
-        zcu_owned_closure_matching_status_t,
-        zcu_moved_closure_matching_status_t
-    ),
-    loaned(zcu_loaned_closure_matching_status_t)
+    owned(zcu_owned_closure_matching_status_t),
+    loaned(zcu_loaned_closure_matching_status_t),
+    moved(zcu_moved_closure_matching_status_t)
 );
 
 impl Default for zcu_owned_closure_matching_status_t {

@@ -11,9 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{
-    IntoRustType, LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit,
-};
+use crate::transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
@@ -37,9 +35,9 @@ pub use crate::opaque_types::z_loaned_queryable_t;
 pub use crate::opaque_types::z_moved_queryable_t;
 pub use crate::opaque_types::z_owned_queryable_t;
 decl_c_type!(
-    owned(z_owned_queryable_t, Option<Queryable<'static, ()>>),
-    loaned(z_loaned_queryable_t, Queryable<'static, ()>),
-moved(z_moved_queryable_t)
+    owned(z_owned_queryable_t, option Queryable<'static, ()>),
+    loaned(z_loaned_queryable_t),
+    moved(z_moved_queryable_t)
 );
 
 /// Constructs a queryable in its gravestone value.
@@ -64,7 +62,7 @@ pub use crate::opaque_types::z_owned_query_t;
 decl_c_type!(
     owned(z_owned_query_t, Option<Query>),
     loaned(z_loaned_query_t, Query),
-moved(z_moved_query_t)
+    moved(z_moved_query_t)
 );
 
 /// Constructs query in its gravestone value.
@@ -221,6 +219,9 @@ pub extern "C" fn z_declare_queryable(
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let keyexpr = key_expr.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
         builder = builder.complete(options.complete);
@@ -228,7 +229,7 @@ pub extern "C" fn z_declare_queryable(
     let queryable = builder
         .callback(move |query| {
             z_closure_query_call(
-                z_closure_query_loan(callback.as_owned_c_type_ref()),
+                z_closure_query_loan(&callback),
                 query.as_loaned_c_type_ref(),
             )
         })
@@ -252,7 +253,7 @@ pub extern "C" fn z_declare_queryable(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(this: z_moved_queryable_t) -> errors::z_error_t {
-    if let Some(qable) = this.into_rust_type().take() {
+    if let Some(qable) = this.into_rust_type() {
         if let Err(e) = qable.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

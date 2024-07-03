@@ -12,29 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use libc::c_char;
-use std::ffi::CStr;
-use std::mem::MaybeUninit;
-use std::ops::Deref;
-use std::ops::DerefMut;
-use std::ptr::null;
-use std::ptr::null_mut;
-use zenoh::bytes::ZBytes;
-use zenoh::core::Priority;
-use zenoh::encoding::Encoding;
-use zenoh::query::ReplyError;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::selector::Selector;
-use zenoh_protocol::core::CongestionControl;
-use zenoh_protocol::core::ZenohIdProto;
-
-use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
-
 use crate::errors;
+use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
-use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_id_t;
@@ -47,6 +27,24 @@ use crate::{
     zcu_reply_keyexpr_t,
 };
 use ::zenoh::core::Wait;
+use libc::c_char;
+use std::ffi::CStr;
+use std::mem::MaybeUninit;
+use std::ops::Deref;
+use std::ops::DerefMut;
+use std::ptr::null;
+use std::ptr::null_mut;
+use zenoh::bytes::ZBytes;
+use zenoh::core::Priority;
+use zenoh::encoding::Encoding;
+use zenoh::query::ReplyError;
+use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
+use zenoh::sample::EncodingBuilderTrait;
+use zenoh::sample::QoSBuilderTrait;
+use zenoh::sample::SampleBuilderTrait;
+use zenoh::selector::Selector;
+use zenoh_protocol::core::CongestionControl;
+use zenoh_protocol::core::ZenohIdProto;
 
 // we need to add Default to ReplyError
 #[repr(transparent)]
@@ -80,7 +78,7 @@ pub use crate::opaque_types::z_owned_reply_err_t;
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyErrorNewtype),
     loaned(z_loaned_reply_err_t, ReplyErrorNewtype),
-moved(z_moved_reply_err_t)
+    moved(z_moved_reply_err_t)
 );
 
 /// Constructs an empty `z_owned_reply_err_t`.
@@ -126,7 +124,7 @@ pub use crate::opaque_types::z_owned_reply_t;
 decl_c_type!(
     owned(z_owned_reply_t, Option<Reply>),
     loaned(z_loaned_reply_t, Reply),
-moved(z_moved_reply_t)
+    moved(z_moved_reply_t)
 );
 
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
@@ -257,6 +255,9 @@ pub unsafe extern "C" fn z_get(
     callback: z_moved_closure_reply_t,
     options: Option<&mut z_get_options_t>,
 ) -> errors::z_error_t {
+    let Some(callback) = callback.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
     let p = if parameters.is_null() {
         ""
     } else {
@@ -298,7 +299,7 @@ pub unsafe extern "C" fn z_get(
     match get
         .callback(move |response| {
             z_closure_reply_call(
-                z_closure_reply_loan(callback.as_owned_c_type_ref()),
+                z_closure_reply_loan(&callback),
                 response.as_loaned_c_type_ref(),
             )
         })

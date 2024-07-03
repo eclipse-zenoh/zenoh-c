@@ -13,9 +13,7 @@
 //
 use crate::{
     errors::{self, Z_OK},
-    transmute::{
-        IntoCType, IntoRustType, LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit,
-    },
+    transmute::{IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
@@ -31,7 +29,7 @@ pub use crate::opaque_types::z_owned_hello_t;
 decl_c_type!(
     owned(z_owned_hello_t, Option<Hello>),
     loaned(z_loaned_hello_t, Hello),
-moved(z_moved_hello_t)
+    moved(z_moved_hello_t)
 );
 
 /// Frees memory and resets hello message to its gravestone state.
@@ -152,12 +150,15 @@ pub extern "C" fn z_scout(
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
+    let Some(callback) = callback.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
     let options = options.cloned().unwrap_or_default();
     let what =
         WhatAmIMatcher::try_from(options.zc_what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.zc_timeout_ms as u64;
-    let Some(config) = config.into_rust_type().take() else {
+    let Some(config) = config.into_rust_type() else {
         log::error!("Config not provided");
         return errors::Z_EINVAL;
     };
@@ -165,10 +166,7 @@ pub extern "C" fn z_scout(
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
-                z_closure_hello_call(
-                    z_closure_hello_loan(callback.as_owned_c_type_ref()),
-                    h.as_loaned_c_type_ref(),
-                )
+                z_closure_hello_call(z_closure_hello_loan(&callback), h.as_loaned_c_type_ref())
             })
             .await
             .unwrap();

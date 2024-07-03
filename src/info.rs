@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{CTypeRef, IntoCType, OwnedCTypeRef, RustTypeRef};
+use crate::transmute::{CTypeRef, IntoCType, IntoRustType, RustTypeRef};
 use crate::{
     errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
 };
@@ -53,11 +53,11 @@ pub unsafe extern "C" fn z_info_peers_zid(
     callback: z_moved_closure_zid_t,
 ) -> errors::z_error_t {
     let session = session.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
     for id in session.info().peers_zid().wait() {
-        z_closure_zid_call(
-            z_closure_zid_loan(callback.as_owned_c_type_ref()),
-            id.as_ctype_ref(),
-        );
+        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
     errors::Z_OK
 }
@@ -75,11 +75,11 @@ pub unsafe extern "C" fn z_info_routers_zid(
     callback: z_moved_closure_zid_t,
 ) -> errors::z_error_t {
     let session = session.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
     for id in session.info().routers_zid().wait() {
-        z_closure_zid_call(
-            z_closure_zid_loan(callback.as_owned_c_type_ref()),
-            id.as_ctype_ref(),
-        );
+        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
     errors::Z_OK
 }

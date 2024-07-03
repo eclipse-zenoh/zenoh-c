@@ -18,7 +18,6 @@ use std::ptr::null;
 use crate::errors;
 use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
-use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_closure_sample_loan;
@@ -46,13 +45,10 @@ use crate::opaque_types::ze_owned_querying_subscriber_t;
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
-        Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
+        option(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
     ),
-    loaned(
-        ze_loaned_querying_subscriber_t,
-        (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
-    ),
-moved(ze_moved_querying_subscriber_t)
+    loaned(ze_loaned_querying_subscriber_t),
+    moved(ze_moved_querying_subscriber_t)
 );
 
 /// Constructs a querying subscriber in a gravestone state.
@@ -124,6 +120,10 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
 ) -> errors::z_error_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        this.write(None);
+        return errors::Z_EINVAL;
+    };
     let mut sub = session
         .declare_subscriber(key_expr.as_rust_type_ref())
         .querying();
@@ -147,10 +147,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
     let sub = sub.callback(move |sample| {
         let sample = sample.as_loaned_c_type_ref();
-        z_closure_sample_call(
-            z_closure_sample_loan(callback.as_owned_c_type_ref()),
-            sample,
-        );
+        z_closure_sample_call(z_closure_sample_loan(&callback), sample);
     });
     match sub.wait() {
         Ok(sub) => {
@@ -230,7 +227,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 pub extern "C" fn ze_undeclare_querying_subscriber(
     this: ze_moved_querying_subscriber_t,
 ) -> errors::z_error_t {
-    if let Some(s) = this.into_rust_type().take() {
+    if let Some(s) = this.into_rust_type() {
         if let Err(e) = s.0.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

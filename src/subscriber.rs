@@ -18,7 +18,6 @@ use crate::errors;
 use crate::keyexpr::*;
 use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
-use crate::transmute::OwnedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
 use crate::z_closure_sample_call;
@@ -65,9 +64,9 @@ pub use crate::opaque_types::z_loaned_subscriber_t;
 pub use crate::opaque_types::z_moved_subscriber_t;
 pub use crate::opaque_types::z_owned_subscriber_t;
 decl_c_type!(
-    owned(z_owned_subscriber_t, Option<Subscriber<'static, ()>>),
-    loaned(z_loaned_subscriber_t, Subscriber<'static, ()>),
-moved(z_moved_subscriber_t)
+    owned(z_owned_subscriber_t, option Subscriber<'static, ()>),
+    loaned(z_loaned_subscriber_t),
+    moved(z_moved_subscriber_t)
 );
 
 /// Constructs a subscriber in a gravestone state.
@@ -123,14 +122,15 @@ pub extern "C" fn z_declare_subscriber(
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        this.write(None);
+        return errors::Z_EINVAL;
+    };
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
-            z_closure_sample_call(
-                z_closure_sample_loan(callback.as_owned_c_type_ref()),
-                sample,
-            )
+            z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         });
     if let Some(options) = options {
         subscriber = subscriber.reliability(options.reliability.into());
@@ -164,7 +164,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> errors::z_error_t {
-    if let Some(s) = this.into_rust_type().take() {
+    if let Some(s) = this.into_rust_type() {
         if let Err(e) = s.undeclare().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

@@ -26,9 +26,9 @@ use crate::opaque_types::z_loaned_session_t;
 use crate::opaque_types::z_moved_session_t;
 use crate::opaque_types::z_owned_session_t;
 decl_c_type!(
-    owned(z_owned_session_t, Option<Arc<Session>>),
-    loaned(z_loaned_session_t, Arc<Session>),
-moved(z_moved_session_t)
+    owned(z_owned_session_t, option Arc<Session>),
+    loaned(z_loaned_session_t),
+    moved(z_moved_session_t)
 );
 
 /// Borrows session.
@@ -128,7 +128,7 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
 pub extern "C" fn z_close(session: z_moved_session_t) -> errors::z_error_t {
-    let Some(s) = session.into_rust_type().take() else {
+    let Some(s) = session.into_rust_type() else {
         return errors::Z_EINVAL;
     };
     let s = match Arc::try_unwrap(s) {

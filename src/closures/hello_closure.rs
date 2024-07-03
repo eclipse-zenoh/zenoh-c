@@ -46,12 +46,13 @@ pub struct z_loaned_closure_hello_t {
 /// Moved closure.
 #[repr(C)]
 pub struct z_moved_closure_hello_t {
-    pub ptr: &'static mut z_owned_closure_hello_t,
+    pub ptr: Option<&'static mut z_owned_closure_hello_t>,
 }
 
 decl_c_type!(
-    owned(z_owned_closure_hello_t, z_moved_closure_hello_t),
-    loaned(z_loaned_closure_hello_t)
+    owned(z_owned_closure_hello_t),
+    loaned(z_loaned_closure_hello_t),
+    moved(z_moved_closure_hello_t)
 );
 
 impl Default for z_owned_closure_hello_t {

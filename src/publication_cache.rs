@@ -58,9 +58,9 @@ pub use crate::opaque_types::ze_owned_publication_cache_t;
 decl_c_type!(
     owned(
         ze_owned_publication_cache_t,
-        Option<zenoh_ext::PublicationCache<'static>>,
+        option zenoh_ext::PublicationCache<'static>,
     ),
-    loaned(ze_loaned_publication_cache_t, zenoh_ext::PublicationCache<'static>),
+    loaned(ze_loaned_publication_cache_t),
 moved(ze_moved_publication_cache_t)
 );
 
@@ -133,7 +133,7 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 pub extern "C" fn ze_undeclare_publication_cache(
     this: ze_moved_publication_cache_t,
 ) -> errors::z_error_t {
-    if let Some(p) = this.into_rust_type().take() {
+    if let Some(p) = this.into_rust_type() {
         if let Err(e) = p.close().wait() {
             log::error!("{}", e);
             return errors::Z_EGENERIC;

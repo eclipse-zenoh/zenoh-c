@@ -45,12 +45,13 @@ pub struct z_loaned_closure_query_t {
 /// Moved closure.
 #[repr(C)]
 pub struct z_moved_closure_query_t {
-    pub ptr: &'static mut z_owned_closure_query_t,
+    pub ptr: Option<&'static mut z_owned_closure_query_t>,
 }
 
 decl_c_type!(
-    owned(z_owned_closure_query_t, z_moved_closure_query_t),
-    loaned(z_loaned_closure_query_t)
+    owned(z_owned_closure_query_t),
+    loaned(z_loaned_closure_query_t),
+    moved(z_moved_closure_query_t)
 );
 
 impl Default for z_owned_closure_query_t {
@@ -155,12 +156,13 @@ pub struct z_loaned_closure_owned_query_t {
 /// Moved closure.
 #[repr(C)]
 pub struct z_moved_closure_owned_query_t {
-    pub ptr: &'static mut z_owned_closure_owned_query_t,
+    pub ptr: Option<&'static mut z_owned_closure_owned_query_t>,
 }
 
 decl_c_type!(
-    owned(z_owned_closure_owned_query_t, z_moved_closure_owned_query_t),
-    loaned(z_loaned_closure_owned_query_t)
+    owned(z_owned_closure_owned_query_t),
+    loaned(z_loaned_closure_owned_query_t),
+    moved(z_moved_closure_owned_query_t)
 );
 
 impl Default for z_owned_closure_owned_query_t {

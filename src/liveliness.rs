@@ -24,10 +24,7 @@ use crate::{
     z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
     z_moved_closure_reply_t, z_owned_subscriber_t,
 };
-use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
-    z_moved_closure_sample_t,
-};
+use crate::{transmute::LoanedCTypeRef, z_moved_closure_sample_t};
 use crate::{z_closure_reply_loan, z_closure_sample_loan};
 use zenoh::core::Wait;
 
@@ -35,12 +32,9 @@ use crate::opaque_types::zc_loaned_liveliness_token_t;
 use crate::opaque_types::zc_moved_liveliness_token_t;
 use crate::opaque_types::zc_owned_liveliness_token_t;
 decl_c_type!(
-    owned(
-        zc_owned_liveliness_token_t,
-        Option<LivelinessToken<'static>>,
-    ),
-    loaned(zc_loaned_liveliness_token_t, LivelinessToken<'static>),
-moved(zc_moved_liveliness_token_t)
+    owned(zc_owned_liveliness_token_t, option LivelinessToken<'static>),
+    loaned(zc_loaned_liveliness_token_t),
+    moved(zc_moved_liveliness_token_t)
 );
 
 /// Constructs liveliness token in its gravestone state.
@@ -123,7 +117,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 pub extern "C" fn zc_liveliness_undeclare_token(
     this: zc_moved_liveliness_token_t,
 ) -> errors::z_error_t {
-    if let Some(token) = this.into_rust_type().take() {
+    if let Some(token) = this.into_rust_type() {
         if let Err(e) = token.undeclare().wait() {
             log::error!("Failed to undeclare token: {e}");
             return errors::Z_EGENERIC;
@@ -166,15 +160,16 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        this.write(None);
+        return errors::Z_EINVAL;
+    };
     match session
         .liveliness()
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
-            z_closure_sample_call(
-                z_closure_sample_loan(callback.as_owned_c_type_ref()),
-                sample,
-            )
+            z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         })
         .wait()
     {
@@ -217,10 +212,13 @@ pub extern "C" fn zc_liveliness_get(
 ) -> errors::z_error_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        return errors::Z_EINVAL;
+    };
     let liveliness: Liveliness<'static> = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {
         z_closure_reply_call(
-            z_closure_reply_loan(callback.as_owned_c_type_ref()),
+            z_closure_reply_loan(&callback),
             response.as_loaned_c_type_ref(),
         )
     });
