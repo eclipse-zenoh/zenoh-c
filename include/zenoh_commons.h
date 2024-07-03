@@ -4007,7 +4007,7 @@ void zc_session_clone(const struct z_loaned_session_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t zc_shm_client_list_add_client(z_protocol_id_t id,
-                                        struct z_owned_shm_client_t *client,
+                                        struct z_moved_shm_client_t client,
                                         struct zc_loaned_shm_client_list_t *list);
 #endif
 /**

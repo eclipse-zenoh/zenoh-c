@@ -27,12 +27,9 @@ pub use crate::opaque_types::z_loaned_fifo_handler_reply_t;
 pub use crate::opaque_types::z_moved_fifo_handler_reply_t;
 pub use crate::opaque_types::z_owned_fifo_handler_reply_t;
 decl_c_type!(
-    owned(
-        z_owned_fifo_handler_reply_t,
-        Option<flume::Receiver<Reply>>,
-    ),
-    loaned(z_loaned_fifo_handler_reply_t, flume::Receiver<Reply>),
-moved(z_moved_fifo_handler_reply_t)
+    owned(z_owned_fifo_handler_reply_t, option flume::Receiver<Reply>),
+    loaned(z_loaned_fifo_handler_reply_t),
+    moved(z_moved_fifo_handler_reply_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
@@ -145,12 +142,9 @@ pub use crate::opaque_types::z_loaned_ring_handler_reply_t;
 pub use crate::opaque_types::z_moved_ring_handler_reply_t;
 pub use crate::opaque_types::z_owned_ring_handler_reply_t;
 decl_c_type!(
-    owned(
-        z_owned_ring_handler_reply_t,
-        Option<RingChannelHandler<Reply>>,
-    ),
-    loaned(z_loaned_ring_handler_reply_t, RingChannelHandler<Reply>),
-moved(z_moved_ring_handler_reply_t)
+    owned(z_owned_ring_handler_reply_t, option RingChannelHandler<Reply>),
+    loaned(z_loaned_ring_handler_reply_t),
+    moved(z_moved_ring_handler_reply_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
