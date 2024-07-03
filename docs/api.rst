@@ -57,23 +57,23 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_str_check
+.. doxygenfunction:: z_string_check
 .. doxygenfunction:: z_view_str_check
-.. doxygenfunction:: z_str_null
+.. doxygenfunction:: z_string_null
 .. doxygenfunction:: z_view_str_null
-.. doxygenfunction:: z_str_loan
+.. doxygenfunction:: z_string_loan
 .. doxygenfunction:: z_view_str_loan
-.. doxygenfunction:: z_str_drop
+.. doxygenfunction:: z_string_drop
 
-.. doxygenfunction:: z_str_empty
+.. doxygenfunction:: z_string_empty
 .. doxygenfunction:: z_view_str_empty
 
-.. doxygenfunction:: z_str_wrap
+.. doxygenfunction:: z_string_wrap
 .. doxygenfunction:: z_view_str_wrap
-.. doxygenfunction:: z_str_from_substr
-.. doxygenfunction:: z_str_data
-.. doxygenfunction:: z_str_len
-.. doxygenfunction:: z_str_is_empty
+.. doxygenfunction:: z_string_from_substr
+.. doxygenfunction:: z_string_data
+.. doxygenfunction:: z_string_len
+.. doxygenfunction:: z_string_is_empty
 
 Slice map
 ---------
@@ -107,16 +107,16 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_str_array_check
-.. doxygenfunction:: z_str_array_null
-.. doxygenfunction:: z_str_array_drop
-.. doxygenfunction:: z_str_array_loan
-.. doxygenfunction:: z_str_array_loan_mut
+.. doxygenfunction:: z_string_array_check
+.. doxygenfunction:: z_string_array_null
+.. doxygenfunction:: z_string_array_drop
+.. doxygenfunction:: z_string_array_loan
+.. doxygenfunction:: z_string_array_loan_mut
 
-.. doxygenfunction:: z_str_array_new
-.. doxygenfunction:: z_str_array_get
-.. doxygenfunction:: z_str_array_len
-.. doxygenfunction:: z_str_array_is_empty
+.. doxygenfunction:: z_string_array_new
+.. doxygenfunction:: z_string_array_get
+.. doxygenfunction:: z_string_array_len
+.. doxygenfunction:: z_string_array_is_empty
 
 Common
 ======
