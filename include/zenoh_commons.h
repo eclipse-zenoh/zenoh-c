@@ -909,6 +909,9 @@ typedef struct z_moved_string_t {
 typedef struct z_moved_subscriber_t {
   struct z_owned_subscriber_t *ptr;
 } z_moved_subscriber_t;
+typedef struct z_moved_task_t {
+  struct z_owned_task_t *ptr;
+} z_moved_task_t;
 typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
@@ -3598,7 +3601,7 @@ ZENOHC_API bool z_task_check(const struct z_owned_task_t *this_);
 /**
  * Detaches the task and releases all allocated resources.
  */
-ZENOHC_API void z_task_detach(struct z_owned_task_t *this_);
+ZENOHC_API void z_task_detach(struct z_moved_task_t this_);
 /**
  * Constructs a new task.
  *
@@ -3615,7 +3618,7 @@ z_error_t z_task_init(struct z_owned_task_t *this_,
 /**
  * Joins the task and releases all allocated resources
  */
-ZENOHC_API z_error_t z_task_join(struct z_owned_task_t *this_);
+ZENOHC_API z_error_t z_task_join(struct z_moved_task_t this_);
 /**
  * Constructs task in a gravestone state.
  */

@@ -8,7 +8,7 @@ use libc::c_void;
 
 use crate::{
     errors,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
 pub use crate::opaque_types::z_loaned_mutex_t;
@@ -218,21 +218,18 @@ pub extern "C" fn z_task_null(this: &mut MaybeUninit<z_owned_task_t>) {
 
 /// Detaches the task and releases all allocated resources.
 #[no_mangle]
-pub extern "C" fn z_task_detach(this: &mut z_owned_task_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_task_detach(this: z_moved_task_t) {}
 
 /// Joins the task and releases all allocated resources
 #[no_mangle]
-pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_error_t {
-    let this = this.as_rust_type_mut().take();
-    if let Some(task) = this {
-        match task.join() {
-            Ok(_) => errors::Z_OK,
-            Err(_) => errors::Z_EINVAL_MUTEX,
-        }
-    } else {
-        errors::Z_OK
+pub extern "C" fn z_task_join(this: z_moved_task_t) -> errors::z_error_t {
+    let Some(task) = this.into_rust_type() else {
+        return errors::Z_OK;
+    };
+    match task.join() {
+        Ok(_) => errors::Z_OK,
+        Err(_) => errors::Z_EINVAL_MUTEX,
     }
 }
 
