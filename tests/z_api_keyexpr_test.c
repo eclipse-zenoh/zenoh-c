@@ -44,7 +44,7 @@ void canonize() {
 
     strcpy(keyexpr, "a/**/**/c");
     z_view_keyexpr_t key_expr_canonized;
-    z_view_keyexpr_from_string_autocanonize(&key_expr_canonized, keyexpr);
+    z_view_keyexpr_from_str_autocanonize(&key_expr_canonized, keyexpr);
     assert(z_view_keyexpr_check(&key_expr_canonized) == true);
     assert(strcmp(keyexpr, "a/**/c") == 0);
     z_view_string_t key_exp_canonized_bytes;
@@ -54,7 +54,7 @@ void canonize() {
 
     strcpy(keyexpr, "a/**/**/c");
     len_new = len_old;
-    int8_t res = z_view_keyexpr_from_substring_autocanonize(&key_expr_canonized, keyexpr, &len_new);
+    int8_t res = z_view_keyexpr_from_substr_autocanonize(&key_expr_canonized, keyexpr, &len_new);
     assert(res == 0);
     assert(len_new == len_old - 3);
     assert(strncmp(keyexpr, "a/**/c", len_new) == 0);
@@ -65,8 +65,8 @@ void canonize() {
 
 void includes() {
     z_view_keyexpr_t foobar, foostar;
-    z_view_keyexpr_from_string(&foobar, "foo/bar");
-    z_view_keyexpr_from_string(&foostar, "foo/*");
+    z_view_keyexpr_from_str(&foobar, "foo/bar");
+    z_view_keyexpr_from_str(&foostar, "foo/*");
 
     assert(z_keyexpr_includes(z_loan(foostar), z_loan(foobar)) == true);
     assert(z_keyexpr_includes(z_loan(foobar), z_loan(foostar)) == false);
@@ -74,9 +74,9 @@ void includes() {
 
 void intersects() {
     z_view_keyexpr_t foobar, foostar, barstar;
-    z_view_keyexpr_from_string(&foobar, "foo/bar");
-    z_view_keyexpr_from_string(&foostar, "foo/*");
-    z_view_keyexpr_from_string(&barstar, "bar/*");
+    z_view_keyexpr_from_str(&foobar, "foo/bar");
+    z_view_keyexpr_from_str(&foostar, "foo/*");
+    z_view_keyexpr_from_str(&barstar, "bar/*");
 
     assert(z_keyexpr_intersects(z_loan(foostar), z_loan(foobar)) == true);
     assert(z_keyexpr_intersects(z_loan(barstar), z_loan(foobar)) == false);
@@ -89,7 +89,7 @@ void undeclare() {
     z_open(&s, z_move(config));
 
     z_view_keyexpr_t view_ke;
-    z_view_keyexpr_from_string(&view_ke, "test/thr");
+    z_view_keyexpr_from_str(&view_ke, "test/thr");
     z_owned_keyexpr_t ke;
     z_declare_keyexpr(&ke, z_loan(s), z_loan(view_ke));
     assert(z_keyexpr_check(&ke));
@@ -99,9 +99,9 @@ void undeclare() {
 
 void relation_to() {
     z_view_keyexpr_t foobar, foostar, barstar;
-    z_view_keyexpr_from_string(&foobar, "foo/bar");
-    z_view_keyexpr_from_string(&foostar, "foo/*");
-    z_view_keyexpr_from_string(&barstar, "bar/*");
+    z_view_keyexpr_from_str(&foobar, "foo/bar");
+    z_view_keyexpr_from_str(&foostar, "foo/*");
+    z_view_keyexpr_from_str(&barstar, "bar/*");
 
     assert(z_keyexpr_relation_to(z_loan(foostar), z_loan(foobar)) == Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES);
     assert(z_keyexpr_relation_to(z_loan(foobar), z_loan(foostar)) == Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS);

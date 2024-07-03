@@ -49,7 +49,7 @@ int run_publisher() {
     pub_cache_opts.history = 42;
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
     ze_owned_publication_cache_t pub_cache;
     ;
     if (ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts) < 0) {
@@ -66,7 +66,7 @@ int run_publisher() {
     // values for cache
     for (int i = 0; i < values_count / 2; ++i) {
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_string(&payload, values[i]);
+        z_bytes_serialize_from_str(&payload, values[i]);
         z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 
@@ -77,7 +77,7 @@ int run_publisher() {
     // values for subscribe
     for (int i = values_count / 2; i < values_count; ++i) {
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_string(&payload, values[i]);
+        z_bytes_serialize_from_str(&payload, values[i]);
         z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 
@@ -129,7 +129,7 @@ int run_subscriber() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);

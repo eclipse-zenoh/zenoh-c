@@ -54,10 +54,10 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     options.timestamp = &ts;
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_string(&payload, values[value_num]);
+    z_bytes_serialize_from_str(&payload, values[value_num]);
 
     z_view_keyexpr_t reply_ke;
-    z_view_keyexpr_from_string(&reply_ke, (const char *)context);
+    z_view_keyexpr_from_str(&reply_ke, (const char *)context);
     z_query_reply(query, z_loan(reply_ke), z_move(payload), &options);
 
     if (++value_num == values_count) {
@@ -75,7 +75,7 @@ int run_queryable() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_closure_query_t callback;
     z_closure(&callback, query_handler, NULL, keyexpr);
     z_owned_queryable_t qable;
@@ -105,7 +105,7 @@ int run_get() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
 
     for (int val_num = 0; val_num < values_count; ++val_num) {
         z_owned_fifo_handler_reply_t handler;

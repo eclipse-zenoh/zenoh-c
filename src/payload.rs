@@ -525,7 +525,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_map_copy(
 /// Serializes a null-terminated string by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_string(
+pub unsafe extern "C" fn z_bytes_serialize_from_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     s: *const libc::c_char,
 ) {
@@ -535,7 +535,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_string(
 /// Serializes a null-terminated string by copying.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_string_copy(
+pub unsafe extern "C" fn z_bytes_serialize_from_str_copy(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     s: *const libc::c_char,
 ) {

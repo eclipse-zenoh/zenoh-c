@@ -1332,11 +1332,11 @@ void z_bytes_serialize_from_slice_map_copy(struct z_owned_bytes_t *this_,
 /**
  * Serializes a null-terminated string by aliasing.
  */
-ZENOHC_API void z_bytes_serialize_from_string(struct z_owned_bytes_t *this_, const char *s);
+ZENOHC_API void z_bytes_serialize_from_str(struct z_owned_bytes_t *this_, const char *s);
 /**
  * Serializes a null-terminated string by copying.
  */
-ZENOHC_API void z_bytes_serialize_from_string_copy(struct z_owned_bytes_t *this_, const char *s);
+ZENOHC_API void z_bytes_serialize_from_str_copy(struct z_owned_bytes_t *this_, const char *s);
 /**
  * Serializes an unsigned integer.
  */
@@ -1766,9 +1766,9 @@ ZENOHC_API z_error_t z_encoding_from_str(struct z_owned_encoding_t *this_, const
  * Constructs a `z_owned_encoding_t` from a specified substring.
  */
 ZENOHC_API
-z_error_t z_encoding_from_substring(struct z_owned_encoding_t *this_,
-                                    const char *s,
-                                    size_t len);
+z_error_t z_encoding_from_substr(struct z_owned_encoding_t *this_,
+                                 const char *s,
+                                 size_t len);
 /**
  * Borrows encoding.
  */
@@ -2066,16 +2066,16 @@ bool z_keyexpr_equals(const struct z_loaned_keyexpr_t *left,
  * not in canon form.
  */
 ZENOHC_API
-z_error_t z_keyexpr_from_string(struct z_owned_keyexpr_t *this_,
-                                const char *expr);
+z_error_t z_keyexpr_from_str(struct z_owned_keyexpr_t *this_,
+                             const char *expr);
 /**
  * Constructs `z_owned_keyexpr_t` from a string, copying the passed string. The copied string is canonized.
  * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression
  * even despite canonization).
  */
 ZENOHC_API
-z_error_t z_keyexpr_from_string_autocanonize(struct z_owned_keyexpr_t *this_,
-                                             const char *expr);
+z_error_t z_keyexpr_from_str_autocanonize(struct z_owned_keyexpr_t *this_,
+                                          const char *expr);
 /**
  * Constructs a `z_owned_keyexpr_t` by copying a substring.
  *
@@ -2085,9 +2085,9 @@ z_error_t z_keyexpr_from_string_autocanonize(struct z_owned_keyexpr_t *this_,
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_keyexpr_from_substring(struct z_owned_keyexpr_t *this_,
-                                   const char *expr,
-                                   size_t len);
+z_error_t z_keyexpr_from_substr(struct z_owned_keyexpr_t *this_,
+                                const char *expr,
+                                size_t len);
 /**
  * Constructs a `z_keyexpr_t` by copying a substring.
  *
@@ -2097,9 +2097,9 @@ z_error_t z_keyexpr_from_substring(struct z_owned_keyexpr_t *this_,
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_keyexpr_from_substring_autocanonize(struct z_owned_keyexpr_t *this_,
-                                                const char *start,
-                                                size_t *len);
+z_error_t z_keyexpr_from_substr_autocanonize(struct z_owned_keyexpr_t *this_,
+                                             const char *start,
+                                             size_t *len);
 /**
  * Returns ``true`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
  * defined by ``right``, ``false`` otherwise.
@@ -3358,14 +3358,22 @@ ZENOHC_API void z_string_drop(struct z_owned_string_t *this_);
  */
 ZENOHC_API void z_string_empty(struct z_owned_string_t *this_);
 /**
+ * Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
+ *
+ * @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_error_t z_string_from_str(struct z_owned_string_t *this_,
+                            const char *str);
+/**
  * Constructs an owned string by copying a `str` substring of length `len`.
  *
  * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
  */
 ZENOHC_API
-z_error_t z_string_from_substring(struct z_owned_string_t *this_,
-                                  const char *str,
-                                  size_t len);
+z_error_t z_string_from_substr(struct z_owned_string_t *this_,
+                               const char *str,
+                               size_t len);
 /**
  * @return ``true`` if string is empty, ``false`` otherwise.
  */
@@ -3382,14 +3390,6 @@ ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_st
  * Constructs owned string in a gravestone state.
  */
 ZENOHC_API void z_string_null(struct z_owned_string_t *this_);
-/**
- * Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
- *
- * @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
- */
-ZENOHC_API
-z_error_t z_string_wrap(struct z_owned_string_t *this_,
-                        const char *str);
 /**
  * Returns ``true`` if subscriber is valid, ``false`` otherwise.
  */
@@ -3523,8 +3523,8 @@ ZENOHC_API bool z_view_keyexpr_check(const struct z_view_keyexpr_t *this_);
  * `expr` must outlive the constucted key expression.
  */
 ZENOHC_API
-z_error_t z_view_keyexpr_from_string(struct z_view_keyexpr_t *this_,
-                                     const char *expr);
+z_error_t z_view_keyexpr_from_str(struct z_view_keyexpr_t *this_,
+                                  const char *expr);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a string.
  * The string is canonized in-place before being passed to keyexpr, possibly shortening it by modifying `len`.
@@ -3532,8 +3532,8 @@ z_error_t z_view_keyexpr_from_string(struct z_view_keyexpr_t *this_,
  * `expr` must outlive the constucted key expression.
  */
 ZENOHC_API
-z_error_t z_view_keyexpr_from_string_autocanonize(struct z_view_keyexpr_t *this_,
-                                                  char *expr);
+z_error_t z_view_keyexpr_from_str_autocanonize(struct z_view_keyexpr_t *this_,
+                                               char *expr);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
  *
@@ -3546,8 +3546,8 @@ z_error_t z_view_keyexpr_from_string_autocanonize(struct z_view_keyexpr_t *this_
  * `s` must outlive constructed key expression.
  */
 ZENOHC_API
-void z_view_keyexpr_from_string_unchecked(struct z_view_keyexpr_t *this_,
-                                          const char *s);
+void z_view_keyexpr_from_str_unchecked(struct z_view_keyexpr_t *this_,
+                                       const char *s);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a substring.
  * `expr` must outlive the constucted key expression.
@@ -3558,9 +3558,9 @@ void z_view_keyexpr_from_string_unchecked(struct z_view_keyexpr_t *this_,
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_view_keyexpr_from_substring(struct z_view_keyexpr_t *this_,
-                                        const char *expr,
-                                        size_t len);
+z_error_t z_view_keyexpr_from_substr(struct z_view_keyexpr_t *this_,
+                                     const char *expr,
+                                     size_t len);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a substring.
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
@@ -3572,9 +3572,9 @@ z_error_t z_view_keyexpr_from_substring(struct z_view_keyexpr_t *this_,
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_error_t z_view_keyexpr_from_substring_autocanonize(struct z_view_keyexpr_t *this_,
-                                                     char *start,
-                                                     size_t *len);
+z_error_t z_view_keyexpr_from_substr_autocanonize(struct z_view_keyexpr_t *this_,
+                                                  char *start,
+                                                  size_t *len);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a substring without checking any of `z_view_keyexpr_t`'s assertions:
  *
@@ -3587,9 +3587,9 @@ z_error_t z_view_keyexpr_from_substring_autocanonize(struct z_view_keyexpr_t *th
  * `start` must outlive constructed key expression.
  */
 ZENOHC_API
-void z_view_keyexpr_from_substring_unchecked(struct z_view_keyexpr_t *this_,
-                                             const char *start,
-                                             size_t len);
+void z_view_keyexpr_from_substr_unchecked(struct z_view_keyexpr_t *this_,
+                                          const char *start,
+                                          size_t len);
 /**
  * Borrows `z_view_keyexpr_t`.
  */
@@ -3646,9 +3646,9 @@ ZENOHC_API void z_view_string_empty(struct z_view_string_t *this_);
  * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
  */
 ZENOHC_API
-z_error_t z_view_string_from_substring(struct z_view_string_t *this_,
-                                       const char *str,
-                                       size_t len);
+z_error_t z_view_string_from_substr(struct z_view_string_t *this_,
+                                    const char *str,
+                                    size_t len);
 /**
  * Borrows view string.
  */
@@ -3696,17 +3696,17 @@ z_error_t zc_config_from_str(struct z_owned_config_t *this_,
  * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
 ZENOHC_API
-z_error_t zc_config_get_from_string(const struct z_loaned_config_t *this_,
-                                    const char *key,
-                                    struct z_owned_string_t *out_value_string);
+z_error_t zc_config_get_from_str(const struct z_loaned_config_t *this_,
+                                 const char *key,
+                                 struct z_owned_string_t *out_value_string);
 /**
  * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
 ZENOHC_API
-z_error_t zc_config_get_from_substring(const struct z_loaned_config_t *this_,
-                                       const char *key,
-                                       size_t key_len,
-                                       struct z_owned_string_t *out_value_string);
+z_error_t zc_config_get_from_substr(const struct z_loaned_config_t *this_,
+                                    const char *key,
+                                    size_t key_len,
+                                    struct z_owned_string_t *out_value_string);
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
@@ -3722,11 +3722,11 @@ z_error_t zc_config_insert_json(struct z_loaned_config_t *this_,
  * Returns 0 if successful, a negative error code otherwise.
  */
 ZENOHC_API
-z_error_t zc_config_insert_json_from_substring(struct z_loaned_config_t *this_,
-                                               const char *key,
-                                               size_t key_len,
-                                               const char *value,
-                                               size_t value_len);
+z_error_t zc_config_insert_json_from_substr(struct z_loaned_config_t *this_,
+                                            const char *key,
+                                            size_t key_len,
+                                            const char *value,
+                                            size_t value_len);
 /**
  * Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
  *

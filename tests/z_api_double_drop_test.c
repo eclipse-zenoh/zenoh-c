@@ -42,7 +42,7 @@ void test_publisher() {
     z_open(&s, z_move(config));
 
     z_owned_keyexpr_t keyexpr;
-    z_keyexpr_from_string(&keyexpr, URL);
+    z_keyexpr_from_str(&keyexpr, URL);
 
     z_owned_publisher_t pub;
     z_declare_publisher(&pub, z_loan(s), z_loan(keyexpr), NULL);
@@ -56,7 +56,7 @@ void test_publisher() {
 
 void test_keyexpr() {
     z_owned_keyexpr_t keyexpr;
-    z_keyexpr_from_string(&keyexpr, URL);
+    z_keyexpr_from_str(&keyexpr, URL);
 
     assert(z_check(keyexpr));
     z_drop(z_move(keyexpr));
@@ -86,7 +86,7 @@ void test_subscriber() {
     z_closure(&callback, data_handler, NULL, NULL);
 
     z_view_keyexpr_t keyexpr;
-    z_view_keyexpr_from_string(&keyexpr, URL);
+    z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_subscriber_t sub;
     z_declare_subscriber(&sub, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
     assert(z_check(sub));
@@ -108,7 +108,7 @@ void test_queryable() {
     z_closure(&callback, query_handler, NULL, NULL);
 
     z_view_keyexpr_t keyexpr;
-    z_view_keyexpr_from_string(&keyexpr, URL);
+    z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_queryable_t queryable;
     z_declare_queryable(&queryable, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
     assert(z_check(queryable));

@@ -30,7 +30,7 @@ use crate::z_id_t;
 use crate::z_loaned_bytes_t;
 use crate::z_loaned_keyexpr_t;
 use crate::z_owned_string_t;
-use crate::z_string_from_substring;
+use crate::z_string_from_substr;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::core::Priority;
@@ -233,7 +233,7 @@ decl_c_type!(
 /// Constructs a `z_owned_encoding_t` from a specified substring.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_from_substring(
+pub unsafe extern "C" fn z_encoding_from_substr(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
     len: usize,
@@ -265,7 +265,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
 ) -> errors::z_error_t {
-    z_encoding_from_substring(this, s, libc::strlen(s))
+    z_encoding_from_substr(this, s, libc::strlen(s))
 }
 
 /// Constructs an owned non-null-terminated string from encoding
@@ -279,7 +279,7 @@ pub unsafe extern "C" fn z_encoding_to_string(
     out_str: &mut MaybeUninit<z_owned_string_t>,
 ) {
     let s: Cow<'static, str> = this.as_rust_type_ref().into();
-    z_string_from_substring(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
+    z_string_from_substr(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
 }
 
 /// Returns a loaned default `z_loaned_encoding_t`.

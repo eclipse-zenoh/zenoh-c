@@ -44,8 +44,8 @@ bool create_attachement_it(z_owned_bytes_t *kv_pair, void *context) {
     if (ctx->iteration_index >= ctx->num_items) {
         return false;
     } else {
-        z_bytes_serialize_from_string(&k, ctx->keys[ctx->iteration_index]);
-        z_bytes_serialize_from_string(&v, ctx->values[ctx->iteration_index]);
+        z_bytes_serialize_from_str(&k, ctx->keys[ctx->iteration_index]);
+        z_bytes_serialize_from_str(&v, ctx->values[ctx->iteration_index]);
     }
 
     z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
@@ -98,7 +98,7 @@ int run_publisher() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_publisher_t pub;
     if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         perror("Unable to declare Publisher for key expression!");
@@ -175,7 +175,7 @@ int run_subscriber() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
