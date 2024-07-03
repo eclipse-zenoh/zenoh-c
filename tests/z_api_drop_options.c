@@ -32,7 +32,7 @@ void put() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, "zenoh/test_put");
+    z_view_keyexpr_from_str(&ke, "zenoh/test_put");
     z_put_options_t opts;
     z_put_options_default(&opts);
     z_owned_bytes_t payload, attachment;
@@ -56,7 +56,7 @@ void get() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, "zenoh/test_get");
+    z_view_keyexpr_from_str(&ke, "zenoh/test_get");
     z_get_options_t opts;
     z_get_options_default(&opts);
     z_owned_bytes_t payload, attachment;

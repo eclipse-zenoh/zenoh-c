@@ -20,7 +20,7 @@ use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
 use crate::errors::z_error_t;
 use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
-use crate::{errors, z_owned_string_t, z_string_from_substring, z_string_null};
+use crate::{errors, z_owned_string_t, z_string_from_substr, z_string_null};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -112,18 +112,18 @@ pub extern "C" fn z_config_clone(
 /// Gets the property with the given path key from the configuration, and constructs and owned string from it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get_from_string(
+pub unsafe extern "C" fn zc_config_get_from_str(
     this: &z_loaned_config_t,
     key: *const c_char,
     out_value_string: &mut MaybeUninit<z_owned_string_t>,
 ) -> errors::z_error_t {
-    zc_config_get_from_substring(this, key, libc::strlen(key), out_value_string)
+    zc_config_get_from_substr(this, key, libc::strlen(key), out_value_string)
 }
 
 /// Gets the property with the given path key from the configuration, and constructs and owned string from it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get_from_substring(
+pub unsafe extern "C" fn zc_config_get_from_substr(
     this: &z_loaned_config_t,
     key: *const c_char,
     key_len: usize,
@@ -145,7 +145,7 @@ pub unsafe extern "C" fn zc_config_get_from_substring(
     let val = config.get_json(key).ok();
     match val {
         Some(val) => {
-            z_string_from_substring(
+            z_string_from_substr(
                 out_value_string,
                 val.as_ptr() as *const libc::c_char,
                 val.len(),
@@ -169,7 +169,7 @@ pub unsafe extern "C" fn zc_config_insert_json(
     key: *const c_char,
     value: *const c_char,
 ) -> errors::z_error_t {
-    zc_config_insert_json_from_substring(this, key, libc::strlen(key), value, libc::strlen(value))
+    zc_config_insert_json_from_substr(this, key, libc::strlen(key), value, libc::strlen(value))
 }
 
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
@@ -177,7 +177,7 @@ pub unsafe extern "C" fn zc_config_insert_json(
 /// Returns 0 if successful, a negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn zc_config_insert_json_from_substring(
+pub unsafe extern "C" fn zc_config_insert_json_from_substr(
     this: &mut z_loaned_config_t,
     key: *const c_char,
     key_len: usize,
@@ -249,7 +249,7 @@ pub unsafe extern "C" fn zc_config_to_string(
     match json5::to_string(config) {
         Ok(s) => {
             unsafe {
-                z_string_from_substring(
+                z_string_from_substr(
                     out_config_string,
                     s.as_ptr() as *const libc::c_char,
                     s.len(),

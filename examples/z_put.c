@@ -46,14 +46,14 @@ int main(int argc, char **argv) {
     printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_string(&payload, value);
+    z_bytes_serialize_from_str(&payload, value);
 
     z_owned_bytes_t attachment, key, val;
-    z_bytes_serialize_from_string(&key, "hello");
-    z_bytes_serialize_from_string(&val, "there");
+    z_bytes_serialize_from_str(&key, "hello");
+    z_bytes_serialize_from_str(&val, "there");
     z_bytes_serialize_from_pair(&attachment, z_move(key), z_move(val));
 
     z_put_options_t options;

@@ -45,7 +45,7 @@ int run_publisher() {
     z_id_t self_id = z_info_zid(z_loan(s));
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
     z_publisher_options_t publisher_options;
     z_publisher_options_default(&publisher_options);
     publisher_options.priority = Z_PRIORITY_DATA;
@@ -72,7 +72,7 @@ int run_publisher() {
         options.timestamp = &ts;
 
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_string(&payload, values[i]);
+        z_bytes_serialize_from_str(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
@@ -157,7 +157,7 @@ int run_subscriber() {
     }
 
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_string(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);

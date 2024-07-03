@@ -16,7 +16,7 @@ use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
     z_owned_closure_query_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t,
-    z_timestamp_t, z_view_string_from_substring, z_view_string_t,
+    z_timestamp_t, z_view_string_from_substr, z_view_string_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
@@ -430,7 +430,7 @@ pub unsafe extern "C" fn z_query_parameters(
 ) {
     let query = this.as_rust_type_ref();
     let params = query.parameters().as_str();
-    unsafe { z_view_string_from_substring(parameters, params.as_ptr() as _, params.len()) };
+    unsafe { z_view_string_from_substr(parameters, params.as_ptr() as _, params.len()) };
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.

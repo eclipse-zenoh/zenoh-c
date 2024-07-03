@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
             break;
     }
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr_from_string(&keyexpr, expr) < 0) {
+    if (z_view_keyexpr_from_str(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
     }
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
     z_owned_bytes_t payload;
     if (value != NULL) {
-        z_bytes_serialize_from_string(&payload, value);
+        z_bytes_serialize_from_str(&payload, value);
         opts.payload = &payload;
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
