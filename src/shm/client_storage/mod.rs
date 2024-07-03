@@ -17,8 +17,8 @@ use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_client_storage_t, z_moved_shm_client_storage_t, z_moved_shm_client_t,
-    z_owned_shm_client_storage_t, z_owned_shm_client_t, zc_loaned_shm_client_list_t,
-    zc_moved_shm_client_list_t, zc_owned_shm_client_list_t,
+    z_owned_shm_client_storage_t, zc_loaned_shm_client_list_t, zc_moved_shm_client_list_t,
+    zc_owned_shm_client_list_t,
 };
 use std::{mem::MaybeUninit, sync::Arc};
 use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
