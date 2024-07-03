@@ -70,7 +70,7 @@ Functions
 
 .. doxygenfunction:: z_str_wrap
 .. doxygenfunction:: z_view_str_wrap
-.. doxygenfunction:: z_str_from_substring
+.. doxygenfunction:: z_str_from_substr
 .. doxygenfunction:: z_str_data
 .. doxygenfunction:: z_str_len
 .. doxygenfunction:: z_str_is_empty
@@ -210,11 +210,11 @@ Functions
 .. doxygenfunction:: z_view_keyexpr_from_string_autocanonize
 .. doxygenfunction:: z_view_keyexpr_from_string_unchecked
 
-.. doxygenfunction:: z_keyexpr_from_substring
-.. doxygenfunction:: z_view_keyexpr_from_substring
-.. doxygenfunction:: z_keyexpr_from_substring_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_substring_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_substring_unchecked
+.. doxygenfunction:: z_keyexpr_from_substr
+.. doxygenfunction:: z_view_keyexpr_from_substr
+.. doxygenfunction:: z_keyexpr_from_substr_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_substr_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_substr_unchecked
 
 .. doxygenfunction:: z_keyexpr_loan
 .. doxygenfunction:: z_view_keyexpr_loan
@@ -253,7 +253,7 @@ Functions
 
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
-.. doxygenfunction:: z_encoding_from_substring
+.. doxygenfunction:: z_encoding_from_substr
 .. doxygenfunction:: z_encoding_to_string
 
 Value
