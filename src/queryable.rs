@@ -14,9 +14,9 @@
 use crate::transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
-    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_query_t,
-    z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t,
+    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
+    z_moved_closure_query_t, z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t,
+    z_priority_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t,
 };
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
