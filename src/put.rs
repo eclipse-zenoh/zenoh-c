@@ -16,9 +16,9 @@ use crate::errors;
 use crate::keyexpr::*;
 use crate::transmute::IntoRustType;
 use crate::transmute::RustTypeRef;
+use crate::transmute::TakeRustType;
 use crate::z_loaned_session_t;
 use crate::z_moved_bytes_t;
-use crate::z_owned_bytes_t;
 use crate::z_timestamp_t;
 use std::ptr::null_mut;
 use zenoh::core::Priority;
@@ -34,7 +34,7 @@ use zenoh::sample::TimestampBuilderTrait;
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
     /// The encoding of the message.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: z_moved_encoding_t,
     /// The congestion control to apply when routing this message.
     pub congestion_control: z_congestion_control_t,
     /// The priority of this message.
@@ -42,13 +42,13 @@ pub struct z_put_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of this message.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The allowed destination of this message.
     pub allowed_destination: zcu_locality_t,
     /// The source info for the message.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: z_moved_source_info_t,
     /// The attachment to this message.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: z_moved_bytes_t,
 }
 
 /// Constructs the default value for `z_put_options_t`.
@@ -56,14 +56,14 @@ pub struct z_put_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
     *this = z_put_options_t {
-        encoding: null_mut(),
+        encoding: None.into(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
+        timestamp: None,
         allowed_destination: zcu_locality_default(),
-        source_info: null_mut(),
-        attachment: null_mut(),
+        source_info: None.into(),
+        attachment: None.into(),
     };
 }
 
@@ -91,23 +91,17 @@ pub extern "C" fn z_put(
 
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
+        if let Some(encoding) = options.encoding.take_rust_type() {
             put = put.encoding(encoding);
         };
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
+        if let Some(source_info) = options.source_info.take_rust_type() {
             put = put.source_info(source_info);
         };
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
+        if let Some(attachment) = options.attachment.take_rust_type() {
             put = put.attachment(attachment);
         }
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_ref() }
-                .unwrap()
-                .as_rust_type_ref();
-            put = put.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
         }
         put = put.priority(options.priority.into());
         put = put.congestion_control(options.congestion_control.into());

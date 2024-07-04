@@ -656,7 +656,7 @@ typedef struct z_put_options_t {
   /**
    * The encoding of the message.
    */
-  struct z_owned_encoding_t *encoding;
+  struct z_moved_encoding_t encoding;
   /**
    * The congestion control to apply when routing this message.
    */
@@ -680,11 +680,11 @@ typedef struct z_put_options_t {
   /**
    * The source info for the message.
    */
-  struct z_owned_source_info_t *source_info;
+  struct z_moved_source_info_t source_info;
   /**
    * The attachment to this message.
    */
-  struct z_owned_bytes_t *attachment;
+  struct z_moved_bytes_t attachment;
 } z_put_options_t;
 /**
  * Represents the set of options that can be applied to a query reply,
