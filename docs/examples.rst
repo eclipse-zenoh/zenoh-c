@@ -58,8 +58,8 @@ Subscribe
       z_owned_string_t payload_string;
       z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
       printf(">> Received (%.*s, %.*s)\n", 
-          (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)), 
-          (int)z_str_len(z_loan(payload_string)), z_str_data(z_loan(payload_string))
+          (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)), 
+          (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string))
       );
 
       z_drop(z_move(payload_string));
@@ -131,8 +131,8 @@ Query
               z_owned_string_t payload_string;
               z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
               printf(">> Received (%.*s, %.*s)\n",
-                  (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)),
-                  (int)z_str_len(z_loan(payload_string)), z_str_data(z_loan(payload_string))
+                  (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+                  (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string))
               );
               z_drop(z_move(payload_string));
           }
@@ -163,11 +163,11 @@ Queryable
           z_bytes_deserialize_into_string(payload, &payload_string);
 
           printf(">> [Queryable ] Received Query '%.*s' with value '%.*s'\n", 
-              (int)z_str_len(z_loan(key_string)), z_str_data(z_loan(key_string)),
-              (int)z_str_len(z_loan(payload_string)), z_str_data(z_loan(payload_string)));
+              (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+              (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
           z_drop(z_move(payload_string));
       } else {
-          printf(">> [Queryable ] Received Query '%s'\n", z_str_data(z_loan(key_string)));
+          printf(">> [Queryable ] Received Query '%s'\n", z_string_data(z_loan(key_string)));
       }
 
       z_owned_bytes_t reply_payload;
