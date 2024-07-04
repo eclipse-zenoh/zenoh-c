@@ -20,7 +20,6 @@ use crate::transmute::TakeRustType;
 use crate::z_loaned_session_t;
 use crate::z_moved_bytes_t;
 use crate::z_timestamp_t;
-use std::ptr::null_mut;
 use zenoh::core::Priority;
 use zenoh::core::Wait;
 use zenoh::publisher::CongestionControl;
@@ -128,7 +127,7 @@ pub struct z_delete_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of this message.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The allowed destination of this message.
     pub allowed_destination: zcu_locality_t,
 }
@@ -141,7 +140,7 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
+        timestamp: None,
         allowed_destination: zcu_locality_default(),
     };
 }
@@ -164,11 +163,8 @@ pub extern "C" fn z_delete(
     let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);
     if let Some(options) = options {
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_ref() }
-                .unwrap()
-                .as_rust_type_ref();
-            del = del.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            del = del.timestamp(Some(*timestamp.as_rust_type_ref()));
         }
         del = del
             .congestion_control(options.congestion_control.into())
