@@ -279,7 +279,7 @@ macro_rules! decl_c_type_inequal {
     //
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type!(
             owned($c_owned_type, option $rust_inner_type),
@@ -291,7 +291,7 @@ macro_rules! decl_c_type_inequal {
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type!(
             owned($c_owned_type, $rust_owned_type),
@@ -307,7 +307,7 @@ macro_rules! decl_c_type_inequal {
     //
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, option $rust_inner_type),
@@ -317,7 +317,7 @@ macro_rules! decl_c_type_inequal {
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, $rust_owned_type),
@@ -331,7 +331,7 @@ macro_rules! decl_c_type_inequal {
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, option $rust_inner_type),
@@ -345,7 +345,7 @@ macro_rules! decl_c_type_inequal {
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, $rust_owned_type),
@@ -359,7 +359,7 @@ macro_rules! decl_c_type_inequal {
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, $rust_owned_type),
@@ -378,7 +378,7 @@ macro_rules! decl_c_type {
     // Owned type only
     //
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         validate_equivalence!($c_owned_type, Option<$rust_inner_type>);
         impl_transmute!(as_c_owned(Option<$rust_inner_type>, $c_owned_type));
@@ -386,7 +386,7 @@ macro_rules! decl_c_type {
         impl_moved!($c_moved_type, as_rust option $rust_inner_type);
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         validate_equivalence!($c_owned_type, $rust_owned_type);
         impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
@@ -398,7 +398,7 @@ macro_rules! decl_c_type {
     //
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, option $rust_inner_type),
@@ -409,7 +409,7 @@ macro_rules! decl_c_type {
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, $rust_owned_type),
@@ -423,7 +423,7 @@ macro_rules! decl_c_type {
     //
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type!(
             owned($c_owned_type, option $rust_inner_type),
@@ -433,7 +433,7 @@ macro_rules! decl_c_type {
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type!(
             owned($c_owned_type, $rust_owned_type),
@@ -447,7 +447,7 @@ macro_rules! decl_c_type {
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, option $rust_inner_type),
@@ -461,7 +461,7 @@ macro_rules! decl_c_type {
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, $rust_owned_type),
@@ -475,7 +475,7 @@ macro_rules! decl_c_type {
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?),
-     moved ($c_moved_type:ty)
+     moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         decl_c_type_inequal!(
             owned($c_owned_type, $rust_owned_type),
@@ -486,8 +486,6 @@ macro_rules! decl_c_type {
         validate_equivalence!($c_owned_type, $c_loaned_type);
         validate_equivalence!($c_view_type, $c_loaned_type);
     };
-
-
 
     //
     // Specific case for closures: c owned type and rust owned type is the same thing: c-repr structure
