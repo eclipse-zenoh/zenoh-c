@@ -635,7 +635,7 @@ typedef struct z_publisher_put_options_t {
   /**
    *  The encoding of the data to publish.
    */
-  struct z_owned_encoding_t *encoding;
+  struct z_moved_encoding_t encoding;
   /**
    * The timestamp of the publication.
    */
@@ -643,11 +643,11 @@ typedef struct z_publisher_put_options_t {
   /**
    * The source info for the publication.
    */
-  struct z_owned_source_info_t *source_info;
+  struct z_moved_source_info_t source_info;
   /**
    * The attachment to attach to the publication.
    */
-  struct z_owned_bytes_t *attachment;
+  struct z_moved_bytes_t attachment;
 } z_publisher_put_options_t;
 /**
  * Options passed to the `z_put()` function.

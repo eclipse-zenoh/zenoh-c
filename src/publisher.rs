@@ -18,10 +18,11 @@ use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
+use crate::transmute::TakeRustType;
 use crate::z_entity_global_id_t;
 use crate::z_moved_bytes_t;
-use crate::z_owned_encoding_t;
-use crate::z_owned_source_info_t;
+use crate::z_moved_encoding_t;
+use crate::z_moved_source_info_t;
 use crate::z_timestamp_t;
 use crate::zcu_closure_matching_status_call;
 use crate::zcu_closure_matching_status_loan;
@@ -40,7 +41,7 @@ use zenoh::sample::TimestampBuilderTrait;
 use zenoh::{core::Priority, publisher::MatchingListener, publisher::Publisher};
 
 use crate::{
-    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t, z_priority_t,
+    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_priority_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.
@@ -160,13 +161,13 @@ pub unsafe extern "C" fn z_publisher_loan_mut(
 #[repr(C)]
 pub struct z_publisher_put_options_t {
     ///  The encoding of the data to publish.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: z_moved_encoding_t,
     /// The timestamp of the publication.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The source info for the publication.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: z_moved_source_info_t,
     /// The attachment to attach to the publication.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: z_moved_bytes_t,
 }
 
 /// Constructs the default value for `z_publisher_put_options_t`.
@@ -174,10 +175,10 @@ pub struct z_publisher_put_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_options_t) {
     *this = z_publisher_put_options_t {
-        encoding: ptr::null_mut(),
-        timestamp: ptr::null_mut(),
-        source_info: ptr::null_mut(),
-        attachment: ptr::null_mut(),
+        encoding: None.into(),
+        timestamp: None,
+        source_info: None.into(),
+        attachment: None.into(),
     }
 }
 
@@ -206,23 +207,17 @@ pub unsafe extern "C" fn z_publisher_put(
 
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
+        if let Some(encoding) = options.encoding.take_rust_type() {
             put = put.encoding(encoding);
         };
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
+        if let Some(source_info) = options.source_info.take_rust_type() {
             put = put.source_info(source_info);
         };
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
+        if let Some(attachment) = options.attachment.take_rust_type() {
             put = put.attachment(attachment);
         }
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
-                .unwrap()
-                .as_rust_type_ref();
-            put = put.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
         }
     }
 
