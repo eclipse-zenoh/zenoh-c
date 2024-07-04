@@ -39,9 +39,7 @@ use zenoh::sample::SampleBuilderTrait;
 use zenoh::sample::TimestampBuilderTrait;
 use zenoh::{core::Priority, publisher::MatchingListener, publisher::Publisher};
 
-use crate::{
-    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_priority_t,
-};
+use crate::{z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_priority_t};
 
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
@@ -216,7 +214,7 @@ pub unsafe extern "C" fn z_publisher_put(
             put = put.attachment(attachment);
         }
         if let Some(timestamp) = options.timestamp.as_ref() {
-            put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
+            put = put.timestamp(Some(timestamp.into_rust_type()));
         }
     }
 
@@ -240,9 +238,7 @@ pub struct z_publisher_delete_options_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_delete_options_t) {
-    *this = z_publisher_delete_options_t {
-        timestamp: None,
-    }
+    *this = z_publisher_delete_options_t { timestamp: None }
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
@@ -257,7 +253,7 @@ pub extern "C" fn z_publisher_delete(
     let mut del = publisher.delete();
     if let Some(options) = options {
         if let Some(timestamp) = options.timestamp.as_ref() {
-            del = del.timestamp(Some(*timestamp.as_rust_type_ref()));
+            del = del.timestamp(Some(timestamp.into_rust_type()));
         }
     }
     if let Err(e) = del.wait() {

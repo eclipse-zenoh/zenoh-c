@@ -694,7 +694,7 @@ typedef struct z_query_reply_options_t {
   /**
    * The encoding of the reply payload.
    */
-  struct z_owned_encoding_t *encoding;
+  struct z_moved_encoding_t encoding;
   /**
    * The congestion control to apply when routing the reply.
    */
@@ -714,11 +714,11 @@ typedef struct z_query_reply_options_t {
   /**
    * The source info for the reply.
    */
-  struct z_owned_source_info_t *source_info;
+  struct z_moved_source_info_t source_info;
   /**
    * The attachment to this reply.
    */
-  struct z_owned_bytes_t *attachment;
+  struct z_moved_bytes_t attachment;
 } z_query_reply_options_t;
 /**
  * Represents the set of options that can be applied to a query delete reply,
@@ -744,11 +744,11 @@ typedef struct z_query_reply_del_options_t {
   /**
    * The source info for the reply.
    */
-  struct z_owned_source_info_t *source_info;
+  struct z_moved_source_info_t source_info;
   /**
    * The attachment to this reply.
    */
-  struct z_owned_bytes_t *attachment;
+  struct z_moved_bytes_t attachment;
 } z_query_reply_del_options_t;
 /**
  * Represents the set of options that can be applied to a query reply error,
@@ -758,7 +758,7 @@ typedef struct z_query_reply_err_options_t {
   /**
    * The encoding of the error payload.
    */
-  struct z_owned_encoding_t *encoding;
+  struct z_moved_encoding_t encoding;
 } z_query_reply_err_options_t;
 typedef struct z_moved_queryable_t {
   struct z_owned_queryable_t *ptr;

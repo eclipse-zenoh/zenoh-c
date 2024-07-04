@@ -11,15 +11,16 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::transmute::{
+    IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
+};
 use crate::{
     errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
-    z_moved_closure_query_t, z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t,
-    z_priority_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t,
+    z_moved_closure_query_t, z_moved_encoding_t, z_moved_source_info_t, z_priority_t,
+    z_timestamp_t, z_view_string_from_substr, z_view_string_t,
 };
 use std::mem::MaybeUninit;
-use std::ptr::null_mut;
 use zenoh::core::Priority;
 use zenoh::core::Wait;
 use zenoh::encoding::Encoding;
@@ -117,7 +118,7 @@ pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) 
 #[repr(C)]
 pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: z_moved_encoding_t,
     /// The congestion control to apply when routing the reply.
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
@@ -125,11 +126,11 @@ pub struct z_query_reply_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of the reply.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The source info for the reply.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: z_moved_source_info_t,
     /// The attachment to this reply.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: z_moved_bytes_t,
 }
 
 /// Constructs the default value for `z_query_reply_options_t`.
@@ -137,13 +138,13 @@ pub struct z_query_reply_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
     *this = z_query_reply_options_t {
-        encoding: null_mut(),
+        encoding: None.into(),
         congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
-        source_info: null_mut(),
-        attachment: null_mut(),
+        timestamp: None,
+        source_info: None.into(),
+        attachment: None.into(),
     };
 }
 
@@ -153,7 +154,7 @@ pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options
 #[repr(C)]
 pub struct z_query_reply_err_options_t {
     /// The encoding of the error payload.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: z_moved_encoding_t,
 }
 
 /// Constructs the default value for `z_query_reply_err_options_t`.
@@ -161,7 +162,7 @@ pub struct z_query_reply_err_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_query_reply_err_options_default(this: &mut z_query_reply_err_options_t) {
     *this = z_query_reply_err_options_t {
-        encoding: null_mut(),
+        encoding: None.into(),
     };
 }
 
@@ -177,11 +178,11 @@ pub struct z_query_reply_del_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of the reply.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The source info for the reply.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: z_moved_source_info_t,
     /// The attachment to this reply.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: z_moved_bytes_t,
 }
 
 /// Constructs the default value for `z_query_reply_del_options_t`.
@@ -192,9 +193,9 @@ pub extern "C" fn z_query_reply_del_options_default(this: &mut z_query_reply_del
         congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
-        source_info: null_mut(),
-        attachment: null_mut(),
+        timestamp: None,
+        source_info: None.into(),
+        attachment: None.into(),
     };
 }
 
@@ -304,23 +305,17 @@ pub extern "C" fn z_query_reply(
 
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
+        if let Some(encoding) = options.encoding.take_rust_type() {
             reply = reply.encoding(encoding);
         };
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
+        if let Some(source_info) = options.source_info.take_rust_type() {
             reply = reply.source_info(source_info);
         };
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
+        if let Some(attachment) = options.attachment.take_rust_type() {
             reply = reply.attachment(attachment);
         }
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
-                .unwrap()
-                .as_rust_type_ref();
-            reply = reply.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
         reply = reply.priority(options.priority.into());
         reply = reply.congestion_control(options.congestion_control.into());
@@ -360,11 +355,7 @@ pub unsafe extern "C" fn z_query_reply_err(
 
     let reply = query.reply_err(payload).encoding(
         options
-            .and_then(|o| {
-                o.encoding
-                    .as_mut()
-                    .map(|e| std::mem::take(e.as_rust_type_mut()))
-            })
+            .and_then(|o| o.encoding.take_rust_type())
             .unwrap_or(Encoding::default()),
     );
 
@@ -399,19 +390,14 @@ pub unsafe extern "C" fn z_query_reply_del(
 
     let mut reply = query.reply_del(key_expr);
     if let Some(options) = options {
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
+        if let Some(source_info) = options.source_info.take_rust_type() {
             reply = reply.source_info(source_info);
         };
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
+        if let Some(attachment) = options.attachment.take_rust_type() {
             reply = reply.attachment(attachment);
         }
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
-                .unwrap()
-                .as_rust_type_ref();
-            reply = reply.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
         reply = reply.priority(options.priority.into());
         reply = reply.congestion_control(options.congestion_control.into());

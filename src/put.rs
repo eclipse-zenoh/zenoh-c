@@ -100,7 +100,7 @@ pub extern "C" fn z_put(
             put = put.attachment(attachment);
         }
         if let Some(timestamp) = options.timestamp.as_ref() {
-            put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
+            put = put.timestamp(Some(timestamp.into_rust_type()));
         }
         put = put.priority(options.priority.into());
         put = put.congestion_control(options.congestion_control.into());
@@ -164,7 +164,7 @@ pub extern "C" fn z_delete(
     let mut del = session.delete(key_expr);
     if let Some(options) = options {
         if let Some(timestamp) = options.timestamp.as_ref() {
-            del = del.timestamp(Some(*timestamp.as_rust_type_ref()));
+            del = del.timestamp(Some(timestamp.into_rust_type()));
         }
         del = del
             .congestion_control(options.congestion_control.into())
