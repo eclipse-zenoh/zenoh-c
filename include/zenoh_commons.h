@@ -206,9 +206,6 @@ typedef enum zcu_reply_keyexpr_t {
    */
   ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zcu_reply_keyexpr_t;
-typedef struct z_moved_alloc_layout_t {
-  struct z_owned_alloc_layout_t *ptr;
-} z_moved_alloc_layout_t;
 typedef int8_t z_error_t;
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 typedef struct z_alloc_alignment_t {
@@ -241,24 +238,12 @@ typedef struct zc_threadsafe_context_t {
   void (*delete_fn)(void*);
 } zc_threadsafe_context_t;
 #endif
-typedef struct z_moved_buf_alloc_result_t {
-  struct z_owned_buf_alloc_result_t *ptr;
-} z_moved_buf_alloc_result_t;
 typedef struct z_moved_bytes_t {
   struct z_owned_bytes_t *ptr;
 } z_moved_bytes_t;
-typedef struct z_moved_shm_t {
-  struct z_owned_shm_t *ptr;
-} z_moved_shm_t;
-typedef struct z_moved_shm_mut_t {
-  struct z_owned_shm_mut_t *ptr;
-} z_moved_shm_mut_t;
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t *ptr;
 } z_moved_bytes_writer_t;
-typedef struct z_moved_chunk_alloc_result_t {
-  struct z_owned_chunk_alloc_result_t *ptr;
-} z_moved_chunk_alloc_result_t;
 /**
  * Unique segment identifier
  */
@@ -624,9 +609,6 @@ typedef struct z_moved_hello_t {
 typedef struct z_moved_keyexpr_t {
   struct z_owned_keyexpr_t *ptr;
 } z_moved_keyexpr_t;
-typedef struct z_moved_memory_layout_t {
-  struct z_owned_memory_layout_t *ptr;
-} z_moved_memory_layout_t;
 typedef struct z_moved_mutex_t {
   struct z_owned_mutex_t *ptr;
 } z_moved_mutex_t;
@@ -809,9 +791,6 @@ typedef struct z_scout_options_t {
    */
   enum z_whatami_t zc_what;
 } z_scout_options_t;
-typedef struct z_moved_shm_client_t {
-  struct z_owned_shm_client_t *ptr;
-} z_moved_shm_client_t;
 /**
  * A callbacks for ShmSegment
  */
@@ -837,12 +816,6 @@ typedef struct zc_shm_client_callbacks_t {
   bool (*attach_fn)(struct z_shm_segment_t *out_segment, z_segment_id_t segment_id, void *context);
 } zc_shm_client_callbacks_t;
 #endif
-typedef struct z_moved_shm_client_storage_t {
-  struct z_owned_shm_client_storage_t *ptr;
-} z_moved_shm_client_storage_t;
-typedef struct z_moved_shm_provider_t {
-  struct z_owned_shm_provider_t *ptr;
-} z_moved_shm_provider_t;
 /**
  * Unique protocol identifier.
  * Here is a contract: it is up to user to make sure that incompatible ShmClient
@@ -882,13 +855,13 @@ typedef struct zc_context_t {
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 typedef struct zc_shm_provider_backend_callbacks_t {
-  void (*alloc_fn)(struct z_owned_chunk_alloc_result_t *out_result,
-                   const struct z_loaned_memory_layout_t *layout,
+  void (*alloc_fn)(z_owned_chunk_alloc_result_t *out_result,
+                   const z_loaned_memory_layout_t *layout,
                    void *context);
   void (*free_fn)(const struct z_chunk_descriptor_t *chunk, void *context);
   size_t (*defragment_fn)(void *context);
   size_t (*available_fn)(void *context);
-  void (*layout_for_fn)(struct z_owned_memory_layout_t *layout, void *context);
+  void (*layout_for_fn)(z_owned_memory_layout_t *layout, void *context);
 } zc_shm_provider_backend_callbacks_t;
 #endif
 typedef struct z_moved_slice_t {
@@ -942,9 +915,6 @@ typedef struct zc_liveliness_get_options_t {
 typedef struct zc_moved_liveliness_token_t {
   struct zc_owned_liveliness_token_t *ptr;
 } zc_moved_liveliness_token_t;
-typedef struct zc_moved_shm_client_list_t {
-  struct zc_owned_shm_client_list_t *ptr;
-} zc_moved_shm_client_list_t;
 /**
  * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
  */
@@ -1074,55 +1044,54 @@ ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 ZENOHC_API extern const unsigned int Z_SHM_POSIX_PROTOCOL_ID;
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_alloc_layout_alloc(struct z_owned_buf_alloc_result_t *out_result,
-                          const struct z_loaned_alloc_layout_t *layout);
+void z_alloc_layout_alloc(z_owned_buf_alloc_result_t *out_result,
+                          const z_loaned_alloc_layout_t *layout);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_alloc_layout_alloc_gc(struct z_owned_buf_alloc_result_t *out_result,
-                             const struct z_loaned_alloc_layout_t *layout);
+void z_alloc_layout_alloc_gc(z_owned_buf_alloc_result_t *out_result,
+                             const z_loaned_alloc_layout_t *layout);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_alloc_layout_alloc_gc_defrag(struct z_owned_buf_alloc_result_t *out_result,
-                                    const struct z_loaned_alloc_layout_t *layout);
+void z_alloc_layout_alloc_gc_defrag(z_owned_buf_alloc_result_t *out_result,
+                                    const z_loaned_alloc_layout_t *layout);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_alloc_layout_alloc_gc_defrag_blocking(struct z_owned_buf_alloc_result_t *out_result,
-                                             const struct z_loaned_alloc_layout_t *layout);
+void z_alloc_layout_alloc_gc_defrag_blocking(z_owned_buf_alloc_result_t *out_result,
+                                             const z_loaned_alloc_layout_t *layout);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_alloc_layout_alloc_gc_defrag_dealloc(struct z_owned_buf_alloc_result_t *out_result,
-                                            const struct z_loaned_alloc_layout_t *layout);
+void z_alloc_layout_alloc_gc_defrag_dealloc(z_owned_buf_alloc_result_t *out_result,
+                                            const z_loaned_alloc_layout_t *layout);
 #endif
 /**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_alloc_layout_check(const struct z_owned_alloc_layout_t *this_);
+ZENOHC_API bool z_alloc_layout_check(const z_owned_alloc_layout_t *this_);
 #endif
 /**
  * Deletes Alloc Layout
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_alloc_layout_drop(struct z_moved_alloc_layout_t this_);
+ZENOHC_API void z_alloc_layout_drop(z_moved_alloc_layout_t this_);
 #endif
 /**
  * Borrows Alloc Layout
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API
-const struct z_loaned_alloc_layout_t *z_alloc_layout_loan(const struct z_owned_alloc_layout_t *this_);
+ZENOHC_API const z_loaned_alloc_layout_t *z_alloc_layout_loan(const z_owned_alloc_layout_t *this_);
 #endif
 /**
  * Creates a new Alloc Layout for SHM Provider
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_alloc_layout_new(struct z_owned_alloc_layout_t *this_,
-                             const struct z_loaned_shm_provider_t *provider,
+z_error_t z_alloc_layout_new(z_owned_alloc_layout_t *this_,
+                             const z_loaned_shm_provider_t *provider,
                              size_t size,
                              struct z_alloc_alignment_t alignment);
 #endif
@@ -1130,45 +1099,45 @@ z_error_t z_alloc_layout_new(struct z_owned_alloc_layout_t *this_,
  * Constructs Alloc Layout in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_alloc_layout_null(struct z_owned_alloc_layout_t *this_);
+ZENOHC_API void z_alloc_layout_null(z_owned_alloc_layout_t *this_);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(struct z_owned_buf_alloc_result_t *out_result,
-                                                          const struct z_loaned_alloc_layout_t *layout,
+z_error_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(z_owned_buf_alloc_result_t *out_result,
+                                                          const z_loaned_alloc_layout_t *layout,
                                                           struct zc_threadsafe_context_t result_context,
                                                           void (*result_callback)(void*,
-                                                                                  struct z_owned_buf_alloc_result_t*));
+                                                                                  z_owned_buf_alloc_result_t*));
 #endif
 /**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_buf_alloc_result_check(const struct z_owned_buf_alloc_result_t *this_);
+ZENOHC_API bool z_buf_alloc_result_check(const z_owned_buf_alloc_result_t *this_);
 #endif
 /**
  * Deletes Buf Alloc Result
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_buf_alloc_result_drop(struct z_moved_buf_alloc_result_t this_);
+ZENOHC_API void z_buf_alloc_result_drop(z_moved_buf_alloc_result_t this_);
 #endif
 /**
  * Borrows Buf Alloc Result
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-const struct z_loaned_buf_alloc_result_t *z_buf_alloc_result_loan(const struct z_owned_buf_alloc_result_t *this_);
+const z_loaned_buf_alloc_result_t *z_buf_alloc_result_loan(const z_owned_buf_alloc_result_t *this_);
 #endif
 /**
  * Constructs Buf Alloc Result in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_buf_alloc_result_null(struct z_owned_buf_alloc_result_t *this_);
+ZENOHC_API void z_buf_alloc_result_null(z_owned_buf_alloc_result_t *this_);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_buf_alloc_result_unwrap(struct z_moved_buf_alloc_result_t alloc_result,
-                                    struct z_owned_shm_mut_t *out_buf,
+z_error_t z_buf_alloc_result_unwrap(z_moved_buf_alloc_result_t alloc_result,
+                                    z_owned_shm_mut_t *out_buf,
                                     enum z_alloc_error_t *out_error);
 #endif
 /**
@@ -1230,7 +1199,7 @@ z_error_t z_bytes_deserialize_into_int8(const struct z_loaned_bytes_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t z_bytes_deserialize_into_loaned_shm(const struct z_loaned_bytes_t *this_,
-                                              const struct z_loaned_shm_t **dst);
+                                              const z_loaned_shm_t **dst);
 #endif
 /**
  * Deserializes data into a mutably loaned SHM buffer
@@ -1241,7 +1210,7 @@ z_error_t z_bytes_deserialize_into_loaned_shm(const struct z_loaned_bytes_t *thi
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t z_bytes_deserialize_into_mut_loaned_shm(struct z_loaned_bytes_t *this_,
-                                                  struct z_loaned_shm_t **dst);
+                                                  z_loaned_shm_t **dst);
 #endif
 /**
  * Deserializes data into an owned SHM buffer by copying it's shared reference
@@ -1252,7 +1221,7 @@ z_error_t z_bytes_deserialize_into_mut_loaned_shm(struct z_loaned_bytes_t *this_
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t z_bytes_deserialize_into_owned_shm(const struct z_loaned_bytes_t *this_,
-                                             struct z_owned_shm_t *dst);
+                                             z_owned_shm_t *dst);
 #endif
 /**
  * Deserializes into a pair of `z_owned_bytes_t` objects.
@@ -1454,9 +1423,7 @@ z_error_t z_bytes_serialize_from_pair(struct z_owned_bytes_t *this_,
  * Serializes from an immutable SHM buffer consuming it
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API
-z_error_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_,
-                                     struct z_moved_shm_t shm);
+ZENOHC_API z_error_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_, z_moved_shm_t shm);
 #endif
 /**
  * Serializes from an immutable SHM buffer copying it
@@ -1464,7 +1431,7 @@ z_error_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 void z_bytes_serialize_from_shm_copy(struct z_owned_bytes_t *this_,
-                                     const struct z_loaned_shm_t *shm);
+                                     const z_loaned_shm_t *shm);
 #endif
 /**
  * Serializes from a mutable SHM buffer consuming it
@@ -1472,7 +1439,7 @@ void z_bytes_serialize_from_shm_copy(struct z_owned_bytes_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t z_bytes_serialize_from_shm_mut(struct z_owned_bytes_t *this_,
-                                         struct z_moved_shm_mut_t shm);
+                                         z_moved_shm_mut_t shm);
 #endif
 /**
  * Serializes a slice by aliasing.
@@ -1559,27 +1526,27 @@ z_error_t z_bytes_writer_write(struct z_loaned_bytes_writer_t *this_,
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_chunk_alloc_result_check(const struct z_owned_chunk_alloc_result_t *this_);
+ZENOHC_API bool z_chunk_alloc_result_check(const z_owned_chunk_alloc_result_t *this_);
 #endif
 /**
  * Deletes Chunk Alloc Result
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_chunk_alloc_result_drop(struct z_moved_chunk_alloc_result_t this_);
+ZENOHC_API void z_chunk_alloc_result_drop(z_moved_chunk_alloc_result_t this_);
 #endif
 /**
  * Borrows Chunk Alloc Result
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-const struct z_loaned_chunk_alloc_result_t *z_chunk_alloc_result_loan(const struct z_owned_chunk_alloc_result_t *this_);
+const z_loaned_chunk_alloc_result_t *z_chunk_alloc_result_loan(const z_owned_chunk_alloc_result_t *this_);
 #endif
 /**
  * Creates a new Chunk Alloc Result with Error value
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_chunk_alloc_result_new_error(struct z_owned_chunk_alloc_result_t *this_,
+void z_chunk_alloc_result_new_error(z_owned_chunk_alloc_result_t *this_,
                                     enum z_alloc_error_t alloc_error);
 #endif
 /**
@@ -1587,14 +1554,14 @@ void z_chunk_alloc_result_new_error(struct z_owned_chunk_alloc_result_t *this_,
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_chunk_alloc_result_new_ok(struct z_owned_chunk_alloc_result_t *this_,
+void z_chunk_alloc_result_new_ok(z_owned_chunk_alloc_result_t *this_,
                                  struct z_allocated_chunk_t allocated_chunk);
 #endif
 /**
  * Constructs Chunk Alloc Result in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_chunk_alloc_result_null(struct z_owned_chunk_alloc_result_t *this_);
+ZENOHC_API void z_chunk_alloc_result_null(z_owned_chunk_alloc_result_t *this_);
 #endif
 /**
  * Get number of milliseconds passed since creation of `time`.
@@ -2322,13 +2289,13 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_memory_layout_check(const struct z_owned_memory_layout_t *this_);
+ZENOHC_API bool z_memory_layout_check(const z_owned_memory_layout_t *this_);
 #endif
 /**
  * Deletes Memory Layout
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_memory_layout_drop(struct z_moved_memory_layout_t this_);
+ZENOHC_API void z_memory_layout_drop(z_moved_memory_layout_t this_);
 #endif
 /**
  * Deletes Memory Layout
@@ -2337,21 +2304,21 @@ ZENOHC_API void z_memory_layout_drop(struct z_moved_memory_layout_t this_);
 ZENOHC_API
 void z_memory_layout_get_data(size_t *out_size,
                               struct z_alloc_alignment_t *out_alignment,
-                              const struct z_loaned_memory_layout_t *this_);
+                              const z_loaned_memory_layout_t *this_);
 #endif
 /**
  * Borrows Memory Layout
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-const struct z_loaned_memory_layout_t *z_memory_layout_loan(const struct z_owned_memory_layout_t *this_);
+const z_loaned_memory_layout_t *z_memory_layout_loan(const z_owned_memory_layout_t *this_);
 #endif
 /**
  * Creates a new Memory Layout
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_memory_layout_new(struct z_owned_memory_layout_t *this_,
+z_error_t z_memory_layout_new(z_owned_memory_layout_t *this_,
                               size_t size,
                               struct z_alloc_alignment_t alignment);
 #endif
@@ -2359,7 +2326,7 @@ z_error_t z_memory_layout_new(struct z_owned_memory_layout_t *this_,
  * Constructs Memory Layout in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_memory_layout_null(struct z_owned_memory_layout_t *this_);
+ZENOHC_API void z_memory_layout_null(z_owned_memory_layout_t *this_);
 #endif
 /**
  * Returns ``true`` if mutex is valid, ``false`` otherwise.
@@ -2415,21 +2382,21 @@ z_error_t z_open(struct z_owned_session_t *this_,
 ZENOHC_API
 z_error_t z_open_with_custom_shm_clients(struct z_owned_session_t *this_,
                                          struct z_moved_config_t config,
-                                         const struct z_loaned_shm_client_storage_t *shm_clients);
+                                         const z_loaned_shm_client_storage_t *shm_clients);
 #endif
 /**
  * Creates a new POSIX SHM Client
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API z_error_t z_posix_shm_client_new(struct z_owned_shm_client_t *this_);
+ZENOHC_API z_error_t z_posix_shm_client_new(z_owned_shm_client_t *this_);
 #endif
 /**
  * Creates a new threadsafe SHM Provider
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_posix_shm_provider_new(struct z_owned_shm_provider_t *this_,
-                                   const struct z_loaned_memory_layout_t *layout);
+z_error_t z_posix_shm_provider_new(z_owned_shm_provider_t *this_,
+                                   const z_loaned_memory_layout_t *layout);
 #endif
 /**
  * Returns the default value of #z_priority_t.
@@ -2719,7 +2686,7 @@ ZENOHC_API uint64_t z_random_u64(void);
  */
 ZENOHC_API uint8_t z_random_u8(void);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API z_error_t z_ref_shm_client_storage_global(struct z_owned_shm_client_storage_t *this_);
+ZENOHC_API z_error_t z_ref_shm_client_storage_global(z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * Returns ``true`` if `reply` is valid, ``false`` otherwise.
@@ -3016,26 +2983,26 @@ ZENOHC_API void z_session_null(struct z_owned_session_t *this_);
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_shm_check(const struct z_owned_shm_t *this_);
+ZENOHC_API bool z_shm_check(const z_owned_shm_t *this_);
 #endif
 /**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_shm_client_check(const struct z_owned_shm_client_t *this_);
+ZENOHC_API bool z_shm_client_check(const z_owned_shm_client_t *this_);
 #endif
 /**
  * Deletes SHM Client
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_client_drop(struct z_moved_shm_client_t this_);
+ZENOHC_API void z_shm_client_drop(z_moved_shm_client_t this_);
 #endif
 /**
  * Creates a new SHM Client
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_client_new(struct z_owned_shm_client_t *this_,
+z_error_t z_shm_client_new(z_owned_shm_client_t *this_,
                            struct zc_threadsafe_context_t context,
                            struct zc_shm_client_callbacks_t callbacks);
 #endif
@@ -3043,212 +3010,209 @@ z_error_t z_shm_client_new(struct z_owned_shm_client_t *this_,
  * Constructs SHM client in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_client_null(struct z_owned_shm_client_t *this_);
+ZENOHC_API void z_shm_client_null(z_owned_shm_client_t *this_);
 #endif
 /**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_shm_client_storage_check(const struct z_owned_shm_client_storage_t *this_);
+ZENOHC_API bool z_shm_client_storage_check(const z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * Derefs SHM Client Storage
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_client_storage_drop(struct z_moved_shm_client_storage_t this_);
+ZENOHC_API void z_shm_client_storage_drop(z_moved_shm_client_storage_t this_);
 #endif
 /**
  * Borrows SHM Client Storage
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-const struct z_loaned_shm_client_storage_t *z_shm_client_storage_loan(const struct z_owned_shm_client_storage_t *this_);
+const z_loaned_shm_client_storage_t *z_shm_client_storage_loan(const z_owned_shm_client_storage_t *this_);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_client_storage_new(struct z_owned_shm_client_storage_t *this_,
-                                   const struct zc_loaned_shm_client_list_t *clients,
+z_error_t z_shm_client_storage_new(z_owned_shm_client_storage_t *this_,
+                                   const zc_loaned_shm_client_list_t *clients,
                                    bool add_default_client_set);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API z_error_t z_shm_client_storage_new_default(struct z_owned_shm_client_storage_t *this_);
+ZENOHC_API z_error_t z_shm_client_storage_new_default(z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * Constructs SHM Client Storage in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_client_storage_null(struct z_owned_shm_client_storage_t *this_);
+ZENOHC_API void z_shm_client_storage_null(z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_clone(const struct z_loaned_shm_t *this_, struct z_owned_shm_t *out);
+ZENOHC_API void z_shm_clone(const z_loaned_shm_t *this_, z_owned_shm_t *out);
 #endif
 /**
  * @return the pointer of the ZShm slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API const unsigned char *z_shm_data(const struct z_loaned_shm_t *this_);
+ZENOHC_API const unsigned char *z_shm_data(const z_loaned_shm_t *this_);
 #endif
 /**
  * Deletes ZShm slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_drop(struct z_moved_shm_t this_);
+ZENOHC_API void z_shm_drop(z_moved_shm_t this_);
 #endif
 /**
  * Constructs ZShm slice from ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_from_mut(struct z_owned_shm_t *this_, struct z_moved_shm_mut_t that);
+ZENOHC_API void z_shm_from_mut(z_owned_shm_t *this_, z_moved_shm_mut_t that);
 #endif
 /**
  * @return the length of the ZShm slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API size_t z_shm_len(const struct z_loaned_shm_t *this_);
+ZENOHC_API size_t z_shm_len(const z_loaned_shm_t *this_);
 #endif
 /**
  * Borrows ZShm slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API const struct z_loaned_shm_t *z_shm_loan(const struct z_owned_shm_t *this_);
+ZENOHC_API const z_loaned_shm_t *z_shm_loan(const z_owned_shm_t *this_);
 #endif
 /**
  * Mutably borrows ZShm slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API struct z_loaned_shm_t *z_shm_loan_mut(struct z_owned_shm_t *this_);
+ZENOHC_API z_loaned_shm_t *z_shm_loan_mut(z_owned_shm_t *this_);
 #endif
 /**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_shm_mut_check(const struct z_owned_shm_mut_t *this_);
+ZENOHC_API bool z_shm_mut_check(const z_owned_shm_mut_t *this_);
 #endif
 /**
  * @return the mutable pointer of the ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API unsigned char *z_shm_mut_data_mut(struct z_loaned_shm_mut_t *this_);
+ZENOHC_API unsigned char *z_shm_mut_data_mut(z_loaned_shm_mut_t *this_);
 #endif
 /**
  * Deletes ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_mut_drop(struct z_moved_shm_mut_t this_);
+ZENOHC_API void z_shm_mut_drop(z_moved_shm_mut_t this_);
 #endif
 /**
  * @return the length of the ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API size_t z_shm_mut_len(const struct z_loaned_shm_mut_t *this_);
+ZENOHC_API size_t z_shm_mut_len(const z_loaned_shm_mut_t *this_);
 #endif
 /**
  * Borrows ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API struct z_loaned_shm_mut_t *z_shm_mut_loan_mut(struct z_owned_shm_mut_t *this_);
+ZENOHC_API z_loaned_shm_mut_t *z_shm_mut_loan_mut(z_owned_shm_mut_t *this_);
 #endif
 /**
  * Constructs ZShmMut slice in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_mut_null(struct z_owned_shm_mut_t *this_);
+ZENOHC_API void z_shm_mut_null(z_owned_shm_mut_t *this_);
 #endif
 /**
  * Tries to construct ZShmMut slice from ZShm slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API
-void z_shm_mut_try_from_immut(struct z_owned_shm_mut_t *this_,
-                              struct z_moved_shm_t that);
+ZENOHC_API void z_shm_mut_try_from_immut(z_owned_shm_mut_t *this_, z_moved_shm_t that);
 #endif
 /**
  * Constructs ZShm slice in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_null(struct z_owned_shm_t *this_);
+ZENOHC_API void z_shm_null(z_owned_shm_t *this_);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_provider_alloc(struct z_owned_buf_alloc_result_t *out_result,
-                               const struct z_loaned_shm_provider_t *provider,
+z_error_t z_shm_provider_alloc(z_owned_buf_alloc_result_t *out_result,
+                               const z_loaned_shm_provider_t *provider,
                                size_t size,
                                struct z_alloc_alignment_t alignment);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_provider_alloc_gc(struct z_owned_buf_alloc_result_t *out_result,
-                                  const struct z_loaned_shm_provider_t *provider,
+z_error_t z_shm_provider_alloc_gc(z_owned_buf_alloc_result_t *out_result,
+                                  const z_loaned_shm_provider_t *provider,
                                   size_t size,
                                   struct z_alloc_alignment_t alignment);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_provider_alloc_gc_defrag(struct z_owned_buf_alloc_result_t *out_result,
-                                         const struct z_loaned_shm_provider_t *provider,
+z_error_t z_shm_provider_alloc_gc_defrag(z_owned_buf_alloc_result_t *out_result,
+                                         const z_loaned_shm_provider_t *provider,
                                          size_t size,
                                          struct z_alloc_alignment_t alignment);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_provider_alloc_gc_defrag_async(struct z_owned_buf_alloc_result_t *out_result,
-                                               const struct z_loaned_shm_provider_t *provider,
+z_error_t z_shm_provider_alloc_gc_defrag_async(z_owned_buf_alloc_result_t *out_result,
+                                               const z_loaned_shm_provider_t *provider,
                                                size_t size,
                                                struct z_alloc_alignment_t alignment,
                                                struct zc_threadsafe_context_t result_context,
                                                void (*result_callback)(void*,
                                                                        z_error_t,
-                                                                       struct z_owned_buf_alloc_result_t*));
+                                                                       z_owned_buf_alloc_result_t*));
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_provider_alloc_gc_defrag_blocking(struct z_owned_buf_alloc_result_t *out_result,
-                                                  const struct z_loaned_shm_provider_t *provider,
+z_error_t z_shm_provider_alloc_gc_defrag_blocking(z_owned_buf_alloc_result_t *out_result,
+                                                  const z_loaned_shm_provider_t *provider,
                                                   size_t size,
                                                   struct z_alloc_alignment_t alignment);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_error_t z_shm_provider_alloc_gc_defrag_dealloc(struct z_owned_buf_alloc_result_t *out_result,
-                                                 const struct z_loaned_shm_provider_t *provider,
+z_error_t z_shm_provider_alloc_gc_defrag_dealloc(z_owned_buf_alloc_result_t *out_result,
+                                                 const z_loaned_shm_provider_t *provider,
                                                  size_t size,
                                                  struct z_alloc_alignment_t alignment);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API size_t z_shm_provider_available(const struct z_loaned_shm_provider_t *provider);
+ZENOHC_API size_t z_shm_provider_available(const z_loaned_shm_provider_t *provider);
 #endif
 /**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool z_shm_provider_check(const struct z_owned_shm_provider_t *this_);
+ZENOHC_API bool z_shm_provider_check(const z_owned_shm_provider_t *this_);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_provider_defragment(const struct z_loaned_shm_provider_t *provider);
+ZENOHC_API void z_shm_provider_defragment(const z_loaned_shm_provider_t *provider);
 #endif
 /**
  * Deletes SHM Provider
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_provider_drop(struct z_moved_shm_provider_t this_);
+ZENOHC_API void z_shm_provider_drop(z_moved_shm_provider_t this_);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_provider_garbage_collect(const struct z_loaned_shm_provider_t *provider);
+ZENOHC_API void z_shm_provider_garbage_collect(const z_loaned_shm_provider_t *provider);
 #endif
 /**
  * Borrows SHM Provider
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API
-const struct z_loaned_shm_provider_t *z_shm_provider_loan(const struct z_owned_shm_provider_t *this_);
+ZENOHC_API const z_loaned_shm_provider_t *z_shm_provider_loan(const z_owned_shm_provider_t *this_);
 #endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_shm_provider_map(struct z_owned_shm_mut_t *out_result,
-                        const struct z_loaned_shm_provider_t *provider,
+void z_shm_provider_map(z_owned_shm_mut_t *out_result,
+                        const z_loaned_shm_provider_t *provider,
                         struct z_allocated_chunk_t allocated_chunk,
                         size_t len);
 #endif
@@ -3257,7 +3221,7 @@ void z_shm_provider_map(struct z_owned_shm_mut_t *out_result,
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
+void z_shm_provider_new(z_owned_shm_provider_t *this_,
                         z_protocol_id_t id,
                         struct zc_context_t context,
                         struct zc_shm_provider_backend_callbacks_t callbacks);
@@ -3266,14 +3230,14 @@ void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
  * Constructs SHM Provider in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_provider_null(struct z_owned_shm_provider_t *this_);
+ZENOHC_API void z_shm_provider_null(z_owned_shm_provider_t *this_);
 #endif
 /**
  * Creates a new threadsafe SHM Provider
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_shm_provider_threadsafe_new(struct z_owned_shm_provider_t *this_,
+void z_shm_provider_threadsafe_new(z_owned_shm_provider_t *this_,
                                    z_protocol_id_t id,
                                    struct zc_threadsafe_context_t context,
                                    struct zc_shm_provider_backend_callbacks_t callbacks);
@@ -3282,13 +3246,13 @@ void z_shm_provider_threadsafe_new(struct z_owned_shm_provider_t *this_,
  * Mutably borrows ZShm slice as borrowed ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API struct z_loaned_shm_mut_t *z_shm_try_mut(struct z_owned_shm_t *this_);
+ZENOHC_API z_loaned_shm_mut_t *z_shm_try_mut(z_owned_shm_t *this_);
 #endif
 /**
  * Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API struct z_loaned_shm_mut_t *z_shm_try_reloan_mut(struct z_loaned_shm_t *this_);
+ZENOHC_API z_loaned_shm_mut_t *z_shm_try_reloan_mut(z_loaned_shm_t *this_);
 #endif
 /**
  * Puts current thread to sleep for specified amount of milliseconds.
@@ -4010,46 +3974,46 @@ void zc_session_clone(const struct z_loaned_session_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t zc_shm_client_list_add_client(z_protocol_id_t id,
-                                        struct z_moved_shm_client_t client,
-                                        struct zc_loaned_shm_client_list_t *list);
+                                        z_moved_shm_client_t client,
+                                        zc_loaned_shm_client_list_t *list);
 #endif
 /**
  * Returns ``true`` if `this` is valid.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool zc_shm_client_list_check(const struct zc_owned_shm_client_list_t *this_);
+ZENOHC_API bool zc_shm_client_list_check(const zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * Deletes list of SHM Clients
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void zc_shm_client_list_drop(struct zc_moved_shm_client_list_t this_);
+ZENOHC_API void zc_shm_client_list_drop(zc_moved_shm_client_list_t this_);
 #endif
 /**
  * Borrows list of SHM Clients
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-const struct zc_loaned_shm_client_list_t *zc_shm_client_list_loan(const struct zc_owned_shm_client_list_t *this_);
+const zc_loaned_shm_client_list_t *zc_shm_client_list_loan(const zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * Mutably borrows list of SHM Clients
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-struct zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(struct zc_owned_shm_client_list_t *this_);
+zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * Creates a new empty list of SHM Clients
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API z_error_t zc_shm_client_list_new(struct zc_owned_shm_client_list_t *this_);
+ZENOHC_API z_error_t zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * Constructs SHM client list in its gravestone value.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void zc_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
+ZENOHC_API void zc_shm_client_list_null(zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
@@ -4093,6 +4057,13 @@ ZENOHC_API
 z_error_t zcu_publisher_matching_listener_callback(struct zcu_owned_matching_listener_t *this_,
                                                    const struct z_loaned_publisher_t *publisher,
                                                    struct zcu_moved_closure_matching_status_t callback);
+/**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_error_t zcu_publisher_matching_listener_drop(struct zcu_moved_matching_listener_t this_);
 /**
  * Undeclares the given matching listener, droping and invalidating it.
  *

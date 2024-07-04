@@ -364,6 +364,17 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
     errors::Z_OK
 }
 
+/// Undeclares the given matching listener, droping and invalidating it.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zcu_publisher_matching_listener_drop(
+    this: zcu_moved_matching_listener_t,
+) -> errors::z_error_t {
+    zcu_publisher_matching_listener_undeclare(this)
+}
+
 /// Undeclares the given publisher, droping and invalidating it.
 ///
 /// @return 0 in case of success, negative error code otherwise.
