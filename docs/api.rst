@@ -735,7 +735,7 @@ Functions
 .. doxygenfunction:: z_hello_null 
 .. doxygenfunction:: z_hello_check
 
-.. doxygenfunction:: z_whatami_to_str
+.. doxygenfunction:: z_whatami_to_view_string
 
 .. doxygenfunction:: z_scout_options_default
 

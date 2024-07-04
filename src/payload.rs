@@ -101,7 +101,7 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
 /// Deserializes data into an owned non-null-terminated string.
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An unitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_string(
@@ -125,7 +125,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_string(
 /// Deserializes data into an owned bytes map.
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An unitialized memory location where to construct a deserialized map.
+/// @param dst: An uninitialized memory location where to construct a deserialized map.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
@@ -148,7 +148,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
 /// Deserializes data into an owned slice.
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An unitialized memory location where to construct a slice.
+/// @param dst: An uninitialized memory location where to construct a slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
@@ -173,7 +173,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
 /// Deserializes data into an owned SHM buffer by copying it's shared reference
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An unitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
@@ -200,7 +200,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
 /// Deserializes data into a loaned SHM buffer
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An unitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
@@ -226,7 +226,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
 /// Deserializes data into a mutably loaned SHM buffer
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An unitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
@@ -600,7 +600,7 @@ impl Iterator for ZBytesInIterator {
 }
 
 /// Constructs payload from an iterator to `z_owned_bytes_t`.
-/// @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
+/// @param this_: An uninitialized location in memory for `z_owned_bytes_t` will be constructed.
 /// @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
 /// @param context: Arbitrary context that will be passed to iterator_body.
 /// @return 0 in case of success, negative error code otherwise.

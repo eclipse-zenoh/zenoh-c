@@ -35,7 +35,7 @@ void fprintpid(FILE *stream, z_id_t pid) {
 
 void fprintwhatami(FILE *stream, z_whatami_t whatami) {
     z_view_string_t whatami_str;
-    z_whatami_to_str(whatami, &whatami_str);
+    z_whatami_to_view_string(whatami, &whatami_str);
     fprintf(stream, "%.*s", (int)z_string_len(z_loan(whatami_str)), z_string_data(z_loan(whatami_str)));
 }
 

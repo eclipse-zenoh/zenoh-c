@@ -221,7 +221,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize)
 /// Constructs a `z_view_keyexpr_t` by aliasing a substring.
 /// `expr` must outlive the constucted key expression.
 ///
-/// @param this_: An unitialized location in memory where key expression will be constructed.
+/// @param this_: An uninitialized location in memory where key expression will be constructed.
 /// @param expr: A buffer with length >= `len`.
 /// @param len: Number of characters from `expr` to consider.
 /// @return 0 in case of success, negative error code otherwise.
@@ -252,7 +252,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr(
 
 /// Constructs a `z_owned_keyexpr_t` by copying a substring.
 ///
-/// @param this_: An unitialized location in memory where key expression will be constructed.
+/// @param this_: An uninitialized location in memory where key expression will be constructed.
 /// @param expr: A buffer with length >= `len`.
 /// @param len: Number of characters from `expr` to consider.
 /// @return 0 in case of success, negative error code otherwise.
@@ -285,7 +285,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substr(
 /// May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
 /// `expr` must outlive the constucted key expression.
 ///
-/// @param this_: An unitialized location in memory where key expression will be constructed
+/// @param this_: An uninitialized location in memory where key expression will be constructed
 /// @param expr: A buffer of with length >= `len`.
 /// @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
 /// @return 0 in case of success, negative error code otherwise.
@@ -318,7 +318,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
 
 /// Constructs a `z_keyexpr_t` by copying a substring.
 ///
-/// @param this_: An unitialized location in memory where key expression will be constructed.
+/// @param this_: An uninitialized location in memory where key expression will be constructed.
 /// @param expr: A buffer of with length >= `len`.
 /// @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
 /// @return 0 in case of success, negative error code otherwise.
