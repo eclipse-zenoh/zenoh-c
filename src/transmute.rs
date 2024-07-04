@@ -50,6 +50,12 @@ pub(crate) trait IntoRustType: Sized {
     fn into_rust_type(self) -> Self::RustType;
 }
 
+pub(crate) trait TakeRustType: IntoRustType + Default {
+    fn take_rust_type(&mut self) -> Self::RustType {
+        std::mem::take(self).into_rust_type()
+    }
+}
+
 pub(crate) trait IntoCType: Sized {
     type CType;
     fn into_c_type(self) -> Self::CType;
@@ -170,6 +176,14 @@ macro_rules! impl_transmute {
             }
         }
     };
+    (take_rust ($c_type:ty, $rust_type:ty)) => {
+        impl Default for $c_type {
+            fn default() -> Self {
+                unsafe { std::mem::transmute::<$rust_type, $c_type>(<$rust_type>::default()) }
+            }
+        }
+        impl $crate::transmute::TakeRustType for $c_type {}
+    };
     (into_c ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::IntoCType for $rust_type {
             type CType = $c_type;
@@ -180,14 +194,26 @@ macro_rules! impl_transmute {
     };
 }
 
-macro_rules! impl_moved {
-    ($c_moved_type:ty, as_rust option $rust_inner_type:ty) => {
+macro_rules! impl_owned {
+    (owned $c_owned_type:ty, moved $c_moved_type:ty, inner rust option $rust_inner_type:ty) => {
+        impl_transmute!(as_c_owned(Option<$rust_inner_type>, $c_owned_type));
+        impl_transmute!(as_rust($c_owned_type, Option<$rust_inner_type>));
+        impl_transmute!(into_rust($c_owned_type, Option<$rust_inner_type>));
+        impl_transmute!(take_rust($c_owned_type, Option<$rust_inner_type>));
+
+        impl Drop for $c_owned_type {
+            fn drop(&mut self) {
+                use $crate::transmute::RustTypeRef;
+                self.as_rust_type_mut().take();
+            }
+        }
+
         impl $crate::transmute::IntoRustType for $c_moved_type {
             type RustType = Option<$rust_inner_type>;
             fn into_rust_type(self) -> Self::RustType {
                 use $crate::transmute::RustTypeRef;
                 let mut this = self;
-                // expicit type for better understanding
+                // expicit types for better understanding
                 let ptr: &mut Option<&mut Option<$rust_inner_type>> =
                     &mut this.ptr.as_mut().map(|r| r.as_rust_type_mut());
                 let res: Option<$rust_inner_type> =
@@ -195,16 +221,26 @@ macro_rules! impl_moved {
                 res
             }
         }
+        impl $crate::transmute::TakeRustType for $c_moved_type {}
         impl Drop for $c_moved_type {
             fn drop(&mut self) {
-                use $crate::transmute::RustTypeRef;
-                self.ptr
-                    .as_mut()
-                    .map(|r| std::mem::take(r.as_rust_type_mut()));
+                self.take();
             }
         }
     };
-    ($c_moved_type:ty, as_rust $rust_owned_type:ty) => {
+    (owned $c_owned_type:ty, moved $c_moved_type:ty, inner rust $rust_owned_type:ty) => {
+        impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
+        impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
+        impl_transmute!(into_rust($c_owned_type, $rust_owned_type));
+        impl_transmute!(take_rust($c_owned_type, $rust_owned_type));
+
+        impl Drop for $c_owned_type {
+            fn drop(&mut self) {
+                use $crate::transmute::RustTypeRef;
+                std::mem::take(self.as_rust_type_mut());
+            }
+        }
+
         impl $crate::transmute::IntoRustType for $c_moved_type {
             type RustType = Option<$rust_owned_type>;
             fn into_rust_type(self) -> Self::RustType {
@@ -215,16 +251,20 @@ macro_rules! impl_moved {
                     .map(|r| std::mem::take(r.as_rust_type_mut()))
             }
         }
+        impl $crate::transmute::TakeRustType for $c_moved_type {}
         impl Drop for $c_moved_type {
             fn drop(&mut self) {
-                use $crate::transmute::RustTypeRef;
-                self.ptr
-                    .as_mut()
-                    .map(|r| std::mem::take(r.as_rust_type_mut()));
+                self.take();
             }
         }
     };
-    ($c_moved_type:ty, $c_owned_type:ty) => {
+    (owned rust $c_owned_type:ty, moved $c_moved_type:ty, loaned $c_loaned_type:ty) => {
+        impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
+        impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));
+
+        // $c_owned_type is a real rust type here, not a blind C structure with same size/alingment
+        // So it's expected that drop is implemented for it (e.g. closures calls `drop` functions themselves)
+
         impl $crate::transmute::IntoRustType for $c_moved_type {
             type RustType = Option<$c_owned_type>;
             fn into_rust_type(self) -> Self::RustType {
@@ -234,7 +274,7 @@ macro_rules! impl_moved {
         }
         impl Drop for $c_moved_type {
             fn drop(&mut self) {
-                self.ptr.as_mut().map(|r| std::mem::take(*r));
+                std::mem::take(&mut self.ptr);
             }
         }
     };
@@ -381,17 +421,13 @@ macro_rules! decl_c_type {
      moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         validate_equivalence!($c_owned_type, Option<$rust_inner_type>);
-        impl_transmute!(as_c_owned(Option<$rust_inner_type>, $c_owned_type));
-        impl_transmute!(as_rust($c_owned_type, Option<$rust_inner_type>));
-        impl_moved!($c_moved_type, as_rust option $rust_inner_type);
+        impl_owned!(owned $c_owned_type, moved $c_moved_type, inner rust option $rust_inner_type);
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         validate_equivalence!($c_owned_type, $rust_owned_type);
-        impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
-        impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
-        impl_moved!($c_moved_type, as_rust $rust_owned_type);
+        impl_owned!(owned $c_owned_type, moved $c_moved_type, inner rust $rust_owned_type);
     };
     //
     // Owned with with explicit rust loaned type - rarely used
@@ -495,9 +531,7 @@ macro_rules! decl_c_type {
      moved ($c_moved_type:ty $(,)?)
      $(,)?) => {
         validate_equivalence!($c_owned_type, $c_loaned_type);
-        impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
-        impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));
-        impl_moved!($c_moved_type, $c_owned_type);
+        impl_owned!(owned rust $c_owned_type, moved $c_moved_type, loaned $c_loaned_type);
     };
 
     //
@@ -519,5 +553,4 @@ macro_rules! decl_c_type {
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
     };
-
 }

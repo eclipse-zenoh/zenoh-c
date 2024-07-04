@@ -20,6 +20,7 @@ use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
+use crate::transmute::TakeRustType;
 use crate::z_closure_sample_loan;
 use crate::z_loaned_keyexpr_t;
 use crate::z_moved_closure_sample_t;
@@ -170,7 +171,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
 pub unsafe extern "C" fn ze_querying_subscriber_get(
     this: &ze_loaned_querying_subscriber_t,
     selector: &z_loaned_keyexpr_t,
-    options: Option<&z_get_options_t>,
+    options: Option<&mut z_get_options_t>,
 ) -> errors::z_error_t {
     unsafe impl Sync for z_get_options_t {}
     let sub = this.as_rust_type_ref();
@@ -183,20 +184,16 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                 let mut get = session.get(selector).callback(cb);
 
                 if let Some(options) = options {
-                    if let Some(payload) = unsafe { options.payload.as_mut() } {
-                        let payload = std::mem::take(payload.as_rust_type_mut());
+                    if let Some(payload) = options.payload.take_rust_type() {
                         get = get.payload(payload);
                     }
-                    if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-                        let encoding = std::mem::take(encoding.as_rust_type_mut());
+                    if let Some(encoding) = options.encoding.take_rust_type() {
                         get = get.encoding(encoding);
                     }
-                    if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-                        let source_info = std::mem::take(source_info.as_rust_type_mut());
+                    if let Some(source_info) = options.source_info.take_rust_type() {
                         get = get.source_info(source_info);
                     }
-                    if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-                        let attachment = std::mem::take(attachment.as_rust_type_mut());
+                    if let Some(attachment) = options.attachment.take_rust_type() {
                         get = get.attachment(attachment);
                     }
 

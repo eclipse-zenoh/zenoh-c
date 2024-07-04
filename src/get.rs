@@ -17,14 +17,17 @@ use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
 use crate::transmute::RustTypeRef;
 use crate::transmute::RustTypeRefUninit;
+use crate::transmute::TakeRustType;
 use crate::z_id_t;
+use crate::z_moved_bytes_t;
 use crate::z_moved_closure_reply_t;
+use crate::z_moved_encoding_t;
+use crate::z_moved_source_info_t;
 use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t,
-    z_query_target_t, zcu_locality_default, zcu_locality_t, zcu_reply_keyexpr_default,
-    zcu_reply_keyexpr_t,
+    z_loaned_session_t, z_priority_t, z_query_target_t, zcu_locality_default, zcu_locality_t,
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 use ::zenoh::core::Wait;
 use libc::c_char;
@@ -33,7 +36,6 @@ use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::ptr::null;
-use std::ptr::null_mut;
 use zenoh::bytes::ZBytes;
 use zenoh::core::Priority;
 use zenoh::encoding::Encoding;
@@ -199,9 +201,9 @@ pub struct z_get_options_t {
     /// The replies consolidation strategy to apply on replies to the query.
     pub consolidation: z_query_consolidation_t,
     /// An optional payload to attach to the query.
-    pub payload: *mut z_owned_bytes_t,
+    pub payload: z_moved_bytes_t,
     /// An optional encoding of the query payload and or attachment.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: z_moved_encoding_t,
     /// The congestion control to apply when routing the query.
     pub congestion_control: z_congestion_control_t,
     /// The allowed destination for the query.
@@ -211,9 +213,9 @@ pub struct z_get_options_t {
     /// The priority of the query.
     pub priority: z_priority_t,
     /// The source info for the query.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: z_moved_source_info_t,
     /// An optional attachment to attach to the query.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: z_moved_bytes_t,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
 }
@@ -229,10 +231,10 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
         accept_replies: zcu_reply_keyexpr_default(),
         priority: Priority::default().into(),
         timeout_ms: 0,
-        payload: null_mut(),
-        encoding: null_mut(),
-        source_info: null_mut(),
-        attachment: null_mut(),
+        payload: None.into(),
+        encoding: None.into(),
+        source_info: None.into(),
+        attachment: None.into(),
     };
 }
 
@@ -267,20 +269,16 @@ pub unsafe extern "C" fn z_get(
     let key_expr = key_expr.as_rust_type_ref();
     let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
-        if let Some(payload) = unsafe { options.payload.as_mut() } {
-            let payload = std::mem::take(payload.as_rust_type_mut());
+        if let Some(payload) = options.payload.take_rust_type() {
             get = get.payload(payload);
         }
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
+        if let Some(encoding) = options.encoding.take_rust_type() {
             get = get.encoding(encoding);
         }
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
+        if let Some(source_info) = options.source_info.take_rust_type() {
             get = get.source_info(source_info);
         }
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
+        if let Some(attachment) = options.attachment.take_rust_type() {
             get = get.attachment(attachment);
         }
 

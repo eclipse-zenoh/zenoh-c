@@ -185,22 +185,32 @@ fn generate_opaque_types() {
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
-        let mut s = format!(
-            "#[derive(Copy, Clone)]
-#[repr(C, align({align}))]
+        let (prefix, category, remainder) = split_type_name(type_name);
+        let mut s = String::new();
+        if category != "owned" {
+            s += "#[derive(Copy, Clone)]\n";
+        };
+        s += format!(
+            "#[repr(C, align({align}))]
 pub struct {type_name} {{
     {inner_field_name}: [u8; {size}],
 }}
 "
-        );
-
-        let (prefix, category, remainder) = split_type_name(type_name);
+        )
+        .as_str();
         if category == "owned" {
             let moved_type_name = format!("{}_{}_{}", prefix, "moved", remainder);
             s += format!(
                 "#[repr(C)]
+#[derive(Default)]
 pub struct {moved_type_name} {{
     pub ptr: Option<&'static mut {type_name}>,
+}}
+
+impl {moved_type_name} {{
+    pub fn take(&mut self) -> Option<{type_name}> {{
+        self.ptr.take().map(std::mem::take)
+    }}
 }}
 
 impl From<Option<&'static mut {type_name}>> for {moved_type_name} {{

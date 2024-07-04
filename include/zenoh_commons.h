@@ -554,6 +554,9 @@ typedef struct z_moved_fifo_handler_sample_t {
 typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
+typedef struct z_moved_source_info_t {
+  struct z_owned_source_info_t *ptr;
+} z_moved_source_info_t;
 /**
  * Options passed to the `z_get()` function.
  */
@@ -569,11 +572,11 @@ typedef struct z_get_options_t {
   /**
    * An optional payload to attach to the query.
    */
-  struct z_owned_bytes_t *payload;
+  struct z_moved_bytes_t payload;
   /**
    * An optional encoding of the query payload and or attachment.
    */
-  struct z_owned_encoding_t *encoding;
+  struct z_moved_encoding_t encoding;
   /**
    * The congestion control to apply when routing the query.
    */
@@ -593,11 +596,11 @@ typedef struct z_get_options_t {
   /**
    * The source info for the query.
    */
-  struct z_owned_source_info_t *source_info;
+  struct z_moved_source_info_t source_info;
   /**
    * An optional attachment to attach to the query.
    */
-  struct z_owned_bytes_t *attachment;
+  struct z_moved_bytes_t attachment;
   /**
    * The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
@@ -870,9 +873,6 @@ typedef struct z_moved_slice_t {
 typedef struct z_moved_slice_map_t {
   struct z_owned_slice_map_t *ptr;
 } z_moved_slice_map_t;
-typedef struct z_moved_source_info_t {
-  struct z_owned_source_info_t *ptr;
-} z_moved_source_info_t;
 typedef struct z_moved_string_array_t {
   struct z_owned_string_array_t *ptr;
 } z_moved_string_array_t;
@@ -4139,7 +4139,7 @@ ZENOHC_API void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_
 ZENOHC_API
 z_error_t ze_querying_subscriber_get(const struct ze_loaned_querying_subscriber_t *this_,
                                      const struct z_loaned_keyexpr_t *selector,
-                                     const struct z_get_options_t *options);
+                                     struct z_get_options_t *options);
 /**
  * Borrows querying subscriber.
  */
