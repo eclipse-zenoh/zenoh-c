@@ -28,28 +28,27 @@ void test_encoding_without_id(void) {
     z_owned_encoding_t e2;
     z_encoding_from_substr(&e2, "my_encoding", 4);
     assert(z_encoding_check(&e2));
-    
+
     z_encoding_to_string(z_encoding_loan(&e2), &s);
     assert(strncmp("zenoh/bytes;my_e", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
     z_encoding_drop(z_move(e2));
     z_string_drop(z_move(s));
 }
 
-
 void test_encoding_with_id(void) {
     z_owned_encoding_t e1;
-    z_encoding_from_str(&e1,  "zenoh/string;utf8");
+    z_encoding_from_str(&e1, "zenoh/string;utf8");
     assert(z_encoding_check(&e1));
     z_owned_string_t s;
     z_encoding_to_string(z_encoding_loan(&e1), &s);
-    assert(strncmp( "zenoh/string;utf8", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
+    assert(strncmp("zenoh/string;utf8", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
     z_encoding_drop(z_move(e1));
     z_string_drop(z_move(s));
-    
+
     z_owned_encoding_t e2;
-    z_encoding_from_substr(&e2,  "zenoh/string;utf8", 15);
+    z_encoding_from_substr(&e2, "zenoh/string;utf8", 15);
     assert(z_encoding_check(&e2));
-    
+
     z_encoding_to_string(z_encoding_loan(&e2), &s);
     assert(strncmp("zenoh/string;utf8", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
     z_encoding_drop(z_move(e2));
@@ -58,18 +57,20 @@ void test_encoding_with_id(void) {
     z_owned_encoding_t e3;
     z_encoding_from_str(&e3, "custom_id;custom_schema");
     assert(z_encoding_check(&e3));
-    
+
     z_encoding_to_string(z_encoding_loan(&e3), &s);
-    assert(strncmp("zenoh/bytes;custom_id;custom_schema", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
+    assert(strncmp("zenoh/bytes;custom_id;custom_schema", z_string_data(z_string_loan(&s)),
+                   z_string_len(z_string_loan(&s))) == 0);
     z_encoding_drop(z_move(e3));
     z_string_drop(z_move(s));
 
     z_owned_encoding_t e4;
     z_encoding_from_substr(&e4, "custom_id;custom_schema", 16);
     assert(z_encoding_check(&e4));
-    
+
     z_encoding_to_string(z_encoding_loan(&e4), &s);
-    assert(strncmp("zenoh/bytes;custom_id;custom", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
+    assert(strncmp("zenoh/bytes;custom_id;custom", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) ==
+           0);
     z_encoding_drop(z_move(e4));
     z_string_drop(z_move(s));
 }
