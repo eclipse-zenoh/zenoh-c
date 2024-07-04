@@ -639,8 +639,8 @@ pub use crate::opaque_types::z_moved_slice_map_t;
 pub use crate::opaque_types::z_owned_slice_map_t;
 pub type ZHashMap = HashMap<CSlice, CSlice>;
 decl_c_type!(
-    owned(z_owned_slice_map_t, Option<ZHashMap>),
-    loaned(z_loaned_slice_map_t, ZHashMap),
+    owned(z_owned_slice_map_t, option ZHashMap),
+    loaned(z_loaned_slice_map_t),
     moved(z_moved_slice_map_t)
 );
 
@@ -782,8 +782,8 @@ pub use crate::opaque_types::z_moved_string_array_t;
 pub use crate::opaque_types::z_owned_string_array_t;
 pub type ZVector = Vec<CString>;
 decl_c_type!(
-    owned(z_owned_string_array_t, Option<ZVector>),
-    loaned(z_loaned_string_array_t, ZVector),
+    owned(z_owned_string_array_t, option ZVector),
+    loaned(z_loaned_string_array_t),
     moved(z_moved_string_array_t)
 );
 

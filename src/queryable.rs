@@ -60,8 +60,8 @@ pub use crate::opaque_types::z_loaned_query_t;
 pub use crate::opaque_types::z_moved_query_t;
 pub use crate::opaque_types::z_owned_query_t;
 decl_c_type!(
-    owned(z_owned_query_t, Option<Query>),
-    loaned(z_loaned_query_t, Query),
+    owned(z_owned_query_t, option Query),
+    loaned(z_loaned_query_t),
     moved(z_moved_query_t)
 );
 

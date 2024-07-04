@@ -27,8 +27,8 @@ pub use crate::opaque_types::z_loaned_hello_t;
 pub use crate::opaque_types::z_moved_hello_t;
 pub use crate::opaque_types::z_owned_hello_t;
 decl_c_type!(
-    owned(z_owned_hello_t, Option<Hello>),
-    loaned(z_loaned_hello_t, Hello),
+    owned(z_owned_hello_t, option Hello ),
+    loaned(z_loaned_hello_t),
     moved(z_moved_hello_t)
 );
 

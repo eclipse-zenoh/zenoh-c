@@ -16,8 +16,8 @@ pub use crate::opaque_types::z_moved_mutex_t;
 pub use crate::opaque_types::z_owned_mutex_t;
 
 decl_c_type!(
-    owned(z_owned_mutex_t, Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>),
-    loaned(z_loaned_mutex_t, (Mutex<()>, Option<MutexGuard<'static, ()>>)),
+    owned(z_owned_mutex_t, option(Mutex<()>, Option<MutexGuard<'static, ()>>)),
+    loaned(z_loaned_mutex_t),
     moved(z_moved_mutex_t)
 );
 
