@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
         kvs[1] = (kv_pair_t){.key = "index", .value = buf_ind};
         kv_pairs_t ctx = (kv_pairs_t){.data = kvs, .current_idx = 0, .len = 2};
         z_bytes_serialize_from_iter(&attachment, create_attachment_iter, (void*)&ctx);
-        options.attachment = &attachment;
+        options.attachment = z_move(attachment);
 
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
