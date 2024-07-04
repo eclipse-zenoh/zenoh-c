@@ -1056,7 +1056,7 @@ z_error_t z_bytes_deserialize_into_int8(const struct z_loaned_bytes_t *this_,
  * Deserializes data into a loaned SHM buffer
  *
  * @param this_: Data to deserialize.
- * @param dst: An unitialized memory location where to construct a deserialized string.
+ * @param dst: An uninitialized memory location where to construct a deserialized string.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
@@ -1067,7 +1067,7 @@ z_error_t z_bytes_deserialize_into_loaned_shm(const struct z_loaned_bytes_t *thi
  * Deserializes data into a mutably loaned SHM buffer
  *
  * @param this_: Data to deserialize.
- * @param dst: An unitialized memory location where to construct a deserialized string.
+ * @param dst: An uninitialized memory location where to construct a deserialized string.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
@@ -1078,7 +1078,7 @@ z_error_t z_bytes_deserialize_into_mut_loaned_shm(struct z_loaned_bytes_t *this_
  * Deserializes data into an owned SHM buffer by copying it's shared reference
  *
  * @param this_: Data to deserialize.
- * @param dst: An unitialized memory location where to construct a deserialized string.
+ * @param dst: An uninitialized memory location where to construct a deserialized string.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
@@ -1097,7 +1097,7 @@ z_error_t z_bytes_deserialize_into_pair(const struct z_loaned_bytes_t *this_,
  * Deserializes data into an owned slice.
  *
  * @param this_: Data to deserialize.
- * @param dst: An unitialized memory location where to construct a slice.
+ * @param dst: An uninitialized memory location where to construct a slice.
  */
 ZENOHC_API
 z_error_t z_bytes_deserialize_into_slice(const struct z_loaned_bytes_t *this_,
@@ -1106,7 +1106,7 @@ z_error_t z_bytes_deserialize_into_slice(const struct z_loaned_bytes_t *this_,
  * Deserializes data into an owned bytes map.
  *
  * @param this_: Data to deserialize.
- * @param dst: An unitialized memory location where to construct a deserialized map.
+ * @param dst: An uninitialized memory location where to construct a deserialized map.
  */
 ZENOHC_API
 z_error_t z_bytes_deserialize_into_slice_map(const struct z_loaned_bytes_t *this_,
@@ -1115,7 +1115,7 @@ z_error_t z_bytes_deserialize_into_slice_map(const struct z_loaned_bytes_t *this
  * Deserializes data into an owned non-null-terminated string.
  *
  * @param this_: Data to deserialize.
- * @param dst: An unitialized memory location where to construct a deserialized string.
+ * @param dst: An uninitialized memory location where to construct a deserialized string.
  */
 ZENOHC_API
 z_error_t z_bytes_deserialize_into_string(const struct z_loaned_bytes_t *this_,
@@ -1263,7 +1263,7 @@ ZENOHC_API void z_bytes_serialize_from_int64(struct z_owned_bytes_t *this_, int6
 ZENOHC_API void z_bytes_serialize_from_int8(struct z_owned_bytes_t *this_, int8_t val);
 /**
  * Constructs payload from an iterator to `z_owned_bytes_t`.
- * @param this_: An uninitialized location in memery for `z_owned_bytes_t` will be constructed.
+ * @param this_: An uninitialized location in memory for `z_owned_bytes_t` will be constructed.
  * @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
  * @param context: Arbitrary context that will be passed to iterator_body.
  * @return 0 in case of success, negative error code otherwise.
@@ -2079,7 +2079,7 @@ z_error_t z_keyexpr_from_str_autocanonize(struct z_owned_keyexpr_t *this_,
 /**
  * Constructs a `z_owned_keyexpr_t` by copying a substring.
  *
- * @param this_: An unitialized location in memory where key expression will be constructed.
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
  * @param expr: A buffer with length >= `len`.
  * @param len: Number of characters from `expr` to consider.
  * @return 0 in case of success, negative error code otherwise.
@@ -2091,7 +2091,7 @@ z_error_t z_keyexpr_from_substr(struct z_owned_keyexpr_t *this_,
 /**
  * Constructs a `z_keyexpr_t` by copying a substring.
  *
- * @param this_: An unitialized location in memory where key expression will be constructed.
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
  * @param expr: A buffer of with length >= `len`.
  * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
  * @return 0 in case of success, negative error code otherwise.
@@ -3552,7 +3552,7 @@ void z_view_keyexpr_from_str_unchecked(struct z_view_keyexpr_t *this_,
  * Constructs a `z_view_keyexpr_t` by aliasing a substring.
  * `expr` must outlive the constucted key expression.
  *
- * @param this_: An unitialized location in memory where key expression will be constructed.
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
  * @param expr: A buffer with length >= `len`.
  * @param len: Number of characters from `expr` to consider.
  * @return 0 in case of success, negative error code otherwise.
@@ -3566,7 +3566,7 @@ z_error_t z_view_keyexpr_from_substr(struct z_view_keyexpr_t *this_,
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
  * `expr` must outlive the constucted key expression.
  *
- * @param this_: An unitialized location in memory where key expression will be constructed
+ * @param this_: An uninitialized location in memory where key expression will be constructed
  * @param expr: A buffer of with length >= `len`.
  * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
  * @return 0 in case of success, negative error code otherwise.
@@ -3670,12 +3670,13 @@ z_error_t z_view_string_wrap(struct z_view_string_t *this_,
  *
  * The string has static storage (i.e. valid until the end of the program).
  * @param whatami: A whatami bitmask of zenoh entity kind.
- * @param str_out: An unitialized memory location where strring will be constructed.
- * @param len: Maximum number of bytes that can be written to the `buf`.
+ * @param str_out: An uninitialized memory location where strring will be constructed.
  *
  * @return 0 if successful, negative error values if whatami contains an invalid bitmask.
  */
-ZENOHC_API z_error_t z_whatami_to_str(enum z_whatami_t whatami, struct z_view_string_t *str_out);
+ZENOHC_API
+z_error_t z_whatami_to_view_string(enum z_whatami_t whatami,
+                                   struct z_view_string_t *str_out);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  *
@@ -3750,7 +3751,7 @@ void zc_liveliness_declaration_options_default(struct zc_liveliness_declaration_
 /**
  * Declares a subscriber on liveliness tokens that intersect `key_expr`.
  *
- * @param this_: An unitialized memory location where subscriber will be constructed.
+ * @param this_: An uninitialized memory location where subscriber will be constructed.
  * @param session: The Zenoh session.
  * @param key_expr: The key expression to subscribe to.
  * @param callback: The callback function that will be called each time a liveliness token status is changed.
@@ -3929,7 +3930,7 @@ ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
  * Constructs and declares a publication cache.
  *
- * @param this_: An unitialized location in memory where publication cache will be constructed.
+ * @param this_: An uninitialized location in memory where publication cache will be constructed.
  * @param session: A Zenoh session.
  * @param key_expr: The key expression to publish to.
  * @param options: Additional options for the publication cache.
@@ -3944,7 +3945,7 @@ z_error_t ze_declare_publication_cache(struct ze_owned_publication_cache_t *this
 /**
  * Constructs and declares a querying subscriber for a given key expression.
  *
- * @param this_: An unitialized memory location where querying subscriber will be constructed.
+ * @param this_: An uninitialized memory location where querying subscriber will be constructed.
  * @param session: A Zenoh session.
  * @param key_expr: A key expression to subscribe to.
  * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.

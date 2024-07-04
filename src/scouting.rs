@@ -178,12 +178,12 @@ pub extern "C" fn z_scout(
 ///
 /// The string has static storage (i.e. valid until the end of the program).
 /// @param whatami: A whatami bitmask of zenoh entity kind.
-/// @param str_out: An unitialized memory location where strring will be constructed.
+/// @param str_out: An uninitialized memory location where strring will be constructed.
 /// @param len: Maximum number of bytes that can be written to the `buf`.
 ///
 /// @return 0 if successful, negative error values if whatami contains an invalid bitmask.
 #[no_mangle]
-pub extern "C" fn z_whatami_to_str(
+pub extern "C" fn z_whatami_to_view_string(
     whatami: z_whatami_t,
     str_out: &mut MaybeUninit<z_view_string_t>,
 ) -> errors::z_error_t {
