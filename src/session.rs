@@ -157,8 +157,8 @@ pub extern "C" fn z_session_drop(this: z_moved_session_t) {}
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn zc_session_clone(
-    this: &z_loaned_session_t,
     dst: &mut MaybeUninit<z_owned_session_t>,
+    this: &z_loaned_session_t,
 ) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this.as_rust_type_ref().clone()));

@@ -103,8 +103,8 @@ pub extern "C" fn z_config_null(this: &mut MaybeUninit<z_owned_config_t>) {
 /// Clones the config into provided uninitialized memory location.
 #[no_mangle]
 pub extern "C" fn z_config_clone(
-    this: &z_loaned_config_t,
     dst: &mut MaybeUninit<z_owned_config_t>,
+    this: &z_loaned_config_t,
 ) {
     let src = Some(this.as_rust_type_ref().clone());
     let dst = dst.as_rust_type_mut_uninit();

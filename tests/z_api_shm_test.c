@@ -63,7 +63,7 @@ int test_shm_buffer(z_owned_shm_mut_t* buf) {
     }
 
     z_owned_shm_t immut2;
-    z_shm_clone(z_loan(immut), &immut2);
+    z_shm_clone(&immut2, z_loan(immut));
     ASSERT_CHECK(immut2);
 
     z_owned_shm_mut_t mut;

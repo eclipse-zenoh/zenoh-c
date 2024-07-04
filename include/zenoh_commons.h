@@ -1147,7 +1147,7 @@ ZENOHC_API bool z_bytes_check(const struct z_owned_bytes_t *this_);
 /**
  * Constructs an owned shallow copy of data in provided uninitialized memory location.
  */
-ZENOHC_API void z_bytes_clone(const struct z_loaned_bytes_t *this_, struct z_owned_bytes_t *dst);
+ZENOHC_API void z_bytes_clone(struct z_owned_bytes_t *dst, const struct z_loaned_bytes_t *this_);
 /**
  * Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
@@ -1785,7 +1785,7 @@ z_error_t z_config_client(struct z_owned_config_t *this_,
 /**
  * Clones the config into provided uninitialized memory location.
  */
-ZENOHC_API void z_config_clone(const struct z_loaned_config_t *this_, struct z_owned_config_t *dst);
+ZENOHC_API void z_config_clone(struct z_owned_config_t *dst, const struct z_loaned_config_t *this_);
 /**
  * Constructs a new empty configuration.
  */
@@ -2504,8 +2504,8 @@ ZENOHC_API bool z_query_check(const struct z_owned_query_t *query);
  * This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
  */
 ZENOHC_API
-void z_query_clone(const struct z_loaned_query_t *this_,
-                   struct z_owned_query_t *dst);
+void z_query_clone(struct z_owned_query_t *dst,
+                   const struct z_loaned_query_t *this_);
 /**
  * Automatic query consolidation strategy selection.
  *
@@ -2695,7 +2695,7 @@ ZENOHC_API bool z_reply_check(const struct z_owned_reply_t *this_);
 /**
  * Constructs an owned shallow copy of reply in provided uninitialized memory location.
  */
-ZENOHC_API void z_reply_clone(const struct z_loaned_reply_t *this_, struct z_owned_reply_t *dst);
+ZENOHC_API void z_reply_clone(struct z_owned_reply_t *dst, const struct z_loaned_reply_t *this_);
 /**
  * Frees reply, resetting it to its gravestone state.
  */
@@ -2889,8 +2889,8 @@ ZENOHC_API bool z_sample_check(const struct z_owned_sample_t *this_);
  * Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
  */
 ZENOHC_API
-void z_sample_clone(const struct z_loaned_sample_t *this_,
-                    struct z_owned_sample_t *dst);
+void z_sample_clone(struct z_owned_sample_t *dst,
+                    const struct z_loaned_sample_t *this_);
 /**
  * Returns sample qos congestion control value.
  */
@@ -3050,7 +3050,7 @@ ZENOHC_API void z_shm_client_storage_null(z_owned_shm_client_storage_t *this_);
  * Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_clone(const z_loaned_shm_t *this_, z_owned_shm_t *out);
+ZENOHC_API void z_shm_clone(z_owned_shm_t *out, const z_loaned_shm_t *this_);
 #endif
 /**
  * @return the pointer of the ZShm slice
@@ -3273,7 +3273,7 @@ ZENOHC_API bool z_slice_check(const struct z_owned_slice_t *this_);
 /**
  * Constructs an owned copy of a slice.
  */
-ZENOHC_API void z_slice_clone(const struct z_loaned_slice_t *this_, struct z_owned_slice_t *dst);
+ZENOHC_API void z_slice_clone(struct z_owned_slice_t *dst, const struct z_loaned_slice_t *this_);
 /**
  * @return the pointer to the slice data.
  */
@@ -3486,7 +3486,7 @@ ZENOHC_API bool z_string_check(const struct z_owned_string_t *this_);
 /**
  * Constructs an owned copy of a string.
  */
-ZENOHC_API void z_string_clone(const struct z_loaned_string_t *this_, struct z_owned_string_t *dst);
+ZENOHC_API void z_string_clone(struct z_owned_string_t *dst, const struct z_loaned_string_t *this_);
 /**
  * @return the pointer of the string data.
  */
@@ -3969,8 +3969,8 @@ ZENOHC_API z_error_t zc_liveliness_undeclare_token(struct zc_moved_liveliness_to
  * Constructs an owned shallow copy of the session in provided uninitialized memory location.
  */
 ZENOHC_API
-void zc_session_clone(const struct z_loaned_session_t *this_,
-                      struct z_owned_session_t *dst);
+void zc_session_clone(struct z_owned_session_t *dst,
+                      const struct z_loaned_session_t *this_);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t zc_shm_client_list_add_client(z_protocol_id_t id,
