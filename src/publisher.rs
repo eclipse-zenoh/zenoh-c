@@ -30,7 +30,6 @@ use crate::zcu_locality_default;
 use crate::zcu_locality_t;
 use crate::zcu_moved_closure_matching_status_t;
 use std::mem::MaybeUninit;
-use std::ptr;
 use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::publisher::CongestionControl;
@@ -234,7 +233,7 @@ pub unsafe extern "C" fn z_publisher_put(
 #[repr(C)]
 pub struct z_publisher_delete_options_t {
     /// The timestamp of this message.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
 }
 
 /// Constructs the default values for the delete operation via a publisher entity.
@@ -242,7 +241,7 @@ pub struct z_publisher_delete_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_delete_options_t) {
     *this = z_publisher_delete_options_t {
-        timestamp: ptr::null_mut(),
+        timestamp: None,
     }
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
@@ -257,11 +256,8 @@ pub extern "C" fn z_publisher_delete(
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
-                .unwrap()
-                .as_rust_type_ref();
-            del = del.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            del = del.timestamp(Some(*timestamp.as_rust_type_ref()));
         }
     }
     if let Err(e) = del.wait() {
