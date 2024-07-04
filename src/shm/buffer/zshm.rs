@@ -53,7 +53,7 @@ pub extern "C" fn z_shm_check(this: &z_owned_shm_t) -> bool {
 
 /// Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy
 #[no_mangle]
-pub extern "C" fn z_shm_clone(this: &z_loaned_shm_t, out: &mut MaybeUninit<z_owned_shm_t>) {
+pub extern "C" fn z_shm_clone(out: &mut MaybeUninit<z_owned_shm_t>, this: &z_loaned_shm_t) {
     let this = this.as_rust_type_ref();
     let copy = this.to_owned();
     out.as_rust_type_mut_uninit().write(Some(copy));

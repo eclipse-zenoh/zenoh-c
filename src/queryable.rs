@@ -89,7 +89,7 @@ pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
-pub extern "C" fn z_query_clone(this: &z_loaned_query_t, dst: &mut MaybeUninit<z_owned_query_t>) {
+pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this: &z_loaned_query_t) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this.as_rust_type_ref().clone()));
 }
