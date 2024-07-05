@@ -12,9 +12,6 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
-use std::ptr::null;
-
 use crate::errors;
 use crate::transmute::IntoRustType;
 use crate::transmute::LoanedCTypeRef;
@@ -32,6 +29,7 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{zcu_locality_default, zcu_locality_t};
+use std::mem::MaybeUninit;
 use zenoh::core::Wait;
 use zenoh::prelude::SessionDeclarations;
 use zenoh::sample::EncodingBuilderTrait;
@@ -73,7 +71,7 @@ pub struct ze_querying_subscriber_options_t {
     #[cfg(feature = "unstable")]
     allowed_origin: zcu_locality_t,
     /// The selector to be used for queries.
-    query_selector: *const z_loaned_keyexpr_t,
+    query_selector: Option<&'static z_loaned_keyexpr_t>,
     /// The target to be used for queries.
     query_target: z_query_target_t,
     /// The consolidation mode to be used for queries.
@@ -87,18 +85,18 @@ pub struct ze_querying_subscriber_options_t {
 /// Constructs the default value for `ze_querying_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_options_default(
-    this: &mut ze_querying_subscriber_options_t,
+    this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
 ) {
-    *this = ze_querying_subscriber_options_t {
+    this.write(ze_querying_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
         #[cfg(feature = "unstable")]
         allowed_origin: zcu_locality_default(),
-        query_selector: null(),
+        query_selector: None,
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
         query_accept_replies: zcu_reply_keyexpr_default(),
         query_timeout_ms: 0,
-    };
+    });
 }
 
 /// Constructs and declares a querying subscriber for a given key expression.
@@ -138,7 +136,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
         {
             sub = sub.allowed_origin(options.allowed_origin.into());
         }
-        if let Some(query_selector) = unsafe { options.query_selector.as_ref() } {
+        if let Some(query_selector) = options.query_selector {
             let query_selector = query_selector.as_rust_type_ref().clone();
             sub = sub.query_selector(query_selector);
         }

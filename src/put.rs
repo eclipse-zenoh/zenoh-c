@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -53,8 +55,8 @@ pub struct z_put_options_t {
 /// Constructs the default value for `z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
-    *this = z_put_options_t {
+pub extern "C" fn z_put_options_default(this: &mut MaybeUninit<z_put_options_t>) {
+    this.write(z_put_options_t {
         encoding: None.into(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
@@ -63,7 +65,7 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
         allowed_destination: zcu_locality_default(),
         source_info: None.into(),
         attachment: None.into(),
-    };
+    });
 }
 
 /// Publishes data on specified key expression.
@@ -135,14 +137,14 @@ pub struct z_delete_options_t {
 /// Constructs the default value for `z_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t) {
-    *this = z_delete_options_t {
+pub unsafe extern "C" fn z_delete_options_default(this: &mut MaybeUninit<z_delete_options_t>) {
+    this.write(z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
         allowed_destination: zcu_locality_default(),
-    };
+    });
 }
 
 /// Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).

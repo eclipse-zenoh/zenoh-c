@@ -222,8 +222,8 @@ pub struct z_get_options_t {
 
 /// Constructs default `z_get_options_t`
 #[no_mangle]
-pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
-    *this = z_get_options_t {
+pub extern "C" fn z_get_options_default(this: &mut MaybeUninit<z_get_options_t>) {
+    this.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::default().into(),
@@ -235,7 +235,7 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
         encoding: None.into(),
         source_info: None.into(),
         attachment: None.into(),
-    };
+    });
 }
 
 /// Query data from the matching queryables in the system.

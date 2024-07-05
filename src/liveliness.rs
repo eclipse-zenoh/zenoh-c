@@ -63,9 +63,9 @@ pub struct zc_liveliness_declaration_options_t {
 /// Constructs default value for `zc_liveliness_declaration_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declaration_options_default(
-    this: &mut zc_liveliness_declaration_options_t,
+    this: &mut MaybeUninit<zc_liveliness_declaration_options_t>,
 ) {
-    *this = zc_liveliness_declaration_options_t { _dummy: 0 };
+    this.write(zc_liveliness_declaration_options_t { _dummy: 0 });
 }
 
 /// Borrows token.
@@ -135,9 +135,9 @@ pub struct zc_liveliness_subscriber_options_t {
 /// Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_default(
-    this: &mut zc_liveliness_subscriber_options_t,
+    this: &mut MaybeUninit<zc_liveliness_subscriber_options_t>,
 ) {
-    *this = zc_liveliness_subscriber_options_t { _dummy: 0 };
+    this.write(zc_liveliness_subscriber_options_t { _dummy: 0 });
 }
 
 /// Declares a subscriber on liveliness tokens that intersect `key_expr`.
@@ -193,8 +193,10 @@ pub struct zc_liveliness_get_options_t {
 
 /// Constructs default value `zc_liveliness_get_options_t`.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_default(this: &mut zc_liveliness_get_options_t) {
-    *this = zc_liveliness_get_options_t { timeout_ms: 10000 };
+pub extern "C" fn zc_liveliness_get_options_default(
+    this: &mut MaybeUninit<zc_liveliness_get_options_t>,
+) {
+    this.write(zc_liveliness_get_options_t { timeout_ms: 10000 });
 }
 
 /// Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.

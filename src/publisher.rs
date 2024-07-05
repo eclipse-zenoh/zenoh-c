@@ -56,13 +56,13 @@ pub struct z_publisher_options_t {
 
 /// Constructs the default value for `z_publisher_options_t`.
 #[no_mangle]
-pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) {
-    *this = z_publisher_options_t {
+pub extern "C" fn z_publisher_options_default(this: &mut MaybeUninit<z_publisher_options_t>) {
+    this.write(z_publisher_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
         allowed_destination: zcu_locality_default(),
-    };
+    });
 }
 
 pub use crate::opaque_types::z_loaned_publisher_t;
@@ -170,13 +170,15 @@ pub struct z_publisher_put_options_t {
 /// Constructs the default value for `z_publisher_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_options_t) {
-    *this = z_publisher_put_options_t {
+pub extern "C" fn z_publisher_put_options_default(
+    this: &mut MaybeUninit<z_publisher_put_options_t>,
+) {
+    this.write(z_publisher_put_options_t {
         encoding: None.into(),
         timestamp: None,
         source_info: None.into(),
         attachment: None.into(),
-    }
+    });
 }
 
 /// Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
@@ -237,8 +239,10 @@ pub struct z_publisher_delete_options_t {
 /// Constructs the default values for the delete operation via a publisher entity.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_delete_options_t) {
-    *this = z_publisher_delete_options_t { timestamp: None }
+pub extern "C" fn z_publisher_delete_options_default(
+    this: &mut MaybeUninit<z_publisher_delete_options_t>,
+) {
+    this.write(z_publisher_delete_options_t { timestamp: None });
 }
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///

@@ -95,10 +95,10 @@ pub struct z_subscriber_options_t {
 
 /// Constructs the default value for `z_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn z_subscriber_options_default(this: &mut z_subscriber_options_t) {
-    *this = z_subscriber_options_t {
+pub extern "C" fn z_subscriber_options_default(this: &mut MaybeUninit<z_subscriber_options_t>) {
+    this.write(z_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
-    }
+    });
 }
 
 /// Constructs and declares a subscriber for a given key expression. Dropping subscriber

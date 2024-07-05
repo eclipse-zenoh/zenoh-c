@@ -41,15 +41,17 @@ pub struct ze_publication_cache_options_t {
 
 /// Constructs the default value for `ze_publication_cache_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication_cache_options_t) {
-    *this = ze_publication_cache_options_t {
+pub extern "C" fn ze_publication_cache_options_default(
+    this: &mut MaybeUninit<ze_publication_cache_options_t>,
+) {
+    this.write(ze_publication_cache_options_t {
         queryable_prefix: null(),
         #[cfg(feature = "unstable")]
         queryable_origin: zcu_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,
-    };
+    });
 }
 
 pub use crate::opaque_types::ze_loaned_publication_cache_t;

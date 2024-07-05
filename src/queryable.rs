@@ -108,8 +108,8 @@ pub struct z_queryable_options_t {
 /// Constructs the default value for `z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) {
-    *this = z_queryable_options_t { complete: false };
+pub extern "C" fn z_queryable_options_default(this: &mut MaybeUninit<z_queryable_options_t>) {
+    this.write(z_queryable_options_t { complete: false });
 }
 
 /// Represents the set of options that can be applied to a query reply,
@@ -136,8 +136,8 @@ pub struct z_query_reply_options_t {
 /// Constructs the default value for `z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
-    *this = z_query_reply_options_t {
+pub extern "C" fn z_query_reply_options_default(this: &mut MaybeUninit<z_query_reply_options_t>) {
+    this.write(z_query_reply_options_t {
         encoding: None.into(),
         congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
@@ -145,7 +145,7 @@ pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options
         timestamp: None,
         source_info: None.into(),
         attachment: None.into(),
-    };
+    });
 }
 
 /// Represents the set of options that can be applied to a query reply error,
@@ -160,10 +160,12 @@ pub struct z_query_reply_err_options_t {
 /// Constructs the default value for `z_query_reply_err_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_err_options_default(this: &mut z_query_reply_err_options_t) {
-    *this = z_query_reply_err_options_t {
+pub extern "C" fn z_query_reply_err_options_default(
+    this: &mut MaybeUninit<z_query_reply_err_options_t>,
+) {
+    this.write(z_query_reply_err_options_t {
         encoding: None.into(),
-    };
+    });
 }
 
 /// Represents the set of options that can be applied to a query delete reply,
@@ -188,15 +190,17 @@ pub struct z_query_reply_del_options_t {
 /// Constructs the default value for `z_query_reply_del_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_del_options_default(this: &mut z_query_reply_del_options_t) {
-    *this = z_query_reply_del_options_t {
+pub extern "C" fn z_query_reply_del_options_default(
+    this: &mut MaybeUninit<z_query_reply_del_options_t>,
+) {
+    this.write(z_query_reply_del_options_t {
         congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
         source_info: None.into(),
         attachment: None.into(),
-    };
+    });
 }
 
 /// Constructs a Queryable for the given key expression.

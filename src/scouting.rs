@@ -129,8 +129,8 @@ pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
 
 /// Constructs the default values for the scouting operation.
 #[no_mangle]
-pub extern "C" fn z_scout_options_default(this: &mut z_scout_options_t) {
-    *this = z_scout_options_t::default();
+pub extern "C" fn z_scout_options_default(this: &mut MaybeUninit<z_scout_options_t>) {
+    this.write(z_scout_options_t::default());
 }
 
 /// Scout for routers and/or peers.
