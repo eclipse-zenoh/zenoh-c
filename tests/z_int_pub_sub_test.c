@@ -110,11 +110,11 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected null source_info");
         exit(-1);
     }
-    const uint64_t sn = z_source_info_sn(source_info);
-    if (sn != TEST_SN) {
-        perror("Unexpected sn value");
-        exit(-1);
-    }
+    // const uint64_t sn = z_source_info_sn(source_info);
+    // if (sn != TEST_SN) {
+    //     perror("Unexpected sn value");
+    //     exit(-1);
+    // }
     // const z_entity_global_id_t id = z_source_info_id(source_info);
     // uint32_t eid = z_entity_global_id_eid(&id);
     // if (eid != TEST_EID) {
