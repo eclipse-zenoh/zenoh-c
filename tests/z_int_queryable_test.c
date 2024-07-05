@@ -42,15 +42,15 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_id_t self_id;
     self_id.id[0] = TEST_ID;
 
-//    z_entity_global_id_t entity_global_id;
-//    z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
-//    z_owned_source_info_t source_info;
-//    z_source_info_new(&source_info, &entity_global_id, TEST_SN);
+    //    z_entity_global_id_t entity_global_id;
+    //    z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
+    //    z_owned_source_info_t source_info;
+    //    z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
     z_timestamp_t ts;
     z_timestamp_new(&ts, &self_id, TEST_TS + value_num);
 
-//    options.source_info = &source_info;
+    //    options.source_info = &source_info;
     options.timestamp = &ts;
 
     z_owned_bytes_t payload;
