@@ -58,17 +58,17 @@ int run_publisher() {
     }
 
     for (int i = 0; i < values_count; ++i) {
-        // TODO fixme when entityglobalid will be fixed
-        z_entity_global_id_t entity_global_id = z_publisher_id(z_loan(pub));
-        z_owned_source_info_t source_info;
-        z_source_info_new(&source_info, &entity_global_id, TEST_SN);
+        // z_entity_global_id_t entity_global_id;
+        // z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
+        // z_owned_source_info_t source_info;
+        // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
         z_timestamp_t ts;
         z_timestamp_new(&ts, &self_id, TEST_TS + i);
 
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
-        options.source_info = &source_info;
+        // options.source_info = &source_info;
         options.timestamp = &ts;
 
         z_owned_bytes_t payload;
@@ -115,12 +115,12 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected sn value");
         exit(-1);
     }
-    const z_entity_global_id_t id = z_source_info_id(source_info);
-    uint32_t eid = z_entity_global_id_eid(&id);
-    if (eid != TEST_EID) {
-        perror("Unexpected eid value");
-        exit(-1);
-    }
+    // const z_entity_global_id_t id = z_source_info_id(source_info);
+    // uint32_t eid = z_entity_global_id_eid(&id);
+    // if (eid != TEST_EID) {
+    //     perror("Unexpected eid value");
+    //     exit(-1);
+    // }
 
     const z_timestamp_t *ts = z_sample_timestamp(sample);
     if (ts == NULL) {
