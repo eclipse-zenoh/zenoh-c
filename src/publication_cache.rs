@@ -12,16 +12,18 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
-use std::ptr::null;
+use std::{mem::MaybeUninit, ptr::null};
 
+use zenoh::prelude::*;
 use zenoh_ext::SessionExt;
 
-use crate::transmute::{RustTypeRef, RustTypeRefUninit};
-use crate::{errors, z_loaned_keyexpr_t, z_loaned_session_t};
+use crate::{
+    errors,
+    transmute::{RustTypeRef, RustTypeRefUninit},
+    z_loaned_keyexpr_t, z_loaned_session_t,
+};
 #[cfg(feature = "unstable")]
 use crate::{zcu_locality_default, zcu_locality_t};
-use zenoh::core::Wait;
 
 /// Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
@@ -52,8 +54,7 @@ pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication
     };
 }
 
-pub use crate::opaque_types::ze_loaned_publication_cache_t;
-pub use crate::opaque_types::ze_owned_publication_cache_t;
+pub use crate::opaque_types::{ze_loaned_publication_cache_t, ze_owned_publication_cache_t};
 decl_c_type!(
     owned(ze_owned_publication_cache_t, Option<zenoh_ext::PublicationCache<'static>>),
     loaned(ze_loaned_publication_cache_t, zenoh_ext::PublicationCache<'static>)

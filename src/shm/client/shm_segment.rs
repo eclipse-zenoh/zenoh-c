@@ -15,13 +15,14 @@
 use std::sync::atomic::AtomicPtr;
 
 use libc::c_void;
-use zenoh::core::Result;
-use zenoh::internal::zerror;
-use zenoh::shm::{ChunkID, ShmSegment};
+use zenoh::{
+    internal::zerror,
+    shm::{ChunkID, ShmSegment},
+    Result,
+};
 
-use crate::context::DroppableContext;
 use crate::{
-    context::{zc_threadsafe_context_t, ThreadsafeContext},
+    context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     shm::common::types::z_chunk_id_t,
 };
 

@@ -12,33 +12,21 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::errors;
-use crate::transmute::IntoCType;
-use crate::transmute::LoanedCTypeRef;
-use crate::transmute::RustTypeRef;
-use crate::transmute::RustTypeRefUninit;
-use crate::z_entity_global_id_t;
-use crate::z_owned_encoding_t;
-use crate::z_owned_source_info_t;
-use crate::z_timestamp_t;
-use crate::zcu_closure_matching_status_call;
-use crate::zcu_closure_matching_status_loan;
-use crate::zcu_locality_default;
-use crate::zcu_locality_t;
-use crate::zcu_owned_closure_matching_status_t;
-use std::mem::MaybeUninit;
-use std::ptr;
-use zenoh::core::Wait;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::publisher::CongestionControl;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::TimestampBuilderTrait;
-use zenoh::{core::Priority, publisher::MatchingListener, publisher::Publisher};
+use std::{mem::MaybeUninit, ptr};
+
+use zenoh::{
+    prelude::*,
+    pubsub::{MatchingListener, Publisher},
+    qos::{CongestionControl, Priority},
+};
 
 use crate::{
-    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t, z_priority_t,
+    errors,
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_congestion_control_t, z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t, z_timestamp_t,
+    zcu_closure_matching_status_call, zcu_closure_matching_status_loan, zcu_locality_default,
+    zcu_locality_t, zcu_owned_closure_matching_status_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.
@@ -65,8 +53,7 @@ pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) 
     };
 }
 
-pub use crate::opaque_types::z_loaned_publisher_t;
-pub use crate::opaque_types::z_owned_publisher_t;
+pub use crate::opaque_types::{z_loaned_publisher_t, z_owned_publisher_t};
 
 decl_c_type!(
     owned(z_owned_publisher_t, Option<Publisher<'static>>),

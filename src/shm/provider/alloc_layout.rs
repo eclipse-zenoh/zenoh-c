@@ -14,25 +14,23 @@
 
 use std::mem::MaybeUninit;
 
-use crate::{
-    context::{zc_threadsafe_context_t, ThreadsafeContext},
-    errors::z_error_t,
-    shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
-    z_owned_buf_alloc_result_t,
-};
 use libc::c_void;
 use zenoh::shm::{
     AllocLayout, BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc,
 };
 
-use crate::context::Context;
-
 use super::{
     alloc_layout_impl::{alloc, alloc_async, alloc_layout_new},
     shm_provider_backend::DynamicShmProviderBackend,
     types::z_alloc_alignment_t,
+};
+use crate::{
+    context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
+    errors::z_error_t,
+    shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
+    z_owned_buf_alloc_result_t,
 };
 
 pub type DynamicAllocLayout =

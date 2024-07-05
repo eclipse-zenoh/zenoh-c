@@ -1,12 +1,13 @@
-use chrono::{DateTime, Local};
-use libc::c_char;
 use std::{
     os::raw::c_void,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-use crate::CopyableToCArray;
+use chrono::{DateTime, Local};
 use lazy_static::lazy_static;
+use libc::c_char;
+
+use crate::CopyableToCArray;
 
 // Use initial time stored in static variable as a reference time,
 // to be able to return number of ns passed since.

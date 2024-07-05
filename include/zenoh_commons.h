@@ -1796,13 +1796,6 @@ void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
  */
 ZENOHC_API uint32_t z_entity_global_id_eid(const struct z_entity_global_id_t *this_);
 /**
- * Create entity global id
- */
-ZENOHC_API
-z_error_t z_entity_global_id_new(struct z_entity_global_id_t *this_,
-                                 const struct z_id_t *zid,
-                                 uint32_t eid);
-/**
  * Returns the zenoh id of entity global id.
  */
 ZENOHC_API struct z_id_t z_entity_global_id_zid(const struct z_entity_global_id_t *this_);
@@ -3671,6 +3664,7 @@ z_error_t z_view_string_wrap(struct z_view_string_t *this_,
  * The string has static storage (i.e. valid until the end of the program).
  * @param whatami: A whatami bitmask of zenoh entity kind.
  * @param str_out: An uninitialized memory location where strring will be constructed.
+ * @param len: Maximum number of bytes that can be written to the `buf`.
  *
  * @return 0 if successful, negative error values if whatami contains an invalid bitmask.
  */

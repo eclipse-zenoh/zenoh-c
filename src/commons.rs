@@ -12,41 +12,32 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::borrow::Cow;
-use std::mem::MaybeUninit;
-use std::ptr::null;
-use std::slice::from_raw_parts;
-use std::str::from_utf8;
-use std::str::FromStr;
+use std::{
+    borrow::Cow,
+    mem::MaybeUninit,
+    ptr::null,
+    slice::from_raw_parts,
+    str::{from_utf8, FromStr},
+};
 
-use crate::errors;
-use crate::transmute::CTypeRef;
-use crate::transmute::IntoCType;
-use crate::transmute::IntoRustType;
-use crate::transmute::LoanedCTypeRef;
-use crate::transmute::RustTypeRef;
-use crate::transmute::RustTypeRefUninit;
-use crate::z_id_t;
-use crate::z_loaned_bytes_t;
-use crate::z_loaned_keyexpr_t;
-use crate::z_owned_string_t;
-use crate::z_string_from_substr;
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
-use zenoh::core::Priority;
-use zenoh::encoding::Encoding;
-use zenoh::info::EntityGlobalId;
-use zenoh::publisher::CongestionControl;
-use zenoh::query::ConsolidationMode;
-use zenoh::query::QueryTarget;
-use zenoh::query::ReplyKeyExpr;
-use zenoh::sample::Locality;
-use zenoh::sample::Sample;
-use zenoh::sample::SampleKind;
-use zenoh::sample::SourceInfo;
-use zenoh::time::Timestamp;
-use zenoh_protocol::core::EntityGlobalIdProto;
-use zenoh_protocol::zenoh::Consolidation;
+use zenoh::{
+    bytes::Encoding,
+    qos::{CongestionControl, Priority},
+    query::{ConsolidationMode, QueryTarget, ReplyKeyExpr},
+    sample::{Locality, Sample, SampleKind, SourceInfo},
+    session::EntityGlobalId,
+    time::Timestamp,
+};
+
+use crate::{
+    errors,
+    transmute::{
+        CTypeRef, IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit,
+    },
+    z_id_t, z_loaned_bytes_t, z_loaned_keyexpr_t, z_owned_string_t, z_string_from_substr,
+};
 
 /// A zenoh unsigned integer
 #[allow(non_camel_case_types)]
@@ -222,8 +213,7 @@ pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
-pub use crate::opaque_types::z_loaned_encoding_t;
-pub use crate::opaque_types::z_owned_encoding_t;
+pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 
 decl_c_type!(
     owned(z_owned_encoding_t, Encoding),
@@ -463,7 +453,7 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
     #[inline]
     fn from(val: z_consolidation_mode_t) -> Self {
         match val {
-            z_consolidation_mode_t::AUTO => Consolidation::Auto,
+            z_consolidation_mode_t::AUTO => ConsolidationMode::Auto,
             z_consolidation_mode_t::NONE => ConsolidationMode::None,
             z_consolidation_mode_t::MONOTONIC => ConsolidationMode::Monotonic,
             z_consolidation_mode_t::LATEST => ConsolidationMode::Latest,
@@ -557,22 +547,6 @@ impl From<z_congestion_control_t> for CongestionControl {
 use crate::z_entity_global_id_t;
 decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 
-/// Create entity global id
-#[no_mangle]
-pub extern "C" fn z_entity_global_id_new(
-    this: &mut MaybeUninit<z_entity_global_id_t>,
-    zid: &z_id_t,
-    eid: u32,
-) -> errors::z_error_t {
-    let entity_global_id: EntityGlobalId = EntityGlobalIdProto {
-        zid: zid.into_rust_type().into(),
-        eid,
-    }
-    .into();
-    this.as_rust_type_mut_uninit().write(entity_global_id);
-    errors::Z_OK
-}
-
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
@@ -583,8 +557,7 @@ pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t 
 pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
     this.as_rust_type_ref().eid()
 }
-pub use crate::opaque_types::z_loaned_source_info_t;
-pub use crate::opaque_types::z_owned_source_info_t;
+pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo)

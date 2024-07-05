@@ -13,23 +13,20 @@
 //
 
 use std::mem::MaybeUninit;
+
 use zenoh::{
     liveliness::{Liveliness, LivelinessToken},
-    prelude::SessionDeclarations,
+    prelude::*,
 };
 
-use crate::transmute::LoanedCTypeRef;
 use crate::{
     errors,
-    transmute::{RustTypeRef, RustTypeRefUninit},
-    z_closure_reply_call, z_closure_sample_call, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_subscriber_t,
+    opaque_types::{zc_loaned_liveliness_token_t, zc_owned_liveliness_token_t},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t, z_owned_closure_sample_t,
+    z_owned_subscriber_t,
 };
-use crate::{z_closure_reply_loan, z_closure_sample_loan};
-use zenoh::core::Wait;
-
-use crate::opaque_types::zc_loaned_liveliness_token_t;
-use crate::opaque_types::zc_owned_liveliness_token_t;
 decl_c_type!(
     owned(zc_owned_liveliness_token_t, Option<LivelinessToken<'static>>),
     loaned(zc_loaned_liveliness_token_t, LivelinessToken<'static>)
