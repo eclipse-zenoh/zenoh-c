@@ -14,9 +14,9 @@
 
 #![allow(non_camel_case_types)]
 
+use std::{cmp::min, slice};
+
 use libc::c_void;
-use std::cmp::min;
-use std::slice;
 
 #[macro_use]
 mod transmute;

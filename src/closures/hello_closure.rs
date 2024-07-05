@@ -12,12 +12,14 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use std::mem::MaybeUninit;
+
+use libc::c_void;
+
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef},
     z_loaned_hello_t,
 };
-use libc::c_void;
-use std::mem::MaybeUninit;
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.

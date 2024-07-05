@@ -58,8 +58,8 @@ int run_publisher() {
     }
 
     for (int i = 0; i < values_count; ++i) {
-        z_entity_global_id_t entity_global_id;
-        z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
+        // TODO fixme when entityglobalid will be fixed
+        z_entity_global_id_t entity_global_id = z_publisher_id(z_loan(pub));
         z_owned_source_info_t source_info;
         z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 

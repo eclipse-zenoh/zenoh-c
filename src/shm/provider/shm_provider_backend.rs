@@ -15,15 +15,18 @@
 use std::fmt::Debug;
 
 use libc::c_void;
-use zenoh::core::Result;
-use zenoh::internal::zerror;
-use zenoh::shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend};
-
-use crate::context::DroppableContext;
-use crate::transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef};
-use crate::{z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t};
+use zenoh::{
+    internal::zerror,
+    shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend},
+    Result,
+};
 
 use super::chunk::z_chunk_descriptor_t;
+use crate::{
+    context::DroppableContext,
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef},
+    z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
+};
 
 /// A callbacks for ShmProviderBackend
 #[derive(Debug)]

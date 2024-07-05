@@ -12,39 +12,30 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use std::{
+    ffi::CStr,
+    mem::MaybeUninit,
+    ops::{Deref, DerefMut},
+    ptr::{null, null_mut},
+};
+
 use libc::c_char;
-use std::ffi::CStr;
-use std::mem::MaybeUninit;
-use std::ops::Deref;
-use std::ops::DerefMut;
-use std::ptr::null;
-use std::ptr::null_mut;
-use zenoh::bytes::ZBytes;
-use zenoh::core::Priority;
-use zenoh::encoding::Encoding;
-use zenoh::query::ReplyError;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::selector::Selector;
-use zenoh_protocol::core::CongestionControl;
-use zenoh_protocol::core::ZenohIdProto;
+use zenoh::{
+    bytes::{Encoding, ZBytes},
+    prelude::*,
+    qos::{CongestionControl, Priority},
+    query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
+};
 
-use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
-
-use crate::errors;
-use crate::transmute::LoanedCTypeRef;
-use crate::transmute::RustTypeRef;
-use crate::transmute::RustTypeRefUninit;
-use crate::z_id_t;
 use crate::{
+    errors,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
-    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
+    z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t,
     z_owned_source_info_t, z_priority_t, z_query_target_t, zcu_locality_default, zcu_locality_t,
     zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
-use ::zenoh::core::Wait;
 
 // we need to add Default to ReplyError
 #[repr(transparent)]
@@ -72,8 +63,7 @@ impl From<&ReplyError> for &ReplyErrorNewtype {
     }
 }
 
-pub use crate::opaque_types::z_loaned_reply_err_t;
-pub use crate::opaque_types::z_owned_reply_err_t;
+pub use crate::opaque_types::{z_loaned_reply_err_t, z_owned_reply_err_t};
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyErrorNewtype),
     loaned(z_loaned_reply_err_t, ReplyErrorNewtype)
@@ -117,8 +107,8 @@ pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
     std::mem::take(this.as_rust_type_mut());
 }
 
-pub use crate::opaque_types::z_loaned_reply_t;
-pub use crate::opaque_types::z_owned_reply_t;
+pub use crate::opaque_types::{z_loaned_reply_t, z_owned_reply_t};
+use crate::transmute::IntoCType;
 decl_c_type!(
     owned(z_owned_reply_t, Option<Reply>),
     loaned(z_loaned_reply_t, Reply)
@@ -165,11 +155,7 @@ pub unsafe extern "C" fn z_reply_replier_id(
 ) -> bool {
     match this.as_rust_type_ref().replier_id() {
         Some(val) => {
-            out_id.write(
-                std::convert::Into::<ZenohIdProto>::into(val)
-                    .to_le_bytes()
-                    .into(),
-            );
+            out_id.write(val.into_c_type());
             true
         }
         None => false,

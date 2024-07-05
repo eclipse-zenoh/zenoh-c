@@ -12,23 +12,28 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use libc::c_void;
 use std::mem::MaybeUninit;
-use zenoh::prelude::*;
-use zenoh::shm::{
-    AllocPolicy, AsyncAllocPolicy, BufLayoutAllocResult, DynamicProtocolID,
-    PosixShmProviderBackend, ProtocolIDSource, ShmProvider, ShmProviderBackend, StaticProtocolID,
-    ZLayoutAllocError, POSIX_PROTOCOL_ID,
+
+use libc::c_void;
+use zenoh::{
+    prelude::*,
+    shm::{
+        AllocPolicy, AsyncAllocPolicy, BufLayoutAllocResult, DynamicProtocolID,
+        PosixShmProviderBackend, ProtocolIDSource, ShmProvider, ShmProviderBackend,
+        StaticProtocolID, ZLayoutAllocError, POSIX_PROTOCOL_ID,
+    },
 };
 
-use crate::context::{Context, DroppableContext, ThreadsafeContext};
-use crate::errors::{z_error_t, Z_EINVAL, Z_OK};
-use crate::transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit};
-use crate::{z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t};
-
-use super::chunk::z_allocated_chunk_t;
-use super::shm_provider_backend::DynamicShmProviderBackend;
-use super::types::z_alloc_alignment_t;
+use super::{
+    chunk::z_allocated_chunk_t, shm_provider_backend::DynamicShmProviderBackend,
+    types::z_alloc_alignment_t,
+};
+use crate::{
+    context::{Context, DroppableContext, ThreadsafeContext},
+    errors::{z_error_t, Z_EINVAL, Z_OK},
+    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
+    z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t,
+};
 
 pub(crate) fn alloc<Policy: AllocPolicy>(
     out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,

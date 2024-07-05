@@ -12,19 +12,20 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use std::{mem::MaybeUninit, sync::Arc};
+
+use libc::c_void;
+use zenoh::{
+    handlers,
+    handlers::{IntoHandler, RingChannelHandler},
+    query::Query,
+};
+
+pub use crate::opaque_types::{z_loaned_fifo_handler_query_t, z_owned_fifo_handler_query_t};
 use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
-use libc::c_void;
-use std::{mem::MaybeUninit, sync::Arc};
-use zenoh::{
-    handlers::{self, IntoHandler, RingChannelHandler},
-    query::Query,
-};
-
-pub use crate::opaque_types::z_loaned_fifo_handler_query_t;
-pub use crate::opaque_types::z_owned_fifo_handler_query_t;
 decl_c_type!(
     owned(z_owned_fifo_handler_query_t, Option<flume::Receiver<Query>>),
     loaned(z_loaned_fifo_handler_query_t, flume::Receiver<Query>)
@@ -137,8 +138,7 @@ pub extern "C" fn z_fifo_handler_query_try_recv(
     }
 }
 
-pub use crate::opaque_types::z_loaned_ring_handler_query_t;
-pub use crate::opaque_types::z_owned_ring_handler_query_t;
+pub use crate::opaque_types::{z_loaned_ring_handler_query_t, z_owned_ring_handler_query_t};
 decl_c_type!(
     owned(z_owned_ring_handler_query_t, Option<RingChannelHandler<Query>>),
     loaned(z_loaned_ring_handler_query_t, RingChannelHandler<Query>)

@@ -1,16 +1,16 @@
-use fs2::FileExt;
-use regex::Regex;
-use std::collections::HashSet;
-use std::env;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::process::{Command, Stdio};
 use std::{
     borrow::Cow,
-    collections::HashMap,
-    io::BufWriter,
+    collections::{HashMap, HashSet},
+    env,
+    fs::File,
+    io::{BufWriter, Read, Write},
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
+
+use fs2::FileExt;
+use regex::Regex;
+
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
 const PREPROCESS_PATH: &str = "include/zenoh-cpp.h";
@@ -198,22 +198,29 @@ pub struct {type_name} {{
     std::fs::write(path_out, data_out).unwrap();
 }
 
-fn get_opaque_type_docs() -> HashMap<String, std::vec::Vec<String>> {
+fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
     let current_folder = get_build_rs_path();
     let path_in = current_folder.join("./build-resources/opaque-types/src/lib.rs");
-    let re = Regex::new(r"(?m)^\s*get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\)").unwrap();
-    let mut comments = std::vec::Vec::<String>::new();
-    let mut res = HashMap::<String, std::vec::Vec<String>>::new();
+    let re = Regex::new(r"(?m)^get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\s*(,)?\s*\);").unwrap();
+    let mut comments = Vec::new();
+    let mut opaque_lines = Vec::new();
+    let mut res = HashMap::new();
 
     for line in std::fs::read_to_string(path_in).unwrap().lines() {
         if line.starts_with("///") {
             comments.push(line.to_string());
             continue;
         }
-        if let Some(c) = re.captures(line) {
-            res.insert(c[2].to_string(), comments.clone());
+        if line.starts_with("get_opaque_type_data!(") {
+            opaque_lines.push(line);
+        } else if !opaque_lines.is_empty() {
+            opaque_lines.push(line);
         }
-        comments.clear();
+        if !opaque_lines.is_empty() && line.ends_with(");") {
+            let joined_lines = std::mem::take(&mut opaque_lines).join("");
+            let capture = re.captures(&joined_lines).expect("invalid opaque type");
+            res.insert(capture[2].to_string(), std::mem::take(&mut comments));
+        }
     }
     res
 }
