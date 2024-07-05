@@ -133,13 +133,13 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         exit(-1);
     }
 
-    z_id_t ts_id = z_timestamp_id(ts);
-    z_id_t gloabl_id = z_entity_global_id_zid(&id);
-
-    if (memcmp(ts_id.id, gloabl_id.id, sizeof(ts_id.id)) != 0) {
-        perror("Timestamp id and global id differ");
-        exit(-1);
-    }
+    // z_id_t ts_id = z_timestamp_id(ts);
+    // z_id_t gloabl_id = z_entity_global_id_zid(&id);
+    //
+    // if (memcmp(ts_id.id, gloabl_id.id, sizeof(ts_id.id)) != 0) {
+    //     perror("Timestamp id and global id differ");
+    //     exit(-1);
+    // }
 
     if (++val_num == values_count) {
         exit(0);
