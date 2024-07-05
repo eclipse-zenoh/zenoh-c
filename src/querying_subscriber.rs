@@ -15,11 +15,8 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    core::Wait,
-    prelude::SessionDeclarations,
-    sample::{EncodingBuilderTrait, SampleBuilderTrait},
-    session::Session,
-    subscriber::Reliability,
+    bytes::EncodingBuilderTrait, prelude::SessionDeclarations, pubsub::Reliability,
+    sample::SampleBuilderTrait, session::Session, Wait,
 };
 use zenoh_ext::*;
 

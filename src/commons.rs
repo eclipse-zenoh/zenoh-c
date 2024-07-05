@@ -23,15 +23,13 @@ use std::{
 use libc::{c_char, c_ulong};
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::{
-    core::Priority,
-    encoding::Encoding,
-    info::EntityGlobalId,
-    publisher::CongestionControl,
+    bytes::Encoding,
+    qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget, ReplyKeyExpr},
     sample::{Locality, Sample, SampleKind, SourceInfo},
+    session::EntityGlobalId,
     time::Timestamp,
 };
-use zenoh_protocol::{core::EntityGlobalIdProto, zenoh::Consolidation};
 
 use crate::{
     errors,

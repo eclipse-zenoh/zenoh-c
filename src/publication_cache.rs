@@ -14,7 +14,7 @@
 
 use std::{mem::MaybeUninit, ptr::null};
 
-use zenoh::core::Wait;
+use zenoh::Wait;
 use zenoh_ext::SessionExt;
 
 use crate::{

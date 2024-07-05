@@ -14,13 +14,12 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    core::{Priority, Wait},
-    encoding::Encoding,
+    bytes::{Encoding, EncodingBuilderTrait},
     prelude::SessionDeclarations,
-    publisher::CongestionControl,
-    query::Query,
-    queryable::Queryable,
-    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    query::{Query, Queryable},
+    sample::{SampleBuilderTrait, TimestampBuilderTrait},
+    Wait,
 };
 
 pub use crate::opaque_types::{z_loaned_queryable_t, z_moved_queryable_t, z_owned_queryable_t};

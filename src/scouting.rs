@@ -15,8 +15,10 @@ use std::mem::MaybeUninit;
 
 use async_std::task;
 use libc::c_ulong;
-use zenoh::scouting::Hello;
-use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
+use zenoh::{
+    config::{WhatAmI, WhatAmIMatcher},
+    scouting::Hello,
+};
 
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{

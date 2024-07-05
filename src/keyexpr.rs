@@ -15,10 +15,9 @@ use std::{error::Error, mem::MaybeUninit};
 
 use libc::c_char;
 use zenoh::{
-    core::Wait,
-    key_expr::{keyexpr, KeyExpr, SetIntersectionLevel},
+    key_expr::{keyexpr, Canonize, KeyExpr, SetIntersectionLevel},
+    Wait,
 };
-use zenoh_protocol::core::key_expr::canon::Canonizable;
 
 pub use crate::opaque_types::{
     z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,

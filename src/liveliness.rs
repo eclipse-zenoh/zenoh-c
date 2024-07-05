@@ -15,7 +15,6 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    core::Wait,
     liveliness::{Liveliness, LivelinessToken},
     prelude::*,
 };

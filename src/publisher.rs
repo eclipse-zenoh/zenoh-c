@@ -15,10 +15,12 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    core::{Priority, Wait},
+    bytes::EncodingBuilderTrait,
     prelude::SessionDeclarations,
-    publisher::{CongestionControl, MatchingListener, Publisher},
-    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+    pubsub::{MatchingListener, Publisher},
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    sample::{SampleBuilderTrait, TimestampBuilderTrait},
+    Wait,
 };
 
 use crate::{

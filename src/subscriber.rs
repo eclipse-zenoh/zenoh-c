@@ -15,9 +15,9 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    core::Wait,
     prelude::SessionDeclarations,
-    subscriber::{Reliability, Subscriber},
+    pubsub::{Reliability, Subscriber},
+    Wait,
 };
 
 use crate::{

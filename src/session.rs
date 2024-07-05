@@ -14,7 +14,7 @@
 
 use std::{mem::MaybeUninit, sync::Arc};
 
-use zenoh::{core::Wait, session::Session};
+use zenoh::{Session, Wait};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::z_loaned_shm_client_storage_t;

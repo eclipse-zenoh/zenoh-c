@@ -16,9 +16,9 @@ use std::fmt::Debug;
 
 use libc::c_void;
 use zenoh::{
-    core::Result,
     internal::zerror,
     shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend},
+    Result,
 };
 
 use super::chunk::z_chunk_descriptor_t;

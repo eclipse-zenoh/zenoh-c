@@ -16,9 +16,9 @@ use std::sync::atomic::AtomicPtr;
 
 use libc::c_void;
 use zenoh::{
-    core::Result,
     internal::zerror,
     shm::{ChunkID, ShmSegment},
+    Result,
 };
 
 use crate::{

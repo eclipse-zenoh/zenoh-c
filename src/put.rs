@@ -1,9 +1,10 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    core::{Priority, Wait},
-    publisher::CongestionControl,
-    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+    bytes::EncodingBuilderTrait,
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    sample::{SampleBuilderTrait, TimestampBuilderTrait},
+    Wait,
 };
 
 //

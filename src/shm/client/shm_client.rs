@@ -15,9 +15,9 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
-    core::Result,
     internal::bail,
     shm::{SegmentID, ShmClient, ShmSegment},
+    Result,
 };
 
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};

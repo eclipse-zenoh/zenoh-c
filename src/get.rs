@@ -19,21 +19,20 @@ use std::{
     ptr::null,
 };
 
-use ::zenoh::core::Wait;
 use libc::c_char;
 use zenoh::{
-    bytes::ZBytes,
-    core::Priority,
-    encoding::Encoding,
-    query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError},
-    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait},
-    selector::Selector,
+    bytes::{Encoding, EncodingBuilderTrait, ZBytes},
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
+    sample::SampleBuilderTrait,
+    Wait,
 };
-use zenoh_protocol::core::{CongestionControl, ZenohIdProto};
 
 use crate::{
     errors,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
+    },
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t,
