@@ -211,9 +211,7 @@ fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
             comments.push(line.to_string());
             continue;
         }
-        if line.starts_with("get_opaque_type_data!(") {
-            opaque_lines.push(line);
-        } else if !opaque_lines.is_empty() {
+        if line.starts_with("get_opaque_type_data!(") || !opaque_lines.is_empty() {
             opaque_lines.push(line);
         }
         if !opaque_lines.is_empty() && line.ends_with(");") {
