@@ -111,7 +111,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
         (attachement_context_t){.keys = {K_CONST}, .values = {V_CONST}, .num_items = 1, .iteration_index = 0};
     z_bytes_serialize_from_iter(&reply_attachment, create_attachement_it, (void *)&out_attachment_context);
 
-    options.attachment = &reply_attachment;
+    options.attachment = z_move(reply_attachment);
 
     z_owned_bytes_t payload;
     z_bytes_serialize_from_str(&payload, values[value_num]);
@@ -182,7 +182,7 @@ int run_get() {
         z_owned_bytes_t attachment;
         z_bytes_serialize_from_iter(&attachment, create_attachement_it, (void *)&out_attachment_context);
 
-        opts.attachment = &attachment;
+        opts.attachment = z_move(attachment);
         z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
         z_owned_reply_t reply;
         for (z_recv(z_loan(handler), &reply); z_check(reply); z_recv(z_loan(handler), &reply)) {

@@ -115,7 +115,7 @@ int run_publisher() {
         z_owned_bytes_t attachment;
         z_bytes_serialize_from_iter(&attachment, create_attachement_it, (void *)&out_attachment_context);
 
-        options.attachment = &attachment;
+        options.attachment = z_move(attachment);
 
         z_view_slice_t v_var;
         z_view_slice_from_str(&v_var, values[i]);

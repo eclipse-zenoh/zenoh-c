@@ -50,7 +50,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_timestamp_t ts;
     z_timestamp_new(&ts, &self_id, TEST_TS + value_num);
 
-    options.source_info = &source_info;
+    options.source_info = z_move(source_info);
     options.timestamp = &ts;
 
     z_owned_bytes_t payload;
