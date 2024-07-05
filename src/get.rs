@@ -159,11 +159,7 @@ pub unsafe extern "C" fn z_reply_replier_id(
 ) -> bool {
     match this.as_rust_type_ref().replier_id() {
         Some(val) => {
-            out_id.write(
-                std::convert::Into::<ZenohIdProto>::into(val)
-                    .to_le_bytes()
-                    .into(),
-            );
+            out_id.write(val.into_c_type());
             true
         }
         None => false,

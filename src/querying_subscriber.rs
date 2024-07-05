@@ -97,7 +97,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
 
 /// Constructs and declares a querying subscriber for a given key expression.
 ///
-/// @param this_: An unitialized memory location where querying subscriber will be constructed.
+/// @param this_: An uninitialized memory location where querying subscriber will be constructed.
 /// @param session: A Zenoh session.
 /// @param key_expr: A key expression to subscribe to.
 /// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.

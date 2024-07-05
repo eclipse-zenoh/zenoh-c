@@ -455,7 +455,7 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
     #[inline]
     fn from(val: z_consolidation_mode_t) -> Self {
         match val {
-            z_consolidation_mode_t::AUTO => Consolidation::Auto,
+            z_consolidation_mode_t::AUTO => ConsolidationMode::Auto,
             z_consolidation_mode_t::NONE => ConsolidationMode::None,
             z_consolidation_mode_t::MONOTONIC => ConsolidationMode::Monotonic,
             z_consolidation_mode_t::LATEST => ConsolidationMode::Latest,
@@ -548,22 +548,6 @@ impl From<z_congestion_control_t> for CongestionControl {
 
 use crate::z_entity_global_id_t;
 decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
-
-/// Create entity global id
-#[no_mangle]
-pub extern "C" fn z_entity_global_id_new(
-    this: &mut MaybeUninit<z_entity_global_id_t>,
-    zid: &z_id_t,
-    eid: u32,
-) -> errors::z_error_t {
-    let entity_global_id: EntityGlobalId = EntityGlobalIdProto {
-        zid: zid.into_rust_type().into(),
-        eid,
-    }
-    .into();
-    this.as_rust_type_mut_uninit().write(entity_global_id);
-    errors::Z_OK
-}
 
 /// Returns the zenoh id of entity global id.
 #[no_mangle]

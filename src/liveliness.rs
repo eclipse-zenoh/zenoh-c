@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use zenoh::{
     core::Wait,
     liveliness::{Liveliness, LivelinessToken},
-    prelude::SessionDeclarations,
+    prelude::*,
 };
 
 use crate::{
@@ -141,7 +141,7 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 
 /// Declares a subscriber on liveliness tokens that intersect `key_expr`.
 ///
-/// @param this_: An unitialized memory location where subscriber will be constructed.
+/// @param this_: An uninitialized memory location where subscriber will be constructed.
 /// @param session: The Zenoh session.
 /// @param key_expr: The key expression to subscribe to.
 /// @param callback: The callback function that will be called each time a liveliness token status is changed.

@@ -14,7 +14,7 @@
 use std::{ffi::CStr, mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
 
 use libc::{c_char, c_uint};
-use zenoh::config::{Config, ValidatedMap, WhatAmI};
+use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
 
 use crate::{
     errors,
@@ -320,20 +320,17 @@ pub unsafe extern "C" fn z_config_client(
     } else if let Ok(locators) = std::slice::from_raw_parts(peers, n_peers)
         .iter()
         .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
-        .try_fold(
-            Vec::<zenoh_protocol::core::Locator>::new(),
-            |mut acc, it| match it {
-                Err(e) => {
-                    log::error!("Error parsing peer address: {}", e);
-                    res = errors::Z_EPARSE;
-                    Err(())
-                }
-                Ok(loc) => {
-                    acc.push(loc);
-                    Ok(acc)
-                }
-            },
-        )
+        .try_fold(Vec::<Locator>::new(), |mut acc, it| match it {
+            Err(e) => {
+                log::error!("Error parsing peer address: {}", e);
+                res = errors::Z_EPARSE;
+                Err(())
+            }
+            Ok(loc) => {
+                acc.push(loc);
+                Ok(acc)
+            }
+        })
     {
         locators
     } else {

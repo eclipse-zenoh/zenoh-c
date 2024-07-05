@@ -1,38 +1,31 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::Condvar;
-use std::sync::Mutex;
-use std::sync::MutexGuard;
-use std::thread::JoinHandle;
-use zenoh::bytes::ZBytesIterator;
-use zenoh::bytes::ZBytesWriter;
-use zenoh::bytes::{ZBytes, ZBytesReader};
-use zenoh::config::Config;
-use zenoh::encoding::Encoding;
-use zenoh::handlers::DefaultHandler;
-use zenoh::handlers::RingChannelHandler;
-use zenoh::key_expr::KeyExpr;
-use zenoh::liveliness::LivelinessToken;
-use zenoh::publisher::MatchingListener;
-use zenoh::publisher::Publisher;
-use zenoh::query::{Reply, ReplyError};
-use zenoh::query::Query;
-use zenoh::queryable::Queryable;
-use zenoh::sample::Sample;
-use zenoh::sample::SourceInfo;
-use zenoh::scouting::Hello;
-use zenoh::session::Session;
-use zenoh::subscriber::Subscriber;
-use zenoh::time::Timestamp;
-use zenoh::info::{ZenohId, EntityGlobalId};
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use core::ffi::c_void;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Condvar, Mutex, MutexGuard},
+    thread::JoinHandle,
+};
+
+use zenoh::{
+    bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
+    config::Config,
+    handlers::{DefaultHandler, RingChannelHandler},
+    key_expr::KeyExpr,
+    liveliness::LivelinessToken,
+    pubsub::{MatchingListener, Publisher, Subscriber},
+    query::{Query, Queryable, Reply, ReplyError},
+    sample::{Sample, SourceInfo},
+    scouting::Hello,
+    session::{EntityGlobalId, Session, ZenohId},
+    time::Timestamp,
+};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use zenoh::shm::{
-    ShmClient, ProtocolID, ShmClientStorage, AllocLayout,DynamicProtocolID, BufAllocResult,
-    ChunkAllocResult, MemoryLayout, ZShmMut, ZShm, zshm, zshmmut, ShmProvider, ChunkDescriptor,
-    ShmProviderBackend, PosixShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID
+use zenoh::{
+    shm::zshm, shm::zshmmut, shm::AllocLayout, shm::BufAllocResult, shm::ChunkAllocResult,
+    shm::ChunkDescriptor, shm::DynamicProtocolID, shm::MemoryLayout, shm::PosixShmProviderBackend,
+    shm::ProtocolID, shm::ShmClient, shm::ShmClientStorage, shm::ShmProvider,
+    shm::ShmProviderBackend, shm::StaticProtocolID, shm::ZShm, shm::ZShmMut,
+    shm::POSIX_PROTOCOL_ID,
 };
 
 #[macro_export]
@@ -43,9 +36,8 @@ macro_rules! get_opaque_type_data {
             const DST_NAME: &str = stringify!($name);
             const ALIGN: usize = std::mem::align_of::<$src_type>();
             const SIZE: usize = std::mem::size_of::<$src_type>();
-            const INFO_MESSAGE: &str = concatcp!(
-                "type: ", DST_NAME, ", align: ", ALIGN, ", size: ", SIZE
-            );
+            const INFO_MESSAGE: &str =
+                concatcp!("type: ", DST_NAME, ", align: ", ALIGN, ", size: ", SIZE);
             panic!("{}", INFO_MESSAGE);
         };
     };
@@ -140,9 +132,15 @@ get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
 ///
 /// In addition to receiving the data it is subscribed to,
 /// it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get()`).
-get_opaque_type_data!(Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>, ze_owned_querying_subscriber_t);
+get_opaque_type_data!(
+    Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
+    ze_owned_querying_subscriber_t
+);
 /// A loaned Zenoh querying subscriber.
-get_opaque_type_data!((zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session), ze_loaned_querying_subscriber_t);
+get_opaque_type_data!(
+    (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
+    ze_loaned_querying_subscriber_t
+);
 
 /// A Zenoh-allocated <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
@@ -204,8 +202,10 @@ get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
 /// Dropping the corresponding publisher, also drops matching listener.
-get_opaque_type_data!(Option<MatchingListener<'static, ()>>, zcu_owned_matching_listener_t);
-
+get_opaque_type_data!(
+    Option<MatchingListener<'static, ()>>,
+    zcu_owned_matching_listener_t
+);
 
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
 ///
@@ -220,21 +220,36 @@ get_opaque_type_data!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 /// expressions.
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
-get_opaque_type_data!(Option<LivelinessToken<'static>>, zc_owned_liveliness_token_t);
+get_opaque_type_data!(
+    Option<LivelinessToken<'static>>,
+    zc_owned_liveliness_token_t
+);
 get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 
 /// An owned Zenoh publication cache.
 ///
 /// Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
 /// (for example by `ze_owned_querying_subscriber_t`).
-get_opaque_type_data!(Option<zenoh_ext::PublicationCache<'static>>, ze_owned_publication_cache_t);
+get_opaque_type_data!(
+    Option<zenoh_ext::PublicationCache<'static>>,
+    ze_owned_publication_cache_t
+);
 /// A loaned Zenoh publication cache.
-get_opaque_type_data!(zenoh_ext::PublicationCache<'static>, ze_loaned_publication_cache_t);
+get_opaque_type_data!(
+    zenoh_ext::PublicationCache<'static>,
+    ze_loaned_publication_cache_t
+);
 
 /// An owned mutex.
-get_opaque_type_data!(Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>, z_owned_mutex_t);
+get_opaque_type_data!(
+    Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>,
+    z_owned_mutex_t
+);
 /// A loaned mutex.
-get_opaque_type_data!((Mutex<()>, Option<MutexGuard<'static, ()>>), z_loaned_mutex_t);
+get_opaque_type_data!(
+    (Mutex<()>, Option<MutexGuard<'static, ()>>),
+    z_loaned_mutex_t
+);
 
 /// An owned conditional variable.
 ///
@@ -255,13 +270,18 @@ get_opaque_type_data!(Hello, z_loaned_hello_t);
 /// An owned SHM Client
 get_opaque_type_data!(Option<Arc<dyn ShmClient>>, z_owned_shm_client_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned list of SHM Clients
-get_opaque_type_data!(Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>, zc_owned_shm_client_list_t);
+get_opaque_type_data!(
+    Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,
+    zc_owned_shm_client_list_t
+);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// A loaned list of SHM Clients
-get_opaque_type_data!(Vec<(ProtocolID, Arc<dyn ShmClient>)>, zc_loaned_shm_client_list_t);
+get_opaque_type_data!(
+    Vec<(ProtocolID, Arc<dyn ShmClient>)>,
+    zc_loaned_shm_client_list_t
+);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned SHM Client Storage
@@ -349,7 +369,7 @@ impl ShmProviderBackend for DummySHMProviderBackend {
         todo!()
     }
 
-    fn layout_for(&self, layout: MemoryLayout) -> zenoh::core::Result<MemoryLayout> {
+    fn layout_for(&self, layout: MemoryLayout) -> zenoh::Result<MemoryLayout> {
         todo!()
     }
 }
@@ -358,14 +378,13 @@ impl ShmProviderBackend for DummySHMProviderBackend {
 type DummySHMProvider = ShmProvider<DynamicProtocolID, DummySHMProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type PosixSHMProvider =
-    ShmProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
+type PosixSHMProvider = ShmProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 enum CDummySHMProvider {
     Posix(PosixSHMProvider),
     Dynamic(DummySHMProvider),
-} 
+}
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned ShmProvider
@@ -374,9 +393,9 @@ get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shm_provider_t);
 /// A loaned ShmProvider
 get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
 
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type PosixAllocLayout = AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
+type PosixAllocLayout =
+    AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 type DummyDynamicAllocLayout = AllocLayout<'static, DynamicProtocolID, DummySHMProviderBackend>;
@@ -395,12 +414,18 @@ get_opaque_type_data!(Option<CSHMLayout>, z_owned_alloc_layout_t);
 get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
 
 /// An owned Zenoh fifo sample handler.
-get_opaque_type_data!(Option<flume::Receiver<Sample>>, z_owned_fifo_handler_sample_t);
+get_opaque_type_data!(
+    Option<flume::Receiver<Sample>>,
+    z_owned_fifo_handler_sample_t
+);
 /// An loaned Zenoh fifo sample handler.
 get_opaque_type_data!(flume::Receiver<Sample>, z_loaned_fifo_handler_sample_t);
 
 /// An owned Zenoh ring sample handler.
-get_opaque_type_data!(Option<RingChannelHandler<Sample>>, z_owned_ring_handler_sample_t);
+get_opaque_type_data!(
+    Option<RingChannelHandler<Sample>>,
+    z_owned_ring_handler_sample_t
+);
 /// An loaned Zenoh ring sample handler.
 get_opaque_type_data!(RingChannelHandler<Sample>, z_loaned_ring_handler_sample_t);
 
@@ -410,7 +435,10 @@ get_opaque_type_data!(Option<flume::Receiver<Query>>, z_owned_fifo_handler_query
 get_opaque_type_data!(flume::Receiver<Query>, z_loaned_fifo_handler_query_t);
 
 /// An owned Zenoh ring query handler.
-get_opaque_type_data!(Option<RingChannelHandler<Query>>, z_owned_ring_handler_query_t);
+get_opaque_type_data!(
+    Option<RingChannelHandler<Query>>,
+    z_owned_ring_handler_query_t
+);
 /// An loaned Zenoh ring query handler.
 get_opaque_type_data!(RingChannelHandler<Query>, z_loaned_ring_handler_query_t);
 
@@ -420,7 +448,10 @@ get_opaque_type_data!(Option<flume::Receiver<Reply>>, z_owned_fifo_handler_reply
 get_opaque_type_data!(flume::Receiver<Reply>, z_loaned_fifo_handler_reply_t);
 
 /// An owned Zenoh ring reply handler.
-get_opaque_type_data!(Option<RingChannelHandler<Reply>>, z_owned_ring_handler_reply_t);
+get_opaque_type_data!(
+    Option<RingChannelHandler<Reply>>,
+    z_owned_ring_handler_reply_t
+);
 /// An loaned Zenoh ring reply handler.
 get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
 

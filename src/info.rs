@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use zenoh::{core::Wait, info::ZenohId, session::SessionDeclarations};
+use zenoh::{prelude::*, session::ZenohId};
 
 pub use crate::opaque_types::z_id_t;
 use crate::{

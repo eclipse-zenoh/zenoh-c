@@ -42,15 +42,16 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_id_t self_id;
     self_id.id[0] = TEST_ID;
 
-    z_entity_global_id_t entity_global_id;
-    z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
-    z_owned_source_info_t source_info;
-    z_source_info_new(&source_info, &entity_global_id, TEST_SN);
+    // See https://github.com/eclipse-zenoh/zenoh/issues/1203
+    // z_entity_global_id_t entity_global_id;
+    // z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
+    // z_owned_source_info_t source_info;
+    // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
     z_timestamp_t ts;
     z_timestamp_new(&ts, &self_id, TEST_TS + value_num);
 
-    options.source_info = z_move(source_info);
+    // options.source_info = z_move(source_info);
     options.timestamp = &ts;
 
     z_owned_bytes_t payload;
@@ -132,17 +133,18 @@ int run_get() {
                 perror("Unexpected null source_info");
                 exit(-1);
             }
-            const uint64_t sn = z_source_info_sn(source_info);
-            if (sn != TEST_SN) {
-                perror("Unexpected sn value");
-                exit(-1);
-            }
-            const z_entity_global_id_t id = z_source_info_id(source_info);
-            uint32_t eid = z_entity_global_id_eid(&id);
-            if (eid != TEST_EID) {
-                perror("Unexpected eid value");
-                exit(-1);
-            }
+            // See https://github.com/eclipse-zenoh/zenoh/issues/1203
+            // const uint64_t sn = z_source_info_sn(source_info);
+            // if (sn != TEST_SN) {
+            //     perror("Unexpected sn value");
+            //     exit(-1);
+            // }
+            // const z_entity_global_id_t id = z_source_info_id(source_info);
+            // uint32_t eid = z_entity_global_id_eid(&id);
+            // if (eid != TEST_EID) {
+            //     perror("Unexpected eid value");
+            //     exit(-1);
+            // }
 
             const z_timestamp_t *ts = z_sample_timestamp(sample);
             if (ts == NULL) {
@@ -155,18 +157,19 @@ int run_get() {
                 exit(-1);
             }
 
-            z_id_t ts_id = z_timestamp_id(ts);
-            z_id_t gloabl_id = z_entity_global_id_zid(&id);
-
-            if (memcmp(ts_id.id, gloabl_id.id, sizeof(ts_id.id)) != 0) {
-                perror("Timestamp id and global id differ");
-                exit(-1);
-            }
-
-            if (ts_id.id[0] != TEST_ID) {
-                perror("Unexpected id value");
-                exit(-1);
-            }
+            // See https://github.com/eclipse-zenoh/zenoh/issues/1203
+            // z_id_t ts_id = z_timestamp_id(ts);
+            // z_id_t gloabl_id = z_entity_global_id_zid(&id);
+            //
+            // if (memcmp(ts_id.id, gloabl_id.id, sizeof(ts_id.id)) != 0) {
+            //     perror("Timestamp id and global id differ");
+            //     exit(-1);
+            // }
+            //
+            // if (ts_id.id[0] != TEST_ID) {
+            //     perror("Unexpected id value");
+            //     exit(-1);
+            // }
 
             z_drop(z_move(payload_string));
             z_drop(z_move(reply));

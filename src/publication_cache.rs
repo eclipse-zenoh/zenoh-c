@@ -70,7 +70,7 @@ moved(ze_moved_publication_cache_t)
 
 /// Constructs and declares a publication cache.
 ///
-/// @param this_: An unitialized location in memory where publication cache will be constructed.
+/// @param this_: An uninitialized location in memory where publication cache will be constructed.
 /// @param session: A Zenoh session.
 /// @param key_expr: The key expression to publish to.
 /// @param options: Additional options for the publication cache.
