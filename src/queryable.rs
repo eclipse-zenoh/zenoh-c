@@ -11,30 +11,27 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{
-    IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
+use std::mem::MaybeUninit;
+
+use zenoh::{
+    core::{Priority, Wait},
+    encoding::Encoding,
+    prelude::SessionDeclarations,
+    publisher::CongestionControl,
+    query::Query,
+    queryable::Queryable,
+    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
 };
+
+pub use crate::opaque_types::{z_loaned_queryable_t, z_moved_queryable_t, z_owned_queryable_t};
 use crate::{
-    errors, z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
+    errors,
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_source_info_t, z_priority_t,
     z_timestamp_t, z_view_string_from_substr, z_view_string_t,
 };
-use std::mem::MaybeUninit;
-use zenoh::core::Priority;
-use zenoh::core::Wait;
-use zenoh::encoding::Encoding;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::publisher::CongestionControl;
-use zenoh::query::Query;
-use zenoh::queryable::Queryable;
-use zenoh::sample::{
-    EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait,
-};
-
-pub use crate::opaque_types::z_loaned_queryable_t;
-pub use crate::opaque_types::z_moved_queryable_t;
-pub use crate::opaque_types::z_owned_queryable_t;
 decl_c_type!(
     owned(z_owned_queryable_t, option Queryable<'static, ()>),
     loaned(z_loaned_queryable_t),
@@ -57,9 +54,7 @@ pub unsafe extern "C" fn z_queryable_loan(this: &z_owned_queryable_t) -> &z_loan
         .as_loaned_c_type_ref()
 }
 
-pub use crate::opaque_types::z_loaned_query_t;
-pub use crate::opaque_types::z_moved_query_t;
-pub use crate::opaque_types::z_owned_query_t;
+pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
     owned(z_owned_query_t, option Query),
     loaned(z_loaned_query_t),

@@ -12,20 +12,21 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::{
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
-};
-use libc::c_void;
 use std::{mem::MaybeUninit, sync::Arc};
+
+use libc::c_void;
 use zenoh::{
     handlers::{self, IntoHandler, RingChannelHandler},
     sample::Sample,
 };
 
-pub use crate::opaque_types::z_loaned_fifo_handler_sample_t;
-pub use crate::opaque_types::z_moved_fifo_handler_sample_t;
-pub use crate::opaque_types::z_owned_fifo_handler_sample_t;
+pub use crate::opaque_types::{
+    z_loaned_fifo_handler_sample_t, z_moved_fifo_handler_sample_t, z_owned_fifo_handler_sample_t,
+};
+use crate::{
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
+};
 decl_c_type!(
     owned(z_owned_fifo_handler_sample_t, option flume::Receiver<Sample >),
     loaned(z_loaned_fifo_handler_sample_t),
@@ -140,9 +141,9 @@ pub extern "C" fn z_fifo_handler_sample_try_recv(
     }
 }
 
-pub use crate::opaque_types::z_loaned_ring_handler_sample_t;
-pub use crate::opaque_types::z_moved_ring_handler_sample_t;
-pub use crate::opaque_types::z_owned_ring_handler_sample_t;
+pub use crate::opaque_types::{
+    z_loaned_ring_handler_sample_t, z_moved_ring_handler_sample_t, z_owned_ring_handler_sample_t,
+};
 decl_c_type!(
     owned(
         z_owned_ring_handler_sample_t,

@@ -14,22 +14,20 @@
 use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
-use zenoh::core::Result;
-use zenoh::internal::bail;
-use zenoh::shm::{SegmentID, ShmClient, ShmSegment};
-
-use crate::context::DroppableContext;
-use crate::transmute::{RustTypeRef, RustTypeRefUninit};
-use crate::{
-    context::{zc_threadsafe_context_t, ThreadsafeContext},
-    errors,
-    shm::common::types::z_segment_id_t,
+use zenoh::{
+    core::Result,
+    internal::bail,
+    shm::{SegmentID, ShmClient, ShmSegment},
 };
 
-pub use crate::opaque_types::z_moved_shm_client_t;
-pub use crate::opaque_types::z_owned_shm_client_t;
-
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
+pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
+use crate::{
+    context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
+    errors,
+    shm::common::types::z_segment_id_t,
+    transmute::{RustTypeRef, RustTypeRefUninit},
+};
 
 /// A callbacks for ShmClient
 #[derive(Debug)]

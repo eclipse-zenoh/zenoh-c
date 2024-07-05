@@ -14,19 +14,20 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::internal::zerror;
-use zenoh::shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError};
+use zenoh::{
+    internal::zerror,
+    shm::{AllocAlignment, BufAllocResult, ChunkAllocResult, MemoryLayout, ZAllocError},
+};
 
-use crate::transmute::{IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use super::chunk::z_allocated_chunk_t;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
+    transmute::{IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_buf_alloc_result_t, z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t,
     z_moved_buf_alloc_result_t, z_moved_chunk_alloc_result_t, z_moved_memory_layout_t,
     z_owned_buf_alloc_result_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
 };
-
-use super::chunk::z_allocated_chunk_t;
 
 /// Allocation errors
 ///

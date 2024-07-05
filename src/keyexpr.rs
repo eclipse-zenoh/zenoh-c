@@ -11,29 +11,24 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::errors;
-use crate::errors::z_error_t;
-use crate::errors::Z_OK;
-use crate::transmute::IntoRustType;
-use crate::transmute::LoanedCTypeRef;
-use crate::transmute::RustTypeRef;
-use crate::transmute::RustTypeRefUninit;
-use crate::z_loaned_session_t;
-use crate::z_view_string_from_substr;
-use crate::z_view_string_t;
+use std::{error::Error, mem::MaybeUninit};
+
 use libc::c_char;
-use std::error::Error;
-use std::mem::MaybeUninit;
-use zenoh::core::Wait;
-use zenoh::key_expr::keyexpr;
-use zenoh::key_expr::KeyExpr;
-use zenoh::key_expr::SetIntersectionLevel;
+use zenoh::{
+    core::Wait,
+    key_expr::{keyexpr, KeyExpr, SetIntersectionLevel},
+};
 use zenoh_protocol::core::key_expr::canon::Canonizable;
 
-pub use crate::opaque_types::z_loaned_keyexpr_t;
-pub use crate::opaque_types::z_moved_keyexpr_t;
-pub use crate::opaque_types::z_owned_keyexpr_t;
-pub use crate::opaque_types::z_view_keyexpr_t;
+pub use crate::opaque_types::{
+    z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
+};
+use crate::{
+    errors,
+    errors::{z_error_t, Z_OK},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
+};
 decl_c_type! {
     owned(z_owned_keyexpr_t, option KeyExpr<'static>),
     loaned(z_loaned_keyexpr_t),

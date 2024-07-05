@@ -12,17 +12,21 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::mem::MaybeUninit;
-use std::ops::{Deref, DerefMut};
-use std::ptr::{null, slice_from_raw_parts};
-use std::slice::from_raw_parts;
+use std::{
+    collections::HashMap,
+    hash::Hash,
+    mem::MaybeUninit,
+    ops::{Deref, DerefMut},
+    ptr::{null, slice_from_raw_parts},
+    slice::from_raw_parts,
+};
 
 use libc::{c_char, c_void, strlen};
 
-use crate::errors::{self, z_error_t};
-use crate::transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
+use crate::{
+    errors::{self, z_error_t},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+};
 
 pub struct CSlice(*const u8, isize);
 #[derive(Default, Clone)]
@@ -200,10 +204,7 @@ impl From<Vec<u8>> for CSlice {
 
 impl std::cmp::Eq for CSlice {}
 
-pub use crate::opaque_types::z_loaned_slice_t;
-pub use crate::opaque_types::z_moved_slice_t;
-pub use crate::opaque_types::z_owned_slice_t;
-pub use crate::opaque_types::z_view_slice_t;
+pub use crate::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t};
 
 decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
@@ -373,10 +374,9 @@ pub extern "C" fn z_slice_is_empty(this: &z_loaned_slice_t) -> bool {
     this.as_rust_type_ref().is_empty()
 }
 
-pub use crate::opaque_types::z_loaned_string_t;
-pub use crate::opaque_types::z_moved_string_t;
-pub use crate::opaque_types::z_owned_string_t;
-pub use crate::opaque_types::z_view_string_t;
+pub use crate::opaque_types::{
+    z_loaned_string_t, z_moved_string_t, z_owned_string_t, z_view_string_t,
+};
 
 #[derive(Default)]
 pub struct CString(CSlice);
@@ -634,9 +634,7 @@ pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
     this.as_rust_type_ref().is_empty()
 }
 
-pub use crate::opaque_types::z_loaned_slice_map_t;
-pub use crate::opaque_types::z_moved_slice_map_t;
-pub use crate::opaque_types::z_owned_slice_map_t;
+pub use crate::opaque_types::{z_loaned_slice_map_t, z_moved_slice_map_t, z_owned_slice_map_t};
 pub type ZHashMap = HashMap<CSlice, CSlice>;
 decl_c_type!(
     owned(z_owned_slice_map_t, option ZHashMap),
@@ -777,9 +775,9 @@ pub extern "C" fn z_slice_map_insert_by_alias(
     }
 }
 
-pub use crate::opaque_types::z_loaned_string_array_t;
-pub use crate::opaque_types::z_moved_string_array_t;
-pub use crate::opaque_types::z_owned_string_array_t;
+pub use crate::opaque_types::{
+    z_loaned_string_array_t, z_moved_string_array_t, z_owned_string_array_t,
+};
 pub type ZVector = Vec<CString>;
 decl_c_type!(
     owned(z_owned_string_array_t, option ZVector),

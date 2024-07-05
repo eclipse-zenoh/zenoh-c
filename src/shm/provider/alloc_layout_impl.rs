@@ -15,23 +15,24 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
-use zenoh::shm::{
-    AllocLayout, AllocPolicy, DynamicProtocolID, PosixShmProviderBackend, ProtocolIDSource,
-    ShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
+use zenoh::{
+    prelude::*,
+    shm::{
+        AllocLayout, AllocPolicy, AsyncAllocPolicy, DynamicProtocolID, PosixShmProviderBackend,
+        ProtocolIDSource, ShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
+    },
 };
-use zenoh::{prelude::*, shm::AsyncAllocPolicy};
-
-use crate::transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit};
-use crate::{
-    context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
-    errors::{z_error_t, Z_EINVAL, Z_OK},
-    z_owned_buf_alloc_result_t,
-};
-use crate::{z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t};
 
 use super::{
     alloc_layout::CSHMLayout, shm_provider_backend::DynamicShmProviderBackend,
     types::z_alloc_alignment_t,
+};
+use crate::{
+    context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
+    errors::{z_error_t, Z_EINVAL, Z_OK},
+    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
+    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
+    z_owned_buf_alloc_result_t,
 };
 
 pub(crate) fn alloc_layout_new(

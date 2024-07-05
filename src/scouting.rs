@@ -11,21 +11,20 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use std::mem::MaybeUninit;
+
+use async_std::task;
+use libc::c_ulong;
+use zenoh::scouting::Hello;
+use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
+
+pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     errors::{self, Z_OK},
     transmute::{IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
-use async_std::task;
-use libc::c_ulong;
-use std::mem::MaybeUninit;
-use zenoh::scouting::Hello;
-use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
-
-pub use crate::opaque_types::z_loaned_hello_t;
-pub use crate::opaque_types::z_moved_hello_t;
-pub use crate::opaque_types::z_owned_hello_t;
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
     loaned(z_loaned_hello_t),

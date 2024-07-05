@@ -12,19 +12,18 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit};
-use crate::{errors, z_moved_config_t, zc_init_logger};
-use std::mem::MaybeUninit;
-use std::sync::Arc;
-use zenoh::core::Wait;
-use zenoh::session::Session;
+use std::{mem::MaybeUninit, sync::Arc};
+
+use zenoh::{core::Wait, session::Session};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::z_loaned_shm_client_storage_t;
-
-use crate::opaque_types::z_loaned_session_t;
-use crate::opaque_types::z_moved_session_t;
-use crate::opaque_types::z_owned_session_t;
+use crate::{
+    errors,
+    opaque_types::{z_loaned_session_t, z_moved_session_t, z_owned_session_t},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_moved_config_t, zc_init_logger,
+};
 decl_c_type!(
     owned(z_owned_session_t, option Arc<Session>),
     loaned(z_loaned_session_t),

@@ -1,5 +1,11 @@
 use std::mem::MaybeUninit;
 
+use zenoh::{
+    core::{Priority, Wait},
+    publisher::CongestionControl,
+    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+};
+
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -14,21 +20,12 @@ use std::mem::MaybeUninit;
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::commons::*;
-use crate::errors;
-use crate::keyexpr::*;
-use crate::transmute::IntoRustType;
-use crate::transmute::RustTypeRef;
-use crate::transmute::TakeRustType;
-use crate::z_loaned_session_t;
-use crate::z_moved_bytes_t;
-use crate::z_timestamp_t;
-use zenoh::core::Priority;
-use zenoh::core::Wait;
-use zenoh::publisher::CongestionControl;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::TimestampBuilderTrait;
+use crate::{
+    errors,
+    keyexpr::*,
+    transmute::{IntoRustType, RustTypeRef, TakeRustType},
+    z_loaned_session_t, z_moved_bytes_t, z_timestamp_t,
+};
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]

@@ -12,41 +12,34 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::errors;
-use crate::transmute::IntoRustType;
-use crate::transmute::LoanedCTypeRef;
-use crate::transmute::RustTypeRef;
-use crate::transmute::RustTypeRefUninit;
-use crate::transmute::TakeRustType;
-use crate::z_id_t;
-use crate::z_moved_bytes_t;
-use crate::z_moved_closure_reply_t;
-use crate::z_moved_encoding_t;
-use crate::z_moved_source_info_t;
-use crate::{
-    z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
-    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_priority_t, z_query_target_t, zcu_locality_default, zcu_locality_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
+use std::{
+    ffi::CStr,
+    mem::MaybeUninit,
+    ops::{Deref, DerefMut},
+    ptr::null,
 };
+
 use ::zenoh::core::Wait;
 use libc::c_char;
-use std::ffi::CStr;
-use std::mem::MaybeUninit;
-use std::ops::Deref;
-use std::ops::DerefMut;
-use std::ptr::null;
-use zenoh::bytes::ZBytes;
-use zenoh::core::Priority;
-use zenoh::encoding::Encoding;
-use zenoh::query::ReplyError;
-use zenoh::query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply};
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::selector::Selector;
-use zenoh_protocol::core::CongestionControl;
-use zenoh_protocol::core::ZenohIdProto;
+use zenoh::{
+    bytes::ZBytes,
+    core::Priority,
+    encoding::Encoding,
+    query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError},
+    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait},
+    selector::Selector,
+};
+use zenoh_protocol::core::{CongestionControl, ZenohIdProto};
+
+use crate::{
+    errors,
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
+    z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
+    z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t,
+    z_moved_source_info_t, z_priority_t, z_query_target_t, zcu_locality_default, zcu_locality_t,
+    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
+};
 
 // we need to add Default to ReplyError
 #[repr(transparent)]
@@ -74,9 +67,7 @@ impl From<&ReplyError> for &ReplyErrorNewtype {
     }
 }
 
-pub use crate::opaque_types::z_loaned_reply_err_t;
-pub use crate::opaque_types::z_moved_reply_err_t;
-pub use crate::opaque_types::z_owned_reply_err_t;
+pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyErrorNewtype),
     loaned(z_loaned_reply_err_t, ReplyErrorNewtype),
@@ -120,9 +111,7 @@ pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_repl
 #[allow(unused_variables)]
 pub extern "C" fn z_reply_err_drop(this: z_moved_reply_err_t) {}
 
-pub use crate::opaque_types::z_loaned_reply_t;
-pub use crate::opaque_types::z_moved_reply_t;
-pub use crate::opaque_types::z_owned_reply_t;
+pub use crate::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
 decl_c_type!(
     owned(z_owned_reply_t, option Reply),
     loaned(z_loaned_reply_t),

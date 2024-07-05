@@ -20,6 +20,12 @@ use zenoh::shm::{
     ShmProviderBuilder,
 };
 
+use super::{
+    chunk::z_allocated_chunk_t,
+    shm_provider_backend::{zc_shm_provider_backend_callbacks_t, DynamicShmProviderBackend},
+    shm_provider_impl::{alloc, alloc_async, available, defragment, garbage_collect, map},
+    types::z_alloc_alignment_t,
+};
 use crate::{
     context::{zc_context_t, zc_threadsafe_context_t, Context, ThreadsafeContext},
     errors::z_error_t,
@@ -30,13 +36,6 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t,
     z_owned_shm_provider_t,
-};
-
-use super::{
-    chunk::z_allocated_chunk_t,
-    shm_provider_backend::{zc_shm_provider_backend_callbacks_t, DynamicShmProviderBackend},
-    shm_provider_impl::{alloc, alloc_async, available, defragment, garbage_collect, map},
-    types::z_alloc_alignment_t,
 };
 
 pub type DynamicShmProvider = ShmProvider<DynamicProtocolID, DynamicShmProviderBackend<Context>>;

@@ -12,6 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use std::{mem::MaybeUninit, sync::Arc};
+
+use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
+
 use super::common::types::z_protocol_id_t;
 use crate::{
     errors::{z_error_t, Z_EINVAL, Z_OK},
@@ -20,8 +24,6 @@ use crate::{
     z_owned_shm_client_storage_t, zc_loaned_shm_client_list_t, zc_moved_shm_client_list_t,
     zc_owned_shm_client_list_t,
 };
-use std::{mem::MaybeUninit, sync::Arc};
-use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
 decl_c_type!(
     owned(zc_owned_shm_client_list_t, option Vec<(ProtocolID, Arc<dyn ShmClient>)>),

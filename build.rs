@@ -1,16 +1,15 @@
-use fs2::FileExt;
-use regex::Regex;
-use std::collections::HashSet;
-use std::env;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::process::{Command, Stdio};
 use std::{
     borrow::Cow,
-    collections::HashMap,
-    io::BufWriter,
+    collections::{HashMap, HashSet},
+    env,
+    fs::File,
+    io::{BufWriter, Read, Write},
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
+
+use fs2::FileExt;
+use regex::Regex;
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
 const PREPROCESS_PATH: &str = "include/zenoh-cpp.h";

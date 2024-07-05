@@ -11,15 +11,14 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::transmute::{CTypeRef, IntoCType, IntoRustType, RustTypeRef};
-use crate::{
-    errors, z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
-};
-use zenoh::core::Wait;
-use zenoh::info::ZenohId;
-use zenoh::session::SessionDeclarations;
+use zenoh::{core::Wait, info::ZenohId, session::SessionDeclarations};
 
 pub use crate::opaque_types::z_id_t;
+use crate::{
+    errors,
+    transmute::{CTypeRef, IntoCType, IntoRustType, RustTypeRef},
+    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
+};
 decl_c_type!(copy(z_id_t, ZenohId));
 
 impl From<[u8; 16]> for z_id_t {

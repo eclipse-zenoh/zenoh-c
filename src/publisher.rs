@@ -12,34 +12,25 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::errors;
-use crate::transmute::IntoCType;
-use crate::transmute::IntoRustType;
-use crate::transmute::LoanedCTypeRef;
-use crate::transmute::RustTypeRef;
-use crate::transmute::RustTypeRefUninit;
-use crate::transmute::TakeRustType;
-use crate::z_entity_global_id_t;
-use crate::z_moved_bytes_t;
-use crate::z_moved_encoding_t;
-use crate::z_moved_source_info_t;
-use crate::z_timestamp_t;
-use crate::zcu_closure_matching_status_call;
-use crate::zcu_closure_matching_status_loan;
-use crate::zcu_locality_default;
-use crate::zcu_locality_t;
-use crate::zcu_moved_closure_matching_status_t;
 use std::mem::MaybeUninit;
-use zenoh::core::Wait;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::publisher::CongestionControl;
-use zenoh::sample::EncodingBuilderTrait;
-use zenoh::sample::QoSBuilderTrait;
-use zenoh::sample::SampleBuilderTrait;
-use zenoh::sample::TimestampBuilderTrait;
-use zenoh::{core::Priority, publisher::MatchingListener, publisher::Publisher};
 
-use crate::{z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_priority_t};
+use zenoh::{
+    core::{Priority, Wait},
+    prelude::SessionDeclarations,
+    publisher::{CongestionControl, MatchingListener, Publisher},
+    sample::{EncodingBuilderTrait, QoSBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+};
+
+use crate::{
+    errors,
+    transmute::{
+        IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
+    },
+    z_congestion_control_t, z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_moved_bytes_t, z_moved_encoding_t, z_moved_source_info_t, z_priority_t, z_timestamp_t,
+    zcu_closure_matching_status_call, zcu_closure_matching_status_loan, zcu_locality_default,
+    zcu_locality_t, zcu_moved_closure_matching_status_t,
+};
 
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
@@ -65,9 +56,7 @@ pub extern "C" fn z_publisher_options_default(this: &mut MaybeUninit<z_publisher
     });
 }
 
-pub use crate::opaque_types::z_loaned_publisher_t;
-pub use crate::opaque_types::z_moved_publisher_t;
-pub use crate::opaque_types::z_owned_publisher_t;
+pub use crate::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t};
 
 decl_c_type!(
     owned(z_owned_publisher_t, option Publisher<'static>),
@@ -283,8 +272,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
         .as_loaned_c_type_ref()
 }
 
-pub use crate::opaque_types::zcu_moved_matching_listener_t;
-pub use crate::opaque_types::zcu_owned_matching_listener_t;
+pub use crate::opaque_types::{zcu_moved_matching_listener_t, zcu_owned_matching_listener_t};
 decl_c_type!(
     owned(zcu_owned_matching_listener_t, option MatchingListener<'static, ()>),
     moved(zcu_moved_matching_listener_t)
