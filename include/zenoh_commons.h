@@ -2611,11 +2611,6 @@ ZENOHC_API void z_reply_null(struct z_owned_reply_t *this_);
  */
 ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *this_);
 /**
- * Gets the id of the zenoh instance that answered this Reply.
- * Returns `true` if id is present
- */
-ZENOHC_API bool z_reply_replier_id(const struct z_loaned_reply_t *this_, struct z_id_t *out_id);
-/**
  * Constructs send and recieve ends of the ring channel
  */
 ZENOHC_API
@@ -3671,6 +3666,7 @@ z_error_t z_view_string_wrap(struct z_view_string_t *this_,
  * The string has static storage (i.e. valid until the end of the program).
  * @param whatami: A whatami bitmask of zenoh entity kind.
  * @param str_out: An uninitialized memory location where strring will be constructed.
+ * @param len: Maximum number of bytes that can be written to the `buf`.
  *
  * @return 0 if successful, negative error values if whatami contains an invalid bitmask.
  */
@@ -3927,6 +3923,11 @@ z_error_t zcu_publisher_matching_listener_undeclare(struct zcu_owned_matching_li
  * Returns the default value of #zcu_reply_keyexpr_t.
  */
 ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
+/**
+ * Gets the id of the zenoh instance that answered this Reply.
+ * Returns `true` if id is present
+ */
+ZENOHC_API bool zcu_reply_replier_id(const struct z_loaned_reply_t *this_, struct z_id_t *out_id);
 /**
  * Constructs and declares a publication cache.
  *

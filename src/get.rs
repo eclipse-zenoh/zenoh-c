@@ -159,7 +159,7 @@ pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned
 /// Returns `true` if id is present
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_replier_id(
+pub unsafe extern "C" fn zcu_reply_replier_id(
     this: &z_loaned_reply_t,
     out_id: &mut MaybeUninit<z_id_t>,
 ) -> bool {
