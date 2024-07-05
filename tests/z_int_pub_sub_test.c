@@ -58,6 +58,7 @@ int run_publisher() {
     }
 
     for (int i = 0; i < values_count; ++i) {
+        // See https://github.com/eclipse-zenoh/zenoh/issues/1203
         // z_entity_global_id_t entity_global_id;
         // z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
         // z_owned_source_info_t source_info;
@@ -110,6 +111,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected null source_info");
         exit(-1);
     }
+    // See https://github.com/eclipse-zenoh/zenoh/issues/1203
     // const uint64_t sn = z_source_info_sn(source_info);
     // if (sn != TEST_SN) {
     //     perror("Unexpected sn value");
@@ -133,6 +135,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         exit(-1);
     }
 
+    // See https://github.com/eclipse-zenoh/zenoh/issues/1203
     // z_id_t ts_id = z_timestamp_id(ts);
     // z_id_t gloabl_id = z_entity_global_id_zid(&id);
     //
