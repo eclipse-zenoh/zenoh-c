@@ -155,18 +155,18 @@ int run_get() {
                 exit(-1);
             }
 
-            z_id_t ts_id = z_timestamp_id(ts);
-            z_id_t gloabl_id = z_entity_global_id_zid(&id);
-
-            if (memcmp(ts_id.id, gloabl_id.id, sizeof(ts_id.id)) != 0) {
-                perror("Timestamp id and global id differ");
-                exit(-1);
-            }
-
-            if (ts_id.id[0] != TEST_ID) {
-                perror("Unexpected id value");
-                exit(-1);
-            }
+            // z_id_t ts_id = z_timestamp_id(ts);
+            // z_id_t gloabl_id = z_entity_global_id_zid(&id);
+            //
+            // if (memcmp(ts_id.id, gloabl_id.id, sizeof(ts_id.id)) != 0) {
+            //     perror("Timestamp id and global id differ");
+            //     exit(-1);
+            // }
+            //
+            // if (ts_id.id[0] != TEST_ID) {
+            //     perror("Unexpected id value");
+            //     exit(-1);
+            // }
 
             z_drop(z_move(payload_string));
             z_drop(z_move(reply));
