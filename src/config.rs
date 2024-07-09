@@ -17,8 +17,7 @@ use libc::{c_char, c_uint};
 use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
 
 use crate::{
-    errors,
-    errors::z_error_t,
+    errors::{self, z_error_t, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_owned_string_t, z_string_from_substr, z_string_null,
 };
@@ -87,9 +86,10 @@ pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_loane
 
 /// Constructs a new empty configuration.
 #[no_mangle]
-pub extern "C" fn z_config_default(this: &mut MaybeUninit<z_owned_config_t>) {
+pub extern "C" fn z_config_default(this: &mut MaybeUninit<z_owned_config_t>) -> errors::z_error_t {
     this.as_rust_type_mut_uninit()
         .write(Some(Config::default()));
+    return Z_OK;
 }
 
 /// Constructs config in its gravestone state.
@@ -297,9 +297,10 @@ pub unsafe extern "C" fn zc_config_from_file(
 /// Constructs a default peer mode configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_config_peer(this: &mut MaybeUninit<z_owned_config_t>) {
+pub extern "C" fn z_config_peer(this: &mut MaybeUninit<z_owned_config_t>) -> errors::z_error_t {
     this.as_rust_type_mut_uninit()
         .write(Some(zenoh::config::peer()));
+    return Z_OK;
 }
 
 /// Constructs a default, zenoh-allocated, client mode configuration.
