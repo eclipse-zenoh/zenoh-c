@@ -156,7 +156,7 @@ pub extern "C" fn z_session_drop(this: &mut z_owned_session_t) {
 /// Constructs an owned shallow copy of the session in provided uninitialized memory location.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_session_clone(
+pub extern "C" fn z_session_clone(
     dst: &mut MaybeUninit<z_owned_session_t>,
     this: &z_loaned_session_t,
 ) {

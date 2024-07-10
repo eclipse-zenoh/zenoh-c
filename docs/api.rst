@@ -452,7 +452,7 @@ Functions
 .. doxygenfunction:: z_session_null
 .. doxygenfunction:: z_session_drop
 
-.. doxygenfunction:: zc_session_clone
+.. doxygenfunction:: z_session_clone
 
 .. doxygenfunction:: z_info_zid
 .. doxygenfunction:: z_info_routers_zid

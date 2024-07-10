@@ -167,14 +167,19 @@ typedef enum z_sample_kind_t {
    */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
+typedef enum z_what_t {
+  Z_WHAT_ROUTER = 1,
+  Z_WHAT_PEER = 2,
+  Z_WHAT_CLIENT = 4,
+  Z_WHAT_ROUTER_PEER = (1 | 2),
+  Z_WHAT_ROUTER_CLIENT = (1 | 4),
+  Z_WHAT_PEER_CLIENT = (2 | 4),
+  Z_WHAT_ROUTER_PEER_CLIENT = ((1 | 2) | 4),
+} z_what_t;
 typedef enum z_whatami_t {
   Z_WHATAMI_ROUTER = 1,
   Z_WHATAMI_PEER = 2,
   Z_WHATAMI_CLIENT = 4,
-  Z_WHATAMI_ROUTER_PEER = (1 | 2),
-  Z_WHATAMI_ROUTER_CLIENT = (1 | 4),
-  Z_WHATAMI_PEER_CLIENT = (2 | 4),
-  Z_WHATAMI_ROUTER_PEER_CLIENT = ((1 | 2) | 4),
 } z_whatami_t;
 /**
  * The locality of samples to be received by subscribers or targeted by publishers.
@@ -686,11 +691,11 @@ typedef struct z_scout_options_t {
   /**
    * The maximum duration in ms the scouting can take.
    */
-  unsigned long zc_timeout_ms;
+  uint64_t timeout_ms;
   /**
    * Type of entities to scout for.
    */
-  enum z_whatami_t zc_what;
+  enum z_what_t what;
 } z_scout_options_t;
 /**
  * A callbacks for ShmSegment
@@ -1647,7 +1652,7 @@ ZENOHC_API void z_config_clone(struct z_owned_config_t *dst, const struct z_loan
 /**
  * Constructs a new empty configuration.
  */
-ZENOHC_API void z_config_default(struct z_owned_config_t *this_);
+ZENOHC_API z_error_t z_config_default(struct z_owned_config_t *this_);
 /**
  * Frees `config`, and resets it to its gravestone state.
  */
@@ -1667,7 +1672,7 @@ ZENOHC_API void z_config_null(struct z_owned_config_t *this_);
 /**
  * Constructs a default peer mode configuration.
  */
-ZENOHC_API void z_config_peer(struct z_owned_config_t *this_);
+ZENOHC_API z_error_t z_config_peer(struct z_owned_config_t *this_);
 /**
  * Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
  * which allows to save the bandwith, when passing key expression between Zenoh entities.
@@ -2817,6 +2822,12 @@ ZENOHC_API void z_scout_options_default(struct z_scout_options_t *this_);
  */
 ZENOHC_API bool z_session_check(const struct z_owned_session_t *this_);
 /**
+ * Constructs an owned shallow copy of the session in provided uninitialized memory location.
+ */
+ZENOHC_API
+void z_session_clone(struct z_owned_session_t *dst,
+                     const struct z_loaned_session_t *this_);
+/**
  * Frees memory and invalidates the session.
  *
  * This will also close the session if it does not have any clones left.
@@ -3818,12 +3829,6 @@ ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *thi
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
 ZENOHC_API z_error_t zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *this_);
-/**
- * Constructs an owned shallow copy of the session in provided uninitialized memory location.
- */
-ZENOHC_API
-void zc_session_clone(struct z_owned_session_t *dst,
-                      const struct z_loaned_session_t *this_);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t zc_shm_client_list_add_client(z_protocol_id_t id,

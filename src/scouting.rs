@@ -14,7 +14,6 @@
 use std::mem::MaybeUninit;
 
 use async_std::task;
-use libc::c_ulong;
 use zenoh::{
     config::{WhatAmI, WhatAmIMatcher},
     scouting::Hello,
@@ -98,16 +97,16 @@ pub extern "C" fn z_hello_locators(
 #[repr(C)]
 pub struct z_scout_options_t {
     /// The maximum duration in ms the scouting can take.
-    pub zc_timeout_ms: c_ulong,
+    pub timeout_ms: u64,
     /// Type of entities to scout for.
-    pub zc_what: z_whatami_t,
+    pub what: z_what_t,
 }
 
 impl Default for z_scout_options_t {
     fn default() -> Self {
         z_scout_options_t {
-            zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-            zc_what: DEFAULT_SCOUTING_WHAT,
+            timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
+            what: DEFAULT_SCOUTING_WHAT,
         }
     }
 }
@@ -119,14 +118,23 @@ pub enum z_whatami_t {
     ROUTER = 0x01,
     PEER = 0x02,
     CLIENT = 0x04,
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum z_what_t {
+    ROUTER = 0x01,
+    PEER = 0x02,
+    CLIENT = 0x04,
     ROUTER_PEER = 0x01 | 0x02,
     ROUTER_CLIENT = 0x01 | 0x04,
     PEER_CLIENT = 0x02 | 0x04,
     ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
 }
 
-pub const DEFAULT_SCOUTING_WHAT: z_whatami_t = z_whatami_t::ROUTER_PEER;
-pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
+pub const DEFAULT_SCOUTING_WHAT: z_what_t = z_what_t::ROUTER_PEER;
+pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
 /// Constructs the default values for the scouting operation.
 #[no_mangle]
@@ -153,9 +161,9 @@ pub extern "C" fn z_scout(
     }
     let options = options.cloned().unwrap_or_default();
     let what =
-        WhatAmIMatcher::try_from(options.zc_what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
+        WhatAmIMatcher::try_from(options.what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
-    let timeout = options.zc_timeout_ms as u64;
+    let timeout = options.timeout_ms;
     let Some(config) = config.as_rust_type_mut().take() else {
         log::error!("Config not provided");
         return errors::Z_EINVAL;
