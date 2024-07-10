@@ -89,7 +89,7 @@ pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_loane
 pub extern "C" fn z_config_default(this: &mut MaybeUninit<z_owned_config_t>) -> errors::z_error_t {
     this.as_rust_type_mut_uninit()
         .write(Some(Config::default()));
-    return Z_OK;
+    Z_OK
 }
 
 /// Constructs config in its gravestone state.
@@ -300,7 +300,7 @@ pub unsafe extern "C" fn zc_config_from_file(
 pub extern "C" fn z_config_peer(this: &mut MaybeUninit<z_owned_config_t>) -> errors::z_error_t {
     this.as_rust_type_mut_uninit()
         .write(Some(zenoh::config::peer()));
-    return Z_OK;
+    Z_OK
 }
 
 /// Constructs a default, zenoh-allocated, client mode configuration.
