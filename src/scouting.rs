@@ -118,10 +118,6 @@ pub enum z_whatami_t {
     ROUTER = 0x01,
     PEER = 0x02,
     CLIENT = 0x04,
-    ROUTER_PEER = 0x01 | 0x02,
-    ROUTER_CLIENT = 0x01 | 0x04,
-    PEER_CLIENT = 0x02 | 0x04,
-    ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
 }
 
 #[allow(non_camel_case_types)]

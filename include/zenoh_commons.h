@@ -180,10 +180,6 @@ typedef enum z_whatami_t {
   Z_WHATAMI_ROUTER = 1,
   Z_WHATAMI_PEER = 2,
   Z_WHATAMI_CLIENT = 4,
-  Z_WHATAMI_ROUTER_PEER = (1 | 2),
-  Z_WHATAMI_ROUTER_CLIENT = (1 | 4),
-  Z_WHATAMI_PEER_CLIENT = (2 | 4),
-  Z_WHATAMI_ROUTER_PEER_CLIENT = ((1 | 2) | 4),
 } z_whatami_t;
 /**
  * The locality of samples to be received by subscribers or targeted by publishers.
