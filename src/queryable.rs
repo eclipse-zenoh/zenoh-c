@@ -228,7 +228,7 @@ pub extern "C" fn z_declare_queryable(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }
@@ -243,7 +243,7 @@ pub extern "C" fn z_declare_queryable(
 pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> errors::z_error_t {
     if let Some(qable) = this.as_rust_type_mut().take() {
         if let Err(e) = qable.undeclare().wait() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return errors::Z_EGENERIC;
         }
     }
@@ -314,7 +314,7 @@ pub extern "C" fn z_query_reply(
     }
 
     if let Err(e) = reply.wait() {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         return errors::Z_EGENERIC;
     }
     errors::Z_OK
@@ -353,7 +353,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     );
 
     if let Err(e) = reply.wait() {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         return errors::Z_EGENERIC;
     }
     errors::Z_OK
@@ -403,7 +403,7 @@ pub unsafe extern "C" fn z_query_reply_del(
     }
 
     if let Err(e) = reply.wait() {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         return errors::Z_EGENERIC;
     }
     errors::Z_OK

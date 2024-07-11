@@ -141,7 +141,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
             errors::Z_OK
         }
         Err(e) => {
-            log::debug!("{}", e);
+            tracing::debug!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }
@@ -200,7 +200,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
         })
         .wait()
     {
-        log::debug!("{}", e);
+        tracing::debug!("{}", e);
         return errors::Z_EGENERIC;
     }
     errors::Z_OK
@@ -215,7 +215,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 ) -> errors::z_error_t {
     if let Some(s) = this.as_rust_type_mut().take() {
         if let Err(e) = s.0.close().wait() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return errors::Z_EGENERIC;
         }
     }

@@ -279,13 +279,13 @@ pub unsafe extern "C" fn zc_config_from_file(
         Ok(path) => match zenoh::config::Config::from_file(path) {
             Ok(c) => Some(c),
             Err(e) => {
-                log::error!("Couldn't read config from {}: {}", path, e);
+                tracing::error!("Couldn't read config from {}: {}", path, e);
                 res = errors::Z_EPARSE;
                 None
             }
         },
         Err(e) => {
-            log::error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
+            tracing::error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
             res = errors::Z_EIO;
             None
         }
@@ -324,7 +324,7 @@ pub unsafe extern "C" fn z_config_client(
         .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
         .try_fold(Vec::<Locator>::new(), |mut acc, it| match it {
             Err(e) => {
-                log::error!("Error parsing peer address: {}", e);
+                tracing::error!("Error parsing peer address: {}", e);
                 res = errors::Z_EPARSE;
                 Err(())
             }

@@ -165,7 +165,7 @@ pub extern "C" fn z_scout(
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
     let Some(config) = config.as_rust_type_mut().take() else {
-        log::error!("Config not provided");
+        tracing::error!("Config not provided");
         return errors::Z_EINVAL;
     };
     let mut closure = z_owned_closure_hello_t::empty();

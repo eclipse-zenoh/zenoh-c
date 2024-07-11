@@ -50,7 +50,7 @@ pub(crate) fn alloc_layout_new(
             {
                 Ok(layout) => CSHMLayout::Posix(layout),
                 Err(e) => {
-                    log::error!("{:?}", e);
+                    tracing::error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }
@@ -63,7 +63,7 @@ pub(crate) fn alloc_layout_new(
             {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
                 Err(e) => {
-                    log::error!("{:?}", e);
+                    tracing::error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }
@@ -76,7 +76,7 @@ pub(crate) fn alloc_layout_new(
             {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),
                 Err(e) => {
-                    log::error!("{:?}", e);
+                    tracing::error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }

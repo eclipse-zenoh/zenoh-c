@@ -133,7 +133,7 @@ pub extern "C" fn z_declare_subscriber(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }
@@ -158,7 +158,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> errors::z_error_t {
     if let Some(s) = this.as_rust_type_mut().take() {
         if let Err(e) = s.undeclare().wait() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return errors::Z_EGENERIC;
         }
     }

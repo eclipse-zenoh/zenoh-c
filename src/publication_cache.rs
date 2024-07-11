@@ -101,7 +101,7 @@ pub extern "C" fn ze_declare_publication_cache(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }
@@ -131,7 +131,7 @@ pub extern "C" fn ze_undeclare_publication_cache(
 ) -> errors::z_error_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.close().wait() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return errors::Z_EGENERIC;
         }
     }

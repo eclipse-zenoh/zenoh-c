@@ -91,7 +91,7 @@ pub extern "C" fn z_memory_layout_new(
             Z_OK
         }
         Err(e) => {
-            log::error!("{e}");
+            tracing::error!("{e}");
             Z_EINVAL
         }
     }

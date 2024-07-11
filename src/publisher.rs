@@ -102,7 +102,7 @@ pub extern "C" fn z_declare_publisher(
     }
     match p.wait() {
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }
@@ -218,7 +218,7 @@ pub unsafe extern "C" fn z_publisher_put(
     }
 
     if let Err(e) = put.wait() {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         errors::Z_EGENERIC
     } else {
         errors::Z_OK
@@ -261,7 +261,7 @@ pub extern "C" fn z_publisher_delete(
         }
     }
     if let Err(e) = del.wait() {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         errors::Z_EGENERIC
     } else {
         errors::Z_OK
@@ -327,7 +327,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             errors::Z_EGENERIC
         }
     }
@@ -343,7 +343,7 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 ) -> errors::z_error_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return errors::Z_EGENERIC;
         }
     }
@@ -358,7 +358,7 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             return errors::Z_EGENERIC;
         }
     }

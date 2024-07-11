@@ -163,7 +163,7 @@ pub(crate) fn map(
             out_result.as_rust_type_mut_uninit().write(Some(buffer));
         }
         Err(e) => {
-            log::error!("{e}");
+            tracing::error!("{e}");
             out_result.as_rust_type_mut_uninit().write(None);
         }
     }

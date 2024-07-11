@@ -73,7 +73,7 @@ pub mod shm;
 /// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
 pub extern "C" fn zc_init_logger() {
-    let _ = env_logger::try_init();
+    zenoh::try_init_log_from_env();
 }
 
 // Test should be runned with `cargo test --no-default-features`

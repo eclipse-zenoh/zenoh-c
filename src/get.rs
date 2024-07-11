@@ -289,7 +289,7 @@ pub unsafe extern "C" fn z_get(
     {
         Ok(()) => errors::Z_OK,
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             errors::Z_EGENERIC
         }
     }

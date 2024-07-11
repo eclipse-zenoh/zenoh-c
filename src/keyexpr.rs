@@ -74,12 +74,12 @@ unsafe fn keyexpr_create(
         Ok(name) => match keyexpr_create_inner(name, should_auto_canonize, should_copy) {
             Ok(v) => Ok(v),
             Err(e) => {
-                log::error!("Couldn't construct a keyexpr: {}", e);
+                tracing::error!("Couldn't construct a keyexpr: {}", e);
                 Err(errors::Z_EINVAL)
             }
         },
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             Err(errors::Z_EPARSE)
         }
     }
@@ -473,7 +473,7 @@ pub extern "C" fn z_declare_keyexpr(
             errors::Z_OK
         }
         Err(e) => {
-            log::debug!("{}", e);
+            tracing::debug!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }
@@ -489,14 +489,14 @@ pub extern "C" fn z_undeclare_keyexpr(
     session: &z_loaned_session_t,
 ) -> errors::z_error_t {
     let Some(kexpr) = this.as_rust_type_mut().take() else {
-        log::debug!("Attempted to undeclare dropped keyexpr");
+        tracing::debug!("Attempted to undeclare dropped keyexpr");
         return errors::Z_EINVAL;
     };
     let session = session.as_rust_type_ref();
     match session.undeclare(kexpr).wait() {
         Ok(()) => errors::Z_OK,
         Err(e) => {
-            log::debug!("{}", e);
+            tracing::debug!("{}", e);
             errors::Z_EGENERIC
         }
     }
@@ -554,7 +554,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
     let right = match std::str::from_utf8(right) {
         Ok(r) => r,
         Err(e) => {
-            log::error!(
+            tracing::error!(
                 "Couldn't concatenate {:02x?} to {} because it is not valid UTF8: {}",
                 right,
                 left,
@@ -570,7 +570,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }
@@ -594,7 +594,7 @@ pub extern "C" fn z_keyexpr_join(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
             errors::Z_EGENERIC
         }

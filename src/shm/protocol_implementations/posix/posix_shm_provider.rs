@@ -52,7 +52,7 @@ pub extern "C" fn z_posix_shm_provider_new(
             Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             Z_EINVAL
         }
     }
