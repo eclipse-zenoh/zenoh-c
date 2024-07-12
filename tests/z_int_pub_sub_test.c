@@ -31,7 +31,6 @@ const uint32_t TEST_EID = 42;
 const uint64_t TEST_SN = 24;
 const uint64_t TEST_TS = 401706000;
 
-
 int run_publisher() {
     SEM_WAIT(sem);
 
