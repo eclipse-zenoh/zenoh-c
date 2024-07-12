@@ -32,8 +32,7 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::{
     errors::{self, z_error_t, Z_EIO, Z_EPARSE, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
-    CSliceOwned, CStringOwned, ZHashMap,
+    z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
@@ -120,29 +119,6 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_string(
             errors::Z_EIO
         }
     }
-}
-
-/// Deserializes data into an owned bytes map.
-///
-/// @param this_: Data to deserialize.
-/// @param dst: An uninitialized memory location where to construct a deserialized map.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
-    this: &z_loaned_bytes_t,
-    dst: &mut MaybeUninit<z_owned_slice_map_t>,
-) -> z_error_t {
-    let dst = dst.as_rust_type_mut_uninit();
-    let payload = this.as_rust_type_ref();
-    let iter = payload.iter::<(Vec<u8>, Vec<u8>)>();
-    let mut hm = ZHashMap::new();
-
-    let iter = iter.filter_map(|val| val.ok());
-    for (k, v) in iter {
-        hm.insert(k.into(), v.into());
-    }
-    dst.write(Some(hm));
-    errors::Z_OK
 }
 
 /// Deserializes data into an owned slice.
@@ -488,40 +464,6 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_copy(
     this.as_rust_type_mut_uninit().write(payload);
 }
 
-/// Serializes slice map by aliasing.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_slice_map(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    bytes_map: &z_loaned_slice_map_t,
-) {
-    let hm = bytes_map.as_rust_type_ref();
-    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
-        (
-            CSlice::new_borrowed_unchecked(k.data(), k.len()),
-            CSlice::new_borrowed_unchecked(v.data(), v.len()),
-        )
-    }));
-    this.as_rust_type_mut_uninit().write(payload);
-}
-
-/// Serializes slice map by copying.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_slice_map_copy(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    bytes_map: &z_loaned_slice_map_t,
-) {
-    let hm = bytes_map.as_rust_type_ref();
-    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
-        (
-            CSlice::new_owned_unchecked(k.data(), k.len()),
-            CSlice::new_owned_unchecked(v.data(), v.len()),
-        )
-    }));
-    this.as_rust_type_mut_uninit().write(payload);
-}
-
 /// Serializes a null-terminated string by aliasing.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -658,27 +600,6 @@ pub extern "C" fn z_bytes_iterator_next(
             false
         }
     }
-}
-
-/// Returns an iterator for multi-element serialized data.
-/// @param this_: Data to deserialize.
-#[no_mangle]
-pub extern "C" fn z_bytes_iter(
-    this: &z_loaned_bytes_t,
-    iterator_body: extern "C" fn(data: &z_loaned_bytes_t, context: *mut c_void) -> z_error_t,
-    context: *mut c_void,
-) -> z_error_t {
-    let mut res = Z_OK;
-    for zb in this.as_rust_type_ref().iter::<ZBytes>() {
-        // this is safe because literally any payload is convertable into ZBuf
-        let b = unsafe { zb.unwrap_unchecked() };
-        res = iterator_body(b.as_loaned_c_type_ref(), context);
-        if res != Z_OK {
-            break;
-        }
-    }
-
-    res
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]

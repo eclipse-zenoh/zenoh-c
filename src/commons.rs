@@ -33,10 +33,9 @@ use zenoh::{
 
 use crate::{
     errors,
-    transmute::{
-        CTypeRef, IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit,
-    },
-    z_id_t, z_loaned_bytes_t, z_loaned_keyexpr_t, z_owned_string_t, z_string_from_substr,
+    transmute::{CTypeRef, IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_id_t, z_loaned_bytes_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_string_t,
+    z_string_from_substr,
 };
 
 /// A zenoh unsigned integer
@@ -73,24 +72,20 @@ impl From<z_sample_kind_t> for SampleKind {
 use crate::opaque_types::z_timestamp_t;
 decl_c_type!(copy(z_timestamp_t, Timestamp));
 
-/// Create timestamp
+/// Create uhlc timestamp from session id.
 #[no_mangle]
 pub extern "C" fn z_timestamp_new(
     this: &mut MaybeUninit<z_timestamp_t>,
-    zid: &z_id_t,
-    npt64_time: u64,
+    session: &z_loaned_session_t,
 ) -> errors::z_error_t {
-    let timestamp = Timestamp::new(
-        zenoh::time::NTP64(npt64_time),
-        (zid.into_rust_type()).into(),
-    );
+    let timestamp = session.as_rust_type_ref().new_timestamp();
     this.as_rust_type_mut_uninit().write(timestamp);
     errors::Z_OK
 }
 
 /// Returns NPT64 time associated with this timestamp.
 #[no_mangle]
-pub extern "C" fn z_timestamp_npt64_time(this: &z_timestamp_t) -> u64 {
+pub extern "C" fn z_timestamp_ntp64_time(this: &z_timestamp_t) -> u64 {
     this.as_rust_type_ref().get_time().0
 }
 

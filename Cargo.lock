@@ -3643,6 +3643,8 @@ dependencies = [
  "unwrap-infallible",
  "zenoh",
  "zenoh-ext",
+ "zenoh-protocol",
+ "zenoh-util",
 ]
 
 [[package]]

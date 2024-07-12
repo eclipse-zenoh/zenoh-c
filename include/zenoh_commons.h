@@ -309,27 +309,6 @@ typedef struct z_owned_closure_hello_t {
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_loaned_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_closure_owned_query_t {
-  void *context;
-  void (*call)(struct z_owned_query_t*, void *context);
-  void (*drop)(void*);
-} z_owned_closure_owned_query_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
@@ -1108,15 +1087,6 @@ ZENOHC_API
 z_error_t z_bytes_deserialize_into_slice(const struct z_loaned_bytes_t *this_,
                                          struct z_owned_slice_t *dst);
 /**
- * Deserializes data into an owned bytes map.
- *
- * @param this_: Data to deserialize.
- * @param dst: An uninitialized memory location where to construct a deserialized map.
- */
-ZENOHC_API
-z_error_t z_bytes_deserialize_into_slice_map(const struct z_loaned_bytes_t *this_,
-                                             struct z_owned_slice_map_t *dst);
-/**
  * Deserializes data into an owned non-null-terminated string.
  *
  * @param this_: Data to deserialize.
@@ -1184,14 +1154,6 @@ void z_bytes_get_writer(struct z_loaned_bytes_t *this_,
  * Returns ``true`` if `this_` is empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_bytes_is_empty(const struct z_loaned_bytes_t *this_);
-/**
- * Returns an iterator for multi-element serialized data.
- * @param this_: Data to deserialize.
- */
-ZENOHC_API
-z_error_t z_bytes_iter(const struct z_loaned_bytes_t *this_,
-                       z_error_t (*iterator_body)(const struct z_loaned_bytes_t *data, void *context),
-                       void *context);
 /**
  * Constructs `z_owned_bytes_t` object corresponding to the next element of serialized data.
  *
@@ -1322,18 +1284,6 @@ ZENOHC_API
 void z_bytes_serialize_from_slice_copy(struct z_owned_bytes_t *this_,
                                        const uint8_t *data,
                                        size_t len);
-/**
- * Serializes slice map by aliasing.
- */
-ZENOHC_API
-void z_bytes_serialize_from_slice_map(struct z_owned_bytes_t *this_,
-                                      const struct z_loaned_slice_map_t *bytes_map);
-/**
- * Serializes slice map by copying.
- */
-ZENOHC_API
-void z_bytes_serialize_from_slice_map_copy(struct z_owned_bytes_t *this_,
-                                           const struct z_loaned_slice_map_t *bytes_map);
 /**
  * Serializes a null-terminated string by aliasing.
  */
@@ -1477,25 +1427,6 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-void z_closure_owned_query_call(const struct z_loaned_closure_owned_query_t *closure,
-                                struct z_owned_query_t *query);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API void z_closure_owned_query_drop(struct z_owned_closure_owned_query_t *closure);
-/**
- * Borrows closure.
- */
-ZENOHC_API
-const struct z_loaned_closure_owned_query_t *z_closure_owned_query_loan(const struct z_owned_closure_owned_query_t *closure);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
- */
-ZENOHC_API struct z_owned_closure_owned_query_t z_closure_owned_query_null(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -3169,78 +3100,6 @@ ZENOHC_API size_t z_slice_len(const struct z_loaned_slice_t *this_);
  */
 ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slice_t *this_);
 /**
- * @return ``true`` if the map is not in its gravestone state, ``false`` otherwise.
- */
-ZENOHC_API bool z_slice_map_check(const struct z_owned_slice_map_t *map);
-/**
- * Destroys the map, resetting it to its gravestone value.
- */
-ZENOHC_API void z_slice_map_drop(struct z_owned_slice_map_t *this_);
-/**
- * @return the value associated with `key` (`NULL` if the key is not present in the map.).
- */
-ZENOHC_API
-const struct z_loaned_slice_t *z_slice_map_get(const struct z_loaned_slice_map_t *this_,
-                                               const struct z_loaned_slice_t *key);
-/**
- * Associates `value` to `key` in the map, aliasing them.
- *
- * If the `key` was already present in the map, its value is updated.
- * @return 1 if there was already an entry associated with the key, 0 otherwise.
- */
-ZENOHC_API
-z_error_t z_slice_map_insert_by_alias(struct z_loaned_slice_map_t *this_,
-                                      const struct z_loaned_slice_t *key,
-                                      const struct z_loaned_slice_t *value);
-/**
- * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
- *
- * If the `key` was already present in the map, its value is updated.
- * @return 1 if there was already an entry associated with the key, 0 otherwise.
- */
-ZENOHC_API
-uint8_t z_slice_map_insert_by_copy(struct z_loaned_slice_map_t *this_,
-                                   const struct z_loaned_slice_t *key,
-                                   const struct z_loaned_slice_t *value);
-/**
- * @return ``true`` if the map is empty, ``false`` otherwise.
- */
-ZENOHC_API bool z_slice_map_is_empty(const struct z_loaned_slice_map_t *this_);
-/**
- * Iterates over key-value pairs of a slice map.
- *
- * @param this_: Slice map to iterate over.
- * @param body: Iterator body function. Returning `true` is treated as iteration loop `break`.
- * @param context: Some data passed to every body invocation.
- */
-ZENOHC_API
-void z_slice_map_iterate(const struct z_loaned_slice_map_t *this_,
-                         bool (*body)(const struct z_loaned_slice_t *key,
-                                      const struct z_loaned_slice_t *value,
-                                      void *context),
-                         void *context);
-/**
- * @return number of key-value pairs in the map.
- */
-ZENOHC_API size_t z_slice_map_len(const struct z_loaned_slice_map_t *this_);
-/**
- * Borrows slice map.
- */
-ZENOHC_API
-const struct z_loaned_slice_map_t *z_slice_map_loan(const struct z_owned_slice_map_t *this_);
-/**
- * Mutably borrows slice map.
- */
-ZENOHC_API struct z_loaned_slice_map_t *z_slice_map_loan_mut(struct z_owned_slice_map_t *this_);
-/**
- * Constructs a new empty map.
- */
-ZENOHC_API void z_slice_map_new(struct z_owned_slice_map_t *this_);
-/**
- * Constructs the gravestone value for `z_owned_slice_map_t`.
- */
-ZENOHC_API void z_slice_map_null(struct z_owned_slice_map_t *this_);
-/**
  * Constructs an empty `z_owned_slice_t`.
  */
 ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
@@ -3480,16 +3339,15 @@ const char *z_time_now_as_str(const char *buf,
  */
 ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
 /**
- * Create timestamp
+ * Create uhlc timestamp from session id.
  */
 ZENOHC_API
 z_error_t z_timestamp_new(struct z_timestamp_t *this_,
-                          const struct z_id_t *zid,
-                          uint64_t npt64_time);
+                          const struct z_loaned_session_t *session);
 /**
  * Returns NPT64 time associated with this timestamp.
  */
-ZENOHC_API uint64_t z_timestamp_npt64_time(const struct z_timestamp_t *this_);
+ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
 /**
  * Undeclares the key expression generated by a call to `z_declare_keyexpr()`.
  * The key expression is consumed.
