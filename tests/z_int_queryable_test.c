@@ -140,7 +140,7 @@ int run_get() {
             // }
 
             const z_timestamp_t *ts = z_sample_timestamp(sample);
-            assert(ts == NULL); // no timestmap was set by queryable
+            assert(ts == NULL);  // no timestmap was set by queryable
 
             // See https://github.com/eclipse-zenoh/zenoh/issues/1203
             // z_id_t ts_id = z_timestamp_id(ts);
