@@ -66,13 +66,6 @@ get_opaque_type_data!(CSlice, z_view_string_t);
 /// A loaned string.
 get_opaque_type_data!(CSlice, z_loaned_string_t);
 
-/// A map of maybe-owned slices to maybe-owned slices.
-///
-/// In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher.
-get_opaque_type_data!(Option<HashMap<usize, usize>>, z_owned_slice_map_t);
-/// A loaned slice map.
-get_opaque_type_data!(HashMap<usize, usize>, z_loaned_slice_map_t);
-
 /// An array of maybe-owned non-null terminated strings.
 ///
 get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_string_array_t);

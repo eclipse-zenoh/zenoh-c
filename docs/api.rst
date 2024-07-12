@@ -75,29 +75,6 @@ Functions
 .. doxygenfunction:: z_string_len
 .. doxygenfunction:: z_string_is_empty
 
-Slice map
----------
-Types
-^^^^^
-.. doxygenstruct:: z_owned_slice_map_t
-.. doxygenstruct:: z_loaned_slice_map_t
-
-Functions
-^^^^^^^^^
-.. doxygenfunction:: z_slice_map_check
-.. doxygenfunction:: z_slice_map_null
-.. doxygenfunction:: z_slice_map_drop
-.. doxygenfunction:: z_slice_map_loan
-.. doxygenfunction:: z_slice_map_loan_mut
-
-.. doxygenfunction:: z_slice_map_new
-.. doxygenfunction:: z_slice_map_get
-.. doxygenfunction:: z_slice_map_len
-.. doxygenfunction:: z_slice_map_is_empty
-.. doxygenfunction:: z_slice_map_insert_by_alias
-.. doxygenfunction:: z_slice_map_insert_by_copy
-.. doxygenfunction:: z_slice_map_iterate
-
 string array
 -----------
 Types
@@ -134,7 +111,6 @@ Functions
 .. doxygenfunction:: z_bytes_len
 .. doxygenfunction:: z_bytes_serialize_from_slice
 .. doxygenfunction:: z_bytes_serialize_from_string
-.. doxygenfunction:: z_bytes_serialize_from_slice_map
 .. doxygenfunction:: z_bytes_serialize_from_iter
 .. doxygenfunction:: z_bytes_serialize_from_pair
 
@@ -151,7 +127,6 @@ Functions
 
 .. doxygenfunction:: z_bytes_deserialize_into_slice
 .. doxygenfunction:: z_bytes_deserialize_into_string
-.. doxygenfunction:: z_bytes_deserialize_into_slice_map
 .. doxygenfunction:: z_bytes_deserialize_into_iter
 .. doxygenfunction:: z_bytes_deserialize_into_pair
 
@@ -305,7 +280,7 @@ Types
 Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_timestamp_id
-.. doxygenfunction:: z_timestamp_npt64_time
+.. doxygenfunction:: z_timestamp_ntp64_time
 
 System
 ======

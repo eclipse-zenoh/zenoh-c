@@ -151,7 +151,7 @@ int run_get() {
                 perror("Unexpected null timestamp");
                 exit(-1);
             }
-            const uint64_t time = z_timestamp_npt64_time(ts);
+            const uint64_t time = z_timestamp_ntp64_time(ts);
             if (time != TEST_TS + val_num) {
                 perror("Unexpected timestamp value");
                 exit(-1);

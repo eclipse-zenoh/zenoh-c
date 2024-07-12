@@ -15,8 +15,6 @@ zenoh_opaque.h:
   - z_owned_string_t!
   - z_view_string_t!
   - z_loaned_string_t!
-  - z_owned_slice_map_t!
-  - z_loaned_slice_map_t!
   - z_owned_string_array_t!
   - z_loaned_string_array_t!
   - z_owned_sample_t!

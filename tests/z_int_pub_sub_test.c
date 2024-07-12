@@ -31,6 +31,7 @@ const uint32_t TEST_EID = 42;
 const uint64_t TEST_SN = 24;
 const uint64_t TEST_TS = 401706000;
 
+
 int run_publisher() {
     SEM_WAIT(sem);
 
@@ -41,8 +42,6 @@ int run_publisher() {
         perror("Unable to open session!");
         return -1;
     }
-
-    z_id_t self_id = z_info_zid(z_loan(s));
 
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
@@ -65,7 +64,7 @@ int run_publisher() {
         // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
         z_timestamp_t ts;
-        z_timestamp_new(&ts, &self_id, TEST_TS + i);
+        z_timestamp_new(&ts, z_loan(s), TEST_TS + i);
 
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
@@ -129,7 +128,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected null timestamp");
         exit(-1);
     }
-    const uint64_t time = z_timestamp_npt64_time(ts);
+    const uint64_t time = z_timestamp_ntp64_time(ts);
     if (time != TEST_TS + val_num) {
         perror("Unexpected timestamp value");
         exit(-1);
