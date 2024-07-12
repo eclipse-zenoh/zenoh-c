@@ -63,7 +63,6 @@ zenoh_opaque.h:
   - z_owned_hello_t!
   - z_loaned_hello_t!
   - z_loaned_closure_hello_t!
-  - z_loaned_closure_owned_query_t!
   - z_loaned_closure_query_t!
   - z_loaned_closure_reply_t!
   - z_loaned_closure_sample_t!

@@ -309,27 +309,6 @@ typedef struct z_owned_closure_hello_t {
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_loaned_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_closure_owned_query_t {
-  void *context;
-  void (*call)(struct z_owned_query_t*, void *context);
-  void (*drop)(void*);
-} z_owned_closure_owned_query_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
@@ -1448,25 +1427,6 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-void z_closure_owned_query_call(const struct z_loaned_closure_owned_query_t *closure,
-                                struct z_owned_query_t *query);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API void z_closure_owned_query_drop(struct z_owned_closure_owned_query_t *closure);
-/**
- * Borrows closure.
- */
-ZENOHC_API
-const struct z_loaned_closure_owned_query_t *z_closure_owned_query_loan(const struct z_owned_closure_owned_query_t *closure);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
- */
-ZENOHC_API struct z_owned_closure_owned_query_t z_closure_owned_query_null(void);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
