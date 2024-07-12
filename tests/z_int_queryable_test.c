@@ -39,20 +39,13 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_query_reply_options_t options;
     z_query_reply_options_default(&options);
 
-    z_id_t self_id;
-    self_id.id[0] = TEST_ID;
-
     // See https://github.com/eclipse-zenoh/zenoh/issues/1203
     // z_entity_global_id_t entity_global_id;
     // z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
     // z_owned_source_info_t source_info;
     // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
-    z_timestamp_t ts;
-    z_timestamp_new(&ts, &self_id, TEST_TS + value_num);
-
     // options.source_info = &source_info;
-    options.timestamp = &ts;
 
     z_owned_bytes_t payload;
     z_bytes_serialize_from_str(&payload, values[value_num]);
@@ -147,15 +140,7 @@ int run_get() {
             // }
 
             const z_timestamp_t *ts = z_sample_timestamp(sample);
-            if (ts == NULL) {
-                perror("Unexpected null timestamp");
-                exit(-1);
-            }
-            const uint64_t time = z_timestamp_ntp64_time(ts);
-            if (time != TEST_TS + val_num) {
-                perror("Unexpected timestamp value");
-                exit(-1);
-            }
+            assert(ts == NULL); // no timestmap was set by queryable
 
             // See https://github.com/eclipse-zenoh/zenoh/issues/1203
             // z_id_t ts_id = z_timestamp_id(ts);

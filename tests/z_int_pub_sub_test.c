@@ -63,7 +63,7 @@ int run_publisher() {
         // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
         z_timestamp_t ts;
-        z_timestamp_new(&ts, z_loan(s), TEST_TS + i);
+        z_timestamp_new(&ts, z_loan(s));
 
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
@@ -123,15 +123,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     // }
 
     const z_timestamp_t *ts = z_sample_timestamp(sample);
-    if (ts == NULL) {
-        perror("Unexpected null timestamp");
-        exit(-1);
-    }
-    const uint64_t time = z_timestamp_ntp64_time(ts);
-    if (time != TEST_TS + val_num) {
-        perror("Unexpected timestamp value");
-        exit(-1);
-    }
+    assert(ts != NULL);
 
     // See https://github.com/eclipse-zenoh/zenoh/issues/1203
     // z_id_t ts_id = z_timestamp_id(ts);
