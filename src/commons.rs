@@ -235,7 +235,7 @@ pub unsafe extern "C" fn z_encoding_from_substr(
                 errors::Z_OK
             }
             Err(e) => {
-                log::error!("Can not create encoding from non UTF-8 string: {}", e);
+                tracing::error!("Can not create encoding from non UTF-8 string: {}", e);
                 encoding.write(Encoding::default());
                 errors::Z_EINVAL
             }

@@ -60,7 +60,7 @@ pub extern "C" fn z_open(
         zc_init_logger();
     }
     let Some(config) = config.as_rust_type_mut().take() else {
-        log::error!("Config not provided");
+        tracing::error!("Config not provided");
         this.write(None);
         return errors::Z_EINVAL;
     };
@@ -70,7 +70,7 @@ pub extern "C" fn z_open(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Error opening session: {}", e);
+            tracing::error!("Error opening session: {}", e);
             this.write(None);
             errors::Z_ENETWORK
         }
@@ -93,7 +93,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
         zc_init_logger();
     }
     let Some(config) = config.as_rust_type_mut().take() else {
-        log::error!("Config not provided");
+        tracing::error!("Config not provided");
         this.write(None);
         return errors::Z_EINVAL;
     };
@@ -106,7 +106,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
             errors::Z_OK
         }
         Err(e) => {
-            log::error!("Error opening session: {}", e);
+            tracing::error!("Error opening session: {}", e);
             this.write(None);
             errors::Z_ENETWORK
         }
@@ -138,7 +138,7 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_error_t {
     };
     match s.close().wait() {
         Err(e) => {
-            log::error!("Error closing session: {}", e);
+            tracing::error!("Error closing session: {}", e);
             errors::Z_EGENERIC
         }
         Ok(_) => errors::Z_OK,

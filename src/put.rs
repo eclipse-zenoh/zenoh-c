@@ -108,7 +108,7 @@ pub extern "C" fn z_put(
     }
 
     if let Err(e) = put.wait() {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         errors::Z_EGENERIC
     } else {
         errors::Z_OK
@@ -177,7 +177,7 @@ pub extern "C" fn z_delete(
 
     match del.wait() {
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             errors::Z_EGENERIC
         }
         Ok(()) => errors::Z_OK,
