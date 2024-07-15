@@ -419,7 +419,7 @@ typedef struct z_publisher_options_t {
    */
   enum z_priority_t priority;
   /**
-   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith
+   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
    */
   bool is_express;
   /**
@@ -500,6 +500,10 @@ typedef struct z_get_options_t {
    * The congestion control to apply when routing the query.
    */
   enum z_congestion_control_t congestion_control;
+  /**
+   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+   */
+  bool is_express;
   /**
    * The allowed destination for the query.
    */

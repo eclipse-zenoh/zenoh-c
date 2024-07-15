@@ -41,7 +41,7 @@ pub struct z_publisher_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of messages from this publisher.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith
+    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
     /// The allowed destination for this publisher.
     pub allowed_destination: zcu_locality_t,
