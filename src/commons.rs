@@ -137,7 +137,7 @@ pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_time
 
 /// Returns sample attachment.
 ///
-/// Returns `NULL`, if sample does not contain any attachement.
+/// Returns `NULL`, if sample does not contain any attachment.
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
     match this.as_rust_type_ref().attachment() {
