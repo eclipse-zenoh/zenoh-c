@@ -12,7 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, ptr};
+use std::{
+    mem::MaybeUninit,
+    ptr::{self, null_mut},
+};
 
 use zenoh::{
     prelude::*,
@@ -32,6 +35,8 @@ use crate::{
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
+    /// Default encoding for messages put by this publisher.
+    pub encoding: *mut z_owned_encoding_t,
     /// The congestion control to apply when routing messages from this publisher.
     pub congestion_control: z_congestion_control_t,
     /// The priority of messages from this publisher.
@@ -46,6 +51,7 @@ pub struct z_publisher_options_t {
 #[no_mangle]
 pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) {
     *this = z_publisher_options_t {
+        encoding: null_mut(),
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
@@ -89,6 +95,10 @@ pub extern "C" fn z_declare_publisher(
             .priority(options.priority.into())
             .express(options.is_express)
             .allowed_destination(options.allowed_destination.into());
+        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
+            let encoding = std::mem::take(encoding.as_rust_type_mut());
+            p = p.encoding(encoding);
+        }
     }
     match p.wait() {
         Err(e) => {

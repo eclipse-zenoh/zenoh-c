@@ -407,6 +407,10 @@ typedef struct z_owned_closure_zid_t {
  */
 typedef struct z_publisher_options_t {
   /**
+   * Default encoding for messages put by this publisher.
+   */
+  struct z_owned_encoding_t *encoding;
+  /**
    * The congestion control to apply when routing messages from this publisher.
    */
   enum z_congestion_control_t congestion_control;
