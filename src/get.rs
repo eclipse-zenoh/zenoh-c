@@ -29,12 +29,16 @@ use zenoh::{
 
 use crate::{
     errors,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
-    z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
+    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t,
-    z_owned_source_info_t, z_priority_t, z_query_target_t, zcu_locality_default, zcu_locality_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
+    z_owned_source_info_t, z_priority_t, z_query_target_t,
+};
+#[cfg(feature = "unstable")]
+use crate::{
+    transmute::LoanedCTypeRef, z_id_t, zc_locality_default, zc_locality_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 
 // we need to add Default to ReplyError
@@ -145,8 +149,9 @@ pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned
     }
 }
 
+#[cfg(feature = "unstable")]
 /// Gets the id of the zenoh instance that answered this Reply.
-/// Returns `true` if id is present
+/// Returns `true` if id is present.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_replier_id(
@@ -189,10 +194,12 @@ pub struct z_get_options_t {
     pub congestion_control: z_congestion_control_t,
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
+    #[cfg(feature = "unstable")]
     /// The allowed destination for the query.
-    pub allowed_destination: zcu_locality_t,
+    pub allowed_destination: zc_locality_t,
+    #[cfg(feature = "unstable")]
     /// The accepted replies for the query.
-    pub accept_replies: zcu_reply_keyexpr_t,
+    pub accept_replies: zc_reply_keyexpr_t,
     /// The priority of the query.
     pub priority: z_priority_t,
     /// The source info for the query.
@@ -210,8 +217,10 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::default().into(),
-        allowed_destination: zcu_locality_default(),
-        accept_replies: zcu_reply_keyexpr_default(),
+        #[cfg(feature = "unstable")]
+        allowed_destination: zc_locality_default(),
+        #[cfg(feature = "unstable")]
+        accept_replies: zc_reply_keyexpr_default(),
         priority: Priority::default().into(),
         is_express: false,
         timeout_ms: 0,
@@ -273,10 +282,14 @@ pub unsafe extern "C" fn z_get(
             .consolidation(options.consolidation)
             .target(options.target.into())
             .congestion_control(options.congestion_control.into())
-            .allowed_destination(options.allowed_destination.into())
-            .accept_replies(options.accept_replies.into())
             .priority(options.priority.into())
             .express(options.is_express);
+        #[cfg(feature = "unstable")]
+        {
+            get = get
+                .allowed_destination(options.allowed_destination.into())
+                .accept_replies(options.accept_replies.into());
+        }
 
         if options.timeout_ms != 0 {
             get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));

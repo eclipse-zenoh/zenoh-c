@@ -37,8 +37,9 @@ pub struct z_put_options_t {
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: *mut z_timestamp_t,
+    #[cfg(feature = "unstable")]
     /// The allowed destination of this message.
-    pub allowed_destination: zcu_locality_t,
+    pub allowed_destination: zc_locality_t,
     /// The source info for the message.
     pub source_info: *mut z_owned_source_info_t,
     /// The attachment to this message.
@@ -55,7 +56,8 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
         priority: Priority::default().into(),
         is_express: false,
         timestamp: null_mut(),
-        allowed_destination: zcu_locality_default(),
+        #[cfg(feature = "unstable")]
+        allowed_destination: zc_locality_default(),
         source_info: null_mut(),
         attachment: null_mut(),
     };
@@ -104,7 +106,10 @@ pub extern "C" fn z_put(
         put = put.priority(options.priority.into());
         put = put.congestion_control(options.congestion_control.into());
         put = put.express(options.is_express);
-        put = put.allowed_destination(options.allowed_destination.into());
+        #[cfg(feature = "unstable")]
+        {
+            put = put.allowed_destination(options.allowed_destination.into());
+        }
     }
 
     if let Err(e) = put.wait() {
@@ -127,8 +132,9 @@ pub struct z_delete_options_t {
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: *mut z_timestamp_t,
+    #[cfg(feature = "unstable")]
     /// The allowed destination of this message.
-    pub allowed_destination: zcu_locality_t,
+    pub allowed_destination: zc_locality_t,
 }
 
 /// Constructs the default value for `z_delete_options_t`.
@@ -140,7 +146,8 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
         priority: Priority::default().into(),
         is_express: false,
         timestamp: null_mut(),
-        allowed_destination: zcu_locality_default(),
+        #[cfg(feature = "unstable")]
+        allowed_destination: zc_locality_default(),
     };
 }
 
@@ -171,8 +178,12 @@ pub extern "C" fn z_delete(
         del = del
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express)
-            .allowed_destination(options.allowed_destination.into());
+            .express(options.is_express);
+
+        #[cfg(feature = "unstable")]
+        {
+            del = del.allowed_destination(options.allowed_destination.into());
+        }
     }
 
     match del.wait() {

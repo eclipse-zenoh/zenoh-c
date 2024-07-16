@@ -184,33 +184,37 @@ typedef enum z_whatami_t {
 /**
  * The locality of samples to be received by subscribers or targeted by publishers.
  */
-typedef enum zcu_locality_t {
+#if defined(UNSTABLE)
+typedef enum zc_locality_t {
   /**
    * Any
    */
-  ZCU_LOCALITY_ANY = 0,
+  ZC_LOCALITY_ANY = 0,
   /**
    * Only from local sessions.
    */
-  ZCU_LOCALITY_SESSION_LOCAL = 1,
+  ZC_LOCALITY_SESSION_LOCAL = 1,
   /**
    * Only from remote sessions.
    */
-  ZCU_LOCALITY_REMOTE = 2,
-} zcu_locality_t;
+  ZC_LOCALITY_REMOTE = 2,
+} zc_locality_t;
+#endif
 /**
  * Key expressions types to which Queryable should reply to.
  */
-typedef enum zcu_reply_keyexpr_t {
+#if defined(UNSTABLE)
+typedef enum zc_reply_keyexpr_t {
   /**
    * Replies to any key expression queries.
    */
-  ZCU_REPLY_KEYEXPR_ANY = 0,
+  ZC_REPLY_KEYEXPR_ANY = 0,
   /**
    * Replies only to queries with intersecting key expressions.
    */
-  ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
-} zcu_reply_keyexpr_t;
+  ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
+} zc_reply_keyexpr_t;
+#endif
 typedef int8_t z_error_t;
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 typedef struct z_alloc_alignment_t {
@@ -422,10 +426,12 @@ typedef struct z_publisher_options_t {
    * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
    */
   bool is_express;
+#if defined(UNSTABLE)
   /**
    * The allowed destination for this publisher.
    */
-  enum zcu_locality_t allowed_destination;
+  enum zc_locality_t allowed_destination;
+#endif
 } z_publisher_options_t;
 /**
  * Options passed to the `z_declare_queryable()` function.
@@ -465,10 +471,12 @@ typedef struct z_delete_options_t {
    * The timestamp of this message.
    */
   struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
   /**
    * The allowed destination of this message.
    */
-  enum zcu_locality_t allowed_destination;
+  enum zc_locality_t allowed_destination;
+#endif
 } z_delete_options_t;
 /**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
@@ -504,14 +512,18 @@ typedef struct z_get_options_t {
    * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
    */
   bool is_express;
+#if defined(UNSTABLE)
   /**
    * The allowed destination for the query.
    */
-  enum zcu_locality_t allowed_destination;
+  enum zc_locality_t allowed_destination;
+#endif
+#if defined(UNSTABLE)
   /**
    * The accepted replies for the query.
    */
-  enum zcu_reply_keyexpr_t accept_replies;
+  enum zc_reply_keyexpr_t accept_replies;
+#endif
   /**
    * The priority of the query.
    */
@@ -584,10 +596,12 @@ typedef struct z_put_options_t {
    * The timestamp of this message.
    */
   struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
   /**
    * The allowed destination of this message.
    */
-  enum zcu_locality_t allowed_destination;
+  enum zc_locality_t allowed_destination;
+#endif
   /**
    * The source info for the message.
    */
@@ -767,6 +781,43 @@ typedef struct z_time_t {
   uint64_t t;
 } z_time_t;
 /**
+ * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
+ */
+#if defined(UNSTABLE)
+typedef struct zc_matching_status_t {
+  /**
+   * True if there exist Subscribers matching the Publisher's key expression, false otherwise.
+   */
+  bool matching;
+} zc_matching_status_t;
+#endif
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+#if defined(UNSTABLE)
+typedef struct zc_owned_closure_matching_status_t {
+  /**
+   * An optional pointer to a closure state.
+   */
+  void *context;
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct zc_matching_status_t *matching_status, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
+} zc_owned_closure_matching_status_t;
+#endif
+/**
  * The options for `zc_liveliness_declare_token()`.
  */
 typedef struct zc_liveliness_declaration_options_t {
@@ -785,39 +836,6 @@ typedef struct zc_liveliness_get_options_t {
   uint32_t timeout_ms;
 } zc_liveliness_get_options_t;
 /**
- * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
- */
-typedef struct zcu_matching_status_t {
-  /**
-   * True if there exist Subscribers matching the Publisher's key expression, false otherwise.
-   */
-  bool matching;
-} zcu_matching_status_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct zcu_owned_closure_matching_status_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(const struct zcu_matching_status_t *matching_status, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
-} zcu_owned_closure_matching_status_t;
-/**
  * Options passed to the `ze_declare_publication_cache()` function.
  */
 typedef struct ze_publication_cache_options_t {
@@ -829,7 +847,7 @@ typedef struct ze_publication_cache_options_t {
   /**
    * The restriction for the matching queries that will be receive by this publication cache.
    */
-  enum zcu_locality_t queryable_origin;
+  enum zc_locality_t queryable_origin;
 #endif
   /**
    * The `complete` option for the queryable.
@@ -858,7 +876,7 @@ typedef struct ze_querying_subscriber_options_t {
   /**
    * The restriction for the matching publications that will be receive by this subscriber.
    */
-  enum zcu_locality_t allowed_origin;
+  enum zc_locality_t allowed_origin;
 #endif
   /**
    * The selector to be used for queries.
@@ -872,10 +890,12 @@ typedef struct ze_querying_subscriber_options_t {
    * The consolidation mode to be used for queries.
    */
   struct z_query_consolidation_t query_consolidation;
+#if defined(UNSTABLE)
   /**
    * The accepted replies for queries.
    */
-  enum zcu_reply_keyexpr_t query_accept_replies;
+  enum zc_reply_keyexpr_t query_accept_replies;
+#endif
   /**
    * The timeout to be used for queries.
    */
@@ -2549,9 +2569,11 @@ ZENOHC_API void z_reply_null(struct z_owned_reply_t *this_);
 ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *this_);
 /**
  * Gets the id of the zenoh instance that answered this Reply.
- * Returns `true` if id is present
+ * Returns `true` if id is present.
  */
+#if defined(UNSTABLE)
 ZENOHC_API bool z_reply_replier_id(const struct z_loaned_reply_t *this_, struct z_id_t *out_id);
+#endif
 /**
  * Constructs send and recieve ends of the ring channel
  */
@@ -3549,6 +3571,41 @@ ZENOHC_API
 z_error_t z_whatami_to_view_string(enum z_whatami_t whatami,
                                    struct z_view_string_t *str_out);
 /**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+void zc_closure_matching_status_call(const struct zc_loaned_closure_matching_status_t *closure,
+                                     const struct zc_matching_status_t *mathing_status);
+#endif
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+bool zc_closure_matching_status_check(const struct zc_owned_closure_matching_status_t *this_);
+#endif
+/**
+ * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+void zc_closure_matching_status_drop(struct zc_owned_closure_matching_status_t *closure);
+#endif
+/**
+ * Borrows closure.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loan(const struct zc_owned_closure_matching_status_t *closure);
+#endif
+/**
+ * Constructs a null value of 'zc_owned_closure_matching_status_t' type
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void zc_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
+#endif
+/**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  *
  * Returns 0 in case of success, negative error code otherwise.
@@ -3695,6 +3752,42 @@ ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *thi
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
 ZENOHC_API z_error_t zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *this_);
+/**
+ * Returns default value of `zc_locality_t`
+ */
+#if defined(UNSTABLE)
+ZENOHC_API enum zc_locality_t zc_locality_default(void);
+#endif
+/**
+ * Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
+ *
+ * @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
+ * @publisher: A publisher to associate with matching listener.
+ * @callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+z_error_t zc_publisher_matching_listener_callback(struct zc_owned_matching_listener_t *this_,
+                                                  const struct z_loaned_publisher_t *publisher,
+                                                  struct zc_owned_closure_matching_status_t *callback);
+#endif
+/**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+z_error_t zc_publisher_matching_listener_undeclare(struct zc_owned_matching_listener_t *this_);
+#endif
+/**
+ * Returns the default value of #zc_reply_keyexpr_t.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
+#endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_error_t zc_shm_client_list_add_client(z_protocol_id_t id,
@@ -3739,59 +3832,6 @@ ZENOHC_API z_error_t zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API void zc_shm_client_list_null(zc_owned_shm_client_list_t *this_);
 #endif
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-void zcu_closure_matching_status_call(const struct zcu_loaned_closure_matching_status_t *closure,
-                                      const struct zcu_matching_status_t *mathing_status);
-/**
- * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
- */
-ZENOHC_API
-bool zcu_closure_matching_status_check(const struct zcu_owned_closure_matching_status_t *this_);
-/**
- * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API
-void zcu_closure_matching_status_drop(struct zcu_owned_closure_matching_status_t *closure);
-/**
- * Borrows closure.
- */
-ZENOHC_API
-const struct zcu_loaned_closure_matching_status_t *zcu_closure_matching_status_loan(const struct zcu_owned_closure_matching_status_t *closure);
-/**
- * Constructs a null value of 'zcu_owned_closure_matching_status_t' type
- */
-ZENOHC_API void zcu_closure_matching_status_null(struct zcu_owned_closure_matching_status_t *this_);
-/**
- * Returns default value of `zcu_locality_t`
- */
-ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
-/**
- * Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
- *
- * @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
- * @publisher: A publisher to associate with matching listener.
- * @callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_error_t zcu_publisher_matching_listener_callback(struct zcu_owned_matching_listener_t *this_,
-                                                   const struct z_loaned_publisher_t *publisher,
-                                                   struct zcu_owned_closure_matching_status_t *callback);
-/**
- * Undeclares the given matching listener, droping and invalidating it.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_error_t zcu_publisher_matching_listener_undeclare(struct zcu_owned_matching_listener_t *this_);
-/**
- * Returns the default value of #zcu_reply_keyexpr_t.
- */
-ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
 /**
  * Constructs and declares a publication cache.
  *

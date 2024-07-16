@@ -459,8 +459,8 @@ Types
     :members:
 .. doxygenstruct:: z_publisher_delete_options_t
 
-.. doxygenstruct:: zcu_owned_matching_listener_t
-.. doxygenstruct:: zcu_owned_closure_matching_status_t
+.. doxygenstruct:: zc_owned_matching_listener_t
+.. doxygenstruct:: zc_owned_closure_matching_status_t
     :members:
 
 Functions
@@ -486,10 +486,10 @@ Functions
 .. doxygenfunction:: z_publisher_put_options_default
 .. doxygenfunction:: z_publisher_delete_options_default
 
-.. doxygenfunction:: zcu_closure_matching_status_check
-.. doxygenfunction:: zcu_closure_matching_status_null
-.. doxygenfunction:: zcu_closure_matching_status_drop
-.. doxygenfunction:: zcu_closure_matching_status_call
+.. doxygenfunction:: zc_closure_matching_status_check
+.. doxygenfunction:: zc_closure_matching_status_null
+.. doxygenfunction:: zc_closure_matching_status_drop
+.. doxygenfunction:: zc_closure_matching_status_call
 
 Subscription
 ============
@@ -755,7 +755,7 @@ Types
 .. doxygenstruct:: ze_owned_publication_cache_t
 .. doxygenstruct:: ze_publication_cache_options_t
     :members:
-.. doxygenenum:: zcu_locality_t
+.. doxygenenum:: zc_locality_t
 
 Functions
 ---------
@@ -779,7 +779,7 @@ Types
 .. doxygenstruct:: ze_loaned_querying_subscriber_t
 .. doxygenstruct:: ze_querying_subscriber_options_t
     :members:
-.. doxygenenum:: zcu_reply_keyexpr_t
+.. doxygenenum:: zc_reply_keyexpr_t
 
 Functions
 ---------
@@ -793,4 +793,4 @@ Functions
 .. doxygenfunction:: ze_querying_subscriber_drop
 
 .. doxygenfunction:: ze_querying_subscriber_options_default
-.. doxygenfunction:: zcu_reply_keyexpr_default
+.. doxygenfunction:: zc_reply_keyexpr_default
