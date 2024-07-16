@@ -29,7 +29,7 @@ use zenoh::{
 
 use crate::{
     errors,
-    transmute::{RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t,
@@ -37,8 +37,8 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::LoanedCTypeRef, z_id_t, zc_locality_default, zc_locality_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    transmute::IntoCType, z_id_t, zc_locality_default, zc_locality_t, zc_reply_keyexpr_default,
+    zc_reply_keyexpr_t,
 };
 
 // we need to add Default to ReplyError
@@ -112,7 +112,7 @@ pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
 }
 
 pub use crate::opaque_types::{z_loaned_reply_t, z_owned_reply_t};
-use crate::transmute::IntoCType;
+
 decl_c_type!(
     owned(z_owned_reply_t, Option<Reply>),
     loaned(z_loaned_reply_t, Reply)
