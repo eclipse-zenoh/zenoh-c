@@ -67,7 +67,8 @@ pub unsafe extern "C" fn z_encoding_from_substr(
 /// Set a schema to this encoding from a c substring. Zenoh does not define what a schema is and its semantichs is left to the implementer.
 /// E.g. a common schema for `text/plain` encoding is `utf-8`.
 #[no_mangle]
-pub extern "C" fn z_encoding_set_schema_from_substr(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
     this: &mut z_loaned_encoding_t,
     s: *const c_char,
     len: usize,
@@ -79,7 +80,7 @@ pub extern "C" fn z_encoding_set_schema_from_substr(
     } else if s.is_null() {
         return errors::Z_EINVAL;
     }
-    let schema_bytes = unsafe { from_raw_parts(s as *const u8, len) };
+    let schema_bytes = from_raw_parts(s as *const u8, len);
     match from_utf8(schema_bytes) {
         Ok(schema_str) => {
             *encoding = std::mem::take(encoding).with_schema(schema_str);
@@ -95,11 +96,12 @@ pub extern "C" fn z_encoding_set_schema_from_substr(
 /// Set a schema to this encoding from a c string. Zenoh does not define what a schema is and its semantichs is left to the implementer.
 /// E.g. a common schema for `text/plain` encoding is `utf-8`.
 #[no_mangle]
-pub extern "C" fn z_encoding_set_schema_from_str(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_encoding_set_schema_from_str(
     this: &mut z_loaned_encoding_t,
     s: *const c_char,
 ) -> z_error_t {
-    z_encoding_set_schema_from_substr(this, s, unsafe { strlen(s) })
+    z_encoding_set_schema_from_substr(this, s,strlen(s))
 }
 
 /// Constructs a `z_owned_encoding_t` from a specified string.
