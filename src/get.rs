@@ -187,6 +187,8 @@ pub struct z_get_options_t {
     pub encoding: *mut z_owned_encoding_t,
     /// The congestion control to apply when routing the query.
     pub congestion_control: z_congestion_control_t,
+    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+    pub is_express: bool,
     /// The allowed destination for the query.
     pub allowed_destination: zcu_locality_t,
     /// The accepted replies for the query.
@@ -211,6 +213,7 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
         allowed_destination: zcu_locality_default(),
         accept_replies: zcu_reply_keyexpr_default(),
         priority: Priority::default().into(),
+        is_express: false,
         timeout_ms: 0,
         payload: null_mut(),
         encoding: null_mut(),
@@ -272,7 +275,8 @@ pub unsafe extern "C" fn z_get(
             .congestion_control(options.congestion_control.into())
             .allowed_destination(options.allowed_destination.into())
             .accept_replies(options.accept_replies.into())
-            .priority(options.priority.into());
+            .priority(options.priority.into())
+            .express(options.is_express);
 
         if options.timeout_ms != 0 {
             get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
