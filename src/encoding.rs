@@ -23,13 +23,12 @@ use libc::{c_char, strlen};
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::bytes::Encoding;
 
+pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     errors::{self, z_error_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_owned_string_t, z_string_from_substr,
 };
-
-pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 
 decl_c_type!(
     owned(z_owned_encoding_t, Encoding),
