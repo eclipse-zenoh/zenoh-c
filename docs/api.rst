@@ -227,6 +227,8 @@ Functions
 .. doxygenfunction:: z_encoding_check
 .. doxygenfunction:: z_encoding_drop
 
+.. doxygenfunction:: z_encoding_drop
+
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
 .. doxygenfunction:: z_encoding_from_substr
