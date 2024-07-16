@@ -101,7 +101,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_str(
     this: &mut z_loaned_encoding_t,
     s: *const c_char,
 ) -> z_error_t {
-    z_encoding_set_schema_from_substr(this, s,strlen(s))
+    z_encoding_set_schema_from_substr(this, s, strlen(s))
 }
 
 /// Constructs a `z_owned_encoding_t` from a specified string.
