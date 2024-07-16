@@ -3549,6 +3549,12 @@ ZENOHC_API
 z_error_t z_whatami_to_view_string(enum z_whatami_t whatami,
                                    struct z_view_string_t *str_out);
 /**
+ * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t zc_config_from_env(struct z_owned_config_t *this_);
+/**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  *
  * Returns 0 in case of success, negative error code otherwise.

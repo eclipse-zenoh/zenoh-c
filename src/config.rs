@@ -294,6 +294,26 @@ pub unsafe extern "C" fn zc_config_from_file(
     res
 }
 
+/// Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
+///
+/// Returns 0 in case of success, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_config_from_env(
+    this: &mut MaybeUninit<z_owned_config_t>,
+) -> errors::z_error_t {
+    match Config::from_env() {
+        Ok(c) => {
+            this.as_rust_type_mut_uninit().write(Some(c));
+            errors::Z_OK
+        }
+        Err(e) => {
+            tracing::error!("{}", e);
+            errors::Z_EIO
+        }
+    }
+}
+
 /// Constructs a default peer mode configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]

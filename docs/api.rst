@@ -399,6 +399,7 @@ Functions
 .. doxygenfunction:: z_config_default
 .. doxygenfunction:: z_config_client
 .. doxygenfunction:: z_config_peer
+.. doxygenfunction:: zc_config_from_env
 .. doxygenfunction:: zc_config_from_file
 .. doxygenfunction:: zc_config_from_str
 .. doxygenfunction:: zc_config_insert_json
