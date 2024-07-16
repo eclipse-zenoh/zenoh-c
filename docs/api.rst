@@ -75,7 +75,7 @@ Functions
 .. doxygenfunction:: z_string_len
 .. doxygenfunction:: z_string_is_empty
 
-string array
+String Array
 -----------
 Types
 ^^^^^
@@ -223,13 +223,85 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_encoding_null
 .. doxygenfunction:: z_encoding_loan
+.. doxygenfunction:: z_encoding_loan_mut
 .. doxygenfunction:: z_encoding_check
 .. doxygenfunction:: z_encoding_drop
 
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
 .. doxygenfunction:: z_encoding_from_substr
+.. doxygenfunction:: z_encoding_set_schema_from_str
+.. doxygenfunction:: z_encoding_set_schema_from_substr
 .. doxygenfunction:: z_encoding_to_string
+
+Predefined Encodings
+^^^^^^^^^^^^^^^^^^^^
+.. doxygenfunction:: z_encoding_zenoh_bytes
+.. doxygenfunction:: z_encoding_zenoh_int8
+.. doxygenfunction:: z_encoding_zenoh_int16
+.. doxygenfunction:: z_encoding_zenoh_int32
+.. doxygenfunction:: z_encoding_zenoh_int64
+.. doxygenfunction:: z_encoding_zenoh_int128
+.. doxygenfunction:: z_encoding_zenoh_uint8
+.. doxygenfunction:: z_encoding_zenoh_uint16
+.. doxygenfunction:: z_encoding_zenoh_uint32
+.. doxygenfunction:: z_encoding_zenoh_uint64
+.. doxygenfunction:: z_encoding_zenoh_uint128
+.. doxygenfunction:: z_encoding_zenoh_float32
+.. doxygenfunction:: z_encoding_zenoh_float64
+.. doxygenfunction:: z_encoding_zenoh_bool
+.. doxygenfunction:: z_encoding_zenoh_string
+.. doxygenfunction:: z_encoding_zenoh_error
+.. doxygenfunction:: z_encoding_application_octet_stream
+.. doxygenfunction:: z_encoding_text_plain
+.. doxygenfunction:: z_encoding_application_json
+.. doxygenfunction:: z_encoding_text_json
+.. doxygenfunction:: z_encoding_application_cdr
+.. doxygenfunction:: z_encoding_application_cbor
+.. doxygenfunction:: z_encoding_application_yaml
+.. doxygenfunction:: z_encoding_text_yaml
+.. doxygenfunction:: z_encoding_text_json5
+.. doxygenfunction:: z_encoding_application_python_serialized_objects
+.. doxygenfunction:: z_encoding_application_protobuf
+.. doxygenfunction:: z_encoding_application_java_serialized_object
+.. doxygenfunction:: z_encoding_application_openmetrics_text
+.. doxygenfunction:: z_encoding_image_png
+.. doxygenfunction:: z_encoding_image_jpeg
+.. doxygenfunction:: z_encoding_image_gif
+.. doxygenfunction:: z_encoding_image_bmp
+.. doxygenfunction:: z_encoding_image_webp
+.. doxygenfunction:: z_encoding_application_xml
+.. doxygenfunction:: z_encoding_application_x_www_form_urlencoded
+.. doxygenfunction:: z_encoding_text_html
+.. doxygenfunction:: z_encoding_text_xml
+.. doxygenfunction:: z_encoding_text_css
+.. doxygenfunction:: z_encoding_text_javascript
+.. doxygenfunction:: z_encoding_text_markdown
+.. doxygenfunction:: z_encoding_text_csv
+.. doxygenfunction:: z_encoding_application_sql
+.. doxygenfunction:: z_encoding_application_coap_payload
+.. doxygenfunction:: z_encoding_application_json_patch_json
+.. doxygenfunction:: z_encoding_application_json_seq
+.. doxygenfunction:: z_encoding_application_jsonpath
+.. doxygenfunction:: z_encoding_application_jwt
+.. doxygenfunction:: z_encoding_application_mp4
+.. doxygenfunction:: z_encoding_application_soap_xml
+.. doxygenfunction:: z_encoding_application_yang
+.. doxygenfunction:: z_encoding_audio_aac
+.. doxygenfunction:: z_encoding_audio_flac
+.. doxygenfunction:: z_encoding_audio_mp4
+.. doxygenfunction:: z_encoding_audio_ogg
+.. doxygenfunction:: z_encoding_audio_vorbis
+.. doxygenfunction:: z_encoding_video_h261
+.. doxygenfunction:: z_encoding_video_h263
+.. doxygenfunction:: z_encoding_video_h264
+.. doxygenfunction:: z_encoding_video_h265
+.. doxygenfunction:: z_encoding_video_h266
+.. doxygenfunction:: z_encoding_video_mp4
+.. doxygenfunction:: z_encoding_video_ogg
+.. doxygenfunction:: z_encoding_video_raw
+.. doxygenfunction:: z_encoding_video_vp8
+.. doxygenfunction:: z_encoding_video_vp9
 
 Value
 -----

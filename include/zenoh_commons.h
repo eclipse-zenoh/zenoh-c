@@ -1695,9 +1695,169 @@ z_error_t z_delete(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_delete_options_default(struct z_delete_options_t *this_);
 /**
+ * A Concise Binary Object Representation (CBOR)-encoded data.
+ *
+ * Constant alias for string: `"application/cbor"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_cbor(void);
+/**
+ * A Common Data Representation (CDR)-encoded data.
+ *
+ * Constant alias for string: `"application/cdr"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_cdr(void);
+/**
+ * Constrained Application Protocol (CoAP) data intended for CoAP-to-HTTP and HTTP-to-CoAP proxies.
+ *
+ * Constant alias for string: `"application/coap-payload"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_coap_payload(void);
+/**
+ * A Java serialized object.
+ *
+ * Constant alias for string: `"application/java-serialized-object"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_java_serialized_object(void);
+/**
+ * JSON data intended to be consumed by an application.
+ *
+ * Constant alias for string: `"application/json"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_json(void);
+/**
+ * Defines a JSON document structure for expressing a sequence of operations to apply to a JSON document.
+ *
+ * Constant alias for string: `"application/json-patch+json"`.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_application_json_patch_json(void);
+/**
+ * A JSON text sequence consists of any number of JSON texts, all encoded in UTF-8.
+ *
+ * Constant alias for string: `"application/json-seq"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_json_seq(void);
+/**
+ * A JSONPath defines a string syntax for selecting and extracting JSON values from within a given JSON value.
+ *
+ * Constant alias for string: `"application/jsonpath"`.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_application_jsonpath(void);
+/**
+ * A JSON Web Token (JWT).
+ *
+ * Constant alias for string: `"application/jwt"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_jwt(void);
+/**
+ * An application-specific MPEG-4 encoded data, either audio or video.
+ *
+ * Constant alias for string: `"application/mp4"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_mp4(void);
+/**
+ * An application-specific stream of bytes.
+ *
+ * Constant alias for string: `"application/octet-stream"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_octet_stream(void);
+/**
+ * An [openmetrics](https://github.com/OpenObservability/OpenMetrics) data, common used by [Prometheus](https://prometheus.io/).
+ *
+ * Constant alias for string: `"application/openmetrics-text"`.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_application_openmetrics_text(void);
+/**
+ * An application-specific protobuf-encoded data.
+ *
+ * Constant alias for string: `"application/protobuf"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_protobuf(void);
+/**
+ * A Python object serialized using [pickle](https://docs.python.org/3/library/pickle.html).
+ *
+ * Constant alias for string: `"application/python-serialized-object"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_python_serialized_objects(void);
+/**
+ * A SOAP 1.2 message serialized as XML 1.0.
+ *
+ * Constant alias for string: `"application/soap+xml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_soap_xml(void);
+/**
+ * An application-specific SQL query.
+ *
+ * Constant alias for string: `"application/sql"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_sql(void);
+/**
+ * An encoded a list of tuples, each consisting of a name and a value.
+ *
+ * Constant alias for string: `"application/x-www-form-urlencoded"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_x_www_form_urlencoded(void);
+/**
+ * An XML file intended to be consumed by an application..
+ *
+ * Constant alias for string: `"application/xml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_xml(void);
+/**
+ * YAML data intended to be consumed by an application.
+ *
+ * Constant alias for string: `"application/yaml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_yaml(void);
+/**
+ * A YANG-encoded data commonly used by the Network Configuration Protocol (NETCONF).
+ *
+ * Constant alias for string: `"application/yang"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_yang(void);
+/**
+ * A MPEG-4 Advanced Audio Coding (AAC) media.
+ *
+ * Constant alias for string: `"audio/aac"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_aac(void);
+/**
+ * A Free Lossless Audio Codec (FLAC) media.
+ *
+ * Constant alias for string: `"audio/flac"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_flac(void);
+/**
+ * An audio codec defined in MPEG-1, MPEG-2, MPEG-4, or registered at the MP4 registration authority.
+ *
+ * Constant alias for string: `"audio/mp4"`.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_audio_mp4(void);
+/**
+ * An Ogg-encapsulated audio stream.
+ *
+ * Constant alias for string: `"audio/ogg"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_ogg(void);
+/**
+ * A Vorbis-encoded audio stream.
+ *
+ * Constant alias for string: `"audio/vorbis"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_vorbis(void);
+/**
  * Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *this_);
+/**
+ * Constructs an owned copy of the encoding in provided uninitilized memory location.
+ */
+ZENOHC_API
+void z_encoding_clone(struct z_owned_encoding_t *dst,
+                      const struct z_loaned_encoding_t *this_);
 /**
  * Frees the memory and resets the encoding it to its default value.
  */
@@ -1714,6 +1874,36 @@ z_error_t z_encoding_from_substr(struct z_owned_encoding_t *this_,
                                  const char *s,
                                  size_t len);
 /**
+ * A BitMap (BMP) image.
+ *
+ * Constant alias for string: `"image/bmp"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_bmp(void);
+/**
+ * A Graphics Interchange Format (GIF) image.
+ *
+ * Constant alias for string: `"image/gif"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_gif(void);
+/**
+ * A Joint Photographic Experts Group (JPEG) image.
+ *
+ * Constant alias for string: `"image/jpeg"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_jpeg(void);
+/**
+ * A Portable Network Graphics (PNG) image.
+ *
+ * Constant alias for string: `"image/png"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_png(void);
+/**
+ * A Web Portable (WebP) image.
+ *
+ *  Constant alias for string: `"image/webp"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_webp(void);
+/**
  * Borrows encoding.
  */
 ZENOHC_API
@@ -1723,9 +1913,88 @@ const struct z_loaned_encoding_t *z_encoding_loan(const struct z_owned_encoding_
  */
 ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
 /**
+ * Mutably borrows encoding.
+ */
+ZENOHC_API struct z_loaned_encoding_t *z_encoding_loan_mut(struct z_owned_encoding_t *this_);
+/**
  * Constructs a default `z_owned_encoding_t`.
  */
 ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *this_);
+/**
+ * Set a schema to this encoding from a c string. Zenoh does not define what a schema is and its semantichs is left to the implementer.
+ * E.g. a common schema for `text/plain` encoding is `utf-8`.
+ */
+ZENOHC_API
+z_error_t z_encoding_set_schema_from_str(struct z_loaned_encoding_t *this_,
+                                         const char *s);
+/**
+ * Set a schema to this encoding from a c substring. Zenoh does not define what a schema is and its semantichs is left to the implementer.
+ * E.g. a common schema for `text/plain` encoding is `utf-8`.
+ */
+ZENOHC_API
+z_error_t z_encoding_set_schema_from_substr(struct z_loaned_encoding_t *this_,
+                                            const char *s,
+                                            size_t len);
+/**
+ * A CSS file.
+ *
+ * Constant alias for string: `"text/css"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_css(void);
+/**
+ * A CSV file.
+ *
+ * Constant alias for string: `"text/csv"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_csv(void);
+/**
+ * An HTML file.
+ *
+ * Constant alias for string: `"text/html"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_html(void);
+/**
+ * A JavaScript file.
+ *
+ * Constant alias for string: `"text/javascript"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_javascript(void);
+/**
+ * JSON data intended to be human readable.
+ *
+ * Constant alias for string: `"text/json"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_json(void);
+/**
+ * JSON5 encoded data that are human readable.
+ *
+ * Constant alias for string: `"text/json5"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_json5(void);
+/**
+ * A MarkDown file.
+ *
+ * Constant alias for string: `"text/markdown"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_markdown(void);
+/**
+ * A textual file.
+ *
+ * Constant alias for string: `"text/plain"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_plain(void);
+/**
+ * An XML file that is human readable.
+ *
+ * Constant alias for string: `"text/xml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_xml(void);
+/**
+ * YAML data intended to be human readable.
+ *
+ * Constant alias for string: `"text/yaml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_yaml(void);
 /**
  * Constructs an owned non-null-terminated string from encoding
  *
@@ -1735,6 +2004,194 @@ ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *this_);
 ZENOHC_API
 void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
                           struct z_owned_string_t *out_str);
+/**
+ * A h261-encoded video stream.
+ *
+ * Constant alias for string: `"video/h261"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h261(void);
+/**
+ * A h263-encoded video stream.
+ *
+ * Constant alias for string: `"video/h263"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h263(void);
+/**
+ * A h264-encoded video stream.
+ *
+ * Constant alias for string: `"video/h264"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h264(void);
+/**
+ * A h265-encoded video stream.
+ *
+ * Constant alias for string: `"video/h265"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h265(void);
+/**
+ * A h266-encoded video stream.
+ *
+ * Constant alias for string: `"video/h266"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h266(void);
+/**
+ * A video codec defined in MPEG-1, MPEG-2, MPEG-4, or registered at the MP4 registration authority.
+ *
+ * Constant alias for string: `"video/mp4"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_mp4(void);
+/**
+ * An Ogg-encapsulated video stream.
+ *
+ * Constant alias for string: `"video/ogg"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_ogg(void);
+/**
+ * An uncompressed, studio-quality video stream.
+ *
+ * Constant alias for string: `"video/raw"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_raw(void);
+/**
+ * A VP8-encoded video stream.
+ *
+ * Constant alias for string: `"video/vp8"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_vp8(void);
+/**
+ * A VP9-encoded video stream.
+ *
+ * Constant alias for string: `"video/vp9"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_vp9(void);
+/**
+ * A boolean. `0` is `false`, `1` is `true`. Other values are invalid.
+ *
+ * Constant alias for string: `"zenoh/bool"`.
+ *
+ * Usually used for types: `bool`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_bool(void);
+/**
+ * Just some bytes.
+ *
+ * Constant alias for string: `"zenoh/bytes"`.
+ *
+ * Usually used for types: `uint8_t[]`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_bytes(void);
+/**
+ * A zenoh error.
+ *
+ * Constant alias for string: `"zenoh/error"`.
+ *
+ * Usually used for types: `z_reply_error_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_error(void);
+/**
+ * A VLE-encoded 32bit float. Binary representation uses *IEEE 754-2008* *binary32* .
+ *
+ * Constant alias for string: `"zenoh/float32"`.
+ *
+ * Usually used for types: `float`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_float32(void);
+/**
+ * A VLE-encoded 64bit float. Binary representation uses *IEEE 754-2008* *binary64*.
+ *
+ * Constant alias for string: `"zenoh/float64"`.
+ *
+ * Usually used for types: `double`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_float64(void);
+/**
+ * A VLE-encoded signed little-endian 128bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int128"`.
+ *
+ * Usually used for types: `int128_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int128(void);
+/**
+ * A VLE-encoded signed little-endian 16bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int16"`.
+ *
+ * Usually used for types: `int16_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int16(void);
+/**
+ * A VLE-encoded signed little-endian 32bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int32"`.
+ *
+ * Usually used for types: `int32_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int32(void);
+/**
+ * A VLE-encoded signed little-endian 64bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int64"`.
+ *
+ * Usually used for types: `int64_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int64(void);
+/**
+ * A VLE-encoded signed little-endian 8bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int8"`.
+ *
+ * Usually used for types: `int8_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int8(void);
+/**
+ * A UTF-8 string.
+ *
+ * Constant alias for string: `"zenoh/string"`.
+ *
+ * Usually used for types: `const char*`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_string(void);
+/**
+ * A VLE-encoded unsigned little-endian 128bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint128"`.
+ *
+ * Usually used for types: `uint128_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint128(void);
+/**
+ * A VLE-encoded unsigned little-endian 16bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint16"`.
+ *
+ * Usually used for types: `uint16_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint16(void);
+/**
+ * A VLE-encoded unsigned little-endian 32bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint32"`.
+ *
+ * Usually used for types: `uint32_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint32(void);
+/**
+ * A VLE-encoded unsigned little-endian 64bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint64"`.
+ *
+ * Usually used for types: `uint64_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint64(void);
+/**
+ * A VLE-encoded unsigned little-endian 8bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint8"`.
+ *
+ * Usually used for types: `uint8_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint8(void);
 /**
  * Returns the entity id of the entity global id.
  */
