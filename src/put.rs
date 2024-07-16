@@ -19,8 +19,8 @@ use zenoh::{
 };
 
 use crate::{
-    commons::*, errors, keyexpr::*, transmute::RustTypeRef, z_loaned_session_t, z_owned_bytes_t,
-    z_timestamp_t,
+    commons::*, encoding::*, errors, keyexpr::*, transmute::RustTypeRef, z_loaned_session_t,
+    z_owned_bytes_t, z_timestamp_t,
 };
 
 /// Options passed to the `z_put()` function.

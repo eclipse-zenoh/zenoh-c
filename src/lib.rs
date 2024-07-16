@@ -28,6 +28,8 @@ pub mod errors;
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;
+pub mod encoding;
+pub use crate::encoding::*;
 mod commons;
 pub use crate::commons::*;
 mod payload;
