@@ -14,8 +14,10 @@
 use std::{error::Error, mem::MaybeUninit};
 
 use libc::c_char;
+#[cfg(feature = "unstable")]
+use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::{
-    key_expr::{keyexpr, Canonize, KeyExpr, SetIntersectionLevel},
+    key_expr::{keyexpr, Canonize, KeyExpr},
     prelude::*,
 };
 
@@ -600,7 +602,7 @@ pub extern "C" fn z_keyexpr_join(
         }
     }
 }
-
+#[cfg(feature = "unstable")]
 /// Intersection level of 2 key expressions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
@@ -614,7 +616,7 @@ pub enum z_keyexpr_intersection_level_t {
     /// 2 key expressions are equal.
     EQUALS = 3,
 }
-
+#[cfg(feature = "unstable")]
 impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
     fn from(val: SetIntersectionLevel) -> Self {
         match val {
@@ -625,7 +627,7 @@ impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
         }
     }
 }
-
+#[cfg(feature = "unstable")]
 #[no_mangle]
 /// Returns the relation between `left` and `right` from `left`'s point of view.
 ///

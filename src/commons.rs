@@ -18,16 +18,21 @@ use libc::c_ulong;
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
-    sample::{Sample, SampleKind, SourceInfo},
-    session::EntityGlobalId,
+    sample::{Sample, SampleKind},
     time::Timestamp,
 };
 #[cfg(feature = "unstable")]
-use zenoh::{query::ReplyKeyExpr, sample::Locality};
+use zenoh::{
+    query::ReplyKeyExpr,
+    sample::{Locality, SourceInfo},
+    session::EntityGlobalId,
+};
 
+#[cfg(feature = "unstable")]
+use crate::transmute::IntoCType;
 use crate::{
     errors,
-    transmute::{CTypeRef, IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 
@@ -138,7 +143,7 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
         None => null(),
     }
 }
-
+#[cfg(feature = "unstable")]
 /// Returns the sample source_info.
 #[no_mangle]
 pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_source_info_t {
@@ -450,25 +455,32 @@ impl From<z_congestion_control_t> for CongestionControl {
     }
 }
 
+#[cfg(feature = "unstable")]
 use crate::z_entity_global_id_t;
+#[cfg(feature = "unstable")]
 decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 
+#[cfg(feature = "unstable")]
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
     this.as_rust_type_ref().zid().into_c_type()
 }
+#[cfg(feature = "unstable")]
 /// Returns the entity id of the entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
     this.as_rust_type_ref().eid()
 }
+#[cfg(feature = "unstable")]
 pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
+#[cfg(feature = "unstable")]
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo)
 );
 
+#[cfg(feature = "unstable")]
 /// Create source info
 #[no_mangle]
 pub extern "C" fn z_source_info_new(
@@ -485,6 +497,7 @@ pub extern "C" fn z_source_info_new(
     errors::Z_OK
 }
 
+#[cfg(feature = "unstable")]
 /// Returns the source_id of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_global_id_t {
@@ -495,30 +508,35 @@ pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_gl
     .into_c_type()
 }
 
+#[cfg(feature = "unstable")]
 /// Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> u64 {
     this.as_rust_type_ref().source_sn.unwrap_or(0)
 }
 
+#[cfg(feature = "unstable")]
 /// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_check(this: &z_owned_source_info_t) -> bool {
     this.as_rust_type_ref().source_id.is_some() || this.as_rust_type_ref().source_sn.is_some()
 }
 
+#[cfg(feature = "unstable")]
 /// Borrows source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_source_info_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+#[cfg(feature = "unstable")]
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_drop(this: &mut z_owned_source_info_t) {
     *this.as_rust_type_mut() = SourceInfo::default();
 }
 
+#[cfg(feature = "unstable")]
 /// Constructs source info in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_null(this: &mut MaybeUninit<z_owned_source_info_t>) {

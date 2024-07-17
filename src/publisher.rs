@@ -27,12 +27,13 @@ use zenoh::{
 
 use crate::{
     errors,
-    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_congestion_control_t, z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_owned_bytes_t, z_owned_encoding_t, z_owned_source_info_t, z_priority_t, z_timestamp_t,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
+    z_owned_encoding_t, z_priority_t, z_timestamp_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
+    transmute::IntoCType, z_entity_global_id_t, z_owned_source_info_t,
     zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
     zc_locality_t, zc_owned_closure_matching_status_t,
 };
@@ -166,6 +167,7 @@ pub struct z_publisher_put_options_t {
     pub encoding: *mut z_owned_encoding_t,
     /// The timestamp of the publication.
     pub timestamp: *mut z_timestamp_t,
+    #[cfg(feature = "unstable")]
     /// The source info for the publication.
     pub source_info: *mut z_owned_source_info_t,
     /// The attachment to attach to the publication.
@@ -179,6 +181,7 @@ pub extern "C" fn z_publisher_put_options_default(this: &mut z_publisher_put_opt
     *this = z_publisher_put_options_t {
         encoding: ptr::null_mut(),
         timestamp: ptr::null_mut(),
+        #[cfg(feature = "unstable")]
         source_info: ptr::null_mut(),
         attachment: ptr::null_mut(),
     }
@@ -211,6 +214,7 @@ pub unsafe extern "C" fn z_publisher_put(
             let encoding = std::mem::take(encoding.as_rust_type_mut());
             put = put.encoding(encoding);
         };
+        #[cfg(feature = "unstable")]
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
             let source_info = std::mem::take(source_info.as_rust_type_mut());
             put = put.source_info(source_info);
@@ -277,7 +281,7 @@ pub extern "C" fn z_publisher_delete(
         errors::Z_OK
     }
 }
-
+#[cfg(feature = "unstable")]
 /// Returns the ID of the publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {

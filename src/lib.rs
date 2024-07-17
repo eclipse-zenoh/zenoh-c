@@ -50,22 +50,27 @@ mod session;
 pub use crate::session::*;
 mod subscriber;
 pub use crate::subscriber::*;
-// // mod pull_subscriber;
-// // pub use crate::pull_subscriber::*;
 mod publisher;
 pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
-mod liveliness;
-pub use liveliness::*;
-mod publication_cache;
-pub use publication_cache::*;
-mod querying_subscriber;
+pub mod platform;
 pub use platform::*;
+#[cfg(feature = "unstable")]
+mod liveliness;
+#[cfg(feature = "unstable")]
+pub use liveliness::*;
+#[cfg(feature = "unstable")]
+mod publication_cache;
+#[cfg(feature = "unstable")]
+pub use publication_cache::*;
+#[cfg(feature = "unstable")]
+mod querying_subscriber;
+#[cfg(feature = "unstable")]
 pub use querying_subscriber::*;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod context;
-pub mod platform;
+
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
 

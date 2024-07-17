@@ -32,13 +32,13 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t,
-    z_owned_source_info_t, z_priority_t, z_query_target_t,
+    z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t, z_priority_t,
+    z_query_target_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_id_t, zc_locality_default, zc_locality_t, zc_reply_keyexpr_default,
-    zc_reply_keyexpr_t,
+    transmute::IntoCType, z_id_t, z_owned_source_info_t, zc_locality_default, zc_locality_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 
 // we need to add Default to ReplyError
@@ -202,6 +202,7 @@ pub struct z_get_options_t {
     pub accept_replies: zc_reply_keyexpr_t,
     /// The priority of the query.
     pub priority: z_priority_t,
+    #[cfg(feature = "unstable")]
     /// The source info for the query.
     pub source_info: *mut z_owned_source_info_t,
     /// An optional attachment to attach to the query.
@@ -226,6 +227,7 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
         timeout_ms: 0,
         payload: null_mut(),
         encoding: null_mut(),
+        #[cfg(feature = "unstable")]
         source_info: null_mut(),
         attachment: null_mut(),
     };
@@ -269,6 +271,7 @@ pub unsafe extern "C" fn z_get(
             let encoding = std::mem::take(encoding.as_rust_type_mut());
             get = get.encoding(encoding);
         }
+        #[cfg(feature = "unstable")]
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
             let source_info = std::mem::take(source_info.as_rust_type_mut());
             get = get.source_info(source_info);

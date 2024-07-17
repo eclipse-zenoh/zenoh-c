@@ -33,8 +33,8 @@ zenoh_opaque.h:
   - z_loaned_query_t!
   - z_owned_queryable_t!
   - z_loaned_queryable_t!
-  - ze_owned_querying_subscriber_t!
-  - ze_loaned_querying_subscriber_t!
+  - ze_owned_querying_subscriber_t!#unstable
+  - ze_loaned_querying_subscriber_t!#unstable
   - z_owned_keyexpr_t!
   - z_view_keyexpr_t!
   - z_loaned_keyexpr_t!
@@ -42,9 +42,9 @@ zenoh_opaque.h:
   - z_loaned_session_t!
   - z_owned_config_t!
   - z_loaned_config_t!
-  - z_owned_source_info_t!
-  - z_loaned_source_info_t!
-  - z_entity_global_id_t!
+  - z_owned_source_info_t!#unstable
+  - z_loaned_source_info_t!#unstable
+  - z_entity_global_id_t!#unstable
   - z_id_t!
   - z_timestamp_t!
   - z_owned_publisher_t!
@@ -52,9 +52,9 @@ zenoh_opaque.h:
   - zc_owned_matching_listener_t!#unstable
   - z_owned_subscriber_t!
   - z_loaned_subscriber_t!
-  - zc_owned_liveliness_token_t!
-  - zc_loaned_liveliness_token_t!
-  - ze_owned_publication_cache_t!
+  - zc_owned_liveliness_token_t!#unstable
+  - zc_loaned_liveliness_token_t!#unstable
+  - ze_owned_publication_cache_t!#unstable
   - z_owned_mutex_t!
   - z_loaned_mutex_t!
   - z_owned_condvar_t!

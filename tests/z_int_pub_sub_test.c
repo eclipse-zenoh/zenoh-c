@@ -103,12 +103,13 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected QoS values");
         exit(-1);
     }
-
+#if defined(UNSTABLE)
     const z_loaned_source_info_t *source_info = z_sample_source_info(sample);
     if (source_info == NULL) {
         perror("Unexpected null source_info");
         exit(-1);
     }
+#endif
     // See https://github.com/eclipse-zenoh/zenoh/issues/1203
     // const uint64_t sn = z_source_info_sn(source_info);
     // if (sn != TEST_SN) {

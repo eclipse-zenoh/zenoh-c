@@ -40,6 +40,7 @@ pub struct z_put_options_t {
     #[cfg(feature = "unstable")]
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
+    #[cfg(feature = "unstable")]
     /// The source info for the message.
     pub source_info: *mut z_owned_source_info_t,
     /// The attachment to this message.
@@ -58,6 +59,7 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
         timestamp: null_mut(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
+        #[cfg(feature = "unstable")]
         source_info: null_mut(),
         attachment: null_mut(),
     };
@@ -89,6 +91,7 @@ pub extern "C" fn z_put(
             let encoding = std::mem::take(encoding.as_rust_type_mut());
             put = put.encoding(encoding);
         };
+        #[cfg(feature = "unstable")]
         if let Some(source_info) = unsafe { options.source_info.as_mut() } {
             let source_info = std::mem::take(source_info.as_rust_type_mut());
             put = put.source_info(source_info);

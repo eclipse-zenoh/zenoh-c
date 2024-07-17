@@ -122,7 +122,7 @@ get_opaque_type_data!(Query, z_loaned_query_t);
 get_opaque_type_data!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
 get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
-
+#[cfg(feature = "unstable")]
 /// An owned Zenoh querying subscriber.
 ///
 /// In addition to receiving the data it is subscribed to,
@@ -131,6 +131,7 @@ get_opaque_type_data!(
     Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
     ze_owned_querying_subscriber_t
 );
+#[cfg(feature = "unstable")]
 /// A loaned Zenoh querying subscriber.
 get_opaque_type_data!(
     (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
@@ -211,6 +212,7 @@ get_opaque_type_data!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
 /// A loaned Zenoh subscriber.
 get_opaque_type_data!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 
+#[cfg(feature = "unstable")]
 /// A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
 /// expressions.
@@ -220,8 +222,9 @@ get_opaque_type_data!(
     Option<LivelinessToken<'static>>,
     zc_owned_liveliness_token_t
 );
+#[cfg(feature = "unstable")]
 get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
-
+#[cfg(feature = "unstable")]
 /// An owned Zenoh publication cache.
 ///
 /// Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
@@ -230,6 +233,7 @@ get_opaque_type_data!(
     Option<zenoh_ext::PublicationCache<'static>>,
     ze_owned_publication_cache_t
 );
+#[cfg(feature = "unstable")]
 /// A loaned Zenoh publication cache.
 get_opaque_type_data!(
     zenoh_ext::PublicationCache<'static>,
@@ -450,10 +454,12 @@ get_opaque_type_data!(
 /// An loaned Zenoh ring reply handler.
 get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
 
+#[cfg(feature = "unstable")]
 /// An owned Zenoh-allocated source info`.
 get_opaque_type_data!(SourceInfo, z_owned_source_info_t);
+#[cfg(feature = "unstable")]
 /// A loaned source info.
 get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
-
+#[cfg(feature = "unstable")]
 /// An entity gloabal id.
 get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);
