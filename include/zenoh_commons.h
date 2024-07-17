@@ -4062,6 +4062,14 @@ const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loa
 #if defined(UNSTABLE)
 ZENOHC_API void zc_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
 #endif
+
+/**
+ * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_error_t zc_config_from_env(struct z_owned_config_t *this_);
+
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
  *
