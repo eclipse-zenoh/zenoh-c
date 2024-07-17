@@ -16,13 +16,15 @@
 
 #include "zenoh.h"
 
-void matching_status_handler(const zcu_matching_status_t *matching_status, void *arg) {
+#ifdef UNSTABLE
+void matching_status_handler(const zc_matching_status_t *matching_status, void *arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");
     } else {
         printf("No Subscribers matched\n");
     }
 }
+#endif
 
 int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
@@ -60,13 +62,19 @@ int main(int argc, char **argv) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
-
-    zcu_owned_matching_listener_t listener;
+#ifdef UNSTABLE
+    zc_owned_matching_listener_t listener;
     if (add_matching_listener) {
-        zcu_owned_closure_matching_status_t callback;
+        zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zcu_publisher_matching_listener_callback(&listener, z_loan(pub), z_move(callback));
+        zc_publisher_matching_listener_callback(&listener, z_loan(pub), z_move(callback));
     }
+#else
+    if (add_matching_listener) {
+        printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
+        exit(-1);
+    }
+#endif
 
     printf("Creating POSIX SHM Provider...\n");
     const size_t total_size = 4096;
@@ -107,6 +115,12 @@ int main(int argc, char **argv) {
             break;
         }
     }
+
+#ifdef UNSTABLE
+    if (add_matching_listener) {
+        zc_publisher_matching_listener_undeclare(z_move(listener));
+    }
+#endif
 
     z_undeclare_publisher(z_move(pub));
     z_close(z_move(s));

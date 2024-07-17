@@ -17,11 +17,13 @@ use std::{mem::MaybeUninit, ptr::null};
 use libc::c_ulong;
 use zenoh::{
     qos::{CongestionControl, Priority},
-    query::{ConsolidationMode, QueryTarget, ReplyKeyExpr},
-    sample::{Locality, Sample, SampleKind, SourceInfo},
+    query::{ConsolidationMode, QueryTarget},
+    sample::{Sample, SampleKind, SourceInfo},
     session::EntityGlobalId,
     time::Timestamp,
 };
+#[cfg(feature = "unstable")]
+use zenoh::{query::ReplyKeyExpr, sample::Locality};
 
 use crate::{
     errors,
@@ -199,10 +201,11 @@ pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
+#[cfg(feature = "unstable")]
 /// The locality of samples to be received by subscribers or targeted by publishers.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub enum zcu_locality_t {
+pub enum zc_locality_t {
     /// Any
     ANY = 0,
     /// Only from local sessions.
@@ -211,63 +214,70 @@ pub enum zcu_locality_t {
     REMOTE = 2,
 }
 
-impl From<Locality> for zcu_locality_t {
+#[cfg(feature = "unstable")]
+impl From<Locality> for zc_locality_t {
     fn from(k: Locality) -> Self {
         match k {
-            Locality::Any => zcu_locality_t::ANY,
-            Locality::SessionLocal => zcu_locality_t::SESSION_LOCAL,
-            Locality::Remote => zcu_locality_t::REMOTE,
+            Locality::Any => zc_locality_t::ANY,
+            Locality::SessionLocal => zc_locality_t::SESSION_LOCAL,
+            Locality::Remote => zc_locality_t::REMOTE,
         }
     }
 }
 
-impl From<zcu_locality_t> for Locality {
-    fn from(k: zcu_locality_t) -> Self {
+#[cfg(feature = "unstable")]
+impl From<zc_locality_t> for Locality {
+    fn from(k: zc_locality_t) -> Self {
         match k {
-            zcu_locality_t::ANY => Locality::Any,
-            zcu_locality_t::SESSION_LOCAL => Locality::SessionLocal,
-            zcu_locality_t::REMOTE => Locality::Remote,
+            zc_locality_t::ANY => Locality::Any,
+            zc_locality_t::SESSION_LOCAL => Locality::SessionLocal,
+            zc_locality_t::REMOTE => Locality::Remote,
         }
     }
 }
 
-/// Returns default value of `zcu_locality_t`
+#[cfg(feature = "unstable")]
+/// Returns default value of `zc_locality_t`
 #[no_mangle]
-pub extern "C" fn zcu_locality_default() -> zcu_locality_t {
+pub extern "C" fn zc_locality_default() -> zc_locality_t {
     Locality::default().into()
 }
 
+#[cfg(feature = "unstable")]
 /// Key expressions types to which Queryable should reply to.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub enum zcu_reply_keyexpr_t {
+pub enum zc_reply_keyexpr_t {
     /// Replies to any key expression queries.
     ANY = 0,
     /// Replies only to queries with intersecting key expressions.
     MATCHING_QUERY = 1,
 }
 
-impl From<ReplyKeyExpr> for zcu_reply_keyexpr_t {
+#[cfg(feature = "unstable")]
+impl From<ReplyKeyExpr> for zc_reply_keyexpr_t {
     fn from(k: ReplyKeyExpr) -> Self {
         match k {
-            ReplyKeyExpr::Any => zcu_reply_keyexpr_t::ANY,
-            ReplyKeyExpr::MatchingQuery => zcu_reply_keyexpr_t::MATCHING_QUERY,
+            ReplyKeyExpr::Any => zc_reply_keyexpr_t::ANY,
+            ReplyKeyExpr::MatchingQuery => zc_reply_keyexpr_t::MATCHING_QUERY,
         }
     }
 }
 
-impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
-    fn from(k: zcu_reply_keyexpr_t) -> Self {
+#[cfg(feature = "unstable")]
+impl From<zc_reply_keyexpr_t> for ReplyKeyExpr {
+    fn from(k: zc_reply_keyexpr_t) -> Self {
         match k {
-            zcu_reply_keyexpr_t::ANY => ReplyKeyExpr::Any,
-            zcu_reply_keyexpr_t::MATCHING_QUERY => ReplyKeyExpr::MatchingQuery,
+            zc_reply_keyexpr_t::ANY => ReplyKeyExpr::Any,
+            zc_reply_keyexpr_t::MATCHING_QUERY => ReplyKeyExpr::MatchingQuery,
         }
     }
 }
 
-/// Returns the default value of #zcu_reply_keyexpr_t.
+#[cfg(feature = "unstable")]
+/// Returns the default value of #zc_reply_keyexpr_t.
 #[no_mangle]
-pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
+pub extern "C" fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }
 

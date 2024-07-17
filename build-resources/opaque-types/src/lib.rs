@@ -6,13 +6,15 @@ use std::{
     thread::JoinHandle,
 };
 
+#[cfg(feature = "unstable")]
+use zenoh::pubsub::MatchingListener;
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
     config::Config,
     handlers::{DefaultHandler, RingChannelHandler},
     key_expr::KeyExpr,
     liveliness::LivelinessToken,
-    pubsub::{MatchingListener, Publisher, Subscriber},
+    pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
     sample::{Sample, SourceInfo},
     scouting::Hello,
@@ -191,13 +193,14 @@ get_opaque_type_data!(Option<Publisher<'static>>, z_owned_publisher_t);
 /// A loaned Zenoh publisher.
 get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 
+#[cfg(feature = "unstable")]
 /// An owned Zenoh matching listener.
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
 /// Dropping the corresponding publisher, also drops matching listener.
 get_opaque_type_data!(
     Option<MatchingListener<'static, ()>>,
-    zcu_owned_matching_listener_t
+    zc_owned_matching_listener_t
 );
 
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
@@ -262,7 +265,6 @@ get_opaque_type_data!(Hello, z_loaned_hello_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned SHM Client
 get_opaque_type_data!(Option<Arc<dyn ShmClient>>, z_owned_shm_client_t);
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned list of SHM Clients
 get_opaque_type_data!(

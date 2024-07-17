@@ -24,10 +24,9 @@ use crate::{
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_owned_closure_sample_t, z_query_consolidation_none,
     z_query_consolidation_t, z_query_target_default, z_query_target_t, z_reliability_t,
-    zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{zcu_locality_default, zcu_locality_t};
+use crate::{zc_locality_default, zc_locality_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t};
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
@@ -58,15 +57,16 @@ pub struct ze_querying_subscriber_options_t {
     reliability: z_reliability_t,
     /// The restriction for the matching publications that will be receive by this subscriber.
     #[cfg(feature = "unstable")]
-    allowed_origin: zcu_locality_t,
+    allowed_origin: zc_locality_t,
     /// The selector to be used for queries.
     query_selector: *const z_loaned_keyexpr_t,
     /// The target to be used for queries.
     query_target: z_query_target_t,
     /// The consolidation mode to be used for queries.
     query_consolidation: z_query_consolidation_t,
+    #[cfg(feature = "unstable")]
     /// The accepted replies for queries.
-    query_accept_replies: zcu_reply_keyexpr_t,
+    query_accept_replies: zc_reply_keyexpr_t,
     /// The timeout to be used for queries.
     query_timeout_ms: u64,
 }
@@ -79,11 +79,12 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     *this = ze_querying_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
         #[cfg(feature = "unstable")]
-        allowed_origin: zcu_locality_default(),
+        allowed_origin: zc_locality_default(),
         query_selector: null(),
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
-        query_accept_replies: zcu_reply_keyexpr_default(),
+        #[cfg(feature = "unstable")]
+        query_accept_replies: zc_reply_keyexpr_default(),
         query_timeout_ms: 0,
     };
 }
@@ -117,11 +118,12 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
         sub = sub
             .reliability(options.reliability.into())
             .query_target(options.query_target.into())
-            .query_consolidation(options.query_consolidation)
-            .query_accept_replies(options.query_accept_replies.into());
+            .query_consolidation(options.query_consolidation);
         #[cfg(feature = "unstable")]
         {
-            sub = sub.allowed_origin(options.allowed_origin.into());
+            sub = sub
+                .query_accept_replies(options.query_accept_replies.into())
+                .allowed_origin(options.allowed_origin.into());
         }
         if let Some(query_selector) = unsafe { options.query_selector.as_ref() } {
             let query_selector = query_selector.as_rust_type_ref().clone();

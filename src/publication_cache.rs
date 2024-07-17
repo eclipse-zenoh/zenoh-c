@@ -23,7 +23,7 @@ use crate::{
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{zcu_locality_default, zcu_locality_t};
+use crate::{zc_locality_default, zc_locality_t};
 
 /// Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
@@ -32,7 +32,7 @@ pub struct ze_publication_cache_options_t {
     pub queryable_prefix: *const z_loaned_keyexpr_t,
     /// The restriction for the matching queries that will be receive by this publication cache.
     #[cfg(feature = "unstable")]
-    pub queryable_origin: zcu_locality_t,
+    pub queryable_origin: zc_locality_t,
     /// The `complete` option for the queryable.
     pub queryable_complete: bool,
     /// The the history size (i.e. maximum number of messages to store).
@@ -47,7 +47,7 @@ pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication
     *this = ze_publication_cache_options_t {
         queryable_prefix: null(),
         #[cfg(feature = "unstable")]
-        queryable_origin: zcu_locality_default(),
+        queryable_origin: zc_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,

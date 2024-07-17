@@ -17,7 +17,7 @@ use libc::c_void;
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef},
-    zcu_matching_status_t,
+    zc_matching_status_t,
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
@@ -28,29 +28,29 @@ use crate::{
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 #[repr(C)]
-pub struct zcu_owned_closure_matching_status_t {
+pub struct zc_owned_closure_matching_status_t {
     /// An optional pointer to a closure state.
     context: *mut c_void,
     /// A closure body.
-    call: Option<extern "C" fn(matching_status: &zcu_matching_status_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(matching_status: &zc_matching_status_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
 /// Loaned closure.
 #[repr(C)]
-pub struct zcu_loaned_closure_matching_status_t {
+pub struct zc_loaned_closure_matching_status_t {
     _0: [usize; 3],
 }
 
 decl_c_type!(
-    owned(zcu_owned_closure_matching_status_t),
-    loaned(zcu_loaned_closure_matching_status_t)
+    owned(zc_owned_closure_matching_status_t),
+    loaned(zc_loaned_closure_matching_status_t)
 );
 
-impl zcu_owned_closure_matching_status_t {
+impl zc_owned_closure_matching_status_t {
     pub fn empty() -> Self {
-        zcu_owned_closure_matching_status_t {
+        zc_owned_closure_matching_status_t {
             context: std::ptr::null_mut(),
             call: None,
             drop: None,
@@ -61,37 +61,37 @@ impl zcu_owned_closure_matching_status_t {
         self.call.is_none() && self.drop.is_none() && self.context.is_null()
     }
 }
-unsafe impl Send for zcu_owned_closure_matching_status_t {}
-unsafe impl Sync for zcu_owned_closure_matching_status_t {}
-impl Drop for zcu_owned_closure_matching_status_t {
+unsafe impl Send for zc_owned_closure_matching_status_t {}
+unsafe impl Sync for zc_owned_closure_matching_status_t {}
+impl Drop for zc_owned_closure_matching_status_t {
     fn drop(&mut self) {
         if let Some(drop) = self.drop {
             drop(self.context)
         }
     }
 }
-/// Constructs a null value of 'zcu_owned_closure_matching_status_t' type
+/// Constructs a null value of 'zc_owned_closure_matching_status_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zcu_closure_matching_status_null(
-    this: *mut MaybeUninit<zcu_owned_closure_matching_status_t>,
+pub unsafe extern "C" fn zc_closure_matching_status_null(
+    this: *mut MaybeUninit<zc_owned_closure_matching_status_t>,
 ) {
-    (*this).write(zcu_owned_closure_matching_status_t::empty());
+    (*this).write(zc_owned_closure_matching_status_t::empty());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn zcu_closure_matching_status_check(
-    this: &zcu_owned_closure_matching_status_t,
+pub extern "C" fn zc_closure_matching_status_check(
+    this: &zc_owned_closure_matching_status_t,
 ) -> bool {
     !this.is_empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn zcu_closure_matching_status_call(
-    closure: &zcu_loaned_closure_matching_status_t,
-    mathing_status: &zcu_matching_status_t,
+pub extern "C" fn zc_closure_matching_status_call(
+    closure: &zc_loaned_closure_matching_status_t,
+    mathing_status: &zc_matching_status_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
     match closure.call {
@@ -103,17 +103,17 @@ pub extern "C" fn zcu_closure_matching_status_call(
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn zcu_closure_matching_status_drop(
-    closure: &mut zcu_owned_closure_matching_status_t,
+pub extern "C" fn zc_closure_matching_status_drop(
+    closure: &mut zc_owned_closure_matching_status_t,
 ) {
-    let mut empty_closure = zcu_owned_closure_matching_status_t::empty();
+    let mut empty_closure = zc_owned_closure_matching_status_t::empty();
     std::mem::swap(&mut empty_closure, closure);
 }
-impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_status_t {
+impl<F: Fn(&zc_matching_status_t)> From<F> for zc_owned_closure_matching_status_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&zcu_matching_status_t)>(
-            response: &zcu_matching_status_t,
+        extern "C" fn call<F: Fn(&zc_matching_status_t)>(
+            response: &zc_matching_status_t,
             this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };
@@ -122,7 +122,7 @@ impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_statu
         extern "C" fn drop<F>(this: *mut c_void) {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })
         }
-        zcu_owned_closure_matching_status_t {
+        zc_owned_closure_matching_status_t {
             context: this,
             call: Some(call::<F>),
             drop: Some(drop::<F>),
@@ -132,8 +132,8 @@ impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_statu
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn zcu_closure_matching_status_loan(
-    closure: &zcu_owned_closure_matching_status_t,
-) -> &zcu_loaned_closure_matching_status_t {
+pub extern "C" fn zc_closure_matching_status_loan(
+    closure: &zc_owned_closure_matching_status_t,
+) -> &zc_loaned_closure_matching_status_t {
     closure.as_loaned_c_type_ref()
 }
