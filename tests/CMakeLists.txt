@@ -13,6 +13,13 @@ foreach(file ${files})
         endif()
     endif()
 
+    # Exclude Liveliness and zenoh-ext tests if unstable api feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+	    if((${target} MATCHES "^.*_liveliness.*$") OR (${target} MATCHES "^.*_query_sub_test.*$"))
+            continue()
+        endif()
+    endif()
+
     # Check the filename prefix to determine the test type
     if (${file} MATCHES "^.*z_api_.*$")
         set(test_type "unit")

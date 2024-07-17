@@ -23,6 +23,16 @@ foreach(file ${files})
             continue()
         endif()
     endif()
+    # Exclude Liveliness and zenoh-ext examples if unstable api feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+        if(
+            (${target} MATCHES "^.*_liveliness.*$") 
+            OR (${target} MATCHES "^.*_pub_cache.*$") 
+            OR (${target} MATCHES "^.*_query_sub.*$")
+        )
+            continue()
+        endif()
+    endif()
 
     # FIXME: remove once zenoh time primitives are available and examples updated
     if(NOT(UNIX) AND(${target} STREQUAL "z_ping" OR ${target} STREQUAL "z_pong" OR ${target} STREQUAL "z_sub_thr"))

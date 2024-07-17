@@ -179,6 +179,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                         let encoding = std::mem::take(encoding.as_rust_type_mut());
                         get = get.encoding(encoding);
                     }
+                    #[cfg(feature = "unstable")]
                     if let Some(source_info) = unsafe { options.source_info.as_mut() } {
                         let source_info = std::mem::take(source_info.as_rust_type_mut());
                         get = get.source_info(source_info);
