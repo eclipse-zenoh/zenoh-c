@@ -24,7 +24,6 @@ use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
 pub use crate::opaque_types::z_owned_shm_client_t;
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
-    errors,
     shm::common::types::z_segment_id_t,
     transmute::{RustTypeRef, RustTypeRefUninit},
 };
@@ -72,10 +71,9 @@ pub extern "C" fn z_shm_client_new(
     this: &mut MaybeUninit<z_owned_shm_client_t>,
     context: zc_threadsafe_context_t,
     callbacks: zc_shm_client_callbacks_t,
-) -> errors::z_error_t {
+) {
     let client = Arc::new(DynamicShmClient::new(context.into(), callbacks)) as Arc<dyn ShmClient>;
     this.as_rust_type_mut_uninit().write(Some(client));
-    errors::Z_OK
 }
 
 /// Constructs SHM client in its gravestone value.

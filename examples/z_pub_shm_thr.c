@@ -61,20 +61,17 @@ int main(int argc, char **argv) {
     z_memory_layout_new(&layout, len, alignment);
     z_owned_shm_provider_t provider;
     z_posix_shm_provider_new(&provider, z_loan(layout));
-    z_owned_buf_alloc_result_t alloc;
-    z_shm_provider_alloc(&alloc, z_loan(provider), len, alignment);
 
     printf("Allocating single SHM buffer\n");
-    z_owned_shm_mut_t shm_mut;
-    z_alloc_error_t shm_error;
-    z_buf_alloc_result_unwrap(z_move(alloc), &shm_mut, &shm_error);
-    if (!z_check(shm_mut)) {
+    z_buf_layout_alloc_result_t alloc;
+    z_shm_provider_alloc(&alloc, z_loan(provider), len, alignment);
+    if (!z_check(alloc.buf)) {
         printf("Unexpected failure during SHM buffer allocation...");
         return -1;
     }
-    memset(z_shm_mut_data_mut(z_loan_mut(shm_mut)), 1, len);
+    memset(z_shm_mut_data_mut(z_loan_mut(alloc.buf)), 1, len);
     z_owned_shm_t shm;
-    z_shm_from_mut(&shm, z_move(shm_mut));
+    z_shm_from_mut(&shm, z_move(alloc.buf));
     const z_loaned_shm_t *loaned_shm = z_loan(shm);
 
     z_owned_bytes_t payload;

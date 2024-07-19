@@ -18,7 +18,7 @@ foreach(file ${files})
     get_filename_component(target ${file} NAME_WE)
 
     # Exclude SHM examples if SHM feature is disabled
-    if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY))
+    if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY AND (ZENOHC_BUILD_WITH_UNSTABLE_API)))
         if(${target} MATCHES "^.*_shm.*$")
             continue()
         endif()
