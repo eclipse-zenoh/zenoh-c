@@ -13,7 +13,7 @@
 #
 [package]
 name = "zenoh-c"
-version = "0.11.0-dev"
+version = "0.11.1-dev"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
@@ -80,7 +80,7 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
-depends = "libzenohc (=0.11.0-dev-1)"
+depends = "libzenohc (=0.11.1~dev-1)"
 assets = [["include/*", "usr/include/", "755"]]
 
 [profile.dev]
