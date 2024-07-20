@@ -27,13 +27,7 @@ endif()
 
 add_library(__zenohc_static STATIC IMPORTED GLOBAL)
 message(STATUS "ZENOHC_BUILD_WITH_UNSTABLE_API=${ZENOHC_BUILD_WITH_UNSTABLE_API}")
-if(ZENOHC_BUILD_WITH_UNSTABLE_API)
-    target_compile_definitions(__zenohc_static INTERFACE UNSTABLE)
-endif()
 message(STATUS "ZENOHC_BUILD_WITH_SHARED_MEMORY=${ZENOHC_BUILD_WITH_SHARED_MEMORY}")
-if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
-    target_compile_definitions(__zenohc_static INTERFACE SHARED_MEMORY)
-endif()
 
 add_library(zenohc::static ALIAS __zenohc_static)
 target_link_libraries(__zenohc_static INTERFACE @NATIVE_STATIC_LIBS@)
@@ -53,13 +47,6 @@ set_target_properties(__zenohc_shared PROPERTIES
 
 if(NOT ("@IMPLIB@" STREQUAL ""))
     set_property(TARGET __zenohc_shared PROPERTY IMPORTED_IMPLIB "${_IMPORT_PREFIX}/@CMAKE_INSTALL_LIBDIR@/@IMPLIB@")
-endif()
-
-if(ZENOHC_BUILD_WITH_UNSTABLE_API)
-    target_compile_definitions(__zenohc_shared INTERFACE UNSTABLE)
-endif()
-if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
-    target_compile_definitions(__zenohc_shared INTERFACE SHARED_MEMORY)
 endif()
 
 if(ZENOHC_LIB_STATIC)
