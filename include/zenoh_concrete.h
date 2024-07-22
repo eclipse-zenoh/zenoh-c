@@ -16,21 +16,3 @@
 #define ALIGN(n)
 #define ZENOHC_API
 #endif
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#define DEFAULT_SCOUTING_TIMEOUT 1000
-#define Z_OK 0
-#define Z_EINVAL -1
-#define Z_EPARSE -2
-#define Z_EIO -3
-#define Z_ENETWORK -4
-#define Z_ENULL -5
-#define Z_EUNAVAILABLE -6
-#define Z_EBUSY_MUTEX -16
-#define Z_EINVAL_MUTEX -22
-#define Z_EAGAIN_MUTEX -11
-#define Z_EPOISON_MUTEX -22
-#define Z_EGENERIC INT8_MIN
