@@ -37,6 +37,18 @@ int main(int argc, char **argv) {
 
     z_owned_config_t config;
     z_config_default(&config);
+
+    // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
+    // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
+    // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
+        printf(
+            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
+            "JSON-serialized value\n",
+            argv[4], Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
+        exit(-1);
+    }
+
     if (argc > 4) {
         if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[4]) < 0) {
             printf(
@@ -97,7 +109,7 @@ int main(int argc, char **argv) {
                 uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
                 sprintf((char *)buf, "SHM [%4d] %s", idx, value);
                 printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-            } 
+            }
 
             z_publisher_put_options_t options;
             z_publisher_put_options_default(&options);
