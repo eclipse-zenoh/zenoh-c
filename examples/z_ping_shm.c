@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
         printf(
             "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
             "JSON-serialized value\n",
-            argv[4], Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
+            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
         exit(-1);
     }
 
