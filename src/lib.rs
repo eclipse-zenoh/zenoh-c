@@ -36,7 +36,9 @@ mod payload;
 pub use crate::payload::*;
 mod keyexpr;
 pub use crate::keyexpr::*;
+#[cfg(feature = "unstable")]
 mod info;
+#[cfg(feature = "unstable")]
 pub use crate::info::*;
 mod get;
 pub use crate::get::*;

@@ -45,7 +45,7 @@ zenoh_opaque.h:
   - z_owned_source_info_t!#unstable
   - z_loaned_source_info_t!#unstable
   - z_entity_global_id_t!#unstable
-  - z_id_t!
+  - z_id_t!#unstable
   - z_timestamp_t!
   - z_owned_publisher_t!
   - z_loaned_publisher_t!

@@ -7,18 +7,22 @@ use std::{
 };
 
 #[cfg(feature = "unstable")]
-use zenoh::pubsub::MatchingListener;
+use zenoh::{
+    pubsub::MatchingListener,
+    liveliness::LivelinessToken,
+    session::{EntityGlobalId, ZenohId},
+    sample::SourceInfo,
+};
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
     config::Config,
     handlers::{DefaultHandler, RingChannelHandler},
     key_expr::KeyExpr,
-    liveliness::LivelinessToken,
     pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
-    sample::{Sample, SourceInfo},
+    sample::Sample,
     scouting::Hello,
-    session::{EntityGlobalId, Session, ZenohId},
+    session::Session,
     time::Timestamp,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -179,6 +183,7 @@ get_opaque_type_data!(Option<Config>, z_owned_config_t);
 /// A loaned Zenoh configuration.
 get_opaque_type_data!(Config, z_loaned_config_t);
 
+#[cfg(feature = "unstable")]
 /// A Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.

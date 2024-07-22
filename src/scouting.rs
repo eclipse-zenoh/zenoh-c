@@ -20,10 +20,12 @@ use zenoh::{
 };
 
 pub use crate::opaque_types::{z_loaned_hello_t, z_owned_hello_t};
+#[cfg(feature = "unstable")]
+use crate::z_id_t;
 use crate::{
     errors::{self, Z_OK},
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_owned_closure_hello_t, z_owned_config_t,
+    z_closure_hello_call, z_closure_hello_loan, z_owned_closure_hello_t, z_owned_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
 decl_c_type!(
@@ -60,6 +62,7 @@ pub extern "C" fn z_hello_null(this: &mut MaybeUninit<z_owned_hello_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
+#[cfg(feature = "unstable")]
 /// Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
