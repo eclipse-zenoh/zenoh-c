@@ -56,6 +56,7 @@ pub extern "C" fn z_shm_mut_check(this: &z_owned_shm_mut_t) -> bool {
 
 /// Borrows ZShmMut slice
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_mut_loan(this: &z_owned_shm_mut_t) -> &z_loaned_shm_mut_t {
     let shmmut: &zshmmut = this.as_rust_type_ref().as_ref().unwrap_unchecked().borrow();
     shmmut.as_loaned_c_type_ref()

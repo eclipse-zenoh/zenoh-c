@@ -141,7 +141,7 @@ pub extern "C" fn z_shm_client_storage_new(
 
 /// Performs a shallow copy of SHM Client Storage
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_new_cloned(
+pub extern "C" fn z_shm_client_storage_clone(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
     from: &z_loaned_shm_client_storage_t,
 ) {

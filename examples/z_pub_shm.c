@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
                 uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
                 sprintf((char *)buf, "SHM [%4d] %s", idx, value);
                 printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-            } 
+            }
 
             z_publisher_put_options_t options;
             z_publisher_put_options_default(&options);
