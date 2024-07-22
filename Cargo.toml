@@ -65,7 +65,7 @@ fs_extra = "1.3.0"
 
 [lib]
 path="src/lib.rs"
-name = "zenohcd"
+name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 
