@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
     z_owned_config_t config;
     z_config_default(&config);
 
-#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+#ifdef SHARED_MEMORY
     // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
     // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
     // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
