@@ -1318,14 +1318,6 @@ z_error_t z_bytes_serialize_from_pair(struct z_owned_bytes_t *this_,
 ZENOHC_API z_error_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_, z_owned_shm_t *shm);
 #endif
 /**
- * Serializes from an immutable SHM buffer copying it
- */
-#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API
-void z_bytes_serialize_from_shm_copy(struct z_owned_bytes_t *this_,
-                                     const z_loaned_shm_t *shm);
-#endif
-/**
  * Serializes from a mutable SHM buffer consuming it
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))

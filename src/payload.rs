@@ -620,18 +620,6 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Serializes from an immutable SHM buffer copying it
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_shm_copy(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    shm: &z_loaned_shm_t,
-) {
-    this.as_rust_type_mut_uninit()
-        .write(shm.as_rust_type_ref().to_owned().into());
-}
-
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// Serializes from a mutable SHM buffer consuming it
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
