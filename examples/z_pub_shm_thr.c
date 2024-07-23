@@ -84,11 +84,13 @@ int main(int argc, char **argv) {
     memset(z_shm_mut_data_mut(z_loan_mut(alloc.buf)), 1, len);
     z_owned_shm_t shm;
     z_shm_from_mut(&shm, z_move(alloc.buf));
-    const z_loaned_shm_t *loaned_shm = z_loan(shm);
 
-    z_owned_bytes_t payload;
+    z_owned_bytes_t shmbs;
+    z_bytes_serialize_from_shm(&shmbs, z_move(shm));
+
     while (1) {
-        z_bytes_serialize_from_shm_copy(&payload, loaned_shm);
+        z_owned_bytes_t payload;
+        z_bytes_clone(&payload, z_loan(shmbs));
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
