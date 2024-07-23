@@ -36,7 +36,9 @@ mod payload;
 pub use crate::payload::*;
 mod keyexpr;
 pub use crate::keyexpr::*;
+#[cfg(feature = "unstable")]
 mod info;
+#[cfg(feature = "unstable")]
 pub use crate::info::*;
 mod get;
 pub use crate::get::*;
@@ -104,7 +106,7 @@ fn test_no_default_features() {
             // " zenoh/transport_udp",
             // " zenoh/transport_unixsock-stream",
             // " zenoh/transport_ws",
-            " zenoh/unstable",
+            // " zenoh/unstable",
             // " zenoh/default",
         )
     );

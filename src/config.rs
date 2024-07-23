@@ -61,6 +61,9 @@ pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
 #[no_mangle]
 pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"timestamping/enabled\0".as_ptr() as *const c_char) };
+#[no_mangle]
+pub static Z_CONFIG_SHARED_MEMORY_KEY: &c_char =
+    unsafe { &*(b"transport/shared_memory/enabled\0".as_ptr() as *const c_char) };
 
 pub use crate::opaque_types::{z_loaned_config_t, z_owned_config_t};
 decl_c_type!(

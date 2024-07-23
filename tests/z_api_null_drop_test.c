@@ -50,8 +50,10 @@ int main(int argc, char **argv) {
     z_closure_reply_null(&closure_reply_null_1);
     z_owned_closure_hello_t closure_hello_null_1;
     z_closure_hello_null(&closure_hello_null_1);
+#ifdef UNSTABLE
     z_owned_closure_zid_t closure_zid_null_1;
     z_closure_zid_null(&closure_zid_null_1);
+#endif
     z_owned_string_t str_null_1;
     z_string_null(&str_null_1);
     z_owned_bytes_t bytes_null_1;
@@ -88,7 +90,9 @@ int main(int argc, char **argv) {
     z_owned_closure_query_t closure_query_null_2;
     z_owned_closure_reply_t closure_reply_null_2;
     z_owned_closure_hello_t closure_hello_null_2;
+#ifdef UNSTABLE
     z_owned_closure_zid_t closure_zid_null_2;
+#endif
     z_owned_string_t str_null_2;
     z_owned_bytes_t bytes_null_2;
 
@@ -105,7 +109,9 @@ int main(int argc, char **argv) {
     z_null(&closure_query_null_2);
     z_null(&closure_reply_null_2);
     z_null(&closure_hello_null_2);
+#ifdef UNSTABLE
     z_null(&closure_zid_null_2);
+#endif
     z_null(&str_null_2);
     z_null(&bytes_null_2);
 
@@ -141,7 +147,9 @@ int main(int argc, char **argv) {
         z_drop(z_move(closure_query_null_1));
         z_drop(z_move(closure_reply_null_1));
         z_drop(z_move(closure_hello_null_1));
+#ifdef UNSTABLE
         z_drop(z_move(closure_zid_null_1));
+#endif
         z_drop(z_move(str_null_1));
         z_drop(z_move(bytes_null_1));
 
@@ -158,7 +166,9 @@ int main(int argc, char **argv) {
         z_drop(z_move(closure_query_null_2));
         z_drop(z_move(closure_reply_null_2));
         z_drop(z_move(closure_hello_null_2));
+#ifdef UNSTABLE
         z_drop(z_move(closure_zid_null_2));
+#endif
         z_drop(z_move(str_null_2));
         z_drop(z_move(bytes_null_2));
     }

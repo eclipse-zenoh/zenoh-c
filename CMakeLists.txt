@@ -193,10 +193,6 @@ if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
 	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
 endif()
 
-if(ZENOHC_BUILD_WITH_SHARED_MEMORY AND NOT ZENOHC_BUILD_WITH_UNSTABLE_API)
-	message( FATAL_ERROR "ZENOHC_BUILD_WITH_SHARED_MEMORY feature requires ZENOHC_BUILD_WITH_UNSTABLE_API to be enabled." )
-endif()
-
 if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
 	set(cargo_flags ${cargo_flags} --features=shared-memory)
 endif()

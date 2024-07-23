@@ -7,18 +7,22 @@ use std::{
 };
 
 #[cfg(feature = "unstable")]
-use zenoh::pubsub::MatchingListener;
+use zenoh::{
+    pubsub::MatchingListener,
+    liveliness::LivelinessToken,
+    session::{EntityGlobalId, ZenohId},
+    sample::SourceInfo,
+};
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
     config::Config,
     handlers::{DefaultHandler, RingChannelHandler},
     key_expr::KeyExpr,
-    liveliness::LivelinessToken,
     pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
-    sample::{Sample, SourceInfo},
+    sample::Sample,
     scouting::Hello,
-    session::{EntityGlobalId, Session, ZenohId},
+    session::Session,
     time::Timestamp,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -27,7 +31,7 @@ use zenoh::{
     shm::ChunkDescriptor, shm::DynamicProtocolID, shm::MemoryLayout, shm::PosixShmProviderBackend,
     shm::ProtocolID, shm::ShmClient, shm::ShmClientStorage, shm::ShmProvider,
     shm::ShmProviderBackend, shm::StaticProtocolID, shm::ZShm, shm::ZShmMut,
-    shm::POSIX_PROTOCOL_ID,
+    shm::POSIX_PROTOCOL_ID, shm::ZLayoutError,
 };
 
 #[macro_export]
@@ -179,6 +183,7 @@ get_opaque_type_data!(Option<Config>, z_owned_config_t);
 /// A loaned Zenoh configuration.
 get_opaque_type_data!(Config, z_loaned_config_t);
 
+#[cfg(feature = "unstable")]
 /// A Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -304,13 +309,6 @@ get_opaque_type_data!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
 get_opaque_type_data!(ChunkAllocResult, z_loaned_chunk_alloc_result_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// An owned BufAllocResult
-get_opaque_type_data!(Option<BufAllocResult>, z_owned_buf_alloc_result_t);
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// A loaned BufAllocResult
-get_opaque_type_data!(BufAllocResult, z_loaned_buf_alloc_result_t);
-
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// An owned ZShm slice
 get_opaque_type_data!(Option<ZShm>, z_owned_shm_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -368,7 +366,7 @@ impl ShmProviderBackend for DummySHMProviderBackend {
         todo!()
     }
 
-    fn layout_for(&self, layout: MemoryLayout) -> zenoh::Result<MemoryLayout> {
+    fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout, ZLayoutError> {
         todo!()
     }
 }

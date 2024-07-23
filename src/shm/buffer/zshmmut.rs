@@ -12,7 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{borrow::BorrowMut, mem::MaybeUninit};
+use std::{
+    borrow::{Borrow, BorrowMut},
+    mem::MaybeUninit,
+};
 
 use zenoh::shm::{zshmmut, ZShmMut};
 
@@ -54,6 +57,14 @@ pub extern "C" fn z_shm_mut_check(this: &z_owned_shm_mut_t) -> bool {
 /// Borrows ZShmMut slice
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_shm_mut_loan(this: &z_owned_shm_mut_t) -> &z_loaned_shm_mut_t {
+    let shmmut: &zshmmut = this.as_rust_type_ref().as_ref().unwrap_unchecked().borrow();
+    shmmut.as_loaned_c_type_ref()
+}
+
+/// Mutably borrows ZShmMut slice
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_mut_loan_mut(
     this: &mut z_owned_shm_mut_t,
 ) -> &mut z_loaned_shm_mut_t {
@@ -77,7 +88,14 @@ pub extern "C" fn z_shm_mut_len(this: &z_loaned_shm_mut_t) -> usize {
     this.as_rust_type_ref().len()
 }
 
-/// @return the mutable pointer of the ZShmMut slice
+/// @return the immutable pointer to the underlying data
+#[no_mangle]
+pub extern "C" fn z_shm_mut_data(this: &z_loaned_shm_mut_t) -> *const libc::c_uchar {
+    let s = this.as_rust_type_ref();
+    s.as_ref().as_ptr()
+}
+
+/// @return the mutable pointer to the underlying data
 #[no_mangle]
 pub extern "C" fn z_shm_mut_data_mut(this: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
     this.as_rust_type_mut().as_mut().as_mut_ptr()
