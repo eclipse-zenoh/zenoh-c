@@ -99,7 +99,10 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     if (value != NULL) {
-        z_bytes_serialize_from_shm_copy(&payload, z_loan(shm));
+        if (!z_bytes_serialize_from_shm(&payload, z_move(shm))) {
+            printf("Unexpected failure during SHM buffer serialization...\n");
+            return -1;
+        }
         opts.payload = &payload;
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),

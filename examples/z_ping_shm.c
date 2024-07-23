@@ -99,9 +99,12 @@ int main(int argc, char** argv) {
     // Convert mutable SHM Buffer into immutable one (to be able to make it's ref copies)
     z_owned_shm_t shm;
     z_shm_from_mut(&shm, z_move(alloc.buf));
-    const z_loaned_shm_t* loaned_shm = z_loan(shm);
 
-    z_owned_bytes_t payload;
+    z_owned_bytes_t shmbs;
+    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+        printf("Unexpected failure during SHM buffer serialization...\n");
+        return -1;
+    }
 
     z_mutex_lock(z_loan_mut(mutex));
     if (args.warmup_ms) {
@@ -110,7 +113,8 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_bytes_serialize_from_shm_copy(&payload, loaned_shm);
+            z_owned_bytes_t payload;
+            z_bytes_clone(&payload, z_loan(shmbs));
             z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
             if (s != 0) {
@@ -122,6 +126,8 @@ int main(int argc, char** argv) {
     unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
         z_clock_t measure_start = z_clock_now();
+        z_owned_bytes_t payload;
+        z_bytes_clone(&payload, z_loan(shmbs));
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
         int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
         if (s != 0) {

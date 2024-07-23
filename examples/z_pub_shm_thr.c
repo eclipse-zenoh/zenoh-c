@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc(&alloc, z_loan(provider), len, alignment);
     if (!z_check(alloc.buf)) {
-        printf("Unexpected failure during SHM buffer allocation...");
+        printf("Unexpected failure during SHM buffer allocation...\n");
         return -1;
     }
     memset(z_shm_mut_data_mut(z_loan_mut(alloc.buf)), 1, len);
@@ -86,8 +86,8 @@ int main(int argc, char **argv) {
     z_shm_from_mut(&shm, z_move(alloc.buf));
 
     z_owned_bytes_t shmbs;
-    if (!z_bytes_serialize_from_shm(&shmbs, z_move(shm))) {
-        printf("Unexpected failure during SHM buffer serialization...");
+    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+        printf("Unexpected failure during SHM buffer serialization...\n");
         return -1;
     }
 
