@@ -33,7 +33,7 @@ void canonize() {
     printf("'%s', len = %lu, err = %d\n", keyexpr, len_new, err);
     assert(err == 0);
     assert(len_new == len_old - 3);
-    assert(strcmp(keyexpr, "a/**/c*/c") == 0);  // string not truncated, it's ok
+    assert(strcmp(keyexpr, "a/**/c") == 0);
 
     strcpy(keyexpr, "a/**/**/c");
     printf("'%s' -> ", keyexpr);
