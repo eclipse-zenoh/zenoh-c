@@ -3,7 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
     env,
     fs::File,
-    io::{BufWriter, Read, Write},
+    io::{BufRead, BufWriter, Read, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
@@ -36,53 +36,17 @@ const HEADER: &str = r"//
 ";
 
 fn fix_cbindgen(input: &str, output: &str) {
-    let _ = Command::new("awk")
-        .arg("-v")
-        .arg("RS='{ \"do stuffs\" }'")
-        .arg("{gsub(\"\\n#endif\\n  ;\", \";\\n#endif\"); print}")
-        .arg(input)
-        .stdout(File::create(output).unwrap())
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
+    let bindings = std::fs::read_to_string(input).expect("failed to open input file");
+    let bindings = bindings.replace("\n#endif\n  ;", ";\n#endif");
+
+    let mut out = File::create(output).expect("failed to open output file");
+    out.write_all(bindings.as_bytes()).unwrap();
 }
 
 fn preprocess_header(input: &str, output: &str) {
-    #[allow(unused_mut)]
-    let mut feature_args: Vec<&str> = vec![];
-    #[cfg(feature = "shared-memory")]
-    {
-        feature_args.push("-DSHARED_MEMORY");
-    }
-    #[cfg(feature = "unstable")]
-    {
-        feature_args.push("-DUNSTABLE");
-    }
-
-    let cpp = Command::new("cpp")
-        .arg("-E")
-        .arg("-DZENOHC_API= ")
-        .arg("-D_Bool=bool")
-        .arg("-D__const=const")
-        .args(feature_args)
-        .arg(input)
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-
-    let sed = Command::new("sed")
-        .arg("/^#/d")
-        .stdin(Stdio::from(cpp.stdout.unwrap()))
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-
-    let sed_out = sed.wait_with_output().unwrap();
-    assert!(!sed_out.stdout.is_empty());
-
-    let mut out = File::create(output).expect("failed to open output");
-    out.write_all(&sed_out.stdout).unwrap();
+    let parsed = process_feature_defines(input).expect("failed to open input file");
+    let mut out = File::create(output).expect("failed to open output file");
+    out.write_all(parsed.as_bytes()).unwrap();
 }
 
 fn main() {
@@ -386,7 +350,7 @@ impl SplitGuide {
                                 let mut split = s.split('#');
                                 let val = split.next().unwrap();
                                 for feature in split {
-                                    if !Self::test_feature(feature) {
+                                    if !test_feature(feature) {
                                         return None;
                                     }
                                 }
@@ -439,15 +403,6 @@ impl SplitGuide {
                 SplitRule::Exclusive(s) | SplitRule::Shared(s) => Some(s.as_str()),
             })
         })
-    }
-    fn test_feature(feature: &str) -> bool {
-        match feature {
-            #[cfg(feature = "shared-memory")]
-            "shared-memory" => true,
-            #[cfg(feature = "unstable")]
-            "unstable" => true,
-            _ => false,
-        }
     }
 }
 
@@ -1384,4 +1339,63 @@ pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String 
         );
     }
     out
+}
+
+fn test_feature(feature: &str) -> bool {
+    match feature {
+        #[cfg(feature = "shared-memory")]
+        "shared-memory" => true,
+        #[cfg(feature = "unstable")]
+        "unstable" => true,
+        _ => false,
+    }
+}
+
+/// Evaluates conditional feature macros in the form #if (logical expression of define(FEATURE_NAME))
+/// and removes the code under those that evaluate to false
+/// Note: works only on single string conditionds
+pub fn process_feature_defines(input_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let file = std::fs::File::open(input_path)?;
+    let lines = std::io::BufReader::new(file).lines();
+    let mut out = String::new();
+    let mut skip = false;
+    let mut nest_level: usize = 0;
+    for line in lines.flatten() {
+        if line.starts_with("#ifdef") && skip {
+            nest_level += 1;
+        } else if line.starts_with("#endif") && skip {
+            nest_level -= 1;
+            skip = nest_level != 0;
+            continue;
+        } else if line.starts_with("#if ") {
+            skip = skip || evaluate_c_defines_line(&line);
+            if skip {
+                nest_level += 1;
+            }
+        }
+        if !skip {
+            out += &line;
+            out += "\n";
+        }
+    }
+
+    Ok(out)
+}
+
+pub fn evaluate_c_defines_line(line: &str) -> bool {
+    let s = match test_feature("unstable") {
+        true => line.replace("defined(UNSTABLE)", "true"),
+        false => line.replace("defined(UNSTABLE)", "false"),
+    };
+
+    let s = match test_feature("shared_memory") {
+        true => s.replace("defined(SHARED_MEMORY)", "true"),
+        false => s.replace("defined(SHARED_MEMORY)", "false"),
+    };
+
+    let s = s.replace("#if", "");
+    match evalexpr::eval(&s) {
+        Ok(v) => v == evalexpr::Value::from(false),
+        Err(_) => panic!("Failed to evaluate {}", &s),
+    }
 }
