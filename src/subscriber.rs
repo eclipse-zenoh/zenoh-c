@@ -20,8 +20,8 @@ use zenoh::{
 };
 
 use crate::{
-    errors,
     keyexpr::*,
+    result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_owned_closure_sample_t,
 };
@@ -112,7 +112,7 @@ pub extern "C" fn z_declare_subscriber(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -130,12 +130,12 @@ pub extern "C" fn z_declare_subscriber(
     match subscriber.wait() {
         Ok(sub) => {
             this.write(Some(sub));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -155,14 +155,14 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> errors::z_result_t {
+pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> result::z_result_t {
     if let Some(s) = this.as_rust_type_mut().take() {
         if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);
-            return errors::Z_EGENERIC;
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.

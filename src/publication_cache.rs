@@ -18,7 +18,7 @@ use zenoh::prelude::*;
 use zenoh_ext::SessionExt;
 
 use crate::{
-    errors,
+    result,
     transmute::{RustTypeRef, RustTypeRefUninit},
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
@@ -75,7 +75,7 @@ pub extern "C" fn ze_declare_publication_cache(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
@@ -98,12 +98,12 @@ pub extern "C" fn ze_declare_publication_cache(
     match p.wait() {
         Ok(publication_cache) => {
             this.write(Some(publication_cache));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -128,14 +128,14 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
     this: &mut ze_owned_publication_cache_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.close().wait() {
             tracing::error!("{}", e);
-            return errors::Z_EGENERIC;
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Drops publication cache. Also attempts to undeclare it.

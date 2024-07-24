@@ -24,7 +24,7 @@ use zenoh::{
 
 use super::chunk::z_allocated_chunk_t;
 use crate::{
-    errors::{z_result_t, Z_EINVAL, Z_OK},
+    result::{z_result_t, Z_EINVAL, Z_OK},
     shm::buffer::zshmmut::z_shm_mut_null,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t,

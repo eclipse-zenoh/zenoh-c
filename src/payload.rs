@@ -26,11 +26,11 @@ use zenoh::{
     internal::buffers::{ZBuf, ZSlice, ZSliceBuffer},
 };
 
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::errors::Z_ENULL;
 pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use crate::result::Z_ENULL;
 use crate::{
-    errors::{self, z_result_t, Z_EIO, Z_EPARSE, Z_OK},
+    result::{self, z_result_t, Z_EIO, Z_EPARSE, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned,
 };
@@ -111,12 +111,12 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_string(
     match payload.deserialize::<String>() {
         Ok(s) => {
             dst.as_rust_type_mut_uninit().write(s.into());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {}", e);
             dst.as_rust_type_mut_uninit().write(CStringOwned::default());
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -135,12 +135,12 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
     match payload.deserialize::<Vec<u8>>() {
         Ok(v) => {
             dst.as_rust_type_mut_uninit().write(v.into());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to read the payload: {}", e);
             dst.as_rust_type_mut_uninit().write(CSliceOwned::default());
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -162,12 +162,12 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
             dst.as_rust_type_mut_uninit().write(Some(s.to_owned()));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {:?}", e);
             dst.as_rust_type_mut_uninit().write(None);
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -189,11 +189,11 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
             dst.write(s.as_loaned_c_type_ref());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {:?}", e);
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -215,11 +215,11 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
     match payload.deserialize_mut::<&mut zshm>() {
         Ok(s) => {
             dst.write(s.as_loaned_c_type_mut());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {:?}", e);
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -270,11 +270,11 @@ where
     match this.as_rust_type_ref().deserialize::<T>() {
         Ok(v) => {
             *val = v;
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {:?}", e);
-            errors::Z_EPARSE
+            result::Z_EPARSE
         }
     }
 }
@@ -681,19 +681,19 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
         libc::SEEK_SET => match offset.try_into() {
             Ok(o) => SeekFrom::Start(o),
             Err(_) => {
-                return errors::Z_EINVAL;
+                return result::Z_EINVAL;
             }
         },
         libc::SEEK_CUR => SeekFrom::Current(offset),
         libc::SEEK_END => SeekFrom::End(offset),
         _ => {
-            return errors::Z_EINVAL;
+            return result::Z_EINVAL;
         }
     };
 
     match reader.seek(pos) {
-        Ok(_) => errors::Z_OK,
-        Err(_) => errors::Z_EINVAL,
+        Ok(_) => result::Z_OK,
+        Err(_) => result::Z_EINVAL,
     }
 }
 

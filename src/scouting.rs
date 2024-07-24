@@ -21,7 +21,7 @@ use zenoh::{
 
 pub use crate::opaque_types::{z_loaned_hello_t, z_owned_hello_t};
 use crate::{
-    errors::{self, Z_OK},
+    result::{self, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_hello_call, z_closure_hello_loan, z_owned_closure_hello_t, z_owned_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
@@ -158,7 +158,7 @@ pub extern "C" fn z_scout(
     config: &mut z_owned_config_t,
     callback: &mut z_owned_closure_hello_t,
     options: Option<&z_scout_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
@@ -169,7 +169,7 @@ pub extern "C" fn z_scout(
     let timeout = options.timeout_ms;
     let Some(config) = config.as_rust_type_mut().take() else {
         tracing::error!("Config not provided");
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let mut closure = z_owned_closure_hello_t::empty();
     std::mem::swap(&mut closure, callback);
@@ -199,14 +199,14 @@ pub extern "C" fn z_scout(
 pub extern "C" fn z_whatami_to_view_string(
     whatami: z_whatami_t,
     str_out: &mut MaybeUninit<z_view_string_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     match WhatAmIMatcher::try_from(whatami as u8) {
-        Err(_) => errors::Z_EINVAL,
+        Err(_) => result::Z_EINVAL,
         Ok(w) => {
             let s = w.to_str();
             let slice = CStringView::new_borrowed_from_slice(s.as_bytes());
             str_out.as_rust_type_mut_uninit().write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
     }
 }

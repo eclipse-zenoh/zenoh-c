@@ -28,7 +28,7 @@ use super::{
 };
 use crate::{
     context::{zc_context_t, zc_threadsafe_context_t, Context, ThreadsafeContext},
-    errors::z_result_t,
+    result::z_result_t,
     shm::{
         common::types::z_protocol_id_t,
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,

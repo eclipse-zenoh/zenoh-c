@@ -23,7 +23,7 @@ use std::{
 use libc::{c_char, strlen};
 
 use crate::{
-    errors::{self, z_result_t},
+    result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
@@ -92,7 +92,7 @@ impl CSlice {
 
     pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
-            Err(errors::Z_EINVAL)
+            Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_borrowed_unchecked(data, len))
         }
@@ -115,7 +115,7 @@ impl CSlice {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
-            Err(errors::Z_EINVAL)
+            Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_owned_unchecked(data, len))
         }
@@ -234,10 +234,10 @@ pub unsafe extern "C" fn z_view_slice_from_str(
 ) -> z_result_t {
     if str.is_null() {
         z_view_slice_empty(this);
-        errors::Z_EINVAL
+        result::Z_EINVAL
     } else {
         z_view_slice_wrap(this, str as *const u8, libc::strlen(str));
-        errors::Z_OK
+        result::Z_OK
     }
 }
 
@@ -255,7 +255,7 @@ pub unsafe extern "C" fn z_view_slice_wrap(
     match CSliceView::new(start, len) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CSliceView::default());
@@ -299,10 +299,10 @@ pub unsafe extern "C" fn z_slice_from_str(
 ) -> z_result_t {
     if str.is_null() {
         z_slice_empty(this);
-        errors::Z_EINVAL
+        result::Z_EINVAL
     } else {
         z_slice_wrap(this, str as *const u8, libc::strlen(str));
-        errors::Z_OK
+        result::Z_OK
     }
 }
 
@@ -320,7 +320,7 @@ pub unsafe extern "C" fn z_slice_wrap(
     match CSliceOwned::new(start, len) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CSliceOwned::default());
@@ -542,7 +542,7 @@ pub unsafe extern "C" fn z_string_from_substr(
     match CStringOwned::new_owned(str, len) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CStringOwned::default());
@@ -564,7 +564,7 @@ pub unsafe extern "C" fn z_view_string_wrap(
     match CStringView::new_borrowed(str, strlen(str)) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CStringView::default());
@@ -587,7 +587,7 @@ pub unsafe extern "C" fn z_view_string_from_substr(
     match CStringView::new_borrowed(str, len) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CStringView::default());

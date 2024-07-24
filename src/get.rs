@@ -28,7 +28,7 @@ use zenoh::{
 };
 
 use crate::{
-    errors,
+    result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
@@ -251,7 +251,7 @@ pub unsafe extern "C" fn z_get(
     parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut z_get_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let mut closure = z_owned_closure_reply_t::empty();
     std::mem::swap(callback, &mut closure);
     let p = if parameters.is_null() {
@@ -307,10 +307,10 @@ pub unsafe extern "C" fn z_get(
         })
         .wait()
     {
-        Ok(()) => errors::Z_OK,
+        Ok(()) => result::Z_OK,
         Err(e) => {
             tracing::error!("{}", e);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }

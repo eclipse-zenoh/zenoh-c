@@ -29,7 +29,7 @@ use super::{
 };
 use crate::{
     context::{Context, DroppableContext, ThreadsafeContext},
-    errors::{z_result_t, Z_EINVAL, Z_OK},
+    result::{z_result_t, Z_EINVAL, Z_OK},
     shm::provider::types::z_buf_layout_alloc_result_t,
     transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_provider_t, z_owned_shm_mut_t,

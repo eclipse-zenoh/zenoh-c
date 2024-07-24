@@ -26,7 +26,7 @@ use zenoh::{
 };
 
 use crate::{
-    errors,
+    result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
     z_owned_encoding_t, z_priority_t, z_timestamp_t,
@@ -92,7 +92,7 @@ pub extern "C" fn z_declare_publisher(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&z_publisher_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
@@ -115,11 +115,11 @@ pub extern "C" fn z_declare_publisher(
         Err(e) => {
             tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
         Ok(publisher) => {
             this.write(Some(publisher));
-            errors::Z_OK
+            result::Z_OK
         }
     }
 }
@@ -204,7 +204,7 @@ pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let publisher = this.as_rust_type_ref();
     let payload = std::mem::take(payload.as_rust_type_mut());
 
@@ -233,9 +233,9 @@ pub unsafe extern "C" fn z_publisher_put(
 
     if let Err(e) = put.wait() {
         tracing::error!("{}", e);
-        errors::Z_EGENERIC
+        result::Z_EGENERIC
     } else {
-        errors::Z_OK
+        result::Z_OK
     }
 }
 
@@ -263,7 +263,7 @@ pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_dele
 pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
     options: Option<&z_publisher_delete_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
@@ -276,9 +276,9 @@ pub extern "C" fn z_publisher_delete(
     }
     if let Err(e) = del.wait() {
         tracing::error!("{}", e);
-        errors::Z_EGENERIC
+        result::Z_EGENERIC
     } else {
-        errors::Z_OK
+        result::Z_OK
     }
 }
 #[cfg(feature = "unstable")]
@@ -325,7 +325,7 @@ pub extern "C" fn zc_publisher_matching_listener_callback(
     this: &mut MaybeUninit<zc_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
     callback: &mut zc_owned_closure_matching_status_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let mut closure = zc_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -342,11 +342,11 @@ pub extern "C" fn zc_publisher_matching_listener_callback(
     match listener {
         Ok(listener) => {
             this.write(Some(listener));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -359,14 +359,14 @@ pub extern "C" fn zc_publisher_matching_listener_callback(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_publisher_matching_listener_undeclare(
     this: &mut zc_owned_matching_listener_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
-            return errors::Z_EGENERIC;
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Undeclares the given publisher, droping and invalidating it.
@@ -374,14 +374,14 @@ pub extern "C" fn zc_publisher_matching_listener_undeclare(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_result_t {
+pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> result::z_result_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
-            return errors::Z_EGENERIC;
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.

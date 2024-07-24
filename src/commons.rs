@@ -33,7 +33,7 @@ use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
 use crate::z_id_t;
 use crate::{
-    errors,
+    result,
     transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
@@ -77,10 +77,10 @@ decl_c_type!(copy(z_timestamp_t, Timestamp));
 pub extern "C" fn z_timestamp_new(
     this: &mut MaybeUninit<z_timestamp_t>,
     session: &z_loaned_session_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let timestamp = session.as_rust_type_ref().new_timestamp();
     this.as_rust_type_mut_uninit().write(timestamp);
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Returns NPT64 time associated with this timestamp.
@@ -490,14 +490,14 @@ pub extern "C" fn z_source_info_new(
     this: &mut MaybeUninit<z_owned_source_info_t>,
     source_id: &z_entity_global_id_t,
     source_sn: u64,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let source_info = SourceInfo {
         source_id: Some(*source_id.as_rust_type_ref()),
         source_sn: Some(source_sn),
     };
     this.write(source_info);
-    errors::Z_OK
+    result::Z_OK
 }
 
 #[cfg(feature = "unstable")]

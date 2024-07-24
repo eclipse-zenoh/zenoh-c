@@ -23,8 +23,8 @@ use zenoh::{
 
 pub use crate::opaque_types::{z_loaned_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t};
 use crate::{
-    errors,
-    errors::{z_result_t, Z_OK},
+    result,
+    result::{z_result_t, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
 };
@@ -71,18 +71,18 @@ unsafe fn keyexpr_create(
     name: &'static mut [u8],
     should_auto_canonize: bool,
     should_copy: bool,
-) -> Result<KeyExpr<'static>, errors::z_result_t> {
+) -> Result<KeyExpr<'static>, result::z_result_t> {
     match std::str::from_utf8_mut(name) {
         Ok(name) => match keyexpr_create_inner(name, should_auto_canonize, should_copy) {
             Ok(v) => Ok(v),
             Err(e) => {
                 tracing::error!("Couldn't construct a keyexpr: {}", e);
-                Err(errors::Z_EINVAL)
+                Err(result::Z_EINVAL)
             }
         },
         Err(e) => {
             tracing::error!("{}", e);
-            Err(errors::Z_EPARSE)
+            Err(result::Z_EPARSE)
         }
     }
 }
@@ -95,7 +95,7 @@ unsafe fn keyexpr_create(
 pub unsafe extern "C" fn z_keyexpr_from_str(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let len = if expr.is_null() {
         0
     } else {
@@ -166,7 +166,7 @@ pub extern "C" fn z_view_keyexpr_check(this: &z_view_keyexpr_t) -> bool {
 pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) -> z_result_t {
     let name = std::slice::from_raw_parts_mut(start as _, len);
     match keyexpr_create(name, false, false) {
-        Ok(_) => errors::Z_OK,
+        Ok(_) => result::Z_OK,
         Err(e) => e,
     }
 }
@@ -202,13 +202,13 @@ pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) 
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize) -> z_result_t {
     if start.is_null() {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
     match keyexpr_create(name, true, false) {
         Ok(ke) => {
             *len = ke.len();
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => e,
     }
@@ -231,13 +231,13 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr(
     let this = this.as_rust_type_mut_uninit();
     if expr.is_null() {
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     }
     let expr = std::slice::from_raw_parts_mut(expr as _, len);
     match keyexpr_create(expr, false, false) {
         Ok(ke) => {
             this.write(Some(ke));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(None);
@@ -262,13 +262,13 @@ pub unsafe extern "C" fn z_keyexpr_from_substr(
     let this = this.as_rust_type_mut_uninit();
     if expr.is_null() {
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     }
     let expr = std::slice::from_raw_parts_mut(expr as _, len);
     match keyexpr_create(expr, false, true) {
         Ok(ke) => {
             this.write(Some(ke));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(None);
@@ -295,7 +295,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
     let this = this.as_rust_type_mut_uninit();
     if start.is_null() {
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
 
@@ -303,7 +303,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
         Ok(ke) => {
             *len = ke.len();
             this.write(Some(ke));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(None);
@@ -328,7 +328,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substr_autocanonize(
     let this = this.as_rust_type_mut_uninit();
     if start.is_null() {
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
 
@@ -336,7 +336,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substr_autocanonize(
         Ok(ke) => {
             *len = ke.len();
             this.write(Some(ke));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(None);
@@ -357,7 +357,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str(
 ) -> z_result_t {
     if expr.is_null() {
         this.as_rust_type_mut_uninit().write(None);
-        errors::Z_EINVAL
+        result::Z_EINVAL
     } else {
         let len = if expr.is_null() {
             0
@@ -380,11 +380,11 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str_autocanonize(
 ) -> z_result_t {
     if expr.is_null() {
         this.as_rust_type_mut_uninit().write(None);
-        errors::Z_EINVAL
+        result::Z_EINVAL
     } else {
         let mut len = libc::strlen(expr);
         let res = z_view_keyexpr_from_substr_autocanonize(this, expr, &mut len);
-        if res == errors::Z_OK {
+        if res == result::Z_OK {
             *expr.add(len) = 0;
         }
         res
@@ -472,12 +472,12 @@ pub extern "C" fn z_declare_keyexpr(
     match session.declare_keyexpr(key_expr).wait() {
         Ok(id) => {
             this.write(Some(id.into_owned()));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::debug!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -489,17 +489,17 @@ pub extern "C" fn z_declare_keyexpr(
 pub extern "C" fn z_undeclare_keyexpr(
     this: &mut z_owned_keyexpr_t,
     session: &z_loaned_session_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let Some(kexpr) = this.as_rust_type_mut().take() else {
         tracing::debug!("Attempted to undeclare dropped keyexpr");
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let session = session.as_rust_type_ref();
     match session.undeclare(kexpr).wait() {
-        Ok(()) => errors::Z_OK,
+        Ok(()) => result::Z_OK,
         Err(e) => {
             tracing::debug!("{}", e);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -549,7 +549,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
     left: &z_loaned_keyexpr_t,
     right_start: *const c_char,
     right_len: usize,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let left = left.as_rust_type_ref();
     let right = std::slice::from_raw_parts(right_start as _, right_len);
@@ -563,18 +563,18 @@ pub unsafe extern "C" fn z_keyexpr_concat(
                 e
             );
             this.write(None);
-            return errors::Z_EINVAL;
+            return result::Z_EINVAL;
         }
     };
     match left.concat(right) {
         Ok(result) => {
             this.write(Some(result));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -586,19 +586,19 @@ pub extern "C" fn z_keyexpr_join(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     left: &z_loaned_keyexpr_t,
     right: &z_loaned_keyexpr_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let left = left.as_rust_type_ref();
     let right = right.as_rust_type_ref();
     let this = this.as_rust_type_mut_uninit();
     match left.join(right.as_str()) {
         Ok(result) => {
             this.write(Some(result));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }

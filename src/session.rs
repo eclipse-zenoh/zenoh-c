@@ -19,8 +19,8 @@ use zenoh::{prelude::*, session::Session};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::z_loaned_shm_client_storage_t;
 use crate::{
-    errors,
     opaque_types::{z_loaned_session_t, z_owned_session_t},
+    result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_owned_config_t, zc_init_logger,
 };
@@ -54,7 +54,7 @@ pub extern "C" fn z_session_null(this: &mut MaybeUninit<z_owned_session_t>) {
 pub extern "C" fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_owned_config_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
@@ -62,17 +62,17 @@ pub extern "C" fn z_open(
     let Some(config) = config.as_rust_type_mut().take() else {
         tracing::error!("Config not provided");
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     match zenoh::open(config).wait() {
         Ok(s) => {
             this.write(Some(Arc::new(s)));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Error opening session: {}", e);
             this.write(None);
-            errors::Z_ENETWORK
+            result::Z_ENETWORK
         }
     }
 }
@@ -87,7 +87,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_owned_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
@@ -95,7 +95,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
     let Some(config) = config.as_rust_type_mut().take() else {
         tracing::error!("Config not provided");
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     match zenoh::open(config)
         .with_shm_clients(shm_clients.as_rust_type_ref().clone())
@@ -103,12 +103,12 @@ pub extern "C" fn z_open_with_custom_shm_clients(
     {
         Ok(s) => {
             this.write(Some(Arc::new(s)));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Error opening session: {}", e);
             this.write(None);
-            errors::Z_ENETWORK
+            result::Z_ENETWORK
         }
     }
 }
@@ -125,10 +125,10 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 /// @return 0 in  case of success, a negative value if an error occured while closing the session,
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
-pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_result_t {
+pub extern "C" fn z_close(this: &mut z_owned_session_t) -> result::z_result_t {
     let session = this.as_rust_type_mut();
     let Some(s) = session.take() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let s = match Arc::try_unwrap(s) {
         Ok(s) => s,
@@ -139,9 +139,9 @@ pub extern "C" fn z_close(this: &mut z_owned_session_t) -> errors::z_result_t {
     match s.close().wait() {
         Err(e) => {
             tracing::error!("Error closing session: {}", e);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
-        Ok(_) => errors::Z_OK,
+        Ok(_) => result::Z_OK,
     }
 }
 

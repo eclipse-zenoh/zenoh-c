@@ -25,7 +25,7 @@ use zenoh::bytes::Encoding;
 
 pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
-    errors::{self, z_result_t},
+    result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_owned_string_t, z_string_from_substr,
 };
@@ -42,22 +42,22 @@ pub unsafe extern "C" fn z_encoding_from_substr(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
     len: usize,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let encoding = this.as_rust_type_mut_uninit();
     if s.is_null() {
         encoding.write(Encoding::default());
-        errors::Z_OK
+        result::Z_OK
     } else {
         let s = from_raw_parts(s as *const u8, len);
         match from_utf8(s) {
             Ok(s) => {
                 encoding.write(Encoding::from_str(s).unwrap_infallible());
-                errors::Z_OK
+                result::Z_OK
             }
             Err(e) => {
                 tracing::error!("Can not create encoding from non UTF-8 string: {}", e);
                 encoding.write(Encoding::default());
-                errors::Z_EINVAL
+                result::Z_EINVAL
             }
         }
     }
@@ -71,23 +71,23 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
     this: &mut z_loaned_encoding_t,
     s: *const c_char,
     len: usize,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let encoding = this.as_rust_type_mut();
     if len == 0 {
         *encoding = std::mem::take(encoding).with_schema(String::new());
-        return errors::Z_OK;
+        return result::Z_OK;
     } else if s.is_null() {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     }
     let schema_bytes = from_raw_parts(s as *const u8, len);
     match from_utf8(schema_bytes) {
         Ok(schema_str) => {
             *encoding = std::mem::take(encoding).with_schema(schema_str);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
-            errors::Z_EINVAL
+            result::Z_EINVAL
         }
     }
 }
@@ -109,7 +109,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_str(
 pub unsafe extern "C" fn z_encoding_from_str(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     z_encoding_from_substr(this, s, libc::strlen(s))
 }
 

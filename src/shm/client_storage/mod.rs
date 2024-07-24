@@ -18,7 +18,7 @@ use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE}
 
 use super::common::types::z_protocol_id_t;
 use crate::{
-    errors::{z_result_t, Z_EINVAL, Z_OK},
+    result::{z_result_t, Z_EINVAL, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
     zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,

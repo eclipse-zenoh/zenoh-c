@@ -24,7 +24,7 @@ pub mod opaque_types;
 pub use crate::opaque_types::*;
 
 mod collections;
-pub mod errors;
+pub mod result;
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;

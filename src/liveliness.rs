@@ -20,8 +20,8 @@ use zenoh::{
 };
 
 use crate::{
-    errors,
     opaque_types::{zc_loaned_liveliness_token_t, zc_owned_liveliness_token_t},
+    result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_owned_closure_reply_t, z_owned_closure_sample_t,
@@ -90,19 +90,19 @@ pub extern "C" fn zc_liveliness_declare_token(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     _options: Option<&zc_liveliness_declaration_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     match session.liveliness().declare_token(key_expr).wait() {
         Ok(token) => {
             this.write(Some(token));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to undeclare token: {e}");
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -111,15 +111,15 @@ pub extern "C" fn zc_liveliness_declare_token(
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(
     this: &mut zc_owned_liveliness_token_t,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut();
     if let Some(token) = this.take() {
         if let Err(e) = token.undeclare().wait() {
             tracing::error!("Failed to undeclare token: {e}");
-            return errors::Z_EGENERIC;
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// The options for `zc_liveliness_declare_subscriber()`
@@ -152,7 +152,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     _options: Option<&mut zc_liveliness_subscriber_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
@@ -168,12 +168,12 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     {
         Ok(subscriber) => {
             this.write(Some(subscriber));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("Failed to subscribe to liveliness: {e}");
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -202,7 +202,7 @@ pub extern "C" fn zc_liveliness_get(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut zc_liveliness_get_options_t>,
-) -> errors::z_result_t {
+) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
@@ -217,10 +217,10 @@ pub extern "C" fn zc_liveliness_get(
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
     }
     match builder.wait() {
-        Ok(()) => errors::Z_OK,
+        Ok(()) => result::Z_OK,
         Err(e) => {
             tracing::error!("Failed to subscribe to liveliness: {e}");
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
