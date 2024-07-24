@@ -684,6 +684,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "evalexpr"
+version = "11.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63b41cb9dd076076058a4523f009c900c582279536d0b2e45a29aa930e083cc5"
+
+[[package]]
 name = "event-listener"
 version = "2.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3620,6 +3626,7 @@ dependencies = [
  "cbindgen",
  "chrono",
  "const_format",
+ "evalexpr",
  "flume",
  "fs2",
  "fs_extra",
@@ -3627,6 +3634,7 @@ dependencies = [
  "json5",
  "lazy_static",
  "libc",
+ "phf",
  "rand",
  "regex",
  "serde_yaml",
