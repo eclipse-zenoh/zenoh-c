@@ -63,6 +63,7 @@ regex = "1.7.1"
 serde_yaml = "0.9.19"
 fs_extra = "1.3.0"
 evalexpr = "11.3.0"
+phf = {version = "0.11.2", features = ["macros"] }
 
 [lib]
 path="src/lib.rs"

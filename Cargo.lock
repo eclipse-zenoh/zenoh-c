@@ -3616,6 +3616,7 @@ dependencies = [
  "json5",
  "lazy_static",
  "libc",
+ "phf",
  "rand",
  "regex",
  "serde_yaml",

@@ -9,6 +9,7 @@ use std::{
 };
 
 use fs2::FileExt;
+use phf::phf_map;
 use regex::Regex;
 
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
@@ -34,6 +35,11 @@ const HEADER: &str = r"//
 #define ZENOHC_API
 #endif
 ";
+
+static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
+    "unstable" => "UNSTABLE",
+    "shared-memory" => "SHARED_MEMORY",
+};
 
 fn fix_cbindgen(input: &str, output: &str) {
     let bindings = std::fs::read_to_string(input).expect("failed to open input file");
@@ -99,15 +105,11 @@ fn produce_opaque_types_data() -> PathBuf {
 
     #[allow(unused_mut)]
     let mut feature_args: Vec<&str> = vec![];
-    #[cfg(feature = "shared-memory")]
-    {
-        feature_args.push("-F");
-        feature_args.push("shared-memory");
-    }
-    #[cfg(feature = "unstable")]
-    {
-        feature_args.push("-F");
-        feature_args.push("unstable");
+    for (rust_feature, _c_feature) in RUST_TO_C_FEATURES.entries() {
+        if test_feature(rust_feature) {
+            feature_args.push("-F");
+            feature_args.push(rust_feature);
+        }
     }
 
     let _ = Command::new("cargo")
@@ -227,11 +229,12 @@ fn configure() {
         .unwrap();
     file.lock_exclusive().unwrap();
     file.write_all(content.as_bytes()).unwrap();
-    #[cfg(feature = "shared-memory")]
-    file.write_all("#define SHARED_MEMORY\n".as_bytes())
-        .unwrap();
-    #[cfg(feature = "unstable")]
-    file.write_all("#define UNSTABLE\n".as_bytes()).unwrap();
+    for (rust_feature, c_feature) in RUST_TO_C_FEATURES.entries() {
+        if test_feature(rust_feature) {
+            file.write_all(format!("#define {}\n", c_feature).as_bytes())
+                .unwrap();
+        }
+    }
     file.unlock().unwrap();
 }
 
@@ -1383,17 +1386,18 @@ pub fn process_feature_defines(input_path: &str) -> Result<String, Box<dyn std::
 }
 
 pub fn evaluate_c_defines_line(line: &str) -> bool {
-    let s = match test_feature("unstable") {
-        true => line.replace("defined(UNSTABLE)", "true"),
-        false => line.replace("defined(UNSTABLE)", "false"),
-    };
+    let mut s = line.to_string();
+    for (rust_feature, c_feature) in RUST_TO_C_FEATURES.entries() {
+        s = s.replace(
+            &format!("defined({})", c_feature),
+            match test_feature(rust_feature) {
+                true => "true",
+                false => "false",
+            },
+        );
+    }
 
-    let s = match test_feature("shared_memory") {
-        true => s.replace("defined(SHARED_MEMORY)", "true"),
-        false => s.replace("defined(SHARED_MEMORY)", "false"),
-    };
-
-    let s = s.replace("#if", "");
+    s = s.replace("#if", "");
     match evalexpr::eval(&s) {
         Ok(v) => v == evalexpr::Value::from(false),
         Err(_) => panic!("Failed to evaluate {}", &s),
