@@ -1353,7 +1353,7 @@ fn test_feature(feature: &str) -> bool {
 
 /// Evaluates conditional feature macros in the form #if (logical expression of define(FEATURE_NAME))
 /// and removes the code under those that evaluate to false
-/// Note: works only on single string conditionds
+/// Note: works only on single string conditional expressions
 pub fn process_feature_defines(input_path: &str) -> Result<String, Box<dyn std::error::Error>> {
     let file = std::fs::File::open(input_path)?;
     let lines = std::io::BufReader::new(file).lines();
