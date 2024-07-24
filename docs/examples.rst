@@ -34,7 +34,7 @@ Publish
       }
       
       z_owned_bytes_t payload;
-      z_bytes_serialize_from_string(&payload, "value");
+      z_bytes_serialize_from_str(&payload, "value");
       z_view_keyexpr_t key_expr;
       z_view_keyexpr_from_string(&key_expr, "key/expression");
 
@@ -171,7 +171,7 @@ Queryable
       }
 
       z_owned_bytes_t reply_payload;
-      z_bytes_serialize_from_string(&reply_payload, "reply");
+      z_bytes_serialize_from_str(&reply_payload, "reply");
 
       z_view_keyexpr_t reply_keyexpr;
       z_view_keyexpr_from_string(&reply_keyexpr, (const char *)context);
