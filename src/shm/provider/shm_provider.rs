@@ -28,7 +28,7 @@ use super::{
 };
 use crate::{
     context::{zc_context_t, zc_threadsafe_context_t, Context, ThreadsafeContext},
-    errors::z_error_t,
+    result::z_result_t,
     shm::{
         common::types::z_protocol_id_t,
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
@@ -181,7 +181,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
         *mut c_void,
         *mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
-) -> z_error_t {
+) -> z_result_t {
     alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
         out_result,
         provider,
@@ -213,6 +213,6 @@ pub extern "C" fn z_shm_provider_map(
     provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
-) -> z_error_t {
+) -> z_result_t {
     map(out_result, provider, allocated_chunk, len)
 }

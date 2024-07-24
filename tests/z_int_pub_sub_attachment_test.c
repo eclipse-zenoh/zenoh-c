@@ -53,7 +53,7 @@ bool create_attachment_it(z_owned_bytes_t *kv_pair, void *context) {
     return true;
 };
 
-z_error_t check_attachment(const z_loaned_bytes_t *attachment, const attachment_context_t *ctx) {
+z_result_t check_attachment(const z_loaned_bytes_t *attachment, const attachment_context_t *ctx) {
     z_bytes_iterator_t iter = z_bytes_get_iterator(attachment);
     for (size_t i = 0; i < ctx->num_items; i++) {
         z_owned_bytes_t kv, k, v;

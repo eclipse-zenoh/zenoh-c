@@ -26,7 +26,7 @@ use super::{
 };
 use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
-    errors::z_error_t,
+    result::z_result_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
@@ -56,7 +56,7 @@ pub extern "C" fn z_alloc_layout_new(
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) -> z_result_t {
     alloc_layout_new(this, provider, size, alignment)
 }
 
@@ -136,7 +136,7 @@ pub extern "C" fn z_alloc_layout_threadsafe_alloc_gc_defrag_async(
     layout: &'static z_loaned_alloc_layout_t,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(*mut c_void, &mut MaybeUninit<z_buf_alloc_result_t>),
-) -> z_error_t {
+) -> z_result_t {
     alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
         out_result,
         layout,

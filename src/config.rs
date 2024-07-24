@@ -17,7 +17,7 @@ use libc::{c_char, c_uint};
 use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
 
 use crate::{
-    errors::{self, z_error_t, Z_OK},
+    result::{self, z_result_t, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_owned_string_t, z_string_from_substr, z_string_null,
 };
@@ -89,7 +89,7 @@ pub extern "C" fn z_config_loan_mut(this: &mut z_owned_config_t) -> &mut z_loane
 
 /// Constructs a new empty configuration.
 #[no_mangle]
-pub extern "C" fn z_config_default(this: &mut MaybeUninit<z_owned_config_t>) -> errors::z_error_t {
+pub extern "C" fn z_config_default(this: &mut MaybeUninit<z_owned_config_t>) -> result::z_result_t {
     this.as_rust_type_mut_uninit()
         .write(Some(Config::default()));
     Z_OK
@@ -119,7 +119,7 @@ pub unsafe extern "C" fn zc_config_get_from_str(
     this: &z_loaned_config_t,
     key: *const c_char,
     out_value_string: &mut MaybeUninit<z_owned_string_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     zc_config_get_from_substr(this, key, libc::strlen(key), out_value_string)
 }
 
@@ -131,18 +131,18 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
     key: *const c_char,
     key_len: usize,
     out_value_string: &mut MaybeUninit<z_owned_string_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let config = this.as_rust_type_ref();
     if key.is_null() {
         z_string_null(out_value_string);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     }
 
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(_) => {
             z_string_null(out_value_string);
-            return errors::Z_EINVAL;
+            return result::Z_EINVAL;
         }
     };
     let val = config.get_json(key).ok();
@@ -153,11 +153,11 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
                 val.as_ptr() as *const libc::c_char,
                 val.len(),
             );
-            errors::Z_OK
+            result::Z_OK
         }
         None => {
             z_string_null(out_value_string);
-            errors::Z_EUNAVAILABLE
+            result::Z_EUNAVAILABLE
         }
     }
 }
@@ -171,7 +171,7 @@ pub unsafe extern "C" fn zc_config_insert_json(
     this: &mut z_loaned_config_t,
     key: *const c_char,
     value: *const c_char,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     zc_config_insert_json_from_substr(this, key, libc::strlen(key), value, libc::strlen(value))
 }
 
@@ -186,19 +186,19 @@ pub unsafe extern "C" fn zc_config_insert_json_from_substr(
     key_len: usize,
     value: *const c_char,
     value_len: usize,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let config = this.as_rust_type_mut();
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
-        Err(_) => return errors::Z_EINVAL,
+        Err(_) => return result::Z_EINVAL,
     };
     let value = match from_utf8(from_raw_parts(value as _, value_len)) {
         Ok(s) => s,
-        Err(_) => return errors::Z_EINVAL,
+        Err(_) => return result::Z_EINVAL,
     };
     match config.insert_json5(key, value) {
         Ok(_) => 0,
-        Err(_) => errors::Z_EGENERIC,
+        Err(_) => result::Z_EGENERIC,
     }
 }
 
@@ -223,16 +223,16 @@ pub extern "C" fn z_config_check(this: &z_owned_config_t) -> bool {
 pub unsafe extern "C" fn zc_config_from_str(
     this: &mut MaybeUninit<z_owned_config_t>,
     s: *const c_char,
-) -> errors::z_error_t {
-    let mut res = errors::Z_OK;
+) -> result::z_result_t {
+    let mut res = result::Z_OK;
     if s.is_null() {
         z_config_null(this);
-        res = errors::Z_EINVAL;
+        res = result::Z_EINVAL;
     } else {
         let conf_str = CStr::from_ptr(s);
         let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();
         if props.is_none() {
-            res = errors::Z_EPARSE;
+            res = result::Z_EPARSE;
         }
         this.as_rust_type_mut_uninit().write(props);
     }
@@ -247,7 +247,7 @@ pub unsafe extern "C" fn zc_config_from_str(
 pub unsafe extern "C" fn zc_config_to_string(
     config: &z_loaned_config_t,
     out_config_string: &mut MaybeUninit<z_owned_string_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let config = config.as_rust_type_ref();
     match json5::to_string(config) {
         Ok(s) => {
@@ -258,11 +258,11 @@ pub unsafe extern "C" fn zc_config_to_string(
                     s.len(),
                 )
             };
-            errors::Z_OK
+            result::Z_OK
         }
         Err(_) => {
             z_string_null(out_config_string);
-            errors::Z_EPARSE
+            result::Z_EPARSE
         }
     }
 }
@@ -275,21 +275,21 @@ pub unsafe extern "C" fn zc_config_to_string(
 pub unsafe extern "C" fn zc_config_from_file(
     this: &mut MaybeUninit<z_owned_config_t>,
     path: *const c_char,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let path_str = CStr::from_ptr(path);
-    let mut res = errors::Z_OK;
+    let mut res = result::Z_OK;
     let config = match path_str.to_str() {
         Ok(path) => match zenoh::config::Config::from_file(path) {
             Ok(c) => Some(c),
             Err(e) => {
                 tracing::error!("Couldn't read config from {}: {}", path, e);
-                res = errors::Z_EPARSE;
+                res = result::Z_EPARSE;
                 None
             }
         },
         Err(e) => {
             tracing::error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
-            res = errors::Z_EIO;
+            res = result::Z_EIO;
             None
         }
     };
@@ -304,15 +304,15 @@ pub unsafe extern "C" fn zc_config_from_file(
 #[no_mangle]
 pub unsafe extern "C" fn zc_config_from_env(
     this: &mut MaybeUninit<z_owned_config_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     match Config::from_env() {
         Ok(c) => {
             this.as_rust_type_mut_uninit().write(Some(c));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -320,7 +320,7 @@ pub unsafe extern "C" fn zc_config_from_env(
 /// Constructs a default peer mode configuration.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_config_peer(this: &mut MaybeUninit<z_owned_config_t>) -> errors::z_error_t {
+pub extern "C" fn z_config_peer(this: &mut MaybeUninit<z_owned_config_t>) -> result::z_result_t {
     this.as_rust_type_mut_uninit()
         .write(Some(zenoh::config::peer()));
     Z_OK
@@ -338,8 +338,8 @@ pub unsafe extern "C" fn z_config_client(
     this: &mut MaybeUninit<z_owned_config_t>,
     peers: *const *const c_char,
     n_peers: usize,
-) -> z_error_t {
-    let mut res = errors::Z_OK;
+) -> z_result_t {
+    let mut res = result::Z_OK;
     let locators = if peers.is_null() {
         Vec::new()
     } else if let Ok(locators) = std::slice::from_raw_parts(peers, n_peers)
@@ -348,7 +348,7 @@ pub unsafe extern "C" fn z_config_client(
         .try_fold(Vec::<Locator>::new(), |mut acc, it| match it {
             Err(e) => {
                 tracing::error!("Error parsing peer address: {}", e);
-                res = errors::Z_EPARSE;
+                res = result::Z_EPARSE;
                 Err(())
             }
             Ok(loc) => {

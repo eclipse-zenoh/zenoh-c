@@ -19,7 +19,7 @@ use zenoh::{
 };
 
 use crate::{
-    commons::*, encoding::*, errors, keyexpr::*, transmute::RustTypeRef, z_loaned_session_t,
+    commons::*, encoding::*, keyexpr::*, result, transmute::RustTypeRef, z_loaned_session_t,
     z_owned_bytes_t, z_timestamp_t,
 };
 
@@ -80,7 +80,7 @@ pub extern "C" fn z_put(
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_put_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let payload = std::mem::take(payload.as_rust_type_mut());
@@ -117,9 +117,9 @@ pub extern "C" fn z_put(
 
     if let Err(e) = put.wait() {
         tracing::error!("{}", e);
-        errors::Z_EGENERIC
+        result::Z_EGENERIC
     } else {
-        errors::Z_OK
+        result::Z_OK
     }
 }
 
@@ -167,7 +167,7 @@ pub extern "C" fn z_delete(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);
@@ -192,8 +192,8 @@ pub extern "C" fn z_delete(
     match del.wait() {
         Err(e) => {
             tracing::error!("{}", e);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
-        Ok(()) => errors::Z_OK,
+        Ok(()) => result::Z_OK,
     }
 }

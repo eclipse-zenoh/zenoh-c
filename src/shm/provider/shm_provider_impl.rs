@@ -29,7 +29,7 @@ use super::{
 };
 use crate::{
     context::{Context, DroppableContext, ThreadsafeContext},
-    errors::{z_error_t, Z_EINVAL, Z_OK},
+    result::{z_result_t, Z_EINVAL, Z_OK},
     shm::provider::types::z_buf_layout_alloc_result_t,
     transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
     z_loaned_shm_provider_t, z_owned_shm_mut_t,
@@ -70,7 +70,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
         *mut c_void,
         *mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
-) -> z_error_t {
+) -> z_result_t {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             alloc_async_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
@@ -134,7 +134,7 @@ pub(crate) fn map(
     provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
-) -> z_error_t {
+) -> z_result_t {
     let chunk = match allocated_chunk.try_into() {
         Ok(val) => val,
         Err(_) => return Z_EINVAL,

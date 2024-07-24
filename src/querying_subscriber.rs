@@ -18,8 +18,8 @@ use zenoh::{prelude::*, pubsub::Reliability, session::Session};
 use zenoh_ext::*;
 
 use crate::{
-    errors,
     opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
+    result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_owned_closure_sample_t, z_query_consolidation_none,
@@ -106,7 +106,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -140,12 +140,12 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     match sub.wait() {
         Ok(sub) => {
             this.write(Some((sub, session)));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             tracing::debug!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     this: &ze_loaned_querying_subscriber_t,
     selector: &z_loaned_keyexpr_t,
     options: Option<&z_get_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     unsafe impl Sync for z_get_options_t {}
     let sub = this.as_rust_type_ref();
     let session = sub.1;
@@ -204,9 +204,9 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
         .wait()
     {
         tracing::debug!("{}", e);
-        return errors::Z_EGENERIC;
+        return result::Z_EGENERIC;
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Undeclares the given querying subscriber, drops it and resets to a gravestone state.
@@ -215,14 +215,14 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
     this: &mut ze_owned_querying_subscriber_t,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     if let Some(s) = this.as_rust_type_mut().take() {
         if let Err(e) = s.0.close().wait() {
             tracing::error!("{}", e);
-            return errors::Z_EGENERIC;
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Drops querying subscriber. Also attempts to undeclare it.
