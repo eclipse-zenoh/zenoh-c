@@ -20,7 +20,7 @@ use zenoh::shm::{
 };
 
 use crate::{
-    errors::{z_error_t, Z_EINVAL, Z_OK},
+    errors::{z_result_t, Z_EINVAL, Z_OK},
     shm::provider::shm_provider::CSHMProvider,
     transmute::{RustTypeRef, RustTypeRefUninit},
     z_loaned_memory_layout_t, z_owned_shm_provider_t,
@@ -37,7 +37,7 @@ pub type PosixAllocLayout =
 pub extern "C" fn z_posix_shm_provider_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
     layout: &z_loaned_memory_layout_t,
-) -> z_error_t {
+) -> z_result_t {
     match PosixShmProviderBackend::builder()
         .with_layout(layout.as_rust_type_ref())
         .res()

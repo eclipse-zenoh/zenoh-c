@@ -251,7 +251,7 @@ pub unsafe extern "C" fn z_get(
     parameters: *const c_char,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut z_get_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let mut closure = z_owned_closure_reply_t::empty();
     std::mem::swap(callback, &mut closure);
     let p = if parameters.is_null() {

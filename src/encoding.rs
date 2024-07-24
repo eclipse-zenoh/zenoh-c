@@ -25,7 +25,7 @@ use zenoh::bytes::Encoding;
 
 pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
-    errors::{self, z_error_t},
+    errors::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_owned_string_t, z_string_from_substr,
 };
@@ -42,7 +42,7 @@ pub unsafe extern "C" fn z_encoding_from_substr(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
     len: usize,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let encoding = this.as_rust_type_mut_uninit();
     if s.is_null() {
         encoding.write(Encoding::default());
@@ -71,7 +71,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
     this: &mut z_loaned_encoding_t,
     s: *const c_char,
     len: usize,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let encoding = this.as_rust_type_mut();
     if len == 0 {
         *encoding = std::mem::take(encoding).with_schema(String::new());
@@ -99,7 +99,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
 pub unsafe extern "C" fn z_encoding_set_schema_from_str(
     this: &mut z_loaned_encoding_t,
     s: *const c_char,
-) -> z_error_t {
+) -> z_result_t {
     z_encoding_set_schema_from_substr(this, s, strlen(s))
 }
 
@@ -109,7 +109,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_str(
 pub unsafe extern "C" fn z_encoding_from_str(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     z_encoding_from_substr(this, s, libc::strlen(s))
 }
 

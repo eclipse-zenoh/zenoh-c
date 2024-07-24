@@ -106,7 +106,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     this: &ze_loaned_querying_subscriber_t,
     selector: &z_loaned_keyexpr_t,
     options: Option<&z_get_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     unsafe impl Sync for z_get_options_t {}
     let sub = this.as_rust_type_ref();
     let session = sub.1;
@@ -215,7 +215,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
     this: &mut ze_owned_querying_subscriber_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     if let Some(s) = this.as_rust_type_mut().take() {
         if let Err(e) = s.0.close().wait() {
             tracing::error!("{}", e);

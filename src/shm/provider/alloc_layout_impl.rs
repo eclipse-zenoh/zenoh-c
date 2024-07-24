@@ -29,7 +29,7 @@ use super::{
 };
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
-    errors::{z_error_t, Z_EINVAL, Z_OK},
+    errors::{z_result_t, Z_EINVAL, Z_OK},
     shm::provider::types::z_buf_alloc_result_t,
     transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
@@ -40,7 +40,7 @@ pub(crate) fn alloc_layout_new(
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) -> z_result_t {
     let layout = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             match provider
@@ -109,7 +109,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
     layout: &'static z_loaned_alloc_layout_t,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(*mut c_void, &mut MaybeUninit<z_buf_alloc_result_t>),
-) -> z_error_t {
+) -> z_result_t {
     match layout.as_rust_type_ref() {
         super::alloc_layout::CSHMLayout::Posix(layout) => {
             alloc_async_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(

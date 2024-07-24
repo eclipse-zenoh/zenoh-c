@@ -92,7 +92,7 @@ pub extern "C" fn z_declare_publisher(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&z_publisher_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
@@ -204,7 +204,7 @@ pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let publisher = this.as_rust_type_ref();
     let payload = std::mem::take(payload.as_rust_type_mut());
 
@@ -263,7 +263,7 @@ pub extern "C" fn z_publisher_delete_options_default(this: &mut z_publisher_dele
 pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
     options: Option<&z_publisher_delete_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
@@ -325,7 +325,7 @@ pub extern "C" fn zc_publisher_matching_listener_callback(
     this: &mut MaybeUninit<zc_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
     callback: &mut zc_owned_closure_matching_status_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let mut closure = zc_owned_closure_matching_status_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -359,7 +359,7 @@ pub extern "C" fn zc_publisher_matching_listener_callback(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_publisher_matching_listener_undeclare(
     this: &mut zc_owned_matching_listener_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
@@ -374,7 +374,7 @@ pub extern "C" fn zc_publisher_matching_listener_undeclare(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> errors::z_result_t {
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);

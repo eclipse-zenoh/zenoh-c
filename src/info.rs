@@ -50,7 +50,7 @@ pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
 pub unsafe extern "C" fn z_info_peers_zid(
     session: &z_loaned_session_t,
     callback: &mut z_owned_closure_zid_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     let session = session.as_rust_type_ref();
@@ -71,7 +71,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 pub unsafe extern "C" fn z_info_routers_zid(
     session: &z_loaned_session_t,
     callback: &mut z_owned_closure_zid_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let mut closure = z_owned_closure_zid_t::empty();
     std::mem::swap(&mut closure, callback);
     let session = session.as_rust_type_ref();

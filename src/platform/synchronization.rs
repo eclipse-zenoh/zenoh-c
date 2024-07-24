@@ -20,7 +20,7 @@ decl_c_type!(
 /// Constructs a mutex.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_mutex_init(this: &mut MaybeUninit<z_owned_mutex_t>) -> errors::z_error_t {
+pub extern "C" fn z_mutex_init(this: &mut MaybeUninit<z_owned_mutex_t>) -> errors::z_result_t {
     this.as_rust_type_mut_uninit().write(Some((
         Mutex::<()>::new(()),
         None::<MutexGuard<'static, ()>>,
@@ -59,7 +59,7 @@ pub unsafe extern "C" fn z_mutex_loan_mut(this: &mut z_owned_mutex_t) -> &mut z_
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
 /// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
-pub extern "C" fn z_mutex_lock(this: &'static mut z_loaned_mutex_t) -> errors::z_error_t {
+pub extern "C" fn z_mutex_lock(this: &'static mut z_loaned_mutex_t) -> errors::z_result_t {
     let this = this.as_rust_type_mut();
 
     match this.0.lock() {
@@ -77,7 +77,7 @@ pub extern "C" fn z_mutex_lock(this: &'static mut z_loaned_mutex_t) -> errors::z
 /// Unlocks previously locked mutex. If mutex was not locked by the current thread, the behaviour is undefined.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error_t {
+pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_result_t {
     let this = this.as_rust_type_mut();
     if this.1.is_none() {
         return errors::Z_EINVAL_MUTEX;
@@ -93,7 +93,7 @@ pub extern "C" fn z_mutex_unlock(this: &mut z_loaned_mutex_t) -> errors::z_error
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_mutex_try_lock(
     this: &'static mut z_loaned_mutex_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut();
     match this.0.try_lock() {
         Ok(new_lock) => {
@@ -163,7 +163,7 @@ pub unsafe extern "C" fn z_condvar_loan_mut(
 /// Wakes up one blocked thread waiting on this condiitonal variable.
 /// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
-pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_error_t {
+pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_result_t {
     let this = this.as_rust_type_ref();
     this.notify_one();
     errors::Z_OK
@@ -179,7 +179,7 @@ pub extern "C" fn z_condvar_signal(this: &z_loaned_condvar_t) -> errors::z_error
 pub unsafe extern "C" fn z_condvar_wait(
     this: &z_loaned_condvar_t,
     m: &mut z_loaned_mutex_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_ref();
     let m = m.as_rust_type_mut();
     if m.1.is_none() {
@@ -216,7 +216,7 @@ pub extern "C" fn z_task_detach(this: &mut z_owned_task_t) {
 
 /// Joins the task and releases all allocated resources
 #[no_mangle]
-pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_error_t {
+pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> errors::z_result_t {
     let this = this.as_rust_type_mut().take();
     if let Some(task) = this {
         match task.join() {
@@ -260,7 +260,7 @@ pub unsafe extern "C" fn z_task_init(
     _attr: *const z_task_attr_t,
     fun: unsafe extern "C" fn(arg: *mut c_void),
     arg: *mut c_void,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let fun_arg_pair = FunArgPair { fun, arg };
 

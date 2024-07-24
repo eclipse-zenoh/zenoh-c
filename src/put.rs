@@ -80,7 +80,7 @@ pub extern "C" fn z_put(
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_put_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let payload = std::mem::take(payload.as_rust_type_mut());
@@ -167,7 +167,7 @@ pub extern "C" fn z_delete(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);

@@ -213,7 +213,7 @@ pub extern "C" fn z_declare_queryable(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_query_t::empty();
     std::mem::swap(&mut closure, callback);
@@ -246,7 +246,7 @@ pub extern "C" fn z_declare_queryable(
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> errors::z_result_t {
     if let Some(qable) = this.as_rust_type_mut().take() {
         if let Err(e) = qable.undeclare().wait() {
             tracing::error!("{}", e);
@@ -289,7 +289,7 @@ pub extern "C" fn z_query_reply(
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let query = this.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let payload = std::mem::take(payload.as_rust_type_mut());
@@ -345,7 +345,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     this: &z_loaned_query_t,
     payload: &mut z_owned_bytes_t,
     options: Option<&mut z_query_reply_err_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let query = this.as_rust_type_ref();
     let payload = std::mem::take(payload.as_rust_type_mut());
 
@@ -384,7 +384,7 @@ pub unsafe extern "C" fn z_query_reply_del(
     this: &z_loaned_query_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_query_reply_del_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let query = this.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
 

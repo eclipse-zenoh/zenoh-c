@@ -90,7 +90,7 @@ pub extern "C" fn zc_liveliness_declare_token(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     _options: Option<&zc_liveliness_declaration_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
@@ -111,7 +111,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(
     this: &mut zc_owned_liveliness_token_t,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut();
     if let Some(token) = this.take() {
         if let Err(e) = token.undeclare().wait() {
@@ -152,7 +152,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     _options: Option<&mut zc_liveliness_subscriber_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
@@ -202,7 +202,7 @@ pub extern "C" fn zc_liveliness_get(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_reply_t,
     options: Option<&mut zc_liveliness_get_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());

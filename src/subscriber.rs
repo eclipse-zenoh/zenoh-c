@@ -112,7 +112,7 @@ pub extern "C" fn z_declare_subscriber(
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_owned_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let mut closure = z_owned_closure_sample_t::empty();
     std::mem::swap(callback, &mut closure);
@@ -155,7 +155,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> errors::z_result_t {
     if let Some(s) = this.as_rust_type_mut().take() {
         if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);

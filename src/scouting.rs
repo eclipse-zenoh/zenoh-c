@@ -158,7 +158,7 @@ pub extern "C" fn z_scout(
     config: &mut z_owned_config_t,
     callback: &mut z_owned_closure_hello_t,
     options: Option<&z_scout_options_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
@@ -199,7 +199,7 @@ pub extern "C" fn z_scout(
 pub extern "C" fn z_whatami_to_view_string(
     whatami: z_whatami_t,
     str_out: &mut MaybeUninit<z_view_string_t>,
-) -> errors::z_error_t {
+) -> errors::z_result_t {
     match WhatAmIMatcher::try_from(whatami as u8) {
         Err(_) => errors::Z_EINVAL,
         Ok(w) => {

@@ -24,7 +24,7 @@ use zenoh::{
 
 use super::chunk::z_allocated_chunk_t;
 use crate::{
-    errors::{z_error_t, Z_EINVAL, Z_OK},
+    errors::{z_result_t, Z_EINVAL, Z_OK},
     shm::buffer::zshmmut::z_shm_mut_null,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t,
@@ -122,7 +122,7 @@ pub extern "C" fn z_memory_layout_new(
     this: &mut MaybeUninit<z_owned_memory_layout_t>,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) -> z_result_t {
     match create_memory_layout(size, alignment) {
         Ok(layout) => {
             this.as_rust_type_mut_uninit().write(Some(layout));
@@ -195,7 +195,7 @@ decl_c_type!(
 pub extern "C" fn z_chunk_alloc_result_new_ok(
     this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
     allocated_chunk: z_allocated_chunk_t,
-) -> z_error_t {
+) -> z_result_t {
     match allocated_chunk.try_into() {
         Ok(chunk) => {
             this.as_rust_type_mut_uninit().write(Some(Ok(chunk)));
