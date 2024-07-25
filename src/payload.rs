@@ -176,7 +176,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
 /// Deserializes data into a loaned SHM buffer
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An uninitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
@@ -202,7 +202,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
 /// Deserializes data into a mutably loaned SHM buffer
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An uninitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
