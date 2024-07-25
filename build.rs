@@ -43,9 +43,7 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
 
 fn fix_cbindgen(input: &str, output: &str) {
     let bindings = std::fs::read_to_string(input).expect("failed to open input file");
-    let bindings = bindings
-        .replace("\n#endif\n  ;", ";\n#endif")
-        .replace("const z_loaned_shm_t **", "z_loaned_shm_t * const *");
+    let bindings = bindings.replace("\n#endif\n  ;", ";\n#endif");
 
     let mut out = File::create(output).expect("failed to open output file");
     out.write_all(bindings.as_bytes()).unwrap();
