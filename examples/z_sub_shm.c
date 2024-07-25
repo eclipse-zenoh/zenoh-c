@@ -36,7 +36,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
 #if defined(SHARED_MEMORY) && defined(UNSTABLE)
     char *payload_type = "RAW";
     {
-        z_loaned_shm_t *shm = NULL;
+        const z_loaned_shm_t *shm = NULL;
         if (z_bytes_deserialize_into_loaned_shm(z_sample_payload(sample), &shm) == Z_OK) {
             payload_type = "SHM";
         }
