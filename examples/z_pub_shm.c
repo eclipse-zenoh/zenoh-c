@@ -28,7 +28,7 @@ void matching_status_handler(const zc_matching_status_t *matching_status, void *
 
 int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
-    char *value = "Pub from C!";
+    char *value = "Pub from C SHM!";
     bool add_matching_listener = false;
 
     if (argc > 1) keyexpr = argv[1];
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
         if (z_check(alloc.buf)) {
             {
                 uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
-                sprintf((char *)buf, "SHM [%4d] %s", idx, value);
+                sprintf((char *)buf, "[%4d] %s", idx, value);
                 printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
             }
 
