@@ -17,7 +17,7 @@
 #include "zenoh.h"
 
 const char *keyexpr = "demo/example/zenoh-c-queryable";
-const char *value = "Queryable from C!";
+const char *value = "Queryable from C SHM!";
 z_view_keyexpr_t ke;
 
 void query_handler(const z_loaned_query_t *query, void *context) {
@@ -37,10 +37,10 @@ void query_handler(const z_loaned_query_t *query, void *context) {
         z_owned_string_t payload_string;
         z_bytes_deserialize_into_string(payload, &payload_string);
 
-        printf(">> [Queryable ] Received Query [%s] '%.*s?%.*s' with value '%.*s'\n", payload_type,
+        printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s' [%s]\n",
                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
                (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)),
-               (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
+               (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)), payload_type);
         z_drop(z_move(payload_string));
     } else {
         printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", (int)z_string_len(z_loan(key_string)),
