@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#include <stdio.h>robust
+#include <stdio.h>
 #include <string.h>
 
 #include "zenoh.h"
