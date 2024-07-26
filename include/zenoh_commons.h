@@ -3641,14 +3641,6 @@ ZENOHC_API void z_slice_drop(struct z_owned_slice_t *this_);
  */
 ZENOHC_API void z_slice_empty(struct z_owned_slice_t *this_);
 /**
- * Copies a string into `z_owned_slice_t` using `strlen` (this should therefore not be used with untrusted inputs).
- *
- * @return -1 if `str == NULL` (and creates an empty slice), 0 otherwise.
- */
-ZENOHC_API
-z_result_t z_slice_from_str(struct z_owned_slice_t *this_,
-                            const char *str);
-/**
  * @return ``true`` if slice is empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_slice_is_empty(const struct z_loaned_slice_t *this_);
@@ -3664,12 +3656,6 @@ ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slic
  * Constructs an empty `z_owned_slice_t`.
  */
 ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
-/**
- * Constructs a slice by copying a `len` bytes long sequence starting at `start`.
- *
- * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
- */
-ZENOHC_API z_result_t z_slice_wrap(struct z_owned_slice_t *this_, const uint8_t *start, size_t len);
 /**
  * Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
  */
