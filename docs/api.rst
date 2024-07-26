@@ -39,9 +39,7 @@ Functions
 
 .. doxygenfunction:: z_slice_empty
 .. doxygenfunction:: z_view_slice_empty
-.. doxygenfunction:: z_slice_wrap
 .. doxygenfunction:: z_view_slice_wrap
-.. doxygenfunction:: z_slice_from_str
 .. doxygenfunction:: z_slice_data
 .. doxygenfunction:: z_slice_len
 .. doxygenfunction:: z_slice_is_empty

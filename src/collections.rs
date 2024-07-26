@@ -288,47 +288,6 @@ pub extern "C" fn z_slice_null(this: &mut MaybeUninit<z_owned_slice_t>) {
     z_slice_empty(this);
 }
 
-/// Copies a string into `z_owned_slice_t` using `strlen` (this should therefore not be used with untrusted inputs).
-///
-/// @return -1 if `str == NULL` (and creates an empty slice), 0 otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_from_str(
-    this: &mut MaybeUninit<z_owned_slice_t>,
-    str: *const c_char,
-) -> z_result_t {
-    if str.is_null() {
-        z_slice_empty(this);
-        result::Z_EINVAL
-    } else {
-        z_slice_wrap(this, str as *const u8, libc::strlen(str));
-        result::Z_OK
-    }
-}
-
-/// Constructs a slice by copying a `len` bytes long sequence starting at `start`.
-///
-/// @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_wrap(
-    this: &mut MaybeUninit<z_owned_slice_t>,
-    start: *const u8,
-    len: usize,
-) -> z_result_t {
-    let this = this.as_rust_type_mut_uninit();
-    match CSliceOwned::new(start, len) {
-        Ok(slice) => {
-            this.write(slice);
-            result::Z_OK
-        }
-        Err(e) => {
-            this.write(CSliceOwned::default());
-            e
-        }
-    }
-}
-
 /// Frees the memory and invalidates the slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
