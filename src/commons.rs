@@ -12,11 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, ptr::null, str::from_utf8};
+use std::{mem::MaybeUninit, ptr::null};
 
 use libc::c_ulong;
 use zenoh::{
-    bytes::Encoding,
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
     sample::{Sample, SampleKind},
@@ -33,11 +32,12 @@ use zenoh::{
 use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
 use crate::z_id_t;
+#[cfg(feature = "unstable")]
+use crate::z_moved_source_info_t;
 use crate::{
-    result::{self, z_result_t},
+    result::{self},
     transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_moved_encoding_t,
 };
 
 /// A zenoh unsigned integer
@@ -209,96 +209,6 @@ pub extern "C" fn z_sample_drop(this: z_moved_sample_t) {}
 #[no_mangle]
 pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
-}
-
-pub use crate::opaque_types::z_owned_encoding_t;
-decl_c_type!(
-    owned(z_owned_encoding_t, Encoding),
-    loaned(z_loaned_encoding_t, Encoding),
-    moved(z_moved_encoding_t)
-);
-
-/// Constructs a `z_owned_encoding_t` from a specified substring.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_from_substr(
-    this: &mut MaybeUninit<z_owned_encoding_t>,
-    s: *const c_char,
-    len: usize,
-) -> z_result_t {
-    let encoding = this.as_rust_type_mut_uninit();
-    if s.is_null() {
-        encoding.write(Encoding::default());
-        result::Z_OK
-    } else {
-        let s = from_raw_parts(s as *const u8, len);
-        match from_utf8(s) {
-            Ok(s) => {
-                encoding.write(Encoding::from_str(s).unwrap_infallible());
-                result::Z_OK
-            }
-            Err(e) => {
-                log::error!("Can not create encoding from non UTF-8 string: {}", e);
-                encoding.write(Encoding::default());
-                result::Z_EINVAL
-            }
-        }
-    }
-}
-
-/// Constructs a `z_owned_encoding_t` from a specified string.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_from_str(
-    this: &mut MaybeUninit<z_owned_encoding_t>,
-    s: *const c_char,
-) -> errors::z_error_t {
-    z_encoding_from_substr(this, s, libc::strlen(s))
-}
-
-/// Constructs an owned non-null-terminated string from encoding
-///
-/// @param this_: Encoding.
-/// @param out_str: Uninitialized memory location where a string to be constructed.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_encoding_to_string(
-    this: &z_loaned_encoding_t,
-    out_str: &mut MaybeUninit<z_owned_string_t>,
-) {
-    let s: Cow<'static, str> = this.as_rust_type_ref().into();
-    z_string_from_substr(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
-}
-
-/// Returns a loaned default `z_loaned_encoding_t`.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_encoding_loan_default() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_BYTES.as_loaned_c_type_ref()
-}
-
-/// Constructs a default `z_owned_encoding_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_null(this: &mut MaybeUninit<z_owned_encoding_t>) {
-    this.as_rust_type_mut_uninit().write(Encoding::default());
-}
-
-/// Frees the memory and resets the encoding it to its default value.
-#[no_mangle]
-pub extern "C" fn z_encoding_drop(this: &mut z_owned_encoding_t) {
-    *this.as_rust_type_mut() = Encoding::default();
-}
-
-/// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_encoding_check(this: &'static z_owned_encoding_t) -> bool {
-    *this.as_rust_type_ref() != Encoding::default()
-}
-
-/// Borrows encoding.
-#[no_mangle]
-pub extern "C" fn z_encoding_loan(this: &z_owned_encoding_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// The locality of samples to be received by subscribers or targeted by publishers.
@@ -566,7 +476,9 @@ pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t 
 pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
     this.as_rust_type_ref().eid()
 }
+#[cfg(feature = "unstable")]
 pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
+#[cfg(feature = "unstable")]
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),

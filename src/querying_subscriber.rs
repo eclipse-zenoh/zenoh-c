@@ -23,7 +23,7 @@ use zenoh_ext::*;
 use crate::{
     opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
     z_query_consolidation_t, z_query_target_default, z_query_target_t, z_reliability_t,

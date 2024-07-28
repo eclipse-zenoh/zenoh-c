@@ -14,26 +14,28 @@
 
 use std::mem::MaybeUninit;
 
+use crate::transmute::IntoRustType;
+#[cfg(feature = "unstable")]
+use crate::z_moved_source_info_t;
+#[cfg(feature = "unstable")]
+use crate::zc_moved_closure_matching_status_t;
+use crate::{
+    result::{self},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
+    z_moved_encoding_t, z_priority_t, z_timestamp_t,
+};
+#[cfg(feature = "unstable")]
+use crate::{
+    transmute::IntoCType, z_entity_global_id_t, zc_closure_matching_status_call,
+    zc_closure_matching_status_loan, zc_locality_default, zc_locality_t,
+};
 #[cfg(feature = "unstable")]
 use zenoh::pubsub::MatchingListener;
 use zenoh::{
     prelude::*,
     pubsub::Publisher,
     qos::{CongestionControl, Priority},
-};
-
-use crate::{
-    result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
-    z_moved_encoding_t, z_moved_source_info_t, z_priority_t, z_timestamp_t,
-    zc_moved_closure_matching_status_t,
-};
-
-#[cfg(feature = "unstable")]
-use crate::{
-    transmute::IntoCType, z_entity_global_id_t, zc_closure_matching_status_call,
-    zc_closure_matching_status_loan, zc_locality_default, zc_locality_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.
@@ -66,7 +68,6 @@ pub extern "C" fn z_publisher_options_default(this: &mut MaybeUninit<z_publisher
 }
 
 pub use crate::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t};
-
 decl_c_type!(
     owned(z_owned_publisher_t, option Publisher<'static>),
     loaned(z_loaned_publisher_t),
@@ -90,7 +91,7 @@ pub extern "C" fn z_declare_publisher(
     this: &mut MaybeUninit<z_owned_publisher_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    options: Option<&z_publisher_options_t>,
+    options: Option<&mut z_publisher_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
@@ -105,8 +106,7 @@ pub extern "C" fn z_declare_publisher(
         {
             p = p.allowed_destination(options.allowed_destination.into());
         }
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
+        if let Some(encoding) = options.encoding.take_rust_type() {
             p = p.encoding(encoding);
         }
     }
@@ -165,7 +165,7 @@ pub struct z_publisher_put_options_t {
     ///  The encoding of the data to publish.
     pub encoding: z_moved_encoding_t,
     /// The timestamp of the publication.
-    pub timestamp: Option<&'static mut z_timestamp_t>,
+    pub timestamp: Option<&'static z_timestamp_t>,
     /// The source info for the publication.
     #[cfg(feature = "unstable")]
     pub source_info: z_moved_source_info_t,
@@ -203,11 +203,11 @@ pub extern "C" fn z_publisher_put_options_default(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
-    payload: z_moved_bytes_t,
+    mut payload: z_moved_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> result::z_result_t {
     let publisher = this.as_rust_type_ref();
-    let Some(payload) = payload.into_rust_type() else {
+    let Some(payload) = payload.take_rust_type() else {
         return result::Z_EINVAL;
     };
 
@@ -223,8 +223,8 @@ pub unsafe extern "C" fn z_publisher_put(
         if let Some(attachment) = options.attachment.take_rust_type() {
             put = put.attachment(attachment);
         }
-        if let Some(timestamp) = options.timestamp.as_ref() {
-            put = put.timestamp(Some(timestamp.into_rust_type()));
+        if let Some(timestamp) = options.timestamp {
+            put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
         }
     }
 
@@ -241,7 +241,7 @@ pub unsafe extern "C" fn z_publisher_put(
 #[repr(C)]
 pub struct z_publisher_delete_options_t {
     /// The timestamp of this message.
-    pub timestamp: Option<&'static mut z_timestamp_t>,
+    pub timestamp: Option<&'static z_timestamp_t>,
 }
 
 /// Constructs the default values for the delete operation via a publisher entity.
@@ -264,8 +264,8 @@ pub extern "C" fn z_publisher_delete(
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
-        if let Some(timestamp) = options.timestamp.as_ref() {
-            del = del.timestamp(Some(timestamp.into_rust_type()));
+        if let Some(timestamp) = options.timestamp {
+            del = del.timestamp(Some(*timestamp.as_rust_type_ref()));
         }
     }
     if let Err(e) = del.wait() {
@@ -367,6 +367,7 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
     result::Z_OK
 }
 
+#[cfg(feature = "unstable")]
 /// Undeclares the given matching listener, droping and invalidating it.
 ///
 /// @return 0 in case of success, negative error code otherwise.
@@ -374,7 +375,7 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_drop(
     this: zc_moved_matching_listener_t,
-) -> z_result_t {
+) -> result::z_result_t {
     zcu_publisher_matching_listener_undeclare(this)
 }
 

@@ -28,7 +28,7 @@ use crate::z_moved_source_info_t;
 
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,

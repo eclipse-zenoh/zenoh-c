@@ -17,9 +17,8 @@ pub use crate::opaque_types::{
     z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
 };
 use crate::{
-    result,
-    result::{z_result_t, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    result::{self, z_result_t, Z_OK},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
 };
 use libc::c_char;
@@ -489,7 +488,7 @@ pub extern "C" fn z_declare_keyexpr(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(
-    this: z_moved_keyexpr_t,
+    mut this: z_moved_keyexpr_t,
     session: &z_loaned_session_t,
 ) -> result::z_result_t {
     let Some(kexpr) = this.take_rust_type() else {

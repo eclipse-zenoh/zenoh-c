@@ -23,7 +23,7 @@ use zenoh::{
 use crate::{
     keyexpr::*,
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 

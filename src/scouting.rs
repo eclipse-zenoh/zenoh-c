@@ -22,7 +22,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };

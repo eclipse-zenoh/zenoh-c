@@ -21,7 +21,10 @@ use zenoh::{
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use crate::{
-    commons::*, result, transmute::RustTypeRef, z_loaned_session_t, z_moved_bytes_t, z_timestamp_t,
+    commons::*,
+    result,
+    transmute::{IntoRustType, RustTypeRef, TakeRustType},
+    z_loaned_session_t, z_moved_bytes_t, z_timestamp_t,
 };
 use crate::{z_loaned_keyexpr_t, z_moved_encoding_t};
 

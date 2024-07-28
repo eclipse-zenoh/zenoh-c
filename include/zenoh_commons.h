@@ -557,7 +557,7 @@ typedef struct z_publisher_delete_options_t {
   /**
    * The timestamp of this message.
    */
-  struct z_timestamp_t *timestamp;
+  const struct z_timestamp_t *timestamp;
 } z_publisher_delete_options_t;
 typedef struct z_moved_publisher_t {
   struct z_owned_publisher_t *ptr;
@@ -573,7 +573,7 @@ typedef struct z_publisher_put_options_t {
   /**
    * The timestamp of the publication.
    */
-  struct z_timestamp_t *timestamp;
+  const struct z_timestamp_t *timestamp;
 #if defined(UNSTABLE)
   /**
    * The source info for the publication.
@@ -1672,7 +1672,7 @@ ZENOHC_API
 z_result_t z_declare_publisher(struct z_owned_publisher_t *this_,
                                const struct z_loaned_session_t *session,
                                const struct z_loaned_keyexpr_t *key_expr,
-                               const struct z_publisher_options_t *options);
+                               struct z_publisher_options_t *options);
 /**
  * Constructs a Queryable for the given key expression.
  *
@@ -1883,10 +1883,6 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_vorbis(void);
  */
 ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *this_);
 /**
- * Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
- */
-ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *this_);
-/**
  * Constructs an owned copy of the encoding in provided uninitilized memory location.
  */
 ZENOHC_API
@@ -1897,24 +1893,9 @@ void z_encoding_clone(struct z_owned_encoding_t *dst,
  */
 ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *this_);
 /**
- * Frees the memory and resets the encoding it to its default value.
- */
-ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *this_);
-/**
  * Constructs a `z_owned_encoding_t` from a specified string.
  */
 ZENOHC_API z_result_t z_encoding_from_str(struct z_owned_encoding_t *this_, const char *s);
-/**
- * Constructs a `z_owned_encoding_t` from a specified string.
- */
-ZENOHC_API z_error_t z_encoding_from_str(struct z_owned_encoding_t *this_, const char *s);
-/**
- * Constructs a `z_owned_encoding_t` from a specified substring.
- */
-ZENOHC_API
-z_result_t z_encoding_from_substr(struct z_owned_encoding_t *this_,
-                                  const char *s,
-                                  size_t len);
 /**
  * Constructs a `z_owned_encoding_t` from a specified substring.
  */
@@ -1958,15 +1939,6 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_webp(void);
 ZENOHC_API
 const struct z_loaned_encoding_t *z_encoding_loan(const struct z_owned_encoding_t *this_);
 /**
- * Borrows encoding.
- */
-ZENOHC_API
-const struct z_loaned_encoding_t *z_encoding_loan(const struct z_owned_encoding_t *this_);
-/**
- * Returns a loaned default `z_loaned_encoding_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
-/**
  * Returns a loaned default `z_loaned_encoding_t`.
  */
 ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
@@ -1974,10 +1946,6 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
  * Mutably borrows encoding.
  */
 ZENOHC_API struct z_loaned_encoding_t *z_encoding_loan_mut(struct z_owned_encoding_t *this_);
-/**
- * Constructs a default `z_owned_encoding_t`.
- */
-ZENOHC_API void z_encoding_null(struct z_owned_encoding_t *this_);
 /**
  * Constructs a default `z_owned_encoding_t`.
  */
@@ -2057,15 +2025,6 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_xml(void);
  * Constant alias for string: `"text/yaml"`.
  */
 ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_yaml(void);
-/**
- * Constructs an owned non-null-terminated string from encoding
- *
- * @param this_: Encoding.
- * @param out_str: Uninitialized memory location where a string to be constructed.
- */
-ZENOHC_API
-void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
-                          struct z_owned_string_t *out_str);
 /**
  * Constructs an owned non-null-terminated string from encoding
  *
@@ -3670,77 +3629,6 @@ ZENOHC_API size_t z_slice_len(const struct z_loaned_slice_t *this_);
  */
 ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slice_t *this_);
 /**
- * @return ``true`` if the map is not in its gravestone state, ``false`` otherwise.
- */
-ZENOHC_API bool z_slice_map_check(const z_owned_slice_map_t *map);
-/**
- * Destroys the map, resetting it to its gravestone value.
- */
-ZENOHC_API void z_slice_map_drop(z_owned_slice_map_t *this_);
-/**
- * @return the value associated with `key` (`NULL` if the key is not present in the map.).
- */
-ZENOHC_API
-const struct z_loaned_slice_t *z_slice_map_get(const z_loaned_slice_map_t *this_,
-                                               const struct z_loaned_slice_t *key);
-/**
- * Associates `value` to `key` in the map, aliasing them.
- *
- * If the `key` was already present in the map, its value is updated.
- * @return 1 if there was already an entry associated with the key, 0 otherwise.
- */
-ZENOHC_API
-z_error_t z_slice_map_insert_by_alias(z_loaned_slice_map_t *this_,
-                                      const struct z_loaned_slice_t *key,
-                                      const struct z_loaned_slice_t *value);
-/**
- * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
- *
- * If the `key` was already present in the map, its value is updated.
- * @return 1 if there was already an entry associated with the key, 0 otherwise.
- */
-ZENOHC_API
-uint8_t z_slice_map_insert_by_copy(z_loaned_slice_map_t *this_,
-                                   const struct z_loaned_slice_t *key,
-                                   const struct z_loaned_slice_t *value);
-/**
- * @return ``true`` if the map is empty, ``false`` otherwise.
- */
-ZENOHC_API bool z_slice_map_is_empty(const z_loaned_slice_map_t *this_);
-/**
- * Iterates over key-value pairs of a slice map.
- *
- * @param this_: Slice map to iterate over.
- * @param body: Iterator body function. Returning `true` is treated as iteration loop `break`.
- * @param context: Some data passed to every body invocation.
- */
-ZENOHC_API
-void z_slice_map_iterate(const z_loaned_slice_map_t *this_,
-                         bool (*body)(const struct z_loaned_slice_t *key,
-                                      const struct z_loaned_slice_t *value,
-                                      void *context),
-                         void *context);
-/**
- * @return number of key-value pairs in the map.
- */
-ZENOHC_API size_t z_slice_map_len(const z_loaned_slice_map_t *this_);
-/**
- * Borrows slice map.
- */
-ZENOHC_API const z_loaned_slice_map_t *z_slice_map_loan(const z_owned_slice_map_t *this_);
-/**
- * Mutably borrows slice map.
- */
-ZENOHC_API z_loaned_slice_map_t *z_slice_map_loan_mut(z_owned_slice_map_t *this_);
-/**
- * Constructs a new empty map.
- */
-ZENOHC_API void z_slice_map_new(z_owned_slice_map_t *this_);
-/**
- * Constructs the gravestone value for `z_owned_slice_map_t`.
- */
-ZENOHC_API void z_slice_map_null(z_owned_slice_map_t *this_);
-/**
  * Constructs an empty `z_owned_slice_t`.
  */
 ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
@@ -4477,8 +4365,10 @@ ZENOHC_API void zc_shm_client_list_null(struct zc_owned_shm_client_list_t *this_
  *
  * @return 0 in case of success, negative error code otherwise.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
 z_result_t zcu_publisher_matching_listener_drop(struct zc_moved_matching_listener_t this_);
+#endif
 /**
  * Undeclares the given matching listener, droping and invalidating it.
  *
@@ -4596,7 +4486,7 @@ void ze_querying_subscriber_options_default(struct ze_querying_subscriber_option
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(UNSTABLE)
-ZENOHC_API z_result_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *this_);
+ZENOHC_API z_result_t ze_undeclare_publication_cache(struct ze_moved_publication_cache_t this_);
 #endif
 /**
  * Undeclares the given querying subscriber, drops it and resets to a gravestone state.

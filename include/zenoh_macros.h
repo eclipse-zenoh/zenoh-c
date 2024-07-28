@@ -18,7 +18,6 @@
         z_owned_condvar_t : z_condvar_loan, \
         z_owned_config_t : z_config_loan, \
         z_owned_encoding_t : z_encoding_loan, \
-        z_owned_encoding_t : z_encoding_loan, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_loan, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_loan, \
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_loan, \
@@ -222,7 +221,6 @@
         z_owned_condvar_t* : z_condvar_null, \
         z_owned_config_t* : z_config_null, \
         z_owned_encoding_t* : z_encoding_null, \
-        z_owned_encoding_t* : z_encoding_null, \
         z_owned_fifo_handler_query_t* : z_fifo_handler_query_null, \
         z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_null, \
         z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_null, \
@@ -274,7 +272,6 @@
         z_owned_closure_zid_t : z_closure_zid_check, \
         z_owned_condvar_t : z_condvar_check, \
         z_owned_config_t : z_config_check, \
-        z_owned_encoding_t : z_encoding_check, \
         z_owned_encoding_t : z_encoding_check, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_check, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_check, \
@@ -361,7 +358,6 @@ inline const z_loaned_closure_sample_t* z_loan(const z_owned_closure_sample_t& c
 inline const z_loaned_closure_zid_t* z_loan(const z_owned_closure_zid_t& closure) { return z_closure_zid_loan(&closure); };
 inline const z_loaned_condvar_t* z_loan(const z_owned_condvar_t& this_) { return z_condvar_loan(&this_); };
 inline const z_loaned_config_t* z_loan(const z_owned_config_t& this_) { return z_config_loan(&this_); };
-inline const z_loaned_encoding_t* z_loan(const z_owned_encoding_t& this_) { return z_encoding_loan(&this_); };
 inline const z_loaned_encoding_t* z_loan(const z_owned_encoding_t& this_) { return z_encoding_loan(&this_); };
 inline const z_loaned_fifo_handler_query_t* z_loan(const z_owned_fifo_handler_query_t& this_) { return z_fifo_handler_query_loan(&this_); };
 inline const z_loaned_fifo_handler_reply_t* z_loan(const z_owned_fifo_handler_reply_t& this_) { return z_fifo_handler_reply_loan(&this_); };
@@ -514,7 +510,6 @@ inline void z_null(z_owned_closure_zid_t* this_) { return z_closure_zid_null(thi
 inline void z_null(z_owned_condvar_t* this_) { return z_condvar_null(this_); };
 inline void z_null(z_owned_config_t* this_) { return z_config_null(this_); };
 inline void z_null(z_owned_encoding_t* this_) { return z_encoding_null(this_); };
-inline void z_null(z_owned_encoding_t* this_) { return z_encoding_null(this_); };
 inline void z_null(z_owned_fifo_handler_query_t* this_) { return z_fifo_handler_query_null(this_); };
 inline void z_null(z_owned_fifo_handler_reply_t* this_) { return z_fifo_handler_reply_null(this_); };
 inline void z_null(z_owned_fifo_handler_sample_t* this_) { return z_fifo_handler_sample_null(this_); };
@@ -564,7 +559,6 @@ inline bool z_check(const z_owned_closure_sample_t& this_) { return z_closure_sa
 inline bool z_check(const z_owned_closure_zid_t& this_) { return z_closure_zid_check(&this_); };
 inline bool z_check(const z_owned_condvar_t& this_) { return z_condvar_check(&this_); };
 inline bool z_check(const z_owned_config_t& this_) { return z_config_check(&this_); };
-inline bool z_check(const z_owned_encoding_t& this_) { return z_encoding_check(&this_); };
 inline bool z_check(const z_owned_encoding_t& this_) { return z_encoding_check(&this_); };
 inline bool z_check(const z_owned_fifo_handler_query_t& this_) { return z_fifo_handler_query_check(&this_); };
 inline bool z_check(const z_owned_fifo_handler_reply_t& this_) { return z_fifo_handler_reply_check(&this_); };

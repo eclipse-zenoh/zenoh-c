@@ -9,7 +9,7 @@ use libc::c_void;
 pub use crate::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
 decl_c_type!(

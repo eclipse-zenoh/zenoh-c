@@ -21,7 +21,7 @@ use crate::z_loaned_shm_client_storage_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_moved_config_t, z_moved_session_t, zc_init_logger,
 };
 decl_c_type!(

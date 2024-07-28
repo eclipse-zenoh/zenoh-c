@@ -31,7 +31,7 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EIO, Z_EPARSE, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_moved_bytes_t, z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
