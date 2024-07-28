@@ -4450,6 +4450,22 @@ z_result_t zc_publisher_matching_listener_callback(zc_owned_matching_listener_t 
                                                    struct zc_moved_closure_matching_status_t callback);
 #endif
 /**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t zc_publisher_matching_listener_drop(zc_moved_matching_listener_t this_);
+#endif
+/**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t zc_publisher_matching_listener_undeclare(zc_moved_matching_listener_t this_);
+#endif
+/**
  * Returns the default value of #zc_reply_keyexpr_t.
  */
 #if defined(UNSTABLE)
@@ -4498,22 +4514,6 @@ ZENOHC_API void zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API void zc_shm_client_list_null(zc_owned_shm_client_list_t *this_);
-#endif
-/**
- * Undeclares the given matching listener, droping and invalidating it.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(UNSTABLE)
-ZENOHC_API z_result_t zcu_publisher_matching_listener_drop(zc_moved_matching_listener_t this_);
-#endif
-/**
- * Undeclares the given matching listener, droping and invalidating it.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(UNSTABLE)
-ZENOHC_API z_result_t zcu_publisher_matching_listener_undeclare(zc_moved_matching_listener_t this_);
 #endif
 /**
  * Constructs and declares a publication cache.
