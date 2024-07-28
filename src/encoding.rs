@@ -143,9 +143,8 @@ pub extern "C" fn z_encoding_null(this: &mut MaybeUninit<z_owned_encoding_t>) {
 
 /// Frees the memory and resets the encoding it to its default value.
 #[no_mangle]
-pub extern "C" fn z_encoding_drop(this: &mut z_owned_encoding_t) {
-    *this.as_rust_type_mut() = Encoding::default();
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_encoding_drop(this: z_moved_encoding_t) {}
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]

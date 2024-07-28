@@ -1891,7 +1891,7 @@ void z_encoding_clone(struct z_owned_encoding_t *dst,
 /**
  * Frees the memory and resets the encoding it to its default value.
  */
-ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *this_);
+ZENOHC_API void z_encoding_drop(struct z_moved_encoding_t this_);
 /**
  * Constructs a `z_owned_encoding_t` from a specified string.
  */

@@ -80,6 +80,7 @@
         z_moved_closure_zid_t : z_closure_zid_drop, \
         z_moved_condvar_t : z_condvar_drop, \
         z_moved_config_t : z_config_drop, \
+        z_moved_encoding_t : z_encoding_drop, \
         z_moved_fifo_handler_query_t : z_fifo_handler_query_drop, \
         z_moved_fifo_handler_reply_t : z_fifo_handler_reply_drop, \
         z_moved_fifo_handler_sample_t : z_fifo_handler_sample_drop, \
@@ -126,6 +127,7 @@
 #define z_closure_zid_move(x) (z_moved_closure_zid_t){&x}
 #define z_condvar_move(x) (z_moved_condvar_t){&x}
 #define z_config_move(x) (z_moved_config_t){&x}
+#define z_encoding_move(x) (z_moved_encoding_t){&x}
 #define z_fifo_handler_query_move(x) (z_moved_fifo_handler_query_t){&x}
 #define z_fifo_handler_reply_move(x) (z_moved_fifo_handler_reply_t){&x}
 #define z_fifo_handler_sample_move(x) (z_moved_fifo_handler_sample_t){&x}
@@ -172,6 +174,7 @@
         z_owned_closure_zid_t : (z_moved_closure_zid_t){(z_owned_closure_zid_t*)&x}, \
         z_owned_condvar_t : (z_moved_condvar_t){(z_owned_condvar_t*)&x}, \
         z_owned_config_t : (z_moved_config_t){(z_owned_config_t*)&x}, \
+        z_owned_encoding_t : (z_moved_encoding_t){(z_owned_encoding_t*)&x}, \
         z_owned_fifo_handler_query_t : (z_moved_fifo_handler_query_t){(z_owned_fifo_handler_query_t*)&x}, \
         z_owned_fifo_handler_reply_t : (z_moved_fifo_handler_reply_t){(z_owned_fifo_handler_reply_t*)&x}, \
         z_owned_fifo_handler_sample_t : (z_moved_fifo_handler_sample_t){(z_owned_fifo_handler_sample_t*)&x}, \
@@ -417,6 +420,7 @@ inline void z_drop(z_moved_closure_sample_t closure) { return z_closure_sample_d
 inline void z_drop(z_moved_closure_zid_t closure) { return z_closure_zid_drop(closure); };
 inline void z_drop(z_moved_condvar_t this_) { return z_condvar_drop(this_); };
 inline void z_drop(z_moved_config_t this_) { return z_config_drop(this_); };
+inline void z_drop(z_moved_encoding_t this_) { return z_encoding_drop(this_); };
 inline void z_drop(z_moved_fifo_handler_query_t this_) { return z_fifo_handler_query_drop(this_); };
 inline void z_drop(z_moved_fifo_handler_reply_t this_) { return z_fifo_handler_reply_drop(this_); };
 inline void z_drop(z_moved_fifo_handler_sample_t this_) { return z_fifo_handler_sample_drop(this_); };
@@ -463,6 +467,7 @@ inline z_moved_closure_sample_t z_move(z_moved_closure_sample_t closure) { retur
 inline z_moved_closure_zid_t z_move(z_moved_closure_zid_t closure) { return (&closure); };
 inline z_moved_condvar_t z_move(z_moved_condvar_t this_) { return (&this_); };
 inline z_moved_config_t z_move(z_moved_config_t this_) { return (&this_); };
+inline z_moved_encoding_t z_move(z_moved_encoding_t this_) { return (&this_); };
 inline z_moved_fifo_handler_query_t z_move(z_moved_fifo_handler_query_t this_) { return (&this_); };
 inline z_moved_fifo_handler_reply_t z_move(z_moved_fifo_handler_reply_t this_) { return (&this_); };
 inline z_moved_fifo_handler_sample_t z_move(z_moved_fifo_handler_sample_t this_) { return (&this_); };
