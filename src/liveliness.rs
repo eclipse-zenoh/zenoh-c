@@ -25,7 +25,7 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
-    z_owned_subscriber_t,
+    z_owned_subscriber_t, zc_moved_liveliness_token_t,
 };
 decl_c_type!(
     owned(zc_owned_liveliness_token_t, option LivelinessToken<'static>),
@@ -158,7 +158,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     let key_expr = key_expr.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     match session
         .liveliness()
@@ -211,7 +211,7 @@ pub extern "C" fn zc_liveliness_get(
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let liveliness: Liveliness<'static> = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {

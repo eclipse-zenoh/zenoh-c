@@ -1916,9 +1916,9 @@ z_result_t z_encoding_from_substr(struct z_owned_encoding_t *this_,
  * Constructs a `z_owned_encoding_t` from a specified substring.
  */
 ZENOHC_API
-z_error_t z_encoding_from_substr(struct z_owned_encoding_t *this_,
-                                 const char *s,
-                                 size_t len);
+z_result_t z_encoding_from_substr(struct z_owned_encoding_t *this_,
+                                  const char *s,
+                                  size_t len);
 /**
  * A BitMap (BMP) image.
  *
@@ -4474,7 +4474,7 @@ ZENOHC_API void zc_shm_client_list_null(struct zc_owned_shm_client_list_t *this_
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API z_error_t zcu_publisher_matching_listener_drop(zcu_moved_matching_listener_t this_);
+ZENOHC_API z_result_t zcu_publisher_matching_listener_drop(zcu_moved_matching_listener_t this_);
 /**
  * Undeclares the given matching listener, droping and invalidating it.
  *

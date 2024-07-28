@@ -12,10 +12,11 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, ptr::null};
+use std::{mem::MaybeUninit, ptr::null, str::from_utf8};
 
 use libc::c_ulong;
 use zenoh::{
+    bytes::Encoding,
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
     sample::{Sample, SampleKind},
@@ -33,9 +34,10 @@ use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
 use crate::z_id_t;
 use crate::{
-    result,
+    result::{self, z_result_t},
     transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_moved_encoding_t,
 };
 
 /// A zenoh unsigned integer
@@ -209,11 +211,11 @@ pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
-pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
-
+pub use crate::opaque_types::z_owned_encoding_t;
 decl_c_type!(
     owned(z_owned_encoding_t, Encoding),
     loaned(z_loaned_encoding_t, Encoding),
+    moved(z_moved_encoding_t)
 );
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
@@ -223,22 +225,22 @@ pub unsafe extern "C" fn z_encoding_from_substr(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
     len: usize,
-) -> errors::z_error_t {
+) -> z_result_t {
     let encoding = this.as_rust_type_mut_uninit();
     if s.is_null() {
         encoding.write(Encoding::default());
-        errors::Z_OK
+        result::Z_OK
     } else {
         let s = from_raw_parts(s as *const u8, len);
         match from_utf8(s) {
             Ok(s) => {
                 encoding.write(Encoding::from_str(s).unwrap_infallible());
-                errors::Z_OK
+                result::Z_OK
             }
             Err(e) => {
                 log::error!("Can not create encoding from non UTF-8 string: {}", e);
                 encoding.write(Encoding::default());
-                errors::Z_EINVAL
+                result::Z_EINVAL
             }
         }
     }

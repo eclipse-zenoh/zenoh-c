@@ -26,7 +26,7 @@ use zenoh::{
 };
 
 use crate::{
-    result,
+    result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
     z_owned_encoding_t, z_priority_t, z_timestamp_t,
@@ -62,7 +62,7 @@ pub extern "C" fn z_publisher_options_default(this: &mut MaybeUninit<z_publisher
         priority: Priority::default().into(),
         is_express: false,
         #[cfg(feature = "unstable")]
-        allowed_destination: zcu_locality_default(),
+        allowed_destination: zc_locality_default(),
     });
 }
 
@@ -375,7 +375,7 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_drop(
     this: zcu_moved_matching_listener_t,
-) -> errors::z_error_t {
+) -> z_result_t {
     zcu_publisher_matching_listener_undeclare(this)
 }
 

@@ -32,7 +32,7 @@ use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EIO, Z_EPARSE, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned,
+    z_moved_bytes_t, z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
@@ -493,10 +493,10 @@ pub extern "C" fn z_bytes_serialize_from_pair(
     second: z_moved_bytes_t,
 ) -> z_result_t {
     let Some(first) = first.into_rust_type() else {
-        return Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let Some(second) = second.into_rust_type() else {
-        return Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let b = ZBytes::serialize((first, second));
     this.as_rust_type_mut_uninit().write(b);

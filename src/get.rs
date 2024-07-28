@@ -33,12 +33,12 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t, z_priority_t,
+    z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
     z_query_target_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_id_t, z_owned_source_info_t, zc_locality_default, zc_locality_t,
+    transmute::IntoCType, z_id_t, z_moved_source_info_t, zc_locality_default, zc_locality_t,
     zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 
@@ -254,7 +254,7 @@ pub unsafe extern "C" fn z_get(
     options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
     let Some(callback) = callback.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let p = if parameters.is_null() {
         ""
