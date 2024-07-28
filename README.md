@@ -62,6 +62,13 @@ This repository provides a C binding based on the main [Zenoh implementation wri
    cmake --build .
    ```
 
+   Unstable api and/or shared memory support can be enabled by setting repectively `ZENOHC_BUILD_WITH_UNSTABLE_API` and `ZENOHC_BUILD_WITH_SHARED_MEMORY` Cmake flags to `true` during configuration step.
+
+   ```bash
+   cmake -DZENOHC_BUILD_WITH_UNSTABLE_API=true -DZENOHC_BUILD_WITH_SHARED_MEMORY=true ../zenoh-c
+   cmake --build . --config Release
+   ```
+
    [build-configurations]: https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#build-configurations
    [Visual Studio generators]: https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#id14
    [Ninja Multi-Config]: https://cmake.org/cmake/help/latest/generator/Ninja%20Multi-Config.html

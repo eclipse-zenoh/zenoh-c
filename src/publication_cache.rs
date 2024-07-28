@@ -18,12 +18,12 @@ use zenoh::Wait;
 use zenoh_ext::SessionExt;
 
 use crate::{
-    errors,
-    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
+    result,
+    transmute::{RustTypeRef, RustTypeRefUninit},
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{zcu_locality_default, zcu_locality_t};
+use crate::{zc_locality_default, zc_locality_t};
 
 /// Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
@@ -32,7 +32,7 @@ pub struct ze_publication_cache_options_t {
     pub queryable_prefix: *const z_loaned_keyexpr_t,
     /// The restriction for the matching queries that will be receive by this publication cache.
     #[cfg(feature = "unstable")]
-    pub queryable_origin: zcu_locality_t,
+    pub queryable_origin: zc_locality_t,
     /// The `complete` option for the queryable.
     pub queryable_complete: bool,
     /// The the history size (i.e. maximum number of messages to store).
@@ -49,7 +49,7 @@ pub extern "C" fn ze_publication_cache_options_default(
     this.write(ze_publication_cache_options_t {
         queryable_prefix: null(),
         #[cfg(feature = "unstable")]
-        queryable_origin: zcu_locality_default(),
+        queryable_origin: zc_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,
@@ -83,7 +83,7 @@ pub extern "C" fn ze_declare_publication_cache(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
@@ -106,12 +106,12 @@ pub extern "C" fn ze_declare_publication_cache(
     match p.wait() {
         Ok(publication_cache) => {
             this.write(Some(publication_cache));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -135,15 +135,15 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
-    this: ze_moved_publication_cache_t,
-) -> errors::z_error_t {
-    if let Some(p) = this.into_rust_type() {
+    this: &mut ze_owned_publication_cache_t,
+) -> result::z_result_t {
+    if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.close().wait() {
-            log::error!("{}", e);
-            return errors::Z_EGENERIC;
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Drops publication cache. Also attempts to undeclare it.

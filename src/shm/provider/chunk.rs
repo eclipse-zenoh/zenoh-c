@@ -1,4 +1,4 @@
-use std::sync::atomic::AtomicPtr;
+use std::{num::TryFromIntError, sync::atomic::AtomicPtr};
 
 //
 // Copyright (c) 2023 ZettaScale Technology
@@ -26,9 +26,10 @@ pub struct z_chunk_descriptor_t {
     len: usize,
 }
 
-impl From<z_chunk_descriptor_t> for ChunkDescriptor {
-    fn from(value: z_chunk_descriptor_t) -> Self {
-        Self::new(value.segment, value.chunk, value.len)
+impl TryFrom<z_chunk_descriptor_t> for ChunkDescriptor {
+    type Error = TryFromIntError;
+    fn try_from(value: z_chunk_descriptor_t) -> Result<Self, Self::Error> {
+        Ok(Self::new(value.segment, value.chunk, value.len.try_into()?))
     }
 }
 
@@ -37,7 +38,7 @@ impl From<&ChunkDescriptor> for z_chunk_descriptor_t {
         Self {
             segment: value.segment,
             chunk: value.chunk,
-            len: value.len,
+            len: value.len.get(),
         }
     }
 }
@@ -49,11 +50,12 @@ pub struct z_allocated_chunk_t {
     data: *mut c_void,
 }
 
-impl From<z_allocated_chunk_t> for AllocatedChunk {
-    fn from(value: z_allocated_chunk_t) -> Self {
-        Self::new(
-            value.descriptpr.into(),
+impl TryFrom<z_allocated_chunk_t> for AllocatedChunk {
+    type Error = TryFromIntError;
+    fn try_from(value: z_allocated_chunk_t) -> Result<Self, Self::Error> {
+        Ok(Self::new(
+            value.descriptpr.try_into()?,
             AtomicPtr::from(value.data as *mut u8),
-        )
+        ))
     }
 }

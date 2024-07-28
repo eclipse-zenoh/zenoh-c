@@ -13,7 +13,6 @@
 //
 
 use std::{
-    collections::HashMap,
     hash::Hash,
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
@@ -21,10 +20,10 @@ use std::{
     slice::from_raw_parts,
 };
 
-use libc::{c_char, c_void, strlen};
+use libc::{c_char, strlen};
 
 use crate::{
-    errors::{self, z_error_t},
+    result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
@@ -73,14 +72,14 @@ impl From<CSliceView> for CSlice {
 }
 
 impl CSliceView {
-    pub fn new(data: *const u8, len: usize) -> Result<Self, z_error_t> {
+    pub fn new(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         Ok(Self(CSlice::new_borrowed(data, len)?))
     }
 }
 
 impl CSliceOwned {
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(data: *const u8, len: usize) -> Result<Self, z_error_t> {
+    pub unsafe fn new(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         Ok(Self(CSlice::new_owned(data, len)?))
     }
 }
@@ -91,9 +90,9 @@ impl CSlice {
         Self(data, -len)
     }
 
-    pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_error_t> {
+    pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
-            Err(errors::Z_EINVAL)
+            Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_borrowed_unchecked(data, len))
         }
@@ -114,9 +113,9 @@ impl CSlice {
     }
 
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_error_t> {
+    pub unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
-            Err(errors::Z_EINVAL)
+            Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_owned_unchecked(data, len))
         }
@@ -233,13 +232,13 @@ pub extern "C" fn z_view_slice_null(this: &mut MaybeUninit<z_view_slice_t>) {
 pub unsafe extern "C" fn z_view_slice_from_str(
     this: &mut MaybeUninit<z_view_slice_t>,
     str: *const c_char,
-) -> z_error_t {
+) -> z_result_t {
     if str.is_null() {
         z_view_slice_empty(this);
-        errors::Z_EINVAL
+        result::Z_EINVAL
     } else {
         z_view_slice_wrap(this, str as *const u8, libc::strlen(str));
-        errors::Z_OK
+        result::Z_OK
     }
 }
 
@@ -252,12 +251,12 @@ pub unsafe extern "C" fn z_view_slice_wrap(
     this: &mut MaybeUninit<z_view_slice_t>,
     start: *const u8,
     len: usize,
-) -> z_error_t {
+) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     match CSliceView::new(start, len) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CSliceView::default());
@@ -288,47 +287,6 @@ pub extern "C" fn z_slice_empty(this: &mut MaybeUninit<z_owned_slice_t>) {
 #[no_mangle]
 pub extern "C" fn z_slice_null(this: &mut MaybeUninit<z_owned_slice_t>) {
     z_slice_empty(this);
-}
-
-/// Copies a string into `z_owned_slice_t` using `strlen` (this should therefore not be used with untrusted inputs).
-///
-/// @return -1 if `str == NULL` (and creates an empty slice), 0 otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_from_str(
-    this: &mut MaybeUninit<z_owned_slice_t>,
-    str: *const c_char,
-) -> z_error_t {
-    if str.is_null() {
-        z_slice_empty(this);
-        errors::Z_EINVAL
-    } else {
-        z_slice_wrap(this, str as *const u8, libc::strlen(str));
-        errors::Z_OK
-    }
-}
-
-/// Constructs a slice by copying a `len` bytes long sequence starting at `start`.
-///
-/// @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_wrap(
-    this: &mut MaybeUninit<z_owned_slice_t>,
-    start: *const u8,
-    len: usize,
-) -> z_error_t {
-    let this = this.as_rust_type_mut_uninit();
-    match CSliceOwned::new(start, len) {
-        Ok(slice) => {
-            this.write(slice);
-            errors::Z_OK
-        }
-        Err(e) => {
-            this.write(CSliceOwned::default());
-            e
-        }
-    }
 }
 
 /// Frees the memory and invalidates the slice.
@@ -393,14 +351,14 @@ impl CString {
 
 impl CStringOwned {
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new_owned(data: *const libc::c_char, len: usize) -> Result<Self, z_error_t> {
+    pub unsafe fn new_owned(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
         Ok(CStringOwned(CString(CSlice::new_owned(data as _, len)?)))
     }
 }
 
 impl CStringView {
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new_borrowed(data: *const libc::c_char, len: usize) -> Result<Self, z_error_t> {
+    pub unsafe fn new_borrowed(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
         Ok(CStringView(CString(CSlice::new_borrowed(data as _, len)?)))
     }
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
@@ -527,7 +485,7 @@ pub extern "C" fn z_view_string_loan(this: &z_view_string_t) -> &z_loaned_string
 pub unsafe extern "C" fn z_string_from_str(
     this: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
-) -> z_error_t {
+) -> z_result_t {
     z_string_from_substr(this, str, strlen(str))
 }
 
@@ -540,12 +498,12 @@ pub unsafe extern "C" fn z_string_from_substr(
     this: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
     len: usize,
-) -> z_error_t {
+) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     match CStringOwned::new_owned(str, len) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CStringOwned::default());
@@ -562,12 +520,12 @@ pub unsafe extern "C" fn z_string_from_substr(
 pub unsafe extern "C" fn z_view_string_wrap(
     this: &mut MaybeUninit<z_view_string_t>,
     str: *const libc::c_char,
-) -> z_error_t {
+) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     match CStringView::new_borrowed(str, strlen(str)) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CStringView::default());
@@ -585,12 +543,12 @@ pub unsafe extern "C" fn z_view_string_from_substr(
     this: &mut MaybeUninit<z_view_string_t>,
     str: *const libc::c_char,
     len: usize,
-) -> z_error_t {
+) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     match CStringView::new_borrowed(str, len) {
         Ok(slice) => {
             this.write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
             this.write(CStringView::default());
@@ -634,12 +592,11 @@ pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
     this.as_rust_type_ref().is_empty()
 }
 
-pub use crate::opaque_types::{z_loaned_slice_map_t, z_moved_slice_map_t, z_owned_slice_map_t};
+pub use crate::opaque_types::{z_loaned_slice_map_t, z_owned_slice_map_t};
 pub type ZHashMap = HashMap<CSlice, CSlice>;
 decl_c_type!(
-    owned(z_owned_slice_map_t, option ZHashMap),
-    loaned(z_loaned_slice_map_t),
-    moved(z_moved_slice_map_t)
+    owned(z_owned_slice_map_t, Option<ZHashMap>),
+    loaned(z_loaned_slice_map_t, ZHashMap),
 );
 
 /// Constructs a new empty map.
@@ -662,8 +619,9 @@ pub extern "C" fn z_slice_map_check(map: &z_owned_slice_map_t) -> bool {
 
 /// Destroys the map, resetting it to its gravestone value.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_slice_map_drop(this: z_moved_slice_map_t) {}
+pub extern "C" fn z_slice_map_drop(this: &mut z_owned_slice_map_t) {
+    *this.as_rust_type_mut() = None;
+}
 
 /// Borrows slice map.
 #[no_mangle]

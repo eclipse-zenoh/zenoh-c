@@ -19,10 +19,10 @@ use zenoh::{Session, Wait};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::z_loaned_shm_client_storage_t;
 use crate::{
-    errors,
-    opaque_types::{z_loaned_session_t, z_moved_session_t, z_owned_session_t},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_moved_config_t, zc_init_logger,
+    opaque_types::{z_loaned_session_t, z_owned_session_t},
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_owned_config_t, zc_init_logger,
 };
 decl_c_type!(
     owned(z_owned_session_t, option Arc<Session>),
@@ -55,25 +55,25 @@ pub extern "C" fn z_session_null(this: &mut MaybeUninit<z_owned_session_t>) {
 pub extern "C" fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: z_moved_config_t,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
     let Some(config) = config.into_rust_type().take() else {
-        log::error!("Config not provided");
+        tracing::error!("Config not provided");
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     match zenoh::open(config).wait() {
         Ok(s) => {
             this.write(Some(Arc::new(s)));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Error opening session: {}", e);
+            tracing::error!("Error opening session: {}", e);
             this.write(None);
-            errors::Z_ENETWORK
+            result::Z_ENETWORK
         }
     }
 }
@@ -88,15 +88,15 @@ pub extern "C" fn z_open_with_custom_shm_clients(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: z_moved_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
     let Some(config) = config.into_rust_type().take() else {
-        log::error!("Config not provided");
+        tracing::error!("Config not provided");
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     match zenoh::open(config)
         .with_shm_clients(shm_clients.as_rust_type_ref().clone())
@@ -104,12 +104,12 @@ pub extern "C" fn z_open_with_custom_shm_clients(
     {
         Ok(s) => {
             this.write(Some(Arc::new(s)));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Error opening session: {}", e);
+            tracing::error!("Error opening session: {}", e);
             this.write(None);
-            errors::Z_ENETWORK
+            result::Z_ENETWORK
         }
     }
 }
@@ -126,7 +126,7 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 /// @return 0 in  case of success, a negative value if an error occured while closing the session,
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
-pub extern "C" fn z_close(session: z_moved_session_t) -> errors::z_error_t {
+pub extern "C" fn z_close(session: z_moved_session_t) -> result::z_result_t {
     let Some(s) = session.into_rust_type() else {
         return errors::Z_EINVAL;
     };
@@ -138,10 +138,10 @@ pub extern "C" fn z_close(session: z_moved_session_t) -> errors::z_error_t {
     };
     match s.close().wait() {
         Err(e) => {
-            log::error!("Error closing session: {}", e);
-            errors::Z_EGENERIC
+            tracing::error!("Error closing session: {}", e);
+            result::Z_EGENERIC
         }
-        Ok(_) => errors::Z_OK,
+        Ok(_) => result::Z_OK,
     }
 }
 
@@ -155,7 +155,7 @@ pub extern "C" fn z_session_drop(this: z_moved_session_t) {}
 /// Constructs an owned shallow copy of the session in provided uninitialized memory location.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_session_clone(
+pub extern "C" fn z_session_clone(
     dst: &mut MaybeUninit<z_owned_session_t>,
     this: &z_loaned_session_t,
 ) {

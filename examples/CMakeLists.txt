@@ -17,9 +17,25 @@ file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 foreach(file ${files})
     get_filename_component(target ${file} NAME_WE)
 
+    # Exclude some examples if UNSTABLE feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+        if(${target} STREQUAL "z_info")
+            continue()
+        endif()
+    endif()
     # Exclude SHM examples if SHM feature is disabled
-    if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY))
+    if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY AND (ZENOHC_BUILD_WITH_UNSTABLE_API)))
         if(${target} MATCHES "^.*_shm.*$")
+            continue()
+        endif()
+    endif()
+    # Exclude Liveliness and zenoh-ext examples if unstable api feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+        if(
+            (${target} MATCHES "^.*_liveliness.*$") 
+            OR (${target} MATCHES "^.*_pub_cache.*$") 
+            OR (${target} MATCHES "^.*_query_sub.*$")
+        )
             continue()
         endif()
     endif()

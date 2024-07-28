@@ -14,7 +14,6 @@
 use std::mem::MaybeUninit;
 
 use async_std::task;
-use libc::c_ulong;
 use zenoh::{
     config::{WhatAmI, WhatAmIMatcher},
     scouting::Hello,
@@ -22,11 +21,13 @@ use zenoh::{
 
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
-    errors::{self, Z_OK},
-    transmute::{IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
+    result::{self, Z_OK},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_closure_hello_call, z_closure_hello_loan, z_owned_closure_hello_t, z_owned_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
+#[cfg(feature = "unstable")]
+use crate::{transmute::IntoCType, z_id_t};
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
     loaned(z_loaned_hello_t),
@@ -61,6 +62,7 @@ pub extern "C" fn z_hello_null(this: &mut MaybeUninit<z_owned_hello_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
+#[cfg(feature = "unstable")]
 /// Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
@@ -98,16 +100,16 @@ pub extern "C" fn z_hello_locators(
 #[repr(C)]
 pub struct z_scout_options_t {
     /// The maximum duration in ms the scouting can take.
-    pub zc_timeout_ms: c_ulong,
+    pub timeout_ms: u64,
     /// Type of entities to scout for.
-    pub zc_what: z_whatami_t,
+    pub what: z_what_t,
 }
 
 impl Default for z_scout_options_t {
     fn default() -> Self {
         z_scout_options_t {
-            zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-            zc_what: DEFAULT_SCOUTING_WHAT,
+            timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
+            what: DEFAULT_SCOUTING_WHAT,
         }
     }
 }
@@ -119,14 +121,23 @@ pub enum z_whatami_t {
     ROUTER = 0x01,
     PEER = 0x02,
     CLIENT = 0x04,
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum z_what_t {
+    ROUTER = 0x01,
+    PEER = 0x02,
+    CLIENT = 0x04,
     ROUTER_PEER = 0x01 | 0x02,
     ROUTER_CLIENT = 0x01 | 0x04,
     PEER_CLIENT = 0x02 | 0x04,
     ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
 }
 
-pub const DEFAULT_SCOUTING_WHAT: z_whatami_t = z_whatami_t::ROUTER_PEER;
-pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
+pub const DEFAULT_SCOUTING_WHAT: z_what_t = z_what_t::ROUTER_PEER;
+pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
 /// Constructs the default values for the scouting operation.
 #[no_mangle]
@@ -147,7 +158,7 @@ pub extern "C" fn z_scout(
     config: z_moved_config_t,
     callback: z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logger();
     }
@@ -156,9 +167,9 @@ pub extern "C" fn z_scout(
     };
     let options = options.cloned().unwrap_or_default();
     let what =
-        WhatAmIMatcher::try_from(options.zc_what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
+        WhatAmIMatcher::try_from(options.what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
-    let timeout = options.zc_timeout_ms as u64;
+    let timeout = options.timeout_ms;
     let Some(config) = config.into_rust_type() else {
         log::error!("Config not provided");
         return errors::Z_EINVAL;
@@ -189,14 +200,14 @@ pub extern "C" fn z_scout(
 pub extern "C" fn z_whatami_to_view_string(
     whatami: z_whatami_t,
     str_out: &mut MaybeUninit<z_view_string_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     match WhatAmIMatcher::try_from(whatami as u8) {
-        Err(_) => errors::Z_EINVAL,
+        Err(_) => result::Z_EINVAL,
         Ok(w) => {
             let s = w.to_str();
             let slice = CStringView::new_borrowed_from_slice(s.as_bytes());
             str_out.as_rust_type_mut_uninit().write(slice);
-            errors::Z_OK
+            result::Z_OK
         }
     }
 }

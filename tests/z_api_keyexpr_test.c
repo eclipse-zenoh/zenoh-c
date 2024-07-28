@@ -33,7 +33,7 @@ void canonize() {
     printf("'%s', len = %lu, err = %d\n", keyexpr, len_new, err);
     assert(err == 0);
     assert(len_new == len_old - 3);
-    assert(strcmp(keyexpr, "a/**/c*/c") == 0);  // string not truncated, it's ok
+    assert(strcmp(keyexpr, "a/**/c") == 0);
 
     strcpy(keyexpr, "a/**/**/c");
     printf("'%s' -> ", keyexpr);
@@ -97,6 +97,7 @@ void undeclare() {
     assert(!z_keyexpr_check(&ke));
 }
 
+#if defined(UNSTABLE)
 void relation_to() {
     z_view_keyexpr_t foobar, foostar, barstar;
     z_view_keyexpr_from_str(&foobar, "foo/bar");
@@ -108,11 +109,14 @@ void relation_to() {
     assert(z_keyexpr_relation_to(z_loan(foostar), z_loan(foostar)) == Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS);
     assert(z_keyexpr_relation_to(z_loan(barstar), z_loan(foobar)) == Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT);
 }
+#endif
 
 int main(int argc, char **argv) {
     canonize();
     includes();
     intersects();
     undeclare();
+#if defined(UNSTABLE)
     relation_to();
+#endif
 }

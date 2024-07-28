@@ -39,9 +39,7 @@ Functions
 
 .. doxygenfunction:: z_slice_empty
 .. doxygenfunction:: z_view_slice_empty
-.. doxygenfunction:: z_slice_wrap
 .. doxygenfunction:: z_view_slice_wrap
-.. doxygenfunction:: z_slice_from_str
 .. doxygenfunction:: z_slice_data
 .. doxygenfunction:: z_slice_len
 .. doxygenfunction:: z_slice_is_empty
@@ -53,57 +51,34 @@ Types
 ^^^^^
 .. doxygenstruct:: z_owned_string_t
 .. doxygenstruct:: z_view_string_t
-.. doxygenstruct:: z_loaned_str_t
+.. doxygenstruct:: z_loaned_string_t
 
 Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_string_check
-.. doxygenfunction:: z_view_str_check
+.. doxygenfunction:: z_view_string_check
 .. doxygenfunction:: z_string_null
-.. doxygenfunction:: z_view_str_null
+.. doxygenfunction:: z_view_string_null
 .. doxygenfunction:: z_string_loan
-.. doxygenfunction:: z_view_str_loan
+.. doxygenfunction:: z_view_string_loan
 .. doxygenfunction:: z_string_drop
 
 .. doxygenfunction:: z_string_empty
-.. doxygenfunction:: z_view_str_empty
+.. doxygenfunction:: z_view_string_empty
 
-.. doxygenfunction:: z_string_wrap
-.. doxygenfunction:: z_view_str_wrap
+.. doxygenfunction:: z_string_from_str
+.. doxygenfunction:: z_view_string_wrap
 .. doxygenfunction:: z_string_from_substr
 .. doxygenfunction:: z_string_data
 .. doxygenfunction:: z_string_len
 .. doxygenfunction:: z_string_is_empty
 
-Slice map
----------
-Types
-^^^^^
-.. doxygenstruct:: z_owned_slice_map_t
-.. doxygenstruct:: z_loaned_slice_map_t
-
-Functions
-^^^^^^^^^
-.. doxygenfunction:: z_slice_map_check
-.. doxygenfunction:: z_slice_map_null
-.. doxygenfunction:: z_slice_map_drop
-.. doxygenfunction:: z_slice_map_loan
-.. doxygenfunction:: z_slice_map_loan_mut
-
-.. doxygenfunction:: z_slice_map_new
-.. doxygenfunction:: z_slice_map_get
-.. doxygenfunction:: z_slice_map_len
-.. doxygenfunction:: z_slice_map_is_empty
-.. doxygenfunction:: z_slice_map_insert_by_alias
-.. doxygenfunction:: z_slice_map_insert_by_copy
-.. doxygenfunction:: z_slice_map_iterate
-
-string array
+String Array
 -----------
 Types
 ^^^^^
-.. doxygenstruct:: z_owned_str_array_t
-.. doxygenstruct:: z_loaned_str_array_t
+.. doxygenstruct:: z_owned_string_array_t
+.. doxygenstruct:: z_loaned_string_array_t
 
 Functions
 ^^^^^^^^^
@@ -133,8 +108,7 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_bytes_len
 .. doxygenfunction:: z_bytes_serialize_from_slice
-.. doxygenfunction:: z_bytes_serialize_from_string
-.. doxygenfunction:: z_bytes_serialize_from_slice_map
+.. doxygenfunction:: z_bytes_serialize_from_str
 .. doxygenfunction:: z_bytes_serialize_from_iter
 .. doxygenfunction:: z_bytes_serialize_from_pair
 
@@ -151,8 +125,6 @@ Functions
 
 .. doxygenfunction:: z_bytes_deserialize_into_slice
 .. doxygenfunction:: z_bytes_deserialize_into_string
-.. doxygenfunction:: z_bytes_deserialize_into_slice_map
-.. doxygenfunction:: z_bytes_deserialize_into_iter
 .. doxygenfunction:: z_bytes_deserialize_into_pair
 
 .. doxygenfunction:: z_bytes_deserialize_into_uint8
@@ -204,11 +176,11 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_keyexpr_from_string
-.. doxygenfunction:: z_view_keyexpr_from_string
-.. doxygenfunction:: z_keyexpr_from_string_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_string_autocanonize
-.. doxygenfunction:: z_view_keyexpr_from_string_unchecked
+.. doxygenfunction:: z_keyexpr_from_str
+.. doxygenfunction:: z_view_keyexpr_from_str
+.. doxygenfunction:: z_keyexpr_from_str_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_str_autocanonize
+.. doxygenfunction:: z_view_keyexpr_from_str_unchecked
 
 .. doxygenfunction:: z_keyexpr_from_substr
 .. doxygenfunction:: z_view_keyexpr_from_substr
@@ -248,29 +220,103 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_encoding_null
 .. doxygenfunction:: z_encoding_loan
+.. doxygenfunction:: z_encoding_loan_mut
 .. doxygenfunction:: z_encoding_check
+.. doxygenfunction:: z_encoding_drop
+
 .. doxygenfunction:: z_encoding_drop
 
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
 .. doxygenfunction:: z_encoding_from_substr
+.. doxygenfunction:: z_encoding_set_schema_from_str
+.. doxygenfunction:: z_encoding_set_schema_from_substr
 .. doxygenfunction:: z_encoding_to_string
 
-Value
+Predefined Encodings
+^^^^^^^^^^^^^^^^^^^^
+.. doxygenfunction:: z_encoding_zenoh_bytes
+.. doxygenfunction:: z_encoding_zenoh_int8
+.. doxygenfunction:: z_encoding_zenoh_int16
+.. doxygenfunction:: z_encoding_zenoh_int32
+.. doxygenfunction:: z_encoding_zenoh_int64
+.. doxygenfunction:: z_encoding_zenoh_int128
+.. doxygenfunction:: z_encoding_zenoh_uint8
+.. doxygenfunction:: z_encoding_zenoh_uint16
+.. doxygenfunction:: z_encoding_zenoh_uint32
+.. doxygenfunction:: z_encoding_zenoh_uint64
+.. doxygenfunction:: z_encoding_zenoh_uint128
+.. doxygenfunction:: z_encoding_zenoh_float32
+.. doxygenfunction:: z_encoding_zenoh_float64
+.. doxygenfunction:: z_encoding_zenoh_bool
+.. doxygenfunction:: z_encoding_zenoh_string
+.. doxygenfunction:: z_encoding_zenoh_error
+.. doxygenfunction:: z_encoding_application_octet_stream
+.. doxygenfunction:: z_encoding_text_plain
+.. doxygenfunction:: z_encoding_application_json
+.. doxygenfunction:: z_encoding_text_json
+.. doxygenfunction:: z_encoding_application_cdr
+.. doxygenfunction:: z_encoding_application_cbor
+.. doxygenfunction:: z_encoding_application_yaml
+.. doxygenfunction:: z_encoding_text_yaml
+.. doxygenfunction:: z_encoding_text_json5
+.. doxygenfunction:: z_encoding_application_python_serialized_objects
+.. doxygenfunction:: z_encoding_application_protobuf
+.. doxygenfunction:: z_encoding_application_java_serialized_object
+.. doxygenfunction:: z_encoding_application_openmetrics_text
+.. doxygenfunction:: z_encoding_image_png
+.. doxygenfunction:: z_encoding_image_jpeg
+.. doxygenfunction:: z_encoding_image_gif
+.. doxygenfunction:: z_encoding_image_bmp
+.. doxygenfunction:: z_encoding_image_webp
+.. doxygenfunction:: z_encoding_application_xml
+.. doxygenfunction:: z_encoding_application_x_www_form_urlencoded
+.. doxygenfunction:: z_encoding_text_html
+.. doxygenfunction:: z_encoding_text_xml
+.. doxygenfunction:: z_encoding_text_css
+.. doxygenfunction:: z_encoding_text_javascript
+.. doxygenfunction:: z_encoding_text_markdown
+.. doxygenfunction:: z_encoding_text_csv
+.. doxygenfunction:: z_encoding_application_sql
+.. doxygenfunction:: z_encoding_application_coap_payload
+.. doxygenfunction:: z_encoding_application_json_patch_json
+.. doxygenfunction:: z_encoding_application_json_seq
+.. doxygenfunction:: z_encoding_application_jsonpath
+.. doxygenfunction:: z_encoding_application_jwt
+.. doxygenfunction:: z_encoding_application_mp4
+.. doxygenfunction:: z_encoding_application_soap_xml
+.. doxygenfunction:: z_encoding_application_yang
+.. doxygenfunction:: z_encoding_audio_aac
+.. doxygenfunction:: z_encoding_audio_flac
+.. doxygenfunction:: z_encoding_audio_mp4
+.. doxygenfunction:: z_encoding_audio_ogg
+.. doxygenfunction:: z_encoding_audio_vorbis
+.. doxygenfunction:: z_encoding_video_h261
+.. doxygenfunction:: z_encoding_video_h263
+.. doxygenfunction:: z_encoding_video_h264
+.. doxygenfunction:: z_encoding_video_h265
+.. doxygenfunction:: z_encoding_video_h266
+.. doxygenfunction:: z_encoding_video_mp4
+.. doxygenfunction:: z_encoding_video_ogg
+.. doxygenfunction:: z_encoding_video_raw
+.. doxygenfunction:: z_encoding_video_vp8
+.. doxygenfunction:: z_encoding_video_vp9
+
+Reply Error
 -----
 Types
 ^^^^^
-.. doxygenstruct:: z_loaned_value_t
+.. doxygenstruct:: z_loaned_reply_err_t
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_value_payload
-.. doxygenfunction:: z_value_encoding
+.. doxygenfunction:: z_reply_err_payload
+.. doxygenfunction:: z_reply_err_encoding
 
-.. doxygenfunction:: z_value_null
-.. doxygenfunction:: z_value_loan
-.. doxygenfunction:: z_value_check
-.. doxygenfunction:: z_value_drop
+.. doxygenfunction:: z_reply_err_null
+.. doxygenfunction:: z_reply_err_loan
+.. doxygenfunction:: z_reply_err_check
+.. doxygenfunction:: z_reply_err_drop
 
 Sample
 ------
@@ -305,7 +351,7 @@ Types
 Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_timestamp_id
-.. doxygenfunction:: z_timestamp_npt64_time
+.. doxygenfunction:: z_timestamp_ntp64_time
 
 System
 ======
@@ -424,10 +470,10 @@ Functions
 .. doxygenfunction:: z_config_default
 .. doxygenfunction:: z_config_client
 .. doxygenfunction:: z_config_peer
+.. doxygenfunction:: zc_config_from_env
 .. doxygenfunction:: zc_config_from_file
 .. doxygenfunction:: zc_config_from_str
 .. doxygenfunction:: zc_config_insert_json
-.. doxygenfunction:: zc_config_get
 .. doxygenfunction:: zc_config_to_string
 
 Session management
@@ -452,7 +498,7 @@ Functions
 .. doxygenfunction:: z_session_null
 .. doxygenfunction:: z_session_drop
 
-.. doxygenfunction:: zc_session_clone
+.. doxygenfunction:: z_session_clone
 
 .. doxygenfunction:: z_info_zid
 .. doxygenfunction:: z_info_routers_zid
@@ -484,8 +530,8 @@ Types
     :members:
 .. doxygenstruct:: z_publisher_delete_options_t
 
-.. doxygenstruct:: zcu_owned_matching_listener_t
-.. doxygenstruct:: zcu_owned_closure_matching_status_t
+.. doxygenstruct:: zc_owned_matching_listener_t
+.. doxygenstruct:: zc_owned_closure_matching_status_t
     :members:
 
 Functions
@@ -511,10 +557,10 @@ Functions
 .. doxygenfunction:: z_publisher_put_options_default
 .. doxygenfunction:: z_publisher_delete_options_default
 
-.. doxygenfunction:: zcu_closure_matching_status_check
-.. doxygenfunction:: zcu_closure_matching_status_null
-.. doxygenfunction:: zcu_closure_matching_status_drop
-.. doxygenfunction:: zcu_closure_matching_status_call
+.. doxygenfunction:: zc_closure_matching_status_check
+.. doxygenfunction:: zc_closure_matching_status_null
+.. doxygenfunction:: zc_closure_matching_status_drop
+.. doxygenfunction:: zc_closure_matching_status_call
 
 Subscription
 ============
@@ -619,7 +665,8 @@ Functions
 
 .. doxygenfunction:: z_query_keyexpr
 .. doxygenfunction:: z_query_parameters
-.. doxygenfunction:: z_query_value
+.. doxygenfunction:: z_query_payload
+.. doxygenfunction:: z_query_encoding
 .. doxygenfunction:: z_query_attachment
 .. doxygenfunction:: z_query_reply
 .. doxygenfunction:: z_query_reply_err
@@ -780,7 +827,7 @@ Types
 .. doxygenstruct:: ze_owned_publication_cache_t
 .. doxygenstruct:: ze_publication_cache_options_t
     :members:
-.. doxygenenum:: zcu_locality_t
+.. doxygenenum:: zc_locality_t
 
 Functions
 ---------
@@ -804,7 +851,7 @@ Types
 .. doxygenstruct:: ze_loaned_querying_subscriber_t
 .. doxygenstruct:: ze_querying_subscriber_options_t
     :members:
-.. doxygenenum:: zcu_reply_keyexpr_t
+.. doxygenenum:: zc_reply_keyexpr_t
 
 Functions
 ---------
@@ -818,4 +865,4 @@ Functions
 .. doxygenfunction:: ze_querying_subscriber_drop
 
 .. doxygenfunction:: ze_querying_subscriber_options_default
-.. doxygenfunction:: zcu_reply_keyexpr_default
+.. doxygenfunction:: zc_reply_keyexpr_default

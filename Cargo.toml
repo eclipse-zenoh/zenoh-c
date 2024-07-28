@@ -17,10 +17,10 @@ version = "0.11.0-dev"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
-  "kydos <angelo@icorsaro.net>",
-  "Julien Enoch <julien@enoch.fr>",
-  "Olivier Hécart <olivier.hecart@adlinktech.com>",
-  "Luca Cominardi <luca.cominardi@gmail.com>",
+    "kydos <angelo@icorsaro.net>",
+    "Julien Enoch <julien@enoch.fr>",
+    "Olivier Hécart <olivier.hecart@adlinktech.com>",
+    "Luca Cominardi <luca.cominardi@gmail.com>",
 ]
 edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
@@ -32,8 +32,8 @@ build = "build.rs"
 
 [features]
 logger-autoinit = []
-shared-memory = ["zenoh/shared-memory", "zenoh-ext/shared-memory"]
-unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
+shared-memory = ["zenoh/shared-memory", "dep:zenoh-ext", "zenoh-ext/shared-memory"]
+unstable = ["zenoh/unstable", "zenoh-ext/unstable", "dep:zenoh-ext"]
 default = ["zenoh/default"]
 
 [badges]
@@ -43,18 +43,17 @@ maintenance = { status = "actively-developed" }
 async-std = "=1.12.0"
 async-trait = "0.1.66"
 chrono = "0.4.37"
-env_logger = "0.10.0"
 futures = "0.3.26"
 json5 = "0.4.1"
 lazy_static = "1.4.0"
 libc = "0.2.139"
-log = "0.4.17"
+tracing = "0.1"
 rand = "0.8.5"
 spin = "0.9.5"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", default-features = false }
-zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0" }
+zenoh = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "0.11.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0" , optional = true }
 flume = "*"
 
 [build-dependencies]
@@ -63,9 +62,11 @@ fs2 = "0.4.3"
 regex = "1.7.1"
 serde_yaml = "0.9.19"
 fs_extra = "1.3.0"
+evalexpr = "11.3.0"
+phf = { version = "0.11.2", features = ["macros"] }
 
 [lib]
-path = "src/lib.rs"
+path="src/lib.rs"
 name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false

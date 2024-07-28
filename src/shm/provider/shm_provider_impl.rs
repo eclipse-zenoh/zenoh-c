@@ -18,9 +18,8 @@ use libc::c_void;
 use zenoh::{
     prelude::*,
     shm::{
-        AllocPolicy, AsyncAllocPolicy, BufLayoutAllocResult, DynamicProtocolID,
-        PosixShmProviderBackend, ProtocolIDSource, ShmProvider, ShmProviderBackend,
-        StaticProtocolID, ZLayoutAllocError, POSIX_PROTOCOL_ID,
+        AllocPolicy, AsyncAllocPolicy, DynamicProtocolID, PosixShmProviderBackend,
+        ProtocolIDSource, ShmProvider, ShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
     },
 };
 
@@ -30,17 +29,18 @@ use super::{
 };
 use crate::{
     context::{Context, DroppableContext, ThreadsafeContext},
-    errors::{z_error_t, Z_EINVAL, Z_OK},
+    result::{z_result_t, Z_EINVAL, Z_OK},
+    shm::provider::types::z_buf_layout_alloc_result_t,
     transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t,
+    z_loaned_shm_provider_t, z_owned_shm_mut_t,
 };
 
 pub(crate) fn alloc<Policy: AllocPolicy>(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             alloc_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
@@ -61,17 +61,16 @@ pub(crate) fn alloc<Policy: AllocPolicy>(
 }
 
 pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
-    out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
     result_context: ThreadsafeContext,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
-        z_error_t,
-        *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+        *mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
-) -> z_error_t {
+) -> z_result_t {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
             alloc_async_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
@@ -103,30 +102,20 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
     }
 }
 
-pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) {
+pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
-        super::shm_provider::CSHMProvider::Posix(provider) => {
-            provider.defragment();
-        }
-        super::shm_provider::CSHMProvider::Dynamic(provider) => {
-            provider.defragment();
-        }
-        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            provider.defragment();
-        }
+        super::shm_provider::CSHMProvider::Posix(provider) => provider.defragment(),
+        super::shm_provider::CSHMProvider::Dynamic(provider) => provider.defragment(),
+        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.defragment(),
     }
 }
 
-pub(crate) fn garbage_collect(provider: &z_loaned_shm_provider_t) {
+pub(crate) fn garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
-        super::shm_provider::CSHMProvider::Posix(provider) => {
-            provider.garbage_collect();
-        }
-        super::shm_provider::CSHMProvider::Dynamic(provider) => {
-            provider.garbage_collect();
-        }
+        super::shm_provider::CSHMProvider::Posix(provider) => provider.garbage_collect(),
+        super::shm_provider::CSHMProvider::Dynamic(provider) => provider.garbage_collect(),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            provider.garbage_collect();
+            provider.garbage_collect()
         }
     }
 }
@@ -145,43 +134,43 @@ pub(crate) fn map(
     provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
-) {
+) -> z_result_t {
+    let chunk = match allocated_chunk.try_into() {
+        Ok(val) => val,
+        Err(_) => return Z_EINVAL,
+    };
+
     let mapping = match provider.as_rust_type_ref() {
-        super::shm_provider::CSHMProvider::Posix(provider) => {
-            provider.map(allocated_chunk.into(), len)
-        }
-        super::shm_provider::CSHMProvider::Dynamic(provider) => {
-            provider.map(allocated_chunk.into(), len)
-        }
-        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            provider.map(allocated_chunk.into(), len)
-        }
+        super::shm_provider::CSHMProvider::Posix(provider) => provider.map(chunk, len),
+        super::shm_provider::CSHMProvider::Dynamic(provider) => provider.map(chunk, len),
+        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.map(chunk, len),
     };
 
     match mapping {
         Ok(buffer) => {
             out_result.as_rust_type_mut_uninit().write(Some(buffer));
+            Z_OK
         }
         Err(e) => {
-            log::error!("{e}");
-            out_result.as_rust_type_mut_uninit().write(None);
+            tracing::error!("{:?}", e);
+            Z_EINVAL
         }
     }
 }
 
 fn alloc_impl<Policy: AllocPolicy, TProtocolID: ProtocolIDSource, TBackend: ShmProviderBackend>(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &ShmProvider<TProtocolID, TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) {
     let result = provider
         .alloc(size)
         .with_alignment(alignment.into_rust_type())
         .with_policy::<Policy>()
         .wait();
 
-    parse_result(out_result, result)
+    out_result.write(result.into());
 }
 
 pub(crate) fn alloc_async_impl<
@@ -189,15 +178,14 @@ pub(crate) fn alloc_async_impl<
     TProtocolID: ProtocolIDSource,
     TBackend: ShmProviderBackend + Send + Sync,
 >(
-    out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &'static ShmProvider<TProtocolID, TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
     result_context: ThreadsafeContext,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
-        z_error_t,
-        *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+        *mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
 ) {
     //todo: this should be ported to tokio with executor argument support
@@ -207,26 +195,9 @@ pub(crate) fn alloc_async_impl<
             .with_alignment(alignment.into_rust_type())
             .with_policy::<Policy>()
             .await;
-        let error = parse_result(out_result, result);
+        out_result.write(result.into());
         unsafe {
-            (result_callback)(result_context.get(), error, out_result);
+            (result_callback)(result_context.get(), out_result);
         }
     });
-}
-
-fn parse_result(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
-    result: BufLayoutAllocResult,
-) -> z_error_t {
-    match result {
-        Ok(buf) => {
-            out_result.as_rust_type_mut_uninit().write(Some(Ok(buf)));
-            Z_OK
-        }
-        Err(ZLayoutAllocError::Alloc(e)) => {
-            out_result.as_rust_type_mut_uninit().write(Some(Err(e)));
-            Z_OK
-        }
-        Err(ZLayoutAllocError::Layout(_)) => Z_EINVAL,
-    }
 }

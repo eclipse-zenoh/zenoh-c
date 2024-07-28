@@ -16,17 +16,19 @@
 
 #include "zenoh.h"
 
-void matching_status_handler(const zcu_matching_status_t *matching_status, void *arg) {
+#ifdef UNSTABLE
+void matching_status_handler(const zc_matching_status_t *matching_status, void *arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");
     } else {
         printf("No Subscribers matched\n");
     }
 }
+#endif
 
 int main(int argc, char **argv) {
     char *keyexpr = "demo/example/zenoh-c-pub";
-    char *value = "Pub from C!";
+    char *value = "Pub from C SHM!";
     bool add_matching_listener = false;
 
     if (argc > 1) keyexpr = argv[1];
@@ -35,6 +37,18 @@ int main(int argc, char **argv) {
 
     z_owned_config_t config;
     z_config_default(&config);
+
+    // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
+    // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
+    // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
+        printf(
+            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
+            "JSON-serialized value\n",
+            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
+        exit(-1);
+    }
+
     if (argc > 4) {
         if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[4]) < 0) {
             printf(
@@ -60,13 +74,19 @@ int main(int argc, char **argv) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
-
-    zcu_owned_matching_listener_t listener;
+#ifdef UNSTABLE
+    zc_owned_matching_listener_t listener;
     if (add_matching_listener) {
-        zcu_owned_closure_matching_status_t callback;
+        zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zcu_publisher_matching_listener_callback(&listener, z_loan(pub), z_move(callback));
+        zc_publisher_matching_listener_callback(&listener, z_loan(pub), z_move(callback));
     }
+#else
+    if (add_matching_listener) {
+        printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
+        exit(-1);
+    }
+#endif
 
     printf("Creating POSIX SHM Provider...\n");
     const size_t total_size = 4096;
@@ -82,16 +102,12 @@ int main(int argc, char **argv) {
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
 
-        z_owned_buf_alloc_result_t alloc;
+        z_buf_layout_alloc_result_t alloc;
         z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
-
-        z_owned_shm_mut_t shm_buf;
-        z_alloc_error_t shm_error;
-        z_buf_alloc_result_unwrap(z_move(alloc), &shm_buf, &shm_error);
-        if (z_check(shm_buf)) {
+        if (z_check(alloc.buf)) {
             {
-                uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(shm_buf));
-                sprintf((char *)buf, "SHM [%4d] %s", idx, value);
+                uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
+                sprintf((char *)buf, "[%4d] %s", idx, value);
                 printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
             }
 
@@ -99,7 +115,7 @@ int main(int argc, char **argv) {
             z_publisher_put_options_default(&options);
 
             z_owned_bytes_t payload;
-            z_bytes_serialize_from_shm_mut(&payload, &shm_buf);
+            z_bytes_serialize_from_shm_mut(&payload, &alloc.buf);
 
             z_publisher_put(z_loan(pub), z_move(payload), &options);
         } else {
@@ -107,6 +123,12 @@ int main(int argc, char **argv) {
             break;
         }
     }
+
+#ifdef UNSTABLE
+    if (add_matching_listener) {
+        zc_publisher_matching_listener_undeclare(z_move(listener));
+    }
+#endif
 
     z_undeclare_publisher(z_move(pub));
     z_close(z_move(s));

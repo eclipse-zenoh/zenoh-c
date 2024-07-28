@@ -15,9 +15,9 @@ use zenoh::{prelude::*, session::ZenohId};
 
 pub use crate::opaque_types::z_id_t;
 use crate::{
-    errors,
-    transmute::{CTypeRef, IntoCType, IntoRustType, RustTypeRef},
-    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
+    result,
+    transmute::{CTypeRef, IntoCType, RustTypeRef},
+    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_owned_closure_zid_t,
 };
 decl_c_type!(copy(z_id_t, ZenohId));
 
@@ -50,7 +50,7 @@ pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
 pub unsafe extern "C" fn z_info_peers_zid(
     session: &z_loaned_session_t,
     callback: z_moved_closure_zid_t,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
         return errors::Z_EINVAL;
@@ -58,7 +58,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
     for id in session.info().peers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Fetches the Zenoh IDs of all connected routers.
@@ -72,7 +72,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
 pub unsafe extern "C" fn z_info_routers_zid(
     session: &z_loaned_session_t,
     callback: z_moved_closure_zid_t,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
         return errors::Z_EINVAL;
@@ -80,5 +80,5 @@ pub unsafe extern "C" fn z_info_routers_zid(
     for id in session.info().routers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
-    errors::Z_OK
+    result::Z_OK
 }

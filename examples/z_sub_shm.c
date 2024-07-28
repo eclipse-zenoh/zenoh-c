@@ -21,12 +21,34 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
+// if Zenoh is built without SHM support, the only buffer type it can receive is RAW
+#if !defined(SHARED_MEMORY)
+    char *payload_type = "RAW";
+#endif
+
+// if Zenoh is built with SHM support but without SHM API (that is unstable), it can
+// receive buffers of any type, but there is no way to detect the buffer type
+#if defined(SHARED_MEMORY) && !defined(UNSTABLE)
+    char *payload_type = "UNKNOWN";
+#endif
+
+// if Zenoh is built with SHM support and with SHM API, we can detect the exact buffer type
+#if defined(SHARED_MEMORY) && defined(UNSTABLE)
+    char *payload_type = "RAW";
+    {
+        const z_loaned_shm_t *shm = NULL;
+        if (z_bytes_deserialize_into_loaned_shm(z_sample_payload(sample), &shm) == Z_OK) {
+            payload_type = "SHM";
+        }
+    }
+#endif
+
     z_owned_string_t payload_string;
     z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
 
-    printf(">> [Subscriber] Received %s ('%.*s': '%.*s')\n", kind_to_str(z_sample_kind(sample)),
+    printf(">> [Subscriber] Received %s ('%.*s': '%.*s') [%s]\n", kind_to_str(z_sample_kind(sample)),
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
-           (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
+           (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)), payload_type);
     z_drop(z_move(payload_string));
 }
 

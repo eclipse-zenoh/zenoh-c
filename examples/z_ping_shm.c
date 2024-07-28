@@ -53,6 +53,17 @@ int main(int argc, char** argv) {
     } else {
         z_config_default(&config);
     }
+
+    // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
+    // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
+        printf(
+            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
+            "JSON-serialized value\n",
+            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
+        exit(-1);
+    }
+
     z_owned_session_t session;
     z_open(&session, z_move(config));
     z_view_keyexpr_t ping;
@@ -72,28 +83,28 @@ int main(int argc, char** argv) {
     z_memory_layout_new(&layout, args.size, alignment);
     z_owned_shm_provider_t provider;
     z_posix_shm_provider_new(&provider, z_loan(layout));
-    z_owned_buf_alloc_result_t alloc;
-    z_shm_provider_alloc(&alloc, z_loan(provider), args.size, alignment);
 
     // Allocate SHM Buffer
-    z_owned_shm_mut_t shm_mut;
-    z_alloc_error_t shm_error;
-    z_buf_alloc_result_unwrap(z_move(alloc), &shm_mut, &shm_error);
-    if (!z_check(shm_mut)) {
+    z_buf_layout_alloc_result_t alloc;
+    z_shm_provider_alloc(&alloc, z_loan(provider), args.size, alignment);
+    if (!z_check(alloc.buf)) {
         printf("Unexpected failure during SHM buffer allocation...");
         return -1;
     }
     // Fill SHM Buffer with data
-    uint8_t* data = z_shm_mut_data_mut(z_loan_mut(shm_mut));
+    uint8_t* data = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
     }
     // Convert mutable SHM Buffer into immutable one (to be able to make it's ref copies)
     z_owned_shm_t shm;
-    z_shm_from_mut(&shm, z_move(shm_mut));
-    const z_loaned_shm_t* loaned_shm = z_loan(shm);
+    z_shm_from_mut(&shm, z_move(alloc.buf));
 
-    z_owned_bytes_t payload;
+    z_owned_bytes_t shmbs;
+    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+        printf("Unexpected failure during SHM buffer serialization...\n");
+        return -1;
+    }
 
     z_mutex_lock(z_loan_mut(mutex));
     if (args.warmup_ms) {
@@ -102,7 +113,8 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_bytes_serialize_from_shm_copy(&payload, loaned_shm);
+            z_owned_bytes_t payload;
+            z_bytes_clone(&payload, z_loan(shmbs));
             z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
             if (s != 0) {
@@ -114,6 +126,8 @@ int main(int argc, char** argv) {
     unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
         z_clock_t measure_start = z_clock_now();
+        z_owned_bytes_t payload;
+        z_bytes_clone(&payload, z_loan(shmbs));
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
         int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
         if (s != 0) {

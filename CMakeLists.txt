@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
-# NOTE(fuzzpixelz): The ci/scripts/bump.bash scripts sets the project version
-# using regular expressions on this statement.
-set(ZENOHC_VERSION 0.11.0.0)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/version.txt version)
 
 project(
 	zenohc
-	VERSION ${ZENOHC_VERSION}
+	VERSION ${version}
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
 	LANGUAGES C
@@ -121,6 +119,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_constants.h
 			DESTINATION ${cargo_toml_dir}/include/)
 	endif()	
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)

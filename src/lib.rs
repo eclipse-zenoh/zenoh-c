@@ -24,17 +24,21 @@ pub mod opaque_types;
 pub use crate::opaque_types::*;
 
 mod collections;
-pub mod errors;
+pub mod result;
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;
+pub mod encoding;
+pub use crate::encoding::*;
 mod commons;
 pub use crate::commons::*;
 mod payload;
 pub use crate::payload::*;
 mod keyexpr;
 pub use crate::keyexpr::*;
+#[cfg(feature = "unstable")]
 mod info;
+#[cfg(feature = "unstable")]
 pub use crate::info::*;
 mod get;
 pub use crate::get::*;
@@ -48,22 +52,27 @@ mod session;
 pub use crate::session::*;
 mod subscriber;
 pub use crate::subscriber::*;
-// // mod pull_subscriber;
-// // pub use crate::pull_subscriber::*;
 mod publisher;
 pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
-mod liveliness;
-pub use liveliness::*;
-mod publication_cache;
-pub use publication_cache::*;
-mod querying_subscriber;
+pub mod platform;
 pub use platform::*;
+#[cfg(feature = "unstable")]
+mod liveliness;
+#[cfg(feature = "unstable")]
+pub use liveliness::*;
+#[cfg(feature = "unstable")]
+mod publication_cache;
+#[cfg(feature = "unstable")]
+pub use publication_cache::*;
+#[cfg(feature = "unstable")]
+mod querying_subscriber;
+#[cfg(feature = "unstable")]
 pub use querying_subscriber::*;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod context;
-pub mod platform;
+
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
 
@@ -73,7 +82,7 @@ pub mod shm;
 /// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
 pub extern "C" fn zc_init_logger() {
-    let _ = env_logger::try_init();
+    zenoh::try_init_log_from_env();
 }
 
 // Test should be runned with `cargo test --no-default-features`
@@ -97,7 +106,7 @@ fn test_no_default_features() {
             // " zenoh/transport_udp",
             // " zenoh/transport_unixsock-stream",
             // " zenoh/transport_ws",
-            " zenoh/unstable",
+            // " zenoh/unstable",
             // " zenoh/default",
         )
     );

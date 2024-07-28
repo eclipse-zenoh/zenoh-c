@@ -39,6 +39,17 @@ int main(int argc, char** argv) {
     }
     z_owned_config_t config;
     z_config_default(&config);
+
+    // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
+    // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
+        printf(
+            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
+            "JSON-serialized value\n",
+            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
+        exit(-1);
+    }
+
     if (argc > 3) {
         if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
@@ -62,23 +73,20 @@ int main(int argc, char** argv) {
     z_memory_layout_new(&layout, value_len, alignment);
     z_owned_shm_provider_t provider;
     z_posix_shm_provider_new(&provider, z_loan(layout));
-    z_owned_buf_alloc_result_t alloc;
-    z_shm_provider_alloc(&alloc, z_loan(provider), value_len, alignment);
 
     // Allocate SHM Buffer
-    z_owned_shm_mut_t shm_mut;
-    z_alloc_error_t shm_error;
-    z_buf_alloc_result_unwrap(z_move(alloc), &shm_mut, &shm_error);
-    if (!z_check(shm_mut)) {
+    z_buf_layout_alloc_result_t alloc;
+    z_shm_provider_alloc(&alloc, z_loan(provider), value_len, alignment);
+    if (!z_check(alloc.buf)) {
         printf("Unexpected failure during SHM buffer allocation...");
         return -1;
     }
     // Fill SHM Buffer with data
-    uint8_t* data = z_shm_mut_data_mut(z_loan_mut(shm_mut));
+    uint8_t* data = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
     memcpy(data, value, value_len);
     // Convert mutable SHM Buffer into immutable one (to be able to make it's ref copies)
     z_owned_shm_t shm;
-    z_shm_from_mut(&shm, z_move(shm_mut));
+    z_shm_from_mut(&shm, z_move(alloc.buf));
     const z_loaned_shm_t* loaned_shm = z_loan(shm);
 
     printf("Sending Query '%s'...\n", expr);
@@ -91,7 +99,10 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     if (value != NULL) {
-        z_bytes_serialize_from_shm_copy(&payload, z_loan(shm));
+        if (!z_bytes_serialize_from_shm(&payload, z_move(shm))) {
+            printf("Unexpected failure during SHM buffer serialization...\n");
+            return -1;
+        }
         opts.payload = &payload;
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),

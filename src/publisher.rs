@@ -12,39 +12,46 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
+use std::{
+    mem::MaybeUninit,
+    ptr::{self, null_mut},
+};
 
+#[cfg(feature = "unstable")]
+use zenoh::pubsub::MatchingListener;
 use zenoh::{
-    bytes::EncodingBuilderTrait,
-    prelude::SessionDeclarations,
-    pubsub::{MatchingListener, Publisher},
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
-    sample::{SampleBuilderTrait, TimestampBuilderTrait},
-    Wait,
+    prelude::*,
+    pubsub::Publisher,
+    qos::{CongestionControl, Priority},
 };
 
 use crate::{
-    errors,
-    transmute::{
-        IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
-    },
-    z_congestion_control_t, z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_moved_bytes_t, z_moved_encoding_t, z_moved_source_info_t, z_priority_t, z_timestamp_t,
-    zcu_closure_matching_status_call, zcu_closure_matching_status_loan, zcu_locality_default,
-    zcu_locality_t, zcu_moved_closure_matching_status_t,
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
+    z_owned_encoding_t, z_priority_t, z_timestamp_t,
+};
+#[cfg(feature = "unstable")]
+use crate::{
+    transmute::IntoCType, z_entity_global_id_t, z_owned_source_info_t,
+    zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
+    zc_locality_t, zc_owned_closure_matching_status_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
+    /// Default encoding for messages put by this publisher.
+    pub encoding: *mut z_owned_encoding_t,
     /// The congestion control to apply when routing messages from this publisher.
     pub congestion_control: z_congestion_control_t,
     /// The priority of messages from this publisher.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith
+    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
+    #[cfg(feature = "unstable")]
     /// The allowed destination for this publisher.
-    pub allowed_destination: zcu_locality_t,
+    pub allowed_destination: zc_locality_t,
 }
 
 /// Constructs the default value for `z_publisher_options_t`.
@@ -54,6 +61,7 @@ pub extern "C" fn z_publisher_options_default(this: &mut MaybeUninit<z_publisher
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
+        #[cfg(feature = "unstable")]
         allowed_destination: zcu_locality_default(),
     });
 }
@@ -84,7 +92,7 @@ pub extern "C" fn z_declare_publisher(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&z_publisher_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
@@ -93,18 +101,25 @@ pub extern "C" fn z_declare_publisher(
         p = p
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express)
-            .allowed_destination(options.allowed_destination.into());
+            .express(options.is_express);
+        #[cfg(feature = "unstable")]
+        {
+            p = p.allowed_destination(options.allowed_destination.into());
+        }
+        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
+            let encoding = std::mem::take(encoding.as_rust_type_mut());
+            p = p.encoding(encoding);
+        }
     }
     match p.wait() {
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
         Ok(publisher) => {
             this.write(Some(publisher));
-            errors::Z_OK
+            result::Z_OK
         }
     }
 }
@@ -153,6 +168,7 @@ pub struct z_publisher_put_options_t {
     /// The timestamp of the publication.
     pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The source info for the publication.
+    #[cfg(feature = "unstable")]
     pub source_info: z_moved_source_info_t,
     /// The attachment to attach to the publication.
     pub attachment: z_moved_bytes_t,
@@ -167,6 +183,7 @@ pub extern "C" fn z_publisher_put_options_default(
     this.write(z_publisher_put_options_t {
         encoding: None.into(),
         timestamp: None,
+        #[cfg(feature = "unstable")]
         source_info: None.into(),
         attachment: None.into(),
     });
@@ -189,7 +206,7 @@ pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
     payload: z_moved_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let publisher = this.as_rust_type_ref();
     let Some(payload) = payload.into_rust_type() else {
         return errors::Z_EINVAL;
@@ -200,6 +217,7 @@ pub unsafe extern "C" fn z_publisher_put(
         if let Some(encoding) = options.encoding.take_rust_type() {
             put = put.encoding(encoding);
         };
+        #[cfg(feature = "unstable")]
         if let Some(source_info) = options.source_info.take_rust_type() {
             put = put.source_info(source_info);
         };
@@ -212,10 +230,10 @@ pub unsafe extern "C" fn z_publisher_put(
     }
 
     if let Err(e) = put.wait() {
-        log::error!("{}", e);
-        errors::Z_EGENERIC
+        tracing::error!("{}", e);
+        result::Z_EGENERIC
     } else {
-        errors::Z_OK
+        result::Z_OK
     }
 }
 
@@ -243,7 +261,7 @@ pub extern "C" fn z_publisher_delete_options_default(
 pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
     options: Option<&z_publisher_delete_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
@@ -252,13 +270,13 @@ pub extern "C" fn z_publisher_delete(
         }
     }
     if let Err(e) = del.wait() {
-        log::error!("{}", e);
-        errors::Z_EGENERIC
+        tracing::error!("{}", e);
+        result::Z_EGENERIC
     } else {
-        errors::Z_OK
+        result::Z_OK
     }
 }
-
+#[cfg(feature = "unstable")]
 /// Returns the ID of the publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {
@@ -274,20 +292,24 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
         .as_loaned_c_type_ref()
 }
 
+#[cfg(feature = "unstable")]
 pub use crate::opaque_types::{zcu_moved_matching_listener_t, zcu_owned_matching_listener_t};
+#[cfg(feature = "unstable")]
 decl_c_type!(
     owned(zcu_owned_matching_listener_t, option MatchingListener<'static, ()>),
     moved(zcu_moved_matching_listener_t)
 );
 
+#[cfg(feature = "unstable")]
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct zcu_matching_status_t {
+pub struct zc_matching_status_t {
     /// True if there exist Subscribers matching the Publisher's key expression, false otherwise.
     pub matching: bool,
 }
 
+#[cfg(feature = "unstable")]
 /// Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
 /// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
@@ -297,11 +319,11 @@ pub struct zcu_matching_status_t {
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zcu_publisher_matching_listener_callback(
-    this: &mut MaybeUninit<zcu_owned_matching_listener_t>,
+pub extern "C" fn zc_publisher_matching_listener_callback(
+    this: &mut MaybeUninit<zc_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
     callback: zcu_moved_closure_matching_status_t,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let publisher = publisher.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
@@ -310,7 +332,7 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
-            let status = zcu_matching_status_t {
+            let status = zc_matching_status_t {
                 matching: matching_status.matching_subscribers(),
             };
             zcu_closure_matching_status_call(zcu_closure_matching_status_loan(&callback), &status);
@@ -319,15 +341,16 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
     match listener {
         Ok(listener) => {
             this.write(Some(listener));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
-            errors::Z_EGENERIC
+            tracing::error!("{}", e);
+            result::Z_EGENERIC
         }
     }
 }
 
+#[cfg(feature = "unstable")]
 /// Undeclares the given matching listener, droping and invalidating it.
 ///
 /// @return 0 in case of success, negative error code otherwise.
@@ -335,14 +358,14 @@ pub extern "C" fn zcu_publisher_matching_listener_callback(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zcu_publisher_matching_listener_undeclare(
     this: zcu_moved_matching_listener_t,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     if let Some(p) = this.into_rust_type().take() {
         if let Err(e) = p.undeclare().wait() {
-            log::error!("{}", e);
-            return errors::Z_EGENERIC;
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Undeclares the given matching listener, droping and invalidating it.
@@ -361,14 +384,14 @@ pub extern "C" fn zcu_publisher_matching_listener_drop(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_publisher(this: z_moved_publisher_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_publisher(this: z_moved_publisher_t) -> result::z_result_t {
     if let Some(p) = this.into_rust_type() {
         if let Err(e) = p.undeclare().wait() {
-            log::error!("{}", e);
-            return errors::Z_EGENERIC;
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.

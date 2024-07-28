@@ -12,31 +12,30 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{
-    borrow::Cow,
-    mem::MaybeUninit,
-    ptr::null,
-    slice::from_raw_parts,
-    str::{from_utf8, FromStr},
-};
+use std::{mem::MaybeUninit, ptr::null};
 
-use libc::{c_char, c_ulong};
-use unwrap_infallible::UnwrapInfallible;
+use libc::c_ulong;
 use zenoh::{
-    bytes::Encoding,
     qos::{CongestionControl, Priority},
-    query::{ConsolidationMode, QueryTarget, ReplyKeyExpr},
-    sample::{Locality, Sample, SampleKind, SourceInfo},
-    session::EntityGlobalId,
+    query::{ConsolidationMode, QueryTarget},
+    sample::{Sample, SampleKind},
     time::Timestamp,
 };
+#[cfg(feature = "unstable")]
+use zenoh::{
+    query::ReplyKeyExpr,
+    sample::{Locality, SourceInfo},
+    session::EntityGlobalId,
+};
 
+#[cfg(feature = "unstable")]
+use crate::transmute::IntoCType;
+#[cfg(feature = "unstable")]
+use crate::z_id_t;
 use crate::{
-    errors,
-    transmute::{
-        CTypeRef, IntoCType, IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit,
-    },
-    z_id_t, z_loaned_bytes_t, z_loaned_keyexpr_t, z_owned_string_t, z_string_from_substr,
+    result,
+    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 
 /// A zenoh unsigned integer
@@ -73,27 +72,24 @@ impl From<z_sample_kind_t> for SampleKind {
 use crate::opaque_types::z_timestamp_t;
 decl_c_type!(copy(z_timestamp_t, Timestamp));
 
-/// Create timestamp
+/// Create uhlc timestamp from session id.
 #[no_mangle]
 pub extern "C" fn z_timestamp_new(
     this: &mut MaybeUninit<z_timestamp_t>,
-    zid: &z_id_t,
-    npt64_time: u64,
-) -> errors::z_error_t {
-    let timestamp = Timestamp::new(
-        zenoh::time::NTP64(npt64_time),
-        (zid.into_rust_type()).into(),
-    );
+    session: &z_loaned_session_t,
+) -> result::z_result_t {
+    let timestamp = session.as_rust_type_ref().new_timestamp();
     this.as_rust_type_mut_uninit().write(timestamp);
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Returns NPT64 time associated with this timestamp.
 #[no_mangle]
-pub extern "C" fn z_timestamp_npt64_time(this: &z_timestamp_t) -> u64 {
+pub extern "C" fn z_timestamp_ntp64_time(this: &z_timestamp_t) -> u64 {
     this.as_rust_type_ref().get_time().0
 }
 
+#[cfg(feature = "unstable")]
 /// Returns id associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_id(this: &z_timestamp_t) -> z_id_t {
@@ -143,7 +139,7 @@ pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_time
 
 /// Returns sample attachment.
 ///
-/// Returns `NULL`, if sample does not contain any attachement.
+/// Returns `NULL`, if sample does not contain any attachment.
 #[no_mangle]
 pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
     match this.as_rust_type_ref().attachment() {
@@ -151,7 +147,7 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
         None => null(),
     }
 }
-
+#[cfg(feature = "unstable")]
 /// Returns the sample source_info.
 #[no_mangle]
 pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_source_info_t {
@@ -213,12 +209,11 @@ pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
-pub use crate::opaque_types::{z_loaned_encoding_t, z_moved_encoding_t, z_owned_encoding_t};
+pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 
 decl_c_type!(
     owned(z_owned_encoding_t, Encoding),
     loaned(z_loaned_encoding_t, Encoding),
-    moved(z_moved_encoding_t)
 );
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
@@ -288,8 +283,9 @@ pub extern "C" fn z_encoding_null(this: &mut MaybeUninit<z_owned_encoding_t>) {
 
 /// Frees the memory and resets the encoding it to its default value.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_encoding_drop(this: z_moved_encoding_t) {}
+pub extern "C" fn z_encoding_drop(this: &mut z_owned_encoding_t) {
+    *this.as_rust_type_mut() = Encoding::default();
+}
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]
@@ -306,7 +302,7 @@ pub extern "C" fn z_encoding_loan(this: &z_owned_encoding_t) -> &z_loaned_encodi
 /// The locality of samples to be received by subscribers or targeted by publishers.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub enum zcu_locality_t {
+pub enum zc_locality_t {
     /// Any
     ANY = 0,
     /// Only from local sessions.
@@ -315,63 +311,70 @@ pub enum zcu_locality_t {
     REMOTE = 2,
 }
 
-impl From<Locality> for zcu_locality_t {
+#[cfg(feature = "unstable")]
+impl From<Locality> for zc_locality_t {
     fn from(k: Locality) -> Self {
         match k {
-            Locality::Any => zcu_locality_t::ANY,
-            Locality::SessionLocal => zcu_locality_t::SESSION_LOCAL,
-            Locality::Remote => zcu_locality_t::REMOTE,
+            Locality::Any => zc_locality_t::ANY,
+            Locality::SessionLocal => zc_locality_t::SESSION_LOCAL,
+            Locality::Remote => zc_locality_t::REMOTE,
         }
     }
 }
 
-impl From<zcu_locality_t> for Locality {
-    fn from(k: zcu_locality_t) -> Self {
+#[cfg(feature = "unstable")]
+impl From<zc_locality_t> for Locality {
+    fn from(k: zc_locality_t) -> Self {
         match k {
-            zcu_locality_t::ANY => Locality::Any,
-            zcu_locality_t::SESSION_LOCAL => Locality::SessionLocal,
-            zcu_locality_t::REMOTE => Locality::Remote,
+            zc_locality_t::ANY => Locality::Any,
+            zc_locality_t::SESSION_LOCAL => Locality::SessionLocal,
+            zc_locality_t::REMOTE => Locality::Remote,
         }
     }
 }
 
-/// Returns default value of `zcu_locality_t`
+#[cfg(feature = "unstable")]
+/// Returns default value of `zc_locality_t`
 #[no_mangle]
-pub extern "C" fn zcu_locality_default() -> zcu_locality_t {
+pub extern "C" fn zc_locality_default() -> zc_locality_t {
     Locality::default().into()
 }
 
+#[cfg(feature = "unstable")]
 /// Key expressions types to which Queryable should reply to.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub enum zcu_reply_keyexpr_t {
+pub enum zc_reply_keyexpr_t {
     /// Replies to any key expression queries.
     ANY = 0,
     /// Replies only to queries with intersecting key expressions.
     MATCHING_QUERY = 1,
 }
 
-impl From<ReplyKeyExpr> for zcu_reply_keyexpr_t {
+#[cfg(feature = "unstable")]
+impl From<ReplyKeyExpr> for zc_reply_keyexpr_t {
     fn from(k: ReplyKeyExpr) -> Self {
         match k {
-            ReplyKeyExpr::Any => zcu_reply_keyexpr_t::ANY,
-            ReplyKeyExpr::MatchingQuery => zcu_reply_keyexpr_t::MATCHING_QUERY,
+            ReplyKeyExpr::Any => zc_reply_keyexpr_t::ANY,
+            ReplyKeyExpr::MatchingQuery => zc_reply_keyexpr_t::MATCHING_QUERY,
         }
     }
 }
 
-impl From<zcu_reply_keyexpr_t> for ReplyKeyExpr {
-    fn from(k: zcu_reply_keyexpr_t) -> Self {
+#[cfg(feature = "unstable")]
+impl From<zc_reply_keyexpr_t> for ReplyKeyExpr {
+    fn from(k: zc_reply_keyexpr_t) -> Self {
         match k {
-            zcu_reply_keyexpr_t::ANY => ReplyKeyExpr::Any,
-            zcu_reply_keyexpr_t::MATCHING_QUERY => ReplyKeyExpr::MatchingQuery,
+            zc_reply_keyexpr_t::ANY => ReplyKeyExpr::Any,
+            zc_reply_keyexpr_t::MATCHING_QUERY => ReplyKeyExpr::MatchingQuery,
         }
     }
 }
 
-/// Returns the default value of #zcu_reply_keyexpr_t.
+#[cfg(feature = "unstable")]
+/// Returns the default value of #zc_reply_keyexpr_t.
 #[no_mangle]
-pub extern "C" fn zcu_reply_keyexpr_default() -> zcu_reply_keyexpr_t {
+pub extern "C" fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }
 
@@ -544,44 +547,48 @@ impl From<z_congestion_control_t> for CongestionControl {
     }
 }
 
+#[cfg(feature = "unstable")]
 use crate::z_entity_global_id_t;
+#[cfg(feature = "unstable")]
 decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 
+#[cfg(feature = "unstable")]
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
     this.as_rust_type_ref().zid().into_c_type()
 }
+#[cfg(feature = "unstable")]
 /// Returns the entity id of the entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
     this.as_rust_type_ref().eid()
 }
-pub use crate::opaque_types::{
-    z_loaned_source_info_t, z_moved_source_info_t, z_owned_source_info_t,
-};
+pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),
     moved(z_moved_source_info_t)
 );
 
+#[cfg(feature = "unstable")]
 /// Create source info
 #[no_mangle]
 pub extern "C" fn z_source_info_new(
     this: &mut MaybeUninit<z_owned_source_info_t>,
     source_id: &z_entity_global_id_t,
     source_sn: u64,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let source_info = SourceInfo {
         source_id: Some(*source_id.as_rust_type_ref()),
         source_sn: Some(source_sn),
     };
     this.write(source_info);
-    errors::Z_OK
+    result::Z_OK
 }
 
+#[cfg(feature = "unstable")]
 /// Returns the source_id of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_global_id_t {
@@ -592,29 +599,34 @@ pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_gl
     .into_c_type()
 }
 
+#[cfg(feature = "unstable")]
 /// Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> u64 {
     this.as_rust_type_ref().source_sn.unwrap_or(0)
 }
 
+#[cfg(feature = "unstable")]
 /// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_check(this: &z_owned_source_info_t) -> bool {
     this.as_rust_type_ref().source_id.is_some() || this.as_rust_type_ref().source_sn.is_some()
 }
 
+#[cfg(feature = "unstable")]
 /// Borrows source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_source_info_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+#[cfg(feature = "unstable")]
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
 #[allow(unused_variables)]
 pub extern "C" fn z_source_info_drop(this: z_moved_source_info_t) {}
 
+#[cfg(feature = "unstable")]
 /// Constructs source info in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_null(this: &mut MaybeUninit<z_owned_source_info_t>) {

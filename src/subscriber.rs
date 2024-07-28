@@ -21,10 +21,10 @@ use zenoh::{
 };
 
 use crate::{
-    errors,
     keyexpr::*,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_owned_closure_sample_t,
 };
 
 /// The subscription reliability.
@@ -114,7 +114,7 @@ pub extern "C" fn z_declare_subscriber(
     key_expr: &z_loaned_keyexpr_t,
     callback: z_moved_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
@@ -134,12 +134,12 @@ pub extern "C" fn z_declare_subscriber(
     match subscriber.wait() {
         Ok(sub) => {
             this.write(Some(sub));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             this.write(None);
-            errors::Z_EGENERIC
+            result::Z_EGENERIC
         }
     }
 }
@@ -159,14 +159,14 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> errors::z_error_t {
+pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> result::z_result_t {
     if let Some(s) = this.into_rust_type() {
         if let Err(e) = s.undeclare().wait() {
-            log::error!("{}", e);
-            return errors::Z_EGENERIC;
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
         }
     }
-    errors::Z_OK
+    result::Z_OK
 }
 
 /// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.

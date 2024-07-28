@@ -15,10 +15,8 @@
 use std::fmt::Debug;
 
 use libc::c_void;
-use zenoh::{
-    internal::zerror,
-    shm::{ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend},
-    Result,
+use zenoh::shm::{
+    ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend, ZLayoutError,
 };
 
 use super::chunk::z_chunk_descriptor_t;
@@ -94,11 +92,11 @@ where
         unsafe { (self.callbacks.available_fn)(self.context.get()) }
     }
 
-    fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout> {
+    fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout, ZLayoutError> {
         let mut layout = Some(layout);
         unsafe {
             (self.callbacks.layout_for_fn)(layout.as_owned_c_type_mut(), self.context.get());
         }
-        layout.ok_or_else(|| zerror!("{:?}: unsupported layout", self).into())
+        layout.ok_or(ZLayoutError::ProviderIncompatibleLayout)
     }
 }

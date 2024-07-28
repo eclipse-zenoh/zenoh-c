@@ -2,6 +2,8 @@ message(STATUS "zenoh-c tests")
 
 add_custom_target(tests)
 
+find_package(Threads REQUIRED)
+
 file(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 foreach(file ${files})
     get_filename_component(target ${file} NAME_WE)
@@ -9,6 +11,13 @@ foreach(file ${files})
     # Exclude SHM tests if SHM feature is disabled
     if(NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY))
 	    if(${target} MATCHES "^.*_shm.*$")
+            continue()
+        endif()
+    endif()
+
+    # Exclude Liveliness and zenoh-ext tests if unstable api feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+	    if((${target} MATCHES "^.*_liveliness.*$") OR (${target} MATCHES "^.*_query_sub_test.*$"))
             continue()
         endif()
     endif()
@@ -27,7 +36,7 @@ foreach(file ${files})
     add_executable(${target} EXCLUDE_FROM_ALL ${file})
     add_dependencies(tests ${target})
     add_dependencies(${target} zenohc::lib)
-    target_link_libraries(${target} PRIVATE zenohc::lib)
+    target_link_libraries(${target} PRIVATE zenohc::lib Threads::Threads)
     copy_dlls(${target})
     set_property(TARGET ${target} PROPERTY C_STANDARD 11)
     add_test(NAME "${test_type}_${target}" COMMAND ${target})

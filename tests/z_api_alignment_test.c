@@ -26,12 +26,14 @@
 
 char *value = "Test value";
 
+#ifdef UNSTABLE
 volatile unsigned int zids = 0;
 void zid_handler(const z_id_t *id, void *arg) {
     (void)(arg);
     (void)(id);
     zids++;
 }
+#endif
 
 volatile unsigned int hellos = 0;
 void hello_handler(const z_loaned_hello_t *hello, void *arg) {
@@ -198,6 +200,8 @@ int main(int argc, char **argv) {
     z_owned_session_t s1;
     assert(0 == z_open(&s1, z_move(_ret_config)));
     assert(z_check(s1));
+
+#ifdef UNSTABLE
     z_id_t _ret_zid = z_info_zid(z_loan(s1));
     printf("Session 1 with PID: 0x");
     for (unsigned long i = 0; i < sizeof(_ret_zid); i++) {
@@ -218,6 +222,7 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
     assert(zids == 1);
+#endif
 
 #ifdef ZENOH_PICO
     zp_task_read_options_t _ret_read_opt = zp_task_read_options_default();
@@ -240,12 +245,15 @@ int main(int argc, char **argv) {
     z_owned_session_t s2;
     assert(0 == z_open(&s2, z_move(_ret_config)));
     assert(z_check(s2));
+
+#ifdef UNSTABLE
     _ret_zid = z_info_zid(z_loan(s2));
     printf("Session 2 with PID: 0x");
     for (unsigned long i = 0; i < sizeof(_ret_zid); i++) {
         printf("%.2X", _ret_zid.id[i]);
     }
     printf("\n");
+#endif
 
 #ifdef ZENOH_PICO
     zp_start_read_task(z_loan(s2), NULL);

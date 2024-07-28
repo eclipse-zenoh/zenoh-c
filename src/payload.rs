@@ -26,14 +26,13 @@ use zenoh::{
     internal::buffers::{ZBuf, ZSlice, ZSliceBuffer},
 };
 
+pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::errors::Z_ENULL;
-pub use crate::opaque_types::{z_loaned_bytes_t, z_moved_bytes_t, z_owned_bytes_t};
+use crate::result::Z_ENULL;
 use crate::{
-    errors::{self, z_error_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_slice_map_t, z_owned_slice_map_t, z_owned_slice_t, z_owned_string_t, CSlice,
-    CSliceOwned, CStringOwned, ZHashMap,
+    result::{self, z_result_t, Z_EIO, Z_EPARSE, Z_OK},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
@@ -107,42 +106,19 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
 pub unsafe extern "C" fn z_bytes_deserialize_into_string(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_string_t>,
-) -> z_error_t {
+) -> z_result_t {
     let payload = this.as_rust_type_ref();
     match payload.deserialize::<String>() {
         Ok(s) => {
             dst.as_rust_type_mut_uninit().write(s.into());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {}", e);
+            tracing::error!("Failed to deserialize the payload: {}", e);
             dst.as_rust_type_mut_uninit().write(CStringOwned::default());
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
-}
-
-/// Deserializes data into an owned bytes map.
-///
-/// @param this_: Data to deserialize.
-/// @param dst: An uninitialized memory location where to construct a deserialized map.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
-    this: &z_loaned_bytes_t,
-    dst: &mut MaybeUninit<z_owned_slice_map_t>,
-) -> z_error_t {
-    let dst = dst.as_rust_type_mut_uninit();
-    let payload = this.as_rust_type_ref();
-    let iter = payload.iter::<(Vec<u8>, Vec<u8>)>();
-    let mut hm = ZHashMap::new();
-
-    let iter = iter.filter_map(|val| val.ok());
-    for (k, v) in iter {
-        hm.insert(k.into(), v.into());
-    }
-    dst.write(Some(hm));
-    errors::Z_OK
 }
 
 /// Deserializes data into an owned slice.
@@ -154,17 +130,17 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice_map(
 pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_slice_t>,
-) -> z_error_t {
+) -> z_result_t {
     let payload = this.as_rust_type_ref();
     match payload.deserialize::<Vec<u8>>() {
         Ok(v) => {
             dst.as_rust_type_mut_uninit().write(v.into());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to read the payload: {}", e);
+            tracing::error!("Failed to read the payload: {}", e);
             dst.as_rust_type_mut_uninit().write(CSliceOwned::default());
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -179,19 +155,19 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
 pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_shm_t>,
-) -> z_error_t {
+) -> z_result_t {
     use zenoh::shm::zshm;
 
     let payload = this.as_rust_type_ref();
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
             dst.as_rust_type_mut_uninit().write(Some(s.to_owned()));
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {:?}", e);
+            tracing::error!("Failed to deserialize the payload: {:?}", e);
             dst.as_rust_type_mut_uninit().write(None);
-            errors::Z_EIO
+            result::Z_EIO
         }
     }
 }
@@ -200,24 +176,24 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
 /// Deserializes data into a loaned SHM buffer
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An uninitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
     this: &'static z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static z_loaned_shm_t>,
-) -> z_error_t {
+) -> z_result_t {
     use zenoh::shm::zshm;
 
     let payload = this.as_rust_type_ref();
     match payload.deserialize::<&zshm>() {
         Ok(s) => {
             dst.write(s.as_loaned_c_type_ref());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {:?}", e);
-            errors::Z_EIO
+            tracing::error!("Failed to deserialize the payload: {:?}", e);
+            result::Z_EIO
         }
     }
 }
@@ -226,24 +202,24 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
 /// Deserializes data into a mutably loaned SHM buffer
 ///
 /// @param this_: Data to deserialize.
-/// @param dst: An uninitialized memory location where to construct a deserialized string.
+/// @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_deserialize_into_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
-) -> z_error_t {
+) -> z_result_t {
     use zenoh::shm::zshm;
 
     let payload = this.as_rust_type_mut();
     match payload.deserialize_mut::<&mut zshm>() {
         Ok(s) => {
             dst.write(s.as_loaned_c_type_mut());
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {:?}", e);
-            errors::Z_EIO
+            tracing::error!("Failed to deserialize the payload: {:?}", e);
+            result::Z_EIO
         }
     }
 }
@@ -286,7 +262,7 @@ where
 fn z_bytes_deserialize_into_arithmetic<'a, T>(
     this: &'a z_loaned_bytes_t,
     val: &'a mut T,
-) -> z_error_t
+) -> z_result_t
 where
     ZSerde: Deserialize<T, Input<'a> = &'a ZBytes>,
     <ZSerde as Deserialize<T>>::Error: fmt::Debug,
@@ -294,11 +270,11 @@ where
     match this.as_rust_type_ref().deserialize::<T>() {
         Ok(v) => {
             *val = v;
-            errors::Z_OK
+            result::Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {:?}", e);
-            errors::Z_EPARSE
+            tracing::error!("Failed to deserialize the payload: {:?}", e);
+            result::Z_EPARSE
         }
     }
 }
@@ -368,7 +344,7 @@ pub extern "C" fn z_bytes_serialize_from_double(this: &mut MaybeUninit<z_owned_b
 pub extern "C" fn z_bytes_deserialize_into_uint8(
     this: &z_loaned_bytes_t,
     dst: &mut u8,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<u8>(this, dst)
 }
 
@@ -378,7 +354,7 @@ pub extern "C" fn z_bytes_deserialize_into_uint8(
 pub extern "C" fn z_bytes_deserialize_into_uint16(
     this: &z_loaned_bytes_t,
     dst: &mut u16,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<u16>(this, dst)
 }
 
@@ -388,7 +364,7 @@ pub extern "C" fn z_bytes_deserialize_into_uint16(
 pub extern "C" fn z_bytes_deserialize_into_uint32(
     this: &z_loaned_bytes_t,
     dst: &mut u32,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<u32>(this, dst)
 }
 
@@ -398,7 +374,7 @@ pub extern "C" fn z_bytes_deserialize_into_uint32(
 pub extern "C" fn z_bytes_deserialize_into_uint64(
     this: &z_loaned_bytes_t,
     dst: &mut u64,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<u64>(this, dst)
 }
 
@@ -408,7 +384,7 @@ pub extern "C" fn z_bytes_deserialize_into_uint64(
 pub extern "C" fn z_bytes_deserialize_into_int8(
     this: &z_loaned_bytes_t,
     dst: &mut i8,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<i8>(this, dst)
 }
 
@@ -418,7 +394,7 @@ pub extern "C" fn z_bytes_deserialize_into_int8(
 pub extern "C" fn z_bytes_deserialize_into_int16(
     this: &z_loaned_bytes_t,
     dst: &mut i16,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<i16>(this, dst)
 }
 
@@ -428,7 +404,7 @@ pub extern "C" fn z_bytes_deserialize_into_int16(
 pub extern "C" fn z_bytes_deserialize_into_int32(
     this: &z_loaned_bytes_t,
     dst: &mut i32,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<i32>(this, dst)
 }
 
@@ -438,7 +414,7 @@ pub extern "C" fn z_bytes_deserialize_into_int32(
 pub extern "C" fn z_bytes_deserialize_into_int64(
     this: &z_loaned_bytes_t,
     dst: &mut i64,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<i64>(this, dst)
 }
 
@@ -448,7 +424,7 @@ pub extern "C" fn z_bytes_deserialize_into_int64(
 pub extern "C" fn z_bytes_deserialize_into_float(
     this: &z_loaned_bytes_t,
     dst: &mut f32,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<f32>(this, dst)
 }
 
@@ -458,7 +434,7 @@ pub extern "C" fn z_bytes_deserialize_into_float(
 pub extern "C" fn z_bytes_deserialize_into_double(
     this: &z_loaned_bytes_t,
     dst: &mut f64,
-) -> z_error_t {
+) -> z_result_t {
     z_bytes_deserialize_into_arithmetic::<f64>(this, dst)
 }
 
@@ -485,40 +461,6 @@ pub unsafe extern "C" fn z_bytes_serialize_from_slice_copy(
 ) {
     let s = CSlice::new_owned_unchecked(data, len);
     let payload = ZBytes::from(ZSlice::from(s));
-    this.as_rust_type_mut_uninit().write(payload);
-}
-
-/// Serializes slice map by aliasing.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_slice_map(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    bytes_map: &z_loaned_slice_map_t,
-) {
-    let hm = bytes_map.as_rust_type_ref();
-    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
-        (
-            CSlice::new_borrowed_unchecked(k.data(), k.len()),
-            CSlice::new_borrowed_unchecked(v.data(), v.len()),
-        )
-    }));
-    this.as_rust_type_mut_uninit().write(payload);
-}
-
-/// Serializes slice map by copying.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_slice_map_copy(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    bytes_map: &z_loaned_slice_map_t,
-) {
-    let hm = bytes_map.as_rust_type_ref();
-    let payload = ZBytes::from_iter(hm.iter().map(|(k, v)| {
-        (
-            CSlice::new_owned_unchecked(k.data(), k.len()),
-            CSlice::new_owned_unchecked(v.data(), v.len()),
-        )
-    }));
     this.as_rust_type_mut_uninit().write(payload);
 }
 
@@ -549,7 +491,7 @@ pub extern "C" fn z_bytes_serialize_from_pair(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     first: z_moved_bytes_t,
     second: z_moved_bytes_t,
-) -> z_error_t {
+) -> z_result_t {
     let Some(first) = first.into_rust_type() else {
         return Z_EINVAL;
     };
@@ -568,7 +510,7 @@ pub extern "C" fn z_bytes_deserialize_into_pair(
     this: &z_loaned_bytes_t,
     first: &mut MaybeUninit<z_owned_bytes_t>,
     second: &mut MaybeUninit<z_owned_bytes_t>,
-) -> z_error_t {
+) -> z_result_t {
     match this.as_rust_type_ref().deserialize::<(ZBytes, ZBytes)>() {
         Ok((a, b)) => {
             first.as_rust_type_mut_uninit().write(a);
@@ -576,7 +518,7 @@ pub extern "C" fn z_bytes_deserialize_into_pair(
             Z_OK
         }
         Err(e) => {
-            log::error!("Failed to deserialize the payload: {:?}", e);
+            tracing::error!("Failed to deserialize the payload: {:?}", e);
             Z_EPARSE
         }
     }
@@ -616,7 +558,7 @@ pub extern "C" fn z_bytes_serialize_from_iter(
         context: *mut c_void,
     ) -> bool,
     context: *mut c_void,
-) -> z_error_t {
+) -> z_result_t {
     let it = ZBytesInIterator {
         body: iterator_body,
         context,
@@ -664,27 +606,6 @@ pub extern "C" fn z_bytes_iterator_next(
     }
 }
 
-/// Returns an iterator for multi-element serialized data.
-/// @param this_: Data to deserialize.
-#[no_mangle]
-pub extern "C" fn z_bytes_iter(
-    this: &z_loaned_bytes_t,
-    iterator_body: extern "C" fn(data: &z_loaned_bytes_t, context: *mut c_void) -> z_error_t,
-    context: *mut c_void,
-) -> z_error_t {
-    let mut res = Z_OK;
-    for zb in this.as_rust_type_ref().iter::<ZBytes>() {
-        // this is safe because literally any payload is convertable into ZBuf
-        let b = unsafe { zb.unwrap_unchecked() };
-        res = iterator_body(b.as_loaned_c_type_ref(), context);
-        if res != Z_OK {
-            break;
-        }
-    }
-
-    res
-}
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// Serializes from an immutable SHM buffer consuming it
 #[no_mangle]
@@ -692,24 +613,12 @@ pub extern "C" fn z_bytes_iter(
 pub unsafe extern "C" fn z_bytes_serialize_from_shm(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     shm: z_moved_shm_t,
-) -> z_error_t {
+) -> z_result_t {
     let Some(shm) = shm.into_rust_type() else {
         return Z_ENULL;
     };
     this.as_rust_type_mut_uninit().write(shm.into());
     Z_OK
-}
-
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Serializes from an immutable SHM buffer copying it
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_shm_copy(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    shm: &z_loaned_shm_t,
-) {
-    this.as_rust_type_mut_uninit()
-        .write(shm.as_rust_type_ref().to_owned().into());
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -719,7 +628,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm_copy(
 pub unsafe extern "C" fn z_bytes_serialize_from_shm_mut(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     shm: z_moved_shm_mut_t,
-) -> z_error_t {
+) -> z_result_t {
     let Some(shm) = shm.into_rust_type() else {
         return Z_ENULL;
     };
@@ -766,25 +675,25 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
     this: &mut z_bytes_reader_t,
     offset: i64,
     origin: libc::c_int,
-) -> z_error_t {
+) -> z_result_t {
     let reader = this.as_rust_type_mut();
     let pos = match origin {
         libc::SEEK_SET => match offset.try_into() {
             Ok(o) => SeekFrom::Start(o),
             Err(_) => {
-                return errors::Z_EINVAL;
+                return result::Z_EINVAL;
             }
         },
         libc::SEEK_CUR => SeekFrom::Current(offset),
         libc::SEEK_END => SeekFrom::End(offset),
         _ => {
-            return errors::Z_EINVAL;
+            return result::Z_EINVAL;
         }
     };
 
     match reader.seek(pos) {
-        Ok(_) => errors::Z_OK,
-        Err(_) => errors::Z_EINVAL,
+        Ok(_) => result::Z_OK,
+        Err(_) => result::Z_EINVAL,
     }
 }
 
@@ -868,7 +777,7 @@ unsafe extern "C" fn z_bytes_writer_write(
     this: &mut z_loaned_bytes_writer_t,
     src: *const u8,
     len: usize,
-) -> z_error_t {
+) -> z_result_t {
     match this.as_rust_type_mut().write(from_raw_parts(src, len)) {
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,

@@ -22,10 +22,8 @@ use zenoh::{
 //
 use crate::commons::*;
 use crate::{
-    errors,
-    keyexpr::*,
-    transmute::{IntoRustType, RustTypeRef, TakeRustType},
-    z_loaned_session_t, z_moved_bytes_t, z_timestamp_t,
+    commons::*, encoding::*, keyexpr::*, result, transmute::RustTypeRef, z_loaned_session_t,
+    z_owned_bytes_t, z_timestamp_t,
 };
 
 /// Options passed to the `z_put()` function.
@@ -43,8 +41,10 @@ pub struct z_put_options_t {
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The allowed destination of this message.
-    pub allowed_destination: zcu_locality_t,
+    #[cfg(feature = "unstable")]
+    pub allowed_destination: zc_locality_t,
     /// The source info for the message.
+    #[cfg(feature = "unstable")]
     pub source_info: z_moved_source_info_t,
     /// The attachment to this message.
     pub attachment: z_moved_bytes_t,
@@ -60,7 +60,9 @@ pub extern "C" fn z_put_options_default(this: &mut MaybeUninit<z_put_options_t>)
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
+        #[cfg(feature = "unstable")]
         allowed_destination: zcu_locality_default(),
+        #[cfg(feature = "unstable")]
         source_info: None.into(),
         attachment: None.into(),
     });
@@ -81,7 +83,7 @@ pub extern "C" fn z_put(
     key_expr: &z_loaned_keyexpr_t,
     payload: z_moved_bytes_t,
     options: Option<&mut z_put_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let Some(payload) = payload.into_rust_type() else {
@@ -93,6 +95,7 @@ pub extern "C" fn z_put(
         if let Some(encoding) = options.encoding.take_rust_type() {
             put = put.encoding(encoding);
         };
+        #[cfg(feature = "unstable")]
         if let Some(source_info) = options.source_info.take_rust_type() {
             put = put.source_info(source_info);
         };
@@ -105,14 +108,17 @@ pub extern "C" fn z_put(
         put = put.priority(options.priority.into());
         put = put.congestion_control(options.congestion_control.into());
         put = put.express(options.is_express);
-        put = put.allowed_destination(options.allowed_destination.into());
+        #[cfg(feature = "unstable")]
+        {
+            put = put.allowed_destination(options.allowed_destination.into());
+        }
     }
 
     if let Err(e) = put.wait() {
-        log::error!("{}", e);
-        errors::Z_EGENERIC
+        tracing::error!("{}", e);
+        result::Z_EGENERIC
     } else {
-        errors::Z_OK
+        result::Z_OK
     }
 }
 
@@ -129,7 +135,8 @@ pub struct z_delete_options_t {
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The allowed destination of this message.
-    pub allowed_destination: zcu_locality_t,
+    #[cfg(feature = "unstable")]
+    pub allowed_destination: zc_locality_t,
 }
 
 /// Constructs the default value for `z_delete_options_t`.
@@ -141,6 +148,7 @@ pub unsafe extern "C" fn z_delete_options_default(this: &mut MaybeUninit<z_delet
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
+        #[cfg(feature = "unstable")]
         allowed_destination: zcu_locality_default(),
     });
 }
@@ -158,7 +166,7 @@ pub extern "C" fn z_delete(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,
-) -> errors::z_error_t {
+) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);
@@ -169,15 +177,19 @@ pub extern "C" fn z_delete(
         del = del
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express)
-            .allowed_destination(options.allowed_destination.into());
+            .express(options.is_express);
+
+        #[cfg(feature = "unstable")]
+        {
+            del = del.allowed_destination(options.allowed_destination.into());
+        }
     }
 
     match del.wait() {
         Err(e) => {
-            log::error!("{}", e);
-            errors::Z_EGENERIC
+            tracing::error!("{}", e);
+            result::Z_EGENERIC
         }
-        Ok(()) => errors::Z_OK,
+        Ok(()) => result::Z_OK,
     }
 }

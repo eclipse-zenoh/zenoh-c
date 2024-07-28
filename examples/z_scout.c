@@ -15,6 +15,7 @@
 
 #include "zenoh.h"
 
+#ifdef UNSTABLE
 void fprintpid(FILE *stream, z_id_t pid) {
     int len = 0;
     for (int i = 0; i < 16; i++) {
@@ -32,6 +33,7 @@ void fprintpid(FILE *stream, z_id_t pid) {
         fprintf(stream, ")");
     }
 }
+#endif
 
 void fprintwhatami(FILE *stream, z_whatami_t whatami) {
     z_view_string_t whatami_str;
@@ -55,7 +57,9 @@ void fprintlocators(FILE *stream, const z_loaned_string_array_t *locs) {
 
 void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
     fprintf(stream, "Hello { pid: ");
+#ifdef UNSTABLE
     fprintpid(stream, z_hello_zid(hello));
+#endif
     fprintf(stream, ", whatami: ");
     fprintwhatami(stream, z_hello_whatami(hello));
 

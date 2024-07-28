@@ -39,6 +39,19 @@ int main(int argc, char** argv) {
     } else {
         z_config_default(&config);
     }
+
+#ifdef SHARED_MEMORY
+    // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
+    // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
+        printf(
+            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
+            "JSON-serialized value\n",
+            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
+        exit(-1);
+    }
+#endif
+
     z_owned_session_t session;
     z_open(&session, z_move(config));
     z_view_keyexpr_t ping;

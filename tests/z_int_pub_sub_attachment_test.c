@@ -31,15 +31,15 @@ const char *const K_VAR = "k_var";
 const char *const K_CONST = "k_const";
 const char *const V_CONST = "v const";
 
-typedef struct attachement_context_t {
+typedef struct attachment_context_t {
     const char *keys[2];
     const char *values[2];
     size_t num_items;
     size_t iteration_index;
-} attachement_context_t;
+} attachment_context_t;
 
-bool create_attachement_it(z_owned_bytes_t *kv_pair, void *context) {
-    attachement_context_t *ctx = (attachement_context_t *)(context);
+bool create_attachment_it(z_owned_bytes_t *kv_pair, void *context) {
+    attachment_context_t *ctx = (attachment_context_t *)(context);
     z_owned_bytes_t k, v;
     if (ctx->iteration_index >= ctx->num_items) {
         return false;
@@ -53,8 +53,8 @@ bool create_attachement_it(z_owned_bytes_t *kv_pair, void *context) {
     return true;
 };
 
-z_error_t check_attachement(const z_loaned_bytes_t *attachement, const attachement_context_t *ctx) {
-    z_bytes_iterator_t iter = z_bytes_get_iterator(attachement);
+z_result_t check_attachment(const z_loaned_bytes_t *attachment, const attachment_context_t *ctx) {
+    z_bytes_iterator_t iter = z_bytes_get_iterator(attachment);
     for (size_t i = 0; i < ctx->num_items; i++) {
         z_owned_bytes_t kv, k, v;
         if (!z_bytes_iterator_next(&iter, &kv)) {
@@ -109,11 +109,11 @@ int run_publisher() {
     z_publisher_put_options_default(&options);
 
     for (int i = 0; i < values_count; ++i) {
-        attachement_context_t out_attachment_context = (attachement_context_t){
+        attachment_context_t out_attachment_context = (attachment_context_t){
             .keys = {K_CONST, K_VAR}, .values = {V_CONST, values[i]}, .num_items = 2, .iteration_index = 0};
 
         z_owned_bytes_t attachment;
-        z_bytes_serialize_from_iter(&attachment, create_attachement_it, (void *)&out_attachment_context);
+        z_bytes_serialize_from_iter(&attachment, create_attachment_it, (void *)&out_attachment_context);
 
         options.attachment = z_move(attachment);
 
@@ -152,9 +152,9 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         exit(-1);
     }
 
-    attachement_context_t in_attachment_context = (attachement_context_t){
+    attachment_context_t in_attachment_context = (attachment_context_t){
         .keys = {K_CONST, K_VAR}, .values = {V_CONST, values[val_num]}, .num_items = 2, .iteration_index = 0};
-    if (check_attachement(attachment, &in_attachment_context) != 0) {
+    if (check_attachment(attachment, &in_attachment_context) != 0) {
         perror("Failed to validate attachment");
         exit(-1);
     }

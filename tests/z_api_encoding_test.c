@@ -75,8 +75,41 @@ void test_encoding_with_id(void) {
     z_string_drop(z_move(s));
 }
 
+void test_with_schema(void) {
+    z_owned_encoding_t e;
+    z_encoding_null(&e);
+    z_encoding_set_schema_from_str(z_encoding_loan_mut(&e), "my_schema");
+
+    z_owned_string_t s;
+    z_encoding_to_string(z_encoding_loan_mut(&e), &s);
+    assert(strncmp("zenoh/bytes;my_schema", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
+    z_encoding_drop(z_move(e));
+
+    z_encoding_clone(&e, z_encoding_zenoh_string());
+    z_encoding_set_schema_from_substr(z_encoding_loan_mut(&e), "my_schema", 3);
+
+    z_encoding_to_string(z_encoding_loan(&e), &s);
+    assert(strncmp("zenoh/string;my_", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
+    z_encoding_drop(z_move(e));
+    z_string_drop(z_move(s));
+}
+
+void test_constants() {
+    z_owned_string_t s;
+    z_encoding_to_string(z_encoding_zenoh_bytes(), &s);
+    assert(strncmp("zenoh/bytes", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
+    z_string_drop(z_move(s));
+
+    z_encoding_to_string(z_encoding_zenoh_string(), &s);
+    assert(strncmp("zenoh/string", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
+
+    z_string_drop(z_move(s));
+}
+
 int main(int argc, char **argv) {
     test_null_encoding();
     test_encoding_without_id();
     test_encoding_with_id();
+    test_constants();
+    test_with_schema();
 }

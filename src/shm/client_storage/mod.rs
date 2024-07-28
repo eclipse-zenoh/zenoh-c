@@ -18,11 +18,10 @@ use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE}
 
 use super::common::types::z_protocol_id_t;
 use crate::{
-    errors::{z_error_t, Z_EINVAL, Z_OK},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_client_storage_t, z_moved_shm_client_storage_t, z_moved_shm_client_t,
-    z_owned_shm_client_storage_t, zc_loaned_shm_client_list_t, zc_moved_shm_client_list_t,
-    zc_owned_shm_client_list_t,
+    result::{z_result_t, Z_EINVAL, Z_OK},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_shm_client_storage_t, z_owned_shm_client_storage_t, z_owned_shm_client_t,
+    zc_loaned_shm_client_list_t, zc_owned_shm_client_list_t,
 };
 
 decl_c_type!(
@@ -33,12 +32,9 @@ decl_c_type!(
 
 /// Creates a new empty list of SHM Clients
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_new(
-    this: &mut MaybeUninit<zc_owned_shm_client_list_t>,
-) -> z_error_t {
+pub extern "C" fn zc_shm_client_list_new(this: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
     let client_list: Vec<(ProtocolID, Arc<dyn ShmClient>)> = Vec::default();
     this.as_rust_type_mut_uninit().write(Some(client_list));
-    Z_OK
 }
 
 /// Constructs SHM client list in its gravestone value.
@@ -87,7 +83,7 @@ pub extern "C" fn zc_shm_client_list_add_client(
     id: z_protocol_id_t,
     client: z_moved_shm_client_t,
     list: &mut zc_loaned_shm_client_list_t,
-) -> z_error_t {
+) -> z_result_t {
     let Some(client) = client.into_rust_type() else {
         return Z_EINVAL;
     };
@@ -104,22 +100,20 @@ decl_c_type!(
 #[no_mangle]
 pub extern "C" fn z_ref_shm_client_storage_global(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
-) -> z_error_t {
+) {
     this.as_rust_type_mut_uninit()
         .write(Some(GLOBAL_CLIENT_STORAGE.clone()));
-    Z_OK
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_new_default(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
-) -> z_error_t {
+) {
     this.as_rust_type_mut_uninit().write(Some(Arc::new(
         ShmClientStorage::builder()
             .with_default_client_set()
             .build(),
     )));
-    Z_OK
 }
 
 #[no_mangle]
@@ -127,7 +121,7 @@ pub extern "C" fn z_shm_client_storage_new(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
     clients: &zc_loaned_shm_client_list_t,
     add_default_client_set: bool,
-) -> z_error_t {
+) -> z_result_t {
     let clients = clients.as_rust_type_ref();
     if clients.is_empty() {
         return Z_EINVAL;
@@ -142,6 +136,16 @@ pub extern "C" fn z_shm_client_storage_new(
     this.as_rust_type_mut_uninit()
         .write(Some(Arc::new(builder.build())));
     Z_OK
+}
+
+/// Performs a shallow copy of SHM Client Storage
+#[no_mangle]
+pub extern "C" fn z_shm_client_storage_clone(
+    this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
+    from: &z_loaned_shm_client_storage_t,
+) {
+    this.as_rust_type_mut_uninit()
+        .write(Some(from.as_rust_type_ref().clone()));
 }
 
 /// Constructs SHM Client Storage in its gravestone value.

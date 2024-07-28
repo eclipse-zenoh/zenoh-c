@@ -28,14 +28,14 @@ use super::{
 };
 use crate::{
     context::{zc_context_t, zc_threadsafe_context_t, Context, ThreadsafeContext},
-    errors::z_error_t,
+    result::z_result_t,
     shm::{
         common::types::z_protocol_id_t,
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
+        provider::types::z_buf_layout_alloc_result_t,
     },
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_buf_alloc_result_t, z_owned_shm_mut_t,
-    z_owned_shm_provider_t,
+    z_loaned_shm_provider_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
 pub type DynamicShmProvider = ShmProvider<DynamicProtocolID, DynamicShmProviderBackend<Context>>;
@@ -122,67 +122,66 @@ pub extern "C" fn z_shm_provider_drop(this: z_moved_shm_provider_t) {}
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) {
     alloc::<JustAlloc>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) {
     alloc::<GarbageCollect>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) {
     alloc::<Defragment<GarbageCollect>>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) {
     alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
-    out_result: &mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
-) -> z_error_t {
+) {
     alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
 }
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
-    out_result: &'static mut MaybeUninit<z_owned_buf_alloc_result_t>,
+    out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
-        z_error_t,
-        *mut MaybeUninit<z_owned_buf_alloc_result_t>,
+        *mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
-) -> z_error_t {
+) -> z_result_t {
     alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
         out_result,
         provider,
@@ -194,13 +193,13 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
 }
 
 #[no_mangle]
-pub extern "C" fn z_shm_provider_defragment(provider: &z_loaned_shm_provider_t) {
-    defragment(provider);
+pub extern "C" fn z_shm_provider_defragment(provider: &z_loaned_shm_provider_t) -> usize {
+    defragment(provider)
 }
 
 #[no_mangle]
-pub extern "C" fn z_shm_provider_garbage_collect(provider: &z_loaned_shm_provider_t) {
-    garbage_collect(provider);
+pub extern "C" fn z_shm_provider_garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
+    garbage_collect(provider)
 }
 
 #[no_mangle]
@@ -214,6 +213,6 @@ pub extern "C" fn z_shm_provider_map(
     provider: &z_loaned_shm_provider_t,
     allocated_chunk: z_allocated_chunk_t,
     len: usize,
-) {
-    map(out_result, provider, allocated_chunk, len);
+) -> z_result_t {
+    map(out_result, provider, allocated_chunk, len)
 }
