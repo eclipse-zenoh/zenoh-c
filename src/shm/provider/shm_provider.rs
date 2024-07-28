@@ -35,7 +35,7 @@ use crate::{
         provider::types::z_buf_layout_alloc_result_t,
     },
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_provider_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
+    z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
 pub type DynamicShmProvider = ShmProvider<DynamicProtocolID, DynamicShmProviderBackend<Context>>;

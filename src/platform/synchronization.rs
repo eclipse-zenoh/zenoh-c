@@ -219,11 +219,11 @@ pub extern "C" fn z_task_detach(this: z_moved_task_t) {}
 #[no_mangle]
 pub extern "C" fn z_task_join(this: z_moved_task_t) -> result::z_result_t {
     let Some(task) = this.into_rust_type() else {
-        return errors::Z_OK;
+        return result::Z_OK;
     };
     match task.join() {
-        Ok(_) => errors::Z_OK,
-        Err(_) => errors::Z_EINVAL_MUTEX,
+        Ok(_) => result::Z_OK,
+        Err(_) => result::Z_EINVAL_MUTEX,
     }
 }
 

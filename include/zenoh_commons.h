@@ -824,7 +824,7 @@ typedef struct zc_owned_closure_matching_status_t {
  */
 #if defined(UNSTABLE)
 typedef struct zc_moved_closure_matching_status_t {
-  zcu_owned_closure_matching_status_t *ptr;
+  struct zc_owned_closure_matching_status_t *ptr;
 } zc_moved_closure_matching_status_t;
 #endif
 /**

@@ -13,6 +13,7 @@
 //
 
 use std::{
+    collections::HashMap,
     hash::Hash,
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
@@ -592,11 +593,12 @@ pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
     this.as_rust_type_ref().is_empty()
 }
 
-pub use crate::opaque_types::{z_loaned_slice_map_t, z_owned_slice_map_t};
+pub use crate::opaque_types::{z_loaned_slice_map_t, z_moved_slice_map_t, z_owned_slice_map_t};
 pub type ZHashMap = HashMap<CSlice, CSlice>;
 decl_c_type!(
-    owned(z_owned_slice_map_t, Option<ZHashMap>),
-    loaned(z_loaned_slice_map_t, ZHashMap),
+    owned(z_owned_slice_map_t, option ZHashMap),
+    loaned(z_loaned_slice_map_t),
+    moved(z_moved_slice_map_t),
 );
 
 /// Constructs a new empty map.

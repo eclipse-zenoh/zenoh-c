@@ -46,7 +46,7 @@ pub struct zc_loaned_closure_matching_status_t {
 /// Moved closure.
 #[repr(C)]
 pub struct zc_moved_closure_matching_status_t {
-    pub ptr: Option<&'static mut zcu_owned_closure_matching_status_t>,
+    pub ptr: Option<&'static mut zc_owned_closure_matching_status_t>,
 }
 
 decl_c_type!(
@@ -57,7 +57,7 @@ decl_c_type!(
 
 impl Default for zc_owned_closure_matching_status_t {
     fn default() -> Self {
-        zcu_owned_closure_matching_status_t {
+        zc_owned_closure_matching_status_t {
             context: std::ptr::null_mut(),
             call: None,
             drop: None,
@@ -115,7 +115,7 @@ pub extern "C" fn zc_closure_matching_status_call(
 #[allow(unused_variables)]
 pub extern "C" fn zc_closure_matching_status_drop(closure: zc_moved_closure_matching_status_t) {}
 
-impl<F: Fn(&zcu_matching_status_t)> From<F> for zcu_owned_closure_matching_status_t {
+impl<F: Fn(&zc_matching_status_t)> From<F> for zc_owned_closure_matching_status_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
         extern "C" fn call<F: Fn(&zc_matching_status_t)>(
