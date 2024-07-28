@@ -23,7 +23,7 @@ pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t
 use crate::{
     result::{self, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_hello_call, z_closure_hello_loan, z_owned_closure_hello_t, z_owned_config_t,
+    z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
 };
 #[cfg(feature = "unstable")]
@@ -163,7 +163,7 @@ pub extern "C" fn z_scout(
         zc_init_logger();
     }
     let Some(callback) = callback.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let options = options.cloned().unwrap_or_default();
     let what =
@@ -171,8 +171,8 @@ pub extern "C" fn z_scout(
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
     let Some(config) = config.into_rust_type() else {
-        log::error!("Config not provided");
-        return errors::Z_EINVAL;
+        tracing::error!("Config not provided");
+        return result::Z_EINVAL;
     };
 
     task::block_on(async move {

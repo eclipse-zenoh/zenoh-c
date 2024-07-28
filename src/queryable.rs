@@ -24,13 +24,14 @@ use zenoh::{
 
 pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 #[cfg(feature = "unstable")]
-use crate::z_owned_source_info_t;
+use crate::z_moved_source_info_t;
+
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
-    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
-    z_owned_closure_query_t, z_owned_encoding_t, z_priority_t, z_timestamp_t,
+    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
+    z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
     z_view_string_from_substr, z_view_string_t,
 };
 decl_c_type!(
@@ -225,7 +226,7 @@ pub extern "C" fn z_declare_queryable(
     let session = session.as_rust_type_ref();
     let keyexpr = key_expr.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
@@ -304,7 +305,7 @@ pub extern "C" fn z_query_reply(
     let query = this.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let Some(payload) = payload.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
 
     let mut reply = query.reply(key_expr, payload);
@@ -355,7 +356,7 @@ pub unsafe extern "C" fn z_query_reply_err(
 ) -> result::z_result_t {
     let query = this.as_rust_type_ref();
     let Some(payload) = payload.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
 
     let reply = query.reply_err(payload).encoding(

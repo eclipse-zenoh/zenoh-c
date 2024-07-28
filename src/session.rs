@@ -22,7 +22,7 @@ use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_owned_config_t, zc_init_logger,
+    z_moved_config_t, z_moved_session_t, zc_init_logger,
 };
 decl_c_type!(
     owned(z_owned_session_t, option Arc<Session>),
@@ -128,7 +128,7 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 #[no_mangle]
 pub extern "C" fn z_close(session: z_moved_session_t) -> result::z_result_t {
     let Some(s) = session.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let s = match Arc::try_unwrap(s) {
         Ok(s) => s,

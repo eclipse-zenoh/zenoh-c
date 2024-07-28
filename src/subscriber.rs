@@ -24,7 +24,7 @@ use crate::{
     keyexpr::*,
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_owned_closure_sample_t,
+    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 
 /// The subscription reliability.
@@ -120,7 +120,7 @@ pub extern "C" fn z_declare_subscriber(
     let key_expr = key_expr.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let mut subscriber = session
         .declare_subscriber(key_expr)

@@ -385,6 +385,9 @@ typedef struct z_moved_condvar_t {
 typedef struct z_moved_config_t {
   struct z_owned_config_t *ptr;
 } z_moved_config_t;
+typedef struct z_moved_encoding_t {
+  struct z_owned_encoding_t *ptr;
+} z_moved_encoding_t;
 /**
  * Options passed to the `z_declare_publisher()` function.
  */
@@ -392,7 +395,7 @@ typedef struct z_publisher_options_t {
   /**
    * Default encoding for messages put by this publisher.
    */
-  struct z_owned_encoding_t *encoding;
+  struct z_moved_encoding_t encoding;
   /**
    * The congestion control to apply when routing messages from this publisher.
    */
@@ -472,9 +475,6 @@ typedef struct z_moved_fifo_handler_sample_t {
 typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
-typedef struct z_moved_encoding_t {
-  struct z_owned_encoding_t *ptr;
-} z_moved_encoding_t;
 typedef struct z_moved_source_info_t {
   struct z_owned_source_info_t *ptr;
 } z_moved_source_info_t;
@@ -857,6 +857,9 @@ typedef struct zc_moved_liveliness_token_t {
 typedef struct zc_moved_shm_client_list_t {
   struct zc_owned_shm_client_list_t *ptr;
 } zc_moved_shm_client_list_t;
+typedef struct zc_moved_matching_listener_t {
+  struct zc_owned_matching_listener_t *ptr;
+} zc_moved_matching_listener_t;
 /**
  * Options passed to the `ze_declare_publication_cache()` function.
  */
@@ -4417,7 +4420,7 @@ ZENOHC_API enum zc_locality_t zc_locality_default(void);
 ZENOHC_API
 z_result_t zc_publisher_matching_listener_callback(struct zc_owned_matching_listener_t *this_,
                                                    const struct z_loaned_publisher_t *publisher,
-                                                   zcu_moved_closure_matching_status_t callback);
+                                                   struct zc_moved_closure_matching_status_t callback);
 #endif
 /**
  * Returns the default value of #zc_reply_keyexpr_t.
@@ -4474,7 +4477,8 @@ ZENOHC_API void zc_shm_client_list_null(struct zc_owned_shm_client_list_t *this_
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API z_result_t zcu_publisher_matching_listener_drop(zcu_moved_matching_listener_t this_);
+ZENOHC_API
+z_result_t zcu_publisher_matching_listener_drop(struct zc_moved_matching_listener_t this_);
 /**
  * Undeclares the given matching listener, droping and invalidating it.
  *
@@ -4482,7 +4486,7 @@ ZENOHC_API z_result_t zcu_publisher_matching_listener_drop(zcu_moved_matching_li
  */
 #if defined(UNSTABLE)
 ZENOHC_API
-z_result_t zcu_publisher_matching_listener_undeclare(zcu_moved_matching_listener_t this_);
+z_result_t zcu_publisher_matching_listener_undeclare(struct zc_moved_matching_listener_t this_);
 #endif
 /**
  * Constructs and declares a publication cache.

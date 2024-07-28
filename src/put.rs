@@ -20,11 +20,13 @@ use zenoh::{
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::commons::*;
 use crate::{
-    commons::*, encoding::*, keyexpr::*, result, transmute::RustTypeRef, z_loaned_session_t,
-    z_owned_bytes_t, z_timestamp_t,
+    commons::*, result, transmute::RustTypeRef, z_loaned_session_t, z_moved_bytes_t, z_timestamp_t,
 };
+use crate::{z_loaned_keyexpr_t, z_moved_encoding_t};
+
+#[cfg(feature = "unstable")]
+use crate::z_moved_source_info_t;
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]
@@ -61,7 +63,7 @@ pub extern "C" fn z_put_options_default(this: &mut MaybeUninit<z_put_options_t>)
         is_express: false,
         timestamp: None,
         #[cfg(feature = "unstable")]
-        allowed_destination: zcu_locality_default(),
+        allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
         source_info: None.into(),
         attachment: None.into(),
@@ -87,7 +89,7 @@ pub extern "C" fn z_put(
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let Some(payload) = payload.into_rust_type() else {
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
 
     let mut put = session.put(key_expr, payload);
@@ -149,7 +151,7 @@ pub unsafe extern "C" fn z_delete_options_default(this: &mut MaybeUninit<z_delet
         is_express: false,
         timestamp: None,
         #[cfg(feature = "unstable")]
-        allowed_destination: zcu_locality_default(),
+        allowed_destination: zc_locality_default(),
     });
 }
 

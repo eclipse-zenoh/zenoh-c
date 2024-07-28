@@ -111,6 +111,7 @@
         zc_moved_closure_matching_status_t : zc_closure_matching_status_drop, \
         zc_moved_liveliness_token_t : zc_liveliness_token_drop, \
         zc_moved_shm_client_list_t : zc_shm_client_list_drop, \
+        zc_moved_matching_listener_t : zcu_publisher_matching_listener_drop, \
         ze_moved_publication_cache_t : ze_publication_cache_drop, \
         ze_moved_querying_subscriber_t : ze_querying_subscriber_drop \
     )(x)
@@ -156,6 +157,7 @@
 #define zc_closure_matching_status_move(x) (zc_moved_closure_matching_status_t){&x}
 #define zc_liveliness_token_move(x) (zc_moved_liveliness_token_t){&x}
 #define zc_shm_client_list_move(x) (zc_moved_shm_client_list_t){&x}
+#define zcu_publisher_matching_listener_move(x) (zc_moved_matching_listener_t){&x}
 #define ze_publication_cache_move(x) (ze_moved_publication_cache_t){&x}
 #define ze_querying_subscriber_move(x) (ze_moved_querying_subscriber_t){&x}
 #define z_move(x) \
@@ -201,6 +203,7 @@
         zc_owned_closure_matching_status_t : (zc_moved_closure_matching_status_t){(zc_owned_closure_matching_status_t*)&x}, \
         zc_owned_liveliness_token_t : (zc_moved_liveliness_token_t){(zc_owned_liveliness_token_t*)&x}, \
         zc_owned_shm_client_list_t : (zc_moved_shm_client_list_t){(zc_owned_shm_client_list_t*)&x}, \
+        zc_owned_matching_listener_t : (zc_moved_matching_listener_t){(zc_owned_matching_listener_t*)&x}, \
         ze_owned_publication_cache_t : (ze_moved_publication_cache_t){(ze_owned_publication_cache_t*)&x}, \
         ze_owned_querying_subscriber_t : (ze_moved_querying_subscriber_t){(ze_owned_querying_subscriber_t*)&x} \
     )
@@ -448,6 +451,7 @@ inline void z_drop(z_moved_subscriber_t this_) { return z_subscriber_drop(this_)
 inline void z_drop(zc_moved_closure_matching_status_t closure) { return zc_closure_matching_status_drop(closure); };
 inline void z_drop(zc_moved_liveliness_token_t this_) { return zc_liveliness_token_drop(this_); };
 inline void z_drop(zc_moved_shm_client_list_t this_) { return zc_shm_client_list_drop(this_); };
+inline void z_drop(zc_moved_matching_listener_t this_) { return zcu_publisher_matching_listener_drop(this_); };
 inline void z_drop(ze_moved_publication_cache_t this_) { return ze_publication_cache_drop(this_); };
 inline void z_drop(ze_moved_querying_subscriber_t this_) { return ze_querying_subscriber_drop(this_); };
 
@@ -493,6 +497,7 @@ inline z_moved_subscriber_t z_move(z_moved_subscriber_t this_) { return (&this_)
 inline zc_moved_closure_matching_status_t z_move(zc_moved_closure_matching_status_t closure) { return (&closure); };
 inline zc_moved_liveliness_token_t z_move(zc_moved_liveliness_token_t this_) { return (&this_); };
 inline zc_moved_shm_client_list_t z_move(zc_moved_shm_client_list_t this_) { return (&this_); };
+inline zc_moved_matching_listener_t z_move(zc_moved_matching_listener_t this_) { return (&this_); };
 inline ze_moved_publication_cache_t z_move(ze_moved_publication_cache_t this_) { return (&this_); };
 inline ze_moved_querying_subscriber_t z_move(ze_moved_querying_subscriber_t this_) { return (&this_); };
 

@@ -29,7 +29,10 @@ use crate::{
     z_query_consolidation_t, z_query_target_default, z_query_target_t, z_reliability_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{zc_locality_default, zc_locality_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t};
+use crate::{
+    zc_locality_default, zc_locality_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    ze_moved_querying_subscriber_t,
+};
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
@@ -112,7 +115,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     let session = session.as_rust_type_ref();
     let Some(callback) = callback.into_rust_type() else {
         this.write(None);
-        return errors::Z_EINVAL;
+        return result::Z_EINVAL;
     };
     let mut sub = session
         .declare_subscriber(key_expr.as_rust_type_ref())
