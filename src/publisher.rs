@@ -355,7 +355,7 @@ pub extern "C" fn zc_publisher_matching_listener_callback(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zcu_publisher_matching_listener_undeclare(
+pub extern "C" fn zc_publisher_matching_listener_undeclare(
     this: zc_moved_matching_listener_t,
 ) -> result::z_result_t {
     if let Some(p) = this.into_rust_type().take() {
@@ -373,10 +373,10 @@ pub extern "C" fn zcu_publisher_matching_listener_undeclare(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zcu_publisher_matching_listener_drop(
+pub extern "C" fn zc_publisher_matching_listener_drop(
     this: zc_moved_matching_listener_t,
 ) -> result::z_result_t {
-    zcu_publisher_matching_listener_undeclare(this)
+    zc_publisher_matching_listener_undeclare(this)
 }
 
 /// Undeclares the given publisher, droping and invalidating it.
