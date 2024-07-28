@@ -203,11 +203,11 @@ pub extern "C" fn z_publisher_put_options_default(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
-    mut payload: z_moved_bytes_t,
+    payload: z_moved_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> result::z_result_t {
     let publisher = this.as_rust_type_ref();
-    let Some(payload) = payload.take_rust_type() else {
+    let Some(payload) = payload.into_rust_type() else {
         return result::Z_EINVAL;
     };
 

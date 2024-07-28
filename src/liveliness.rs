@@ -22,7 +22,7 @@ use zenoh::{
 use crate::{
     opaque_types::{zc_loaned_liveliness_token_t, zc_owned_liveliness_token_t},
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
     z_owned_subscriber_t, zc_moved_liveliness_token_t,
@@ -111,9 +111,9 @@ pub extern "C" fn zc_liveliness_declare_token(
 /// Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(
-    this: &mut zc_owned_liveliness_token_t,
+    this: zc_moved_liveliness_token_t,
 ) -> result::z_result_t {
-    if let Some(token) = this.take_rust_type() {
+    if let Some(token) = this.into_rust_type() {
         if let Err(e) = token.undeclare().wait() {
             tracing::error!("Failed to undeclare token: {e}");
             return result::Z_EGENERIC;

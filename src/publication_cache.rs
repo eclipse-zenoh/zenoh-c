@@ -19,7 +19,7 @@ use zenoh_ext::SessionExt;
 
 use crate::{
     result,
-    transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
 #[cfg(feature = "unstable")]
@@ -135,9 +135,9 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
-    mut this: ze_moved_publication_cache_t,
+    this: ze_moved_publication_cache_t,
 ) -> result::z_result_t {
-    if let Some(p) = this.take_rust_type() {
+    if let Some(p) = this.into_rust_type() {
         if let Err(e) = p.close().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;

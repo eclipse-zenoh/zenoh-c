@@ -35,7 +35,7 @@ use crate::z_id_t;
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
 use crate::{
-    result::{self},
+    result,
     transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };

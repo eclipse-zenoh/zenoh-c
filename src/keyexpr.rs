@@ -26,7 +26,7 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
 };
 
@@ -489,10 +489,10 @@ pub extern "C" fn z_declare_keyexpr(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(
-    mut this: z_moved_keyexpr_t,
+    this: z_moved_keyexpr_t,
     session: &z_loaned_session_t,
 ) -> result::z_result_t {
-    let Some(kexpr) = this.take_rust_type() else {
+    let Some(kexpr) = this.into_rust_type() else {
         tracing::debug!("Attempted to undeclare dropped keyexpr");
         return result::Z_EINVAL;
     };

@@ -4287,7 +4287,7 @@ ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *thi
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
 #if defined(UNSTABLE)
-ZENOHC_API z_result_t zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *this_);
+ZENOHC_API z_result_t zc_liveliness_undeclare_token(struct zc_moved_liveliness_token_t this_);
 #endif
 /**
  * Returns default value of `zc_locality_t`
