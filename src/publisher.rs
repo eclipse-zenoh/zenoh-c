@@ -14,14 +14,21 @@
 
 use std::mem::MaybeUninit;
 
-use crate::transmute::IntoRustType;
+#[cfg(feature = "unstable")]
+use zenoh::pubsub::MatchingListener;
+use zenoh::{
+    prelude::*,
+    pubsub::Publisher,
+    qos::{CongestionControl, Priority},
+};
+
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
 #[cfg(feature = "unstable")]
 use crate::zc_moved_closure_matching_status_t;
 use crate::{
     result::{self},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_encoding_t, z_priority_t, z_timestamp_t,
 };
@@ -29,13 +36,6 @@ use crate::{
 use crate::{
     transmute::IntoCType, z_entity_global_id_t, zc_closure_matching_status_call,
     zc_closure_matching_status_loan, zc_locality_default, zc_locality_t,
-};
-#[cfg(feature = "unstable")]
-use zenoh::pubsub::MatchingListener;
-use zenoh::{
-    prelude::*,
-    pubsub::Publisher,
-    qos::{CongestionControl, Priority},
 };
 
 /// Options passed to the `z_declare_publisher()` function.

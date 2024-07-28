@@ -25,7 +25,6 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
-
 use crate::{
     result,
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},

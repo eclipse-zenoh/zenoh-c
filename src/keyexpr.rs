@@ -13,6 +13,14 @@
 //
 use std::{error::Error, mem::MaybeUninit};
 
+use libc::c_char;
+#[cfg(feature = "unstable")]
+use zenoh::key_expr::SetIntersectionLevel;
+use zenoh::{
+    key_expr::{keyexpr, Canonize, KeyExpr},
+    prelude::*,
+};
+
 pub use crate::opaque_types::{
     z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
 };
@@ -20,13 +28,6 @@ use crate::{
     result::{self, z_result_t, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
-};
-use libc::c_char;
-#[cfg(feature = "unstable")]
-use zenoh::key_expr::SetIntersectionLevel;
-use zenoh::{
-    key_expr::{keyexpr, Canonize, KeyExpr},
-    prelude::*,
 };
 
 decl_c_type! {

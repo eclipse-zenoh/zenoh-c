@@ -1,12 +1,3 @@
-use std::mem::MaybeUninit;
-
-use zenoh::{
-    bytes::EncodingBuilderTrait,
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
-    sample::{SampleBuilderTrait, TimestampBuilderTrait},
-    Wait,
-};
-
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -20,16 +11,23 @@ use zenoh::{
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use std::mem::MaybeUninit;
+
+use zenoh::{
+    bytes::EncodingBuilderTrait,
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    sample::{SampleBuilderTrait, TimestampBuilderTrait},
+    Wait,
+};
+
+#[cfg(feature = "unstable")]
+use crate::z_moved_source_info_t;
 use crate::{
     commons::*,
     result,
     transmute::{IntoRustType, RustTypeRef, TakeRustType},
-    z_loaned_session_t, z_moved_bytes_t, z_timestamp_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
 };
-use crate::{z_loaned_keyexpr_t, z_moved_encoding_t};
-
-#[cfg(feature = "unstable")]
-use crate::z_moved_source_info_t;
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]
