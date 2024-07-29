@@ -110,7 +110,8 @@ int run_publisher() {
     z_publisher_put_options_t options;
     z_publisher_put_options_default(&options);
 
-    kv_pair_t kvs[2] = {(kv_pair_t){.key = K_CONST, .value = V_CONST}};
+    kv_pair_t kvs[2];
+    kvs[0] = (kv_pair_t){.key = K_CONST, .value = V_CONST};
     for (int i = 0; i < values_count; ++i) {
         kvs[1] = (kv_pair_t){.key = K_VAR, .value = values[i]};
 

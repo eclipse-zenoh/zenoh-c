@@ -78,7 +78,8 @@ int main(int argc, char** argv) {
     z_publisher_put_options_default(&options);
 
     // allocate attachment data
-    kv_pair_t kvs[2] = {(kv_pair_t){.key = "source", .value = "C"}};
+    kv_pair_t kvs[2];
+    kvs[0] = (kv_pair_t){.key = "source", .value = "C"};
     // allocate attachment and payload
     z_owned_bytes_t attachment;
     z_owned_bytes_t payload;

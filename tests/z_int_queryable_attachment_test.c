@@ -173,7 +173,8 @@ int run_get() {
     z_get_options_t opts;
     z_get_options_default(&opts);
 
-    kv_pair_t kvs[2] = {(kv_pair_t){.key = K_CONST, .value = V_CONST}};
+    kv_pair_t kvs[2];
+    kvs[0] = (kv_pair_t){.key = K_CONST, .value = V_CONST};
 
     for (int val_num = 0; val_num < values_count; ++val_num) {
         kvs[1] = (kv_pair_t){.key = K_VAR, .value = values[val_num]};
