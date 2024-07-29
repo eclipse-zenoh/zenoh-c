@@ -162,8 +162,8 @@ void test_arithmetic() {
     TEST_ARITHMETIC(double, double, -105.001);
 }
 
-bool iter_body(z_owned_bytes_t* b, void* context) {
-    uint8_t* val = (uint8_t*)context;
+bool iter_body(z_owned_bytes_t *b, void *context) {
+    uint8_t *val = (uint8_t *)context;
     if (*val >= 10) {
         return false;
     } else {
@@ -178,7 +178,7 @@ void test_iter() {
 
     z_owned_bytes_t payload;
     uint8_t context = 0;
-    z_bytes_serialize_from_iter(&payload, iter_body, (void*)(&context));
+    z_bytes_serialize_from_iter(&payload, iter_body, (void *)(&context));
 
     z_bytes_iterator_t it = z_bytes_get_iterator(z_loan(payload));
 
@@ -212,7 +212,7 @@ void test_pair() {
     assert(d == 123.45);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     test_reader_seek();
     test_reader_read();
     test_writer();
