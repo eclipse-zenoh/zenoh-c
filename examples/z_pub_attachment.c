@@ -21,24 +21,22 @@ typedef struct kv_pair_t {
     const char* value;
 } kv_pair_t;
 
-typedef struct kv_pairs_t {
-    const kv_pair_t* data;
-    size_t len;
-    size_t current_idx;
-} kv_pairs_t;
+typedef struct kv_it {
+    kv_pair_t* current;
+    kv_pair_t* end;
+} kv_it;
 
 bool create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
-    kv_pairs_t* kvs = (kv_pairs_t*)(context);
-    z_owned_bytes_t k, v;
-    if (kvs->current_idx >= kvs->len) {
+    kv_it* it = (kv_it*)(context);
+    if (it->current == it->end) {
         return false;
-    } else {
-        z_bytes_serialize_from_str(&k, kvs->data[kvs->current_idx].key);
-        z_bytes_serialize_from_str(&v, kvs->data[kvs->current_idx].value);
-        z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
-        kvs->current_idx++;
-        return true;
     }
+    z_owned_bytes_t k, v;
+    z_bytes_serialize_from_str(&k, it->current->key);
+    z_bytes_serialize_from_str(&v, it->current->value);
+    z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
+    it->current++;
+    return true;
 };
 
 int main(int argc, char** argv) {
@@ -94,8 +92,8 @@ int main(int argc, char** argv) {
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
         kvs[1] = (kv_pair_t){.key = "index", .value = buf_ind};
-        kv_pairs_t ctx = (kv_pairs_t){.data = kvs, .current_idx = 0, .len = 2};
-        z_bytes_serialize_from_iter(&attachment, create_attachment_iter, (void*)&ctx);
+        kv_it it = {.current = kvs, .end = kvs + 2};
+        z_bytes_serialize_from_iter(&attachment, create_attachment_iter, (void*)&it);
         options.attachment = &attachment;
 
         sprintf(buf, "[%4d] %s", idx, value);

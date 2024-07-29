@@ -29,31 +29,32 @@ const char *const K_VAR = "k_var";
 const char *const K_CONST = "k_const";
 const char *const V_CONST = "v const";
 
-typedef struct attachment_context_t {
-    const char *keys[2];
-    const char *values[2];
-    size_t num_items;
-    size_t iteration_index;
-} attachment_context_t;
+typedef struct kv_pair_t {
+    const char *key;
+    const char *value;
+} kv_pair_t;
 
-bool create_attachment_it(z_owned_bytes_t *kv_pair, void *context) {
-    attachment_context_t *ctx = (attachment_context_t *)(context);
-    z_owned_bytes_t k, v;
-    if (ctx->iteration_index >= ctx->num_items) {
+typedef struct kv_it {
+    kv_pair_t *current;
+    kv_pair_t *end;
+} kv_it;
+
+bool create_attachment_iter(z_owned_bytes_t *kv_pair, void *context) {
+    kv_it *it = (kv_it *)(context);
+    if (it->current == it->end) {
         return false;
-    } else {
-        z_bytes_serialize_from_str(&k, ctx->keys[ctx->iteration_index]);
-        z_bytes_serialize_from_str(&v, ctx->values[ctx->iteration_index]);
     }
-
+    z_owned_bytes_t k, v;
+    z_bytes_serialize_from_str(&k, it->current->key);
+    z_bytes_serialize_from_str(&v, it->current->value);
     z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
-    ctx->iteration_index++;
+    it->current++;
     return true;
 };
 
-z_result_t check_attachment(const z_loaned_bytes_t *attachment, const attachment_context_t *ctx) {
+z_result_t check_attachment(const z_loaned_bytes_t *attachment, kv_it *it) {
     z_bytes_iterator_t iter = z_bytes_get_iterator(attachment);
-    for (size_t i = 0; i < ctx->num_items; i++) {
+    while (it->current != it->end) {
         z_owned_bytes_t kv, k, v;
         if (!z_bytes_iterator_next(&iter, &kv)) {
             perror("Not enough elements in the attachment\n");
@@ -67,11 +68,11 @@ z_result_t check_attachment(const z_loaned_bytes_t *attachment, const attachment
         z_bytes_deserialize_into_string(z_loan(k), &k_str);
         z_bytes_deserialize_into_string(z_loan(v), &v_str);
 
-        if (strncmp(ctx->keys[i], z_string_data(z_loan(k_str)), z_string_len(z_loan(k_str))) != 0) {
+        if (strncmp(it->current->key, z_string_data(z_loan(k_str)), z_string_len(z_loan(k_str))) != 0) {
             perror("Incorrect attachment key\n");
             return -1;
         }
-        if (strncmp(ctx->values[i], z_string_data(z_loan(v_str)), z_string_len(z_loan(v_str))) != 0) {
+        if (strncmp(it->current->value, z_string_data(z_loan(v_str)), z_string_len(z_loan(v_str))) != 0) {
             perror("Incorrect attachment value\n");
             return -1;
         }
@@ -80,6 +81,7 @@ z_result_t check_attachment(const z_loaned_bytes_t *attachment, const attachment
         z_drop(z_move(k));
         z_drop(z_move(v));
         z_drop(z_move(kv));
+        it->current++;
     }
     return 0;
 };
@@ -96,9 +98,9 @@ void query_handler(const z_loaned_query_t *query, void *context) {
         exit(-1);
     }
 
-    attachment_context_t in_attachment_context = (attachment_context_t){
-        .keys = {K_CONST, K_VAR}, .values = {V_CONST, values[value_num]}, .num_items = 2, .iteration_index = 0};
-    if (check_attachment(attachment, &in_attachment_context) != 0) {
+    kv_pair_t kvs_in[2] = {(kv_pair_t){K_CONST, V_CONST}, (kv_pair_t){K_VAR, values[value_num]}};
+    kv_it it = {.current = kvs_in, .end = kvs_in + 2};
+    if (check_attachment(attachment, &it) != 0) {
         perror("Failed to validate attachment");
         exit(-1);
     }
@@ -107,9 +109,9 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_query_reply_options_default(&options);
 
     z_owned_bytes_t reply_attachment;
-    attachment_context_t out_attachment_context =
-        (attachment_context_t){.keys = {K_CONST}, .values = {V_CONST}, .num_items = 1, .iteration_index = 0};
-    z_bytes_serialize_from_iter(&reply_attachment, create_attachment_it, (void *)&out_attachment_context);
+    kv_pair_t kvs_out[1] = {(kv_pair_t){K_CONST, V_CONST}};
+    kv_it it_out = {.current = kvs_out, .end = kvs_out + 1};
+    z_bytes_serialize_from_iter(&reply_attachment, create_attachment_iter, (void *)&it_out);
 
     options.attachment = &reply_attachment;
 
@@ -171,16 +173,19 @@ int run_get() {
     z_get_options_t opts;
     z_get_options_default(&opts);
 
+    kv_pair_t kvs[2];
+    kvs[0] = (kv_pair_t){.key = K_CONST, .value = V_CONST};
+
     for (int val_num = 0; val_num < values_count; ++val_num) {
-        attachment_context_t out_attachment_context = (attachment_context_t){
-            .keys = {K_CONST, K_VAR}, .values = {V_CONST, values[val_num]}, .num_items = 2, .iteration_index = 0};
+        kvs[1] = (kv_pair_t){.key = K_VAR, .value = values[val_num]};
 
         z_owned_fifo_handler_reply_t handler;
         z_owned_closure_reply_t closure;
         z_fifo_channel_reply_new(&closure, &handler, 16);
 
         z_owned_bytes_t attachment;
-        z_bytes_serialize_from_iter(&attachment, create_attachment_it, (void *)&out_attachment_context);
+        kv_it it = {.current = kvs, .end = kvs + 2};
+        z_bytes_serialize_from_iter(&attachment, create_attachment_iter, (void *)&it);
 
         opts.attachment = &attachment;
         z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
@@ -202,9 +207,10 @@ int run_get() {
                 perror("Missing attachment!");
                 exit(-1);
             }
-            attachment_context_t in_attachment_context =
-                (attachment_context_t){.keys = {K_CONST}, .values = {V_CONST}, .num_items = 1, .iteration_index = 0};
-            if (check_attachment(received_attachment, &in_attachment_context) != 0) {
+
+            kv_pair_t kvs_out[1] = {(kv_pair_t){K_CONST, V_CONST}};
+            kv_it it_out = {.current = kvs_out, .end = kvs_out + 1};
+            if (check_attachment(received_attachment, &it_out) != 0) {
                 perror("Failed to validate attachment");
                 exit(-1);
             }
