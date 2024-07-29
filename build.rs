@@ -903,11 +903,22 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .open(path_out)
         .unwrap();
 
-    let header = "#pragma once
+    file_out.write_all("#pragma once\n\n".as_bytes()).unwrap();
 
+    //
+    // Common C/C++ part
+    //
+    let type_name_to_move_func = make_move_signatures(path_in);
+    let out = generate_move_functions(&type_name_to_move_func);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    //
+    // C part
+    //
+    let header = "
 // clang-format off
 #ifndef __cplusplus
-
 
 ";
     file_out.write_all(header.as_bytes()).unwrap();
@@ -927,7 +938,6 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let type_name_to_move_func = make_move_macros(path_in);
     let out = generate_generic_move_c(&type_name_to_move_func);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
@@ -955,6 +965,9 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     let out = generate_generic_recv_c(&recv_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
 
+    //
+    // C++ part
+    //
     file_out
         .write_all("\n#else  // #ifndef __cplusplus\n".as_bytes())
         .unwrap();
@@ -972,7 +985,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_move_cpp(&type_name_to_drop_func);
+    let out = generate_generic_move_cpp(&type_name_to_move_func);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1006,14 +1019,14 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .unwrap();
 }
 
-pub fn make_move_macros(path_in: &str) -> Vec<FunctionSignature> {
+pub fn make_move_signatures(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
         let (prefix, _, remainder) = split_type_name(arg_type);
-        let z_owned_type = format!("{}_{}_{}", prefix, "owned", remainder);
+        let z_owned_type = format!("{}_{}_{}*", prefix, "owned", remainder);
         let f = FunctionSignature {
             return_type: Ctype::new(arg_type),
             func_name: func_name.to_string() + "_move",
@@ -1166,21 +1179,6 @@ pub fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
-pub fn generate_generic_c_move_macro(macro_func: &[FunctionSignature]) -> String {
-    let mut out = "#define z_move(x) \\
-    _Generic((x)"
-        .to_string();
-    for func in macro_func {
-        let z_moved_type = &func.return_type.typename;
-        let z_owned_type = &func.args[0].typename.typename;
-        out += ", \\\n";
-        out += &format!("        {z_owned_type} : ({z_moved_type}){{({z_owned_type}*)&x}}");
-    }
-    out += " \\\n";
-    out += "    )";
-    out
-}
-
 pub fn generate_generic_c(
     macro_func: &[FunctionSignature],
     generic_name: &str,
@@ -1228,21 +1226,28 @@ pub fn generate_generic_loan_mut_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_loan_mut", true)
 }
 
+pub fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_c(macro_func, "z_move", true)
+}
+
 pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_drop", false)
 }
 
-pub fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
+pub fn generate_move_functions(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
-            "#define {}(x) ({}){{&x}}\n",
-            sig.func_name, sig.return_type.typename
+            "static inline {} {}({} x) {{ return ({}){{x}}; }}\n",
+            sig.return_type.typename,
+            sig.func_name,
+            sig.args[0].typename.typename,
+            sig.return_type.typename
         );
     }
-    out += generate_generic_c_move_macro(macro_func).as_str();
     out
 }
+
 pub fn generate_generic_null_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_null", false)
 }
@@ -1361,15 +1366,7 @@ pub fn generate_generic_drop_cpp(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_move_cpp(macro_func: &[FunctionSignature]) -> String {
-    let mut move_funcs = Vec::<FunctionSignature>::new();
-    for f in macro_func {
-        move_funcs.push(FunctionSignature {
-            return_type: f.args[0].typename.clone(),
-            func_name: "".to_string(),
-            args: [f.args[0].clone()].to_vec(),
-        });
-    }
-    generate_generic_cpp(&move_funcs, "z_move", true)
+    generate_generic_cpp(macro_func, "z_move", true)
 }
 
 pub fn generate_generic_null_cpp(macro_func: &[FunctionSignature]) -> String {
