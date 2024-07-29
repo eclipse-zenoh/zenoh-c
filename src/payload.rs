@@ -472,9 +472,9 @@ pub unsafe extern "C" fn z_bytes_serialize_from_buf(
 ) -> z_result_t {
     if let Ok(s) = CSlice::new(data, len, deleter, context) {
         z_bytes_serialize_from_cslice(this, s);
-        return Z_OK;
+        Z_OK
     } else {
-        return Z_EINVAL;
+        Z_EINVAL
     }
 }
 
@@ -506,9 +506,9 @@ pub unsafe extern "C" fn z_bytes_serialize_from_str(
 ) -> z_result_t {
     if let Ok(mut s) = CStringOwned::new(data, libc::strlen(data), deleter, context) {
         z_bytes_serialize_from_string(this, s.as_owned_c_type_mut());
-        return Z_OK;
+        Z_OK
     } else {
-        return Z_EINVAL;
+        Z_EINVAL
     }
 }
 
