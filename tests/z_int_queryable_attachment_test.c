@@ -45,8 +45,8 @@ bool create_attachment_iter(z_owned_bytes_t *kv_pair, void *context) {
         return false;
     }
     z_owned_bytes_t k, v;
-    z_bytes_serialize_from_str(&k, it->current->key);
-    z_bytes_serialize_from_str(&v, it->current->value);
+    z_bytes_serialize_from_str(&k, it->current->key, NULL, NULL);
+    z_bytes_serialize_from_str(&v, it->current->value, NULL, NULL);
     z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
     it->current++;
     return true;
@@ -116,7 +116,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     options.attachment = &reply_attachment;
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, values[value_num]);
+    z_bytes_serialize_from_str(&payload, values[value_num], NULL, NULL);
 
     z_view_keyexpr_t reply_ke;
     z_view_keyexpr_from_str(&reply_ke, (const char *)context);

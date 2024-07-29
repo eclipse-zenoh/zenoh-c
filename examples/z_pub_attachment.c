@@ -32,8 +32,8 @@ bool create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
         return false;
     }
     z_owned_bytes_t k, v;
-    z_bytes_serialize_from_str(&k, it->current->key);
-    z_bytes_serialize_from_str(&v, it->current->value);
+    z_bytes_serialize_from_str(&k, it->current->key, NULL, NULL);
+    z_bytes_serialize_from_str(&v, it->current->value, NULL, NULL);
     z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
     it->current++;
     return true;
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
 
-        z_bytes_serialize_from_str(&payload, buf);
+        z_bytes_serialize_from_str(&payload, buf, NULL, NULL);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 

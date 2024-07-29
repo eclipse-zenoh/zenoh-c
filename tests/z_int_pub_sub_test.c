@@ -71,7 +71,7 @@ int run_publisher() {
         options.timestamp = &ts;
 
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, values[i]);
+        z_bytes_serialize_from_str(&payload, values[i], NULL, NULL);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 

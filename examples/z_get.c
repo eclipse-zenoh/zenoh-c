@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
     z_owned_bytes_t payload;
     if (value != NULL) {
-        z_bytes_serialize_from_str(&payload, value);
+        z_bytes_serialize_from_str(&payload, value, NULL, NULL);
         opts.payload = &payload;
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),

@@ -1268,6 +1268,21 @@ z_result_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
  */
 ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
 /**
+ * Serializes a data from buffer.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param data: A pointer to the buffer containing data. `this_` will take ownership of the buffer.
+ * @param len: Length of the buffer.
+ * @param deleter: A thread-safe function, that will be called on `data` when `this_` is dropped. Can be `NULL` if `data` is located in static memory and does not require a drop.
+ * @param context: An optional context to be passed to `deleter`.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_serialize_from_buf(struct z_owned_bytes_t *this_,
+                                      const uint8_t *data,
+                                      size_t len,
+                                      void (*deleter)(void *data, void *context),
+                                      void *context);
+/**
  * Serializes a double.
  */
 ZENOHC_API void z_bytes_serialize_from_double(struct z_owned_bytes_t *this_, double val);
@@ -1293,7 +1308,7 @@ ZENOHC_API void z_bytes_serialize_from_int64(struct z_owned_bytes_t *this_, int6
 ZENOHC_API void z_bytes_serialize_from_int8(struct z_owned_bytes_t *this_, int8_t val);
 /**
  * Constructs payload from an iterator to `z_owned_bytes_t`.
- * @param this_: An uninitialized location in memory for `z_owned_bytes_t` will be constructed.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
  * @param context: Arbitrary context that will be passed to iterator_body.
  * @return 0 in case of success, negative error code otherwise.
@@ -1326,27 +1341,31 @@ z_result_t z_bytes_serialize_from_shm_mut(struct z_owned_bytes_t *this_,
                                           z_owned_shm_mut_t *shm);
 #endif
 /**
- * Serializes a slice by aliasing.
+ * Serializes a slice.
+ * The slice is consumed upon function return.
  */
 ZENOHC_API
 void z_bytes_serialize_from_slice(struct z_owned_bytes_t *this_,
-                                  const uint8_t *data,
-                                  size_t len);
+                                  struct z_owned_slice_t *slice);
 /**
- * Serializes a slice by copying.
+ * Serializes a null-terminated string.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param data: a pointer to the string. `this_` will take ownership of the buffer.
+ * @param deleter: A thread-safe function, that will be called on `data` when `this_` is dropped. Can be `NULL` if `data` is located in static memory and does not require a drop.
+ * @param context: An optional context to be passed to `deleter`.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-void z_bytes_serialize_from_slice_copy(struct z_owned_bytes_t *this_,
-                                       const uint8_t *data,
-                                       size_t len);
+z_result_t z_bytes_serialize_from_str(struct z_owned_bytes_t *this_,
+                                      const char *data,
+                                      void (*deleter)(void *data, void *context),
+                                      void *context);
 /**
- * Serializes a null-terminated string by aliasing.
+ * Serializes a string.
  */
-ZENOHC_API void z_bytes_serialize_from_str(struct z_owned_bytes_t *this_, const char *s);
-/**
- * Serializes a null-terminated string by copying.
- */
-ZENOHC_API void z_bytes_serialize_from_str_copy(struct z_owned_bytes_t *this_, const char *s);
+ZENOHC_API
+void z_bytes_serialize_from_string(struct z_owned_bytes_t *this_,
+                                   struct z_owned_string_t *s);
 /**
  * Serializes an unsigned integer.
  */
@@ -3640,6 +3659,15 @@ ZENOHC_API void z_slice_drop(struct z_owned_slice_t *this_);
  * Constructs an empty `z_owned_slice_t`.
  */
 ZENOHC_API void z_slice_empty(struct z_owned_slice_t *this_);
+/**
+ * Constructs a slice by copying a `len` bytes long sequence starting at `start`.
+ *
+ * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_slice_from_buf(struct z_owned_slice_t *this_,
+                            const uint8_t *start,
+                            size_t len);
 /**
  * @return ``true`` if slice is empty, ``false`` otherwise.
  */

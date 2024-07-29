@@ -6,13 +6,6 @@ use std::{
     thread::JoinHandle,
 };
 
-#[cfg(feature = "unstable")]
-use zenoh::{
-    pubsub::MatchingListener,
-    liveliness::LivelinessToken,
-    session::{EntityGlobalId, ZenohId},
-    sample::SourceInfo,
-};
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
     config::Config,
@@ -25,13 +18,20 @@ use zenoh::{
     session::Session,
     time::Timestamp,
 };
+#[cfg(feature = "unstable")]
+use zenoh::{
+    liveliness::LivelinessToken,
+    pubsub::MatchingListener,
+    sample::SourceInfo,
+    session::{EntityGlobalId, ZenohId},
+};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
     shm::zshm, shm::zshmmut, shm::AllocLayout, shm::BufAllocResult, shm::ChunkAllocResult,
     shm::ChunkDescriptor, shm::DynamicProtocolID, shm::MemoryLayout, shm::PosixShmProviderBackend,
     shm::ProtocolID, shm::ShmClient, shm::ShmClientStorage, shm::ShmProvider,
-    shm::ShmProviderBackend, shm::StaticProtocolID, shm::ZShm, shm::ZShmMut,
-    shm::POSIX_PROTOCOL_ID, shm::ZLayoutError,
+    shm::ShmProviderBackend, shm::StaticProtocolID, shm::ZLayoutError, shm::ZShm, shm::ZShmMut,
+    shm::POSIX_PROTOCOL_ID,
 };
 
 #[macro_export]
@@ -56,7 +56,7 @@ get_opaque_type_data!(ZBytes, z_owned_bytes_t);
 /// A loaned serialized Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 
-type CSlice = (usize, isize);
+type CSlice = (usize, usize, usize, usize);
 
 /// A contiguous owned sequence of bytes allocated by Zenoh.
 get_opaque_type_data!(CSlice, z_owned_slice_t);

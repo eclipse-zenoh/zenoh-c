@@ -66,7 +66,7 @@ int run_publisher() {
     // values for cache
     for (int i = 0; i < values_count / 2; ++i) {
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, values[i]);
+        z_bytes_serialize_from_str(&payload, values[i], NULL, NULL);
         z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 
@@ -77,7 +77,7 @@ int run_publisher() {
     // values for subscribe
     for (int i = values_count / 2; i < values_count; ++i) {
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, values[i]);
+        z_bytes_serialize_from_str(&payload, values[i], NULL, NULL);
         z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 

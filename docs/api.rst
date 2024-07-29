@@ -38,6 +38,7 @@ Functions
 .. doxygenfunction:: z_slice_drop
 
 .. doxygenfunction:: z_slice_empty
+.. doxygenfunction:: z_slice_from_buf
 .. doxygenfunction:: z_view_slice_empty
 .. doxygenfunction:: z_view_slice_wrap
 .. doxygenfunction:: z_slice_data
@@ -108,6 +109,8 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_bytes_len
 .. doxygenfunction:: z_bytes_serialize_from_slice
+.. doxygenfunction:: z_bytes_serialize_from_buf
+.. doxygenfunction:: z_bytes_serialize_from_string
 .. doxygenfunction:: z_bytes_serialize_from_str
 .. doxygenfunction:: z_bytes_serialize_from_iter
 .. doxygenfunction:: z_bytes_serialize_from_pair

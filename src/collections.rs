@@ -12,11 +12,12 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+use core::ffi::c_void;
 use std::{
     hash::Hash,
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
-    ptr::{null, slice_from_raw_parts},
+    ptr::{null, null_mut, slice_from_raw_parts},
     slice::from_raw_parts,
 };
 
@@ -27,7 +28,20 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
-pub struct CSlice(*const u8, isize);
+pub struct CSlice {
+    data: *const u8,
+    len: usize,
+    drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+    context: *mut c_void,
+}
+
+pub extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_void) {
+    let ptr = data as *const u8;
+    let len = context as usize;
+    let b = unsafe { Box::from_raw(slice_from_raw_parts(ptr, len).cast_mut()) };
+    std::mem::drop(b);
+}
+
 #[derive(Default, Clone)]
 pub struct CSliceOwned(CSlice);
 #[derive(Default)]
@@ -85,9 +99,35 @@ impl CSliceOwned {
 }
 
 impl CSlice {
+    pub fn new_unchecked(
+        data: *const u8,
+        len: usize,
+        drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+        context: *mut c_void,
+    ) -> Self {
+        Self {
+            data,
+            len,
+            drop,
+            context,
+        }
+    }
+
     pub fn new_borrowed_unchecked(data: *const u8, len: usize) -> Self {
-        let len: isize = len as isize;
-        Self(data, -len)
+        Self::new_unchecked(data, len, None, null_mut())
+    }
+
+    pub fn new(
+        data: *const u8,
+        len: usize,
+        drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+        context: *mut c_void,
+    ) -> Result<Self, z_result_t> {
+        if data.is_null() && len > 0 {
+            Err(result::Z_EINVAL)
+        } else {
+            Ok(Self::new_unchecked(data, len, drop, context))
+        }
     }
 
     pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_result_t> {
@@ -109,7 +149,11 @@ impl CSlice {
         }
         let b = unsafe { from_raw_parts(data, len).to_vec().into_boxed_slice() };
         let slice = Box::leak(b);
-        Self(slice.as_ptr(), slice.len() as isize)
+        CSlice::wrap(slice.as_ptr(), len)
+    }
+
+    pub fn wrap(data: *const u8, len: usize) -> Self {
+        Self::new_unchecked(data, len, Some(_z_drop_c_slice_default), len as *mut c_void)
     }
 
     #[allow(clippy::missing_safety_doc)]
@@ -122,30 +166,30 @@ impl CSlice {
     }
 
     pub fn slice(&self) -> &'static [u8] {
-        if self.1 == 0 {
+        if self.len == 0 {
             return &[0u8; 0];
         }
-        unsafe { from_raw_parts(self.0, self.1.unsigned_abs()) }
+        unsafe { from_raw_parts(self.data, self.len) }
     }
 
     pub fn data(&self) -> *const u8 {
-        self.0
+        self.data
     }
 
     pub fn len(&self) -> usize {
-        self.1.unsigned_abs()
+        self.len
     }
 
     pub fn is_empty(&self) -> bool {
-        self.1 == 0
+        self.len == 0
     }
 
     pub fn is_owned(&self) -> bool {
-        self.1 > 0
+        self.drop.is_some()
     }
 
-    pub fn shallow_copy(&self) -> Self {
-        Self(self.0, self.1)
+    pub fn clone_to_borrowed(&self) -> Self {
+        Self::new_borrowed_unchecked(self.data, self.len)
     }
 
     pub fn clone_to_owned(&self) -> CSliceOwned {
@@ -161,17 +205,20 @@ impl Clone for CSlice {
 
 impl Default for CSlice {
     fn default() -> Self {
-        Self(null(), 0)
+        Self {
+            data: null(),
+            len: 0,
+            drop: None,
+            context: null_mut(),
+        }
     }
 }
 
 impl Drop for CSlice {
     fn drop(&mut self) {
-        if !self.is_owned() {
-            return;
+        if let Some(drop) = self.drop {
+            drop(self.data as *mut c_void, self.context);
         }
-        let b = unsafe { Box::from_raw(slice_from_raw_parts(self.data(), self.len()).cast_mut()) };
-        std::mem::drop(b);
     }
 }
 
@@ -190,7 +237,7 @@ impl PartialEq for CSlice {
 impl From<Vec<u8>> for CSliceOwned {
     fn from(value: Vec<u8>) -> Self {
         let slice = Box::leak(value.into_boxed_slice());
-        CSliceOwned(CSlice(slice.as_ptr(), slice.len() as isize))
+        CSliceOwned(CSlice::wrap(slice.as_ptr(), slice.len()))
     }
 }
 
@@ -332,14 +379,37 @@ pub extern "C" fn z_slice_is_empty(this: &z_loaned_slice_t) -> bool {
     this.as_rust_type_ref().is_empty()
 }
 
+/// Constructs a slice by copying a `len` bytes long sequence starting at `start`.
+///
+/// @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_slice_from_buf(
+    this: &mut MaybeUninit<z_owned_slice_t>,
+    start: *const u8,
+    len: usize,
+) -> z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    match CSliceOwned::new(start, len) {
+        Ok(slice) => {
+            this.write(slice);
+            result::Z_OK
+        }
+        Err(e) => {
+            this.write(CSliceOwned::default());
+            e
+        }
+    }
+}
+
 pub use crate::opaque_types::{z_loaned_string_t, z_owned_string_t, z_view_string_t};
 
 #[derive(Default)]
-pub struct CString(CSlice);
+pub struct CString(pub CSlice);
 #[derive(Default)]
-pub struct CStringOwned(CString);
+pub struct CStringOwned(pub CString);
 #[derive(Default)]
-pub struct CStringView(CString);
+pub struct CStringView(pub CString);
 
 impl CString {
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
@@ -351,6 +421,18 @@ impl CStringOwned {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
         Ok(CStringOwned(CString(CSlice::new_owned(data as _, len)?)))
+    }
+
+    #[allow(clippy::missing_safety_doc)]
+    pub unsafe fn new(
+        data: *const libc::c_char,
+        len: usize,
+        drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+        context: *mut c_void,
+    ) -> Result<Self, z_result_t> {
+        Ok(CStringOwned(CString(CSlice::new(
+            data as _, len, drop, context,
+        )?)))
     }
 }
 
@@ -406,7 +488,7 @@ impl AsRef<CSlice> for CStringView {
 impl From<String> for CStringOwned {
     fn from(value: String) -> Self {
         let slice = Box::leak(value.into_boxed_str());
-        CStringOwned(CString(CSlice(slice.as_ptr(), slice.len() as isize)))
+        CStringOwned(CString(CSlice::wrap(slice.as_ptr(), slice.len())))
     }
 }
 
@@ -698,7 +780,7 @@ pub extern "C" fn z_string_array_push_by_alias(
 ) -> usize {
     let this = this.as_rust_type_mut();
     let v = value.as_rust_type_ref();
-    this.push(CString(v.shallow_copy()));
+    this.push(CString(v.clone_to_borrowed()));
 
     this.len()
 }
