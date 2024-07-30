@@ -1,4 +1,5 @@
 #pragma once
+// clang-format off
 
 static inline z_moved_bytes_t z_bytes_move(z_owned_bytes_t* x) { return (z_moved_bytes_t){x}; }
 static inline z_moved_bytes_writer_t z_bytes_writer_move(z_owned_bytes_writer_t* x) { return (z_moved_bytes_writer_t){x}; }
@@ -32,7 +33,6 @@ static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { 
 
 
 
-// clang-format off
 #ifndef __cplusplus
 
 #define z_loan(x) \

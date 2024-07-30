@@ -903,7 +903,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .open(path_out)
         .unwrap();
 
-    file_out.write_all("#pragma once\n\n".as_bytes()).unwrap();
+    file_out.write_all("#pragma once
+// clang-format off
+
+".as_bytes()).unwrap();
 
     //
     // Common C/C++ part
@@ -916,12 +919,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     //
     // C part
     //
-    let header = "
-// clang-format off
+    file_out.write_all("
 #ifndef __cplusplus
 
-";
-    file_out.write_all(header.as_bytes()).unwrap();
+".as_bytes()).unwrap();
 
     let type_name_to_loan_func = find_loan_functions(path_in);
     let out = generate_generic_loan_c(&type_name_to_loan_func);
