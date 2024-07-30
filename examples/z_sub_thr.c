@@ -12,7 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
-#include <zenoh_macros.h>
 
 #include "zenoh.h"
 
