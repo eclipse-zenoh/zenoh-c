@@ -7,7 +7,7 @@ project(
 	VERSION ${version}
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
-	LANGUAGES C
+	LANGUAGES C CXX
 )
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
