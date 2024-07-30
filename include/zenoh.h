@@ -30,10 +30,10 @@ extern "C" {
 
 // clang-format off
 // include order is important
-#include "zenoh_macros.h"
 #include "zenoh_concrete.h"
 #include "zenoh_opaque.h"
 #include "zenoh_commons.h"
+#include "zenoh_macros.h"
 #include "zenoh_constants.h"
 // clang-format on
 
