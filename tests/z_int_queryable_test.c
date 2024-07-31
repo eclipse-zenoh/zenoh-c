@@ -71,7 +71,7 @@ int run_queryable() {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, keyexpr);
+    z_closure(&callback, query_handler, NULL, (void *)keyexpr);
     z_owned_queryable_t qable;
     z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL);
     if (!z_check(qable)) {

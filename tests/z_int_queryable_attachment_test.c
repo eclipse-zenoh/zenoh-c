@@ -137,7 +137,7 @@ int run_queryable() {
     }
 
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, keyexpr);
+    z_closure(&callback, query_handler, NULL, (void *)keyexpr);
 
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
