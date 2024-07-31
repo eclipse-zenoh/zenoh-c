@@ -448,7 +448,7 @@ pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_b
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
 ///
-/// Returns NULL if query does not hame an encoding.
+/// Returns NULL if query does not contain an encoding.
 #[no_mangle]
 pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
     this.as_rust_type_ref()
