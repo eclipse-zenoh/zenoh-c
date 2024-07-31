@@ -66,7 +66,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     z_query_reply_options_default(&_ret_qreply_opt);
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, value, NULL, NULL);
+    z_bytes_from_str(&payload, (char *)value, NULL, NULL);
     z_query_reply(query, query_ke, z_move(payload), &_ret_qreply_opt);
 }
 
@@ -289,7 +289,7 @@ int main(int argc, char **argv) {
     // TODO: set encoding option
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, value, NULL, NULL);
+    z_bytes_serialize_from_str(&payload, value);
     _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 

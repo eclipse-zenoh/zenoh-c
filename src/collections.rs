@@ -21,7 +21,7 @@ use std::{
     slice::from_raw_parts,
 };
 
-use libc::{c_char, strlen};
+use libc::strlen;
 
 use crate::{
     result::{self, z_result_t},
@@ -96,6 +96,15 @@ impl CSliceOwned {
     pub unsafe fn new(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         Ok(Self(CSlice::new_owned(data, len)?))
     }
+    #[allow(clippy::missing_safety_doc)]
+    pub unsafe fn wrap(
+        data: *mut u8,
+        len: usize,
+        drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+        context: *mut c_void,
+    ) -> Result<Self, z_result_t> {
+        Ok(CSliceOwned(CSlice::new(data, len, drop, context)?))
+    }
 }
 
 impl CSlice {
@@ -118,7 +127,7 @@ impl CSlice {
     }
 
     pub fn new(
-        data: *const u8,
+        data: *mut u8,
         len: usize,
         drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
         context: *mut c_void,
@@ -270,30 +279,12 @@ pub extern "C" fn z_view_slice_null(this: &mut MaybeUninit<z_view_slice_t>) {
     this.as_rust_type_mut_uninit().write(CSliceView::default());
 }
 
-/// Constructs a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
-///
-/// @return -1 if `str == NULL` (and creates an empty view slice), 0 otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_slice_from_str(
-    this: &mut MaybeUninit<z_view_slice_t>,
-    str: *const c_char,
-) -> z_result_t {
-    if str.is_null() {
-        z_view_slice_empty(this);
-        result::Z_EINVAL
-    } else {
-        z_view_slice_wrap(this, str as *const u8, libc::strlen(str));
-        result::Z_OK
-    }
-}
-
 /// Constructs a `len` bytes long view starting at `start`.
 ///
 /// @return -1 if `start == NULL` and `len > 0` (and creates an empty view slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_slice_wrap(
+pub unsafe extern "C" fn z_view_slice_from_buf(
     this: &mut MaybeUninit<z_view_slice_t>,
     start: *const u8,
     len: usize,
@@ -402,6 +393,36 @@ pub unsafe extern "C" fn z_slice_from_buf(
     }
 }
 
+/// Constructs a slice by transferring ownership of `data` to it.
+/// @param this_: Pointer to an uninitialized memoery location where slice will be constructed.
+/// @param data: Pointer to the data to be owned by `this_`.
+/// @param len: Number of bytes in `data`.
+/// @param deleter: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
+/// @param context: An optional context to be passed to the `deleter`.
+///
+/// @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_slice_wrap(
+    this: &mut MaybeUninit<z_owned_slice_t>,
+    data: *mut u8,
+    len: usize,
+    drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+    context: *mut c_void,
+) -> z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    match CSliceOwned::wrap(data, len, drop, context) {
+        Ok(slice) => {
+            this.write(slice);
+            result::Z_OK
+        }
+        Err(e) => {
+            this.write(CSliceOwned::default());
+            e
+        }
+    }
+}
+
 pub use crate::opaque_types::{z_loaned_string_t, z_owned_string_t, z_view_string_t};
 
 #[derive(Default)]
@@ -419,13 +440,13 @@ impl CString {
 
 impl CStringOwned {
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new_owned(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
+    pub unsafe fn new(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
         Ok(CStringOwned(CString(CSlice::new_owned(data as _, len)?)))
     }
 
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(
-        data: *const libc::c_char,
+    pub unsafe fn wrap(
+        data: *mut libc::c_char,
         len: usize,
         drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
         context: *mut c_void,
@@ -580,7 +601,34 @@ pub unsafe extern "C" fn z_string_from_substr(
     len: usize,
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    match CStringOwned::new_owned(str, len) {
+    match CStringOwned::new(str, len) {
+        Ok(slice) => {
+            this.write(slice);
+            result::Z_OK
+        }
+        Err(e) => {
+            this.write(CStringOwned::default());
+            e
+        }
+    }
+}
+
+/// Constructs an owned string by transferring ownership of a null-terminated string `str` to it.
+/// @param this_: Pointer to an uninitialized memory location where an owned string will be constructed.
+/// @param value: Pointer to a null terminated string to be owned by `this_`.
+/// @param deleter: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
+/// @param context: An optional context to be passed to the `deleter`.
+/// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_string_wrap(
+    this: &mut MaybeUninit<z_owned_string_t>,
+    str: *mut libc::c_char,
+    drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+    context: *mut c_void,
+) -> z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    match CStringOwned::wrap(str, libc::strlen(str), drop, context) {
         Ok(slice) => {
             this.write(slice);
             result::Z_OK
@@ -597,7 +645,7 @@ pub unsafe extern "C" fn z_string_from_substr(
 /// @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_string_wrap(
+pub unsafe extern "C" fn z_view_string_from_str(
     this: &mut MaybeUninit<z_view_string_t>,
     str: *const libc::c_char,
 ) -> z_result_t {

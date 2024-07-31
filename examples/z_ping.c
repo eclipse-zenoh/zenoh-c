@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
         unsigned long elapsed_us = 0;
         while (elapsed_us < args.warmup_ms * 1000) {
-            z_bytes_serialize_from_buf(&payload, data, args.size, NULL, NULL);
+            z_bytes_from_buf(&payload, data, args.size, NULL, NULL);
             z_publisher_put(z_loan(pub), z_move(payload), NULL);
             int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));
             if (s != 0) {
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
     }
     unsigned long* results = z_malloc(sizeof(unsigned long) * args.number_of_pings);
     for (int i = 0; i < args.number_of_pings; i++) {
-        z_bytes_serialize_from_buf(&payload, data, args.size, NULL, NULL);
+        z_bytes_from_buf(&payload, data, args.size, NULL, NULL);
         z_clock_t measure_start = z_clock_now();
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
         int s = z_condvar_wait(z_loan(cond), z_loan_mut(mutex));

@@ -49,12 +49,12 @@ int main(int argc, char **argv) {
     z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, value, NULL, NULL);
+    z_bytes_from_str(&payload, (char *)value, NULL, NULL);
 
     z_owned_bytes_t attachment, key, val;
-    z_bytes_serialize_from_str(&key, "hello", NULL, NULL);
-    z_bytes_serialize_from_str(&val, "there", NULL, NULL);
-    z_bytes_serialize_from_pair(&attachment, z_move(key), z_move(val));
+    z_bytes_from_str(&key, (char *)"hello", NULL, NULL);
+    z_bytes_from_str(&val, (char *)"there", NULL, NULL);
+    z_bytes_from_pair(&attachment, z_move(key), z_move(val));
 
     z_put_options_t options;
     z_put_options_default(&options);

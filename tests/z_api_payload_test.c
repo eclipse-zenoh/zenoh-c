@@ -26,7 +26,7 @@ void test_reader_seek() {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_buf(&payload, data, 10, NULL, NULL);
+    z_bytes_from_buf(&payload, data, 10, NULL, NULL);
 
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
     assert(z_bytes_reader_tell(&reader) == 0);
@@ -57,7 +57,7 @@ void test_reader_read() {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_buf(&payload, data, 10, NULL, NULL);
+    z_bytes_from_buf(&payload, data, 10, NULL, NULL);
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
 
     assert(5 == z_bytes_reader_read(&reader, data_out, 5));
@@ -113,28 +113,50 @@ void test_slice(void) {
 
     size_t cnt = 0;
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_buf(&payload, data, 10, custom_deleter, (void *)&cnt);
+    z_bytes_from_buf(&payload, data, 10, custom_deleter, (void *)&cnt);
 
     z_owned_slice_t out;
-    z_bytes_deserialize_into_slice(z_loan(payload), &out);
+    z_bytes_deserialize_into_slice(z_bytes_loan(&payload), &out);
 
     assert(cnt == 0);
-    z_bytes_drop(z_move(payload));
+    z_drop(z_move(payload));
     assert(cnt == 1);
 
-    assert(!memcmp(data, z_slice_data(z_loan(out)), 10));
+    assert(!memcmp(data, z_slice_data(z_slice_loan(&out)), 10));
+    z_drop(z_move(out));
 
     z_owned_bytes_t payload2;
     z_owned_slice_t s;
     z_slice_from_buf(&s, data, 10);
-    z_bytes_serialize_from_slice(&payload2, z_move(s));
+    z_bytes_serialize_from_slice(&payload2, z_slice_loan(&s));
+    assert(z_check(s));
+    z_drop(z_move(s));
     z_owned_slice_t out2;
-    z_bytes_deserialize_into_slice(z_loan(payload2), &out2);
-    assert(!memcmp(data, z_slice_data(z_loan(out2)), 10));
+    z_bytes_deserialize_into_slice(z_bytes_loan(&payload2), &out2);
+    z_drop(z_move(payload2));
+    assert(!memcmp(data, z_slice_data(z_slice_loan(&out2)), 10));
 
-    z_bytes_drop(z_move(payload2));
-    z_slice_drop(z_move(out));
-    z_slice_drop(z_move(out2));
+    z_drop(z_move(out2));
+
+    z_owned_bytes_t payload3;
+    z_slice_from_buf(&s, data, 10);
+    z_bytes_from_slice(&payload3, z_move(s));
+    assert(!z_check(s));
+    z_owned_slice_t out3;
+    z_bytes_deserialize_into_slice(z_bytes_loan(&payload3), &out3);
+    z_drop(z_move(payload3));
+    assert(!memcmp(data, z_slice_data(z_slice_loan(&out3)), 10));
+
+    z_drop(z_move(out3));
+
+    z_owned_bytes_t payload4;
+    z_bytes_serialize_from_buf(&payload4, data, 10);
+    z_owned_slice_t out4;
+    z_bytes_deserialize_into_slice(z_bytes_loan(&payload4), &out4);
+    z_drop(z_move(payload4));
+
+    assert(!memcmp(data, z_slice_data(z_slice_loan(&out4)), 10));
+    z_drop(z_move(out4));
 }
 
 #define TEST_ARITHMETIC(TYPE, EXT, VAL)                        \
@@ -178,7 +200,7 @@ void test_iter() {
 
     z_owned_bytes_t payload;
     uint8_t context = 0;
-    z_bytes_serialize_from_iter(&payload, iter_body, (void *)(&context));
+    z_bytes_from_iter(&payload, iter_body, (void *)(&context));
 
     z_bytes_iterator_t it = z_bytes_get_iterator(z_loan(payload));
 
@@ -199,7 +221,7 @@ void test_pair() {
     z_owned_bytes_t payload, payload1, payload2, payload1_out, payload2_out;
     z_bytes_serialize_from_int16(&payload1, -500);
     z_bytes_serialize_from_double(&payload2, 123.45);
-    z_bytes_serialize_from_pair(&payload, z_move(payload1), z_move(payload2));
+    z_bytes_from_pair(&payload, z_move(payload1), z_move(payload2));
 
     z_bytes_deserialize_into_pair(z_loan(payload), &payload1_out, &payload2_out);
 
