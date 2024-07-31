@@ -1235,6 +1235,24 @@ z_result_t z_bytes_from_pair(struct z_owned_bytes_t *this_,
  */
 ZENOHC_API void z_bytes_from_slice(struct z_owned_bytes_t *this_, struct z_owned_slice_t *slice);
 /**
+ * Serializes a statically allocated constant data.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param data: A pointer to the statically allocated constant data.
+ * @param len: Number of bytes to serialize.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_from_static_buf(struct z_owned_bytes_t *this_,
+                                   uint8_t *data,
+                                   size_t len);
+/**
+ * Serializes a statically allocated constant null-terminated string by aliasing.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param str: a pointer to the statically allocated constant string.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_bytes_from_static_str(struct z_owned_bytes_t *this_, const char *str);
+/**
  * Serializes a null-terminated string.
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param str: a pointer to the string. `this_` will take ownership of the buffer.

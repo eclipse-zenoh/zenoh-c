@@ -18,6 +18,7 @@ use std::{
     io::{Read, Seek, SeekFrom, Write},
     mem::MaybeUninit,
     os::raw::c_void,
+    ptr::null_mut,
     slice::{from_raw_parts, from_raw_parts_mut},
 };
 
@@ -492,6 +493,26 @@ pub unsafe extern "C" fn z_bytes_from_buf(
     }
 }
 
+/// Serializes a statically allocated constant data.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param data: A pointer to the statically allocated constant data.
+/// @param len: Number of bytes to serialize.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_static_buf(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    data: *mut u8,
+    len: usize,
+) -> z_result_t {
+    if let Ok(mut s) = CSliceOwned::wrap(data as _, len, None, null_mut()) {
+        z_bytes_from_slice(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
+}
+
 /// Serializes a data from buffer by copying.
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param data: A pointer to the buffer containing data.
@@ -553,6 +574,24 @@ pub unsafe extern "C" fn z_bytes_from_str(
     context: *mut c_void,
 ) -> z_result_t {
     if let Ok(mut s) = CStringOwned::wrap(str, libc::strlen(str), deleter, context) {
+        z_bytes_from_string(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
+}
+
+/// Serializes a statically allocated constant null-terminated string by aliasing.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param str: a pointer to the statically allocated constant string.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_static_str(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    str: *const libc::c_char,
+) -> z_result_t {
+    if let Ok(mut s) = CStringOwned::wrap(str as _, libc::strlen(str), None, null_mut()) {
         z_bytes_from_string(this, s.as_owned_c_type_mut());
         Z_OK
     } else {

@@ -108,6 +108,16 @@ void custom_deleter(void *data, void *context) {
     (*cnt)++;
 }
 
+bool z_check_and_drop_payload(z_owned_bytes_t *payload, uint8_t *data, size_t len) {
+    z_owned_slice_t out;
+    z_bytes_deserialize_into_slice(z_loan(*payload), &out);
+    z_drop(z_move(*payload));
+    bool res = memcmp(data, z_slice_data(z_loan(out)), len) == 0;
+    z_drop(z_move(out));
+
+    return res;
+}
+
 void test_slice(void) {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
@@ -116,47 +126,36 @@ void test_slice(void) {
     z_bytes_from_buf(&payload, data, 10, custom_deleter, (void *)&cnt);
 
     z_owned_slice_t out;
-    z_bytes_deserialize_into_slice(z_bytes_loan(&payload), &out);
+    z_bytes_deserialize_into_slice(z_loan(payload), &out);
 
     assert(cnt == 0);
     z_drop(z_move(payload));
     assert(cnt == 1);
 
-    assert(!memcmp(data, z_slice_data(z_slice_loan(&out)), 10));
+    assert(!memcmp(data, z_slice_data(z_loan(out)), 10));
     z_drop(z_move(out));
 
     z_owned_bytes_t payload2;
     z_owned_slice_t s;
     z_slice_from_buf(&s, data, 10);
-    z_bytes_serialize_from_slice(&payload2, z_slice_loan(&s));
+    z_bytes_serialize_from_slice(&payload2, z_loan(s));
     assert(z_check(s));
     z_drop(z_move(s));
-    z_owned_slice_t out2;
-    z_bytes_deserialize_into_slice(z_bytes_loan(&payload2), &out2);
-    z_drop(z_move(payload2));
-    assert(!memcmp(data, z_slice_data(z_slice_loan(&out2)), 10));
-
-    z_drop(z_move(out2));
+    assert(z_check_and_drop_payload(&payload2, data, 10));
 
     z_owned_bytes_t payload3;
     z_slice_from_buf(&s, data, 10);
     z_bytes_from_slice(&payload3, z_move(s));
     assert(!z_check(s));
-    z_owned_slice_t out3;
-    z_bytes_deserialize_into_slice(z_bytes_loan(&payload3), &out3);
-    z_drop(z_move(payload3));
-    assert(!memcmp(data, z_slice_data(z_slice_loan(&out3)), 10));
-
-    z_drop(z_move(out3));
+    assert(z_check_and_drop_payload(&payload3, data, 10));
 
     z_owned_bytes_t payload4;
     z_bytes_serialize_from_buf(&payload4, data, 10);
-    z_owned_slice_t out4;
-    z_bytes_deserialize_into_slice(z_bytes_loan(&payload4), &out4);
-    z_drop(z_move(payload4));
+    assert(z_check_and_drop_payload(&payload4, data, 10));
 
-    assert(!memcmp(data, z_slice_data(z_slice_loan(&out4)), 10));
-    z_drop(z_move(out4));
+    z_owned_bytes_t payload5;
+    z_bytes_from_static_buf(&payload5, data, 10);
+    assert(z_check_and_drop_payload(&payload5, data, 10));
 }
 
 #define TEST_ARITHMETIC(TYPE, EXT, VAL)                        \

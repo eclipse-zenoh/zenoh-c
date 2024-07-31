@@ -49,11 +49,11 @@ int main(int argc, char **argv) {
     z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_bytes_t payload;
-    z_bytes_from_str(&payload, (char *)value, NULL, NULL);
+    z_bytes_from_static_str(&payload, value);
 
     z_owned_bytes_t attachment, key, val;
-    z_bytes_from_str(&key, (char *)"hello", NULL, NULL);
-    z_bytes_from_str(&val, (char *)"there", NULL, NULL);
+    z_bytes_from_static_str(&key, (char *)"hello");
+    z_bytes_from_static_str(&val, (char *)"there");
     z_bytes_from_pair(&attachment, z_move(key), z_move(val));
 
     z_put_options_t options;

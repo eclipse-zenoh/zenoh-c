@@ -114,10 +114,12 @@ Functions
 .. doxygenfunction:: z_bytes_from_slice
 .. doxygenfunction:: z_bytes_serialize_from_buf
 .. doxygenfunction:: z_bytes_from_buf
+.. doxygenfunction:: z_bytes_from_static_buf
 .. doxygenfunction:: z_bytes_serialize_from_string
 .. doxygenfunction:: z_bytes_from_string
 .. doxygenfunction:: z_bytes_serialize_from_str
 .. doxygenfunction:: z_bytes_from_str
+.. doxygenfunction:: z_bytes_from_static_str
 .. doxygenfunction:: z_bytes_from_iter
 .. doxygenfunction:: z_bytes_from_pair
 

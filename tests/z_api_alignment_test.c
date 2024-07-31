@@ -66,7 +66,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
     z_query_reply_options_default(&_ret_qreply_opt);
 
     z_owned_bytes_t payload;
-    z_bytes_from_str(&payload, (char *)value, NULL, NULL);
+    z_bytes_from_static_str(&payload, value);
     z_query_reply(query, query_ke, z_move(payload), &_ret_qreply_opt);
 }
 

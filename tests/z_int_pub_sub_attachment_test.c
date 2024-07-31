@@ -122,7 +122,7 @@ int run_publisher() {
         options.attachment = &attachment;
 
         z_owned_bytes_t payload;
-        z_bytes_from_str(&payload, (char *)values[i], NULL, NULL);
+        z_bytes_from_static_str(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 

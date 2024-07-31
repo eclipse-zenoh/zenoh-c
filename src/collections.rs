@@ -43,7 +43,7 @@ pub extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_voi
 }
 
 #[derive(Default, Clone)]
-pub struct CSliceOwned(CSlice);
+pub struct CSliceOwned(pub CSlice);
 #[derive(Default)]
 pub struct CSliceView(CSlice);
 
