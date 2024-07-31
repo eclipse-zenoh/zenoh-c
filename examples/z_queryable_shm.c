@@ -30,7 +30,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_query_parameters(query, &params);
 
     const z_loaned_bytes_t *payload = z_query_payload(query);
-    if (z_bytes_len(payload) > 0) {
+    if (payload != NULL && z_bytes_len(payload) > 0) {
         const z_loaned_shm_t *shm = NULL;
         char *payload_type = z_bytes_deserialize_into_loaned_shm(payload, &shm) == Z_OK ? "SHM" : "RAW";
 

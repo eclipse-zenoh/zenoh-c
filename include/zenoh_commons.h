@@ -2871,7 +2871,7 @@ ZENOHC_API void z_query_drop(struct z_owned_query_t *this_);
 /**
  * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
  *
- * Returns NULL if query does not hame an encoding.
+ * Returns NULL if query does not contain an encoding.
  */
 ZENOHC_API
 const struct z_loaned_encoding_t *z_query_encoding(const struct z_loaned_query_t *this_);
