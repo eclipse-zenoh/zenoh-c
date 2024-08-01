@@ -3692,6 +3692,15 @@ ZENOHC_API bool z_slice_check(const struct z_owned_slice_t *this_);
  */
 ZENOHC_API void z_slice_clone(struct z_owned_slice_t *dst, const struct z_loaned_slice_t *this_);
 /**
+ * Constructs a slice by copying a `len` bytes long sequence starting at `start`.
+ *
+ * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_slice_copy_from_buf(struct z_owned_slice_t *this_,
+                                 const uint8_t *start,
+                                 size_t len);
+/**
  * @return the pointer to the slice data.
  */
 ZENOHC_API const uint8_t *z_slice_data(const struct z_loaned_slice_t *this_);
@@ -3704,14 +3713,21 @@ ZENOHC_API void z_slice_drop(struct z_owned_slice_t *this_);
  */
 ZENOHC_API void z_slice_empty(struct z_owned_slice_t *this_);
 /**
- * Constructs a slice by copying a `len` bytes long sequence starting at `start`.
+ * Constructs a slice by transferring ownership of `data` to it.
+ * @param this_: Pointer to an uninitialized memoery location where slice will be constructed.
+ * @param data: Pointer to the data to be owned by `this_`.
+ * @param len: Number of bytes in `data`.
+ * @param deleter: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
+ * @param context: An optional context to be passed to the `deleter`.
  *
  * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
  */
 ZENOHC_API
 z_result_t z_slice_from_buf(struct z_owned_slice_t *this_,
-                            const uint8_t *start,
-                            size_t len);
+                            uint8_t *data,
+                            size_t len,
+                            void (*drop)(void *data, void *context),
+                            void *context);
 /**
  * @return ``true`` if slice is empty, ``false`` otherwise.
  */
@@ -3728,22 +3744,6 @@ ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slic
  * Constructs an empty `z_owned_slice_t`.
  */
 ZENOHC_API void z_slice_null(struct z_owned_slice_t *this_);
-/**
- * Constructs a slice by transferring ownership of `data` to it.
- * @param this_: Pointer to an uninitialized memoery location where slice will be constructed.
- * @param data: Pointer to the data to be owned by `this_`.
- * @param len: Number of bytes in `data`.
- * @param deleter: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
- * @param context: An optional context to be passed to the `deleter`.
- *
- * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
- */
-ZENOHC_API
-z_result_t z_slice_wrap(struct z_owned_slice_t *this_,
-                        uint8_t *data,
-                        size_t len,
-                        void (*drop)(void *data, void *context),
-                        void *context);
 /**
  * Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
  */
@@ -3857,6 +3857,23 @@ ZENOHC_API bool z_string_check(const struct z_owned_string_t *this_);
  */
 ZENOHC_API void z_string_clone(struct z_owned_string_t *dst, const struct z_loaned_string_t *this_);
 /**
+ * Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
+ *
+ * @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_string_copy_from_str(struct z_owned_string_t *this_,
+                                  const char *str);
+/**
+ * Constructs an owned string by copying a `str` substring of length `len`.
+ *
+ * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_string_copy_from_substr(struct z_owned_string_t *this_,
+                                     const char *str,
+                                     size_t len);
+/**
  * @return the pointer of the string data.
  */
 ZENOHC_API const char *z_string_data(const struct z_loaned_string_t *this_);
@@ -3869,22 +3886,18 @@ ZENOHC_API void z_string_drop(struct z_owned_string_t *this_);
  */
 ZENOHC_API void z_string_empty(struct z_owned_string_t *this_);
 /**
- * Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
- *
- * @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
- */
-ZENOHC_API
-z_result_t z_string_from_str(struct z_owned_string_t *this_,
-                             const char *str);
-/**
- * Constructs an owned string by copying a `str` substring of length `len`.
- *
+ * Constructs an owned string by transferring ownership of a null-terminated string `str` to it.
+ * @param this_: Pointer to an uninitialized memory location where an owned string will be constructed.
+ * @param value: Pointer to a null terminated string to be owned by `this_`.
+ * @param deleter: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
+ * @param context: An optional context to be passed to the `deleter`.
  * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
  */
 ZENOHC_API
-z_result_t z_string_from_substr(struct z_owned_string_t *this_,
-                                const char *str,
-                                size_t len);
+z_result_t z_string_from_str(struct z_owned_string_t *this_,
+                             char *str,
+                             void (*drop)(void *value, void *context),
+                             void *context);
 /**
  * @return ``true`` if string is empty, ``false`` otherwise.
  */
@@ -3901,19 +3914,6 @@ ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_st
  * Constructs owned string in a gravestone state.
  */
 ZENOHC_API void z_string_null(struct z_owned_string_t *this_);
-/**
- * Constructs an owned string by transferring ownership of a null-terminated string `str` to it.
- * @param this_: Pointer to an uninitialized memory location where an owned string will be constructed.
- * @param value: Pointer to a null terminated string to be owned by `this_`.
- * @param deleter: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
- * @param context: An optional context to be passed to the `deleter`.
- * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
- */
-ZENOHC_API
-z_result_t z_string_wrap(struct z_owned_string_t *this_,
-                         char *str,
-                         void (*drop)(void *data, void *context),
-                         void *context);
 /**
  * Returns ``true`` if subscriber is valid, ``false`` otherwise.
  */

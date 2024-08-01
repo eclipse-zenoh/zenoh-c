@@ -375,7 +375,7 @@ pub extern "C" fn z_slice_is_empty(this: &z_loaned_slice_t) -> bool {
 /// @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_from_buf(
+pub unsafe extern "C" fn z_slice_copy_from_buf(
     this: &mut MaybeUninit<z_owned_slice_t>,
     start: *const u8,
     len: usize,
@@ -403,7 +403,7 @@ pub unsafe extern "C" fn z_slice_from_buf(
 /// @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_wrap(
+pub unsafe extern "C" fn z_slice_from_buf(
     this: &mut MaybeUninit<z_owned_slice_t>,
     data: *mut u8,
     len: usize,
@@ -583,11 +583,11 @@ pub extern "C" fn z_view_string_loan(this: &z_view_string_t) -> &z_loaned_string
 /// @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_from_str(
+pub unsafe extern "C" fn z_string_copy_from_str(
     this: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
-    z_string_from_substr(this, str, strlen(str))
+    z_string_copy_from_substr(this, str, strlen(str))
 }
 
 /// Constructs an owned string by copying a `str` substring of length `len`.
@@ -595,7 +595,7 @@ pub unsafe extern "C" fn z_string_from_str(
 /// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_from_substr(
+pub unsafe extern "C" fn z_string_copy_from_substr(
     this: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
     len: usize,
@@ -621,10 +621,10 @@ pub unsafe extern "C" fn z_string_from_substr(
 /// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_wrap(
+pub unsafe extern "C" fn z_string_from_str(
     this: &mut MaybeUninit<z_owned_string_t>,
     str: *mut libc::c_char,
-    drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+    drop: Option<extern "C" fn(value: *mut c_void, context: *mut c_void)>,
     context: *mut c_void,
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();

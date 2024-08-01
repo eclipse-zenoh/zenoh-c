@@ -38,8 +38,8 @@ Functions
 .. doxygenfunction:: z_slice_drop
 
 .. doxygenfunction:: z_slice_empty
+.. doxygenfunction:: z_slice_copy_from_buf
 .. doxygenfunction:: z_slice_from_buf
-.. doxygenfunction:: z_slice_wrap
 .. doxygenfunction:: z_view_slice_empty
 .. doxygenfunction:: z_view_slice_from_buf
 .. doxygenfunction:: z_slice_data
@@ -68,10 +68,10 @@ Functions
 .. doxygenfunction:: z_string_empty
 .. doxygenfunction:: z_view_string_empty
 
-.. doxygenfunction:: z_string_from_str
+.. doxygenfunction:: z_string_copy_from_str
 .. doxygenfunction:: z_view_string_from_str
-.. doxygenfunction:: z_string_from_substr
-.. doxygenfunction:: z_string_wrap
+.. doxygenfunction:: z_string_copy_from_substr
+.. doxygenfunction:: z_string_from_str
 .. doxygenfunction:: z_string_data
 .. doxygenfunction:: z_string_len
 .. doxygenfunction:: z_string_is_empty
