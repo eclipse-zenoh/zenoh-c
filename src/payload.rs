@@ -32,7 +32,7 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK},
-    transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_owned_slice_t, z_owned_string_t,
     z_slice_clone, z_string_clone, CSlice, CSliceOwned, CStringOwned,
 };

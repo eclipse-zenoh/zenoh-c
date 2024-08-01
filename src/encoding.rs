@@ -27,7 +27,7 @@ pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_moved_encoding_t, z_owned_string_t, z_string_from_substr,
+    z_moved_encoding_t, z_owned_string_t, z_string_copy_from_substr,
 };
 
 decl_c_type!(
