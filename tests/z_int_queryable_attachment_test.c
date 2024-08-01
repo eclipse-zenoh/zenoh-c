@@ -47,7 +47,7 @@ bool create_attachment_iter(z_owned_bytes_t *kv_pair, void *context) {
     z_owned_bytes_t k, v;
     z_bytes_serialize_from_str(&k, it->current->key);
     z_bytes_serialize_from_str(&v, it->current->value);
-    z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
+    z_bytes_from_pair(kv_pair, z_move(k), z_move(v));
     it->current++;
     return true;
 };
@@ -111,12 +111,12 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_owned_bytes_t reply_attachment;
     kv_pair_t kvs_out[1] = {(kv_pair_t){K_CONST, V_CONST}};
     kv_it it_out = {.current = kvs_out, .end = kvs_out + 1};
-    z_bytes_serialize_from_iter(&reply_attachment, create_attachment_iter, (void *)&it_out);
+    z_bytes_from_iter(&reply_attachment, create_attachment_iter, (void *)&it_out);
 
     options.attachment = &reply_attachment;
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, values[value_num]);
+    z_bytes_from_static_str(&payload, values[value_num]);
 
     z_view_keyexpr_t reply_ke;
     z_view_keyexpr_from_str(&reply_ke, (const char *)context);
@@ -185,7 +185,7 @@ int run_get() {
 
         z_owned_bytes_t attachment;
         kv_it it = {.current = kvs, .end = kvs + 2};
-        z_bytes_serialize_from_iter(&attachment, create_attachment_iter, (void *)&it);
+        z_bytes_from_iter(&attachment, create_attachment_iter, (void *)&it);
 
         opts.attachment = &attachment;
         z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);

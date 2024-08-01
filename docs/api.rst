@@ -38,8 +38,10 @@ Functions
 .. doxygenfunction:: z_slice_drop
 
 .. doxygenfunction:: z_slice_empty
+.. doxygenfunction:: z_slice_copy_from_buf
+.. doxygenfunction:: z_slice_from_buf
 .. doxygenfunction:: z_view_slice_empty
-.. doxygenfunction:: z_view_slice_wrap
+.. doxygenfunction:: z_view_slice_from_buf
 .. doxygenfunction:: z_slice_data
 .. doxygenfunction:: z_slice_len
 .. doxygenfunction:: z_slice_is_empty
@@ -66,9 +68,10 @@ Functions
 .. doxygenfunction:: z_string_empty
 .. doxygenfunction:: z_view_string_empty
 
+.. doxygenfunction:: z_string_copy_from_str
+.. doxygenfunction:: z_view_string_from_str
+.. doxygenfunction:: z_string_copy_from_substr
 .. doxygenfunction:: z_string_from_str
-.. doxygenfunction:: z_view_string_wrap
-.. doxygenfunction:: z_string_from_substr
 .. doxygenfunction:: z_string_data
 .. doxygenfunction:: z_string_len
 .. doxygenfunction:: z_string_is_empty
@@ -108,9 +111,17 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_bytes_len
 .. doxygenfunction:: z_bytes_serialize_from_slice
+.. doxygenfunction:: z_bytes_from_slice
+.. doxygenfunction:: z_bytes_serialize_from_buf
+.. doxygenfunction:: z_bytes_from_buf
+.. doxygenfunction:: z_bytes_from_static_buf
+.. doxygenfunction:: z_bytes_serialize_from_string
+.. doxygenfunction:: z_bytes_from_string
 .. doxygenfunction:: z_bytes_serialize_from_str
-.. doxygenfunction:: z_bytes_serialize_from_iter
-.. doxygenfunction:: z_bytes_serialize_from_pair
+.. doxygenfunction:: z_bytes_from_str
+.. doxygenfunction:: z_bytes_from_static_str
+.. doxygenfunction:: z_bytes_from_iter
+.. doxygenfunction:: z_bytes_from_pair
 
 .. doxygenfunction:: z_bytes_serialize_from_uint8
 .. doxygenfunction:: z_bytes_serialize_from_uint16

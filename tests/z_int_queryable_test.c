@@ -48,7 +48,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     // options.source_info = &source_info;
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, values[value_num]);
+    z_bytes_from_static_str(&payload, values[value_num]);
 
     z_view_keyexpr_t reply_ke;
     z_view_keyexpr_from_str(&reply_ke, (const char *)context);

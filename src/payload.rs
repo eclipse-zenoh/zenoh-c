@@ -18,6 +18,7 @@ use std::{
     io::{Read, Seek, SeekFrom, Write},
     mem::MaybeUninit,
     os::raw::c_void,
+    ptr::null_mut,
     slice::{from_raw_parts, from_raw_parts_mut},
 };
 
@@ -30,9 +31,10 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::result::Z_ENULL;
 use crate::{
-    result::{self, z_result_t, Z_EIO, Z_EPARSE, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CStringOwned,
+    result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_slice_t, z_loaned_string_t, z_owned_slice_t, z_owned_string_t, z_slice_clone,
+    z_string_clone, CSlice, CSliceOwned, CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_owned_shm_mut_t, z_owned_shm_t};
@@ -438,56 +440,187 @@ pub extern "C" fn z_bytes_deserialize_into_double(
     z_bytes_deserialize_into_arithmetic::<f64>(this, dst)
 }
 
-/// Serializes a slice by aliasing.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_slice(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    data: *const u8,
-    len: usize,
-) {
-    let s = CSlice::new_borrowed_unchecked(data, len);
+fn _z_bytes_serialize_from_cslice(this: &mut MaybeUninit<z_owned_bytes_t>, s: CSlice) {
     let payload = ZBytes::from(ZSlice::from(s));
     this.as_rust_type_mut_uninit().write(payload);
+}
+
+/// Serializes a slice.
+/// The slice is consumed upon function return.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_slice(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    slice: &mut z_owned_slice_t,
+) {
+    _z_bytes_serialize_from_cslice(this, std::mem::take(slice.as_rust_type_mut()))
 }
 
 /// Serializes a slice by copying.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_slice_copy(
+pub unsafe extern "C" fn z_bytes_serialize_from_slice(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    slice: &z_loaned_slice_t,
+) {
+    let mut s = MaybeUninit::<z_owned_slice_t>::uninit();
+    z_slice_clone(&mut s, slice);
+    let mut s_clone = s.assume_init();
+    z_bytes_from_slice(this, &mut s_clone)
+}
+
+/// Serializes a data from buffer.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param data: A pointer to the buffer containing data. `this_` will take ownership of the buffer.
+/// @param len: Length of the buffer.
+/// @param deleter: A thread-safe function, that will be called on `data` when `this_` is dropped. Can be `NULL` if `data` is located in static memory and does not require a drop.
+/// @param context: An optional context to be passed to `deleter`.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_buf(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    data: *mut u8,
+    len: usize,
+    deleter: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+    context: *mut c_void,
+) -> z_result_t {
+    if let Ok(mut s) = CSliceOwned::wrap(data, len, deleter, context) {
+        z_bytes_from_slice(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
+}
+
+/// Serializes a statically allocated constant data.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param data: A pointer to the statically allocated constant data.
+/// @param len: Number of bytes to serialize.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_static_buf(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    data: *mut u8,
+    len: usize,
+) -> z_result_t {
+    if let Ok(mut s) = CSliceOwned::wrap(data as _, len, None, null_mut()) {
+        z_bytes_from_slice(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
+}
+
+/// Serializes a data from buffer by copying.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param data: A pointer to the buffer containing data.
+/// @param len: Length of the buffer.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_serialize_from_buf(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     data: *const u8,
     len: usize,
-) {
-    let s = CSlice::new_owned_unchecked(data, len);
-    let payload = ZBytes::from(ZSlice::from(s));
-    this.as_rust_type_mut_uninit().write(payload);
+) -> z_result_t {
+    if let Ok(mut s) = CSliceOwned::new(data, len) {
+        z_bytes_from_slice(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
 }
 
-/// Serializes a null-terminated string by aliasing.
+/// Serializes a string.
+/// The string is consumed upon function return.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_string(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    s: &mut z_owned_string_t,
+) {
+    // TODO: verify that string is a valid utf-8 string ?
+    let cs = std::mem::take(&mut s.as_rust_type_mut().0 .0);
+    _z_bytes_serialize_from_cslice(this, cs)
+}
+
+/// Serializes a string by copying.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_serialize_from_string(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    str: &z_loaned_string_t,
+) {
+    let mut s = MaybeUninit::<z_owned_string_t>::uninit();
+    z_string_clone(&mut s, str);
+    let mut s_clone = s.assume_init();
+    z_bytes_from_string(this, &mut s_clone)
+}
+
+/// Serializes a null-terminated string.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param str: a pointer to the string. `this_` will take ownership of the buffer.
+/// @param deleter: A thread-safe function, that will be called on `str` when `this_` is dropped. Can be `NULL` if `str` is located in static memory and does not require a drop.
+/// @param context: An optional context to be passed to `deleter`.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_str(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    str: *mut libc::c_char,
+    deleter: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+    context: *mut c_void,
+) -> z_result_t {
+    if let Ok(mut s) = CStringOwned::wrap(str, libc::strlen(str), deleter, context) {
+        z_bytes_from_string(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
+}
+
+/// Serializes a statically allocated constant null-terminated string by aliasing.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param str: a pointer to the statically allocated constant string.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_from_static_str(
+    this: &mut MaybeUninit<z_owned_bytes_t>,
+    str: *const libc::c_char,
+) -> z_result_t {
+    if let Ok(mut s) = CStringOwned::wrap(str as _, libc::strlen(str), None, null_mut()) {
+        z_bytes_from_string(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
+}
+
+/// Serializes a null-terminated string by copying.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+/// @param str: a pointer to the null-terminated string. `this_` will take ownership of the string.
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_serialize_from_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    s: *const libc::c_char,
-) {
-    z_bytes_serialize_from_slice(this, s as *const u8, libc::strlen(s));
-}
-
-/// Serializes a null-terminated string by copying.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_serialize_from_str_copy(
-    this: &mut MaybeUninit<z_owned_bytes_t>,
-    s: *const libc::c_char,
-) {
-    z_bytes_serialize_from_slice_copy(this, s as *const u8, libc::strlen(s));
+    str: *const libc::c_char,
+) -> z_result_t {
+    if let Ok(mut s) = CStringOwned::new(str, libc::strlen(str)) {
+        z_bytes_from_string(this, s.as_owned_c_type_mut());
+        Z_OK
+    } else {
+        Z_EINVAL
+    }
 }
 
 /// Serializes a pair of `z_owned_bytes_t` objects which are consumed in the process.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_pair(
+pub extern "C" fn z_bytes_from_pair(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     first: &mut z_owned_bytes_t,
     second: &mut z_owned_bytes_t,
@@ -542,12 +675,12 @@ impl Iterator for ZBytesInIterator {
 }
 
 /// Constructs payload from an iterator to `z_owned_bytes_t`.
-/// @param this_: An uninitialized location in memory for `z_owned_bytes_t` will be constructed.
+/// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
 /// @param context: Arbitrary context that will be passed to iterator_body.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_iter(
+pub extern "C" fn z_bytes_from_iter(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     iterator_body: extern "C" fn(
         data: &mut MaybeUninit<z_owned_bytes_t>,
