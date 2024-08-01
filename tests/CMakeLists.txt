@@ -42,6 +42,8 @@ foreach(file ${files})
         set_source_files_properties(${file} PROPERTIES LANGUAGE CXX)
         set_property(TARGET ${target} PROPERTY LANGUAGE CXX)
         set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+        # add compiler flag "+x c++" to suppress the warning "treating 'c' input as 'c++' when in C++ mode, this behavior is deprecated "
+        target_compile_options(${target} PRIVATE -x c++)
     else()
         set_source_files_properties(${file} PROPERTIES LANGUAGE C)
         set_property(TARGET ${target} PROPERTY LANGUAGE C)
