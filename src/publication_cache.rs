@@ -130,7 +130,7 @@ pub extern "C" fn ze_undeclare_publication_cache(
     this: &mut ze_owned_publication_cache_t,
 ) -> result::z_result_t {
     if let Some(p) = this.as_rust_type_mut().take() {
-        if let Err(e) = p.close().wait() {
+        if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
         }
