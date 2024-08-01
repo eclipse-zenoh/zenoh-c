@@ -1092,9 +1092,15 @@ pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
     let re = Regex::new(r"(.+?) +(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
-    for (_, [return_type, func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
+    for (_, [return_type, func_name, arg_type, arg_name]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
+    {
         // if necessary, other prefixes like "extern", "static", etc. can be removed here
-        let return_type = return_type.split(' ').filter(|x| *x != "ZENOHC_API").collect::<Vec<_>>().join(" ");
+        let return_type = return_type
+            .split(' ')
+            .filter(|x| *x != "ZENOHC_API")
+            .collect::<Vec<_>>()
+            .join(" ");
         let f = FunctionSignature {
             return_type: Ctype::new(return_type.as_str()),
             func_name: func_name.to_string() + "_drop",
