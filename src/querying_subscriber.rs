@@ -219,7 +219,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
     this: ze_moved_querying_subscriber_t,
 ) -> result::z_result_t {
     if let Some(s) = this.into_rust_type() {
-        if let Err(e) = s.0.close().wait() {
+        if let Err(e) = s.0.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
         }
