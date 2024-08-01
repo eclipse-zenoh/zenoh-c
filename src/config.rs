@@ -19,7 +19,7 @@ use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
 use crate::{
     result::{self, z_result_t, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_owned_string_t, z_string_from_substr, z_string_null,
+    z_owned_string_t, z_string_copy_from_substr, z_string_null,
 };
 
 #[no_mangle]
@@ -149,7 +149,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
     let val = config.get_json(key).ok();
     match val {
         Some(val) => {
-            z_string_from_substr(
+            z_string_copy_from_substr(
                 out_value_string,
                 val.as_ptr() as *const libc::c_char,
                 val.len(),
@@ -251,7 +251,7 @@ pub unsafe extern "C" fn zc_config_to_string(
     match json5::to_string(config) {
         Ok(s) => {
             unsafe {
-                z_string_from_substr(
+                z_string_copy_from_substr(
                     out_config_string,
                     s.as_ptr() as *const libc::c_char,
                     s.len(),

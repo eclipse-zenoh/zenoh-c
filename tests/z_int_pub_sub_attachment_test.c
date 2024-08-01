@@ -49,7 +49,7 @@ bool create_attachment_iter(z_owned_bytes_t *kv_pair, void *context) {
     z_owned_bytes_t k, v;
     z_bytes_serialize_from_str(&k, it->current->key);
     z_bytes_serialize_from_str(&v, it->current->value);
-    z_bytes_serialize_from_pair(kv_pair, z_move(k), z_move(v));
+    z_bytes_from_pair(kv_pair, z_move(k), z_move(v));
     it->current++;
     return true;
 };
@@ -117,14 +117,12 @@ int run_publisher() {
 
         z_owned_bytes_t attachment;
         kv_it it = {kvs, kvs + 2};
-        z_bytes_serialize_from_iter(&attachment, create_attachment_iter, (void *)&it);
+        z_bytes_from_iter(&attachment, create_attachment_iter, (void *)&it);
 
         options.attachment = z_move(attachment);
 
-        z_view_slice_t v_var;
-        z_view_slice_from_str(&v_var, values[i]);
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_slice(&payload, z_slice_data(z_loan(v_var)), z_slice_len(z_loan(v_var)));
+        z_bytes_from_static_str(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 

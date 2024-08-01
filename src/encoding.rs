@@ -125,7 +125,7 @@ pub unsafe extern "C" fn z_encoding_to_string(
     out_str: &mut MaybeUninit<z_owned_string_t>,
 ) {
     let s: Cow<'static, str> = this.as_rust_type_ref().into();
-    z_string_from_substr(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
+    z_string_copy_from_substr(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
 }
 
 /// Returns a loaned default `z_loaned_encoding_t`.

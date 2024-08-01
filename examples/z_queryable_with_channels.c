@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
         z_query_parameters(query, &params);
 
         const z_loaned_bytes_t *payload = z_query_payload(query);
-        if (z_bytes_len(payload) > 0) {
+        if (payload != NULL && z_bytes_len(payload) > 0) {
             z_owned_string_t payload_string;
             z_bytes_deserialize_into_string(payload, &payload_string);
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         z_query_reply_options_default(&options);
 
         z_owned_bytes_t reply_payload;
-        z_bytes_serialize_from_str(&reply_payload, value);
+        z_bytes_from_static_str(&reply_payload, value);
         z_query_reply(query, z_loan(ke), z_move(reply_payload), &options);
         z_drop(z_move(oquery));
     }
