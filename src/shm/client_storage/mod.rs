@@ -102,8 +102,9 @@ decl_c_type!(
 pub extern "C" fn z_ref_shm_client_storage_global(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
 ) {
+    let global_client_storage = &*(GLOBAL_CLIENT_STORAGE.read());
     this.as_rust_type_mut_uninit()
-        .write(Some(GLOBAL_CLIENT_STORAGE.clone()));
+        .write(Some(global_client_storage.clone()));
 }
 
 #[no_mangle]
