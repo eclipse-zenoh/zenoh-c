@@ -914,14 +914,6 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .unwrap();
 
     //
-    // Common C/C++ part
-    //
-    let type_name_to_move_func = make_move_signatures(path_in);
-    let out = generate_move_functions(&type_name_to_move_func);
-    file_out.write_all(out.as_bytes()).unwrap();
-    file_out.write_all("\n\n".as_bytes()).unwrap();
-
-    //
     // C part
     //
     file_out
@@ -933,6 +925,11 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
             .as_bytes(),
         )
         .unwrap();
+
+    let type_name_to_move_func = make_move_signatures(path_in);
+    let out = generate_move_functions_c(&type_name_to_move_func);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let type_name_to_loan_func = find_loan_functions(path_in);
     let out = generate_generic_loan_c(&type_name_to_loan_func);
@@ -982,6 +979,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out
         .write_all("\n#else  // #ifndef __cplusplus\n".as_bytes())
         .unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_move_functions_cpp(&type_name_to_move_func);
+    file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let out = generate_generic_loan_cpp(&type_name_to_loan_func);
@@ -1253,7 +1254,7 @@ pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_drop", false)
 }
 
-pub fn generate_move_functions(macro_func: &[FunctionSignature]) -> String {
+pub fn generate_move_functions_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
@@ -1299,6 +1300,20 @@ pub fn generate_generic_closure_c(_macro_func: &[FunctionSignature]) -> String {
     "#define z_closure(x, callback, dropper, ctx) \\
     {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}"
         .to_owned()
+}
+
+pub fn generate_move_functions_cpp(macro_func: &[FunctionSignature]) -> String {
+    let mut out = String::new();
+    for sig in macro_func {
+        out += &format!(
+            "static inline {} {}({} x) {{ return {}{{x}}; }}\n",
+            sig.return_type.typename,
+            sig.func_name,
+            sig.args[0].typename.typename,
+            sig.return_type.typename
+        );
+    }
+    out
 }
 
 pub fn generate_generic_cpp(

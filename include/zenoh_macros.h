@@ -1,6 +1,9 @@
 #pragma once
 // clang-format off
 
+
+#ifndef __cplusplus
+
 static inline z_moved_bytes_t z_bytes_move(z_owned_bytes_t* x) { return (z_moved_bytes_t){x}; }
 static inline z_moved_bytes_writer_t z_bytes_writer_move(z_owned_bytes_writer_t* x) { return (z_moved_bytes_writer_t){x}; }
 static inline z_moved_closure_hello_t z_closure_hello_move(z_owned_closure_hello_t* x) { return (z_moved_closure_hello_t){x}; }
@@ -31,9 +34,6 @@ static inline z_moved_string_array_t z_string_array_move(z_owned_string_array_t*
 static inline z_moved_string_t z_string_move(z_owned_string_t* x) { return (z_moved_string_t){x}; }
 static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { return (z_moved_subscriber_t){x}; }
 
-
-
-#ifndef __cplusplus
 
 #define z_loan(x) \
     _Generic((x), \
@@ -253,6 +253,37 @@ static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { 
         const z_loaned_ring_handler_sample_t* : z_ring_handler_sample_recv \
     )(x, __VA_ARGS__)
 #else  // #ifndef __cplusplus
+
+
+static inline z_moved_bytes_t z_bytes_move(z_owned_bytes_t* x) { return z_moved_bytes_t{x}; }
+static inline z_moved_bytes_writer_t z_bytes_writer_move(z_owned_bytes_writer_t* x) { return z_moved_bytes_writer_t{x}; }
+static inline z_moved_closure_hello_t z_closure_hello_move(z_owned_closure_hello_t* x) { return z_moved_closure_hello_t{x}; }
+static inline z_moved_closure_query_t z_closure_query_move(z_owned_closure_query_t* x) { return z_moved_closure_query_t{x}; }
+static inline z_moved_closure_reply_t z_closure_reply_move(z_owned_closure_reply_t* x) { return z_moved_closure_reply_t{x}; }
+static inline z_moved_closure_sample_t z_closure_sample_move(z_owned_closure_sample_t* x) { return z_moved_closure_sample_t{x}; }
+static inline z_moved_condvar_t z_condvar_move(z_owned_condvar_t* x) { return z_moved_condvar_t{x}; }
+static inline z_moved_config_t z_config_move(z_owned_config_t* x) { return z_moved_config_t{x}; }
+static inline z_moved_encoding_t z_encoding_move(z_owned_encoding_t* x) { return z_moved_encoding_t{x}; }
+static inline z_moved_fifo_handler_query_t z_fifo_handler_query_move(z_owned_fifo_handler_query_t* x) { return z_moved_fifo_handler_query_t{x}; }
+static inline z_moved_fifo_handler_reply_t z_fifo_handler_reply_move(z_owned_fifo_handler_reply_t* x) { return z_moved_fifo_handler_reply_t{x}; }
+static inline z_moved_fifo_handler_sample_t z_fifo_handler_sample_move(z_owned_fifo_handler_sample_t* x) { return z_moved_fifo_handler_sample_t{x}; }
+static inline z_moved_hello_t z_hello_move(z_owned_hello_t* x) { return z_moved_hello_t{x}; }
+static inline z_moved_keyexpr_t z_keyexpr_move(z_owned_keyexpr_t* x) { return z_moved_keyexpr_t{x}; }
+static inline z_moved_mutex_t z_mutex_move(z_owned_mutex_t* x) { return z_moved_mutex_t{x}; }
+static inline z_moved_publisher_t z_publisher_move(z_owned_publisher_t* x) { return z_moved_publisher_t{x}; }
+static inline z_moved_query_t z_query_move(z_owned_query_t* x) { return z_moved_query_t{x}; }
+static inline z_moved_queryable_t z_queryable_move(z_owned_queryable_t* x) { return z_moved_queryable_t{x}; }
+static inline z_moved_reply_t z_reply_move(z_owned_reply_t* x) { return z_moved_reply_t{x}; }
+static inline z_moved_reply_err_t z_reply_err_move(z_owned_reply_err_t* x) { return z_moved_reply_err_t{x}; }
+static inline z_moved_ring_handler_query_t z_ring_handler_query_move(z_owned_ring_handler_query_t* x) { return z_moved_ring_handler_query_t{x}; }
+static inline z_moved_ring_handler_reply_t z_ring_handler_reply_move(z_owned_ring_handler_reply_t* x) { return z_moved_ring_handler_reply_t{x}; }
+static inline z_moved_ring_handler_sample_t z_ring_handler_sample_move(z_owned_ring_handler_sample_t* x) { return z_moved_ring_handler_sample_t{x}; }
+static inline z_moved_sample_t z_sample_move(z_owned_sample_t* x) { return z_moved_sample_t{x}; }
+static inline z_moved_session_t z_session_move(z_owned_session_t* x) { return z_moved_session_t{x}; }
+static inline z_moved_slice_t z_slice_move(z_owned_slice_t* x) { return z_moved_slice_t{x}; }
+static inline z_moved_string_array_t z_string_array_move(z_owned_string_array_t* x) { return z_moved_string_array_t{x}; }
+static inline z_moved_string_t z_string_move(z_owned_string_t* x) { return z_moved_string_t{x}; }
+static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { return z_moved_subscriber_t{x}; }
 
 
 
