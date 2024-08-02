@@ -523,7 +523,7 @@ impl From<CString> for CSlice {
 
 impl From<CStringOwned> for CSlice {
     fn from(value: CStringOwned) -> Self {
-        value.0.0
+        value.0 .0
     }
 }
 
