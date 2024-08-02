@@ -906,9 +906,9 @@ extern "C" fn z_bytes_get_writer(
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_write(
     this: &mut z_loaned_bytes_writer_t,
+    len_written: &mut usize,
     src: *const u8,
     len: usize,
-    len_written: &mut usize,
 ) -> z_result_t {
     match this.as_rust_type_mut().write(from_raw_parts(src, len)) {
         Ok(written) => {
