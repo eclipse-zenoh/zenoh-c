@@ -49,7 +49,7 @@ pub unsafe extern "C" fn z_encoding_from_substr(
         encoding.write(Encoding::default());
         result::Z_OK
     } else {
-        let s = from_raw_parts(s as *const u8, len);
+        let s = from_raw_parts(s, len);
         match from_utf8(s) {
             Ok(s) => {
                 encoding.write(Encoding::from_str(s).unwrap_infallible());
@@ -80,7 +80,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
     } else if s.is_null() {
         return result::Z_EINVAL;
     }
-    let schema_bytes = from_raw_parts(s as *const u8, len);
+    let schema_bytes = from_raw_parts(s, len);
     match from_utf8(schema_bytes) {
         Ok(schema_str) => {
             *encoding = std::mem::take(encoding).with_schema(schema_str);
