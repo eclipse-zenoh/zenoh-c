@@ -898,7 +898,8 @@ extern "C" fn z_bytes_get_writer(
         .write(Some(this.as_rust_type_mut().writer()));
 }
 
-/// Writes `len` bytes from `src` into underlying data
+/// Tries to write `len` bytes from `src` into underlying data,
+/// returning how many bytes were written.
 ///
 /// @return 0 in case of success, negative error code otherwise
 #[allow(clippy::missing_safety_doc)]
@@ -907,8 +908,28 @@ unsafe extern "C" fn z_bytes_writer_write(
     this: &mut z_loaned_bytes_writer_t,
     src: *const u8,
     len: usize,
+    len_written: &mut usize,
 ) -> z_result_t {
     match this.as_rust_type_mut().write(from_raw_parts(src, len)) {
+        Ok(written) => {
+            *len_written = written;
+            Z_OK
+        }
+        Err(_) => Z_EIO,
+    }
+}
+
+/// Writes `len` bytes from `src` into underlying data
+///
+/// @return 0 in case of success, negative error code otherwise
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+unsafe extern "C" fn z_bytes_writer_write_all(
+    this: &mut z_loaned_bytes_writer_t,
+    src: *const u8,
+    len: usize,
+) -> z_result_t {
+    match this.as_rust_type_mut().write_all(from_raw_parts(src, len)) {
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,
     }
