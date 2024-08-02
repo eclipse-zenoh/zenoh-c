@@ -66,7 +66,7 @@ evalexpr = "11.3.0"
 phf = { version = "0.11.2", features = ["macros"] }
 
 [lib]
-path="@CARGO_PROJECT_DIR@src/lib.rs"
+path = "@CARGO_PROJECT_DIR@src/lib.rs"
 name = "@CARGO_LIB_NAME@"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
