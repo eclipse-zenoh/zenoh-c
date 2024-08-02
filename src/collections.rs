@@ -43,7 +43,7 @@ pub extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_voi
 }
 
 #[derive(Default, Clone)]
-pub struct CSliceOwned(pub CSlice);
+pub struct CSliceOwned(CSlice);
 #[derive(Default)]
 pub struct CSliceView(CSlice);
 
@@ -428,11 +428,11 @@ pub use crate::opaque_types::{
 };
 
 #[derive(Default)]
-pub struct CString(pub CSlice);
+pub struct CString(CSlice);
 #[derive(Default)]
-pub struct CStringOwned(pub CString);
+pub struct CStringOwned(CString);
 #[derive(Default)]
-pub struct CStringView(pub CString);
+pub struct CStringView(CString);
 
 impl CString {
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
@@ -512,6 +512,18 @@ impl From<String> for CStringOwned {
     fn from(value: String) -> Self {
         let slice = Box::leak(value.into_boxed_str());
         CStringOwned(CString(CSlice::wrap(slice.as_ptr(), slice.len())))
+    }
+}
+
+impl From<CString> for CSlice {
+    fn from(value: CString) -> Self {
+        value.0
+    }
+}
+
+impl From<CStringOwned> for CSlice {
+    fn from(value: CStringOwned) -> Self {
+        value.0.0
     }
 }
 
