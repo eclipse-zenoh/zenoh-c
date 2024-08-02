@@ -1454,9 +1454,9 @@ ZENOHC_API void z_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
  * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_write(struct z_loaned_bytes_writer_t *this_,
-                                const uint8_t *src,
-                                size_t len);
+z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
+                                    const uint8_t *src,
+                                    size_t len);
 /**
  * Returns ``true`` if `this` is valid.
  */
