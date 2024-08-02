@@ -66,7 +66,7 @@ evalexpr = "11.3.0"
 phf = { version = "0.11.2", features = ["macros"] }
 
 [lib]
-path="src/lib.rs"
+path = "src/lib.rs"
 name = "zenohcd"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
