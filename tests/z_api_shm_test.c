@@ -39,15 +39,19 @@
         return -200;          \
     }
 
-int test_shm_buffer(z_owned_shm_mut_t* buf) {
-    ASSERT_CHECK(*buf);
+int test_shm_buffer(z_moved_shm_mut_t mbuf) {
+    assert(mbuf._ptr != NULL);
+    z_owned_shm_mut_t buf;
+    z_take(buf, mbuf);
+    assert(mbuf._ptr == NULL);
+    ASSERT_CHECK(buf);
 
-    { z_loaned_shm_mut_t* loaned = z_loan_mut(*buf); }
+    { z_loaned_shm_mut_t* loaned = z_loan_mut(buf); }
 
     z_owned_shm_t immut;
-    z_shm_from_mut(&immut, z_move(*buf));
+    z_shm_from_mut(&immut, z_move(buf));
     ASSERT_CHECK(immut);
-    ASSERT_CHECK_ERR(*buf);
+    assert(buf->_ptr == NULL);
 
     { const z_loaned_shm_t* loaned = z_loan(immut); }
 
@@ -79,7 +83,7 @@ int test_shm_buffer(z_owned_shm_mut_t* buf) {
     return 0;
 }
 
-bool test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
+int test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
     z_buf_alloc_result_t alloc;
     z_alloc_layout_alloc_gc(&alloc, alloc_layout);
 
@@ -89,12 +93,12 @@ bool test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
     if (z_check(alloc.buf)) {
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
-        return true;
+        return Z_OK;
     } else
-        return false;
+        return Z_ENULL;
 }
 
-bool test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_alloc_alignment_t alignment) {
+int test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_alloc_alignment_t alignment) {
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc_gc(&alloc, provider, size, alignment);
 
@@ -104,16 +108,16 @@ bool test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_all
     if (z_check(alloc.buf)) {
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
-        return true;
+        return Z_OK;
     } else
-        return false;
+        return Z_ENULL;
 }
 
 int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignment, size_t buf_ok_size,
                   size_t buf_err_size) {
     // test allocation OK
     for (int i = 0; i < 100; ++i) {
-        ASSERT_TRUE(test_allocation(z_loan(*provider), buf_ok_size, alignment));
+        ASSERT_OK(test_allocation(z_loan(*provider), buf_ok_size, alignment));
     }
 
     // test allocation ERROR
@@ -129,7 +133,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
         ASSERT_CHECK(alloc_layout);
         // test layouted allocation OK
         for (int i = 0; i < 100; ++i) {
-            ASSERT_TRUE(test_layouted_allocation(z_loan(alloc_layout)));
+            ASSERT_OK(test_layouted_allocation(z_loan(alloc_layout)));
         }
         z_drop(z_move(alloc_layout));
         ASSERT_CHECK_ERR(alloc_layout);
@@ -242,7 +246,7 @@ void layout_for_fn(struct z_owned_memory_layout_t* layout, void* context) {
     z_memory_layout_get_data(&size, &alignment, z_loan(*layout));
 
     if (size != 1 || alignment.pow != 0) {
-        z_memory_layout_drop(layout);
+        z_memory_layout_drop(z_move(*layout));
     }
 }
 
@@ -254,8 +258,8 @@ int run_c_provider() {
     test_provider_context test_context;
     test_context.available = size;
     test_context.count = size;
-    test_context.busy_flags = malloc(sizeof(bool) * size);
-    test_context.bytes = malloc(sizeof(uint8_t) * size);
+    test_context.busy_flags = (bool*)malloc(sizeof(bool) * size);
+    test_context.bytes = (uint8_t*)malloc(sizeof(uint8_t) * size);
     zc_context_t context = {&test_context, &delete_fn};
 
     // init callbacks
