@@ -215,7 +215,7 @@ macro_rules! impl_owned {
                 let mut this = self;
                 // expicit types for better understanding
                 let ptr: &mut Option<&mut Option<$rust_inner_type>> =
-                    &mut this.ptr.as_mut().map(|r| r.as_rust_type_mut());
+                    &mut this._ptr.as_mut().map(|r| r.as_rust_type_mut());
                 let res: Option<$rust_inner_type> =
                     ptr.as_mut().map(|r| std::mem::take(*r)).flatten();
                 res
@@ -246,7 +246,7 @@ macro_rules! impl_owned {
             fn into_rust_type(self) -> Self::RustType {
                 use $crate::transmute::RustTypeRef;
                 let mut this = self;
-                this.ptr
+                this._ptr
                     .as_mut()
                     .map(|r| std::mem::take(r.as_rust_type_mut()))
             }
@@ -269,12 +269,12 @@ macro_rules! impl_owned {
             type RustType = Option<$c_owned_type>;
             fn into_rust_type(self) -> Self::RustType {
                 let mut this = self;
-                this.ptr.as_mut().map(|r| std::mem::take(*r))
+                this._ptr.as_mut().map(|r| std::mem::take(*r))
             }
         }
         impl Drop for $c_moved_type {
             fn drop(&mut self) {
-                std::mem::take(&mut self.ptr);
+                std::mem::take(&mut self._ptr);
             }
         }
     };

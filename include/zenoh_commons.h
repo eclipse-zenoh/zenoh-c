@@ -273,16 +273,16 @@ typedef struct zc_threadsafe_context_t {
 } zc_threadsafe_context_t;
 #endif
 typedef struct z_moved_bytes_t {
-  struct z_owned_bytes_t *ptr;
+  struct z_owned_bytes_t *_ptr;
 } z_moved_bytes_t;
 typedef struct z_moved_slice_t {
-  struct z_owned_slice_t *ptr;
+  struct z_owned_slice_t *_ptr;
 } z_moved_slice_t;
 typedef struct z_moved_string_t {
-  struct z_owned_string_t *ptr;
+  struct z_owned_string_t *_ptr;
 } z_moved_string_t;
 typedef struct z_moved_bytes_writer_t {
-  struct z_owned_bytes_writer_t *ptr;
+  struct z_owned_bytes_writer_t *_ptr;
 } z_moved_bytes_writer_t;
 /**
  * Unique segment identifier
@@ -323,7 +323,7 @@ typedef struct z_clock_t {
   const void *t_base;
 } z_clock_t;
 typedef struct z_moved_session_t {
-  struct z_owned_session_t *ptr;
+  struct z_owned_session_t *_ptr;
 } z_moved_session_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -354,7 +354,7 @@ typedef struct z_owned_closure_hello_t {
  * Moved closure.
  */
 typedef struct z_moved_closure_hello_t {
-  struct z_owned_closure_hello_t *ptr;
+  struct z_owned_closure_hello_t *_ptr;
 } z_moved_closure_hello_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -384,7 +384,7 @@ typedef struct z_owned_closure_query_t {
  * Moved closure.
  */
 typedef struct z_moved_closure_query_t {
-  struct z_owned_closure_query_t *ptr;
+  struct z_owned_closure_query_t *_ptr;
 } z_moved_closure_query_t;
 /**
  * A structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -414,7 +414,7 @@ typedef struct z_owned_closure_reply_t {
  * Moved closure.
  */
 typedef struct z_moved_closure_reply_t {
-  struct z_owned_closure_reply_t *ptr;
+  struct z_owned_closure_reply_t *_ptr;
 } z_moved_closure_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -444,7 +444,7 @@ typedef struct z_owned_closure_sample_t {
  * Moved closure.
  */
 typedef struct z_moved_closure_sample_t {
-  struct z_owned_closure_sample_t *ptr;
+  struct z_owned_closure_sample_t *_ptr;
 } z_moved_closure_sample_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -477,17 +477,17 @@ typedef struct z_owned_closure_zid_t {
  */
 #if defined(UNSTABLE)
 typedef struct z_moved_closure_zid_t {
-  struct z_owned_closure_zid_t *ptr;
+  struct z_owned_closure_zid_t *_ptr;
 } z_moved_closure_zid_t;
 #endif
 typedef struct z_moved_condvar_t {
-  struct z_owned_condvar_t *ptr;
+  struct z_owned_condvar_t *_ptr;
 } z_moved_condvar_t;
 typedef struct z_moved_config_t {
-  struct z_owned_config_t *ptr;
+  struct z_owned_config_t *_ptr;
 } z_moved_config_t;
 typedef struct z_moved_encoding_t {
-  struct z_owned_encoding_t *ptr;
+  struct z_owned_encoding_t *_ptr;
 } z_moved_encoding_t;
 /**
  * Options passed to the `z_declare_publisher()` function.
@@ -562,13 +562,13 @@ typedef struct z_delete_options_t {
 #endif
 } z_delete_options_t;
 typedef struct z_moved_fifo_handler_query_t {
-  struct z_owned_fifo_handler_query_t *ptr;
+  struct z_owned_fifo_handler_query_t *_ptr;
 } z_moved_fifo_handler_query_t;
 typedef struct z_moved_fifo_handler_reply_t {
-  struct z_owned_fifo_handler_reply_t *ptr;
+  struct z_owned_fifo_handler_reply_t *_ptr;
 } z_moved_fifo_handler_reply_t;
 typedef struct z_moved_fifo_handler_sample_t {
-  struct z_owned_fifo_handler_sample_t *ptr;
+  struct z_owned_fifo_handler_sample_t *_ptr;
 } z_moved_fifo_handler_sample_t;
 /**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
@@ -636,13 +636,13 @@ typedef struct z_get_options_t {
   uint64_t timeout_ms;
 } z_get_options_t;
 typedef struct z_moved_hello_t {
-  struct z_owned_hello_t *ptr;
+  struct z_owned_hello_t *_ptr;
 } z_moved_hello_t;
 typedef struct z_moved_keyexpr_t {
-  struct z_owned_keyexpr_t *ptr;
+  struct z_owned_keyexpr_t *_ptr;
 } z_moved_keyexpr_t;
 typedef struct z_moved_mutex_t {
-  struct z_owned_mutex_t *ptr;
+  struct z_owned_mutex_t *_ptr;
 } z_moved_mutex_t;
 /**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
@@ -655,7 +655,7 @@ typedef struct z_publisher_delete_options_t {
   const struct z_timestamp_t *timestamp;
 } z_publisher_delete_options_t;
 typedef struct z_moved_publisher_t {
-  struct z_owned_publisher_t *ptr;
+  struct z_owned_publisher_t *_ptr;
 } z_moved_publisher_t;
 /**
  * Options passed to the `z_publisher_put()` function.
@@ -722,7 +722,7 @@ typedef struct z_put_options_t {
   struct z_moved_bytes_t attachment;
 } z_put_options_t;
 typedef struct z_moved_query_t {
-  struct z_owned_query_t *ptr;
+  struct z_owned_query_t *_ptr;
 } z_moved_query_t;
 /**
  * Represents the set of options that can be applied to a query reply,
@@ -803,25 +803,25 @@ typedef struct z_query_reply_err_options_t {
   struct z_moved_encoding_t encoding;
 } z_query_reply_err_options_t;
 typedef struct z_moved_queryable_t {
-  struct z_owned_queryable_t *ptr;
+  struct z_owned_queryable_t *_ptr;
 } z_moved_queryable_t;
 typedef struct z_moved_reply_t {
-  struct z_owned_reply_t *ptr;
+  struct z_owned_reply_t *_ptr;
 } z_moved_reply_t;
 typedef struct z_moved_reply_err_t {
-  struct z_owned_reply_err_t *ptr;
+  struct z_owned_reply_err_t *_ptr;
 } z_moved_reply_err_t;
 typedef struct z_moved_ring_handler_query_t {
-  struct z_owned_ring_handler_query_t *ptr;
+  struct z_owned_ring_handler_query_t *_ptr;
 } z_moved_ring_handler_query_t;
 typedef struct z_moved_ring_handler_reply_t {
-  struct z_owned_ring_handler_reply_t *ptr;
+  struct z_owned_ring_handler_reply_t *_ptr;
 } z_moved_ring_handler_reply_t;
 typedef struct z_moved_ring_handler_sample_t {
-  struct z_owned_ring_handler_sample_t *ptr;
+  struct z_owned_ring_handler_sample_t *_ptr;
 } z_moved_ring_handler_sample_t;
 typedef struct z_moved_sample_t {
-  struct z_owned_sample_t *ptr;
+  struct z_owned_sample_t *_ptr;
 } z_moved_sample_t;
 /**
  * Options to pass to `z_scout()`.
@@ -918,13 +918,13 @@ typedef struct zc_shm_provider_backend_callbacks_t {
 } zc_shm_provider_backend_callbacks_t;
 #endif
 typedef struct z_moved_string_array_t {
-  struct z_owned_string_array_t *ptr;
+  struct z_owned_string_array_t *_ptr;
 } z_moved_string_array_t;
 typedef struct z_moved_subscriber_t {
-  struct z_owned_subscriber_t *ptr;
+  struct z_owned_subscriber_t *_ptr;
 } z_moved_subscriber_t;
 typedef struct z_moved_task_t {
-  struct z_owned_task_t *ptr;
+  struct z_owned_task_t *_ptr;
 } z_moved_task_t;
 typedef struct z_task_attr_t {
   size_t _0;
@@ -985,7 +985,7 @@ typedef struct zc_owned_closure_matching_status_t {
  */
 #if defined(UNSTABLE)
 typedef struct zc_moved_closure_matching_status_t {
-  struct zc_owned_closure_matching_status_t *ptr;
+  struct zc_owned_closure_matching_status_t *_ptr;
 } zc_moved_closure_matching_status_t;
 #endif
 /**

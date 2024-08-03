@@ -48,7 +48,7 @@ pub struct z_loaned_closure_hello_t {
 /// Moved closure.
 #[repr(C)]
 pub struct z_moved_closure_hello_t {
-    pub ptr: Option<&'static mut z_owned_closure_hello_t>,
+    pub _ptr: Option<&'static mut z_owned_closure_hello_t>,
 }
 
 decl_c_type!(

@@ -170,18 +170,18 @@ pub struct {type_name} {{
                 "#[repr(C)]
 #[derive(Default)]
 pub struct {moved_type_name} {{
-    pub ptr: Option<&'static mut {type_name}>,
+    pub _ptr: Option<&'static mut {type_name}>,
 }}
 
 impl {moved_type_name} {{
     pub fn take(&mut self) -> Option<{type_name}> {{
-        self.ptr.take().map(std::mem::take)
+        self._ptr.take().map(std::mem::take)
     }}
 }}
 
 impl From<Option<&'static mut {type_name}>> for {moved_type_name} {{
     fn from(ptr: Option<&'static mut {type_name}>) -> Self {{
-        Self {{ ptr }}
+        Self {{ _ptr: ptr }}
     }}
 }}
 "
@@ -914,6 +914,14 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .unwrap();
 
     //
+    // Common part
+    //
+    let (move_funcs, take_funcs) = make_move_take_signatures(path_in);
+    let out = generate_take_functions(&take_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    //
     // C part
     //
     file_out
@@ -926,8 +934,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         )
         .unwrap();
 
-    let type_name_to_move_func = make_move_signatures(path_in);
-    let out = generate_move_functions_c(&type_name_to_move_func);
+    let out = generate_move_functions_c(&move_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -946,7 +953,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_move_c(&type_name_to_move_func);
+    let out = generate_generic_move_c(&move_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -981,7 +988,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_move_functions_cpp(&type_name_to_move_func);
+    let out = generate_move_functions_cpp(&move_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -997,7 +1004,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_move_cpp(&type_name_to_move_func);
+    let out = generate_generic_move_cpp(&move_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1031,22 +1038,35 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .unwrap();
 }
 
-pub fn make_move_signatures(path_in: &str) -> Vec<FunctionSignature> {
+pub fn make_move_take_signatures(
+    path_in: &str,
+) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
-    let mut res = Vec::<FunctionSignature>::new();
+    let mut move_funcs = Vec::<FunctionSignature>::new();
+    let mut take_funcs = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
         let (prefix, _, remainder) = split_type_name(arg_type);
         let z_owned_type = format!("{}_{}_{}*", prefix, "owned", remainder);
-        let f = FunctionSignature {
+        let z_moved_type = format!("{}_{}_{}", prefix, "moved", remainder);
+        let move_f = FunctionSignature {
             return_type: Ctype::new(arg_type),
             func_name: func_name.to_string() + "_move",
             args: vec![FuncArg::new(&z_owned_type, arg_name)],
         };
-        res.push(f);
+        let take_f = FunctionSignature {
+            return_type: Ctype::new("void"),
+            func_name: func_name.to_string() + "_take",
+            args: vec![
+                FuncArg::new(&z_owned_type, "this_"),
+                FuncArg::new(&z_moved_type, arg_name),
+            ],
+        };
+        move_funcs.push(move_f);
+        take_funcs.push(take_f);
     }
-    res
+    (move_funcs, take_funcs)
 }
 
 pub fn find_loan_functions(path_in: &str) -> Vec<FunctionSignature> {
@@ -1254,11 +1274,40 @@ pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_drop", false)
 }
 
+pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
+    let mut out = String::new();
+    for sig in macro_func {
+        out += &format!(
+            "static inline void {}({} {}, {} {}) {{ *this_ = *x._ptr; z_null(x._ptr); }}\n",
+            sig.func_name,
+            sig.args[0].typename.typename,
+            sig.args[0].name,
+            sig.args[1].typename.typename,
+            sig.args[1].name,
+        );
+    }
+    out
+}
+
 pub fn generate_move_functions_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
             "static inline {} {}({} x) {{ return ({}){{x}}; }}\n",
+            sig.return_type.typename,
+            sig.func_name,
+            sig.args[0].typename.typename,
+            sig.return_type.typename
+        );
+    }
+    out
+}
+
+pub fn generate_move_functions_cpp(macro_func: &[FunctionSignature]) -> String {
+    let mut out = String::new();
+    for sig in macro_func {
+        out += &format!(
+            "static inline {} {}({} x) {{ return {}{{x}}; }}\n",
             sig.return_type.typename,
             sig.func_name,
             sig.args[0].typename.typename,
@@ -1300,20 +1349,6 @@ pub fn generate_generic_closure_c(_macro_func: &[FunctionSignature]) -> String {
     "#define z_closure(x, callback, dropper, ctx) \\
     {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}"
         .to_owned()
-}
-
-pub fn generate_move_functions_cpp(macro_func: &[FunctionSignature]) -> String {
-    let mut out = String::new();
-    for sig in macro_func {
-        out += &format!(
-            "static inline {} {}({} x) {{ return {}{{x}}; }}\n",
-            sig.return_type.typename,
-            sig.func_name,
-            sig.args[0].typename.typename,
-            sig.return_type.typename
-        );
-    }
-    out
 }
 
 pub fn generate_generic_cpp(
