@@ -950,16 +950,16 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let type_name_to_null_func = find_null_functions(path_in);
+    let out = generate_generic_null_c(&type_name_to_null_func);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_take_functions(&take_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let out = generate_generic_take_c(&take_funcs);
-    file_out.write_all(out.as_bytes()).unwrap();
-    file_out.write_all("\n\n".as_bytes()).unwrap();
-
-    let type_name_to_null_func = find_null_functions(path_in);
-    let out = generate_generic_null_c(&type_name_to_null_func);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1009,15 +1009,15 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_null_cpp(&type_name_to_null_func);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_take_functions(&take_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let out = generate_generic_take_cpp(&take_funcs);
-    file_out.write_all(out.as_bytes()).unwrap();
-    file_out.write_all("\n\n".as_bytes()).unwrap();
-
-    let out = generate_generic_null_cpp(&type_name_to_null_func);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
