@@ -1301,11 +1301,14 @@ pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
-            "static inline void {}({} {}, {} {}) {{ *this_ = *x._ptr; z_null(x._ptr); }}\n",
+            "static inline void {}({} {}, {} {}) {{ *{} = *{}._ptr; z_null({}._ptr); }}\n",
             sig.func_name,
             sig.args[0].typename.typename,
             sig.args[0].name,
             sig.args[1].typename.typename,
+            sig.args[1].name,
+            sig.args[0].name,
+            sig.args[1].name,
             sig.args[1].name,
         );
     }
