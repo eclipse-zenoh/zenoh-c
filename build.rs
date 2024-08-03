@@ -950,6 +950,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_take_functions(&take_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_take_c(&take_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
@@ -1005,6 +1009,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_take_functions(&take_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_take_cpp(&take_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
@@ -1037,13 +1045,6 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out
         .write_all("\n#endif  // #ifndef __cplusplus\n\n".as_bytes())
         .unwrap();
-
-    //
-    // Common part
-    //
-    let out = generate_take_functions(&take_funcs);
-    file_out.write_all(out.as_bytes()).unwrap();
-    file_out.write_all("\n\n".as_bytes()).unwrap();
 }
 
 pub fn make_move_take_signatures(
