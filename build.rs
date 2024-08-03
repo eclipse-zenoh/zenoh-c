@@ -957,6 +957,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_take_c(&take_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let type_name_to_null_func = find_null_functions(path_in);
     let out = generate_generic_null_c(&type_name_to_null_func);
     file_out.write_all(out.as_bytes()).unwrap();
@@ -1005,6 +1009,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let out = generate_generic_move_cpp(&move_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_take_cpp(&take_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1059,8 +1067,8 @@ pub fn make_move_take_signatures(
             return_type: Ctype::new("void"),
             func_name: func_name.to_string() + "_take",
             args: vec![
-                FuncArg::new(&z_owned_type, "this_"),
-                FuncArg::new(&z_moved_type, arg_name),
+                FuncArg::new(&z_owned_type, arg_name),
+                FuncArg::new(&z_moved_type, "x"),
             ],
         };
         move_funcs.push(move_f);
@@ -1224,20 +1232,30 @@ pub fn generate_generic_c(
     generic_name: &str,
     decay: bool,
 ) -> String {
-    let va_args = macro_func.iter().any(|f| f.args.len() > 1);
+    let va_args = macro_func
+        .iter()
+        .any(|f| f.args.len() != macro_func[0].args.len());
+    let mut args = macro_func[0]
+        .args
+        .iter()
+        .map(|a| a.name.to_string())
+        .collect::<Vec<_>>();
     let mut out = if va_args {
         format!(
-            "#define {generic_name}(x, ...) \\
-    _Generic((x)"
+            "#define {generic_name}({}, ...) \\
+    _Generic((x)",
+            args.join(", ")
         )
     } else {
         format!(
-            "#define {generic_name}(x) \\
-    _Generic((x)"
+            "#define {generic_name}({}) \\
+    _Generic((x)",
+            args.join(", ")
         )
     };
-
-    let x = if decay { "&x" } else { "x" };
+    if decay {
+        args[0] = format!("&{}", args[0]);
+    }
 
     for func in macro_func {
         let owned_type = if decay {
@@ -1251,9 +1269,9 @@ pub fn generate_generic_c(
     }
     out += " \\\n";
     if va_args {
-        out += &format!("    )({x}, __VA_ARGS__)");
+        out += &format!("    )({}, __VA_ARGS__)", args.join(", "));
     } else {
-        out += &format!("    )({x})");
+        out += &format!("    )({})", args.join(", "));
     }
     out
 }
@@ -1268,6 +1286,10 @@ pub fn generate_generic_loan_mut_c(macro_func: &[FunctionSignature]) -> String {
 
 pub fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_move", true)
+}
+
+pub fn generate_generic_take_c(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_c(macro_func, "z_take", true)
 }
 
 pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
@@ -1440,6 +1462,10 @@ pub fn generate_generic_drop_cpp(macro_func: &[FunctionSignature]) -> String {
 
 pub fn generate_generic_move_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_move", true)
+}
+
+pub fn generate_generic_take_cpp(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_cpp(macro_func, "z_take", true)
 }
 
 pub fn generate_generic_null_cpp(macro_func: &[FunctionSignature]) -> String {
