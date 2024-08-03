@@ -914,14 +914,6 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         .unwrap();
 
     //
-    // Common part
-    //
-    let (move_funcs, take_funcs) = make_move_take_signatures(path_in);
-    let out = generate_take_functions(&take_funcs);
-    file_out.write_all(out.as_bytes()).unwrap();
-    file_out.write_all("\n\n".as_bytes()).unwrap();
-
-    //
     // C part
     //
     file_out
@@ -934,6 +926,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         )
         .unwrap();
 
+    let (move_funcs, take_funcs) = make_move_take_signatures(path_in);
     let out = generate_move_functions_c(&move_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
@@ -1042,8 +1035,15 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
 
     file_out
-        .write_all("\n#endif  // #ifndef __cplusplus".as_bytes())
+        .write_all("\n#endif  // #ifndef __cplusplus\n\n".as_bytes())
         .unwrap();
+
+    //
+    // Common part
+    //
+    let out = generate_take_functions(&take_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
 }
 
 pub fn make_move_take_signatures(
