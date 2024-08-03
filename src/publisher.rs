@@ -299,6 +299,13 @@ decl_c_type!(
     moved(zc_moved_matching_listener_t)
 );
 
+/// Constructs an empty matching listener
+#[no_mangle]
+#[cfg(feature = "unstable")]
+pub extern "C" fn zc_matching_listerner_null(this: &mut MaybeUninit<zc_owned_matching_listener_t>) {
+    this.as_rust_type_mut_uninit().write(None);
+}
+
 #[cfg(feature = "unstable")]
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]

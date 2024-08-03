@@ -4528,6 +4528,12 @@ ZENOHC_API z_result_t zc_liveliness_undeclare_token(zc_moved_liveliness_token_t 
 ZENOHC_API enum zc_locality_t zc_locality_default(void);
 #endif
 /**
+ * Constructs an empty matching listener
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void zc_matching_listerner_null(zc_owned_matching_listener_t *this_);
+#endif
+/**
  * Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
  *
  * @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
