@@ -302,7 +302,7 @@ decl_c_type!(
 /// Constructs an empty matching listener
 #[no_mangle]
 #[cfg(feature = "unstable")]
-pub extern "C" fn zc_matching_listerner_null(this: &mut MaybeUninit<zc_owned_matching_listener_t>) {
+pub extern "C" fn zc_matching_listener_null(this: &mut MaybeUninit<zc_owned_matching_listener_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 

@@ -4531,7 +4531,7 @@ ZENOHC_API enum zc_locality_t zc_locality_default(void);
  * Constructs an empty matching listener
  */
 #if defined(UNSTABLE)
-ZENOHC_API void zc_matching_listerner_null(zc_owned_matching_listener_t *this_);
+ZENOHC_API void zc_matching_listener_null(zc_owned_matching_listener_t *this_);
 #endif
 /**
  * Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
