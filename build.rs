@@ -1309,9 +1309,9 @@ pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
 pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
-        let (_, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
+        let (prefix, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
         out += &format!(
-            "static inline void {}({} {}, {} {}) {{ *{} = *{}._ptr; z_{}_null(({}._ptr)); }}\n",
+            "static inline void {}({} {}, {} {}) {{ *{} = *{}._ptr; {}_{}_null(({}._ptr)); }}\n",
             sig.func_name,
             sig.args[0].typename.typename,
             sig.args[0].name,
@@ -1319,6 +1319,7 @@ pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
             sig.args[1].name,
             sig.args[0].name,
             sig.args[1].name,
+            prefix,
             semantic,
             sig.args[1].name,
         );
