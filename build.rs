@@ -126,16 +126,23 @@ fn produce_opaque_types_data() -> PathBuf {
     output_file_path
 }
 
-fn split_type_name(type_name: &str) -> (&str, &str, &str) {
+fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     let mut split = type_name.split('_');
     let prefix = split
         .next()
-        .expect("Type should start from 'z_', 'zc_', etc.");
-    let category = split
+        .unwrap_or_else(|| panic!("Fist '_' not found in type name: {type_name}"));
+    let cat = split
         .next()
-        .expect("Type should be in format `z_loaned_...`, `z_owned_...` etc.");
-    let remainder = &type_name[prefix.len() + 1 + category.len() + 1..];
-    (prefix, category, remainder)
+        .unwrap_or_else(|| panic!("Second '_' not found in type name: {type_name}"));
+    let category = if cat != "owned" && cat != "loaned" && cat != "moved" {
+        None
+    } else {
+        Some(cat)
+    };
+    let postfix = split.next_back().expect("Type should end with '_t'");
+    let prefix_cat_len = prefix.len() + 1 + category.map(|c| c.len() + 1).unwrap_or(0);
+    let semantic = &type_name[prefix_cat_len..type_name.len() - postfix.len() - 1];
+    (prefix, category, semantic, postfix)
 }
 
 fn generate_opaque_types() {
@@ -151,9 +158,9 @@ fn generate_opaque_types() {
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
-        let (prefix, category, remainder) = split_type_name(type_name);
+        let (prefix, category, semantic, postfix) = split_type_name(type_name);
         let mut s = String::new();
-        if category != "owned" {
+        if category != Some("owned") {
             s += "#[derive(Copy, Clone)]\n";
         };
         s += format!(
@@ -164,8 +171,8 @@ pub struct {type_name} {{
 "
         )
         .as_str();
-        if category == "owned" {
-            let moved_type_name = format!("{}_{}_{}", prefix, "moved", remainder);
+        if category == Some("owned") {
+            let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
             s += format!(
                 "#[repr(C)]
 #[derive(Default)]
@@ -1056,9 +1063,9 @@ pub fn make_move_take_signatures(
     let mut take_funcs = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
-        let (prefix, _, remainder) = split_type_name(arg_type);
-        let z_owned_type = format!("{}_{}_{}*", prefix, "owned", remainder);
-        let z_moved_type = format!("{}_{}_{}", prefix, "moved", remainder);
+        let (prefix, _, semantic, postfix) = split_type_name(arg_type);
+        let z_owned_type = format!("{}_{}_{}_{}*", prefix, "owned", semantic, postfix);
+        let z_moved_type = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
         let move_f = FunctionSignature {
             return_type: Ctype::new(arg_type),
             func_name: func_name.to_string() + "_move",
@@ -1300,8 +1307,9 @@ pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
 pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
+        let (_, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
         out += &format!(
-            "static inline void {}({} {}, {} {}) {{ *{} = *{}._ptr; z_null({}._ptr); }}\n",
+            "static inline void {}({} {}, {} {}) {{ *{} = *{}._ptr; z_{}_null(({}._ptr)); }}\n",
             sig.func_name,
             sig.args[0].typename.typename,
             sig.args[0].name,
@@ -1309,6 +1317,7 @@ pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
             sig.args[1].name,
             sig.args[0].name,
             sig.args[1].name,
+            semantic,
             sig.args[1].name,
         );
     }
