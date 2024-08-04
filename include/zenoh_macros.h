@@ -36,7 +36,7 @@ static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { 
 
 
 #define z_loan(this_) \
-    _Generic((x), \
+    _Generic((this_), \
         z_owned_bytes_t : z_bytes_loan, \
         z_owned_bytes_writer_t : z_bytes_writer_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
@@ -71,7 +71,7 @@ static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { 
     )(&this_)
 
 #define z_loan_mut(this_) \
-    _Generic((x), \
+    _Generic((this_), \
         z_owned_bytes_t : z_bytes_loan_mut, \
         z_owned_bytes_writer_t : z_bytes_writer_loan_mut, \
         z_owned_condvar_t : z_condvar_loan_mut, \
@@ -83,7 +83,7 @@ static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { 
     )(&this_)
 
 #define z_drop(this_) \
-    _Generic((x), \
+    _Generic((this_), \
         z_moved_bytes_t : z_bytes_drop, \
         z_moved_bytes_writer_t : z_bytes_writer_drop, \
         z_moved_closure_hello_t : z_closure_hello_drop, \
@@ -116,7 +116,7 @@ static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { 
     )(this_)
 
 #define z_move(this_) \
-    _Generic((x), \
+    _Generic((this_), \
         z_owned_bytes_t : z_bytes_move, \
         z_owned_bytes_writer_t : z_bytes_writer_move, \
         z_owned_closure_hello_t : z_closure_hello_move, \
@@ -149,7 +149,7 @@ static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { 
     )(&this_)
 
 #define z_null(this_) \
-    _Generic((x), \
+    _Generic((this_), \
         z_owned_bytes_t* : z_bytes_null, \
         z_owned_bytes_writer_t* : z_bytes_writer_null, \
         z_owned_closure_hello_t* : z_closure_hello_null, \
@@ -217,7 +217,7 @@ static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscr
 
 
 #define z_take(this_, x) \
-    _Generic((x), \
+    _Generic((this_), \
         z_owned_bytes_t : z_bytes_take, \
         z_owned_bytes_writer_t : z_bytes_writer_take, \
         z_owned_closure_hello_t : z_closure_hello_take, \
@@ -250,7 +250,7 @@ static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscr
     )(&this_, x)
 
 #define z_check(this_) \
-    _Generic((x), \
+    _Generic((this_), \
         z_owned_bytes_t : z_bytes_check, \
         z_owned_bytes_writer_t : z_bytes_writer_check, \
         z_owned_closure_hello_t : z_closure_hello_check, \
@@ -287,7 +287,7 @@ static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscr
     )(&this_)
 
 #define z_call(closure, hello) \
-    _Generic((x), \
+    _Generic((closure), \
         const z_loaned_closure_hello_t* : z_closure_hello_call, \
         const z_loaned_closure_query_t* : z_closure_query_call, \
         const z_loaned_closure_reply_t* : z_closure_reply_call, \
@@ -298,7 +298,7 @@ static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscr
     {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}
 
 #define z_try_recv(this_, query) \
-    _Generic((x), \
+    _Generic((this_), \
         const z_loaned_fifo_handler_query_t* : z_fifo_handler_query_try_recv, \
         const z_loaned_fifo_handler_reply_t* : z_fifo_handler_reply_try_recv, \
         const z_loaned_fifo_handler_sample_t* : z_fifo_handler_sample_try_recv, \
@@ -308,7 +308,7 @@ static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscr
     )(this_, query)
 
 #define z_recv(this_, query) \
-    _Generic((x), \
+    _Generic((this_), \
         const z_loaned_fifo_handler_query_t* : z_fifo_handler_query_recv, \
         const z_loaned_fifo_handler_reply_t* : z_fifo_handler_reply_recv, \
         const z_loaned_fifo_handler_sample_t* : z_fifo_handler_sample_recv, \

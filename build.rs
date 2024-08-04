@@ -1251,14 +1251,16 @@ pub fn generate_generic_c(
     let mut out = if va_args {
         format!(
             "#define {generic_name}({}, ...) \\
-    _Generic((x)",
-            args.join(", ")
+        _Generic(({})",
+            args.join(", "),
+            args[0],
         )
     } else {
         format!(
             "#define {generic_name}({}) \\
-    _Generic((x)",
-            args.join(", ")
+    _Generic(({})",
+            args.join(", "),
+            args[0],
         )
     };
     if decay {

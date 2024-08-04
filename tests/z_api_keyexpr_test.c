@@ -28,9 +28,9 @@ void canonize() {
 
     strcpy(keyexpr, "a/**/**/c");
     len_old = len_new = strlen(keyexpr);
-    printf("'%s', len = %lu -> ", keyexpr, len_old);
+    printf("'%s', len = %llu -> ", keyexpr, len_old);
     err = z_keyexpr_canonize(keyexpr, &len_new);
-    printf("'%s', len = %lu, err = %d\n", keyexpr, len_new, err);
+    printf("'%s', len = %llu, err = %d\n", keyexpr, len_new, err);
     assert(err == 0);
     assert(len_new == len_old - 3);
     assert(strcmp(keyexpr, "a/**/c") == 0);
