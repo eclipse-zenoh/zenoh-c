@@ -88,9 +88,9 @@ void test_writer() {
     z_owned_bytes_writer_t writer;
     z_bytes_get_writer(z_loan_mut(payload), &writer);
 
-    assert(z_bytes_writer_write(z_loan_mut(writer), data, 3) == 0);
-    assert(z_bytes_writer_write(z_loan_mut(writer), data + 3, 5) == 0);
-    assert(z_bytes_writer_write(z_loan_mut(writer), data + 8, 2) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data, 3) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data + 3, 5) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data + 8, 2) == 0);
 
     z_drop(z_move(writer));
 

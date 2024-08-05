@@ -172,7 +172,7 @@ Functions
 .. doxygenfunction:: z_bytes_writer_null
 .. doxygenfunction:: z_bytes_writer_check
 .. doxygenfunction:: z_bytes_writer_drop
-.. doxygenfunction:: z_bytes_writer_write
+.. doxygenfunction:: z_bytes_writer_write_all
 
 
 
