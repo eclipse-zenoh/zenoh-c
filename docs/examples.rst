@@ -123,7 +123,7 @@ Query
 
       z_get(z_loan(s), z_loan(key_expr), "", z_move(closure), NULL);
       z_owned_reply_t reply;
-      for (z_recv(z_loan(handler), &reply); z_check(reply); z_recv(z_loan(handler), &reply)) {
+      for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {
           if (z_reply_is_ok(&reply)) {
               const z_loaned_sample_t* sample = z_reply_ok(&reply);
               z_view_string_t key_string;

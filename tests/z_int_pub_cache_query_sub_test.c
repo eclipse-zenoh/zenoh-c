@@ -134,8 +134,8 @@ int run_subscriber() {
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
     ze_owned_querying_subscriber_t sub;
-    ze_declare_querying_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL);
-    if (!z_check(sub)) {
+    ;
+    if (ze_declare_querying_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) != Z_OK) {
         perror("Unable to declare subscriber!");
         return -1;
     }

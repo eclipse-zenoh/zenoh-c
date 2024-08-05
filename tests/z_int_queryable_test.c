@@ -73,8 +73,8 @@ int run_queryable() {
     z_owned_closure_query_t callback;
     z_closure(&callback, query_handler, NULL, keyexpr);
     z_owned_queryable_t qable;
-    z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL);
-    if (!z_check(qable)) {
+    ;
+    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) != Z_OK) {
         printf("Unable to create queryable.\n");
         return -1;
     }
@@ -109,7 +109,7 @@ int run_get() {
         z_get_options_default(&opts);
         z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
         z_owned_reply_t reply;
-        for (z_recv(z_loan(handler), &reply); z_check(reply); z_recv(z_loan(handler), &reply)) {
+        for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {
             assert(z_reply_is_ok(z_loan(reply)));
 
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
