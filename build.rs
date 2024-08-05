@@ -104,7 +104,7 @@ fn produce_opaque_types_data() -> PathBuf {
     let stdio = Stdio::from(out_file);
 
     #[allow(unused_mut)]
-    let mut feature_args: Vec<&str> = vec![];
+    let mut feature_args: Vec<&str> = vec!["-F", "panic"]; // enable output structure sizes in panic messages during build
     for (rust_feature, _c_feature) in RUST_TO_C_FEATURES.entries() {
         if test_feature(rust_feature) {
             feature_args.push("-F");

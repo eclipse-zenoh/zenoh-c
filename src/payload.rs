@@ -931,12 +931,12 @@ extern "C" fn z_bytes_get_writer(
 /// @return 0 in case of success, negative error code otherwise
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-unsafe extern "C" fn z_bytes_writer_write(
+unsafe extern "C" fn z_bytes_writer_write_all(
     this: &mut z_loaned_bytes_writer_t,
     src: *const u8,
     len: usize,
 ) -> z_result_t {
-    match this.as_rust_type_mut().write(from_raw_parts(src, len)) {
+    match this.as_rust_type_mut().write_all(from_raw_parts(src, len)) {
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,
     }
