@@ -84,7 +84,7 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
-depends = "libzenohc (=0.11.0-dev-1)"
+depends = "libzenohc (=1.0.0.6)"
 assets = [["include/*", "usr/include/", "755"]]
 
 [profile.dev]
