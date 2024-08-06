@@ -81,12 +81,11 @@ int test_shm_buffer(z_owned_shm_mut_t* buf) {
 
 bool test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
     z_buf_alloc_result_t alloc;
-    z_alloc_layout_alloc_gc(&alloc, alloc_layout);
 
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    if (z_check(alloc.buf)) {
+    if (z_alloc_layout_alloc_gc(&alloc, alloc_layout) == Z_OK) {
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
         return true;
@@ -96,12 +95,11 @@ bool test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
 
 bool test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_alloc_alignment_t alignment) {
     z_buf_layout_alloc_result_t alloc;
-    z_shm_provider_alloc_gc(&alloc, provider, size, alignment);
 
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    if (z_check(alloc.buf)) {
+    if (z_shm_provider_alloc_gc(&alloc, provider, size, alignment) == Z_OK) {
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
         return true;

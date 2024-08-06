@@ -23,6 +23,7 @@ use zenoh::{
 
 pub use crate::opaque_types::{z_loaned_fifo_handler_query_t, z_owned_fifo_handler_query_t};
 use crate::{
+    result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
@@ -97,42 +98,44 @@ pub unsafe extern "C" fn z_fifo_handler_query_loan(
 }
 
 /// Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
-/// the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
-/// in the gravestone state.
+/// the channel is dropped (normally when Queryable is dropped).
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+/// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_query_recv(
     this: &z_loaned_fifo_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().recv() {
         Ok(q) => {
             query.as_rust_type_mut_uninit().write(Some(q));
-            true
+            result::Z_OK
         }
         Err(_) => {
             query.as_rust_type_mut_uninit().write(None);
-            false
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
 
 /// Returns query from the fifo buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
-/// Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+/// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_query_try_recv(
     this: &z_loaned_fifo_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
         Ok(q) => {
             query.as_rust_type_mut_uninit().write(Some(q));
-            true
+            result::Z_OK
         }
         Err(e) => {
             query.as_rust_type_mut_uninit().write(None);
             match e {
-                flume::TryRecvError::Empty => true,
-                flume::TryRecvError::Disconnected => false,
+                flume::TryRecvError::Empty => result::Z_CHANNEL_NODATA,
+                flume::TryRecvError::Disconnected => result::Z_CHANNEL_DISCONNECTED,
             }
         }
     }
@@ -194,40 +197,46 @@ pub unsafe extern "C" fn z_ring_handler_query_loan(
 }
 
 /// Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until
-/// the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
-/// in the gravestone state.
+/// the channel is dropped (normally when Queryable is dropped).
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_ring_handler_query_recv(
     this: &z_loaned_ring_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().recv() {
         Ok(q) => {
             query.as_rust_type_mut_uninit().write(Some(q));
-            true
+            result::Z_OK
         }
         Err(_) => {
             query.as_rust_type_mut_uninit().write(None);
-            false
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
 
 /// Returns query from the ring buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
-/// Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+/// Z_CHANNEL_NODATA if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_ring_handler_query_try_recv(
     this: &z_loaned_ring_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
         Ok(q) => {
+            let r = if q.is_some() {
+                result::Z_OK
+            } else {
+                result::Z_CHANNEL_NODATA
+            };
             query.as_rust_type_mut_uninit().write(q);
-            true
+            r
         }
         Err(_) => {
             query.as_rust_type_mut_uninit().write(None);
-            false
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }

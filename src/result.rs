@@ -15,6 +15,8 @@
 #[allow(non_camel_case_types)]
 pub type z_result_t = i8;
 
+pub const Z_CHANNEL_DISCONNECTED: z_result_t = 1;
+pub const Z_CHANNEL_NODATA: z_result_t = 2;
 pub const Z_OK: z_result_t = 0;
 pub const Z_EINVAL: z_result_t = -1;
 pub const Z_EPARSE: z_result_t = -2;

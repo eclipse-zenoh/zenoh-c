@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
     ze_owned_publication_cache_t pub_cache;
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
-    ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts);
-    if (!z_check(pub_cache)) {
+
+    if (ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts) != Z_OK) {
         printf("Unable to declare publication cache for key expression!\n");
         exit(-1);
     }
