@@ -55,9 +55,9 @@ int main(int argc, char **argv) {
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
           &opts);  // here, the closure is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
-    for (bool has_more = z_try_recv(z_loan(handler), &reply); has_more;
-         has_more = z_try_recv(z_loan(handler), &reply)) {
-        if (!z_check(reply)) {
+    for (z_result_t res = z_try_recv(z_loan(handler), &reply); res != Z_CHANNEL_DISCONNECTED;
+         res = z_try_recv(z_loan(handler), &reply)) {
+        if (res != Z_OK) {
             z_sleep_ms(50);
             continue;
         }

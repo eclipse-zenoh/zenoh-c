@@ -81,16 +81,18 @@ jobs:
       - name: Build examples with zenoh-c as subbroject and static library and in debug mode
         shell: bash
         run: |
-          mkdir -p build_examples_subproj && cd build_examples_subproj
+          mkdir -p build_examples && cd build_examples
           cmake ../examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_LIB_STATIC=TRUE
           cmake --build . --config Debug
+          cd .. && rm -rf build_examples
 
       - name: Build examples with zenoh-c as installed package
         shell: bash
         run: |
-          mkdir -p build_examples_findproj && cd build_examples_findproj
+          mkdir -p build_examples && cd build_examples
           cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE=PACKAGE
           cmake --build . --config Release
+          cd .. && rm -rf build_examples
 
       - name: Run rust tests
         run: cargo test --verbose --release --features=logger-autoinit

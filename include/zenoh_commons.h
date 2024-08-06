@@ -2480,19 +2480,21 @@ const struct z_loaned_fifo_handler_query_t *z_fifo_handler_query_loan(const stru
 ZENOHC_API void z_fifo_handler_query_null(struct z_owned_fifo_handler_query_t *this_);
 /**
  * Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
- * the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
- * in the gravestone state.
+ * the channel is dropped (normally when Queryable is dropped).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
  */
 ZENOHC_API
-bool z_fifo_handler_query_recv(const struct z_loaned_fifo_handler_query_t *this_,
-                               struct z_owned_query_t *query);
+z_result_t z_fifo_handler_query_recv(const struct z_loaned_fifo_handler_query_t *this_,
+                                     struct z_owned_query_t *query);
 /**
  * Returns query from the fifo buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
- * Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
  */
 ZENOHC_API
-bool z_fifo_handler_query_try_recv(const struct z_loaned_fifo_handler_query_t *this_,
-                                   struct z_owned_query_t *query);
+z_result_t z_fifo_handler_query_try_recv(const struct z_loaned_fifo_handler_query_t *this_,
+                                         struct z_owned_query_t *query);
 /**
  * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
  */
@@ -2512,19 +2514,20 @@ const struct z_loaned_fifo_handler_reply_t *z_fifo_handler_reply_loan(const stru
 ZENOHC_API void z_fifo_handler_reply_null(struct z_owned_fifo_handler_reply_t *this_);
 /**
  * Returns reply from the fifo buffer. If there are no more pending replies will block until next reply is received, or until
- * the channel is dropped (normally when all replies are received). In the later case will return ``false`` and reply will be
- * in the gravestone state.
+ * the channel is dropped (normally when all replies are received).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
  */
 ZENOHC_API
-bool z_fifo_handler_reply_recv(const struct z_loaned_fifo_handler_reply_t *this_,
-                               struct z_owned_reply_t *reply);
+z_result_t z_fifo_handler_reply_recv(const struct z_loaned_fifo_handler_reply_t *this_,
+                                     struct z_owned_reply_t *reply);
 /**
  * Returns reply from the fifo buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
- * Will return false if the channel is dropped (normally when all replies are received) and there are no more replies in the fifo.
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the reply will be in the gravestone state).
  */
 ZENOHC_API
-bool z_fifo_handler_reply_try_recv(const struct z_loaned_fifo_handler_reply_t *this_,
-                                   struct z_owned_reply_t *reply);
+z_result_t z_fifo_handler_reply_try_recv(const struct z_loaned_fifo_handler_reply_t *this_,
+                                         struct z_owned_reply_t *reply);
 /**
  * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
  */
@@ -2544,19 +2547,21 @@ const struct z_loaned_fifo_handler_sample_t *z_fifo_handler_sample_loan(const st
 ZENOHC_API void z_fifo_handler_sample_null(struct z_owned_fifo_handler_sample_t *this_);
 /**
  * Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
- * the channel is dropped (normally when there are no more samples to receive). In the later case will return ``false`` and sample will be
- * in the gravestone state.
+ * the channel is dropped (normally when there are no more samples to receive).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state).
  */
 ZENOHC_API
-bool z_fifo_handler_sample_recv(const struct z_loaned_fifo_handler_sample_t *this_,
-                                struct z_owned_sample_t *sample);
+z_result_t z_fifo_handler_sample_recv(const struct z_loaned_fifo_handler_sample_t *this_,
+                                      struct z_owned_sample_t *sample);
 /**
- * Returns sample from the fifo buffer. If there are no more pending replies will return immediately (with sample set to its gravestone state).
- * Will return false if the channel is dropped (normally when there are no more samples to receive) and there are no more replies in the fifo.
+ * Returns sample from the fifo buffer.
+ * If there are no more pending replies will return immediately (with sample set to its gravestone state).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the sample will be in the gravestone state).
  */
 ZENOHC_API
-bool z_fifo_handler_sample_try_recv(const struct z_loaned_fifo_handler_sample_t *this_,
-                                    struct z_owned_sample_t *sample);
+z_result_t z_fifo_handler_sample_try_recv(const struct z_loaned_fifo_handler_sample_t *this_,
+                                          struct z_owned_sample_t *sample);
 /**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
@@ -3303,19 +3308,20 @@ const struct z_loaned_ring_handler_query_t *z_ring_handler_query_loan(const stru
 ZENOHC_API void z_ring_handler_query_null(struct z_owned_ring_handler_query_t *this_);
 /**
  * Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until
- * the channel is dropped (normally when Queryable is dropped). In the later case will return ``false`` and query will be
- * in the gravestone state.
+ * the channel is dropped (normally when Queryable is dropped).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state).
  */
 ZENOHC_API
-bool z_ring_handler_query_recv(const struct z_loaned_ring_handler_query_t *this_,
-                               struct z_owned_query_t *query);
+z_result_t z_ring_handler_query_recv(const struct z_loaned_ring_handler_query_t *this_,
+                                     struct z_owned_query_t *query);
 /**
  * Returns query from the ring buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
- * Will return false if the channel is dropped (normally when Queryable is dropped) and there are no more queries in the fifo.
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+ * Z_CHANNEL_NODATA if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
  */
 ZENOHC_API
-bool z_ring_handler_query_try_recv(const struct z_loaned_ring_handler_query_t *this_,
-                                   struct z_owned_query_t *query);
+z_result_t z_ring_handler_query_try_recv(const struct z_loaned_ring_handler_query_t *this_,
+                                         struct z_owned_query_t *query);
 /**
  * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
  */
@@ -3335,19 +3341,20 @@ const struct z_loaned_ring_handler_reply_t *z_ring_handler_reply_loan(const stru
 ZENOHC_API void z_ring_handler_reply_null(struct z_owned_ring_handler_reply_t *this_);
 /**
  * Returns reply from the ring buffer. If there are no more pending replies will block until next reply is received, or until
- * the channel is dropped (normally when all replies are received). In the later case will return ``false`` and reply will be
- * in the gravestone state.
+ * the channel is dropped (normally when all replies are received).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
  */
 ZENOHC_API
-bool z_ring_handler_reply_recv(const struct z_loaned_ring_handler_reply_t *this_,
-                               struct z_owned_reply_t *reply);
+z_result_t z_ring_handler_reply_recv(const struct z_loaned_ring_handler_reply_t *this_,
+                                     struct z_owned_reply_t *reply);
 /**
  * Returns reply from the ring buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
- * Will return false if the channel is dropped (normally when all replies are received) and there are no more replies in the fifo.
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the reply will be in the gravestone state).
  */
 ZENOHC_API
-bool z_ring_handler_reply_try_recv(const struct z_loaned_ring_handler_reply_t *this_,
-                                   struct z_owned_reply_t *reply);
+z_result_t z_ring_handler_reply_try_recv(const struct z_loaned_ring_handler_reply_t *this_,
+                                         struct z_owned_reply_t *reply);
 /**
  * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
  */
@@ -3367,19 +3374,20 @@ const struct z_loaned_ring_handler_sample_t *z_ring_handler_sample_loan(const st
 ZENOHC_API void z_ring_handler_sample_null(struct z_owned_ring_handler_sample_t *this_);
 /**
  * Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until
- * the channel is dropped (normally when there are no more samples to receive). In the later case will return ``false`` and sample will be
- * in the gravestone state.
+ * the channel is dropped (normally when there are no more replies to receive).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state).
  */
 ZENOHC_API
-bool z_ring_handler_sample_recv(const struct z_loaned_ring_handler_sample_t *this_,
-                                struct z_owned_sample_t *sample);
+z_result_t z_ring_handler_sample_recv(const struct z_loaned_ring_handler_sample_t *this_,
+                                      struct z_owned_sample_t *sample);
 /**
  * Returns sample from the ring buffer. If there are no more pending replies will return immediately (with sample set to its gravestone state).
- * Will return false if the channel is dropped (normally when there are no more samples to receive) and there are no more replies in the fifo.
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the sample will be in the gravestone state).
  */
 ZENOHC_API
-bool z_ring_handler_sample_try_recv(const struct z_loaned_ring_handler_sample_t *this_,
-                                    struct z_owned_sample_t *sample);
+z_result_t z_ring_handler_sample_try_recv(const struct z_loaned_ring_handler_sample_t *this_,
+                                          struct z_owned_sample_t *sample);
 /**
  * Returns sample attachment.
  *

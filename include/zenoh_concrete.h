@@ -22,6 +22,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #define DEFAULT_SCOUTING_TIMEOUT 1000
+#define Z_CHANNEL_DISCONNECTED 1
+#define Z_CHANNEL_NODATA 2
 #define Z_OK 0
 #define Z_EINVAL -1
 #define Z_EPARSE -2
