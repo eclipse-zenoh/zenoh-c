@@ -99,7 +99,7 @@ pub extern "C" fn zc_init_logging_with_callback(
     let mut closure = zc_owned_closure_log_t::empty();
     std::mem::swap(callback, &mut closure);
     zenoh_util::log::init_log_with_callback(
-        move |meta| min_severity <= meta.level().clone().into(),
+        move |meta| min_severity <= (*meta.level()).into(),
         move |record| {
             if let Some(s) = record.message.as_ref() {
                 let c = CStringView(CString(CSlice::new_borrowed_from_slice(s.as_bytes())));
