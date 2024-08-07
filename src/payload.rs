@@ -297,7 +297,6 @@ impl_serialize_and_deserialize_for_num!(i64, int64, "signed integer");
 impl_serialize_and_deserialize_for_num!(f32, float, "float");
 impl_serialize_and_deserialize_for_num!(f64, double, "double");
 
-
 fn _z_bytes_serialize_from_cslice(this: &mut MaybeUninit<z_owned_bytes_t>, s: CSlice) {
     let payload = ZBytes::from(ZSlice::from(s));
     this.as_rust_type_mut_uninit().write(payload);
