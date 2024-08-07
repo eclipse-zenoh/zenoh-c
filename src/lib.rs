@@ -14,11 +14,7 @@
 
 #![allow(non_camel_case_types)]
 
-use std::{
-    cmp::min,
-    slice,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::{cmp::min, slice};
 
 use libc::c_void;
 
