@@ -9,6 +9,7 @@
         z_owned_bytes_t : z_bytes_loan, \
         z_owned_bytes_writer_t : z_bytes_writer_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
+        zc_owned_closure_log_t : z_closure_log_loan, \
         z_owned_closure_query_t : z_closure_query_loan, \
         z_owned_closure_reply_t : z_closure_reply_loan, \
         z_owned_closure_sample_t : z_closure_sample_loan, \
@@ -56,6 +57,7 @@
         z_owned_bytes_t* : z_bytes_drop, \
         z_owned_bytes_writer_t* : z_bytes_writer_drop, \
         z_owned_closure_hello_t* : z_closure_hello_drop, \
+        zc_owned_closure_log_t* : z_closure_log_drop, \
         z_owned_closure_query_t* : z_closure_query_drop, \
         z_owned_closure_reply_t* : z_closure_reply_drop, \
         z_owned_closure_sample_t* : z_closure_sample_drop, \
@@ -91,6 +93,7 @@
         z_owned_bytes_t* : z_bytes_null, \
         z_owned_bytes_writer_t* : z_bytes_writer_null, \
         z_owned_closure_hello_t* : z_closure_hello_null, \
+        zc_owned_closure_log_t* : z_closure_log_null, \
         z_owned_closure_query_t* : z_closure_query_null, \
         z_owned_closure_reply_t* : z_closure_reply_null, \
         z_owned_closure_sample_t* : z_closure_sample_null, \
@@ -128,6 +131,7 @@
         z_owned_bytes_t : z_bytes_check, \
         z_owned_bytes_writer_t : z_bytes_writer_check, \
         z_owned_closure_hello_t : z_closure_hello_check, \
+        zc_owned_closure_log_t : z_closure_log_check, \
         z_owned_closure_query_t : z_closure_query_check, \
         z_owned_closure_reply_t : z_closure_reply_check, \
         z_owned_closure_sample_t : z_closure_sample_check, \
@@ -197,6 +201,7 @@
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
 inline const z_loaned_bytes_writer_t* z_loan(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan(&this_); };
 inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t& closure) { return z_closure_hello_loan(&closure); };
+inline const zc_loaned_closure_log_t* z_loan(const zc_owned_closure_log_t& closure) { return z_closure_log_loan(&closure); };
 inline const z_loaned_closure_query_t* z_loan(const z_owned_closure_query_t& closure) { return z_closure_query_loan(&closure); };
 inline const z_loaned_closure_reply_t* z_loan(const z_owned_closure_reply_t& closure) { return z_closure_reply_loan(&closure); };
 inline const z_loaned_closure_sample_t* z_loan(const z_owned_closure_sample_t& closure) { return z_closure_sample_loan(&closure); };
@@ -240,6 +245,7 @@ inline z_loaned_string_array_t* z_loan_mut(z_owned_string_array_t& this_) { retu
 inline void z_drop(z_owned_bytes_t* this_) { return z_bytes_drop(this_); };
 inline void z_drop(z_owned_bytes_writer_t* this_) { return z_bytes_writer_drop(this_); };
 inline void z_drop(z_owned_closure_hello_t* closure) { return z_closure_hello_drop(closure); };
+inline void z_drop(zc_owned_closure_log_t* closure) { return z_closure_log_drop(closure); };
 inline void z_drop(z_owned_closure_query_t* closure) { return z_closure_query_drop(closure); };
 inline void z_drop(z_owned_closure_reply_t* closure) { return z_closure_reply_drop(closure); };
 inline void z_drop(z_owned_closure_sample_t* closure) { return z_closure_sample_drop(closure); };
@@ -271,6 +277,7 @@ inline void z_drop(z_owned_subscriber_t* this_) { return z_subscriber_drop(this_
 inline z_owned_bytes_t* z_move(z_owned_bytes_t& this_) { return (&this_); };
 inline z_owned_bytes_writer_t* z_move(z_owned_bytes_writer_t& this_) { return (&this_); };
 inline z_owned_closure_hello_t* z_move(z_owned_closure_hello_t& closure) { return (&closure); };
+inline zc_owned_closure_log_t* z_move(zc_owned_closure_log_t& closure) { return (&closure); };
 inline z_owned_closure_query_t* z_move(z_owned_closure_query_t& closure) { return (&closure); };
 inline z_owned_closure_reply_t* z_move(z_owned_closure_reply_t& closure) { return (&closure); };
 inline z_owned_closure_sample_t* z_move(z_owned_closure_sample_t& closure) { return (&closure); };
@@ -302,6 +309,7 @@ inline z_owned_subscriber_t* z_move(z_owned_subscriber_t& this_) { return (&this
 inline void z_null(z_owned_bytes_t* this_) { return z_bytes_null(this_); };
 inline void z_null(z_owned_bytes_writer_t* this_) { return z_bytes_writer_null(this_); };
 inline void z_null(z_owned_closure_hello_t* this_) { return z_closure_hello_null(this_); };
+inline void z_null(zc_owned_closure_log_t* this_) { return z_closure_log_null(this_); };
 inline void z_null(z_owned_closure_query_t* this_) { return z_closure_query_null(this_); };
 inline void z_null(z_owned_closure_reply_t* this_) { return z_closure_reply_null(this_); };
 inline void z_null(z_owned_closure_sample_t* this_) { return z_closure_sample_null(this_); };
@@ -337,6 +345,7 @@ inline void z_null(z_view_string_t* this_) { return z_view_string_null(this_); }
 inline bool z_check(const z_owned_bytes_t& this_) { return z_bytes_check(&this_); };
 inline bool z_check(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_check(&this_); };
 inline bool z_check(const z_owned_closure_hello_t& this_) { return z_closure_hello_check(&this_); };
+inline bool z_check(const zc_owned_closure_log_t& this_) { return z_closure_log_check(&this_); };
 inline bool z_check(const z_owned_closure_query_t& this_) { return z_closure_query_check(&this_); };
 inline bool z_check(const z_owned_closure_reply_t& this_) { return z_closure_reply_check(&this_); };
 inline bool z_check(const z_owned_closure_sample_t& this_) { return z_closure_sample_check(&this_); };
@@ -468,6 +477,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_writer_t> { typedef z_
 template<> struct z_owned_to_loaned_type_t<z_owned_bytes_writer_t> { typedef z_loaned_bytes_writer_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_hello_t> { typedef z_owned_closure_hello_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_hello_t> { typedef z_loaned_closure_hello_t type; };
+template<> struct z_loaned_to_owned_type_t<zc_loaned_closure_log_t> { typedef zc_owned_closure_log_t type; };
+template<> struct z_owned_to_loaned_type_t<zc_owned_closure_log_t> { typedef zc_loaned_closure_log_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_query_t> { typedef z_owned_closure_query_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_query_t> { typedef z_loaned_closure_query_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_reply_t> { typedef z_owned_closure_reply_t type; };
