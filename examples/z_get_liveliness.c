@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     z_fifo_channel_reply_new(&closure, &handler, 16);
     zc_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(closure), NULL);
     z_owned_reply_t reply;
-    for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {
+    while (z_recv(z_loan(handler), &reply) == Z_OK) {
         if (z_reply_is_ok(z_loan(reply))) {
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
             z_view_string_t key_str;
