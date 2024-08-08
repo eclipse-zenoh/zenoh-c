@@ -37,6 +37,9 @@ mod sample_channel;
 pub use hello_closure::*;
 mod hello_closure;
 
+pub use log_closure::*;
+mod log_closure;
+
 #[cfg(feature = "unstable")]
 pub use matching_status_closure::*;
 #[cfg(feature = "unstable")]
