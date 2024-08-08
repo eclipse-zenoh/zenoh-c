@@ -146,12 +146,12 @@ impl Drop for zc_owned_closure_log_t {
 /// Constructs a closure in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_log_null(this: *mut MaybeUninit<zc_owned_closure_log_t>) {
+pub unsafe extern "C" fn zc_closure_log_null(this: *mut MaybeUninit<zc_owned_closure_log_t>) {
     (*this).write(zc_owned_closure_log_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_log_call(
+pub extern "C" fn zc_closure_log_call(
     closure: &zc_loaned_closure_log_t,
     severity: zc_log_severity_t,
     msg: &z_loaned_string_t,
@@ -167,16 +167,16 @@ pub extern "C" fn z_closure_log_call(
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
 #[allow(unused_variables)]
-pub extern "C" fn z_closure_log_drop(closure: zc_moved_closure_log_t) {}
+pub extern "C" fn zc_closure_log_drop(closure: zc_moved_closure_log_t) {}
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_closure_log_check(this: &zc_owned_closure_log_t) -> bool {
+pub extern "C" fn zc_closure_log_check(this: &zc_owned_closure_log_t) -> bool {
     !this.is_empty()
 }
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn z_closure_log_loan(closure: &zc_owned_closure_log_t) -> &zc_loaned_closure_log_t {
+pub extern "C" fn zc_closure_log_loan(closure: &zc_owned_closure_log_t) -> &zc_loaned_closure_log_t {
     closure.as_loaned_c_type_ref()
 }

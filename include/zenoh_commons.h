@@ -401,36 +401,6 @@ typedef struct z_moved_closure_hello_t {
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
-typedef struct zc_owned_closure_log_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(enum zc_log_severity_t severity, const struct z_loaned_string_t *msg, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
-} zc_owned_closure_log_t;
-/**
- * Moved closure.
- */
-typedef struct zc_moved_closure_log_t {
-  struct zc_owned_closure_log_t *_ptr;
-} zc_moved_closure_log_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
 typedef struct z_owned_closure_query_t {
   /**
    * An optional pointer to a context representing a closure state.
@@ -1000,6 +970,36 @@ typedef struct z_task_attr_t {
 typedef struct z_time_t {
   uint64_t t;
 } z_time_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct zc_owned_closure_log_t {
+  /**
+   * An optional pointer to a closure state.
+   */
+  void *context;
+  /**
+   * A closure body.
+   */
+  void (*call)(enum zc_log_severity_t severity, const struct z_loaned_string_t *msg, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
+} zc_owned_closure_log_t;
+/**
+ * Moved closure.
+ */
+typedef struct zc_moved_closure_log_t {
+  struct zc_owned_closure_log_t *_ptr;
+} zc_moved_closure_log_t;
 /**
  * Loaned closure.
  */
@@ -1726,30 +1726,6 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-void z_closure_log_call(const struct zc_loaned_closure_log_t *closure,
-                        enum zc_log_severity_t severity,
-                        const struct z_loaned_string_t *msg);
-/**
- * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
- */
-ZENOHC_API bool z_closure_log_check(const struct zc_owned_closure_log_t *this_);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API void z_closure_log_drop(struct zc_moved_closure_log_t closure);
-/**
- * Borrows closure.
- */
-ZENOHC_API
-const struct zc_loaned_closure_log_t *z_closure_log_loan(const struct zc_owned_closure_log_t *closure);
-/**
- * Constructs a closure in a gravestone state.
- */
-ZENOHC_API void z_closure_log_null(struct zc_owned_closure_log_t *this_);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -4408,6 +4384,30 @@ ZENOHC_API void z_view_string_null(struct z_view_string_t *this_);
 ZENOHC_API
 z_result_t z_whatami_to_view_string(enum z_whatami_t whatami,
                                     struct z_view_string_t *str_out);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+ZENOHC_API
+void zc_closure_log_call(const struct zc_loaned_closure_log_t *closure,
+                         enum zc_log_severity_t severity,
+                         const struct z_loaned_string_t *msg);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool zc_closure_log_check(const struct zc_owned_closure_log_t *this_);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+ZENOHC_API void zc_closure_log_drop(struct zc_moved_closure_log_t closure);
+/**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_closure_log_t *closure);
+/**
+ * Constructs a closure in a gravestone state.
+ */
+ZENOHC_API void zc_closure_log_null(struct zc_owned_closure_log_t *this_);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
