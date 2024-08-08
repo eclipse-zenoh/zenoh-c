@@ -177,6 +177,8 @@ pub extern "C" fn zc_closure_log_check(this: &zc_owned_closure_log_t) -> bool {
 
 /// Borrows closure.
 #[no_mangle]
-pub extern "C" fn zc_closure_log_loan(closure: &zc_owned_closure_log_t) -> &zc_loaned_closure_log_t {
+pub extern "C" fn zc_closure_log_loan(
+    closure: &zc_owned_closure_log_t,
+) -> &zc_loaned_closure_log_t {
     closure.as_loaned_c_type_ref()
 }

@@ -924,10 +924,12 @@ unsafe extern "C" fn z_bytes_writer_write_all(
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_append(
     this: &mut z_bytes_writer_t,
-    bytes: &mut z_owned_bytes_t,
+    bytes: z_moved_bytes_t,
 ) -> z_result_t {
-    this.as_rust_type_mut()
-        .append(std::mem::take(bytes.as_rust_type_mut()));
+    let Some(bytes) = bytes.into_rust_type() else {
+        return result::Z_ENULL;
+    };
+    this.as_rust_type_mut().append(bytes);
     result::Z_OK
 }
 
@@ -938,9 +940,11 @@ unsafe extern "C" fn z_bytes_writer_append(
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_append_bounded(
     this: &mut z_bytes_writer_t,
-    bytes: &mut z_owned_bytes_t,
+    bytes: z_moved_bytes_t,
 ) -> z_result_t {
-    this.as_rust_type_mut()
-        .serialize(std::mem::take(bytes.as_rust_type_mut()));
+    let Some(bytes) = bytes.into_rust_type() else {
+        return result::Z_ENULL;
+    };
+    this.as_rust_type_mut().serialize(bytes);
     result::Z_OK
 }

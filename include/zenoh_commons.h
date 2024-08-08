@@ -1621,7 +1621,7 @@ ZENOHC_API void z_bytes_serialize_from_uint8(struct z_owned_bytes_t *this_, uint
  */
 ZENOHC_API
 z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
-                                 struct z_owned_bytes_t *bytes);
+                                 struct z_moved_bytes_t bytes);
 /**
  * Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.
  *
@@ -1629,7 +1629,7 @@ z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
  */
 ZENOHC_API
 z_result_t z_bytes_writer_append_bounded(struct z_bytes_writer_t *this_,
-                                         struct z_owned_bytes_t *bytes);
+                                         struct z_moved_bytes_t bytes);
 /**
  * Writes `len` bytes from `src` into underlying data.
  *

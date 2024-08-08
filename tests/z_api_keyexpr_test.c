@@ -24,13 +24,13 @@
 void canonize() {
     char keyexpr[256];
     int8_t err;
-    uintptr_t len_old, len_new;
+    size_t len_old, len_new;
 
     strcpy(keyexpr, "a/**/**/c");
     len_old = len_new = strlen(keyexpr);
-    printf("'%s', len = %llu -> ", keyexpr, len_old);
+    printf("'%s', len = %zu -> ", keyexpr, len_old);
     err = z_keyexpr_canonize(keyexpr, &len_new);
-    printf("'%s', len = %llu, err = %d\n", keyexpr, len_new, err);
+    printf("'%s', len = %zu, err = %d\n", keyexpr, len_new, err);
     assert(err == 0);
     assert(len_new == len_old - 3);
     assert(strcmp(keyexpr, "a/**/c") == 0);
