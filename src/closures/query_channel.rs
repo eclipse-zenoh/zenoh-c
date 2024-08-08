@@ -61,7 +61,7 @@ extern "C" fn __z_handler_query_send(query: &z_loaned_query_t, context: *mut c_v
 
 extern "C" fn __z_handler_query_drop(context: *mut c_void) {
     unsafe {
-        let f = (context as *mut Arc<dyn Fn(Query) + Send + Sync>).read();
+        let f = Box::from_raw(context as *mut Arc<dyn Fn(Query) + Send + Sync>);
         std::mem::drop(f);
     }
 }
