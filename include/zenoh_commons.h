@@ -1466,9 +1466,7 @@ ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_byte
 /**
  * Gets writer for `this_`.
  */
-ZENOHC_API
-void z_bytes_get_writer(struct z_loaned_bytes_t *this_,
-                        struct z_owned_bytes_writer_t *out);
+ZENOHC_API struct z_bytes_writer_t z_bytes_get_writer(struct z_loaned_bytes_t *this_);
 /**
  * Returns ``true`` if `this_` is empty, ``false`` otherwise.
  */
@@ -1509,10 +1507,20 @@ size_t z_bytes_reader_read(struct z_bytes_reader_t *this_,
                            uint8_t *dst,
                            size_t len);
 /**
+ * Reads data into specified destination.
+ *
+ * @param this_: Data reader to read from.
+ * @param dst: An uninitialized memory location where a new piece of data will be read. Note that it does not involve a copy, but only increases reference count.
+ * @return ​0​ upon success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_reader_read_bounded(struct z_bytes_reader_t *this_,
+                                       struct z_owned_bytes_t *dst);
+/**
  * Sets the `reader` position indicator for the payload to the value pointed to by offset.
  * The new position is exactly `offset` bytes measured from the beginning of the payload if origin is `SEEK_SET`,
  * from the current reader position if origin is `SEEK_CUR`, and from the end of the payload if origin is `SEEK_END`.
- * Return ​0​ upon success, negative error code otherwise.
+ * @return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
 z_result_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
@@ -1608,34 +1616,30 @@ ZENOHC_API void z_bytes_serialize_from_uint64(struct z_owned_bytes_t *this_, uin
  */
 ZENOHC_API void z_bytes_serialize_from_uint8(struct z_owned_bytes_t *this_, uint8_t val);
 /**
- * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
- */
-ZENOHC_API bool z_bytes_writer_check(const struct z_owned_bytes_writer_t *this_);
-/**
- * Drops `this_`, resetting it to gravestone value.
- */
-ZENOHC_API void z_bytes_writer_drop(struct z_moved_bytes_writer_t this_);
-/**
- * Borrows writer.
- */
-ZENOHC_API
-const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
-/**
- * Muatably borrows writer.
- */
-ZENOHC_API
-struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
-/**
- * The gravestone value for `z_owned_bytes_reader_t`.
- */
-ZENOHC_API void z_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
-/**
- * Writes `len` bytes from `src` into underlying data
+ * Appends bytes.
+ * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
+ * Said in other terms, it allows to create a linear view on different memory regions without copy.
  *
  * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
+z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
+                                 struct z_owned_bytes_t *bytes);
+/**
+ * Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.
+ *
+ * @return 0 in case of success, negative error code otherwise
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_append_bounded(struct z_bytes_writer_t *this_,
+                                         struct z_owned_bytes_t *bytes);
+/**
+ * Writes `len` bytes from `src` into underlying data.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_write_all(struct z_bytes_writer_t *this_,
                                     const uint8_t *src,
                                     size_t len);
 /**
@@ -4635,25 +4639,29 @@ ZENOHC_API z_result_t zc_liveliness_undeclare_token(zc_moved_liveliness_token_t 
 ZENOHC_API enum zc_locality_t zc_locality_default(void);
 #endif
 /**
- * Constructs an empty matching listener
+ * Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
  */
 #if defined(UNSTABLE)
-ZENOHC_API void zc_matching_listener_null(zc_owned_matching_listener_t *this_);
+ZENOHC_API
+z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *this_,
+                                            struct zc_matching_status_t *matching_status);
 #endif
 /**
  * Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
  *
  * @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
- * @publisher: A publisher to associate with matching listener.
- * @callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+ * @param publisher: A publisher to associate with matching listener.
+ * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(UNSTABLE)
 ZENOHC_API
-z_result_t zc_publisher_matching_listener_callback(zc_owned_matching_listener_t *this_,
-                                                   const struct z_loaned_publisher_t *publisher,
-                                                   struct zc_moved_closure_matching_status_t callback);
+z_result_t zc_publisher_matching_listener_declare(zc_owned_matching_listener_t *this_,
+                                                  const struct z_loaned_publisher_t *publisher,
+                                                  struct zc_owned_closure_matching_status_t *callback);
 #endif
 /**
  * Undeclares the given matching listener, droping and invalidating it.
