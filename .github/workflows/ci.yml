@@ -22,7 +22,7 @@ jobs:
   valgrind:
     name: Install Valgrind for memory leak checks
     runs-on: ubuntu-latest
-    needs: check
+    needs: check_format
     steps:
       - name: Clone this repository
         uses: actions/checkout@v4
