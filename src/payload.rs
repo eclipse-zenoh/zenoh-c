@@ -798,10 +798,35 @@ pub unsafe extern "C" fn z_bytes_reader_read(
     reader.read(buf).unwrap_or(0)
 }
 
+/// Reads data into specified destination.
+///
+/// @param this_: Data reader to read from.
+/// @param dst: An uninitialized memory location where a new piece of data will be read. Note that it does not involve a copy, but only increases reference count.
+/// @return ​0​ upon success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_reader_read_bounded(
+    this: &mut z_bytes_reader_t,
+    dst: &mut MaybeUninit<z_owned_bytes_t>,
+) -> z_result_t {
+    let reader = this.as_rust_type_mut();
+    match reader.deserialize::<ZBytes>() {
+        Ok(b) => {
+            dst.as_rust_type_mut_uninit().write(b);
+            result::Z_OK
+        }
+        Err(e) => {
+            dst.as_rust_type_mut_uninit().write(ZBytes::empty());
+            tracing::error!("{}", e);
+            result::Z_EPARSE
+        }
+    }
+}
+
 /// Sets the `reader` position indicator for the payload to the value pointed to by offset.
 /// The new position is exactly `offset` bytes measured from the beginning of the payload if origin is `SEEK_SET`,
 /// from the current reader position if origin is `SEEK_CUR`, and from the end of the payload if origin is `SEEK_END`.
-/// Return ​0​ upon success, negative error code otherwise.
+/// @return ​0​ upon success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_reader_seek(
@@ -839,72 +864,23 @@ pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
 
-pub use crate::opaque_types::{z_loaned_bytes_writer_t, z_owned_bytes_writer_t};
+pub use crate::opaque_types::z_bytes_writer_t;
 
-decl_c_type! {
-    owned(z_owned_bytes_writer_t, Option<ZBytesWriter<'static>>),
-    loaned(z_loaned_bytes_writer_t, ZBytesWriter<'static>),
-}
-
-/// The gravestone value for `z_owned_bytes_reader_t`.
-#[no_mangle]
-extern "C" fn z_bytes_writer_null(this: &mut MaybeUninit<z_owned_bytes_writer_t>) {
-    this.as_rust_type_mut_uninit().write(None);
-}
-
-/// Drops `this_`, resetting it to gravestone value.
-#[no_mangle]
-extern "C" fn z_bytes_writer_drop(this: &mut z_owned_bytes_writer_t) {
-    *this.as_rust_type_mut() = None;
-}
-
-/// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
-#[no_mangle]
-extern "C" fn z_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
-    this.as_rust_type_ref().is_some()
-}
-
-/// Borrows writer.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-unsafe extern "C" fn z_bytes_writer_loan(
-    this: &z_owned_bytes_writer_t,
-) -> &z_loaned_bytes_writer_t {
-    this.as_rust_type_ref()
-        .as_ref()
-        .unwrap_unchecked()
-        .as_loaned_c_type_ref()
-}
-
-/// Muatably borrows writer.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-unsafe extern "C" fn z_bytes_writer_loan_mut(
-    this: &mut z_owned_bytes_writer_t,
-) -> &mut z_loaned_bytes_writer_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
-}
+decl_c_type! {loaned(z_bytes_writer_t, ZBytesWriter<'static>)}
 
 /// Gets writer for `this_`.
 #[no_mangle]
-extern "C" fn z_bytes_get_writer(
-    this: &'static mut z_loaned_bytes_t,
-    out: &mut MaybeUninit<z_owned_bytes_writer_t>,
-) {
-    out.as_rust_type_mut_uninit()
-        .write(Some(this.as_rust_type_mut().writer()));
+extern "C" fn z_bytes_get_writer(this: &'static mut z_loaned_bytes_t) -> z_bytes_writer_t {
+    *this.as_rust_type_mut().writer().as_loaned_c_type_ref()
 }
 
-/// Writes `len` bytes from `src` into underlying data
+/// Writes `len` bytes from `src` into underlying data.
 ///
-/// @return 0 in case of success, negative error code otherwise
+/// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_write_all(
-    this: &mut z_loaned_bytes_writer_t,
+    this: &mut z_bytes_writer_t,
     src: *const u8,
     len: usize,
 ) -> z_result_t {
@@ -912,4 +888,34 @@ unsafe extern "C" fn z_bytes_writer_write_all(
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,
     }
+}
+
+/// Appends bytes.     
+/// This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
+/// Said in other terms, it allows to create a linear view on different memory regions without copy.
+///
+/// @return 0 in case of success, negative error code otherwise
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+unsafe extern "C" fn z_bytes_writer_append(
+    this: &mut z_bytes_writer_t,
+    bytes: &mut z_owned_bytes_t,
+) -> z_result_t {
+    this.as_rust_type_mut()
+        .append(std::mem::take(bytes.as_rust_type_mut()));
+    result::Z_OK
+}
+
+/// Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.    
+///
+/// @return 0 in case of success, negative error code otherwise
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+unsafe extern "C" fn z_bytes_writer_append_bounded(
+    this: &mut z_bytes_writer_t,
+    bytes: &mut z_owned_bytes_t,
+) -> z_result_t {
+    this.as_rust_type_mut()
+        .serialize(std::mem::take(bytes.as_rust_type_mut()));
+    result::Z_OK
 }
