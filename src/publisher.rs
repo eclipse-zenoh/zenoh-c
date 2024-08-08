@@ -315,13 +315,13 @@ pub struct zc_matching_status_t {
 /// Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
 /// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
-/// @publisher: A publisher to associate with matching listener.
-/// @callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+/// @param publisher: A publisher to associate with matching listener.
+/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_matching_listener_callback(
+pub extern "C" fn zc_publisher_matching_listener_declare(
     this: &mut MaybeUninit<zc_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
     callback: &mut zc_owned_closure_matching_status_t,
@@ -369,6 +369,30 @@ pub extern "C" fn zc_publisher_matching_listener_undeclare(
     result::Z_OK
 }
 
+#[cfg(feature = "unstable")]
+/// Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
+///
+/// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zc_publisher_get_matching_status(
+    this: &'static z_loaned_publisher_t,
+    matching_status: &mut MaybeUninit<zc_matching_status_t>,
+) -> result::z_result_t {
+    match this.as_rust_type_ref().matching_status().wait() {
+        Ok(s) => {
+            matching_status.write(zc_matching_status_t {
+                matching: s.matching_subscribers(),
+            });
+            result::Z_OK
+        }
+        Err(e) => {
+            tracing::error!("{}", e);
+            result::Z_ENETWORK
+        }
+    }
+}
+
 /// Undeclares the given publisher, droping and invalidating it.
 ///
 /// @return 0 in case of success, negative error code otherwise.
@@ -378,7 +402,7 @@ pub extern "C" fn z_undeclare_publisher(this: &mut z_owned_publisher_t) -> resul
     if let Some(p) = this.as_rust_type_mut().take() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
-            return result::Z_EGENERIC;
+            return result::Z_ENETWORK;
         }
     }
     result::Z_OK

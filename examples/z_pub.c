@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     if (add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zc_publisher_matching_listener_callback(&listener, z_loan(pub), z_move(callback));
+        zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
     }
 #else
     if (add_matching_listener) {
