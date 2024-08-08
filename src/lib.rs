@@ -134,3 +134,8 @@ impl CopyableToCArray for &str {
         self.as_bytes().copy_to_c_array(buf, len)
     }
 }
+
+#[no_mangle]
+pub extern "C" fn zc_stop_z_runtime() {
+    let _z = zenoh_runtime::ZRuntimePoolGuard;
+}

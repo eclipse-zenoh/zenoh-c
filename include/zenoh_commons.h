@@ -4492,6 +4492,7 @@ ZENOHC_API void zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API void zc_shm_client_list_null(zc_owned_shm_client_list_t *this_);
 #endif
+ZENOHC_API void zc_stop_z_runtime(void);
 /**
  * Constructs and declares a publication cache.
  *

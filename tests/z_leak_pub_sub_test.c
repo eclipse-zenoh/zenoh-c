@@ -38,8 +38,6 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
 }
 
 int main(int argc, char **argv) {
-    // let _z = zenoh_runtime::ZRuntimePoolGuard;
-    // zenoh_util::init_log_test();
     printf("Declaring Publisher on %s\n", PUB_KEY_EXPR);
 
     z_owned_keyexpr_t pub_keyexpr;
@@ -86,6 +84,14 @@ int main(int argc, char **argv) {
         z_publisher_put(z_loan(publisher), z_move(payload), &options);
         z_sleep_s(1);
     }
+
+    z_undeclare_publisher(z_move(publisher));
+    z_undeclare_subscriber(z_move(subscriber));
+    z_close(z_move(pub_session));
+    z_close(z_move(sub_session));
+    z_drop(z_move(pub_keyexpr));
+
+    zc_stop_z_runtime();
 
     return 0;
 }
