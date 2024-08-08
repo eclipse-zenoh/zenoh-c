@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -24,7 +24,8 @@
 const char *PUB_KEY_EXPR = "test/valgrind/data";
 const char *SUB_KEY_EXPR = "test/valgrind/**";
 
-void data_handler(const z_loaned_sample_t *sample, void *arg) {
+void data_handler(const z_loaned_sample_t *sample, void *context) {
+    (void)context;
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
