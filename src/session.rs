@@ -22,7 +22,7 @@ use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_owned_config_t, zc_init_logger,
+    z_owned_config_t, zc_init_logging,
 };
 decl_c_type!(
     owned(z_owned_session_t, Option<Arc<Session>>),
@@ -57,7 +57,7 @@ pub extern "C" fn z_open(
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
-        zc_init_logger();
+        zc_init_logging();
     }
     let Some(config) = config.as_rust_type_mut().take() else {
         tracing::error!("Config not provided");
@@ -90,7 +90,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
-        zc_init_logger();
+        zc_init_logging();
     }
     let Some(config) = config.as_rust_type_mut().take() else {
         tracing::error!("Config not provided");

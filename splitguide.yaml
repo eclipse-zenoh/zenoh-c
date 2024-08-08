@@ -20,8 +20,7 @@ zenoh_opaque.h:
   - z_owned_sample_t!
   - z_loaned_sample_t!
   - z_bytes_reader_t!
-  - z_owned_bytes_writer_t!
-  - z_loaned_bytes_writer_t!
+  - z_bytes_writer_t!
   - z_bytes_iterator_t!
   - z_owned_encoding_t!
   - z_loaned_encoding_t!
@@ -67,6 +66,7 @@ zenoh_opaque.h:
   - z_loaned_closure_reply_t!
   - z_loaned_closure_sample_t!
   - z_loaned_closure_zid_t!
+  - zc_loaned_closure_log_t!
   - zc_loaned_closure_matching_status_t!#unstable
   - z_owned_shm_client_t!#shared-memory#unstable
   - zc_owned_shm_client_list_t!#shared-memory#unstable

@@ -219,6 +219,41 @@ typedef enum zc_locality_t {
 } zc_locality_t;
 #endif
 /**
+ * Severity level of Zenoh log message.
+ */
+typedef enum zc_log_severity_t {
+  /**
+   * The `trace` level.
+   *
+   * Designates very low priority, often extremely verbose, information.
+   */
+  ZC_LOG_SEVERITY_TRACE = 0,
+  /**
+   * The "debug" level.
+   *
+   * Designates lower priority information.
+   */
+  ZC_LOG_SEVERITY_DEBUG = 1,
+  /**
+   * The "info" level.
+   *
+   * Designates useful information.
+   */
+  ZC_LOG_SEVERITY_INFO = 2,
+  /**
+   * The "warn" level.
+   *
+   * Designates hazardous situations.
+   */
+  ZC_LOG_SEVERITY_WARN = 3,
+  /**
+   * The "error" level.
+   *
+   * Designates very serious errors.
+   */
+  ZC_LOG_SEVERITY_ERROR = 4,
+} zc_log_severity_t;
+/**
  * Key expressions types to which Queryable should reply to.
  */
 #if defined(UNSTABLE)
@@ -337,6 +372,30 @@ typedef struct z_owned_closure_hello_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_hello_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct zc_owned_closure_log_t {
+  /**
+   * An optional pointer to a closure state.
+   */
+  void *context;
+  /**
+   * A closure body.
+   */
+  void (*call)(enum zc_log_severity_t severity, const struct z_loaned_string_t *msg, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
+} zc_owned_closure_log_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -1285,9 +1344,7 @@ ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_byte
 /**
  * Gets writer for `this_`.
  */
-ZENOHC_API
-void z_bytes_get_writer(struct z_loaned_bytes_t *this_,
-                        struct z_owned_bytes_writer_t *out);
+ZENOHC_API struct z_bytes_writer_t z_bytes_get_writer(struct z_loaned_bytes_t *this_);
 /**
  * Returns ``true`` if `this_` is empty, ``false`` otherwise.
  */
@@ -1328,10 +1385,20 @@ size_t z_bytes_reader_read(struct z_bytes_reader_t *this_,
                            uint8_t *dst,
                            size_t len);
 /**
+ * Reads data into specified destination.
+ *
+ * @param this_: Data reader to read from.
+ * @param dst: An uninitialized memory location where a new piece of data will be read. Note that it does not involve a copy, but only increases reference count.
+ * @return ​0​ upon success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_reader_read_bounded(struct z_bytes_reader_t *this_,
+                                       struct z_owned_bytes_t *dst);
+/**
  * Sets the `reader` position indicator for the payload to the value pointed to by offset.
  * The new position is exactly `offset` bytes measured from the beginning of the payload if origin is `SEEK_SET`,
  * from the current reader position if origin is `SEEK_CUR`, and from the end of the payload if origin is `SEEK_END`.
- * Return ​0​ upon success, negative error code otherwise.
+ * @return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
 z_result_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
@@ -1427,34 +1494,30 @@ ZENOHC_API void z_bytes_serialize_from_uint64(struct z_owned_bytes_t *this_, uin
  */
 ZENOHC_API void z_bytes_serialize_from_uint8(struct z_owned_bytes_t *this_, uint8_t val);
 /**
- * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
- */
-ZENOHC_API bool z_bytes_writer_check(const struct z_owned_bytes_writer_t *this_);
-/**
- * Drops `this_`, resetting it to gravestone value.
- */
-ZENOHC_API void z_bytes_writer_drop(struct z_owned_bytes_writer_t *this_);
-/**
- * Borrows writer.
- */
-ZENOHC_API
-const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
-/**
- * Muatably borrows writer.
- */
-ZENOHC_API
-struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
-/**
- * The gravestone value for `z_owned_bytes_reader_t`.
- */
-ZENOHC_API void z_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
-/**
- * Writes `len` bytes from `src` into underlying data
+ * Appends bytes.
+ * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
+ * Said in other terms, it allows to create a linear view on different memory regions without copy.
  *
  * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
+z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
+                                 struct z_owned_bytes_t *bytes);
+/**
+ * Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.
+ *
+ * @return 0 in case of success, negative error code otherwise
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_append_bounded(struct z_bytes_writer_t *this_,
+                                         struct z_owned_bytes_t *bytes);
+/**
+ * Writes `len` bytes from `src` into underlying data.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_write_all(struct z_bytes_writer_t *this_,
                                     const uint8_t *src,
                                     size_t len);
 /**
@@ -1545,6 +1608,30 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+ZENOHC_API
+void z_closure_log_call(const struct zc_loaned_closure_log_t *closure,
+                        enum zc_log_severity_t severity,
+                        const struct z_loaned_string_t *msg);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_closure_log_check(const struct zc_owned_closure_log_t *this_);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+ZENOHC_API void z_closure_log_drop(struct zc_owned_closure_log_t *closure);
+/**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct zc_loaned_closure_log_t *z_closure_log_loan(const struct zc_owned_closure_log_t *closure);
+/**
+ * Constructs a closure in a gravestone state.
+ */
+ZENOHC_API void z_closure_log_null(struct zc_owned_closure_log_t *this_);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -4304,12 +4391,22 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
- * Initialises the zenoh runtime logger.
+ * Initializes the zenoh runtime logger, using rust environment settings.
  *
  * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
  * this will be performed automatically by `z_open` and `z_scout`.
  */
-ZENOHC_API void zc_init_logger(void);
+ZENOHC_API void zc_init_logging(void);
+/**
+ * Initializes the zenoh runtime logger with custom callback.
+ *
+ * @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
+ * Messages with lower severity levels will be ignored.
+ * @param callback: A closure that will be called with each log message severity level and content.
+ */
+ZENOHC_API
+void zc_init_logging_with_callback(enum zc_log_severity_t min_severity,
+                                   struct zc_owned_closure_log_t *callback);
 /**
  * Constructs default value for `zc_liveliness_declaration_options_t`.
  */
@@ -4420,19 +4517,29 @@ ZENOHC_API z_result_t zc_liveliness_undeclare_token(zc_owned_liveliness_token_t 
 ZENOHC_API enum zc_locality_t zc_locality_default(void);
 #endif
 /**
+ * Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *this_,
+                                            struct zc_matching_status_t *matching_status);
+#endif
+/**
  * Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
  *
  * @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
- * @publisher: A publisher to associate with matching listener.
- * @callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+ * @param publisher: A publisher to associate with matching listener.
+ * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(UNSTABLE)
 ZENOHC_API
-z_result_t zc_publisher_matching_listener_callback(zc_owned_matching_listener_t *this_,
-                                                   const struct z_loaned_publisher_t *publisher,
-                                                   struct zc_owned_closure_matching_status_t *callback);
+z_result_t zc_publisher_matching_listener_declare(zc_owned_matching_listener_t *this_,
+                                                  const struct z_loaned_publisher_t *publisher,
+                                                  struct zc_owned_closure_matching_status_t *callback);
 #endif
 /**
  * Undeclares the given matching listener, droping and invalidating it.

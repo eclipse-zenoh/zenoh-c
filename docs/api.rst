@@ -106,6 +106,7 @@ Types
 .. doxygenstruct:: z_loaned_bytes_t
 .. doxygenstruct:: z_bytes_iterator_t
 .. doxygenstruct:: z_bytes_reader_t
+.. doxygenstruct:: z_bytes_writer_t
 
 Functions
 ^^^^^^^^^
@@ -159,6 +160,7 @@ Functions
 
 .. doxygenfunction:: z_bytes_get_reader
 .. doxygenfunction:: z_bytes_reader_read
+.. doxygenfunction:: z_bytes_reader_read_bounded
 .. doxygenfunction:: z_bytes_reader_seek
 .. doxygenfunction:: z_bytes_reader_tell
 
@@ -167,12 +169,9 @@ Functions
 
 .. doxygenfunction:: z_bytes_get_writer
 
-.. doxygenfunction:: z_bytes_writer_loan
-.. doxygenfunction:: z_bytes_writer_loan_mut
-.. doxygenfunction:: z_bytes_writer_null
-.. doxygenfunction:: z_bytes_writer_check
-.. doxygenfunction:: z_bytes_writer_drop
 .. doxygenfunction:: z_bytes_writer_write_all
+.. doxygenfunction:: z_bytes_writer_append
+.. doxygenfunction:: z_bytes_writer_append_bounded
 
 
 
@@ -573,6 +572,10 @@ Functions
 .. doxygenfunction:: zc_closure_matching_status_drop
 .. doxygenfunction:: zc_closure_matching_status_call
 
+.. doxygenfunction:: zc_publisher_get_matching_status
+.. doxygenfunction:: zc_publisher_matching_listener_declare
+.. doxygenfunction:: zc_publisher_matching_listener_undeclare
+
 Subscription
 ============
 
@@ -877,3 +880,19 @@ Functions
 
 .. doxygenfunction:: ze_querying_subscriber_options_default
 .. doxygenfunction:: zc_reply_keyexpr_default
+
+Logging
+=======
+
+Types
+-----
+
+.. doxygenstruct:: zc_owned_closure_log_t
+.. doxygenstruct:: zc_loaned_closure_log_t
+.. doxygenenum:: zc_log_severity_t
+
+Functions
+---------
+
+.. doxygenfunction:: zc_init_logging
+.. doxygenfunction:: zc_init_logging_with_callback
