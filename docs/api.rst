@@ -572,6 +572,10 @@ Functions
 .. doxygenfunction:: zc_closure_matching_status_drop
 .. doxygenfunction:: zc_closure_matching_status_call
 
+.. doxygenfunction:: zc_publisher_get_matching_status
+.. doxygenfunction:: zc_publisher_matching_listener_declare
+.. doxygenfunction:: zc_publisher_matching_listener_undeclare
+
 Subscription
 ============
 
