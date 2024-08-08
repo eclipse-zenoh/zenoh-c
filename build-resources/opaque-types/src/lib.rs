@@ -63,7 +63,6 @@ pub struct CSlice {
     _context: *mut c_void,
 }
 
-
 get_opaque_type_data!(CSlice, z_owned_slice_t);
 /// A contiguous sequence of bytes owned by some other entity.
 get_opaque_type_data!(CSlice, z_view_slice_t);
