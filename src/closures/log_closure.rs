@@ -99,10 +99,27 @@ pub struct zc_loaned_closure_log_t {
     _0: [usize; 3],
 }
 
+/// Moved closure.
+#[repr(C)]
+pub struct zc_moved_closure_log_t {
+    _ptr: Option<&'static mut zc_owned_closure_log_t>,
+}
+
 decl_c_type!(
     owned(zc_owned_closure_log_t),
-    loaned(zc_loaned_closure_log_t)
+    loaned(zc_loaned_closure_log_t),
+    moved(zc_moved_closure_log_t)
 );
+
+impl Default for zc_owned_closure_log_t {
+    fn default() -> Self {
+        zc_owned_closure_log_t {
+            context: std::ptr::null_mut(),
+            call: None,
+            drop: None,
+        }
+    }
+}
 
 impl zc_owned_closure_log_t {
     pub fn empty() -> Self {
@@ -130,7 +147,7 @@ impl Drop for zc_owned_closure_log_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_closure_log_null(this: *mut MaybeUninit<zc_owned_closure_log_t>) {
-    (*this).write(zc_owned_closure_log_t::empty());
+    (*this).write(zc_owned_closure_log_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
@@ -149,10 +166,8 @@ pub extern "C" fn z_closure_log_call(
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_log_drop(closure: &mut zc_owned_closure_log_t) {
-    let mut empty_closure = zc_owned_closure_log_t::empty();
-    std::mem::swap(&mut empty_closure, closure);
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_closure_log_drop(closure: zc_moved_closure_log_t) {}
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]

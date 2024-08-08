@@ -416,6 +416,12 @@ typedef struct zc_owned_closure_log_t {
   void (*drop)(void *context);
 } zc_owned_closure_log_t;
 /**
+ * Moved closure.
+ */
+typedef struct zc_moved_closure_log_t {
+  struct zc_owned_closure_log_t *_ptr;
+} zc_moved_closure_log_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -1734,7 +1740,7 @@ ZENOHC_API bool z_closure_log_check(const struct zc_owned_closure_log_t *this_);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_closure_log_drop(struct zc_owned_closure_log_t *closure);
+ZENOHC_API void z_closure_log_drop(struct zc_moved_closure_log_t closure);
 /**
  * Borrows closure.
  */
