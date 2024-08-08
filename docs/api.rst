@@ -896,3 +896,11 @@ Functions
 
 .. doxygenfunction:: zc_init_logging
 .. doxygenfunction:: zc_init_logging_with_callback
+
+
+Other
+=====
+
+Functions
+---------
+.. doxygenfunction:: zc_stop_z_runtime

@@ -163,6 +163,10 @@ impl CopyableToCArray for &str {
     }
 }
 
+/// Stops all Zenoh tasks and drops all related static variables.
+/// All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
+/// None of Zenoh functionality can be used after this call.
+/// Useful to suppress memory leaks messages due to Zenoh static variables (since they are never destroyed due to Rust language design).
 #[no_mangle]
 pub extern "C" fn zc_stop_z_runtime() {
     let _z = zenoh_runtime::ZRuntimePoolGuard;

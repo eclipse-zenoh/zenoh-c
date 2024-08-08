@@ -4599,7 +4599,14 @@ ZENOHC_API void zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API void zc_shm_client_list_null(zc_owned_shm_client_list_t *this_);
 #endif
-ZENOHC_API void zc_stop_z_runtime(void);
+/**
+ * Stops all Zenoh tasks and drops all related static variables.
+ * All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
+ * None of Zenoh functionality can be used after this call.
+ * Useful to suppress memory leaks messages due to Zenoh static variables (since they are never destroyed due to Rust language design).
+ */
+ZENOHC_API
+void zc_stop_z_runtime(void);
 /**
  * Constructs and declares a publication cache.
  *
