@@ -316,9 +316,6 @@ typedef struct z_moved_slice_t {
 typedef struct z_moved_string_t {
   struct z_owned_string_t *_ptr;
 } z_moved_string_t;
-typedef struct z_moved_bytes_writer_t {
-  struct z_owned_bytes_writer_t *_ptr;
-} z_moved_bytes_writer_t;
 /**
  * Unique segment identifier
  */
@@ -4639,6 +4636,12 @@ ZENOHC_API z_result_t zc_liveliness_undeclare_token(zc_moved_liveliness_token_t 
 ZENOHC_API enum zc_locality_t zc_locality_default(void);
 #endif
 /**
+ * Constructs an empty matching listener
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void zc_matching_listener_null(zc_owned_matching_listener_t *this_);
+#endif
+/**
  * Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
  *
  * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
@@ -4661,15 +4664,7 @@ z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *t
 ZENOHC_API
 z_result_t zc_publisher_matching_listener_declare(zc_owned_matching_listener_t *this_,
                                                   const struct z_loaned_publisher_t *publisher,
-                                                  struct zc_owned_closure_matching_status_t *callback);
-#endif
-/**
- * Undeclares the given matching listener, droping and invalidating it.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(UNSTABLE)
-ZENOHC_API z_result_t zc_publisher_matching_listener_drop(zc_moved_matching_listener_t this_);
+                                                  struct zc_moved_closure_matching_status_t callback);
 #endif
 /**
  * Undeclares the given matching listener, droping and invalidating it.
