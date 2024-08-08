@@ -107,7 +107,6 @@ jobs:
             !target/release/.*
             !target/release/*.d
 
-
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged
   # from branches where specific status checks have passed. These checks are
