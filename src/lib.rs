@@ -103,8 +103,8 @@ pub extern "C" fn zc_init_logging_with_callback(
         move |record| {
             if let Some(s) = record.message.as_ref() {
                 let c = CStringView::new_borrowed_from_slice(s.as_bytes());
-                z_closure_log_call(
-                    z_closure_log_loan(&closure),
+                zc_closure_log_call(
+                    zc_closure_log_loan(&closure),
                     record.level.into(),
                     c.as_loaned_c_type_ref(),
                 );
