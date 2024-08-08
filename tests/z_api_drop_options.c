@@ -74,7 +74,7 @@ void get() {
 }
 
 int main(int argc, char **argv) {
-    zc_init_logger();
+    zc_init_logging();
     put();
     get();
 }

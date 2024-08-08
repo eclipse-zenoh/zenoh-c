@@ -877,3 +877,19 @@ Functions
 
 .. doxygenfunction:: ze_querying_subscriber_options_default
 .. doxygenfunction:: zc_reply_keyexpr_default
+
+Logging
+=======
+
+Types
+-----
+
+.. doxygenstruct:: zc_owned_closure_log_t
+.. doxygenstruct:: zc_loaned_closure_log_t
+.. doxygenenum:: zc_log_severity_t
+
+Functions
+---------
+
+.. doxygenfunction:: zc_init_logging
+.. doxygenfunction:: zc_init_logging_with_callback

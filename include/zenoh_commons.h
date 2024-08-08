@@ -219,6 +219,41 @@ typedef enum zc_locality_t {
 } zc_locality_t;
 #endif
 /**
+ * Severity level of Zenoh log message.
+ */
+typedef enum zc_log_severity_t {
+  /**
+   * The `trace` level.
+   *
+   * Designates very low priority, often extremely verbose, information.
+   */
+  ZC_LOG_SEVERITY_TRACE = 0,
+  /**
+   * The "debug" level.
+   *
+   * Designates lower priority information.
+   */
+  ZC_LOG_SEVERITY_DEBUG = 1,
+  /**
+   * The "info" level.
+   *
+   * Designates useful information.
+   */
+  ZC_LOG_SEVERITY_INFO = 2,
+  /**
+   * The "warn" level.
+   *
+   * Designates hazardous situations.
+   */
+  ZC_LOG_SEVERITY_WARN = 3,
+  /**
+   * The "error" level.
+   *
+   * Designates very serious errors.
+   */
+  ZC_LOG_SEVERITY_ERROR = 4,
+} zc_log_severity_t;
+/**
  * Key expressions types to which Queryable should reply to.
  */
 #if defined(UNSTABLE)
@@ -337,6 +372,30 @@ typedef struct z_owned_closure_hello_t {
    */
   void (*drop)(void *context);
 } z_owned_closure_hello_t;
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+typedef struct zc_owned_closure_log_t {
+  /**
+   * An optional pointer to a closure state.
+   */
+  void *context;
+  /**
+   * A closure body.
+   */
+  void (*call)(enum zc_log_severity_t severity, const struct z_loaned_string_t *msg, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
+} zc_owned_closure_log_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
@@ -1545,6 +1604,30 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void z_closure_hello_null(struct z_owned_closure_hello_t *this_);
+/**
+ * Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+ZENOHC_API
+void z_closure_log_call(const struct zc_loaned_closure_log_t *closure,
+                        enum zc_log_severity_t severity,
+                        const struct z_loaned_string_t *msg);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_closure_log_check(const struct zc_owned_closure_log_t *this_);
+/**
+ * Drops the closure. Droping an uninitialized closure is a no-op.
+ */
+ZENOHC_API void z_closure_log_drop(struct zc_owned_closure_log_t *closure);
+/**
+ * Borrows closure.
+ */
+ZENOHC_API
+const struct zc_loaned_closure_log_t *z_closure_log_loan(const struct zc_owned_closure_log_t *closure);
+/**
+ * Constructs a closure in a gravestone state.
+ */
+ZENOHC_API void z_closure_log_null(struct zc_owned_closure_log_t *this_);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -4304,12 +4387,22 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
- * Initialises the zenoh runtime logger.
+ * Initializes the zenoh runtime logger, using rust environment settings.
  *
  * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
  * this will be performed automatically by `z_open` and `z_scout`.
  */
-ZENOHC_API void zc_init_logger(void);
+ZENOHC_API void zc_init_logging(void);
+/**
+ * Initializes the zenoh runtime logger with custom callback.
+ *
+ * @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
+ * Messages with lower severity levels will be ignored.
+ * @param callback: A closure that will be called with each log message severity level and content.
+ */
+ZENOHC_API
+void zc_init_logging_with_callback(enum zc_log_severity_t min_severity,
+                                   struct zc_owned_closure_log_t *callback);
 /**
  * Constructs default value for `zc_liveliness_declaration_options_t`.
  */
