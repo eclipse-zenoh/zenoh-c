@@ -1,7 +1,6 @@
 message(STATUS "zenoh-c tests")
 
 add_custom_target(tests)
-configure_file(${PROJECT_SOURCE_DIR}/tests/run_leak_check.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_leak_check.sh COPYONLY)
 
 find_package(Threads REQUIRED)
 
@@ -46,7 +45,7 @@ foreach(file ${files})
     if (NOT(test_type STREQUAL leak))
         add_test(NAME "${test_type}_${target}" COMMAND ${target})
     elseif(VALGRIND)
-        add_test(NAME "${test_type}_${target}" COMMAND bash ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_leak_check.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target})
+        add_test(NAME "${test_type}_${target}" COMMAND bash ${PROJECT_SOURCE_DIR}/tests/run_leak_check.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target})
     endif()
 endforeach()
 
