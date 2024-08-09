@@ -49,6 +49,10 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
           cmake --build . --target install --config Release
 
+      - name: Install valgrind
+        uses: taiki-e/install-action@valgrind
+        if: matrix.os == 'ubuntu-latest'
+
       - name: Run cmake tests with zenoh-c as dynamic library
         shell: bash
         run: |
