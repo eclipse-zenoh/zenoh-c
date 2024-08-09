@@ -6,15 +6,16 @@ use std::{
 
 use libc::c_void;
 
-pub use crate::opaque_types::{z_loaned_mutex_t, z_owned_mutex_t};
+pub use crate::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
 };
 
 decl_c_type!(
-    owned(z_owned_mutex_t, Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>),
-    loaned(z_loaned_mutex_t, (Mutex<()>, Option<MutexGuard<'static, ()>>))
+    owned(z_owned_mutex_t, option(Mutex<()>, Option<MutexGuard<'static, ()>>)),
+    loaned(z_loaned_mutex_t),
+    moved(z_moved_mutex_t)
 );
 
 /// Constructs a mutex.
@@ -30,9 +31,8 @@ pub extern "C" fn z_mutex_init(this: &mut MaybeUninit<z_owned_mutex_t>) -> resul
 
 /// Drops mutex and resets it to its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_mutex_drop(this: &mut z_owned_mutex_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_mutex_drop(this: z_moved_mutex_t) {}
 
 /// Returns ``true`` if mutex is valid, ``false`` otherwise.
 #[no_mangle]
@@ -107,11 +107,11 @@ pub unsafe extern "C" fn z_mutex_try_lock(
     result::Z_OK
 }
 
-pub use crate::opaque_types::{z_loaned_condvar_t, z_owned_condvar_t};
-decl_c_type!(
-    inequal
-    owned(z_owned_condvar_t, Option<Condvar>),
-    loaned(z_loaned_condvar_t, Condvar)
+pub use crate::opaque_types::{z_loaned_condvar_t, z_moved_condvar_t, z_owned_condvar_t};
+decl_c_type_inequal!(
+    owned(z_owned_condvar_t, option Condvar),
+    loaned(z_loaned_condvar_t),
+    moved(z_moved_condvar_t)
 );
 
 /// Constructs conditional variable.
@@ -128,9 +128,8 @@ pub extern "C" fn z_condvar_null(this: &mut MaybeUninit<z_owned_condvar_t>) {
 
 /// Drops conditional variable.
 #[no_mangle]
-pub extern "C" fn z_condvar_drop(this: &mut z_owned_condvar_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_condvar_drop(this: z_moved_condvar_t) {}
 
 /// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
 #[no_mangle]
@@ -195,8 +194,11 @@ pub unsafe extern "C" fn z_condvar_wait(
     result::Z_OK
 }
 
-pub use crate::opaque_types::z_owned_task_t;
-decl_c_type!(owned(z_owned_task_t, Option<JoinHandle<()>>));
+pub use crate::opaque_types::{z_moved_task_t, z_owned_task_t};
+decl_c_type!(
+    owned(z_owned_task_t, option JoinHandle<()>),
+    moved(z_moved_task_t)
+);
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -210,23 +212,25 @@ pub extern "C" fn z_task_null(this: &mut MaybeUninit<z_owned_task_t>) {
 
 /// Detaches the task and releases all allocated resources.
 #[no_mangle]
-pub extern "C" fn z_task_detach(this: &mut z_owned_task_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_task_detach(this: z_moved_task_t) {}
 
 /// Joins the task and releases all allocated resources
 #[no_mangle]
-pub extern "C" fn z_task_join(this: &mut z_owned_task_t) -> result::z_result_t {
-    let this = this.as_rust_type_mut().take();
-    if let Some(task) = this {
-        match task.join() {
-            Ok(_) => result::Z_OK,
-            Err(_) => result::Z_EINVAL_MUTEX,
-        }
-    } else {
-        result::Z_OK
+pub extern "C" fn z_task_join(this: z_moved_task_t) -> result::z_result_t {
+    let Some(task) = this.into_rust_type() else {
+        return result::Z_OK;
+    };
+    match task.join() {
+        Ok(_) => result::Z_OK,
+        Err(_) => result::Z_EINVAL_MUTEX,
     }
 }
+
+/// Drop the task. Same as `z_task_detach`. Use `z_task_join` to wait for the task completion.
+#[no_mangle]
+#[allow(unused_variables)]
+pub extern "C" fn z_task_drop(this: z_moved_task_t) {}
 
 /// Returns ``true`` if task is valid, ``false`` otherwise.
 #[no_mangle]

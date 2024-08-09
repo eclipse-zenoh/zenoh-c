@@ -29,7 +29,8 @@ use crate::{
     result::z_result_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_owned_alloc_layout_t,
+    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
+    z_owned_alloc_layout_t,
 };
 
 pub type DynamicAllocLayout =
@@ -45,8 +46,9 @@ pub enum CSHMLayout {
 }
 
 decl_c_type!(
-    owned(z_owned_alloc_layout_t, Option<CSHMLayout>),
-    loaned(z_loaned_alloc_layout_t, CSHMLayout),
+    owned(z_owned_alloc_layout_t, option CSHMLayout),
+    loaned(z_loaned_alloc_layout_t),
+    moved(z_moved_alloc_layout_t)
 );
 
 /// Creates a new Alloc Layout for SHM Provider
@@ -86,9 +88,8 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 
 /// Deletes Alloc Layout
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_drop(this: &mut z_owned_alloc_layout_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_alloc_layout_drop(this: z_moved_alloc_layout_t) {}
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc(

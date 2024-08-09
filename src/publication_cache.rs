@@ -14,12 +14,12 @@
 
 use std::{mem::MaybeUninit, ptr::null};
 
-use zenoh::prelude::*;
+use zenoh::Wait;
 use zenoh_ext::SessionExt;
 
 use crate::{
     result,
-    transmute::{RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
 #[cfg(feature = "unstable")]
@@ -43,21 +43,29 @@ pub struct ze_publication_cache_options_t {
 
 /// Constructs the default value for `ze_publication_cache_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication_cache_options_t) {
-    *this = ze_publication_cache_options_t {
+pub extern "C" fn ze_publication_cache_options_default(
+    this: &mut MaybeUninit<ze_publication_cache_options_t>,
+) {
+    this.write(ze_publication_cache_options_t {
         queryable_prefix: null(),
         #[cfg(feature = "unstable")]
         queryable_origin: zc_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,
-    };
+    });
 }
 
-pub use crate::opaque_types::{ze_loaned_publication_cache_t, ze_owned_publication_cache_t};
+pub use crate::opaque_types::{
+    ze_loaned_publication_cache_t, ze_moved_publication_cache_t, ze_owned_publication_cache_t,
+};
 decl_c_type!(
-    owned(ze_owned_publication_cache_t, Option<zenoh_ext::PublicationCache<'static>>),
-    loaned(ze_loaned_publication_cache_t, zenoh_ext::PublicationCache<'static>)
+    owned(
+        ze_owned_publication_cache_t,
+        option zenoh_ext::PublicationCache<'static>,
+    ),
+    loaned(ze_loaned_publication_cache_t),
+    moved(ze_moved_publication_cache_t)
 );
 
 /// Constructs and declares a publication cache.
@@ -127,9 +135,9 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
-    this: &mut ze_owned_publication_cache_t,
+    this: ze_moved_publication_cache_t,
 ) -> result::z_result_t {
-    if let Some(p) = this.as_rust_type_mut().take() {
+    if let Some(p) = this.into_rust_type() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -141,6 +149,6 @@ pub extern "C" fn ze_undeclare_publication_cache(
 /// Drops publication cache. Also attempts to undeclare it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_drop(this: &mut ze_owned_publication_cache_t) {
+pub extern "C" fn ze_publication_cache_drop(this: ze_moved_publication_cache_t) {
     ze_undeclare_publication_cache(this);
 }

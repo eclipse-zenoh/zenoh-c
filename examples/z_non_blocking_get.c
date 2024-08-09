@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     z_owned_closure_reply_t closure;
     z_fifo_channel_reply_new(&closure, &handler, 16);
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
-          z_move(opts));  // here, the closure is moved and will be dropped by zenoh when adequate
+          &opts);  // here, the closure is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
     for (z_result_t res = z_try_recv(z_loan(handler), &reply); res != Z_CHANNEL_DISCONNECTED;
          res = z_try_recv(z_loan(handler), &reply)) {

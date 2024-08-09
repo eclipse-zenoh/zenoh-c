@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
         kvs[1] = (kv_pair_t){.key = "index", .value = buf_ind};
         kv_it it = {.current = kvs, .end = kvs + 2};
         z_bytes_from_iter(&attachment, create_attachment_iter, (void*)&it);
-        options.attachment = &attachment;
+        options.attachment = z_move(attachment);
 
         sprintf(buf, "[%4d] %s", idx, value);
         printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);

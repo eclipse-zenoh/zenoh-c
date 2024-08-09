@@ -12,30 +12,34 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, ptr::null};
+use std::mem::MaybeUninit;
 
-use zenoh::{prelude::*, pubsub::Reliability, session::Session};
+use zenoh::{
+    bytes::EncodingBuilderTrait, prelude::SessionDeclarations, pubsub::Reliability,
+    sample::SampleBuilderTrait, session::Session, Wait,
+};
 use zenoh_ext::*;
 
 use crate::{
     opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
-    z_loaned_session_t, z_owned_closure_sample_t, z_query_consolidation_none,
+    z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
     z_query_consolidation_t, z_query_target_default, z_query_target_t, z_reliability_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{zc_locality_default, zc_locality_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t};
+use crate::{
+    zc_locality_default, zc_locality_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    ze_moved_querying_subscriber_t,
+};
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
-        Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
+        option(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
     ),
-    loaned(
-        ze_loaned_querying_subscriber_t,
-        (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
-    )
+    loaned(ze_loaned_querying_subscriber_t),
+    moved(ze_moved_querying_subscriber_t)
 );
 
 /// Constructs a querying subscriber in a gravestone state.
@@ -59,7 +63,7 @@ pub struct ze_querying_subscriber_options_t {
     #[cfg(feature = "unstable")]
     allowed_origin: zc_locality_t,
     /// The selector to be used for queries.
-    query_selector: *const z_loaned_keyexpr_t,
+    query_selector: Option<&'static z_loaned_keyexpr_t>,
     /// The target to be used for queries.
     query_target: z_query_target_t,
     /// The consolidation mode to be used for queries.
@@ -74,19 +78,19 @@ pub struct ze_querying_subscriber_options_t {
 /// Constructs the default value for `ze_querying_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_options_default(
-    this: &mut ze_querying_subscriber_options_t,
+    this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
 ) {
-    *this = ze_querying_subscriber_options_t {
+    this.write(ze_querying_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
         #[cfg(feature = "unstable")]
         allowed_origin: zc_locality_default(),
-        query_selector: null(),
+        query_selector: None,
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
         #[cfg(feature = "unstable")]
         query_accept_replies: zc_reply_keyexpr_default(),
         query_timeout_ms: 0,
-    };
+    });
 }
 
 /// Constructs and declares a querying subscriber for a given key expression.
@@ -104,13 +108,15 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_sample_t,
+    callback: z_moved_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    let mut closure = z_owned_closure_sample_t::empty();
-    std::mem::swap(callback, &mut closure);
     let session = session.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        this.write(None);
+        return result::Z_EINVAL;
+    };
     let mut sub = session
         .declare_subscriber(key_expr.as_rust_type_ref())
         .querying();
@@ -125,7 +131,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
                 .query_accept_replies(options.query_accept_replies.into())
                 .allowed_origin(options.allowed_origin.into());
         }
-        if let Some(query_selector) = unsafe { options.query_selector.as_ref() } {
+        if let Some(query_selector) = options.query_selector {
             let query_selector = query_selector.as_rust_type_ref().clone();
             sub = sub.query_selector(query_selector);
         }
@@ -135,7 +141,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
     let sub = sub.callback(move |sample| {
         let sample = sample.as_loaned_c_type_ref();
-        z_closure_sample_call(z_closure_sample_loan(&closure), sample);
+        z_closure_sample_call(z_closure_sample_loan(&callback), sample);
     });
     match sub.wait() {
         Ok(sub) => {
@@ -158,7 +164,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
 pub unsafe extern "C" fn ze_querying_subscriber_get(
     this: &ze_loaned_querying_subscriber_t,
     selector: &z_loaned_keyexpr_t,
-    options: Option<&z_get_options_t>,
+    options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
     unsafe impl Sync for z_get_options_t {}
     let sub = this.as_rust_type_ref();
@@ -171,21 +177,17 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                 let mut get = session.get(selector).callback(cb);
 
                 if let Some(options) = options {
-                    if let Some(payload) = unsafe { options.payload.as_mut() } {
-                        let payload = std::mem::take(payload.as_rust_type_mut());
+                    if let Some(payload) = options.payload.take_rust_type() {
                         get = get.payload(payload);
                     }
-                    if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-                        let encoding = std::mem::take(encoding.as_rust_type_mut());
+                    if let Some(encoding) = options.encoding.take_rust_type() {
                         get = get.encoding(encoding);
                     }
                     #[cfg(feature = "unstable")]
-                    if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-                        let source_info = std::mem::take(source_info.as_rust_type_mut());
+                    if let Some(source_info) = options.source_info.take_rust_type() {
                         get = get.source_info(source_info);
                     }
-                    if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-                        let attachment = std::mem::take(attachment.as_rust_type_mut());
+                    if let Some(attachment) = options.attachment.take_rust_type() {
                         get = get.attachment(attachment);
                     }
 
@@ -214,9 +216,9 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
-    this: &mut ze_owned_querying_subscriber_t,
+    this: ze_moved_querying_subscriber_t,
 ) -> result::z_result_t {
-    if let Some(s) = this.as_rust_type_mut().take() {
+    if let Some(s) = this.into_rust_type() {
         if let Err(e) = s.0.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -227,7 +229,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 
 /// Drops querying subscriber. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_drop(this: &mut ze_owned_querying_subscriber_t) {
+pub extern "C" fn ze_querying_subscriber_drop(this: ze_moved_querying_subscriber_t) {
     ze_undeclare_querying_subscriber(this);
 }
 

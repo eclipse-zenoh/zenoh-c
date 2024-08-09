@@ -24,13 +24,13 @@
 void canonize() {
     char keyexpr[256];
     int8_t err;
-    uintptr_t len_old, len_new;
+    size_t len_old, len_new;
 
     strcpy(keyexpr, "a/**/**/c");
     len_old = len_new = strlen(keyexpr);
-    printf("'%s', len = %lu -> ", keyexpr, len_old);
+    printf("'%s', len = %zu -> ", keyexpr, len_old);
     err = z_keyexpr_canonize(keyexpr, &len_new);
-    printf("'%s', len = %lu, err = %d\n", keyexpr, len_new, err);
+    printf("'%s', len = %zu, err = %d\n", keyexpr, len_new, err);
     assert(err == 0);
     assert(len_new == len_old - 3);
     assert(strcmp(keyexpr, "a/**/c") == 0);
@@ -93,7 +93,7 @@ void undeclare() {
     z_owned_keyexpr_t ke;
     z_declare_keyexpr(&ke, z_loan(s), z_loan(view_ke));
     assert(z_keyexpr_check(&ke));
-    z_undeclare_keyexpr(&ke, z_loan(s));
+    z_undeclare_keyexpr(z_move(ke), z_loan(s));
     assert(!z_keyexpr_check(&ke));
 }
 

@@ -21,7 +21,7 @@ use zenoh::{
 };
 
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
-pub use crate::opaque_types::z_owned_shm_client_t;
+pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     shm::common::types::z_segment_id_t,
@@ -39,7 +39,10 @@ pub struct zc_shm_client_callbacks_t {
     ) -> bool,
 }
 
-decl_c_type!(owned(z_owned_shm_client_t, Option<Arc<dyn ShmClient>>));
+decl_c_type!(
+    owned(z_owned_shm_client_t, option Arc<dyn ShmClient>),
+    moved(z_moved_shm_client_t)
+);
 
 #[derive(Debug)]
 pub struct DynamicShmClient {
@@ -90,6 +93,5 @@ pub extern "C" fn z_shm_client_check(this: &z_owned_shm_client_t) -> bool {
 
 /// Deletes SHM Client
 #[no_mangle]
-pub extern "C" fn z_shm_client_drop(this: &mut z_owned_shm_client_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_shm_client_drop(this: z_moved_shm_client_t) {}
