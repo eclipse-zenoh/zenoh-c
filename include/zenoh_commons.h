@@ -4139,6 +4139,10 @@ ZENOHC_API bool z_task_check(const struct z_owned_task_t *this_);
  */
 ZENOHC_API void z_task_detach(struct z_moved_task_t this_);
 /**
+ * Drop the task. Same as `z_task_detach`. Use `z_task_join` to wait for the task completion.
+ */
+ZENOHC_API void z_task_drop(struct z_moved_task_t this_);
+/**
  * Constructs a new task.
  *
  * @param this_: An uninitialized memory location where task will be constructed.
@@ -4228,9 +4232,9 @@ ZENOHC_API z_result_t z_undeclare_queryable(struct z_moved_queryable_t this_);
  */
 ZENOHC_API z_result_t z_undeclare_subscriber(struct z_moved_subscriber_t this_);
 /**
- * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
+ * Constructs a view key expression in empty state
  */
-ZENOHC_API bool z_view_keyexpr_check(const struct z_view_keyexpr_t *this_);
+ZENOHC_API void z_view_keyexpr_empty(struct z_view_keyexpr_t *this_);
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a string.
  * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression or if it is
@@ -4306,18 +4310,14 @@ void z_view_keyexpr_from_substr_unchecked(struct z_view_keyexpr_t *this_,
                                           const char *start,
                                           size_t len);
 /**
+ * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_view_keyexpr_is_empty(const struct z_view_keyexpr_t *this_);
+/**
  * Borrows `z_view_keyexpr_t`.
  */
 ZENOHC_API
 const struct z_loaned_keyexpr_t *z_view_keyexpr_loan(const struct z_view_keyexpr_t *this_);
-/**
- * Constructs a view key expression in a gravestone state.
- */
-ZENOHC_API void z_view_keyexpr_null(struct z_view_keyexpr_t *this_);
-/**
- * @return ``true`` if the slice is not empty, ``false`` otherwise.
- */
-ZENOHC_API bool z_view_slice_check(const struct z_view_slice_t *this_);
 /**
  * Constructs an empty view slice.
  */
@@ -4332,17 +4332,13 @@ z_result_t z_view_slice_from_buf(struct z_view_slice_t *this_,
                                  const uint8_t *start,
                                  size_t len);
 /**
+ * @return ``true`` if the slice is not empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_view_slice_is_empty(const struct z_view_slice_t *this_);
+/**
  * Borrows view slice.
  */
 ZENOHC_API const struct z_loaned_slice_t *z_view_slice_loan(const struct z_view_slice_t *this_);
-/**
- * Constructs an empty view slice.
- */
-ZENOHC_API void z_view_slice_null(struct z_view_slice_t *this_);
-/**
- * @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
- */
-ZENOHC_API bool z_view_string_check(const struct z_view_string_t *this_);
 /**
  * Constructs an empty view string.
  */
@@ -4365,13 +4361,13 @@ z_result_t z_view_string_from_substr(struct z_view_string_t *this_,
                                      const char *str,
                                      size_t len);
 /**
+ * @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_view_string_is_empty(const struct z_view_string_t *this_);
+/**
  * Borrows view string.
  */
 ZENOHC_API const struct z_loaned_string_t *z_view_string_loan(const struct z_view_string_t *this_);
-/**
- * Constructs view string in a gravestone state.
- */
-ZENOHC_API void z_view_string_null(struct z_view_string_t *this_);
 /**
  * Constructs a non-owned non-null-terminated string from the kind of zenoh entity.
  *
@@ -4636,6 +4632,12 @@ ZENOHC_API z_result_t zc_liveliness_undeclare_token(zc_moved_liveliness_token_t 
 ZENOHC_API enum zc_locality_t zc_locality_default(void);
 #endif
 /**
+ * Checks the matching listener is for the gravestone state
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool zc_matching_listener_check(const zc_owned_matching_listener_t *this_);
+#endif
+/**
  * Constructs an empty matching listener
  */
 #if defined(UNSTABLE)
@@ -4665,6 +4667,14 @@ ZENOHC_API
 z_result_t zc_publisher_matching_listener_declare(zc_owned_matching_listener_t *this_,
                                                   const struct z_loaned_publisher_t *publisher,
                                                   struct zc_moved_closure_matching_status_t callback);
+#endif
+/**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t zc_publisher_matching_listener_drop(zc_moved_matching_listener_t this_);
 #endif
 /**
  * Undeclares the given matching listener, droping and invalidating it.

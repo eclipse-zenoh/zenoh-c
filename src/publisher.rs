@@ -306,6 +306,13 @@ pub extern "C" fn zc_matching_listener_null(this: &mut MaybeUninit<zc_owned_matc
     this.as_rust_type_mut_uninit().write(None);
 }
 
+/// Checks the matching listener is for the gravestone state
+#[no_mangle]
+#[cfg(feature = "unstable")]
+pub extern "C" fn zc_matching_listener_check(this: &zc_owned_matching_listener_t) -> bool {
+    this.as_rust_type_ref().is_some()
+}
+
 #[cfg(feature = "unstable")]
 /// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
@@ -373,6 +380,19 @@ pub extern "C" fn zc_publisher_matching_listener_undeclare(
     }
     result::Z_OK
 }
+
+#[cfg(feature = "unstable")]
+/// Undeclares the given matching listener, droping and invalidating it.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zc_publisher_matching_listener_drop(
+    this: zc_moved_matching_listener_t,
+) -> result::z_result_t {
+    zc_publisher_matching_listener_undeclare(this)
+}
+
 
 #[cfg(feature = "unstable")]
 /// Gets publisher matching status - i.e. if there are any subscribers matching its key expression.

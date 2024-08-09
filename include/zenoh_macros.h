@@ -32,6 +32,7 @@ static inline z_moved_slice_t z_slice_move(z_owned_slice_t* x) { return (z_moved
 static inline z_moved_string_array_t z_string_array_move(z_owned_string_array_t* x) { return (z_moved_string_array_t){x}; }
 static inline z_moved_string_t z_string_move(z_owned_string_t* x) { return (z_moved_string_t){x}; }
 static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { return (z_moved_subscriber_t){x}; }
+static inline z_moved_task_t z_task_move(z_owned_task_t* x) { return (z_moved_task_t){x}; }
 static inline zc_moved_closure_log_t zc_closure_log_move(zc_owned_closure_log_t* x) { return (zc_moved_closure_log_t){x}; }
 
 
@@ -111,6 +112,7 @@ static inline zc_moved_closure_log_t zc_closure_log_move(zc_owned_closure_log_t*
         z_moved_string_array_t : z_string_array_drop, \
         z_moved_string_t : z_string_drop, \
         z_moved_subscriber_t : z_subscriber_drop, \
+        z_moved_task_t : z_task_drop, \
         zc_moved_closure_log_t : zc_closure_log_drop \
     )(this_)
 
@@ -144,6 +146,7 @@ static inline zc_moved_closure_log_t zc_closure_log_move(zc_owned_closure_log_t*
         z_owned_string_array_t : z_string_array_move, \
         z_owned_string_t : z_string_move, \
         z_owned_subscriber_t : z_subscriber_move, \
+        z_owned_task_t : z_task_move, \
         zc_owned_closure_log_t : zc_closure_log_move \
     )(&this_)
 
@@ -178,9 +181,6 @@ static inline zc_moved_closure_log_t zc_closure_log_move(zc_owned_closure_log_t*
         z_owned_string_t* : z_string_null, \
         z_owned_subscriber_t* : z_subscriber_null, \
         z_owned_task_t* : z_task_null, \
-        z_view_keyexpr_t* : z_view_keyexpr_null, \
-        z_view_slice_t* : z_view_slice_null, \
-        z_view_string_t* : z_view_string_null, \
         zc_owned_closure_log_t* : zc_closure_log_null \
     )(this_)
 
@@ -212,6 +212,7 @@ static inline void z_slice_take(z_owned_slice_t* this_, z_moved_slice_t x) { *th
 static inline void z_string_array_take(z_owned_string_array_t* this_, z_moved_string_array_t x) { *this_ = *x._ptr; z_string_array_null(x._ptr); }
 static inline void z_string_take(z_owned_string_t* this_, z_moved_string_t x) { *this_ = *x._ptr; z_string_null(x._ptr); }
 static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscriber_t x) { *this_ = *x._ptr; z_subscriber_null(x._ptr); }
+static inline void z_task_take(z_owned_task_t* this_, z_moved_task_t x) { *this_ = *x._ptr; z_task_null(x._ptr); }
 static inline void zc_closure_log_take(zc_owned_closure_log_t* closure, zc_moved_closure_log_t x) { *closure = *x._ptr; zc_closure_log_null(x._ptr); }
 
 
@@ -245,6 +246,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure, zc_moved
         z_owned_string_array_t : z_string_array_take, \
         z_owned_string_t : z_string_take, \
         z_owned_subscriber_t : z_subscriber_take, \
+        z_owned_task_t : z_task_take, \
         zc_owned_closure_log_t : zc_closure_log_take \
     )(&this_, x)
 
@@ -279,9 +281,6 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure, zc_moved
         z_owned_string_t : z_string_check, \
         z_owned_subscriber_t : z_subscriber_check, \
         z_owned_task_t : z_task_check, \
-        z_view_keyexpr_t : z_view_keyexpr_check, \
-        z_view_slice_t : z_view_slice_check, \
-        z_view_string_t : z_view_string_check, \
         zc_owned_closure_log_t : zc_closure_log_check \
     )(&this_)
 
@@ -346,6 +345,7 @@ static inline z_moved_slice_t z_slice_move(z_owned_slice_t* x) { return z_moved_
 static inline z_moved_string_array_t z_string_array_move(z_owned_string_array_t* x) { return z_moved_string_array_t{x}; }
 static inline z_moved_string_t z_string_move(z_owned_string_t* x) { return z_moved_string_t{x}; }
 static inline z_moved_subscriber_t z_subscriber_move(z_owned_subscriber_t* x) { return z_moved_subscriber_t{x}; }
+static inline z_moved_task_t z_task_move(z_owned_task_t* x) { return z_moved_task_t{x}; }
 static inline zc_moved_closure_log_t zc_closure_log_move(zc_owned_closure_log_t* x) { return zc_moved_closure_log_t{x}; }
 
 
@@ -420,6 +420,7 @@ inline void z_drop(z_moved_slice_t this_) { z_slice_drop(this_); };
 inline void z_drop(z_moved_string_array_t this_) { z_string_array_drop(this_); };
 inline void z_drop(z_moved_string_t this_) { z_string_drop(this_); };
 inline void z_drop(z_moved_subscriber_t this_) { z_subscriber_drop(this_); };
+inline void z_drop(z_moved_task_t this_) { z_task_drop(this_); };
 inline void z_drop(zc_moved_closure_log_t closure) { zc_closure_log_drop(closure); };
 
 
@@ -451,6 +452,7 @@ inline z_moved_slice_t z_move(z_owned_slice_t& this_) { return z_slice_move(&thi
 inline z_moved_string_array_t z_move(z_owned_string_array_t& this_) { return z_string_array_move(&this_); };
 inline z_moved_string_t z_move(z_owned_string_t& this_) { return z_string_move(&this_); };
 inline z_moved_subscriber_t z_move(z_owned_subscriber_t& this_) { return z_subscriber_move(&this_); };
+inline z_moved_task_t z_move(z_owned_task_t& this_) { return z_task_move(&this_); };
 inline zc_moved_closure_log_t z_move(zc_owned_closure_log_t& closure) { return zc_closure_log_move(&closure); };
 
 
@@ -483,9 +485,6 @@ inline void z_null(z_owned_string_array_t* this_) { z_string_array_null(this_); 
 inline void z_null(z_owned_string_t* this_) { z_string_null(this_); };
 inline void z_null(z_owned_subscriber_t* this_) { z_subscriber_null(this_); };
 inline void z_null(z_owned_task_t* this_) { z_task_null(this_); };
-inline void z_null(z_view_keyexpr_t* this_) { z_view_keyexpr_null(this_); };
-inline void z_null(z_view_slice_t* this_) { z_view_slice_null(this_); };
-inline void z_null(z_view_string_t* this_) { z_view_string_null(this_); };
 inline void z_null(zc_owned_closure_log_t* this_) { zc_closure_log_null(this_); };
 
 static inline void z_bytes_take(z_owned_bytes_t* this_, z_moved_bytes_t x) { *this_ = *x._ptr; z_bytes_null(x._ptr); }
@@ -516,6 +515,7 @@ static inline void z_slice_take(z_owned_slice_t* this_, z_moved_slice_t x) { *th
 static inline void z_string_array_take(z_owned_string_array_t* this_, z_moved_string_array_t x) { *this_ = *x._ptr; z_string_array_null(x._ptr); }
 static inline void z_string_take(z_owned_string_t* this_, z_moved_string_t x) { *this_ = *x._ptr; z_string_null(x._ptr); }
 static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscriber_t x) { *this_ = *x._ptr; z_subscriber_null(x._ptr); }
+static inline void z_task_take(z_owned_task_t* this_, z_moved_task_t x) { *this_ = *x._ptr; z_task_null(x._ptr); }
 static inline void zc_closure_log_take(zc_owned_closure_log_t* closure, zc_moved_closure_log_t x) { *closure = *x._ptr; zc_closure_log_null(x._ptr); }
 
 
@@ -604,6 +604,9 @@ inline void z_take(z_owned_string_t& this_, z_moved_string_t x) {
 inline void z_take(z_owned_subscriber_t& this_, z_moved_subscriber_t x) {
     z_subscriber_take(&this_, x);
 };
+inline void z_take(z_owned_task_t& this_, z_moved_task_t x) {
+    z_task_take(&this_, x);
+};
 inline void z_take(zc_owned_closure_log_t& closure, zc_moved_closure_log_t x) {
     zc_closure_log_take(&closure, x);
 };
@@ -638,9 +641,6 @@ inline bool z_check(const z_owned_string_array_t& this_) { return z_string_array
 inline bool z_check(const z_owned_string_t& this_) { return z_string_check(&this_); };
 inline bool z_check(const z_owned_subscriber_t& this_) { return z_subscriber_check(&this_); };
 inline bool z_check(const z_owned_task_t& this_) { return z_task_check(&this_); };
-inline bool z_check(const z_view_keyexpr_t& this_) { return z_view_keyexpr_check(&this_); };
-inline bool z_check(const z_view_slice_t& this_) { return z_view_slice_check(&this_); };
-inline bool z_check(const z_view_string_t& this_) { return z_view_string_check(&this_); };
 inline bool z_check(const zc_owned_closure_log_t& this_) { return zc_closure_log_check(&this_); };
 
 
