@@ -114,8 +114,8 @@ int main(int argc, char **argv) {
     z_view_keyexpr_from_str(&key_demo_example, "demo/example");
     z_view_keyexpr_from_str(&key_demo_example_a, "demo/example/a");
     z_view_keyexpr_from_str(&key_demo_example_starstar, "demo/example/**");
-    bool _ret_bool = z_view_keyexpr_check(&key_demo_example);
-    assert(_ret_bool == true);
+    bool _ret_bool = z_view_keyexpr_is_empty(&key_demo_example);
+    assert(_ret_bool == false);
 
     _ret_bool = z_keyexpr_includes(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
     assert(_ret_bool);

@@ -45,7 +45,7 @@ void canonize() {
     strcpy(keyexpr, "a/**/**/c");
     z_view_keyexpr_t key_expr_canonized;
     z_view_keyexpr_from_str_autocanonize(&key_expr_canonized, keyexpr);
-    assert(z_view_keyexpr_check(&key_expr_canonized) == true);
+    assert(z_view_keyexpr_is_empty(&key_expr_canonized) == false);
     assert(strcmp(keyexpr, "a/**/c") == 0);
     z_view_string_t key_exp_canonized_bytes;
     z_keyexpr_as_view_string(z_loan(key_expr_canonized), &key_exp_canonized_bytes);
