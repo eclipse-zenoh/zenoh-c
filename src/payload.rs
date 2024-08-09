@@ -23,7 +23,7 @@ use std::{
 };
 
 use zenoh::{
-    bytes::{Deserialize, Serialize, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter, ZSerde},
+    bytes::{ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
     internal::buffers::{ZBuf, ZSlice, ZSliceBuffer},
 };
 
@@ -254,191 +254,48 @@ impl From<CSlice> for ZBytes {
     }
 }
 
-fn z_bytes_serialize_from_arithmetic<T>(this: &mut MaybeUninit<z_owned_bytes_t>, val: T)
-where
-    ZSerde: Serialize<T, Output = ZBytes>,
-{
-    this.as_rust_type_mut_uninit().write(ZBytes::serialize(val));
-}
+macro_rules! impl_serialize_and_deserialize_for_num {
+    ($rust_type:ty, $c_type:ty, $desc:tt) => {
+        paste::paste! {
+            #[doc = "Serialization from " $desc "."]
+            #[no_mangle]
+            pub extern "C" fn [<z_bytes_serialize_from_ $c_type>](this: &mut MaybeUninit<z_owned_bytes_t>, val: $rust_type) {
+                this.as_rust_type_mut_uninit().write(ZBytes::serialize(val));
+            }
 
-fn z_bytes_deserialize_into_arithmetic<'a, T>(
-    this: &'a z_loaned_bytes_t,
-    val: &'a mut T,
-) -> z_result_t
-where
-    ZSerde: Deserialize<T, Input<'a> = &'a ZBytes>,
-    <ZSerde as Deserialize<T>>::Error: fmt::Debug,
-{
-    match this.as_rust_type_ref().deserialize::<T>() {
-        Ok(v) => {
-            *val = v;
-            result::Z_OK
-        }
-        Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {:?}", e);
-            result::Z_EPARSE
+            #[doc = "Deserialization into " $desc "."]
+            #[doc = "\n"]
+            #[doc = "@return 0 in case of success, negative error code otherwise."]
+            #[no_mangle]
+            pub extern "C" fn [< z_bytes_deserialize_into_ $c_type>](
+                this: &z_loaned_bytes_t,
+                dst: &mut $rust_type,
+            ) -> z_result_t {
+                match this.as_rust_type_ref().deserialize::<$rust_type>() {
+                    Ok(v) => {
+                        *dst = v;
+                        result::Z_OK
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to deserialize the payload: {:?}", e);
+                        result::Z_EPARSE
+                    }
+                }
+            }
         }
     }
 }
 
-/// Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint8(this: &mut MaybeUninit<z_owned_bytes_t>, val: u8) {
-    z_bytes_serialize_from_arithmetic::<u8>(this, val);
-}
-
-/// Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint16(this: &mut MaybeUninit<z_owned_bytes_t>, val: u16) {
-    z_bytes_serialize_from_arithmetic::<u16>(this, val);
-}
-
-/// Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint32(this: &mut MaybeUninit<z_owned_bytes_t>, val: u32) {
-    z_bytes_serialize_from_arithmetic::<u32>(this, val);
-}
-
-/// Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint64(this: &mut MaybeUninit<z_owned_bytes_t>, val: u64) {
-    z_bytes_serialize_from_arithmetic::<u64>(this, val);
-}
-
-/// Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int8(this: &mut MaybeUninit<z_owned_bytes_t>, val: i8) {
-    z_bytes_serialize_from_arithmetic::<i8>(this, val);
-}
-
-/// Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int16(this: &mut MaybeUninit<z_owned_bytes_t>, val: i16) {
-    z_bytes_serialize_from_arithmetic::<i16>(this, val);
-}
-
-/// Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int32(this: &mut MaybeUninit<z_owned_bytes_t>, val: i32) {
-    z_bytes_serialize_from_arithmetic::<i32>(this, val);
-}
-
-/// Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int64(this: &mut MaybeUninit<z_owned_bytes_t>, val: i64) {
-    z_bytes_serialize_from_arithmetic::<i64>(this, val);
-}
-
-/// Serializes a float.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_float(this: &mut MaybeUninit<z_owned_bytes_t>, val: f32) {
-    z_bytes_serialize_from_arithmetic::<f32>(this, val);
-}
-
-/// Serializes a double.
-#[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_double(this: &mut MaybeUninit<z_owned_bytes_t>, val: f64) {
-    z_bytes_serialize_from_arithmetic::<f64>(this, val);
-}
-/// Deserializes into an unsigned integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint8(
-    this: &z_loaned_bytes_t,
-    dst: &mut u8,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<u8>(this, dst)
-}
-
-/// Deserializes into an unsigned integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint16(
-    this: &z_loaned_bytes_t,
-    dst: &mut u16,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<u16>(this, dst)
-}
-
-/// Deserializes into an unsigned integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint32(
-    this: &z_loaned_bytes_t,
-    dst: &mut u32,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<u32>(this, dst)
-}
-
-/// Deserializes into an unsigned integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_uint64(
-    this: &z_loaned_bytes_t,
-    dst: &mut u64,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<u64>(this, dst)
-}
-
-/// Deserializes into a signed integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int8(
-    this: &z_loaned_bytes_t,
-    dst: &mut i8,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<i8>(this, dst)
-}
-
-/// Deserializes into a signed integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int16(
-    this: &z_loaned_bytes_t,
-    dst: &mut i16,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<i16>(this, dst)
-}
-
-/// Deserializes into a signed integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int32(
-    this: &z_loaned_bytes_t,
-    dst: &mut i32,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<i32>(this, dst)
-}
-
-/// Deserializes into a signed integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_int64(
-    this: &z_loaned_bytes_t,
-    dst: &mut i64,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<i64>(this, dst)
-}
-
-/// Deserializes into a float.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_float(
-    this: &z_loaned_bytes_t,
-    dst: &mut f32,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<f32>(this, dst)
-}
-
-/// Deserializes into a signed integer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_deserialize_into_double(
-    this: &z_loaned_bytes_t,
-    dst: &mut f64,
-) -> z_result_t {
-    z_bytes_deserialize_into_arithmetic::<f64>(this, dst)
-}
+impl_serialize_and_deserialize_for_num!(u8, uint8, "unsigned integer");
+impl_serialize_and_deserialize_for_num!(u16, uint16, "unsigned integer");
+impl_serialize_and_deserialize_for_num!(u32, uint32, "unsigned integer");
+impl_serialize_and_deserialize_for_num!(u64, uint64, "unsigned integer");
+impl_serialize_and_deserialize_for_num!(i8, int8, "signed integer");
+impl_serialize_and_deserialize_for_num!(i16, int16, "signed integer");
+impl_serialize_and_deserialize_for_num!(i32, int32, "signed integer");
+impl_serialize_and_deserialize_for_num!(i64, int64, "signed integer");
+impl_serialize_and_deserialize_for_num!(f32, float, "float");
+impl_serialize_and_deserialize_for_num!(f64, double, "double");
 
 fn _z_bytes_serialize_from_cslice(this: &mut MaybeUninit<z_owned_bytes_t>, s: CSlice) {
     let payload = ZBytes::from(ZSlice::from(s));
