@@ -10,8 +10,6 @@ on:
 
 env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-  CARGO_PROFILE_DEV_DEBUG: false
-  RUSTUP_WINDOWS_PATH_ADD_BIN: 1
 
 jobs:
   check_format:
