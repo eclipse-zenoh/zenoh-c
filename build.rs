@@ -1058,29 +1058,23 @@ pub fn make_move_take_signatures(
     path_in: &str,
 ) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(\w+)(_drop|_undeclare)\(struct (\w+) (\w+)\);").unwrap();
+    let re = Regex::new(r"(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
     let mut move_funcs = Vec::<FunctionSignature>::new();
     let mut take_funcs = Vec::<FunctionSignature>::new();
-    let mut processed = HashSet::<String>::new();
 
-    for (_, [func_name, _, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract())
+    for (_, [func_name_prefix, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract())
     {
-        if processed.contains(arg_type) {
-            continue;
-        } else {
-            processed.insert(arg_type.to_string());
-        }
         let (prefix, _, semantic, postfix) = split_type_name(arg_type);
         let z_owned_type = format!("{}_{}_{}_{}*", prefix, "owned", semantic, postfix);
         let z_moved_type = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
         let move_f = FunctionSignature {
             return_type: Ctype::new(arg_type),
-            func_name: func_name.to_string() + "_move",
+            func_name: func_name_prefix.to_string() + "_move",
             args: vec![FuncArg::new(&z_owned_type, arg_name)],
         };
         let take_f = FunctionSignature {
             return_type: Ctype::new("void"),
-            func_name: func_name.to_string() + "_take",
+            func_name: func_name_prefix.to_string() + "_take",
             args: vec![
                 FuncArg::new(&z_owned_type, arg_name),
                 FuncArg::new(&z_moved_type, "x"),
@@ -1133,18 +1127,12 @@ pub fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(.+?) +(\w+)(_drop|_undeclare)\(struct (\w+) (\w+)\);").unwrap();
+    let re = Regex::new(r"(.+?) +(\w+_drop)\(struct (\w+) (\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
-    let mut processed = HashSet::<String>::new();
 
-    for (_, [return_type, func_name, func_postfix, arg_type, arg_name]) in
+    for (_, [return_type, func_name, arg_type, arg_name]) in
         re.captures_iter(&bindings).map(|c| c.extract())
     {
-        if processed.contains(arg_type) {
-            continue;
-        } else {
-            processed.insert(arg_type.to_string());
-        }
         // if necessary, other prefixes like "extern", "static", etc. can be removed here
         let return_type = return_type
             .split(' ')
@@ -1153,7 +1141,7 @@ pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
             .join(" ");
         let f = FunctionSignature {
             return_type: Ctype::new(return_type.as_str()),
-            func_name: func_name.to_string() + func_postfix,
+            func_name: func_name.to_string(),
             args: vec![FuncArg::new(arg_type, arg_name)],
         };
         res.push(f);
