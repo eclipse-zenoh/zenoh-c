@@ -62,7 +62,7 @@ extern "C" fn __z_handler_reply_send(reply: &z_loaned_reply_t, context: *mut c_v
 
 extern "C" fn __z_handler_reply_drop(context: *mut c_void) {
     unsafe {
-        let f = (context as *mut Arc<dyn Fn(Reply) + Send + Sync>).read();
+        let f = Box::from_raw(context as *mut Arc<dyn Fn(Reply) + Send + Sync>);
         std::mem::drop(f);
     }
 }

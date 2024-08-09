@@ -64,7 +64,7 @@ extern "C" fn __z_handler_sample_send(sample: &z_loaned_sample_t, context: *mut 
 
 extern "C" fn __z_handler_sample_drop(context: *mut c_void) {
     unsafe {
-        let f = (context as *mut Arc<dyn Fn(Sample) + Send + Sync>).read();
+        let f = Box::from_raw(context as *mut Arc<dyn Fn(Sample) + Send + Sync>);
         std::mem::drop(f);
     }
 }

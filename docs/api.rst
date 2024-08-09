@@ -77,7 +77,7 @@ Functions
 .. doxygenfunction:: z_string_is_empty
 
 String Array
------------
+------------
 Types
 ^^^^^
 .. doxygenstruct:: z_owned_string_array_t
@@ -233,9 +233,6 @@ Functions
 .. doxygenfunction:: z_encoding_loan_mut
 .. doxygenfunction:: z_encoding_check
 .. doxygenfunction:: z_encoding_drop
-
-.. doxygenfunction:: z_encoding_drop
-
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
 .. doxygenfunction:: z_encoding_from_substr
@@ -313,7 +310,7 @@ Predefined Encodings
 .. doxygenfunction:: z_encoding_video_vp9
 
 Reply Error
------
+-----------
 Types
 ^^^^^
 .. doxygenstruct:: z_loaned_reply_err_t
@@ -629,7 +626,7 @@ Functions
 .. doxygenfunction:: z_ring_handler_sample_drop
 .. doxygenfunction:: z_ring_handler_sample_loan
 .. doxygenfunction:: z_ring_handler_sample_recv
-.. doxygenfunction:: z_ring_handler_sample_try_recv  
+.. doxygenfunction:: z_ring_handler_sample_try_recv
 
 Queryable
 =========
@@ -705,7 +702,7 @@ Functions
 .. doxygenfunction:: z_ring_handler_query_drop
 .. doxygenfunction:: z_ring_handler_query_loan
 .. doxygenfunction:: z_ring_handler_query_recv
-.. doxygenfunction:: z_ring_handler_query_try_recv  
+.. doxygenfunction:: z_ring_handler_query_try_recv
 
 Query
 =====
@@ -770,7 +767,7 @@ Functions
 .. doxygenfunction:: z_ring_handler_reply_drop
 .. doxygenfunction:: z_ring_handler_reply_loan
 .. doxygenfunction:: z_ring_handler_reply_recv
-.. doxygenfunction:: z_ring_handler_reply_try_recv  
+.. doxygenfunction:: z_ring_handler_reply_try_recv
 
 Scouting
 ========
@@ -792,8 +789,8 @@ Functions
 .. doxygenfunction:: z_hello_locators
 .. doxygenfunction:: z_hello_zid
 .. doxygenfunction:: z_hello_loan
-.. doxygenfunction:: z_hello_drop 
-.. doxygenfunction:: z_hello_null 
+.. doxygenfunction:: z_hello_drop
+.. doxygenfunction:: z_hello_null
 .. doxygenfunction:: z_hello_check
 
 .. doxygenfunction:: z_whatami_to_view_string
@@ -896,3 +893,11 @@ Functions
 
 .. doxygenfunction:: zc_init_logging
 .. doxygenfunction:: zc_init_logging_with_callback
+
+
+Other
+=====
+
+Functions
+---------
+.. doxygenfunction:: zc_stop_z_runtime
