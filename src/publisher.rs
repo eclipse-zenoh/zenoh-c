@@ -393,7 +393,6 @@ pub extern "C" fn zc_publisher_matching_listener_drop(
     zc_publisher_matching_listener_undeclare(this)
 }
 
-
 #[cfg(feature = "unstable")]
 /// Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///

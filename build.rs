@@ -993,7 +993,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
             nulls.difference(&drops)
         ));
     }
-    
+
     if drops != checks {
         msgs.push(format!(
             "the list of z_xxx_drop and z_xxx_check functions are different:\n missing z_xxx_check for {:?}\n missing z_xxx_drop for {:?}",
@@ -1021,7 +1021,6 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     if !msgs.is_empty() {
         panic!("Some functions are missing:\n{}", msgs.join("\n"));
     }
-
 
     let out = generate_move_functions_c(&move_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
