@@ -36,5 +36,5 @@ int main(int argc, char **argv) {
     z_view_keyexpr_from_str_unchecked(&keyexpr, NULL);
     assert(z_view_keyexpr_is_empty(&keyexpr));
     z_view_keyexpr_from_substr_unchecked(&keyexpr, NULL, 0);
-    assert(!z_view_keyexpr_is_empty(&keyexpr));
+    assert(z_view_keyexpr_is_empty(&keyexpr));
 }
