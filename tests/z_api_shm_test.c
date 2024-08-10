@@ -42,7 +42,7 @@
 int test_shm_buffer(z_moved_shm_mut_t mbuf) {
     assert(mbuf._ptr != NULL);
     z_owned_shm_mut_t buf;
-    z_take(buf, mbuf);
+    z_take(&buf, mbuf);
     assert(mbuf._ptr == NULL);
     ASSERT_CHECK(buf);
 
