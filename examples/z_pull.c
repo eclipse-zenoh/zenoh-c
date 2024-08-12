@@ -13,20 +13,19 @@
 //
 #include <stdio.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-const char *kind_to_str(z_sample_kind_t kind) {
-    switch (kind) {
-        case Z_SAMPLE_KIND_PUT:
-            return "PUT";
-        case Z_SAMPLE_KIND_DELETE:
-            return "DELETE";
-        default:
-            return "UNKNOWN";
-    }
-}
+#define DEFAULT_KEYEXPR "demo/example/**"
 
-void handle_sample(const z_loaned_sample_t *sample) {
+struct args_t {
+    char* keyexpr;  // -k
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+const char* kind_to_str(z_sample_kind_t kind);
+
+void handle_sample(const z_loaned_sample_t* sample) {
     z_view_string_t keystr;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &keystr);
     z_owned_string_t payload_value;
@@ -37,23 +36,10 @@ void handle_sample(const z_loaned_sample_t *sample) {
     z_drop(z_move(payload_value));
 }
 
-int main(int argc, char **argv) {
-    char *expr = "demo/example/**";
-    if (argc > 1) {
-        expr = argv[1];
-    }
-
+int main(int argc, char** argv) {
     z_owned_config_t config;
     z_config_default(&config);
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_LISTEN_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_LISTEN_KEY, Z_CONFIG_LISTEN_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
     z_owned_session_t s;
@@ -95,4 +81,53 @@ int main(int argc, char **argv) {
     z_undeclare_subscriber(z_move(sub));
     z_close(z_move(s));
     return 0;
+}
+
+const char* kind_to_str(z_sample_kind_t kind) {
+    switch (kind) {
+        case Z_SAMPLE_KIND_PUT:
+            return "PUT";
+        case Z_SAMPLE_KIND_DELETE:
+            return "DELETE";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_pull [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEY> (optional, string, default='%s'): The key expression to subscribe to\n",
+        DEFAULT_KEYEXPR);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return (struct args_t){.keyexpr = (char*)keyexpr};
 }

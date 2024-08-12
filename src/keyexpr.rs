@@ -79,7 +79,7 @@ unsafe fn keyexpr_create(
         Ok(name) => match keyexpr_create_inner(name, should_auto_canonize, should_copy) {
             Ok(v) => Ok(v),
             Err(e) => {
-                tracing::error!("Couldn't construct a keyexpr: {}", e);
+                tracing::error!("Couldn't construct a keyexpr from {:02x?}: {}", name, e);
                 Err(result::Z_EINVAL)
             }
         },
