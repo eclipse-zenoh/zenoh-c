@@ -77,7 +77,7 @@ Functions
 .. doxygenfunction:: z_string_is_empty
 
 String Array
------------
+------------
 Types
 ^^^^^
 .. doxygenstruct:: z_owned_string_array_t
@@ -106,6 +106,7 @@ Types
 .. doxygenstruct:: z_loaned_bytes_t
 .. doxygenstruct:: z_bytes_iterator_t
 .. doxygenstruct:: z_bytes_reader_t
+.. doxygenstruct:: z_bytes_writer_t
 
 Functions
 ^^^^^^^^^
@@ -159,6 +160,7 @@ Functions
 
 .. doxygenfunction:: z_bytes_get_reader
 .. doxygenfunction:: z_bytes_reader_read
+.. doxygenfunction:: z_bytes_reader_read_bounded
 .. doxygenfunction:: z_bytes_reader_seek
 .. doxygenfunction:: z_bytes_reader_tell
 
@@ -167,12 +169,9 @@ Functions
 
 .. doxygenfunction:: z_bytes_get_writer
 
-.. doxygenfunction:: z_bytes_writer_loan
-.. doxygenfunction:: z_bytes_writer_loan_mut
-.. doxygenfunction:: z_bytes_writer_null
-.. doxygenfunction:: z_bytes_writer_check
-.. doxygenfunction:: z_bytes_writer_drop
-.. doxygenfunction:: z_bytes_writer_write
+.. doxygenfunction:: z_bytes_writer_write_all
+.. doxygenfunction:: z_bytes_writer_append
+.. doxygenfunction:: z_bytes_writer_append_bounded
 
 
 
@@ -234,9 +233,6 @@ Functions
 .. doxygenfunction:: z_encoding_loan_mut
 .. doxygenfunction:: z_encoding_check
 .. doxygenfunction:: z_encoding_drop
-
-.. doxygenfunction:: z_encoding_drop
-
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
 .. doxygenfunction:: z_encoding_from_substr
@@ -314,7 +310,7 @@ Predefined Encodings
 .. doxygenfunction:: z_encoding_video_vp9
 
 Reply Error
------
+-----------
 Types
 ^^^^^
 .. doxygenstruct:: z_loaned_reply_err_t
@@ -573,6 +569,10 @@ Functions
 .. doxygenfunction:: zc_closure_matching_status_drop
 .. doxygenfunction:: zc_closure_matching_status_call
 
+.. doxygenfunction:: zc_publisher_get_matching_status
+.. doxygenfunction:: zc_publisher_matching_listener_declare
+.. doxygenfunction:: zc_publisher_matching_listener_undeclare
+
 Subscription
 ============
 
@@ -626,7 +626,7 @@ Functions
 .. doxygenfunction:: z_ring_handler_sample_drop
 .. doxygenfunction:: z_ring_handler_sample_loan
 .. doxygenfunction:: z_ring_handler_sample_recv
-.. doxygenfunction:: z_ring_handler_sample_try_recv  
+.. doxygenfunction:: z_ring_handler_sample_try_recv
 
 Queryable
 =========
@@ -702,7 +702,7 @@ Functions
 .. doxygenfunction:: z_ring_handler_query_drop
 .. doxygenfunction:: z_ring_handler_query_loan
 .. doxygenfunction:: z_ring_handler_query_recv
-.. doxygenfunction:: z_ring_handler_query_try_recv  
+.. doxygenfunction:: z_ring_handler_query_try_recv
 
 Query
 =====
@@ -767,7 +767,7 @@ Functions
 .. doxygenfunction:: z_ring_handler_reply_drop
 .. doxygenfunction:: z_ring_handler_reply_loan
 .. doxygenfunction:: z_ring_handler_reply_recv
-.. doxygenfunction:: z_ring_handler_reply_try_recv  
+.. doxygenfunction:: z_ring_handler_reply_try_recv
 
 Scouting
 ========
@@ -789,8 +789,8 @@ Functions
 .. doxygenfunction:: z_hello_locators
 .. doxygenfunction:: z_hello_zid
 .. doxygenfunction:: z_hello_loan
-.. doxygenfunction:: z_hello_drop 
-.. doxygenfunction:: z_hello_null 
+.. doxygenfunction:: z_hello_drop
+.. doxygenfunction:: z_hello_null
 .. doxygenfunction:: z_hello_check
 
 .. doxygenfunction:: z_whatami_to_view_string
@@ -877,3 +877,27 @@ Functions
 
 .. doxygenfunction:: ze_querying_subscriber_options_default
 .. doxygenfunction:: zc_reply_keyexpr_default
+
+Logging
+=======
+
+Types
+-----
+
+.. doxygenstruct:: zc_owned_closure_log_t
+.. doxygenstruct:: zc_loaned_closure_log_t
+.. doxygenenum:: zc_log_severity_t
+
+Functions
+---------
+
+.. doxygenfunction:: zc_init_logging
+.. doxygenfunction:: zc_init_logging_with_callback
+
+
+Other
+=====
+
+Functions
+---------
+.. doxygenfunction:: zc_stop_z_runtime

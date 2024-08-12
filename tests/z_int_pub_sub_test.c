@@ -49,8 +49,8 @@ int run_publisher() {
     publisher_options.priority = Z_PRIORITY_DATA;
     publisher_options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(s), z_loan(ke), &publisher_options);
-    if (!z_check(pub)) {
+
+    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &publisher_options) != Z_OK) {
         perror("Unable to declare Publisher for key expression!");
         return -1;
     }

@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     if (add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zc_publisher_matching_listener_callback(&listener, z_loan(pub), z_move(callback));
+        zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
     }
 #else
     if (add_matching_listener) {
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
             z_publisher_put_options_default(&options);
 
             z_owned_bytes_t payload;
-            z_bytes_serialize_from_shm_mut(&payload, &alloc.buf);
+            z_bytes_serialize_from_shm_mut(&payload, z_move(alloc.buf));
 
             z_publisher_put(z_loan(pub), z_move(payload), &options);
         } else {

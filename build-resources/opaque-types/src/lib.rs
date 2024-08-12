@@ -1,7 +1,6 @@
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+#![allow(unused_doc_comments)]
 use core::ffi::c_void;
 use std::{
-    collections::HashMap,
     sync::{Arc, Condvar, Mutex, MutexGuard},
     thread::JoinHandle,
 };
@@ -9,7 +8,7 @@ use std::{
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
     config::Config,
-    handlers::{DefaultHandler, RingChannelHandler},
+    handlers::RingChannelHandler,
     key_expr::KeyExpr,
     pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
@@ -44,6 +43,7 @@ macro_rules! get_opaque_type_data {
             const SIZE: usize = std::mem::size_of::<$src_type>();
             const INFO_MESSAGE: &str =
                 concatcp!("type: ", DST_NAME, ", align: ", ALIGN, ", size: ", SIZE);
+            #[cfg(feature = "panic")]
             panic!("{}", INFO_MESSAGE);
         };
     };
@@ -56,9 +56,13 @@ get_opaque_type_data!(ZBytes, z_owned_bytes_t);
 /// A loaned serialized Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 
-type CSlice = (usize, usize, usize, usize);
+pub struct CSlice {
+    _data: *const u8,
+    _len: usize,
+    _drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
+    _context: *mut c_void,
+}
 
-/// A contiguous owned sequence of bytes allocated by Zenoh.
 get_opaque_type_data!(CSlice, z_owned_slice_t);
 /// A contiguous sequence of bytes owned by some other entity.
 get_opaque_type_data!(CSlice, z_view_slice_t);
@@ -90,10 +94,7 @@ get_opaque_type_data!(Sample, z_loaned_sample_t);
 get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
 
 /// A writer for serialized data.
-get_opaque_type_data!(Option<ZBytesWriter<'static>>, z_owned_bytes_writer_t);
-
-/// A loaned writer for serialized data.
-get_opaque_type_data!(ZBytesWriter<'static>, z_loaned_bytes_writer_t);
+get_opaque_type_data!(ZBytesWriter<'static>, z_bytes_writer_t);
 
 /// An iterator over multi-element serialized data
 get_opaque_type_data!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);

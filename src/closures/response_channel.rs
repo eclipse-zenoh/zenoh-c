@@ -24,6 +24,7 @@ pub use crate::opaque_types::{
     z_loaned_fifo_handler_reply_t, z_moved_fifo_handler_reply_t, z_owned_fifo_handler_reply_t,
 };
 use crate::{
+    result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
 };
@@ -61,7 +62,7 @@ extern "C" fn __z_handler_reply_send(reply: &z_loaned_reply_t, context: *mut c_v
 
 extern "C" fn __z_handler_reply_drop(context: *mut c_void) {
     unsafe {
-        let f = (context as *mut Arc<dyn Fn(Reply) + Send + Sync>).read();
+        let f = Box::from_raw(context as *mut Arc<dyn Fn(Reply) + Send + Sync>);
         std::mem::drop(f);
     }
 }
@@ -98,42 +99,43 @@ pub unsafe extern "C" fn z_fifo_handler_reply_loan(
 }
 
 /// Returns reply from the fifo buffer. If there are no more pending replies will block until next reply is received, or until
-/// the channel is dropped (normally when all replies are received). In the later case will return ``false`` and reply will be
-/// in the gravestone state.
+/// the channel is dropped (normally when all replies are received).
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_reply_recv(
     this: &z_loaned_fifo_handler_reply_t,
     reply: &mut MaybeUninit<z_owned_reply_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().recv() {
         Ok(q) => {
             reply.as_rust_type_mut_uninit().write(Some(q));
-            true
+            result::Z_OK
         }
         Err(_) => {
             reply.as_rust_type_mut_uninit().write(None);
-            false
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
 
 /// Returns reply from the fifo buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
-/// Will return false if the channel is dropped (normally when all replies are received) and there are no more replies in the fifo.
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state),
+/// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the reply will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_fifo_handler_reply_try_recv(
     this: &z_loaned_fifo_handler_reply_t,
     reply: &mut MaybeUninit<z_owned_reply_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
         Ok(q) => {
             reply.as_rust_type_mut_uninit().write(Some(q));
-            true
+            result::Z_OK
         }
         Err(e) => {
             reply.as_rust_type_mut_uninit().write(None);
             match e {
-                flume::TryRecvError::Empty => true,
-                flume::TryRecvError::Disconnected => false,
+                flume::TryRecvError::Empty => result::Z_CHANNEL_NODATA,
+                flume::TryRecvError::Disconnected => result::Z_CHANNEL_DISCONNECTED,
             }
         }
     }
@@ -197,40 +199,46 @@ pub unsafe extern "C" fn z_ring_handler_reply_loan(
 }
 
 /// Returns reply from the ring buffer. If there are no more pending replies will block until next reply is received, or until
-/// the channel is dropped (normally when all replies are received). In the later case will return ``false`` and reply will be
-/// in the gravestone state.
+/// the channel is dropped (normally when all replies are received).
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_ring_handler_reply_recv(
     this: &z_loaned_ring_handler_reply_t,
     reply: &mut MaybeUninit<z_owned_reply_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().recv() {
         Ok(q) => {
             reply.as_rust_type_mut_uninit().write(Some(q));
-            true
+            result::Z_OK
         }
         Err(_) => {
             reply.as_rust_type_mut_uninit().write(None);
-            false
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
 
 /// Returns reply from the ring buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
-/// Will return false if the channel is dropped (normally when all replies are received) and there are no more replies in the fifo.
+/// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state),
+/// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the reply will be in the gravestone state).
 #[no_mangle]
 pub extern "C" fn z_ring_handler_reply_try_recv(
     this: &z_loaned_ring_handler_reply_t,
     reply: &mut MaybeUninit<z_owned_reply_t>,
-) -> bool {
+) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
         Ok(q) => {
+            let r = if q.is_some() {
+                result::Z_OK
+            } else {
+                result::Z_CHANNEL_NODATA
+            };
             reply.as_rust_type_mut_uninit().write(q);
-            true
+            r
         }
         Err(_) => {
             reply.as_rust_type_mut_uninit().write(None);
-            false
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }

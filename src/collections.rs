@@ -274,12 +274,6 @@ pub extern "C" fn z_view_slice_empty(this: &mut MaybeUninit<z_view_slice_t>) {
     this.as_rust_type_mut_uninit().write(CSliceView::default());
 }
 
-/// Constructs an empty view slice.
-#[no_mangle]
-pub extern "C" fn z_view_slice_null(this: &mut MaybeUninit<z_view_slice_t>) {
-    this.as_rust_type_mut_uninit().write(CSliceView::default());
-}
-
 /// Constructs a `len` bytes long view starting at `start`.
 ///
 /// @return -1 if `start == NULL` and `len > 0` (and creates an empty view slice), 0 otherwise.
@@ -311,8 +305,8 @@ pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> &z_loaned_slice_t 
 
 /// @return ``true`` if the slice is not empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_view_slice_check(this: &z_view_slice_t) -> bool {
-    !this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_view_slice_is_empty(this: &z_view_slice_t) -> bool {
+    this.as_rust_type_ref().is_empty()
 }
 
 /// Constructs an empty `z_owned_slice_t`.
@@ -555,14 +549,8 @@ pub extern "C" fn z_string_null(this: &mut MaybeUninit<z_owned_string_t>) {
 
 /// @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_view_string_check(this: &z_view_string_t) -> bool {
-    !this.as_rust_type_ref().is_empty()
-}
-
-/// Constructs view string in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_view_string_null(this: &mut MaybeUninit<z_view_string_t>) {
-    this.as_rust_type_mut_uninit().write(CStringView::default());
+pub extern "C" fn z_view_string_is_empty(this: &z_view_string_t) -> bool {
+    this.as_rust_type_ref().is_empty()
 }
 
 /// Constructs an empty owned string.

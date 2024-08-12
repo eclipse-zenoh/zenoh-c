@@ -119,8 +119,7 @@ void test_liveliness_get() {
 
     zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
     z_owned_reply_t reply;
-    assert(z_recv(z_loan(handler), &reply));
-    assert(z_check(reply));
+    assert(z_recv(z_loan(handler), &reply) == Z_OK);
     assert(z_reply_is_ok(z_loan(reply)));
     const z_loaned_keyexpr_t* reply_keyexpr = z_sample_keyexpr(z_reply_ok(z_loan(reply)));
     z_view_string_t reply_keyexpr_s;
@@ -128,7 +127,7 @@ void test_liveliness_get() {
     assert(strncmp(token1_expr, z_string_data(z_loan(reply_keyexpr_s)), z_string_len(z_loan(reply_keyexpr_s))) == 0);
 
     z_drop(z_move(reply));
-    assert(!z_recv(z_loan(handler), &reply));
+    assert(z_recv(z_loan(handler), &reply) == Z_CHANNEL_DISCONNECTED);
 
     z_drop(z_move(t1));
     z_drop(z_move(handler));
@@ -136,7 +135,7 @@ void test_liveliness_get() {
     z_fifo_channel_reply_new(&cb, &handler, 3);
 
     zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
-    assert(!z_recv(z_loan(handler), &reply));
+    assert(z_recv(z_loan(handler), &reply) == Z_CHANNEL_DISCONNECTED);
 
     z_drop(z_move(handler));
     z_drop(z_move(s1));

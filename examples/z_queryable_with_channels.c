@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
     printf("Press CTRL-C to quit...\n");
     z_owned_query_t oquery;
-    for (z_recv(z_loan(handler), &oquery); z_check(oquery); z_recv(z_loan(handler), &oquery)) {
+    for (z_result_t res = z_recv(z_loan(handler), &oquery); res == Z_OK; res = z_recv(z_loan(handler), &oquery)) {
         const z_loaned_query_t* query = z_loan(oquery);
         z_view_string_t key_string;
         z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);

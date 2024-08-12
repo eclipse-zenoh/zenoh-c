@@ -213,7 +213,7 @@ Finally, we strongly advise that you refrain from using structure field that sta
 
 ## Logging
 
-By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behavior can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logger` function.
+By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behavior can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logging` function.
 
 ## Cross-Compilation
 

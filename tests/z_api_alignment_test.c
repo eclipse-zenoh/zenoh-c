@@ -107,15 +107,15 @@ int main(int argc, char **argv) {
     setbuf(stdout, NULL);
 
 #ifdef ZENOH_C
-    zc_init_logger();
+    zc_init_logging();
 #endif
 
     z_view_keyexpr_t key_demo_example, key_demo_example_a, key_demo_example_starstar;
     z_view_keyexpr_from_str(&key_demo_example, "demo/example");
     z_view_keyexpr_from_str(&key_demo_example_a, "demo/example/a");
     z_view_keyexpr_from_str(&key_demo_example_starstar, "demo/example/**");
-    bool _ret_bool = z_view_keyexpr_check(&key_demo_example);
-    assert(_ret_bool == true);
+    bool _ret_bool = z_view_keyexpr_is_empty(&key_demo_example);
+    assert(_ret_bool == false);
 
     _ret_bool = z_keyexpr_includes(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
     assert(_ret_bool);

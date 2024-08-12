@@ -227,6 +227,11 @@ pub extern "C" fn z_task_join(this: z_moved_task_t) -> result::z_result_t {
     }
 }
 
+/// Drop the task. Same as `z_task_detach`. Use `z_task_join` to wait for the task completion.
+#[no_mangle]
+#[allow(unused_variables)]
+pub extern "C" fn z_task_drop(this: z_moved_task_t) {}
+
 /// Returns ``true`` if task is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_task_check(this: &z_owned_task_t) -> bool {

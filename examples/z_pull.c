@@ -71,8 +71,8 @@ int main(int argc, char** argv) {
         if (c == -1) {
             z_sleep_s(1);
         } else {
-            z_try_recv(z_loan(handler), &sample);
-            if (z_check(sample)) {
+            z_result_t res = z_try_recv(z_loan(handler), &sample);
+            if (res == Z_OK) {
                 handle_sample(z_loan(sample));
                 z_drop(z_move(sample));
             }

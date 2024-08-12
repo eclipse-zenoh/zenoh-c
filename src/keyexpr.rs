@@ -43,9 +43,9 @@ pub extern "C" fn z_keyexpr_null(this: &mut MaybeUninit<z_owned_keyexpr_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
-/// Constructs a view key expression in a gravestone state.
+/// Constructs a view key expression in empty state
 #[no_mangle]
-pub extern "C" fn z_view_keyexpr_null(this: &mut MaybeUninit<z_view_keyexpr_t>) {
+pub extern "C" fn z_view_keyexpr_empty(this: &mut MaybeUninit<z_view_keyexpr_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
@@ -157,8 +157,8 @@ pub extern "C" fn z_keyexpr_check(this: &z_owned_keyexpr_t) -> bool {
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_view_keyexpr_check(this: &z_view_keyexpr_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_view_keyexpr_is_empty(this: &z_view_keyexpr_t) -> bool {
+    this.as_rust_type_ref().is_none()
 }
 
 /// Returns 0 if the passed string is a valid (and canon) key expression.

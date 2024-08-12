@@ -40,7 +40,7 @@ void config_peer() {
 }
 
 int main(int argc, char **argv) {
-    zc_init_logger();
+    zc_init_logging();
     config_client();
     config_peer();
 }

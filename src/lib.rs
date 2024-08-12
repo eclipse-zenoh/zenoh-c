@@ -18,6 +18,7 @@ use std::{cmp::min, slice};
 
 use libc::c_void;
 
+use crate::transmute::LoanedCTypeRef;
 #[macro_use]
 mod transmute;
 pub mod opaque_types;
@@ -76,13 +77,40 @@ pub mod context;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
 
-/// Initialises the zenoh runtime logger.
+/// Initializes the zenoh runtime logger, using rust environment settings.
 ///
 /// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
 /// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
-pub extern "C" fn zc_init_logger() {
+pub extern "C" fn zc_init_logging() {
     zenoh::try_init_log_from_env();
+}
+
+/// Initializes the zenoh runtime logger with custom callback.
+///
+/// @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
+/// Messages with lower severity levels will be ignored.
+/// @param callback: A closure that will be called with each log message severity level and content.
+#[no_mangle]
+pub extern "C" fn zc_init_logging_with_callback(
+    min_severity: zc_log_severity_t,
+    callback: &mut zc_owned_closure_log_t,
+) {
+    let mut closure = zc_owned_closure_log_t::empty();
+    std::mem::swap(callback, &mut closure);
+    zenoh_util::log::init_log_with_callback(
+        move |meta| min_severity <= (*meta.level()).into(),
+        move |record| {
+            if let Some(s) = record.message.as_ref() {
+                let c = CStringView::new_borrowed_from_slice(s.as_bytes());
+                zc_closure_log_call(
+                    zc_closure_log_loan(&closure),
+                    record.level.into(),
+                    c.as_loaned_c_type_ref(),
+                );
+            }
+        },
+    );
 }
 
 // Test should be runned with `cargo test --no-default-features`
@@ -133,4 +161,13 @@ impl CopyableToCArray for &str {
     fn copy_to_c_array(&self, buf: *mut c_void, len: usize) -> usize {
         self.as_bytes().copy_to_c_array(buf, len)
     }
+}
+
+/// Stops all Zenoh tasks and drops all related static variables.
+/// All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
+/// None of Zenoh functionality can be used after this call.
+/// Useful to suppress memory leaks messages due to Zenoh static variables (since they are never destroyed due to Rust language design).
+#[no_mangle]
+pub extern "C" fn zc_stop_z_runtime() {
+    let _z = zenoh_runtime::ZRuntimePoolGuard;
 }

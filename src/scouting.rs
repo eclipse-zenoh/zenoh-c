@@ -24,7 +24,7 @@ use crate::{
     result::{self, Z_OK},
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
-    z_owned_string_array_t, z_view_string_t, zc_init_logger, CString, CStringView, ZVector,
+    z_owned_string_array_t, z_view_string_t, zc_init_logging, CString, CStringView, ZVector,
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_id_t};
@@ -160,7 +160,7 @@ pub extern "C" fn z_scout(
     options: Option<&z_scout_options_t>,
 ) -> result::z_result_t {
     if cfg!(feature = "logger-autoinit") {
-        zc_init_logger();
+        zc_init_logging();
     }
     let Some(callback) = callback.into_rust_type() else {
         return result::Z_EINVAL;
