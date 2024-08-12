@@ -113,7 +113,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     kv_it it_out = {.current = kvs_out, .end = kvs_out + 1};
     z_bytes_from_iter(&reply_attachment, create_attachment_iter, (void *)&it_out);
 
-    options.attachment = &reply_attachment;
+    options.attachment = z_move(reply_attachment);
 
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, values[value_num]);
@@ -137,7 +137,7 @@ int run_queryable() {
     }
 
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, keyexpr);
+    z_closure(&callback, query_handler, NULL, (void *)keyexpr);
 
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
@@ -187,7 +187,7 @@ int run_get() {
         kv_it it = {.current = kvs, .end = kvs + 2};
         z_bytes_from_iter(&attachment, create_attachment_iter, (void *)&it);
 
-        opts.attachment = &attachment;
+        opts.attachment = z_move(attachment);
         z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
         z_owned_reply_t reply;
         for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {

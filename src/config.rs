@@ -65,10 +65,11 @@ pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
 pub static Z_CONFIG_SHARED_MEMORY_KEY: &c_char =
     unsafe { &*(b"transport/shared_memory/enabled\0".as_ptr() as *const c_char) };
 
-pub use crate::opaque_types::{z_loaned_config_t, z_owned_config_t};
+pub use crate::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
 decl_c_type!(
-    owned(z_owned_config_t, Option<Config>),
-    loaned(z_loaned_config_t, Config)
+    owned(z_owned_config_t, option Config),
+    loaned(z_loaned_config_t),
+    moved(z_moved_config_t)
 );
 
 /// Borrows config.
@@ -220,10 +221,8 @@ pub unsafe extern "C" fn zc_config_insert_json_from_substr(
 
 /// Frees `config`, and resets it to its gravestone state.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_config_drop(this: &mut z_owned_config_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_config_drop(this: z_moved_config_t) {}
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

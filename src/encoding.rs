@@ -27,12 +27,13 @@ pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_owned_string_t, z_string_copy_from_substr,
+    z_moved_encoding_t, z_owned_string_t, z_string_copy_from_substr,
 };
 
 decl_c_type!(
     owned(z_owned_encoding_t, Encoding),
     loaned(z_loaned_encoding_t, Encoding),
+    moved(z_moved_encoding_t)
 );
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
@@ -48,6 +49,7 @@ pub unsafe extern "C" fn z_encoding_from_substr(
         encoding.write(Encoding::default());
         result::Z_OK
     } else {
+        #[allow(clippy::unnecessary_cast)]
         let s = from_raw_parts(s as *const u8, len);
         match from_utf8(s) {
             Ok(s) => {
@@ -79,6 +81,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
     } else if s.is_null() {
         return result::Z_EINVAL;
     }
+    #[allow(clippy::unnecessary_cast)]
     let schema_bytes = from_raw_parts(s as *const u8, len);
     match from_utf8(schema_bytes) {
         Ok(schema_str) => {
@@ -142,9 +145,8 @@ pub extern "C" fn z_encoding_null(this: &mut MaybeUninit<z_owned_encoding_t>) {
 
 /// Frees the memory and resets the encoding it to its default value.
 #[no_mangle]
-pub extern "C" fn z_encoding_drop(this: &mut z_owned_encoding_t) {
-    *this.as_rust_type_mut() = Encoding::default();
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_encoding_drop(this: z_moved_encoding_t) {}
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]

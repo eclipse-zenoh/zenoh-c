@@ -43,7 +43,7 @@ pub extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_voi
 }
 
 #[derive(Default, Clone)]
-pub struct CSliceOwned(pub CSlice);
+pub struct CSliceOwned(CSlice);
 #[derive(Default)]
 pub struct CSliceView(CSlice);
 
@@ -259,23 +259,18 @@ impl From<Vec<u8>> for CSlice {
 
 impl std::cmp::Eq for CSlice {}
 
-pub use crate::opaque_types::{z_loaned_slice_t, z_owned_slice_t, z_view_slice_t};
+pub use crate::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t};
 
 decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
-    view(z_view_slice_t, CSliceView),
     loaned(z_loaned_slice_t, CSlice),
+    view(z_view_slice_t, CSliceView),
+    moved(z_moved_slice_t)
 );
 
 /// Constructs an empty view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_empty(this: &mut MaybeUninit<z_view_slice_t>) {
-    this.as_rust_type_mut_uninit().write(CSliceView::default());
-}
-
-/// Constructs an empty view slice.
-#[no_mangle]
-pub extern "C" fn z_view_slice_null(this: &mut MaybeUninit<z_view_slice_t>) {
     this.as_rust_type_mut_uninit().write(CSliceView::default());
 }
 
@@ -310,8 +305,8 @@ pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> &z_loaned_slice_t 
 
 /// @return ``true`` if the slice is not empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_view_slice_check(this: &z_view_slice_t) -> bool {
-    !this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_view_slice_is_empty(this: &z_view_slice_t) -> bool {
+    this.as_rust_type_ref().is_empty()
 }
 
 /// Constructs an empty `z_owned_slice_t`.
@@ -329,9 +324,8 @@ pub extern "C" fn z_slice_null(this: &mut MaybeUninit<z_owned_slice_t>) {
 /// Frees the memory and invalidates the slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_drop(this: &mut z_owned_slice_t) {
-    *this.as_rust_type_mut() = CSliceOwned::default();
-}
+#[allow(unused_variables)]
+pub unsafe extern "C" fn z_slice_drop(this: z_moved_slice_t) {}
 
 /// Borrows slice.
 #[no_mangle]
@@ -423,14 +417,16 @@ pub unsafe extern "C" fn z_slice_from_buf(
     }
 }
 
-pub use crate::opaque_types::{z_loaned_string_t, z_owned_string_t, z_view_string_t};
+pub use crate::opaque_types::{
+    z_loaned_string_t, z_moved_string_t, z_owned_string_t, z_view_string_t,
+};
 
 #[derive(Default)]
-pub struct CString(pub CSlice);
+pub struct CString(CSlice);
 #[derive(Default)]
-pub struct CStringOwned(pub CString);
+pub struct CStringOwned(CString);
 #[derive(Default)]
-pub struct CStringView(pub CString);
+pub struct CStringView(CString);
 
 impl CString {
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
@@ -513,18 +509,30 @@ impl From<String> for CStringOwned {
     }
 }
 
+impl From<CString> for CSlice {
+    fn from(value: CString) -> Self {
+        value.0
+    }
+}
+
+impl From<CStringOwned> for CSlice {
+    fn from(value: CStringOwned) -> Self {
+        value.0 .0
+    }
+}
+
 decl_c_type!(
     owned(z_owned_string_t, CStringOwned),
-    view(z_view_string_t, CStringView),
     loaned(z_loaned_string_t, CString),
+    view(z_view_string_t, CStringView),
+    moved(z_moved_string_t)
 );
 
 /// Frees memory and invalidates `z_owned_string_t`, putting it in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_drop(this: &mut z_owned_string_t) {
-    *this.as_rust_type_mut() = CStringOwned::default();
-}
+#[allow(unused_variables)]
+pub unsafe extern "C" fn z_string_drop(this: z_moved_string_t) {}
 
 /// @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
 #[no_mangle]
@@ -541,14 +549,8 @@ pub extern "C" fn z_string_null(this: &mut MaybeUninit<z_owned_string_t>) {
 
 /// @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_view_string_check(this: &z_view_string_t) -> bool {
-    !this.as_rust_type_ref().is_empty()
-}
-
-/// Constructs view string in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_view_string_null(this: &mut MaybeUninit<z_view_string_t>) {
-    this.as_rust_type_mut_uninit().write(CStringView::default());
+pub extern "C" fn z_view_string_is_empty(this: &z_view_string_t) -> bool {
+    this.as_rust_type_ref().is_empty()
 }
 
 /// Constructs an empty owned string.
@@ -720,11 +722,14 @@ pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
     this.as_rust_type_ref().is_empty()
 }
 
-pub use crate::opaque_types::{z_loaned_string_array_t, z_owned_string_array_t};
+pub use crate::opaque_types::{
+    z_loaned_string_array_t, z_moved_string_array_t, z_owned_string_array_t,
+};
 pub type ZVector = Vec<CString>;
 decl_c_type!(
-    owned(z_owned_string_array_t, Option<ZVector>),
-    loaned(z_loaned_string_array_t, ZVector),
+    owned(z_owned_string_array_t, option ZVector),
+    loaned(z_loaned_string_array_t),
+    moved(z_moved_string_array_t)
 );
 
 /// Constructs a new empty string array.
@@ -747,9 +752,8 @@ pub extern "C" fn z_string_array_check(this: &z_owned_string_array_t) -> bool {
 
 /// Destroys the string array, resetting it to its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_string_array_drop(this: &mut z_owned_string_array_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_string_array_drop(this: z_moved_string_array_t) {}
 
 /// Borrows string array.
 #[no_mangle]

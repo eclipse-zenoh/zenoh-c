@@ -119,7 +119,7 @@ int run_publisher() {
         kv_it it = {kvs, kvs + 2};
         z_bytes_from_iter(&attachment, create_attachment_iter, (void *)&it);
 
-        options.attachment = &attachment;
+        options.attachment = z_move(attachment);
 
         z_owned_bytes_t payload;
         z_bytes_from_static_str(&payload, values[i]);

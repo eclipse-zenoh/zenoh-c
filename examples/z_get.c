@@ -65,10 +65,10 @@ int main(int argc, char **argv) {
     z_owned_bytes_t payload;
     if (value != NULL) {
         z_bytes_from_static_str(&payload, value);
-        opts.payload = &payload;
+        opts.payload = z_move(payload);
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
-          z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
+          &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
 
     for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {

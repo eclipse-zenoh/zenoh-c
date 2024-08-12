@@ -20,23 +20,24 @@ use std::{
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_loaned_shm_mut_t, z_owned_shm_mut_t, z_owned_shm_t,
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_loaned_shm_mut_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t,
 };
 
 decl_c_type!(
-    owned(z_owned_shm_mut_t, Option<ZShmMut>),
-    loaned(z_loaned_shm_mut_t, zshmmut)
+    owned(z_owned_shm_mut_t, option ZShmMut),
+    loaned(z_loaned_shm_mut_t, zshmmut),
+    moved(z_moved_shm_mut_t)
 );
 
 /// Tries to construct ZShmMut slice from ZShm slice
 #[no_mangle]
 pub extern "C" fn z_shm_mut_try_from_immut(
     this: &mut MaybeUninit<z_owned_shm_mut_t>,
-    that: &mut z_owned_shm_t,
+    that: z_moved_shm_t,
 ) {
     let shm: Option<ZShmMut> = that
-        .as_rust_type_mut()
+        .into_rust_type()
         .take()
         .and_then(|val| val.try_into().ok());
     this.as_rust_type_mut_uninit().write(shm);
@@ -78,9 +79,8 @@ pub unsafe extern "C" fn z_shm_mut_loan_mut(
 
 /// Deletes ZShmMut slice
 #[no_mangle]
-pub extern "C" fn z_shm_mut_drop(this: &mut z_owned_shm_mut_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_shm_mut_drop(this: z_moved_shm_mut_t) {}
 
 /// @return the length of the ZShmMut slice
 #[no_mangle]

@@ -24,7 +24,7 @@
 #define URI "demo/example/**/*"
 #define SCOUTING_TIMEOUT "1000"
 
-char *value = "Test value";
+const char *value = "Test value";
 
 #ifdef UNSTABLE
 volatile unsigned int zids = 0;
@@ -114,8 +114,8 @@ int main(int argc, char **argv) {
     z_view_keyexpr_from_str(&key_demo_example, "demo/example");
     z_view_keyexpr_from_str(&key_demo_example_a, "demo/example/a");
     z_view_keyexpr_from_str(&key_demo_example_starstar, "demo/example/**");
-    _Bool _ret_bool = z_view_keyexpr_check(&key_demo_example);
-    assert(_ret_bool == true);
+    bool _ret_bool = z_view_keyexpr_is_empty(&key_demo_example);
+    assert(_ret_bool == false);
 
     _ret_bool = z_keyexpr_includes(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
     assert(_ret_bool);
@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
 
     const z_loaned_session_t *ls1 = z_loan(s1);
     z_owned_closure_sample_t _ret_closure_sample;
-    z_closure(&_ret_closure_sample, data_handler, NULL, ls1);
+    z_closure(&_ret_closure_sample, data_handler, NULL, (void *)ls1);
     z_subscriber_options_t _ret_sub_opt;
     z_subscriber_options_default(&_ret_sub_opt);
 
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
     z_sleep_s(SLEEP);
 
     char s1_res[64];
-    sprintf(s1_res, "%s/chunk/%d", keyexpr_str, 1);
+    snprintf(s1_res, 64, "%s/chunk/%d", keyexpr_str, 1);
     z_view_keyexpr_t s1_key;
     z_view_keyexpr_from_str(&s1_key, s1_res);
     z_owned_keyexpr_t _ret_expr;
@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
     // TODO: test for pull subscriber
 
     z_owned_closure_query_t _ret_closure_query;
-    z_closure(&_ret_closure_query, query_handler, NULL, ls1);
+    z_closure(&_ret_closure_query, query_handler, NULL, (void *)ls1);
     z_queryable_options_t _ret_qle_opt;
     z_queryable_options_default(&_ret_qle_opt);
     z_owned_queryable_t qle;

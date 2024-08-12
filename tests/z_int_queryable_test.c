@@ -45,7 +45,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     // z_owned_source_info_t source_info;
     // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
-    // options.source_info = &source_info;
+    // options.source_info = z_move(source_info);
 
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, values[value_num]);
@@ -71,7 +71,7 @@ int run_queryable() {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, keyexpr);
+    z_closure(&callback, query_handler, NULL, (void *)keyexpr);
     z_owned_queryable_t qable;
     ;
     if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) != Z_OK) {

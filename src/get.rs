@@ -16,28 +16,29 @@ use std::{
     ffi::CStr,
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
-    ptr::{null, null_mut},
+    ptr::null,
 };
 
 use libc::c_char;
 use zenoh::{
-    bytes::{Encoding, ZBytes},
-    prelude::*,
-    qos::{CongestionControl, Priority},
+    bytes::{Encoding, EncodingBuilderTrait, ZBytes},
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
+    sample::SampleBuilderTrait,
+    Wait,
 };
 
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_owned_bytes_t, z_owned_closure_reply_t, z_owned_encoding_t, z_priority_t,
+    z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
     z_query_target_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_id_t, z_owned_source_info_t, zc_locality_default, zc_locality_t,
+    transmute::IntoCType, z_id_t, z_moved_source_info_t, zc_locality_default, zc_locality_t,
     zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 
@@ -67,10 +68,11 @@ impl From<&ReplyError> for &ReplyErrorNewtype {
     }
 }
 
-pub use crate::opaque_types::{z_loaned_reply_err_t, z_owned_reply_err_t};
+pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyErrorNewtype),
-    loaned(z_loaned_reply_err_t, ReplyErrorNewtype)
+    loaned(z_loaned_reply_err_t, ReplyErrorNewtype),
+    moved(z_moved_reply_err_t)
 );
 
 /// Constructs an empty `z_owned_reply_err_t`.
@@ -107,15 +109,14 @@ pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_repl
 
 /// Frees the memory and resets the reply error it to its default value.
 #[no_mangle]
-pub extern "C" fn z_reply_err_drop(this: &mut z_owned_reply_err_t) {
-    std::mem::take(this.as_rust_type_mut());
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_reply_err_drop(this: z_moved_reply_err_t) {}
 
-pub use crate::opaque_types::{z_loaned_reply_t, z_owned_reply_t};
-
+pub use crate::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
 decl_c_type!(
-    owned(z_owned_reply_t, Option<Reply>),
-    loaned(z_loaned_reply_t, Reply)
+    owned(z_owned_reply_t, option Reply),
+    loaned(z_loaned_reply_t),
+    moved(z_moved_reply_t)
 );
 
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
@@ -187,9 +188,9 @@ pub struct z_get_options_t {
     /// The replies consolidation strategy to apply on replies to the query.
     pub consolidation: z_query_consolidation_t,
     /// An optional payload to attach to the query.
-    pub payload: *mut z_owned_bytes_t,
+    pub payload: z_moved_bytes_t,
     /// An optional encoding of the query payload and or attachment.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: z_moved_encoding_t,
     /// The congestion control to apply when routing the query.
     pub congestion_control: z_congestion_control_t,
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
@@ -204,17 +205,17 @@ pub struct z_get_options_t {
     pub priority: z_priority_t,
     #[cfg(feature = "unstable")]
     /// The source info for the query.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: z_moved_source_info_t,
     /// An optional attachment to attach to the query.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: z_moved_bytes_t,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
 }
 
 /// Constructs default `z_get_options_t`
 #[no_mangle]
-pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
-    *this = z_get_options_t {
+pub extern "C" fn z_get_options_default(this: &mut MaybeUninit<z_get_options_t>) {
+    this.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::default().into(),
@@ -225,12 +226,12 @@ pub extern "C" fn z_get_options_default(this: &mut z_get_options_t) {
         priority: Priority::default().into(),
         is_express: false,
         timeout_ms: 0,
-        payload: null_mut(),
-        encoding: null_mut(),
+        payload: None.into(),
+        encoding: None.into(),
         #[cfg(feature = "unstable")]
-        source_info: null_mut(),
-        attachment: null_mut(),
-    };
+        source_info: None.into(),
+        attachment: None.into(),
+    });
 }
 
 /// Query data from the matching queryables in the system.
@@ -249,11 +250,12 @@ pub unsafe extern "C" fn z_get(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,
-    callback: &mut z_owned_closure_reply_t,
+    callback: z_moved_closure_reply_t,
     options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
-    let mut closure = z_owned_closure_reply_t::empty();
-    std::mem::swap(callback, &mut closure);
+    let Some(callback) = callback.into_rust_type() else {
+        return result::Z_EINVAL;
+    };
     let p = if parameters.is_null() {
         ""
     } else {
@@ -263,21 +265,17 @@ pub unsafe extern "C" fn z_get(
     let key_expr = key_expr.as_rust_type_ref();
     let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
-        if let Some(payload) = unsafe { options.payload.as_mut() } {
-            let payload = std::mem::take(payload.as_rust_type_mut());
+        if let Some(payload) = options.payload.take_rust_type() {
             get = get.payload(payload);
         }
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
+        if let Some(encoding) = options.encoding.take_rust_type() {
             get = get.encoding(encoding);
         }
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
+        if let Some(source_info) = options.source_info.take_rust_type() {
             get = get.source_info(source_info);
         }
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
+        if let Some(attachment) = options.attachment.take_rust_type() {
             get = get.attachment(attachment);
         }
 
@@ -301,7 +299,7 @@ pub unsafe extern "C" fn z_get(
     match get
         .callback(move |response| {
             z_closure_reply_call(
-                z_closure_reply_loan(&closure),
+                z_closure_reply_loan(&callback),
                 response.as_loaned_c_type_ref(),
             )
         })
@@ -317,9 +315,8 @@ pub unsafe extern "C" fn z_get(
 
 /// Frees reply, resetting it to its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_reply_drop(this: &mut z_owned_reply_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_reply_drop(this: z_moved_reply_t) {}
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]

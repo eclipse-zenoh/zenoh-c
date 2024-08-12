@@ -65,6 +65,13 @@ jobs:
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_static)"
 
+      - name: Build cmake tests with C++ compiler to make sure that C API is C++ compatible
+        shell: bash
+        run: |
+          cd build
+          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_TESTS_WITH_CXX=TRUE
+          cmake --build . --target tests --config Debug
+
       - name: Run cmake tests with zenoh-c as static library
         shell: bash
         run: |
