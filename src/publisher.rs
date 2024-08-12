@@ -33,9 +33,9 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_owned_source_info_t,
-    zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
-    zc_locality_t, zc_owned_closure_matching_status_t,
+    transmute::IntoCType, z_entity_global_id_t, z_owned_source_info_t, z_reliability_t,
+    z_reliability_default, zc_closure_matching_status_call, zc_closure_matching_status_loan,
+    zc_locality_default, zc_locality_t, zc_owned_closure_matching_status_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.
@@ -52,6 +52,9 @@ pub struct z_publisher_options_t {
     #[cfg(feature = "unstable")]
     /// The allowed destination for this publisher.
     pub allowed_destination: zc_locality_t,
+    #[cfg(feature = "unstable")]
+    /// The reliability to apply to this publisher.
+    pub reliability: z_reliability_t,
 }
 
 /// Constructs the default value for `z_publisher_options_t`.
@@ -64,6 +67,8 @@ pub extern "C" fn z_publisher_options_default(this: &mut z_publisher_options_t) 
         is_express: false,
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
     };
 }
 
@@ -104,7 +109,9 @@ pub extern "C" fn z_declare_publisher(
             .express(options.is_express);
         #[cfg(feature = "unstable")]
         {
-            p = p.allowed_destination(options.allowed_destination.into());
+            p = p
+                .allowed_destination(options.allowed_destination.into())
+                .reliability(options.reliability.into());
         }
         if let Some(encoding) = unsafe { options.encoding.as_mut() } {
             let encoding = std::mem::take(encoding.as_rust_type_mut());

@@ -22,6 +22,8 @@ use crate::{
     commons::*, encoding::*, keyexpr::*, result, transmute::RustTypeRef, z_loaned_session_t,
     z_owned_bytes_t, z_timestamp_t,
 };
+#[cfg(feature = "unstable")]
+use crate::z_reliability_t;
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]
@@ -41,6 +43,9 @@ pub struct z_put_options_t {
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
+    /// The reliability to apply to this message.
+    pub reliability: z_reliability_t,
+    #[cfg(feature = "unstable")]
     /// The source info for the message.
     pub source_info: *mut z_owned_source_info_t,
     /// The attachment to this message.
@@ -59,6 +64,8 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
         timestamp: null_mut(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
         #[cfg(feature = "unstable")]
         source_info: null_mut(),
         attachment: null_mut(),
@@ -111,7 +118,9 @@ pub extern "C" fn z_put(
         put = put.express(options.is_express);
         #[cfg(feature = "unstable")]
         {
-            put = put.allowed_destination(options.allowed_destination.into());
+            put = put
+                .allowed_destination(options.allowed_destination.into())
+                .reliability(options.reliability.into());
         }
     }
 
@@ -138,6 +147,9 @@ pub struct z_delete_options_t {
     #[cfg(feature = "unstable")]
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
+    #[cfg(feature = "unstable")]
+    /// The reliability to apply to this message.
+    pub reliability: z_reliability_t,
 }
 
 /// Constructs the default value for `z_delete_options_t`.
@@ -151,6 +163,8 @@ pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t)
         timestamp: null_mut(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
     };
 }
 
@@ -185,7 +199,9 @@ pub extern "C" fn z_delete(
 
         #[cfg(feature = "unstable")]
         {
-            del = del.allowed_destination(options.allowed_destination.into());
+            del = del
+                .allowed_destination(options.allowed_destination.into())
+                .reliability(options.reliability.into());
         }
     }
 

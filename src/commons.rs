@@ -16,6 +16,7 @@ use std::{mem::MaybeUninit, ptr::null};
 
 use libc::c_ulong;
 use zenoh::{
+    pubsub::Reliability,
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
     sample::{Sample, SampleKind},
@@ -428,6 +429,43 @@ impl From<z_priority_t> for Priority {
 #[no_mangle]
 pub extern "C" fn z_priority_default() -> z_priority_t {
     Priority::default().into()
+}
+
+/// The reliability.
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_reliability_t {
+    /// Defines reliability as ``BEST_EFFORT``
+    BEST_EFFORT,
+    /// Defines reliability as ``RELIABLE``
+    RELIABLE,
+}
+
+impl From<Reliability> for z_reliability_t {
+    #[inline]
+    fn from(r: Reliability) -> Self {
+        match r {
+            Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
+            Reliability::Reliable => z_reliability_t::RELIABLE,
+        }
+    }
+}
+
+impl From<z_reliability_t> for Reliability {
+    #[inline]
+    fn from(val: z_reliability_t) -> Self {
+        match val {
+            z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
+            z_reliability_t::RELIABLE => Reliability::Reliable,
+        }
+    }
+}
+
+/// Returns default value of `z_reliability_t`
+#[no_mangle]
+pub extern "C" fn z_reliability_default() -> z_reliability_t {
+    Reliability::default().into()
 }
 
 #[allow(non_camel_case_types)]

@@ -163,7 +163,7 @@ typedef enum z_query_target_t {
   Z_QUERY_TARGET_ALL_COMPLETE,
 } z_query_target_t;
 /**
- * The subscription reliability.
+ * The reliability.
  */
 typedef enum z_reliability_t {
   /**
@@ -520,6 +520,12 @@ typedef struct z_publisher_options_t {
    */
   enum zc_locality_t allowed_destination;
 #endif
+#if defined(UNSTABLE)
+  /**
+   * The reliability to apply to this publisher.
+   */
+  enum z_reliability_t reliability;
+#endif
 } z_publisher_options_t;
 /**
  * Options passed to the `z_declare_queryable()` function.
@@ -564,6 +570,12 @@ typedef struct z_delete_options_t {
    * The allowed destination of this message.
    */
   enum zc_locality_t allowed_destination;
+#endif
+#if defined(UNSTABLE)
+  /**
+   * The reliability to apply to this message.
+   */
+  enum z_reliability_t reliability;
 #endif
 } z_delete_options_t;
 /**
@@ -693,6 +705,12 @@ typedef struct z_put_options_t {
    * The allowed destination of this message.
    */
   enum zc_locality_t allowed_destination;
+#endif
+#if defined(UNSTABLE)
+  /**
+   * The reliability to apply to this message.
+   */
+  enum z_reliability_t reliability;
 #endif
 #if defined(UNSTABLE)
   /**
@@ -3168,6 +3186,10 @@ ZENOHC_API uint8_t z_random_u8(void);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API void z_ref_shm_client_storage_global(z_owned_shm_client_storage_t *this_);
 #endif
+/**
+ * Returns default value of `z_reliability_t`
+ */
+ZENOHC_API enum z_reliability_t z_reliability_default(void);
 /**
  * Returns ``true`` if `reply` is valid, ``false`` otherwise.
  */
