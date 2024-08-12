@@ -33,6 +33,8 @@ use zenoh::{
 use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
 use crate::z_id_t;
+#[cfg(feature = "unstable")]
+use crate::z_moved_source_info_t;
 use crate::{
     result,
     transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
@@ -98,10 +100,11 @@ pub extern "C" fn z_timestamp_id(this: &z_timestamp_t) -> z_id_t {
 }
 
 use crate::opaque_types::z_loaned_sample_t;
-pub use crate::opaque_types::z_owned_sample_t;
+pub use crate::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
-    owned(z_owned_sample_t, Option<Sample>),
-    loaned(z_loaned_sample_t, Sample),
+    owned(z_owned_sample_t, option Sample),
+    loaned(z_loaned_sample_t),
+    moved(z_moved_sample_t)
 );
 
 /// Returns the key expression of the sample.
@@ -200,9 +203,8 @@ pub unsafe extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sam
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_sample_drop(this: &mut z_owned_sample_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_sample_drop(this: z_moved_sample_t) {}
 
 /// Constructs sample in its gravestone state.
 #[no_mangle]
@@ -210,7 +212,6 @@ pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
-#[cfg(feature = "unstable")]
 /// The locality of samples to be received by subscribers or targeted by publishers.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -518,7 +519,8 @@ pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
-    loaned(z_loaned_source_info_t, SourceInfo)
+    loaned(z_loaned_source_info_t, SourceInfo),
+    moved(z_moved_source_info_t)
 );
 
 #[cfg(feature = "unstable")]
@@ -573,9 +575,8 @@ pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_
 #[cfg(feature = "unstable")]
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_source_info_drop(this: &mut z_owned_source_info_t) {
-    *this.as_rust_type_mut() = SourceInfo::default();
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_source_info_drop(this: z_moved_source_info_t) {}
 
 #[cfg(feature = "unstable")]
 /// Constructs source info in its gravestone state.

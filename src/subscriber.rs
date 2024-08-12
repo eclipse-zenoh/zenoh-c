@@ -15,21 +15,23 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    prelude::*,
+    prelude::SessionDeclarations,
     pubsub::{Reliability, Subscriber},
+    Wait,
 };
 
 use crate::{
     keyexpr::*,
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_owned_closure_sample_t, z_reliability_t,
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t, z_reliability_t,
 };
 
-pub use crate::opaque_types::{z_loaned_subscriber_t, z_owned_subscriber_t};
+pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
 decl_c_type!(
-    owned(z_owned_subscriber_t, Option<Subscriber<'static, ()>>),
-    loaned(z_loaned_subscriber_t, Subscriber<'static, ()>)
+    owned(z_owned_subscriber_t, option Subscriber<'static, ()>),
+    loaned(z_loaned_subscriber_t),
+    moved(z_moved_subscriber_t)
 );
 
 /// Constructs a subscriber in a gravestone state.
@@ -58,10 +60,10 @@ pub struct z_subscriber_options_t {
 
 /// Constructs the default value for `z_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn z_subscriber_options_default(this: &mut z_subscriber_options_t) {
-    *this = z_subscriber_options_t {
+pub extern "C" fn z_subscriber_options_default(this: &mut MaybeUninit<z_subscriber_options_t>) {
+    this.write(z_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
-    }
+    });
 }
 
 /// Constructs and declares a subscriber for a given key expression. Dropping subscriber
@@ -79,19 +81,21 @@ pub extern "C" fn z_declare_subscriber(
     this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_sample_t,
+    callback: z_moved_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    let mut closure = z_owned_closure_sample_t::empty();
-    std::mem::swap(callback, &mut closure);
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
+    let Some(callback) = callback.into_rust_type() else {
+        this.write(None);
+        return result::Z_EINVAL;
+    };
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
-            z_closure_sample_call(z_closure_sample_loan(&closure), sample)
+            z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         });
     if let Some(options) = options {
         subscriber = subscriber.reliability(options.reliability.into());
@@ -124,8 +128,8 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> result::z_result_t {
-    if let Some(s) = this.as_rust_type_mut().take() {
+pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> result::z_result_t {
+    if let Some(s) = this.into_rust_type() {
         if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -136,9 +140,8 @@ pub extern "C" fn z_undeclare_subscriber(this: &mut z_owned_subscriber_t) -> res
 
 /// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn z_subscriber_drop(this: &mut z_owned_subscriber_t) {
-    z_undeclare_subscriber(this);
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_subscriber_drop(this: z_moved_subscriber_t) {}
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
 #[no_mangle]

@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <zenoh_macros.h>
 
 #include "zenoh.h"
 

@@ -19,26 +19,26 @@ use zenoh::{
     scouting::Hello,
 };
 
-pub use crate::opaque_types::{z_loaned_hello_t, z_owned_hello_t};
+pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
-    z_closure_hello_call, z_closure_hello_loan, z_owned_closure_hello_t, z_owned_config_t,
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logging, CString, CStringView, ZVector,
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_id_t};
 decl_c_type!(
-    owned(z_owned_hello_t, Option<Hello>),
-    loaned(z_loaned_hello_t, Hello)
+    owned(z_owned_hello_t, option Hello ),
+    loaned(z_loaned_hello_t),
+    moved(z_moved_hello_t)
 );
 
 /// Frees memory and resets hello message to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_drop(this: &mut z_owned_hello_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub unsafe extern "C" fn z_hello_drop(this: z_moved_hello_t) {}
 
 /// Borrows hello message.
 #[no_mangle]
@@ -141,8 +141,8 @@ pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
 /// Constructs the default values for the scouting operation.
 #[no_mangle]
-pub extern "C" fn z_scout_options_default(this: &mut z_scout_options_t) {
-    *this = z_scout_options_t::default();
+pub extern "C" fn z_scout_options_default(this: &mut MaybeUninit<z_scout_options_t>) {
+    this.write(z_scout_options_t::default());
 }
 
 /// Scout for routers and/or peers.
@@ -155,29 +155,30 @@ pub extern "C" fn z_scout_options_default(this: &mut z_scout_options_t) {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_scout(
-    config: &mut z_owned_config_t,
-    callback: &mut z_owned_closure_hello_t,
+    config: z_moved_config_t,
+    callback: z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
 ) -> result::z_result_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logging();
     }
+    let Some(callback) = callback.into_rust_type() else {
+        return result::Z_EINVAL;
+    };
     let options = options.cloned().unwrap_or_default();
     let what =
         WhatAmIMatcher::try_from(options.what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
-    let Some(config) = config.as_rust_type_mut().take() else {
+    let Some(config) = config.into_rust_type() else {
         tracing::error!("Config not provided");
         return result::Z_EINVAL;
     };
-    let mut closure = z_owned_closure_hello_t::empty();
-    std::mem::swap(&mut closure, callback);
 
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
-                z_closure_hello_call(z_closure_hello_loan(&closure), h.as_loaned_c_type_ref())
+                z_closure_hello_call(z_closure_hello_loan(&callback), h.as_loaned_c_type_ref())
             })
             .await
             .unwrap();

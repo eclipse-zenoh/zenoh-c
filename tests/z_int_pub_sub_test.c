@@ -67,7 +67,7 @@ int run_publisher() {
 
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
-        // options.source_info = &source_info;
+        // options.source_info = z_move(source_info);
         options.timestamp = &ts;
 
         z_owned_bytes_t payload;

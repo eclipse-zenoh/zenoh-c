@@ -16,27 +16,28 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
-    handlers,
-    handlers::{IntoHandler, RingChannelHandler},
+    handlers::{self, IntoHandler, RingChannelHandler},
     query::Query,
 };
 
-pub use crate::opaque_types::{z_loaned_fifo_handler_query_t, z_owned_fifo_handler_query_t};
+pub use crate::opaque_types::{
+    z_loaned_fifo_handler_query_t, z_moved_fifo_handler_query_t, z_owned_fifo_handler_query_t,
+};
 use crate::{
     result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_query_t, Option<flume::Receiver<Query>>),
-    loaned(z_loaned_fifo_handler_query_t, flume::Receiver<Query>)
+    owned(z_owned_fifo_handler_query_t, option flume::Receiver<Query> ),
+    loaned(z_loaned_fifo_handler_query_t),
+    moved(z_moved_fifo_handler_query_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_query_drop(this: &mut z_owned_fifo_handler_query_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_fifo_handler_query_drop(this: z_moved_fifo_handler_query_t) {}
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
@@ -141,17 +142,22 @@ pub extern "C" fn z_fifo_handler_query_try_recv(
     }
 }
 
-pub use crate::opaque_types::{z_loaned_ring_handler_query_t, z_owned_ring_handler_query_t};
+pub use crate::opaque_types::{
+    z_loaned_ring_handler_query_t, z_moved_ring_handler_query_t, z_owned_ring_handler_query_t,
+};
 decl_c_type!(
-    owned(z_owned_ring_handler_query_t, Option<RingChannelHandler<Query>>),
-    loaned(z_loaned_ring_handler_query_t, RingChannelHandler<Query>)
+    owned(
+        z_owned_ring_handler_query_t,
+        option RingChannelHandler<Query>,
+    ),
+    loaned(z_loaned_ring_handler_query_t),
+moved(z_moved_ring_handler_query_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_query_drop(this: &mut z_owned_ring_handler_query_t) {
-    *this.as_rust_type_mut() = None;
-}
+#[allow(unused_variables)]
+pub extern "C" fn z_ring_handler_query_drop(this: z_moved_ring_handler_query_t) {}
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
