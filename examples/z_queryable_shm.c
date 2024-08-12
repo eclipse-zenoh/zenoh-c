@@ -62,7 +62,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
         z_query_reply_options_default(&options);
 
         z_owned_bytes_t reply_payload;
-        z_bytes_serialize_from_shm_mut(&reply_payload, &alloc.buf);
+        z_bytes_serialize_from_shm_mut(&reply_payload, z_move(alloc.buf));
 
         z_view_keyexpr_t reply_keyexpr;
         z_view_keyexpr_from_str(&reply_keyexpr, (const char *)context);

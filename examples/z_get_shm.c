@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
             printf("Unexpected failure during SHM buffer serialization...\n");
             return -1;
         }
-        opts.payload = &payload;
+        opts.payload = z_move(payload);
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
           &opts);  // here, the send is moved and will be dropped by zenoh when adequate
