@@ -34,9 +34,9 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_reliability_t, z_reliability_default,
-    zc_closure_matching_status_call, zc_closure_matching_status_loan,
-    zc_locality_default, zc_locality_t,
+    transmute::IntoCType, z_entity_global_id_t, z_reliability_default, z_reliability_t,
+    zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
+    zc_locality_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.

@@ -22,14 +22,14 @@ use zenoh::{
 
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
+#[cfg(feature = "unstable")]
+use crate::z_reliability_t;
 use crate::{
     commons::*,
     result,
     transmute::{IntoRustType, RustTypeRef, TakeRustType},
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
 };
-#[cfg(feature = "unstable")]
-use crate::z_reliability_t;
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]
