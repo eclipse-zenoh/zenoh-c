@@ -20,6 +20,7 @@ use zenoh::{
     Wait,
 };
 
+pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
 use crate::{
     keyexpr::*,
     result,
@@ -27,8 +28,6 @@ use crate::{
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
     z_reliability_t,
 };
-
-pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
 decl_c_type!(
     owned(z_owned_subscriber_t, option Subscriber<'static, ()>),
     loaned(z_loaned_subscriber_t),
