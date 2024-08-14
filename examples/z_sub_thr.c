@@ -62,7 +62,7 @@ void drop_stats(void *context) {
 int main(int argc, char **argv) {
     z_owned_config_t config;
     z_config_default(&config);
-    
+
     if (argc > 1) {
         if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
             printf(
