@@ -174,6 +174,8 @@ pub struct {type_name} {{
         .as_str();
         if category == Some("owned") {
             let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
+            let semantic_upcase = semantic.chars().next().unwrap().to_uppercase().to_string() + &semantic[1..];
+            let moved_dropper_type_name = format!("Moved{}", semantic_upcase);
             s += format!(
                 "#[repr(C)]
 #[derive(Default)]
@@ -191,6 +193,46 @@ impl From<Option<&'static mut {type_name}>> for {moved_type_name} {{
     fn from(ptr: Option<&'static mut {type_name}>) -> Self {{
         Self {{ _ptr: ptr }}
     }}
+}}
+
+#[repr(C)]
+#[derive(Default)]
+pub struct {moved_type_name}2 {{
+    _this: {type_name}
+}}
+
+impl {moved_type_name}2 {{
+    pub fn dropper(&mut self) -> {moved_dropper_type_name} {{
+        {moved_dropper_type_name}(&mut self._this)
+    }}
+}}
+
+pub struct {moved_dropper_type_name}<'a>(&'a mut {type_name});
+
+impl AsRef<{type_name}> for {moved_dropper_type_name}<'_> {{
+    fn as_ref(&self) -> &{type_name} {{
+        self.0
+    }}
+}}
+
+impl AsMut<{type_name}> for {moved_dropper_type_name}<'_> {{
+    fn as_mut(&mut self) -> &mut {type_name} {{
+        self.0
+    }}
+}}
+
+impl Drop for {type_name} {{
+    fn drop(&mut self) {{
+        use crate::transmute::RustTypeRef;
+        std::mem::take(self.as_rust_type_mut());
+    }}
+}}
+
+impl Drop for {moved_dropper_type_name}<'_> {{
+     fn drop(&mut self) {{
+         use crate::transmute::RustTypeRef;
+         std::mem::take(self.0.as_rust_type_mut());
+     }}
 }}
 "
             )
