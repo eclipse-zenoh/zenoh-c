@@ -146,6 +146,22 @@ fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     (prefix, category, semantic, postfix)
 }
 
+fn to_camel_case(s: &str) -> String {
+    let mut res = String::new();
+    let mut capitalize = true;
+    for c in s.chars() {
+        if c == '_' {
+            capitalize = true;
+        } else if capitalize {
+            res.push(c.to_ascii_uppercase());
+            capitalize = false;
+        } else {
+            res.push(c);
+        }
+    }
+    res
+}
+
 fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
     let current_folder = get_build_rs_path();
@@ -174,8 +190,7 @@ pub struct {type_name} {{
         .as_str();
         if category == Some("owned") {
             let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
-            let semantic_upcase = semantic.chars().next().unwrap().to_uppercase().to_string() + &semantic[1..];
-            let moved_dropper_type_name = format!("Moved{}", semantic_upcase);
+            let moved_dropper_type_name = format!("Moved{}", to_camel_case(semantic));
             s += format!(
                 "#[repr(C)]
 #[derive(Default)]
@@ -196,7 +211,6 @@ impl From<Option<&'static mut {type_name}>> for {moved_type_name} {{
 }}
 
 #[repr(C)]
-#[derive(Default)]
 pub struct {moved_type_name}2 {{
     _this: {type_name}
 }}
@@ -209,17 +223,20 @@ impl {moved_type_name}2 {{
 
 pub struct {moved_dropper_type_name}<'a>(&'a mut {type_name});
 
-impl AsRef<{type_name}> for {moved_dropper_type_name}<'_> {{
-    fn as_ref(&self) -> &{type_name} {{
+impl std::ops::Deref for {moved_dropper_type_name}<'_> {{
+    type Target = {type_name};
+
+    fn deref(&self) -> &Self::Target {{
         self.0
     }}
 }}
 
-impl AsMut<{type_name}> for {moved_dropper_type_name}<'_> {{
-    fn as_mut(&mut self) -> &mut {type_name} {{
+impl std::ops::DerefMut for {moved_dropper_type_name}<'_> {{
+    fn deref_mut(&mut self) -> &mut Self::Target {{
         self.0
     }}
 }}
+
 
 impl Drop for {type_name} {{
     fn drop(&mut self) {{

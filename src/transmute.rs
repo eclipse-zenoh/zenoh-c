@@ -194,11 +194,25 @@ macro_rules! impl_transmute {
 }
 
 macro_rules! impl_owned {
-    (owned $c_owned_type:ty, moved2 $c_moved_type:ty, inner rust option $rust_inner_type:ty) => {
+    (owned $c_owned_type:ty, moved $c_moved_type:ty, moved2 $c_moved_type2:ty, inner rust option $rust_inner_type:ty) => {
         impl_transmute!(as_c_owned(Option<$rust_inner_type>, $c_owned_type));
         impl_transmute!(as_rust($c_owned_type, Option<$rust_inner_type>));
         impl_transmute!(into_rust($c_owned_type, Option<$rust_inner_type>));
         impl_transmute!(take_rust($c_owned_type, Option<$rust_inner_type>));
+
+        impl $crate::transmute::IntoRustType for $c_moved_type {
+            type RustType = Option<$rust_inner_type>;
+            fn into_rust_type(self) -> Self::RustType {
+                use $crate::transmute::RustTypeRef;
+                let mut this = self;
+                // expicit types for better understanding
+                let ptr: &mut Option<&mut Option<$rust_inner_type>> =
+                    &mut this._ptr.as_mut().map(|r| r.as_rust_type_mut());
+                let res: Option<$rust_inner_type> =
+                    ptr.as_mut().map(|r| std::mem::take(*r)).flatten();
+                res
+            }
+        }
 
         impl $crate::transmute::TakeRustType for $c_moved_type {}
         impl Drop for $c_moved_type {
@@ -419,6 +433,14 @@ macro_rules! decl_c_type {
         validate_equivalence!($c_owned_type, Option<$rust_inner_type>);
         impl_owned!(owned $c_owned_type, moved $c_moved_type, inner rust option $rust_inner_type);
     };
+    (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
+     moved ($c_moved_type:ty $(,)?),
+     moved2 ($c_moved_type2:ty $(,)?)
+     $(,)?) => {
+        validate_equivalence!($c_owned_type, Option<$rust_inner_type>);
+        impl_owned!(owned $c_owned_type, moved $c_moved_type, moved2 $c_moved_type2, inner rust option $rust_inner_type);
+    };
+
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      moved ($c_moved_type:ty $(,)?)
      $(,)?) => {

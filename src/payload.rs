@@ -41,7 +41,7 @@ use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
 decl_c_type! {
     owned(z_owned_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t),
-    moved(z_moved_bytes_t)
+    moved(z_moved_bytes_t),
 }
 
 /// The gravestone value for `z_owned_bytes_t`.
