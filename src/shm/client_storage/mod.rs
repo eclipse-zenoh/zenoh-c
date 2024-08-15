@@ -19,7 +19,7 @@ use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE}
 use super::common::types::z_protocol_id_t;
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_shm_client_storage_t, z_moved_shm_client_storage_t, z_moved_shm_client_t,
     z_owned_shm_client_storage_t, zc_loaned_shm_client_list_t, zc_moved_shm_client_list_t,
     zc_owned_shm_client_list_t,
@@ -81,10 +81,10 @@ pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_add_client(
     id: z_protocol_id_t,
-    client: z_moved_shm_client_t,
+    client: &mut z_moved_shm_client_t,
     list: &mut zc_loaned_shm_client_list_t,
 ) -> z_result_t {
-    let Some(client) = client.into_rust_type() else {
+    let Some(client) = client.take_rust_type() else {
         return Z_EINVAL;
     };
     list.as_rust_type_mut().push((id, client));

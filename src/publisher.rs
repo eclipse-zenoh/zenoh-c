@@ -288,7 +288,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 }
 
 #[cfg(feature = "unstable")]
-pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_moved_matching_listener_t2, zc_owned_matching_listener_t};
+pub use crate::opaque_types::{zc_moved_matching_listener_t,  zc_owned_matching_listener_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
     owned(zc_owned_matching_listener_t, option MatchingListener<'static, ()>),
@@ -330,13 +330,11 @@ pub struct zc_matching_status_t {
 pub extern "C" fn zc_publisher_matching_listener_declare(
     this: &mut MaybeUninit<zc_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
-    callback: zc_moved_closure_matching_status_t,
+    callback: &mut zc_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let publisher = publisher.as_rust_type_ref();
-    let Some(callback) = callback.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let callback = callback.take_rust_type();
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
@@ -365,9 +363,9 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_publisher_matching_listener_undeclare(
-    this: &mut zc_moved_matching_listener_t2,
+    this: &mut zc_moved_matching_listener_t,
 ) -> result::z_result_t {
-    if let Some(p) = this.dropper().as_rust_type_mut() {
+    if let Some(p) = this.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;

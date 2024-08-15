@@ -85,14 +85,14 @@ pub extern "C" fn z_open(
 #[no_mangle]
 pub extern "C" fn z_open_with_custom_shm_clients(
     this: &mut MaybeUninit<z_owned_session_t>,
-    config: z_moved_config_t,
+    config: &mut z_moved_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logging();
     }
-    let Some(config) = config.into_rust_type().take() else {
+    let Some(config) = config.take_rust_type() else {
         tracing::error!("Config not provided");
         this.write(None);
         return result::Z_EINVAL;

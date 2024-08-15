@@ -20,7 +20,7 @@ use std::{
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_shm_mut_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t,
 };
 
@@ -33,10 +33,10 @@ decl_c_type!(
 #[no_mangle]
 pub extern "C" fn z_shm_mut_try_from_immut(
     this: &mut MaybeUninit<z_owned_shm_mut_t>,
-    that: z_moved_shm_t,
+    that: &mut z_moved_shm_t,
 ) {
     let shm: Option<ZShmMut> = that
-        .into_rust_type()
+        .take_rust_type()
         .take()
         .and_then(|val| val.try_into().ok());
     this.as_rust_type_mut_uninit().write(shm);

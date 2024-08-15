@@ -414,7 +414,7 @@ typedef struct z_owned_closure_zid_t {
  */
 #if defined(UNSTABLE)
 typedef struct z_moved_closure_zid_t {
-  struct z_owned_closure_zid_t *_ptr;
+  struct z_owned_closure_zid_t _this;
 } z_moved_closure_zid_t;
 #endif
 typedef struct z_moved_condvar_t {
@@ -886,7 +886,7 @@ typedef struct zc_owned_closure_matching_status_t {
  */
 #if defined(UNSTABLE)
 typedef struct zc_moved_closure_matching_status_t {
-  struct zc_owned_closure_matching_status_t *_ptr;
+  struct zc_owned_closure_matching_status_t _this;
 } zc_moved_closure_matching_status_t;
 #endif
 /**
@@ -1424,7 +1424,7 @@ ZENOHC_API void z_bytes_serialize_from_int8(struct z_owned_bytes_t *this_, int8_
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_result_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_,
-                                      struct z_moved_shm_t shm);
+                                      struct z_moved_shm_t *shm);
 #endif
 /**
  * Serializes from a mutable SHM buffer consuming it
@@ -1432,7 +1432,7 @@ z_result_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_result_t z_bytes_serialize_from_shm_mut(struct z_owned_bytes_t *this_,
-                                          struct z_moved_shm_mut_t shm);
+                                          struct z_moved_shm_mut_t *shm);
 #endif
 /**
  * Serializes a slice by copying.
@@ -2552,7 +2552,7 @@ ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
 #if defined(UNSTABLE)
 ZENOHC_API
 z_result_t z_info_peers_zid(const struct z_loaned_session_t *session,
-                            struct z_moved_closure_zid_t callback);
+                            struct z_moved_closure_zid_t *callback);
 #endif
 /**
  * Fetches the Zenoh IDs of all connected routers.
@@ -2565,7 +2565,7 @@ z_result_t z_info_peers_zid(const struct z_loaned_session_t *session,
 #if defined(UNSTABLE)
 ZENOHC_API
 z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
-                              struct z_moved_closure_zid_t callback);
+                              struct z_moved_closure_zid_t *callback);
 #endif
 /**
  * Returns the session's Zenoh ID.
@@ -2811,7 +2811,7 @@ z_result_t z_open(struct z_owned_session_t *this_,
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_result_t z_open_with_custom_shm_clients(struct z_owned_session_t *this_,
-                                          struct z_moved_config_t config,
+                                          struct z_moved_config_t *config,
                                           const struct z_loaned_shm_client_storage_t *shm_clients);
 #endif
 /**
@@ -3521,7 +3521,7 @@ ZENOHC_API void z_shm_drop(struct z_moved_shm_t this_);
  * Constructs ZShm slice from ZShmMut slice
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void z_shm_from_mut(struct z_owned_shm_t *this_, struct z_moved_shm_mut_t that);
+ZENOHC_API void z_shm_from_mut(struct z_owned_shm_t *this_, struct z_moved_shm_mut_t *that);
 #endif
 /**
  * @return the length of the ZShm slice
@@ -3595,7 +3595,7 @@ ZENOHC_API void z_shm_mut_null(struct z_owned_shm_mut_t *this_);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 void z_shm_mut_try_from_immut(struct z_owned_shm_mut_t *this_,
-                              struct z_moved_shm_t that);
+                              struct z_moved_shm_t *that);
 #endif
 /**
  * Constructs ZShm slice in its gravestone value.
@@ -4406,7 +4406,7 @@ ZENOHC_API
 z_result_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
                                             const struct z_loaned_session_t *session,
                                             const struct z_loaned_keyexpr_t *key_expr,
-                                            struct z_moved_closure_sample_t callback,
+                                            struct z_moved_closure_sample_t *callback,
                                             struct zc_liveliness_subscriber_options_t *_options);
 #endif
 /**
@@ -4439,7 +4439,7 @@ z_result_t zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_
 ZENOHC_API
 z_result_t zc_liveliness_get(const struct z_loaned_session_t *session,
                              const struct z_loaned_keyexpr_t *key_expr,
-                             struct z_moved_closure_reply_t callback,
+                             struct z_moved_closure_reply_t *callback,
                              struct zc_liveliness_get_options_t *options);
 #endif
 /**
@@ -4484,7 +4484,7 @@ ZENOHC_API void zc_liveliness_token_null(struct zc_owned_liveliness_token_t *thi
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
 #if defined(UNSTABLE)
-ZENOHC_API z_result_t zc_liveliness_undeclare_token(struct zc_moved_liveliness_token_t this_);
+ZENOHC_API z_result_t zc_liveliness_undeclare_token(struct zc_moved_liveliness_token_t *this_);
 #endif
 /**
  * Returns default value of `zc_locality_t`
@@ -4527,7 +4527,7 @@ z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *t
 ZENOHC_API
 z_result_t zc_publisher_matching_listener_declare(struct zc_owned_matching_listener_t *this_,
                                                   const struct z_loaned_publisher_t *publisher,
-                                                  struct zc_moved_closure_matching_status_t callback);
+                                                  struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
  * Undeclares the given matching listener, droping and invalidating it.
@@ -4545,7 +4545,7 @@ z_result_t zc_publisher_matching_listener_drop(struct zc_moved_matching_listener
  */
 #if defined(UNSTABLE)
 ZENOHC_API
-z_result_t zc_publisher_matching_listener_undeclare(zc_moved_matching_listener_t2 *this_);
+z_result_t zc_publisher_matching_listener_undeclare(struct zc_moved_matching_listener_t *this_);
 #endif
 /**
  * Returns the default value of #zc_reply_keyexpr_t.
@@ -4556,7 +4556,7 @@ ZENOHC_API enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 z_result_t zc_shm_client_list_add_client(z_protocol_id_t id,
-                                         struct z_moved_shm_client_t client,
+                                         struct z_moved_shm_client_t *client,
                                          struct zc_loaned_shm_client_list_t *list);
 #endif
 /**
@@ -4638,7 +4638,7 @@ ZENOHC_API
 z_result_t ze_declare_querying_subscriber(struct ze_owned_querying_subscriber_t *this_,
                                           const struct z_loaned_session_t *session,
                                           const struct z_loaned_keyexpr_t *key_expr,
-                                          struct z_moved_closure_sample_t callback,
+                                          struct z_moved_closure_sample_t *callback,
                                           struct ze_querying_subscriber_options_t *options);
 #endif
 /**
@@ -4651,7 +4651,7 @@ ZENOHC_API bool ze_publication_cache_check(const struct ze_owned_publication_cac
  * Drops publication cache. Also attempts to undeclare it.
  */
 #if defined(UNSTABLE)
-ZENOHC_API void ze_publication_cache_drop(struct ze_moved_publication_cache_t this_);
+ZENOHC_API void ze_publication_cache_drop(struct ze_moved_publication_cache_t *_this);
 #endif
 /**
  * Constructs a publication cache in a gravestone state.
@@ -4675,7 +4675,7 @@ ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subs
  * Drops querying subscriber. Also attempts to undeclare it.
  */
 #if defined(UNSTABLE)
-ZENOHC_API void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_t this_);
+ZENOHC_API void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_t *_this);
 #endif
 /**
  * Make querying subscriber perform an additional query on a specified selector.
@@ -4713,7 +4713,7 @@ void ze_querying_subscriber_options_default(struct ze_querying_subscriber_option
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(UNSTABLE)
-ZENOHC_API z_result_t ze_undeclare_publication_cache(struct ze_moved_publication_cache_t this_);
+ZENOHC_API z_result_t ze_undeclare_publication_cache(struct ze_moved_publication_cache_t *this_);
 #endif
 /**
  * Undeclares the given querying subscriber, drops it and resets to a gravestone state.
@@ -4721,5 +4721,6 @@ ZENOHC_API z_result_t ze_undeclare_publication_cache(struct ze_moved_publication
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(UNSTABLE)
-ZENOHC_API z_result_t ze_undeclare_querying_subscriber(struct ze_moved_querying_subscriber_t this_);
+ZENOHC_API
+z_result_t ze_undeclare_querying_subscriber(struct ze_moved_querying_subscriber_t *_this);
 #endif

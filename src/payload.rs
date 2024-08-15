@@ -762,9 +762,9 @@ pub extern "C" fn z_bytes_iterator_next(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_serialize_from_shm(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    shm: z_moved_shm_t,
+    shm: &mut z_moved_shm_t,
 ) -> z_result_t {
-    let Some(shm) = shm.into_rust_type() else {
+    let Some(shm) = shm.take_rust_type() else {
         this.as_rust_type_mut_uninit().write(ZBytes::default());
         return Z_ENULL;
     };
@@ -778,9 +778,9 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_serialize_from_shm_mut(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    shm: z_moved_shm_mut_t,
+    shm: &mut z_moved_shm_mut_t,
 ) -> z_result_t {
-    let Some(shm) = shm.into_rust_type() else {
+    let Some(shm) = shm.take_rust_type() else {
         this.as_rust_type_mut_uninit().write(ZBytes::default());
         return Z_ENULL;
     };
