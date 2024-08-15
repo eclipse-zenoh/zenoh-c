@@ -21,7 +21,7 @@ use crate::z_loaned_shm_client_storage_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_config_t, z_moved_session_t, zc_init_logging,
 };
 decl_c_type!(
@@ -53,13 +53,13 @@ pub extern "C" fn z_session_null(this: &mut MaybeUninit<z_owned_session_t>) {
 #[no_mangle]
 pub extern "C" fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
-    config: z_moved_config_t,
+    config: &mut z_moved_config_t,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
         zc_init_logging();
     }
-    let Some(config) = config.into_rust_type().take() else {
+    let Some(config) = config.take_rust_type().take() else {
         tracing::error!("Config not provided");
         this.write(None);
         return result::Z_EINVAL;
@@ -125,8 +125,8 @@ pub extern "C" fn z_session_check(this: &z_owned_session_t) -> bool {
 /// @return 0 in  case of success, a negative value if an error occured while closing the session,
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
-pub extern "C" fn z_close(session: z_moved_session_t) -> result::z_result_t {
-    let Some(s) = session.into_rust_type() else {
+pub extern "C" fn z_close(session: &mut z_moved_session_t) -> result::z_result_t {
+    let Some(s) = session.take_rust_type() else {
         return result::Z_EINVAL;
     };
     let s = match Arc::try_unwrap(s) {

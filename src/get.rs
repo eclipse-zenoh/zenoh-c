@@ -29,7 +29,7 @@ use zenoh::{
 };
 
 use crate::{
-    result, transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit}, z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t, z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t, z_query_target_t
+    result, transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType}, z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t, z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t, z_query_target_t
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -246,7 +246,7 @@ pub unsafe extern "C" fn z_get(
     callback: &mut z_moved_closure_reply_t,
     options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
-    let callback = callback.into_rust_type();
+    let callback = callback.take_rust_type();
     let p = if parameters.is_null() {
         ""
     } else {
@@ -257,17 +257,17 @@ pub unsafe extern "C" fn z_get(
     let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
         if let Some(payload) = options.payload.take() {
-            get = get.payload(payload.into_rust_type());
+            get = get.payload(payload.take_rust_type());
         }
         if let Some(encoding) = options.encoding.take() {
-            get = get.encoding(encoding.into_rust_type());
+            get = get.encoding(encoding.take_rust_type());
         }
         #[cfg(feature = "unstable")]
         if let Some(source_info) = options.source_info.take() {
-            get = get.source_info(source_info.into_rust_type());
+            get = get.source_info(source_info.take_rust_type());
         }
         if let Some(attachment) = options.attachment.take() {
-            get = get.attachment(attachment.into_rust_type());
+            get = get.attachment(attachment.take_rust_type());
         }
 
         get = get

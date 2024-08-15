@@ -9,7 +9,7 @@ use libc::c_void;
 pub use crate::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
 use crate::{
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
 decl_c_type!(
@@ -214,8 +214,8 @@ pub extern "C" fn z_task_detach(this: z_moved_task_t) {}
 
 /// Joins the task and releases all allocated resources
 #[no_mangle]
-pub extern "C" fn z_task_join(this: z_moved_task_t) -> result::z_result_t {
-    let Some(task) = this.into_rust_type() else {
+pub extern "C" fn z_task_join(this: &mut z_moved_task_t) -> result::z_result_t {
+    let Some(task) = this.take_rust_type() else {
         return result::Z_OK;
     };
     match task.join() {

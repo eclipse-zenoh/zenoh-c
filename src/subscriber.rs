@@ -23,7 +23,7 @@ use zenoh::{
 use crate::{
     keyexpr::*,
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 
@@ -117,7 +117,7 @@ pub extern "C" fn z_declare_subscriber(
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let callback = callback.into_rust_type();
+    let callback = callback.take_rust_type();
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
@@ -155,8 +155,8 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> result::z_result_t {
-    if let Some(s) = this.into_rust_type() {
+pub extern "C" fn z_undeclare_subscriber(_this: &mut z_moved_subscriber_t) -> result::z_result_t {
+    if let Some(s) = _this.take_rust_type() {
         if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;

@@ -52,17 +52,19 @@ pub(crate) trait IntoCType: Sized {
     fn into_c_type(self) -> Self::CType;
 }
 
-impl<T> IntoRustType for &mut T where T: Default + IntoRustType {
-    type RustType = T::RustType;
-    fn into_rust_type(self) -> Self::RustType {
-        std::mem::take(self).into_rust_type()
-    }
-}
+pub(crate) trait TakeRustType: Sized {
+    type RustType;
+    fn take_rust_type(&mut self) -> Self::RustType;
+} 
+pub(crate) trait TakeCType: Sized {
+    type CType;
+    fn take_c_type(&mut self) -> Self::CType;
+} 
 
-impl<T> IntoCType for &mut T where T: Default + IntoCType {
-    type CType = T::CType;
-    fn into_c_type(self) -> Self::CType {
-        std::mem::take(self).into_c_type()
+impl<P, Q> TakeRustType for P where P: TakeCType<CType = Q>, Q: IntoRustType {
+    type RustType = Q::RustType;
+    fn take_rust_type(&mut self) -> Self::RustType {
+        self.take_c_type().into_rust_type()
     }
 }
 
@@ -243,12 +245,10 @@ macro_rules! impl_owned {
 //
 // - "Moved" type - repr "C" structure which wraps the owned type. It's used to explictly transfer ownership in C code.
 //    When pointer to moved type is passed to C code, the only way to access the wrapped owned type
-//    is by calling ".dropper()" method which returns pointer to the owned type wrapped into the "XxxDropper" structure.
-//    The "XxxDropper" structure drops and nullifies the wrapped owned type when it's dropped.
-//    I.e. C function which accepts pointer to "z_xxx_moved_t" have to take it's dropper
-//    to guarantee ownership transfer.
+//    is to call "take_rust_type()" or "take_c_type()" methods which empties the passed owned type,
+//    leaving rust code responsible to drop it.
 //    Note: C functions purposedly accepts **pointer** to moved type, not the moved type itself.
-//    Solution with passing moved type by value could be better from Rust point of view, but provokes error on C side.
+//    Passing moved type by value could be better from Rust point of view, but provokes error on C side.
 //
 // - "View" type - the type which holds references to external data but doesn't own it. Therefore it's always safe to copy/forget it without explicit destructor.
 //   The view type correspods to owned type. E.g. there may be "onwned string" and "view string". View type can be converted to loaned type, same as loaned type of
@@ -462,15 +462,10 @@ macro_rules! decl_c_type {
      $(,)?) => {
         validate_equivalence!($c_owned_type, $c_loaned_type);
         impl_owned!(owned rust $c_owned_type, loaned $c_loaned_type);
-        impl std::ops::Deref for $c_moved_type {
-            type Target = $c_owned_type;
-            fn deref(&self) -> &Self::Target {
-                &self._this
-            }
-        }
-        impl std::ops::DerefMut for $c_moved_type {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self._this
+        impl $crate::transmute::TakeCType for $c_moved_type {
+            type CType = $c_owned_type;
+            fn take_c_type(&mut self) -> Self::CType {
+                std::mem::take(&mut self._this)
             }
         }
     };

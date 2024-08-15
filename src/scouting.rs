@@ -22,7 +22,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result::{self, Z_OK},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logging, CString, CStringView, ZVector,
 };
@@ -154,20 +154,20 @@ pub extern "C" fn z_scout_options_default(this: &mut MaybeUninit<z_scout_options
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_scout(
-    config: z_moved_config_t,
+    config: &mut z_moved_config_t,
     callback: &mut z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
 ) -> result::z_result_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logging();
     }
-    let callback = callback.into_rust_type();
+    let callback = callback.take_rust_type();
     let options = options.cloned().unwrap_or_default();
     let what =
         WhatAmIMatcher::try_from(options.what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
-    let Some(config) = config.into_rust_type() else {
+    let Some(config) = config.take_rust_type() else {
         tracing::error!("Config not provided");
         return result::Z_EINVAL;
     };

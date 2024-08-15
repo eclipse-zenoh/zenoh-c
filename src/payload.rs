@@ -32,7 +32,7 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CString, CStringOwned,
 };
@@ -467,7 +467,7 @@ pub unsafe extern "C" fn z_bytes_from_slice(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     slice: &mut z_moved_slice_t,
 ) {
-    let slice = slice.into_rust_type();
+    let slice = slice.take_rust_type();
     let payload = ZBytes::from(slice);
     this.as_rust_type_mut_uninit().write(payload);
 }
@@ -560,7 +560,7 @@ pub unsafe extern "C" fn z_bytes_from_string(
     s: &mut z_moved_string_t,
 ) {
     // TODO: verify that string is a valid utf-8 string ?
-    let cs = s.into_rust_type();
+    let cs = s.take_rust_type();
     let payload = ZBytes::from(cs);
     this.as_rust_type_mut_uninit().write(payload);
 }
@@ -646,7 +646,7 @@ pub extern "C" fn z_bytes_from_pair(
     first: &mut z_moved_bytes_t,
     second: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    let payload = ZBytes::serialize((first.into_rust_type(), second.into_rust_type()));
+    let payload = ZBytes::serialize((first.take_rust_type(), second.take_rust_type()));
     this.as_rust_type_mut_uninit().write(payload);
     Z_OK
 }
@@ -920,7 +920,7 @@ unsafe extern "C" fn z_bytes_writer_append(
     this: &mut z_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    this.as_rust_type_mut().append(bytes.into_rust_type());
+    this.as_rust_type_mut().append(bytes.take_rust_type());
     result::Z_OK
 }
 
@@ -933,6 +933,6 @@ unsafe extern "C" fn z_bytes_writer_append_bounded(
     this: &mut z_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    this.as_rust_type_mut().serialize(bytes.into_rust_type());
+    this.as_rust_type_mut().serialize(bytes.take_rust_type());
     result::Z_OK
 }

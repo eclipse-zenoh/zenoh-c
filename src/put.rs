@@ -25,7 +25,7 @@ use crate::z_moved_source_info_t;
 use crate::{
     commons::*,
     result,
-    transmute::{IntoRustType, RustTypeRef},
+    transmute::{IntoRustType, RustTypeRef, TakeRustType},
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
 };
 
@@ -89,18 +89,18 @@ pub extern "C" fn z_put(
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let payload = payload.into_rust_type();
+    let payload = payload.take_rust_type();
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
         if let Some(encoding) = options.encoding.take() {
-            put = put.encoding(encoding.into_rust_type());
+            put = put.encoding(encoding.take_rust_type());
         };
         #[cfg(feature = "unstable")]
         if let Some(source_info) = options.source_info.take() {
-            put = put.source_info(source_info.into_rust_type());
+            put = put.source_info(source_info.take_rust_type());
         };
         if let Some(attachment) = options.attachment.take() {
-            put = put.attachment(attachment.into_rust_type());
+            put = put.attachment(attachment.take_rust_type());
         }
         if let Some(timestamp) = options.timestamp.as_ref() {
             put = put.timestamp(Some(timestamp.into_rust_type()));
