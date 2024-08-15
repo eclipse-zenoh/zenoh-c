@@ -27,7 +27,7 @@ pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 use crate::z_moved_source_info_t;
 use crate::{
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
@@ -36,7 +36,6 @@ use crate::{
 decl_c_type!(
     owned(z_owned_queryable_t, option Queryable<'static, ()>),
     loaned(z_loaned_queryable_t),
-    moved(z_moved_queryable_t)
 );
 
 /// Constructs a queryable in its gravestone value.
@@ -59,7 +58,6 @@ pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t
 decl_c_type!(
     owned(z_owned_query_t, option Query),
     loaned(z_loaned_query_t),
-    moved(z_moved_query_t)
 );
 
 /// Constructs query in its gravestone value.
@@ -114,7 +112,7 @@ pub extern "C" fn z_queryable_options_default(this: &mut MaybeUninit<z_queryable
 #[repr(C)]
 pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
-    pub encoding: z_moved_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing the reply.
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
@@ -125,9 +123,9 @@ pub struct z_query_reply_options_t {
     pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The source info for the reply.
     #[cfg(feature = "unstable")]
-    pub source_info: z_moved_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this reply.
-    pub attachment: z_moved_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
 /// Constructs the default value for `z_query_reply_options_t`.
@@ -152,7 +150,7 @@ pub extern "C" fn z_query_reply_options_default(this: &mut MaybeUninit<z_query_r
 #[repr(C)]
 pub struct z_query_reply_err_options_t {
     /// The encoding of the error payload.
-    pub encoding: z_moved_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
 }
 
 /// Constructs the default value for `z_query_reply_err_options_t`.
@@ -181,9 +179,9 @@ pub struct z_query_reply_del_options_t {
     pub timestamp: Option<&'static mut z_timestamp_t>,
     /// The source info for the reply.
     #[cfg(feature = "unstable")]
-    pub source_info: z_moved_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this reply.
-    pub attachment: z_moved_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
 /// Constructs the default value for `z_query_reply_del_options_t`.
@@ -218,15 +216,13 @@ pub extern "C" fn z_declare_queryable(
     this: &mut MaybeUninit<z_owned_queryable_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: z_moved_closure_query_t,
+    callback: &mut z_moved_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let keyexpr = key_expr.as_rust_type_ref();
-    let Some(callback) = callback.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let callback = callback.into_rust_type();
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
         builder = builder.complete(options.complete);
@@ -298,26 +294,23 @@ pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
 pub extern "C" fn z_query_reply(
     this: &z_loaned_query_t,
     key_expr: &z_loaned_keyexpr_t,
-    payload: z_moved_bytes_t,
+    payload: &mut z_moved_bytes_t,
     options: Option<&mut z_query_reply_options_t>,
 ) -> result::z_result_t {
     let query = this.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let Some(payload) = payload.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
-
+    let payload = payload.into_rust_type();
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
-        if let Some(encoding) = options.encoding.take_rust_type() {
-            reply = reply.encoding(encoding);
+        if let Some(encoding) = options.encoding.take() {
+            reply = reply.encoding(encoding.into_rust_type());
         };
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take_rust_type() {
-            reply = reply.source_info(source_info);
+        if let Some(source_info) = options.source_info.take() {
+            reply = reply.source_info(source_info.into_rust_type());
         };
-        if let Some(attachment) = options.attachment.take_rust_type() {
-            reply = reply.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            reply = reply.attachment(attachment.into_rust_type());
         }
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));
@@ -350,17 +343,15 @@ pub extern "C" fn z_query_reply(
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply_err(
     this: &z_loaned_query_t,
-    payload: z_moved_bytes_t,
+    payload: &mut z_moved_bytes_t,
     options: Option<&mut z_query_reply_err_options_t>,
 ) -> result::z_result_t {
     let query = this.as_rust_type_ref();
-    let Some(payload) = payload.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
-
+    let payload = payload.into_rust_type();
     let reply = query.reply_err(payload).encoding(
         options
-            .and_then(|o| o.encoding.take_rust_type())
+            .and_then(|o| o.encoding.take())
+            .map(|e| e.into_rust_type())
             .unwrap_or(Encoding::default()),
     );
 
@@ -396,11 +387,11 @@ pub unsafe extern "C" fn z_query_reply_del(
     let mut reply = query.reply_del(key_expr);
     if let Some(options) = options {
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take_rust_type() {
-            reply = reply.source_info(source_info);
+        if let Some(source_info) = options.source_info.take() {
+            reply = reply.source_info(source_info.into_rust_type());
         };
-        if let Some(attachment) = options.attachment.take_rust_type() {
-            reply = reply.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            reply = reply.attachment(attachment.into_rust_type());
         }
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));

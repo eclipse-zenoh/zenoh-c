@@ -265,7 +265,6 @@ decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
     loaned(z_loaned_slice_t, CSlice),
     view(z_view_slice_t, CSliceView),
-    moved(z_moved_slice_t)
 );
 
 /// Constructs an empty view slice.
@@ -525,7 +524,6 @@ decl_c_type!(
     owned(z_owned_string_t, CStringOwned),
     loaned(z_loaned_string_t, CString),
     view(z_view_string_t, CStringView),
-    moved(z_moved_string_t)
 );
 
 /// Frees memory and invalidates `z_owned_string_t`, putting it in gravestone state.
@@ -729,7 +727,6 @@ pub type ZVector = Vec<CString>;
 decl_c_type!(
     owned(z_owned_string_array_t, option ZVector),
     loaned(z_loaned_string_array_t),
-    moved(z_moved_string_array_t)
 );
 
 /// Constructs a new empty string array.

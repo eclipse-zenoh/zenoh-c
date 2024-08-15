@@ -52,7 +52,6 @@ pub enum CSHMProvider {
 decl_c_type!(
     owned(z_owned_shm_provider_t, option CSHMProvider),
     loaned(z_loaned_shm_provider_t),
-    moved(z_moved_shm_provider_t)
 );
 
 /// Creates a new SHM Provider

@@ -28,7 +28,7 @@ use crate::z_moved_source_info_t;
 use crate::zc_moved_closure_matching_status_t;
 use crate::{
     result::{self},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_encoding_t, z_priority_t, z_timestamp_t,
 };
@@ -42,7 +42,7 @@ use crate::{
 #[repr(C)]
 pub struct z_publisher_options_t {
     /// Default encoding for messages put by this publisher.
-    pub encoding: z_moved_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing messages from this publisher.
     pub congestion_control: z_congestion_control_t,
     /// The priority of messages from this publisher.
@@ -71,7 +71,6 @@ pub use crate::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned
 decl_c_type!(
     owned(z_owned_publisher_t, option Publisher<'static>),
     loaned(z_loaned_publisher_t),
-    moved(z_moved_publisher_t)
 );
 
 /// Constructs and declares a publisher for the given key expression.
@@ -106,8 +105,8 @@ pub extern "C" fn z_declare_publisher(
         {
             p = p.allowed_destination(options.allowed_destination.into());
         }
-        if let Some(encoding) = options.encoding.take_rust_type() {
-            p = p.encoding(encoding);
+        if let Some(encoding) = options.encoding.take() {
+            p = p.encoding(encoding.into_rust_type());
         }
     }
     match p.wait() {
@@ -163,14 +162,14 @@ pub unsafe extern "C" fn z_publisher_loan_mut(
 #[repr(C)]
 pub struct z_publisher_put_options_t {
     ///  The encoding of the data to publish.
-    pub encoding: z_moved_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The timestamp of the publication.
     pub timestamp: Option<&'static z_timestamp_t>,
     /// The source info for the publication.
     #[cfg(feature = "unstable")]
-    pub source_info: z_moved_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to attach to the publication.
-    pub attachment: z_moved_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
 /// Constructs the default value for `z_publisher_put_options_t`.
@@ -203,25 +202,22 @@ pub extern "C" fn z_publisher_put_options_default(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_put(
     this: &z_loaned_publisher_t,
-    payload: z_moved_bytes_t,
+    payload: &mut z_moved_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
 ) -> result::z_result_t {
     let publisher = this.as_rust_type_ref();
-    let Some(payload) = payload.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
-
+    let payload = payload.into_rust_type();
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        if let Some(encoding) = options.encoding.take_rust_type() {
-            put = put.encoding(encoding);
+        if let Some(encoding) = options.encoding.take() {
+            put = put.encoding(encoding.into_rust_type());
         };
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take_rust_type() {
-            put = put.source_info(source_info);
+        if let Some(source_info) = options.source_info.take() {
+            put = put.source_info(source_info.into_rust_type());
         };
-        if let Some(attachment) = options.attachment.take_rust_type() {
-            put = put.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            put = put.attachment(attachment.into_rust_type());
         }
         if let Some(timestamp) = options.timestamp {
             put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
@@ -292,11 +288,10 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 }
 
 #[cfg(feature = "unstable")]
-pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_owned_matching_listener_t};
+pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_moved_matching_listener_t2, zc_owned_matching_listener_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
     owned(zc_owned_matching_listener_t, option MatchingListener<'static, ()>),
-    moved(zc_moved_matching_listener_t)
 );
 
 /// Constructs an empty matching listener
@@ -370,9 +365,9 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_publisher_matching_listener_undeclare(
-    this: zc_moved_matching_listener_t,
+    this: &mut zc_moved_matching_listener_t2,
 ) -> result::z_result_t {
-    if let Some(p) = this.into_rust_type().take() {
+    if let Some(p) = this.dropper().as_rust_type_mut() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -388,7 +383,7 @@ pub extern "C" fn zc_publisher_matching_listener_undeclare(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_publisher_matching_listener_drop(
-    this: zc_moved_matching_listener_t,
+    this: &mut zc_moved_matching_listener_t,
 ) -> result::z_result_t {
     zc_publisher_matching_listener_undeclare(this)
 }

@@ -103,7 +103,6 @@ pub use crate::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
     owned(z_owned_sample_t, option Sample),
     loaned(z_loaned_sample_t),
-    moved(z_moved_sample_t)
 );
 
 /// Returns the key expression of the sample.
@@ -482,7 +481,6 @@ pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),
-    moved(z_moved_source_info_t)
 );
 
 #[cfg(feature = "unstable")]

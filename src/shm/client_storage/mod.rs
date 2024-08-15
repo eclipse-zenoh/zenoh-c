@@ -28,7 +28,6 @@ use crate::{
 decl_c_type!(
     owned(zc_owned_shm_client_list_t, option Vec<(ProtocolID, Arc<dyn ShmClient>)>),
     loaned(zc_loaned_shm_client_list_t),
-    moved(zc_moved_shm_client_list_t)
 );
 
 /// Creates a new empty list of SHM Clients
@@ -95,7 +94,6 @@ pub extern "C" fn zc_shm_client_list_add_client(
 decl_c_type!(
     owned(z_owned_shm_client_storage_t, option Arc<ShmClientStorage> ),
     loaned(z_loaned_shm_client_storage_t),
-    moved(z_moved_shm_client_storage_t)
 );
 
 #[no_mangle]

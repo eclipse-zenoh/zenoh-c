@@ -41,7 +41,6 @@ use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
 decl_c_type! {
     owned(z_owned_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t),
-    moved(z_moved_bytes_t),
 }
 
 /// The gravestone value for `z_owned_bytes_t`.
@@ -466,10 +465,10 @@ pub extern "C" fn z_bytes_deserialize_into_double(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_from_slice(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    slice: z_moved_slice_t,
+    slice: &mut z_moved_slice_t,
 ) {
     let slice = slice.into_rust_type();
-    let payload = slice.map(ZBytes::from).unwrap_or_default();
+    let payload = ZBytes::from(slice);
     this.as_rust_type_mut_uninit().write(payload);
 }
 
@@ -558,11 +557,11 @@ pub unsafe extern "C" fn z_bytes_serialize_from_buf(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_from_string(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    s: z_moved_string_t,
+    s: &mut z_moved_string_t,
 ) {
     // TODO: verify that string is a valid utf-8 string ?
     let cs = s.into_rust_type();
-    let payload = cs.map(ZBytes::from).unwrap_or_default();
+    let payload = ZBytes::from(cs);
     this.as_rust_type_mut_uninit().write(payload);
 }
 
@@ -644,17 +643,12 @@ pub unsafe extern "C" fn z_bytes_serialize_from_str(
 #[no_mangle]
 pub extern "C" fn z_bytes_from_pair(
     this: &mut MaybeUninit<z_owned_bytes_t>,
-    first: z_moved_bytes_t,
-    second: z_moved_bytes_t,
+    first: &mut z_moved_bytes_t,
+    second: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    if let (Some(first), Some(second)) = (first.into_rust_type(), second.into_rust_type()) {
-        let payload = ZBytes::serialize((first, second));
-        this.as_rust_type_mut_uninit().write(payload);
-        Z_OK
-    } else {
-        this.as_rust_type_mut_uninit().write(ZBytes::default());
-        Z_EINVAL
-    }
+    let payload = ZBytes::serialize((first.into_rust_type(), second.into_rust_type()));
+    this.as_rust_type_mut_uninit().write(payload);
+    Z_OK
 }
 
 /// Deserializes into a pair of `z_owned_bytes_t` objects.
@@ -924,12 +918,9 @@ unsafe extern "C" fn z_bytes_writer_write_all(
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_append(
     this: &mut z_bytes_writer_t,
-    bytes: z_moved_bytes_t,
+    bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    let Some(bytes) = bytes.into_rust_type() else {
-        return result::Z_ENULL;
-    };
-    this.as_rust_type_mut().append(bytes);
+    this.as_rust_type_mut().append(bytes.into_rust_type());
     result::Z_OK
 }
 
@@ -940,11 +931,8 @@ unsafe extern "C" fn z_bytes_writer_append(
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_append_bounded(
     this: &mut z_bytes_writer_t,
-    bytes: z_moved_bytes_t,
+    bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    let Some(bytes) = bytes.into_rust_type() else {
-        return result::Z_ENULL;
-    };
-    this.as_rust_type_mut().serialize(bytes);
+    this.as_rust_type_mut().serialize(bytes.into_rust_type());
     result::Z_OK
 }

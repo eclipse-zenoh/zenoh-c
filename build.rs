@@ -146,22 +146,6 @@ fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     (prefix, category, semantic, postfix)
 }
 
-fn to_camel_case(s: &str) -> String {
-    let mut res = String::new();
-    let mut capitalize = true;
-    for c in s.chars() {
-        if c == '_' {
-            capitalize = true;
-        } else if capitalize {
-            res.push(c.to_ascii_uppercase());
-            capitalize = false;
-        } else {
-            res.push(c);
-        }
-    }
-    res
-}
-
 fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
     let current_folder = get_build_rs_path();
@@ -190,66 +174,33 @@ pub struct {type_name} {{
         .as_str();
         if category == Some("owned") {
             let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
-            let moved_dropper_type_name = format!("Moved{}", to_camel_case(semantic));
+            // Note: owned type {type_name} should implement "Default" and "IntoRustType" traits, this is
+            // done by "decl_c_type!" macro in transmute module.
             s += format!(
                 "#[repr(C)]
 #[derive(Default)]
 pub struct {moved_type_name} {{
-    pub _ptr: Option<&'static mut {type_name}>,
-}}
-
-impl {moved_type_name} {{
-    pub fn take(&mut self) -> Option<{type_name}> {{
-        self._ptr.take().map(std::mem::take)
-    }}
-}}
-
-impl From<Option<&'static mut {type_name}>> for {moved_type_name} {{
-    fn from(ptr: Option<&'static mut {type_name}>) -> Self {{
-        Self {{ _ptr: ptr }}
-    }}
-}}
-
-#[repr(C)]
-pub struct {moved_type_name}2 {{
     _this: {type_name}
 }}
 
-impl {moved_type_name}2 {{
-    pub fn dropper(&mut self) -> {moved_dropper_type_name} {{
-        {moved_dropper_type_name}(&mut self._this)
-    }}
-}}
-
-pub struct {moved_dropper_type_name}<'a>(&'a mut {type_name});
-
-impl std::ops::Deref for {moved_dropper_type_name}<'_> {{
+impl std::ops::Deref for {moved_type_name} {{
     type Target = {type_name};
-
     fn deref(&self) -> &Self::Target {{
-        self.0
+        &self._this
     }}
 }}
 
-impl std::ops::DerefMut for {moved_dropper_type_name}<'_> {{
+impl std::ops::DerefMut for {moved_type_name} {{
     fn deref_mut(&mut self) -> &mut Self::Target {{
-        self.0
+        &mut self._this
     }}
 }}
-
 
 impl Drop for {type_name} {{
     fn drop(&mut self) {{
-        use crate::transmute::RustTypeRef;
-        std::mem::take(self.as_rust_type_mut());
+        use crate::transmute::IntoRustType;
+        let _ = self.into_rust_type();
     }}
-}}
-
-impl Drop for {moved_dropper_type_name}<'_> {{
-     fn drop(&mut self) {{
-         use crate::transmute::RustTypeRef;
-         std::mem::take(self.0.as_rust_type_mut());
-     }}
 }}
 "
             )

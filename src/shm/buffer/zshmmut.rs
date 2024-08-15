@@ -27,7 +27,6 @@ use crate::{
 decl_c_type!(
     owned(z_owned_shm_mut_t, option ZShmMut),
     loaned(z_loaned_shm_mut_t, zshmmut),
-    moved(z_moved_shm_mut_t)
 );
 
 /// Tries to construct ZShmMut slice from ZShm slice

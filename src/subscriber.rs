@@ -62,7 +62,6 @@ pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_own
 decl_c_type!(
     owned(z_owned_subscriber_t, option Subscriber<'static, ()>),
     loaned(z_loaned_subscriber_t),
-    moved(z_moved_subscriber_t)
 );
 
 /// Constructs a subscriber in a gravestone state.
@@ -112,16 +111,13 @@ pub extern "C" fn z_declare_subscriber(
     this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: z_moved_closure_sample_t,
+    callback: &mut z_moved_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let Some(callback) = callback.into_rust_type() else {
-        this.write(None);
-        return result::Z_EINVAL;
-    };
+    let callback = callback.into_rust_type();
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {

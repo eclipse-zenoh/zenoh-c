@@ -27,7 +27,6 @@ use crate::{
 decl_c_type!(
     owned(z_owned_session_t, option Arc<Session>),
     loaned(z_loaned_session_t),
-    moved(z_moved_session_t)
 );
 
 /// Borrows session.

@@ -31,7 +31,6 @@ use crate::{transmute::IntoCType, z_id_t};
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
     loaned(z_loaned_hello_t),
-    moved(z_moved_hello_t)
 );
 
 /// Frees memory and resets hello message to its gravestone state.
@@ -156,15 +155,13 @@ pub extern "C" fn z_scout_options_default(this: &mut MaybeUninit<z_scout_options
 #[no_mangle]
 pub extern "C" fn z_scout(
     config: z_moved_config_t,
-    callback: z_moved_closure_hello_t,
+    callback: &mut z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
 ) -> result::z_result_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logging();
     }
-    let Some(callback) = callback.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let callback = callback.into_rust_type();
     let options = options.cloned().unwrap_or_default();
     let what =
         WhatAmIMatcher::try_from(options.what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);

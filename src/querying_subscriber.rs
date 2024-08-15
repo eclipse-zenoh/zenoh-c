@@ -39,7 +39,6 @@ decl_c_type!(
         option(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
     ),
     loaned(ze_loaned_querying_subscriber_t),
-    moved(ze_moved_querying_subscriber_t)
 );
 
 /// Constructs a querying subscriber in a gravestone state.

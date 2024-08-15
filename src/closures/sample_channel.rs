@@ -31,7 +31,6 @@ use crate::{
 decl_c_type!(
     owned(z_owned_fifo_handler_sample_t, option flume::Receiver<Sample>),
     loaned(z_loaned_fifo_handler_sample_t),
-    moved(z_moved_fifo_handler_sample_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
@@ -153,7 +152,6 @@ decl_c_type!(
         option RingChannelHandler<Sample>,
     ),
     loaned(z_loaned_ring_handler_sample_t),
-    moved(z_moved_ring_handler_sample_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.

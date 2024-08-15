@@ -102,13 +102,13 @@ pub struct zc_loaned_closure_log_t {
 /// Moved closure.
 #[repr(C)]
 pub struct zc_moved_closure_log_t {
-    _ptr: Option<&'static mut zc_owned_closure_log_t>,
+    _this: zc_owned_closure_log_t,
 }
 
 decl_c_type!(
     owned(zc_owned_closure_log_t),
     loaned(zc_loaned_closure_log_t),
-    moved(zc_moved_closure_log_t)
+    moved(zc_moved_closure_log_t),
 );
 
 impl Default for zc_owned_closure_log_t {

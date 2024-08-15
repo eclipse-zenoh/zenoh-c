@@ -30,7 +30,6 @@ use crate::{
 decl_c_type!(
     owned(zc_owned_liveliness_token_t, option LivelinessToken<'static>),
     loaned(zc_loaned_liveliness_token_t),
-    moved(zc_moved_liveliness_token_t)
 );
 
 /// Constructs liveliness token in its gravestone state.
