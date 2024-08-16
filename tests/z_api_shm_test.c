@@ -21,6 +21,12 @@
         return result;    \
     }
 
+#define ASSERT_ERR(result) \
+    if (result == Z_OK) {  \
+        assert(false);     \
+        return result;     \
+    }
+
 #define ASSERT_TRUE(expr) \
     if (!(expr)) {        \
         assert(false);    \
@@ -89,7 +95,8 @@ int test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    if (z_alloc_layout_alloc_gc(&alloc, alloc_layout) == Z_OK) {
+    z_alloc_layout_alloc_gc(&alloc, alloc_layout);
+    if (z_check(alloc.buf)) {
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
         return Z_OK;
@@ -103,7 +110,8 @@ int test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_allo
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    if (z_shm_provider_alloc_gc(&alloc, provider, size, alignment) == Z_OK) {
+    z_shm_provider_alloc_gc(&alloc, provider, size, alignment);
+    if (z_check(alloc.buf)) {
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
         return Z_OK;
@@ -120,7 +128,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
 
     // test allocation ERROR
     if (buf_err_size) {
-        ASSERT_TRUE(!test_allocation(z_loan(*provider), buf_err_size, alignment));
+        ASSERT_ERR(test_allocation(z_loan(*provider), buf_err_size, alignment));
     }
 
     // OK layouted allocations
@@ -144,7 +152,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
         ASSERT_OK(z_alloc_layout_new(&alloc_layout, z_loan(*provider), buf_err_size, alignment));
         ASSERT_CHECK(alloc_layout);
         // test layouted allocation ERROR
-        ASSERT_TRUE(!test_layouted_allocation(z_loan(alloc_layout)));
+        ASSERT_ERR(test_layouted_allocation(z_loan(alloc_layout)));
         z_drop(z_move(alloc_layout));
         ASSERT_CHECK_ERR(alloc_layout);
     }
