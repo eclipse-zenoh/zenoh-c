@@ -44,7 +44,8 @@ pub unsafe extern "C" fn z_hello_drop(this_: &mut z_moved_hello_t) {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hello_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap()
         .as_loaned_c_type_ref()

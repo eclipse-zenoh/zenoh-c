@@ -29,7 +29,12 @@ use zenoh::{
 };
 
 use crate::{
-    result, transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType}, z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t, z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t, z_query_target_t
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
+    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
+    z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
+    z_query_target_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -72,7 +77,8 @@ decl_c_type!(
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
 pub extern "C" fn z_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
-    this_.as_rust_type_mut_uninit()
+    this_
+        .as_rust_type_mut_uninit()
         .write(ReplyErrorNewtype::default());
 }
 
@@ -321,7 +327,8 @@ pub extern "C" fn z_reply_check(this_: &z_owned_reply_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_reply_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()

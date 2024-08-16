@@ -74,7 +74,8 @@ pub extern "C" fn z_subscriber_null(this_: &mut MaybeUninit<z_owned_subscriber_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()

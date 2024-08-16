@@ -50,7 +50,8 @@ pub extern "C" fn z_mutex_null(this_: &mut MaybeUninit<z_owned_mutex_t>) {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
-    this_.as_rust_type_mut()
+    this_
+        .as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
         .as_loaned_c_type_mut()
@@ -141,7 +142,8 @@ pub extern "C" fn z_condvar_check(this_: &z_owned_condvar_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_condvar_loan(this_: &z_owned_condvar_t) -> &z_loaned_condvar_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()

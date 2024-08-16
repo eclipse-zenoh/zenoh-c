@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::transmute::TakeRustType;
-use libc::c_ulong;
 use std::{mem::MaybeUninit, ptr::null};
+
+use libc::c_ulong;
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
@@ -36,7 +36,7 @@ use crate::z_id_t;
 use crate::z_moved_source_info_t;
 use crate::{
     result,
-    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 

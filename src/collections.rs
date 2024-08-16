@@ -311,7 +311,9 @@ pub extern "C" fn z_view_slice_is_empty(this_: &z_view_slice_t) -> bool {
 /// Constructs an empty `z_owned_slice_t`.
 #[no_mangle]
 pub extern "C" fn z_slice_empty(this_: &mut MaybeUninit<z_owned_slice_t>) {
-    this_.as_rust_type_mut_uninit().write(CSliceOwned::default());
+    this_
+        .as_rust_type_mut_uninit()
+        .write(CSliceOwned::default());
 }
 
 /// Constructs an empty `z_owned_slice_t`.
@@ -323,7 +325,7 @@ pub extern "C" fn z_slice_null(this_: &mut MaybeUninit<z_owned_slice_t>) {
 /// Frees the memory and invalidates the slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_slice_drop(this_:&mut z_moved_slice_t) {
+pub unsafe extern "C" fn z_slice_drop(this_: &mut z_moved_slice_t) {
     let _ = this_.take_rust_type();
 }
 
@@ -543,7 +545,8 @@ pub extern "C" fn z_string_check(this_: &z_owned_string_t) -> bool {
 /// Constructs owned string in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_string_null(this_: &mut MaybeUninit<z_owned_string_t>) {
-    this_.as_rust_type_mut_uninit()
+    this_
+        .as_rust_type_mut_uninit()
         .write(CStringOwned::default());
 }
 
@@ -557,7 +560,8 @@ pub extern "C" fn z_view_string_is_empty(this_: &z_view_string_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_string_empty(this_: &mut MaybeUninit<z_owned_string_t>) {
-    this_.as_rust_type_mut_uninit()
+    this_
+        .as_rust_type_mut_uninit()
         .write(CStringOwned::default());
 }
 
@@ -565,7 +569,9 @@ pub unsafe extern "C" fn z_string_empty(this_: &mut MaybeUninit<z_owned_string_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_string_empty(this_: &mut MaybeUninit<z_view_string_t>) {
-    this_.as_rust_type_mut_uninit().write(CStringView::default());
+    this_
+        .as_rust_type_mut_uninit()
+        .write(CStringView::default());
 }
 
 /// Borrows string.

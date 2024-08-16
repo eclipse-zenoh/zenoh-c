@@ -55,13 +55,17 @@ pub(crate) trait IntoCType: Sized {
 pub(crate) trait TakeRustType: Sized {
     type RustType;
     fn take_rust_type(&mut self) -> Self::RustType;
-} 
+}
 pub(crate) trait TakeCType: Sized {
     type CType;
     fn take_c_type(&mut self) -> Self::CType;
-} 
+}
 
-impl<P, Q> TakeRustType for P where P: TakeCType<CType = Q>, Q: IntoRustType {
+impl<P, Q> TakeRustType for P
+where
+    P: TakeCType<CType = Q>,
+    Q: IntoRustType,
+{
     type RustType = Q::RustType;
     fn take_rust_type(&mut self) -> Self::RustType {
         self.take_c_type().into_rust_type()
@@ -91,7 +95,7 @@ macro_rules! validate_equivalence {
             }
             const SIZE_A: usize = std::mem::size_of::<$type_a>();
             const SIZE_B: usize = std::mem::size_of::<$type_b>();
-            if SIZE_A != SIZE_B {       
+            if SIZE_A != SIZE_B {
                 const ERR_MESSAGE: &str = concatcp!(
                     "Size mismatch: type ",
                     TYPE_NAME_A,
@@ -110,7 +114,6 @@ macro_rules! validate_equivalence {
 
 #[macro_export]
 macro_rules! impl_transmute {
-
     (as_c ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::CTypeRef for $rust_type {
             type CType = $c_type;

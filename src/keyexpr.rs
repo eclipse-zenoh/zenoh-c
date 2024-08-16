@@ -127,7 +127,8 @@ pub unsafe extern "C" fn z_keyexpr_from_str_autocanonize(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_loan(this_: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -137,7 +138,8 @@ pub unsafe extern "C" fn z_keyexpr_loan(this_: &z_owned_keyexpr_t) -> &z_loaned_
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_keyexpr_loan(this_: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()

@@ -89,8 +89,11 @@ pub extern "C" fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loan
 
 /// Constructs a new empty configuration.
 #[no_mangle]
-pub extern "C" fn z_config_default(this_: &mut MaybeUninit<z_owned_config_t>) -> result::z_result_t {
-    this_.as_rust_type_mut_uninit()
+pub extern "C" fn z_config_default(
+    this_: &mut MaybeUninit<z_owned_config_t>,
+) -> result::z_result_t {
+    this_
+        .as_rust_type_mut_uninit()
         .write(Some(Config::default()));
     Z_OK
 }
@@ -338,7 +341,8 @@ pub unsafe extern "C" fn zc_config_from_env(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_config_peer(this_: &mut MaybeUninit<z_owned_config_t>) -> result::z_result_t {
-    this_.as_rust_type_mut_uninit()
+    this_
+        .as_rust_type_mut_uninit()
         .write(Some(zenoh::config::peer()));
     Z_OK
 }

@@ -48,7 +48,8 @@ pub extern "C" fn z_queryable_null(this_: &mut MaybeUninit<z_owned_queryable_t>)
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loaned_queryable_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -74,7 +75,8 @@ pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loaned_query_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -160,9 +162,7 @@ pub struct z_query_reply_err_options_t {
 pub extern "C" fn z_query_reply_err_options_default(
     this: &mut MaybeUninit<z_query_reply_err_options_t>,
 ) {
-    this.write(z_query_reply_err_options_t {
-        encoding: None,
-    });
+    this.write(z_query_reply_err_options_t { encoding: None });
 }
 
 /// Represents the set of options that can be applied to a query delete reply,
@@ -433,7 +433,8 @@ pub unsafe extern "C" fn z_query_parameters(
 /// Returns NULL if query does not contain a payload.
 #[no_mangle]
 pub extern "C" fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .payload()
         .map(|v| v.as_loaned_c_type_ref())
 }
@@ -443,7 +444,8 @@ pub extern "C" fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_
 /// Returns NULL if query does not contain an encoding.
 #[no_mangle]
 pub extern "C" fn z_query_encoding(this_: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .encoding()
         .map(|v| v.as_loaned_c_type_ref())
 }
@@ -453,7 +455,8 @@ pub extern "C" fn z_query_encoding(this_: &z_loaned_query_t) -> Option<&z_loaned
 /// Returns NULL if query does not contain an attachment.
 #[no_mangle]
 pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .attachment()
         .map(|a| a.as_loaned_c_type_ref())
 }

@@ -31,7 +31,10 @@ decl_c_type!(
 
 /// Constructs ZShm slice from ZShmMut slice
 #[no_mangle]
-pub extern "C" fn z_shm_from_mut(this_: &mut MaybeUninit<z_owned_shm_t>, that: &mut z_moved_shm_mut_t) {
+pub extern "C" fn z_shm_from_mut(
+    this_: &mut MaybeUninit<z_owned_shm_t>,
+    that: &mut z_moved_shm_mut_t,
+) {
     let shm: Option<ZShm> = that.take_rust_type().take().map(|val| val.into());
     this_.as_rust_type_mut_uninit().write(shm);
 }
@@ -60,7 +63,11 @@ pub extern "C" fn z_shm_clone(out: &mut MaybeUninit<z_owned_shm_t>, this_: &z_lo
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_loan(this_: &z_owned_shm_t) -> &z_loaned_shm_t {
-    let this: &zshm = this_.as_rust_type_ref().as_ref().unwrap_unchecked().borrow();
+    let this: &zshm = this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .borrow();
     this.as_loaned_c_type_ref()
 }
 

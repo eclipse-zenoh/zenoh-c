@@ -309,19 +309,28 @@ pub extern "C" fn z_bytes_serialize_from_uint8(this_: &mut MaybeUninit<z_owned_b
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint16(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u16) {
+pub extern "C" fn z_bytes_serialize_from_uint16(
+    this_: &mut MaybeUninit<z_owned_bytes_t>,
+    val: u16,
+) {
     z_bytes_serialize_from_arithmetic::<u16>(this_, val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint32(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u32) {
+pub extern "C" fn z_bytes_serialize_from_uint32(
+    this_: &mut MaybeUninit<z_owned_bytes_t>,
+    val: u32,
+) {
     z_bytes_serialize_from_arithmetic::<u32>(this_, val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint64(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u64) {
+pub extern "C" fn z_bytes_serialize_from_uint64(
+    this_: &mut MaybeUninit<z_owned_bytes_t>,
+    val: u64,
+) {
     z_bytes_serialize_from_arithmetic::<u64>(this_, val);
 }
 
@@ -357,7 +366,10 @@ pub extern "C" fn z_bytes_serialize_from_float(this_: &mut MaybeUninit<z_owned_b
 
 /// Serializes a double.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_double(this_: &mut MaybeUninit<z_owned_bytes_t>, val: f64) {
+pub extern "C" fn z_bytes_serialize_from_double(
+    this_: &mut MaybeUninit<z_owned_bytes_t>,
+    val: f64,
+) {
     z_bytes_serialize_from_arithmetic::<f64>(this_, val);
 }
 /// Deserializes into an unsigned integer.

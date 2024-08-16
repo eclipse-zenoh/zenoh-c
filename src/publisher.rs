@@ -140,7 +140,8 @@ pub extern "C" fn z_publisher_check(this_: &z_owned_publisher_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_publisher_loan(this_: &z_owned_publisher_t) -> &z_loaned_publisher_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -288,7 +289,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 }
 
 #[cfg(feature = "unstable")]
-pub use crate::opaque_types::{zc_moved_matching_listener_t,  zc_owned_matching_listener_t};
+pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_owned_matching_listener_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
     owned(zc_owned_matching_listener_t, option MatchingListener<'static, ()>),
