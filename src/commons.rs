@@ -12,12 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-#[cfg(feature = "unstable")]
 use crate::transmute::TakeRustType;
-
-use std::{mem::MaybeUninit, ptr::null};
-
 use libc::c_ulong;
+use std::{mem::MaybeUninit, ptr::null};
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
@@ -155,7 +152,10 @@ pub extern "C" fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loa
 /// Returns the sample source_info.
 #[no_mangle]
 pub extern "C" fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_source_info_t {
-    this_.as_rust_type_ref().source_info().as_loaned_c_type_ref()
+    this_
+        .as_rust_type_ref()
+        .source_info()
+        .as_loaned_c_type_ref()
 }
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
@@ -196,7 +196,8 @@ pub extern "C" fn z_sample_check(this_: &z_owned_sample_t) -> bool {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sample_t {
-    this_.as_rust_type_ref()
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
