@@ -1230,11 +1230,12 @@ pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
             .collect::<Vec<_>>()
             .join(" ");
         let (_, _, semantic, _) = split_type_name(arg_type);
+        let arg_type = arg_type.to_string() + "*";
         let f = FunctionSignature::new(
             semantic,
             return_type.as_str(),
             func_name.to_string(),
-            vec![FuncArg::new(arg_type, arg_name)],
+            vec![FuncArg::new(&arg_type, arg_name)],
         );
         res.push(f);
     }

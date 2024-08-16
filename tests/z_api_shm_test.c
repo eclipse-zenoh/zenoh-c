@@ -39,11 +39,11 @@
         return -200;          \
     }
 
-int test_shm_buffer(z_moved_shm_mut_t mbuf) {
-    assert(mbuf._ptr != NULL);
+int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
+    ASSERT_CHECK(mbuf->_this);
     z_owned_shm_mut_t buf;
     z_take(&buf, mbuf);
-    assert(mbuf._ptr == NULL);
+    ASSERT_CHECK_ERR(mbuf->_this);
     ASSERT_CHECK(buf);
 
     { z_loaned_shm_mut_t* loaned = z_loan_mut(buf); }
@@ -51,7 +51,7 @@ int test_shm_buffer(z_moved_shm_mut_t mbuf) {
     z_owned_shm_t immut;
     z_shm_from_mut(&immut, z_move(buf));
     ASSERT_CHECK(immut);
-    assert(buf->_ptr == NULL);
+    ASSERT_CHECK_ERR(buf);
 
     { const z_loaned_shm_t* loaned = z_loan(immut); }
 
