@@ -1023,7 +1023,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     }
 
     if !msgs.is_empty() {
-        // panic!("Some functions are missing:\n{}", msgs.join("\n"));
+        panic!("Some functions are missing:\n{}", msgs.join("\n"));
     }
 
     let out = generate_move_functions_c(&move_funcs);
