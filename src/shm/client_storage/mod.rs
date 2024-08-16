@@ -51,8 +51,9 @@ pub extern "C" fn zc_shm_client_list_check(this: &zc_owned_shm_client_list_t) ->
 
 /// Deletes list of SHM Clients
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn zc_shm_client_list_drop(this: zc_moved_shm_client_list_t) {}
+pub extern "C" fn zc_shm_client_list_drop(this_: &mut zc_moved_shm_client_list_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Borrows list of SHM Clients
 #[no_mangle]
@@ -161,8 +162,9 @@ pub extern "C" fn z_shm_client_storage_check(this: &z_owned_shm_client_storage_t
 
 /// Derefs SHM Client Storage
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_shm_client_storage_drop(this: z_moved_shm_client_storage_t) {}
+pub extern "C" fn z_shm_client_storage_drop(this_: &mut z_moved_shm_client_storage_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Borrows SHM Client Storage
 #[no_mangle]

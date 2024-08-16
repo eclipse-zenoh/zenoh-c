@@ -18,7 +18,7 @@ use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
 
 use crate::{
     result::{self, z_result_t, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_owned_string_t, z_string_copy_from_substr, z_string_null,
 };
 
@@ -220,8 +220,10 @@ pub unsafe extern "C" fn zc_config_insert_json_from_substr(
 
 /// Frees `config`, and resets it to its gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_config_drop(this: z_moved_config_t) {}
+pub extern "C" fn z_config_drop(this_: &mut z_moved_config_t) {
+    let _ = this_.take_rust_type();
+}
+
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

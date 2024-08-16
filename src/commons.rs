@@ -12,6 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+#[cfg(feature = "unstable")]
+use crate::transmute::TakeRustType;
+
 use std::{mem::MaybeUninit, ptr::null};
 
 use libc::c_ulong;
@@ -201,8 +204,9 @@ pub unsafe extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sam
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_sample_drop(this: z_moved_sample_t) {}
+pub extern "C" fn z_sample_drop(this_: &mut z_moved_sample_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Constructs sample in its gravestone state.
 #[no_mangle]
@@ -535,8 +539,9 @@ pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_
 #[cfg(feature = "unstable")]
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_source_info_drop(this: z_moved_source_info_t) {}
+pub extern "C" fn z_source_info_drop(this_: &mut z_moved_source_info_t) {
+    let _ = this_.take_rust_type();
+}
 
 #[cfg(feature = "unstable")]
 /// Constructs source info in its gravestone state.

@@ -30,8 +30,9 @@ pub extern "C" fn z_mutex_init(this: &mut MaybeUninit<z_owned_mutex_t>) -> resul
 
 /// Drops mutex and resets it to its gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_mutex_drop(this: z_moved_mutex_t) {}
+pub extern "C" fn z_mutex_drop(this_: &mut z_moved_mutex_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Returns ``true`` if mutex is valid, ``false`` otherwise.
 #[no_mangle]
@@ -126,8 +127,9 @@ pub extern "C" fn z_condvar_null(this: &mut MaybeUninit<z_owned_condvar_t>) {
 
 /// Drops conditional variable.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_condvar_drop(this: z_moved_condvar_t) {}
+pub extern "C" fn z_condvar_drop(this_: &mut z_moved_condvar_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
 #[no_mangle]
@@ -209,8 +211,9 @@ pub extern "C" fn z_task_null(this: &mut MaybeUninit<z_owned_task_t>) {
 
 /// Detaches the task and releases all allocated resources.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_task_detach(this: z_moved_task_t) {}
+pub extern "C" fn z_task_detach(this_: &mut z_moved_task_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Joins the task and releases all allocated resources
 #[no_mangle]
@@ -226,8 +229,9 @@ pub extern "C" fn z_task_join(this: &mut z_moved_task_t) -> result::z_result_t {
 
 /// Drop the task. Same as `z_task_detach`. Use `z_task_join` to wait for the task completion.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_task_drop(this: z_moved_task_t) {}
+pub extern "C" fn z_task_drop(this_: &mut z_moved_task_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Returns ``true`` if task is valid, ``false`` otherwise.
 #[no_mangle]

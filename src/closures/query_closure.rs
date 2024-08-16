@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_query_t,
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -107,8 +107,9 @@ pub extern "C" fn z_closure_query_call(
 }
 /// Drops the closure, resetting it to its gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_closure_query_drop(closure: z_moved_closure_query_t) {}
+pub extern "C" fn z_closure_query_drop(closure_: &mut z_moved_closure_query_t) {
+    let _ = closure_.take_rust_type();
+}
 
 impl<F: Fn(&z_loaned_query_t)> From<F> for z_owned_closure_query_t {
     fn from(f: F) -> Self {

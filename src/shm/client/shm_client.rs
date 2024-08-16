@@ -25,7 +25,7 @@ pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     shm::common::types::z_segment_id_t,
-    transmute::{RustTypeRef, RustTypeRefUninit},
+    transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
 /// A callbacks for ShmClient
@@ -92,5 +92,6 @@ pub extern "C" fn z_shm_client_check(this: &z_owned_shm_client_t) -> bool {
 
 /// Deletes SHM Client
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_shm_client_drop(this: z_moved_shm_client_t) {}
+pub extern "C" fn z_shm_client_drop(this_: &mut z_moved_shm_client_t) {
+    let _ = this_.take_rust_type();
+}

@@ -26,7 +26,7 @@ use super::chunk::z_allocated_chunk_t;
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
     shm::buffer::zshmmut::z_shm_mut_null,
-    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t,
     z_moved_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
@@ -169,8 +169,9 @@ pub unsafe extern "C" fn z_memory_layout_loan(
 
 /// Deletes Memory Layout
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_memory_layout_drop(this: z_moved_memory_layout_t) {}
+pub extern "C" fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Extract data from Memory Layout
 #[no_mangle]
@@ -240,8 +241,9 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
 
 /// Deletes Chunk Alloc Result
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_chunk_alloc_result_drop(this: z_moved_chunk_alloc_result_t) {}
+pub extern "C" fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
+    let _ = this_.take_rust_type();
+}
 
 #[repr(C)]
 pub struct z_buf_alloc_result_t {

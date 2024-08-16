@@ -58,8 +58,9 @@ extern "C" fn z_bytes_empty(this: &mut MaybeUninit<z_owned_bytes_t>) {
 /// Drops `this_`, resetting it to gravestone value. If there are any shallow copies
 /// created by `z_bytes_clone()`, they would still stay valid.
 #[no_mangle]
-#[allow(unused_variables)]
-extern "C" fn z_bytes_drop(this: z_moved_bytes_t) {}
+extern "C" fn z_bytes_drop(this_: &mut z_moved_bytes_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]

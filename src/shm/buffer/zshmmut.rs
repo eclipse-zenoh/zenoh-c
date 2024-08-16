@@ -78,8 +78,9 @@ pub unsafe extern "C" fn z_shm_mut_loan_mut(
 
 /// Deletes ZShmMut slice
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_shm_mut_drop(this: z_moved_shm_mut_t) {}
+pub extern "C" fn z_shm_mut_drop(this_: &mut z_moved_shm_mut_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// @return the length of the ZShmMut slice
 #[no_mangle]

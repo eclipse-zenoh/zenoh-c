@@ -16,7 +16,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     zc_matching_status_t,
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -112,8 +112,9 @@ pub extern "C" fn zc_closure_matching_status_call(
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn zc_closure_matching_status_drop(closure: zc_moved_closure_matching_status_t) {}
+pub extern "C" fn zc_closure_matching_status_drop(closure_: &mut zc_moved_closure_matching_status_t) {
+    let _ = closure_.take_rust_type();
+}
 
 impl<F: Fn(&zc_matching_status_t)> From<F> for zc_owned_closure_matching_status_t {
     fn from(f: F) -> Self {

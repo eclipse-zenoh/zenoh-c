@@ -1141,7 +1141,7 @@ pub fn make_move_take_signatures(
     path_in: &str,
 ) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
+    let re = Regex::new(r"(\w+)_drop\(struct (\w+) \*(\w+)\);").unwrap();
     let mut move_funcs = Vec::<FunctionSignature>::new();
     let mut take_funcs = Vec::<FunctionSignature>::new();
 
@@ -1217,7 +1217,7 @@ pub fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(.+?) +(\w+_drop)\(struct (\w+) (\w+)\);").unwrap();
+    let re = Regex::new(r"(.+?) +(\w+_drop)\(struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [return_type, func_name, arg_type, arg_name]) in
@@ -1344,7 +1344,9 @@ pub fn generate_generic_c(
     let va_args = macro_func
         .iter()
         .any(|f| f.args.len() != macro_func[0].args.len());
-    let mut args = macro_func[0]
+    let mut args = macro_func
+        .first()
+        .unwrap_or_else(|| panic!("no sigatures found for building generic {generic_name}"))
         .args
         .iter()
         .map(|a| a.name.to_string())

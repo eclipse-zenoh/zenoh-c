@@ -81,9 +81,8 @@ pub unsafe extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loan
 }
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_query_drop(this: &mut z_moved_query_t) {
-    this.take_rust_type();
+pub extern "C" fn z_query_drop(this_: &mut z_moved_query_t) {
+    let _ = this_.take_rust_type();
 }
 /// Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
 ///

@@ -94,8 +94,9 @@ pub unsafe extern "C" fn z_shm_try_mut(this: &mut z_owned_shm_t) -> *mut z_loane
 
 /// Deletes ZShm slice
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_shm_drop(this: z_moved_shm_t) {}
+pub extern "C" fn z_shm_drop(this_: &mut z_moved_shm_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice
 #[no_mangle]

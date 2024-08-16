@@ -26,7 +26,7 @@ use zenoh::bytes::Encoding;
 pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_encoding_t, z_owned_string_t, z_string_copy_from_substr,
 };
 
@@ -144,8 +144,9 @@ pub extern "C" fn z_encoding_null(this: &mut MaybeUninit<z_owned_encoding_t>) {
 
 /// Frees the memory and resets the encoding it to its default value.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_encoding_drop(this: z_moved_encoding_t) {}
+pub extern "C" fn z_encoding_drop(this_: &mut z_moved_encoding_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]

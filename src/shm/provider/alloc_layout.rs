@@ -28,7 +28,7 @@ use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
     z_owned_alloc_layout_t,
 };
@@ -87,8 +87,9 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 
 /// Deletes Alloc Layout
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_alloc_layout_drop(this: z_moved_alloc_layout_t) {}
+pub extern "C" fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {
+    let _ = this_.take_rust_type();
+}
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc(

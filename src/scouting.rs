@@ -36,8 +36,9 @@ decl_c_type!(
 /// Frees memory and resets hello message to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-#[allow(unused_variables)]
-pub unsafe extern "C" fn z_hello_drop(this: z_moved_hello_t) {}
+pub unsafe extern "C" fn z_hello_drop(this_: &mut z_moved_hello_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Borrows hello message.
 #[no_mangle]

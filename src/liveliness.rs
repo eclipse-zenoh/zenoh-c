@@ -46,8 +46,9 @@ pub extern "C" fn zc_liveliness_token_check(this: &zc_owned_liveliness_token_t) 
 
 /// Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn zc_liveliness_token_drop(this: zc_moved_liveliness_token_t) {}
+pub extern "C" fn zc_liveliness_token_drop(this_: &mut zc_moved_liveliness_token_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// The options for `zc_liveliness_declare_token()`.
 #[repr(C)]

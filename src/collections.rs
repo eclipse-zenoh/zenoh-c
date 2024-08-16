@@ -25,7 +25,7 @@ use libc::strlen;
 
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
 pub struct CSlice {
@@ -323,8 +323,9 @@ pub extern "C" fn z_slice_null(this: &mut MaybeUninit<z_owned_slice_t>) {
 /// Frees the memory and invalidates the slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-#[allow(unused_variables)]
-pub unsafe extern "C" fn z_slice_drop(this: z_moved_slice_t) {}
+pub unsafe extern "C" fn z_slice_drop(this_:&mut z_moved_slice_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Borrows slice.
 #[no_mangle]
@@ -529,8 +530,9 @@ decl_c_type!(
 /// Frees memory and invalidates `z_owned_string_t`, putting it in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-#[allow(unused_variables)]
-pub unsafe extern "C" fn z_string_drop(this: z_moved_string_t) {}
+pub unsafe extern "C" fn z_string_drop(this_: &mut z_moved_string_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
 #[no_mangle]
@@ -749,8 +751,9 @@ pub extern "C" fn z_string_array_check(this: &z_owned_string_array_t) -> bool {
 
 /// Destroys the string array, resetting it to its gravestone value.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_string_array_drop(this: z_moved_string_array_t) {}
+pub extern "C" fn z_string_array_drop(this_: &mut z_moved_string_array_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Borrows string array.
 #[no_mangle]

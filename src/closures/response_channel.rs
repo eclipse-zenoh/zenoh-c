@@ -25,7 +25,7 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
 };
 decl_c_type!(
@@ -35,8 +35,9 @@ decl_c_type!(
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_fifo_handler_reply_drop(this: z_moved_fifo_handler_reply_t) {}
+pub extern "C" fn z_fifo_handler_reply_drop(this_: &mut z_moved_fifo_handler_reply_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
@@ -150,8 +151,9 @@ decl_c_type!(
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_ring_handler_reply_drop(this: z_moved_ring_handler_reply_t) {}
+pub extern "C" fn z_ring_handler_reply_drop(this_: &mut z_moved_ring_handler_reply_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]

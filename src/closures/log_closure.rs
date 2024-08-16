@@ -15,7 +15,7 @@
 use std::mem::MaybeUninit;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_string_t,
 };
 
@@ -166,8 +166,9 @@ pub extern "C" fn zc_closure_log_call(
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn zc_closure_log_drop(closure: zc_moved_closure_log_t) {}
+pub extern "C" fn zc_closure_log_drop(closure_: &mut zc_moved_closure_log_t) {
+    let _ = closure_.take_rust_type();
+}
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
