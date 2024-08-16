@@ -58,7 +58,7 @@ pub struct z_put_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
     this_.write(z_put_options_t {
-        encoding: None.into(),
+        encoding: None,
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
@@ -66,8 +66,8 @@ pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
-        source_info: None.into(),
-        attachment: None.into(),
+        source_info: None,
+        attachment: None,
     });
 }
 

@@ -134,14 +134,14 @@ pub struct z_query_reply_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
     this_.write(z_query_reply_options_t {
-        encoding: None.into(),
+        encoding: None,
         congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
         #[cfg(feature = "unstable")]
-        source_info: None.into(),
-        attachment: None.into(),
+        source_info: None,
+        attachment: None,
     });
 }
 
@@ -161,7 +161,7 @@ pub extern "C" fn z_query_reply_err_options_default(
     this: &mut MaybeUninit<z_query_reply_err_options_t>,
 ) {
     this.write(z_query_reply_err_options_t {
-        encoding: None.into(),
+        encoding: None,
     });
 }
 
@@ -197,8 +197,8 @@ pub extern "C" fn z_query_reply_del_options_default(
         is_express: false,
         timestamp: None,
         #[cfg(feature = "unstable")]
-        source_info: None.into(),
-        attachment: None.into(),
+        source_info: None,
+        attachment: None,
     });
 }
 

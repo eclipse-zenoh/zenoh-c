@@ -220,11 +220,11 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
         priority: Priority::default().into(),
         is_express: false,
         timeout_ms: 0,
-        payload: None.into(),
-        encoding: None.into(),
+        payload: None,
+        encoding: None,
         #[cfg(feature = "unstable")]
-        source_info: None.into(),
-        attachment: None.into(),
+        source_info: None,
+        attachment: None,
     });
 }
 

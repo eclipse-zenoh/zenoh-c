@@ -184,6 +184,14 @@ macro_rules! impl_transmute {
             }
         }
     };
+    (into_rust (itself $rust_type:ty)) => {
+        impl $crate::transmute::IntoRustType for $rust_type {
+            type RustType = $rust_type;
+            fn into_rust_type(self) -> Self::RustType {
+                self
+            }
+        }
+    };
     (take_rust ($c_type:ty, $rust_type:ty)) => {
         impl Default for $c_type {
             fn default() -> Self {
@@ -224,7 +232,7 @@ macro_rules! impl_owned {
     (owned rust $c_owned_type:ty, loaned $c_loaned_type:ty) => {
         impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
         impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));
-        impl_transmute!(into_rust($c_owned_type, $c_owned_type));
+        impl_transmute!(into_rust(itself $c_owned_type));
     };
 }
 
