@@ -180,7 +180,7 @@ pub struct {type_name} {{
                 "#[repr(C)]
 #[derive(Default)]
 pub struct {moved_type_name} {{
-    _this: {type_name}
+    _this: {type_name},
 }}
 
 impl crate::transmute::TakeCType for {moved_type_name} {{
