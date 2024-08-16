@@ -32,21 +32,21 @@ decl_c_type!(
 
 /// Creates a new empty list of SHM Clients
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_new(this: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
+pub extern "C" fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
     let client_list: Vec<(ProtocolID, Arc<dyn ShmClient>)> = Vec::default();
-    this.as_rust_type_mut_uninit().write(Some(client_list));
+    this_.as_rust_type_mut_uninit().write(Some(client_list));
 }
 
 /// Constructs SHM client list in its gravestone value.
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_null(this: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn zc_shm_client_list_null(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_check(this: &zc_owned_shm_client_list_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn zc_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Deletes list of SHM Clients
@@ -150,14 +150,14 @@ pub extern "C" fn z_shm_client_storage_clone(
 
 /// Constructs SHM Client Storage in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_null(this: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_shm_client_storage_null(this_: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_check(this: &z_owned_shm_client_storage_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_shm_client_storage_check(this_: &z_owned_shm_client_storage_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Derefs SHM Client Storage

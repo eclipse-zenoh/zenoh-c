@@ -225,14 +225,14 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 
 /// Drops querying subscriber. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_drop(_this: &mut ze_moved_querying_subscriber_t) {
-    ze_undeclare_querying_subscriber(_this);
+pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
+    ze_undeclare_querying_subscriber(this_);
 }
 
 /// Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscriber_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn ze_querying_subscriber_check(this_: &ze_owned_querying_subscriber_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows querying subscriber.

@@ -63,14 +63,14 @@ pub extern "C" fn z_alloc_layout_new(
 
 /// Constructs Alloc Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_null(this: &mut MaybeUninit<z_owned_alloc_layout_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_alloc_layout_null(this_: &mut MaybeUninit<z_owned_alloc_layout_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_check(this: &z_owned_alloc_layout_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows Alloc Layout

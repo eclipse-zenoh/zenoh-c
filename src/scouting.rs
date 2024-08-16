@@ -43,8 +43,8 @@ pub unsafe extern "C" fn z_hello_drop(this_: &mut z_moved_hello_t) {
 /// Borrows hello message.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_loan(this: &z_owned_hello_t) -> &z_loaned_hello_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hello_t {
+    this_.as_rust_type_ref()
         .as_ref()
         .unwrap()
         .as_loaned_c_type_ref()
@@ -52,27 +52,27 @@ pub unsafe extern "C" fn z_hello_loan(this: &z_owned_hello_t) -> &z_loaned_hello
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_check(this: &z_owned_hello_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_hello_check(this_: &z_owned_hello_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs hello message in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_null(this: &mut MaybeUninit<z_owned_hello_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 #[cfg(feature = "unstable")]
 /// Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
-pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
-    this.as_rust_type_ref().zid().into_c_type()
+pub extern "C" fn z_hello_zid(this_: &z_loaned_hello_t) -> z_id_t {
+    this_.as_rust_type_ref().zid().into_c_type()
 }
 
 /// Returns type of Zenoh entity that transmitted hello message.
 #[no_mangle]
-pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
-    match this.as_rust_type_ref().whatami() {
+pub extern "C" fn z_hello_whatami(this_: &z_loaned_hello_t) -> z_whatami_t {
+    match this_.as_rust_type_ref().whatami() {
         WhatAmI::Router => z_whatami_t::ROUTER,
         WhatAmI::Peer => z_whatami_t::PEER,
         WhatAmI::Client => z_whatami_t::CLIENT,
@@ -141,8 +141,8 @@ pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
 /// Constructs the default values for the scouting operation.
 #[no_mangle]
-pub extern "C" fn z_scout_options_default(this: &mut MaybeUninit<z_scout_options_t>) {
-    this.write(z_scout_options_t::default());
+pub extern "C" fn z_scout_options_default(this_: &mut MaybeUninit<z_scout_options_t>) {
+    this_.write(z_scout_options_t::default());
 }
 
 /// Scout for routers and/or peers.

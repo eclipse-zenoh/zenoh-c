@@ -84,14 +84,14 @@ impl Drop for z_owned_closure_sample_t {
 /// Constructs a closure in its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_sample_null(this: &mut MaybeUninit<z_owned_closure_sample_t>) {
-    this.write(z_owned_closure_sample_t::default());
+pub unsafe extern "C" fn z_closure_sample_null(this_: &mut MaybeUninit<z_owned_closure_sample_t>) {
+    this_.write(z_owned_closure_sample_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_closure_sample_check(this: &z_owned_closure_sample_t) -> bool {
-    !this.is_empty()
+pub extern "C" fn z_closure_sample_check(this_: &z_owned_closure_sample_t) -> bool {
+    !this_.is_empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.

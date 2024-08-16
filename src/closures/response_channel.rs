@@ -41,14 +41,14 @@ pub extern "C" fn z_fifo_handler_reply_drop(this_: &mut z_moved_fifo_handler_rep
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_reply_null(this: &mut MaybeUninit<z_owned_fifo_handler_reply_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_fifo_handler_reply_null(this_: &mut MaybeUninit<z_owned_fifo_handler_reply_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_reply_check(this: &z_owned_fifo_handler_reply_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_fifo_handler_reply_check(this_: &z_owned_fifo_handler_reply_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 extern "C" fn __z_handler_reply_send(reply: &z_loaned_reply_t, context: *mut c_void) {
@@ -157,14 +157,14 @@ pub extern "C" fn z_ring_handler_reply_drop(this_: &mut z_moved_ring_handler_rep
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_reply_null(this: &mut MaybeUninit<z_owned_ring_handler_reply_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_ring_handler_reply_null(this_: &mut MaybeUninit<z_owned_ring_handler_reply_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_reply_check(this: &z_owned_ring_handler_reply_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_ring_handler_reply_check(this_: &z_owned_ring_handler_reply_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs send and recieve ends of the ring channel

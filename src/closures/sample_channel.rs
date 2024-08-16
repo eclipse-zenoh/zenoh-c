@@ -49,8 +49,8 @@ pub extern "C" fn z_fifo_handler_sample_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_sample_check(this: &z_owned_fifo_handler_sample_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_fifo_handler_sample_check(this_: &z_owned_fifo_handler_sample_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 extern "C" fn __z_handler_sample_send(sample: &z_loaned_sample_t, context: *mut c_void) {
@@ -171,8 +171,8 @@ pub extern "C" fn z_ring_handler_sample_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_sample_check(this: &z_owned_ring_handler_sample_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_ring_handler_sample_check(this_: &z_owned_ring_handler_sample_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs send and recieve ends of the ring channel

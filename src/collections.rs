@@ -269,8 +269,8 @@ decl_c_type!(
 
 /// Constructs an empty view slice.
 #[no_mangle]
-pub extern "C" fn z_view_slice_empty(this: &mut MaybeUninit<z_view_slice_t>) {
-    this.as_rust_type_mut_uninit().write(CSliceView::default());
+pub extern "C" fn z_view_slice_empty(this_: &mut MaybeUninit<z_view_slice_t>) {
+    this_.as_rust_type_mut_uninit().write(CSliceView::default());
 }
 
 /// Constructs a `len` bytes long view starting at `start`.
@@ -298,26 +298,26 @@ pub unsafe extern "C" fn z_view_slice_from_buf(
 
 /// Borrows view slice.
 #[no_mangle]
-pub extern "C" fn z_view_slice_loan(this: &z_view_slice_t) -> &z_loaned_slice_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_view_slice_loan(this_: &z_view_slice_t) -> &z_loaned_slice_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// @return ``true`` if the slice is not empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_view_slice_is_empty(this: &z_view_slice_t) -> bool {
-    this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_view_slice_is_empty(this_: &z_view_slice_t) -> bool {
+    this_.as_rust_type_ref().is_empty()
 }
 
 /// Constructs an empty `z_owned_slice_t`.
 #[no_mangle]
-pub extern "C" fn z_slice_empty(this: &mut MaybeUninit<z_owned_slice_t>) {
-    this.as_rust_type_mut_uninit().write(CSliceOwned::default());
+pub extern "C" fn z_slice_empty(this_: &mut MaybeUninit<z_owned_slice_t>) {
+    this_.as_rust_type_mut_uninit().write(CSliceOwned::default());
 }
 
 /// Constructs an empty `z_owned_slice_t`.
 #[no_mangle]
-pub extern "C" fn z_slice_null(this: &mut MaybeUninit<z_owned_slice_t>) {
-    z_slice_empty(this);
+pub extern "C" fn z_slice_null(this_: &mut MaybeUninit<z_owned_slice_t>) {
+    z_slice_empty(this_);
 }
 
 /// Frees the memory and invalidates the slice.
@@ -329,39 +329,39 @@ pub unsafe extern "C" fn z_slice_drop(this_:&mut z_moved_slice_t) {
 
 /// Borrows slice.
 #[no_mangle]
-pub extern "C" fn z_slice_loan(this: &z_owned_slice_t) -> &z_loaned_slice_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_slice_loan(this_: &z_owned_slice_t) -> &z_loaned_slice_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Constructs an owned copy of a slice.
 #[no_mangle]
-pub extern "C" fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this: &z_loaned_slice_t) {
+pub extern "C" fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this_: &z_loaned_slice_t) {
     dst.as_rust_type_mut_uninit()
-        .write(this.as_rust_type_ref().clone_to_owned());
+        .write(this_.as_rust_type_ref().clone_to_owned());
 }
 
 /// @return ``true`` if slice is not empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_slice_check(this: &z_owned_slice_t) -> bool {
-    !this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_slice_check(this_: &z_owned_slice_t) -> bool {
+    !this_.as_rust_type_ref().is_empty()
 }
 
 /// @return the length of the slice.
 #[no_mangle]
-pub extern "C" fn z_slice_len(this: &z_loaned_slice_t) -> usize {
-    this.as_rust_type_ref().len()
+pub extern "C" fn z_slice_len(this_: &z_loaned_slice_t) -> usize {
+    this_.as_rust_type_ref().len()
 }
 
 /// @return the pointer to the slice data.
 #[no_mangle]
-pub extern "C" fn z_slice_data(this: &z_loaned_slice_t) -> *const u8 {
-    this.as_rust_type_ref().data()
+pub extern "C" fn z_slice_data(this_: &z_loaned_slice_t) -> *const u8 {
+    this_.as_rust_type_ref().data()
 }
 
 /// @return ``true`` if slice is empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_slice_is_empty(this: &z_loaned_slice_t) -> bool {
-    this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_slice_is_empty(this_: &z_loaned_slice_t) -> bool {
+    this_.as_rust_type_ref().is_empty()
 }
 
 /// Constructs a slice by copying a `len` bytes long sequence starting at `start`.
@@ -536,48 +536,48 @@ pub unsafe extern "C" fn z_string_drop(this_: &mut z_moved_string_t) {
 
 /// @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_string_check(this: &z_owned_string_t) -> bool {
-    !this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_string_check(this_: &z_owned_string_t) -> bool {
+    !this_.as_rust_type_ref().is_empty()
 }
 
 /// Constructs owned string in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_string_null(this: &mut MaybeUninit<z_owned_string_t>) {
-    this.as_rust_type_mut_uninit()
+pub extern "C" fn z_string_null(this_: &mut MaybeUninit<z_owned_string_t>) {
+    this_.as_rust_type_mut_uninit()
         .write(CStringOwned::default());
 }
 
 /// @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_view_string_is_empty(this: &z_view_string_t) -> bool {
-    this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_view_string_is_empty(this_: &z_view_string_t) -> bool {
+    this_.as_rust_type_ref().is_empty()
 }
 
 /// Constructs an empty owned string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_empty(this: &mut MaybeUninit<z_owned_string_t>) {
-    this.as_rust_type_mut_uninit()
+pub unsafe extern "C" fn z_string_empty(this_: &mut MaybeUninit<z_owned_string_t>) {
+    this_.as_rust_type_mut_uninit()
         .write(CStringOwned::default());
 }
 
 /// Constructs an empty view string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_string_empty(this: &mut MaybeUninit<z_view_string_t>) {
-    this.as_rust_type_mut_uninit().write(CStringView::default());
+pub unsafe extern "C" fn z_view_string_empty(this_: &mut MaybeUninit<z_view_string_t>) {
+    this_.as_rust_type_mut_uninit().write(CStringView::default());
 }
 
 /// Borrows string.
 #[no_mangle]
-pub extern "C" fn z_string_loan(this: &z_owned_string_t) -> &z_loaned_string_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_string_loan(this_: &z_owned_string_t) -> &z_loaned_string_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Borrows view string.
 #[no_mangle]
-pub extern "C" fn z_view_string_loan(this: &z_view_string_t) -> &z_loaned_string_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_view_string_loan(this_: &z_view_string_t) -> &z_loaned_string_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
@@ -586,10 +586,10 @@ pub extern "C" fn z_view_string_loan(this: &z_view_string_t) -> &z_loaned_string
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_string_copy_from_str(
-    this: &mut MaybeUninit<z_owned_string_t>,
+    this_: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
-    z_string_copy_from_substr(this, str, strlen(str))
+    z_string_copy_from_substr(this_, str, strlen(str))
 }
 
 /// Constructs an owned string by copying a `str` substring of length `len`.
@@ -689,14 +689,14 @@ pub unsafe extern "C" fn z_view_string_from_substr(
 
 /// @return the length of the string (without terminating 0 character).
 #[no_mangle]
-pub extern "C" fn z_string_len(this: &z_loaned_string_t) -> usize {
-    this.as_rust_type_ref().len()
+pub extern "C" fn z_string_len(this_: &z_loaned_string_t) -> usize {
+    this_.as_rust_type_ref().len()
 }
 
 /// @return the pointer of the string data.
 #[no_mangle]
-pub extern "C" fn z_string_data(this: &z_loaned_string_t) -> *const libc::c_char {
-    this.as_rust_type_ref().data() as _
+pub extern "C" fn z_string_data(this_: &z_loaned_string_t) -> *const libc::c_char {
+    this_.as_rust_type_ref().data() as _
 }
 
 /// Constructs an owned copy of a string.
@@ -712,14 +712,14 @@ pub extern "C" fn z_string_clone(
 
 // Converts loaned string into loaned slice (with terminating 0 character).
 #[no_mangle]
-pub extern "C" fn z_string_as_slice(this: &z_loaned_string_t) -> &z_loaned_slice_t {
-    this.as_rust_type_ref().as_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_string_as_slice(this_: &z_loaned_string_t) -> &z_loaned_slice_t {
+    this_.as_rust_type_ref().as_ref().as_loaned_c_type_ref()
 }
 
 /// @return ``true`` if string is empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_string_is_empty(this: &z_loaned_string_t) -> bool {
-    this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_string_is_empty(this_: &z_loaned_string_t) -> bool {
+    this_.as_rust_type_ref().is_empty()
 }
 
 pub use crate::opaque_types::{
@@ -733,20 +733,20 @@ decl_c_type!(
 
 /// Constructs a new empty string array.
 #[no_mangle]
-pub extern "C" fn z_string_array_new(this: &mut MaybeUninit<z_owned_string_array_t>) {
-    this.as_rust_type_mut_uninit().write(Some(ZVector::new()));
+pub extern "C" fn z_string_array_new(this_: &mut MaybeUninit<z_owned_string_array_t>) {
+    this_.as_rust_type_mut_uninit().write(Some(ZVector::new()));
 }
 
 /// Constructs string array in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_string_array_null(this: &mut MaybeUninit<z_owned_string_array_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_string_array_null(this_: &mut MaybeUninit<z_owned_string_array_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_string_array_check(this: &z_owned_string_array_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_string_array_check(this_: &z_owned_string_array_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Destroys the string array, resetting it to its gravestone value.
@@ -781,14 +781,14 @@ pub unsafe extern "C" fn z_string_array_loan_mut(
 
 /// @return number of elements in the array.
 #[no_mangle]
-pub extern "C" fn z_string_array_len(this: &z_loaned_string_array_t) -> usize {
-    this.as_rust_type_ref().len()
+pub extern "C" fn z_string_array_len(this_: &z_loaned_string_array_t) -> usize {
+    this_.as_rust_type_ref().len()
 }
 
 /// @return ``true`` if the array is empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_string_array_is_empty(this: &z_loaned_string_array_t) -> bool {
-    this.as_rust_type_ref().is_empty()
+pub extern "C" fn z_string_array_is_empty(this_: &z_loaned_string_array_t) -> bool {
+    this_.as_rust_type_ref().is_empty()
 }
 
 /// @return the value at the position of index in the string array.

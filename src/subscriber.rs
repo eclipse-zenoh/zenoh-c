@@ -66,15 +66,15 @@ decl_c_type!(
 
 /// Constructs a subscriber in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_subscriber_null(this: &mut MaybeUninit<z_owned_subscriber_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_subscriber_null(this_: &mut MaybeUninit<z_owned_subscriber_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Borrows subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
+    this_.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -90,8 +90,8 @@ pub struct z_subscriber_options_t {
 
 /// Constructs the default value for `z_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn z_subscriber_options_default(this: &mut MaybeUninit<z_subscriber_options_t>) {
-    this.write(z_subscriber_options_t {
+pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
+    this_.write(z_subscriber_options_t {
         reliability: Reliability::DEFAULT.into(),
     });
 }
@@ -155,8 +155,8 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(_this: &mut z_moved_subscriber_t) -> result::z_result_t {
-    if let Some(s) = _this.take_rust_type() {
+pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
+    if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -173,6 +173,6 @@ pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_subscriber_check(this: &z_owned_subscriber_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }

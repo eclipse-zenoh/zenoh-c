@@ -2851,7 +2851,7 @@ ZENOHC_API void z_publisher_delete_options_default(struct z_publisher_delete_opt
 /**
  * Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.
  */
-ZENOHC_API void z_publisher_drop(struct z_moved_publisher_t *_this);
+ZENOHC_API void z_publisher_drop(struct z_moved_publisher_t *this_);
 /**
  * Returns the ID of the publisher.
  */
@@ -4079,7 +4079,7 @@ z_result_t z_undeclare_keyexpr(struct z_moved_keyexpr_t *this_,
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API z_result_t z_undeclare_publisher(struct z_moved_publisher_t *_this);
+ZENOHC_API z_result_t z_undeclare_publisher(struct z_moved_publisher_t *this_);
 /**
  * Undeclares a `z_owned_queryable_t` and drops it.
  *
@@ -4091,7 +4091,7 @@ ZENOHC_API z_result_t z_undeclare_queryable(struct z_moved_queryable_t *this_);
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API z_result_t z_undeclare_subscriber(struct z_moved_subscriber_t *_this);
+ZENOHC_API z_result_t z_undeclare_subscriber(struct z_moved_subscriber_t *this_);
 /**
  * Constructs a view key expression in empty state
  */
@@ -4651,7 +4651,7 @@ ZENOHC_API bool ze_publication_cache_check(const struct ze_owned_publication_cac
  * Drops publication cache. Also attempts to undeclare it.
  */
 #if defined(UNSTABLE)
-ZENOHC_API void ze_publication_cache_drop(struct ze_moved_publication_cache_t *_this);
+ZENOHC_API void ze_publication_cache_drop(struct ze_moved_publication_cache_t *this_);
 #endif
 /**
  * Constructs a publication cache in a gravestone state.
@@ -4675,7 +4675,7 @@ ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subs
  * Drops querying subscriber. Also attempts to undeclare it.
  */
 #if defined(UNSTABLE)
-ZENOHC_API void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_t *_this);
+ZENOHC_API void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_t *this_);
 #endif
 /**
  * Make querying subscriber perform an additional query on a specified selector.

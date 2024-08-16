@@ -303,62 +303,62 @@ where
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint8(this: &mut MaybeUninit<z_owned_bytes_t>, val: u8) {
-    z_bytes_serialize_from_arithmetic::<u8>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint8(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u8) {
+    z_bytes_serialize_from_arithmetic::<u8>(this_, val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint16(this: &mut MaybeUninit<z_owned_bytes_t>, val: u16) {
-    z_bytes_serialize_from_arithmetic::<u16>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint16(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u16) {
+    z_bytes_serialize_from_arithmetic::<u16>(this_, val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint32(this: &mut MaybeUninit<z_owned_bytes_t>, val: u32) {
-    z_bytes_serialize_from_arithmetic::<u32>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint32(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u32) {
+    z_bytes_serialize_from_arithmetic::<u32>(this_, val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_uint64(this: &mut MaybeUninit<z_owned_bytes_t>, val: u64) {
-    z_bytes_serialize_from_arithmetic::<u64>(this, val);
+pub extern "C" fn z_bytes_serialize_from_uint64(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u64) {
+    z_bytes_serialize_from_arithmetic::<u64>(this_, val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int8(this: &mut MaybeUninit<z_owned_bytes_t>, val: i8) {
-    z_bytes_serialize_from_arithmetic::<i8>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int8(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i8) {
+    z_bytes_serialize_from_arithmetic::<i8>(this_, val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int16(this: &mut MaybeUninit<z_owned_bytes_t>, val: i16) {
-    z_bytes_serialize_from_arithmetic::<i16>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int16(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i16) {
+    z_bytes_serialize_from_arithmetic::<i16>(this_, val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int32(this: &mut MaybeUninit<z_owned_bytes_t>, val: i32) {
-    z_bytes_serialize_from_arithmetic::<i32>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int32(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i32) {
+    z_bytes_serialize_from_arithmetic::<i32>(this_, val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_int64(this: &mut MaybeUninit<z_owned_bytes_t>, val: i64) {
-    z_bytes_serialize_from_arithmetic::<i64>(this, val);
+pub extern "C" fn z_bytes_serialize_from_int64(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i64) {
+    z_bytes_serialize_from_arithmetic::<i64>(this_, val);
 }
 
 /// Serializes a float.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_float(this: &mut MaybeUninit<z_owned_bytes_t>, val: f32) {
-    z_bytes_serialize_from_arithmetic::<f32>(this, val);
+pub extern "C" fn z_bytes_serialize_from_float(this_: &mut MaybeUninit<z_owned_bytes_t>, val: f32) {
+    z_bytes_serialize_from_arithmetic::<f32>(this_, val);
 }
 
 /// Serializes a double.
 #[no_mangle]
-pub extern "C" fn z_bytes_serialize_from_double(this: &mut MaybeUninit<z_owned_bytes_t>, val: f64) {
-    z_bytes_serialize_from_arithmetic::<f64>(this, val);
+pub extern "C" fn z_bytes_serialize_from_double(this_: &mut MaybeUninit<z_owned_bytes_t>, val: f64) {
+    z_bytes_serialize_from_arithmetic::<f64>(this_, val);
 }
 /// Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
@@ -879,8 +879,8 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 /// @return read position indicator on success or -1L if failure occurs.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_tell(this: &mut z_bytes_reader_t) -> i64 {
-    let reader = this.as_rust_type_mut();
+pub unsafe extern "C" fn z_bytes_reader_tell(this_: &mut z_bytes_reader_t) -> i64 {
+    let reader = this_.as_rust_type_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
 

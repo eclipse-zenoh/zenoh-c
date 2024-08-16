@@ -80,14 +80,14 @@ pub extern "C" fn z_shm_client_new(
 
 /// Constructs SHM client in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_client_null(this: &mut MaybeUninit<z_owned_shm_client_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_shm_client_null(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shm_client_check(this: &z_owned_shm_client_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_shm_client_check(this_: &z_owned_shm_client_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Deletes SHM Client

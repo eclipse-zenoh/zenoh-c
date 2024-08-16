@@ -71,34 +71,34 @@ decl_c_type!(
 
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
-pub extern "C" fn z_reply_err_null(this: &mut MaybeUninit<z_owned_reply_err_t>) {
-    this.as_rust_type_mut_uninit()
+pub extern "C" fn z_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
+    this_.as_rust_type_mut_uninit()
         .write(ReplyErrorNewtype::default());
 }
 
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_reply_err_check(this: &'static z_owned_reply_err_t) -> bool {
-    !this.as_rust_type_ref().payload().is_empty()
+pub extern "C" fn z_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
+    !this_.as_rust_type_ref().payload().is_empty()
 }
 
 /// Returns reply error payload.
 #[no_mangle]
-pub extern "C" fn z_reply_err_payload(this: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().payload().as_loaned_c_type_ref()
+pub extern "C" fn z_reply_err_payload(this_: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
+    this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
 /// Returns reply error encoding.
 #[no_mangle]
-pub extern "C" fn z_reply_err_encoding(this: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().encoding().as_loaned_c_type_ref()
+pub extern "C" fn z_reply_err_encoding(this_: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
+    this_.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 
 /// Borrows reply error.
 #[no_mangle]
-pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Frees the memory and resets the reply error it to its default value.
@@ -116,8 +116,8 @@ decl_c_type!(
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
-    this.as_rust_type_ref().result().is_ok()
+pub unsafe extern "C" fn z_reply_is_ok(this_: &z_loaned_reply_t) -> bool {
+    this_.as_rust_type_ref().result().is_ok()
 }
 
 /// Yields the contents of the reply by asserting it indicates a success.
@@ -125,8 +125,8 @@ pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
 /// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_sample_t {
-    match this.as_rust_type_ref().result() {
+pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned_sample_t {
+    match this_.as_rust_type_ref().result() {
         Ok(sample) => sample.as_loaned_c_type_ref() as _,
         Err(_) => null(),
     }
@@ -137,8 +137,8 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
-    match this.as_rust_type_ref().result() {
+pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
+    match this_.as_rust_type_ref().result() {
         Ok(_) => null(),
         Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_c_type_ref(),
     }
@@ -164,14 +164,14 @@ pub unsafe extern "C" fn z_reply_replier_id(
 
 /// Constructs the reply in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_reply_null(this: &mut MaybeUninit<z_owned_reply_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_reply_null(this_: &mut MaybeUninit<z_owned_reply_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 /// Constructs an owned shallow copy of reply in provided uninitialized memory location.
 #[no_mangle]
-pub extern "C" fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this: &z_loaned_reply_t) {
+pub extern "C" fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this_: &z_loaned_reply_t) {
     dst.as_rust_type_mut_uninit()
-        .write(Some(this.as_rust_type_ref().clone()));
+        .write(Some(this_.as_rust_type_ref().clone()));
 }
 
 /// Options passed to the `z_get()` function.
@@ -208,8 +208,8 @@ pub struct z_get_options_t {
 
 /// Constructs default `z_get_options_t`
 #[no_mangle]
-pub extern "C" fn z_get_options_default(this: &mut MaybeUninit<z_get_options_t>) {
-    this.write(z_get_options_t {
+pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
+    this_.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::default().into(),
@@ -313,15 +313,15 @@ pub extern "C" fn z_reply_drop(this_: &mut z_moved_reply_t) {
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_reply_check(this_: &z_owned_reply_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows reply.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_reply_t {
+    this_.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()

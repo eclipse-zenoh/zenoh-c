@@ -83,8 +83,8 @@ impl Drop for z_owned_closure_hello_t {
 /// Constructs a closure in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_hello_null(this: *mut MaybeUninit<z_owned_closure_hello_t>) {
-    (*this).write(z_owned_closure_hello_t::default());
+pub unsafe extern "C" fn z_closure_hello_null(this_: *mut MaybeUninit<z_owned_closure_hello_t>) {
+    (*this_).write(z_owned_closure_hello_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
@@ -129,8 +129,8 @@ impl<F: Fn(&z_loaned_hello_t)> From<F> for z_owned_closure_hello_t {
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_closure_hello_check(this: &z_owned_closure_hello_t) -> bool {
-    !this.is_empty()
+pub extern "C" fn z_closure_hello_check(this_: &z_owned_closure_hello_t) -> bool {
+    !this_.is_empty()
 }
 
 /// Borrows closure.
