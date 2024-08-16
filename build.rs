@@ -1150,10 +1150,10 @@ pub fn make_move_take_signatures(
     {
         let (prefix, _, semantic, postfix) = split_type_name(arg_type);
         let z_owned_type = format!("{}_{}_{}_{}*", prefix, "owned", semantic, postfix);
-        let z_moved_type = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
+        let z_moved_type = format!("{}_{}_{}_{}*", prefix, "moved", semantic, postfix);
         let move_f = FunctionSignature::new(
             semantic,
-            arg_type,
+            &z_moved_type,
             func_name_prefix.to_string() + "_move",
             vec![FuncArg::new(&z_owned_type, arg_name)],
         );
@@ -1414,7 +1414,7 @@ pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
     for sig in macro_func {
         let (prefix, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
         out += &format!(
-            "static inline void {}({} {}, {} {}) {{ *{} = *{}._ptr; {}_{}_null({}._ptr); }}\n",
+            "static inline void {}({} {}, {} {}) {{ *{} = {}->_this; {}_{}_null(&{}->_this); }}\n",
             sig.func_name,
             sig.args[0].typename.typename,
             sig.args[0].name,
@@ -1434,7 +1434,7 @@ pub fn generate_move_functions_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
-            "static inline {} {}({} x) {{ return ({}){{x}}; }}\n",
+            "static inline {} {}({} x) {{ return ({})(x); }}\n",
             sig.return_type.typename,
             sig.func_name,
             sig.args[0].typename.typename,
@@ -1448,7 +1448,7 @@ pub fn generate_move_functions_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
-            "static inline {} {}({} x) {{ return {}{{x}}; }}\n",
+            "static inline {} {}({} x) {{ return reinterpret_cast<{}>(x); }}\n",
             sig.return_type.typename,
             sig.func_name,
             sig.args[0].typename.typename,
