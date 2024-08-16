@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
+
+void parse_args(int argc, char** argv, z_owned_config_t* config);
 
 void callback(const z_loaned_sample_t* sample, void* context) {
     const z_loaned_publisher_t* pub = z_loan(*(z_owned_publisher_t*)context);
@@ -17,21 +20,11 @@ void drop(void* context) {
     //  which makes passing a pointer to the stack safe as long as `sub` is dropped in a scope where `pub` is still
     //  valid.
 }
-struct args_t {
-    char* config_path;       // -c
-    uint8_t help_requested;  // -h
-};
-struct args_t parse_args(int argc, char** argv);
 
 int main(int argc, char** argv) {
-    struct args_t args = parse_args(argc, argv);
-    if (args.help_requested) {
-        printf(
-            "-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the "
-            "default configuration will be used.\n");
-        return 1;
-    }
     z_owned_config_t config;
+    parse_args(argc, argv, &config);
+
     if (args.config_path) {
         zc_config_from_file(&config, args.config_path);
     } else {
@@ -50,31 +43,41 @@ int main(int argc, char** argv) {
     z_closure(&respond, callback, drop, (void*)&pub);
     z_owned_subscriber_t sub;
     z_declare_subscriber(&sub, z_loan(session), z_loan(ping), z_move(respond), NULL);
-    while (getchar() != 'q') {
+
+    while (1) {
+        z_sleep_s(1);
     }
     z_undeclare_subscriber(z_move(sub));
     z_close(z_move(session));
 }
 
-char* getopt(int argc, char** argv, char option) {
-    for (int i = 0; i < argc; i++) {
-        size_t len = strlen(argv[i]);
-        if (len >= 2 && argv[i][0] == '-' && argv[i][1] == option) {
-            if (len > 2 && argv[i][2] == '=') {
-                return argv[i] + 3;
-            } else if (i + 1 < argc) {
-                return argv[i + 1];
-            }
-        }
-    }
-    return NULL;
+void print_help() {
+    printf(
+        "\
+    Usage: z_pong [OPTIONS]\n\n\
+    Options:\n");
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
 }
 
-struct args_t parse_args(int argc, char** argv) {
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-h") == 0) {
-            return (struct args_t){.help_requested = 1};
-        }
+void parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
     }
-    return (struct args_t){.help_requested = 0, .config_path = getopt(argc, argv, 'c')};
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
 }

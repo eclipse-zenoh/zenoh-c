@@ -14,27 +14,24 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-const char *keyexpr = "demo/example/zenoh-c-queryable";
-const char *value = "Queryable from C!";
+#define DEFAULT_KEYEXPR "demo/example/zenoh-c-queryable"
+#define DEFAULT_VALUE "Queryable from C!"
+
+struct args_t {
+    char* keyexpr;  // -k
+    char* value;    // -v
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
 z_view_keyexpr_t ke;
 
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        keyexpr = argv[1];
-    }
+int main(int argc, char** argv) {
     z_owned_config_t config;
     z_config_default(&config);
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
     z_owned_session_t s;
@@ -43,12 +40,12 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    if (z_view_keyexpr_from_str(&ke, keyexpr) < 0) {
+    if (z_view_keyexpr_from_str(&ke, args.keyexpr) < 0) {
         printf("%s is not a valid key expression", keyexpr);
         exit(-1);
     }
 
-    printf("Declaring Queryable on '%s'...\n", keyexpr);
+    printf("Declaring Queryable on '%s'...\n", args.keyexpr);
     z_owned_fifo_handler_query_t handler;
     z_owned_closure_query_t closure;
     z_fifo_channel_query_new(&closure, &handler, 16);
@@ -59,17 +56,17 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("^C to quit...\n");
+    printf("Press CTRL-C to quit...\n");
     z_owned_query_t oquery;
     for (z_result_t res = z_recv(z_loan(handler), &oquery); res == Z_OK; res = z_recv(z_loan(handler), &oquery)) {
-        const z_loaned_query_t *query = z_loan(oquery);
+        const z_loaned_query_t* query = z_loan(oquery);
         z_view_string_t key_string;
         z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
 
         z_view_string_t params;
         z_query_parameters(query, &params);
 
-        const z_loaned_bytes_t *payload = z_query_payload(query);
+        const z_loaned_bytes_t* payload = z_query_payload(query);
         if (payload != NULL && z_bytes_len(payload) > 0) {
             z_owned_string_t payload_string;
             z_bytes_deserialize_into_string(payload, &payload_string);
@@ -96,4 +93,47 @@ int main(int argc, char **argv) {
     z_drop(z_move(handler));
     z_close(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_queryable_with_channels [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEYEXPR> (optional, string, default='%s'): The key expression matching queries to reply to\n\
+        -v <VALUE> (optional, string, default='%s'): The value to reply to queries with\n",
+        DEFAULT_KEYEXPR, DEFAULT_VALUE);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    const char* value = parse_opt(argc, argv, "v", true);
+    if (!value) {
+        value = DEFAULT_VALUE;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value};
 }
