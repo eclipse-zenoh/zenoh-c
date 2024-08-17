@@ -22,11 +22,11 @@
 z_view_keyexpr_t ke;
 
 struct args_t {
-    char* keyexpr; // -k
-    char* value; // -v
+    char *keyexpr;  // -k
+    char *value;    // -v
 };
 
-char* value;
+char *value;
 
 struct args_t parse_args(int argc, char **argv, z_owned_config_t *config);
 
