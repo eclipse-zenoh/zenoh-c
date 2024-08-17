@@ -39,7 +39,6 @@ void matching_status_handler(const zc_matching_status_t* matching_status, void* 
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");

@@ -39,7 +39,6 @@ void data_handler(const z_loaned_sample_t* sample, void* arg) {
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");

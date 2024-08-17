@@ -26,7 +26,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
 
     z_view_keyexpr_t keyexpr;

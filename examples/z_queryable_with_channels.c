@@ -30,7 +30,6 @@ z_view_keyexpr_t ke;
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
