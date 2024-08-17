@@ -50,8 +50,9 @@ int main(int argc, char** argv) {
     }
 
     printf("Press CTRL-C to quit...\n");
+    z_owned_bytes_t payload;
     while (1) {
-        z_bytes_from_buf(&payload, value, len, NULL, NULL);
+        z_bytes_from_buf(&payload, value, args.size, NULL, NULL);
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 

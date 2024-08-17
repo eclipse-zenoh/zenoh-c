@@ -27,6 +27,7 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
+#ifdef UNSTABLE
 void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");

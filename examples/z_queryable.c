@@ -21,6 +21,15 @@
 #define DEFAULT_VALUE "Queryable from C!"
 z_view_keyexpr_t ke;
 
+struct args_t {
+    char* keyexpr; // -k
+    char* value; // -v
+};
+
+char* value;
+
+struct args_t parse_args(int argc, char **argv, z_owned_config_t *config);
+
 void query_handler(const z_loaned_query_t *query, void *context) {
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
@@ -55,7 +64,6 @@ void query_handler(const z_loaned_query_t *query, void *context) {
 
 int main(int argc, char **argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
     value = args.value;
 
