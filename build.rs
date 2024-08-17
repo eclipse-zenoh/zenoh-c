@@ -1507,6 +1507,20 @@ pub fn generate_generic_cpp(
     generic_name: &str,
     decay: bool,
 ) -> String {
+    if decay {
+        let mut out = generate_generic_cpp_impl(macro_func, generic_name, false);
+        out += &generate_generic_cpp_impl(macro_func, generic_name, true);
+        out
+    } else {
+        generate_generic_cpp_impl(macro_func, generic_name, false)
+    }
+}
+
+pub fn generate_generic_cpp_impl(
+    macro_func: &[FunctionSignature],
+    generic_name: &str,
+    decay: bool,
+) -> String {
     let mut out = "".to_owned();
 
     let (body_start, body_end) = if macro_func.iter().any(|f| f.args.len() > 1) {
