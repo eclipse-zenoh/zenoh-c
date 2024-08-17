@@ -1345,7 +1345,7 @@ pub fn generate_generic_c(
     let va_args = macro_func
         .iter()
         .any(|f| f.args.len() != macro_func[0].args.len());
-    let mut args = macro_func
+    let args = macro_func
         .first()
         .unwrap_or_else(|| panic!("no sigatures found for building generic {generic_name}"))
         .args
@@ -1367,26 +1367,35 @@ pub fn generate_generic_c(
             args[0],
         )
     };
-    if decay {
-        args[0] = format!("&{}", args[0]);
-    }
-
     for func in macro_func {
-        let owned_type = if decay {
-            func.args[0].typename.clone().decay().typename
-        } else {
-            func.args[0].typename.typename.clone()
-        };
         let func_name = &func.func_name;
+        let select_type = func.args[0].typename.typename.clone();
         out += ", \\\n";
-        out += &format!("        {owned_type} : {func_name}");
+        out += &format!("        {select_type} : {func_name}");
+        if decay {
+            let select_type = func.args[0].typename.clone().decay().typename;
+            out += ", \\\n";
+            out += &format!("        {select_type} : {func_name}");
+        }
     }
-    out += " \\\n";
-    if va_args {
-        out += &format!("    )({}, __VA_ARGS__)", args.join(", "));
+    out += " \\\n    )(";
+    let sargs = args.join(", ") + if va_args { ", __VA_ARGS__" } else { "" };
+    if decay {
+        out += format!("_Generic(({})", args[0]).as_str();
+        for func in macro_func {
+            let select_type = func.args[0].typename.typename.clone();
+            out += ", \\\n";
+            out += &format!("        {select_type} : ({sargs})");
+
+            let select_type = func.args[0].typename.clone().decay().typename;
+            out += ", \\\n";
+            out += &format!("        {select_type} : (&{sargs})");
+        }
+        out += " \\\n    )";
     } else {
-        out += &format!("    )({})", args.join(", "));
+        out += &sargs;
     }
+    out += ")\n";
     out
 }
 

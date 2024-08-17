@@ -182,7 +182,7 @@ void parse_zenoh_common_args(const int argc, char** argv, z_owned_config_t* conf
     // -c: A configuration file.
     const char* config_file = parse_opt(argc, argv, "c", true);
     if (config_file) {
-        *config = zc_config_from_file(config_file);
+        zc_config_from_file(config, config_file);
     }
     // -m: The Zenoh session mode [default: peer].
     const char* mode = parse_opt(argc, argv, "m", true);

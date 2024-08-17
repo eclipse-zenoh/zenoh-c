@@ -38,49 +38,167 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 
 #define z_loan(this_) \
     _Generic((this_), \
+        const z_owned_bytes_t* : z_bytes_loan, \
         z_owned_bytes_t : z_bytes_loan, \
+        const z_owned_closure_hello_t* : z_closure_hello_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
+        const z_owned_closure_query_t* : z_closure_query_loan, \
         z_owned_closure_query_t : z_closure_query_loan, \
+        const z_owned_closure_reply_t* : z_closure_reply_loan, \
         z_owned_closure_reply_t : z_closure_reply_loan, \
+        const z_owned_closure_sample_t* : z_closure_sample_loan, \
         z_owned_closure_sample_t : z_closure_sample_loan, \
+        const z_owned_condvar_t* : z_condvar_loan, \
         z_owned_condvar_t : z_condvar_loan, \
+        const z_owned_config_t* : z_config_loan, \
         z_owned_config_t : z_config_loan, \
+        const z_owned_encoding_t* : z_encoding_loan, \
         z_owned_encoding_t : z_encoding_loan, \
+        const z_owned_fifo_handler_query_t* : z_fifo_handler_query_loan, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_loan, \
+        const z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_loan, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_loan, \
+        const z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_loan, \
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_loan, \
+        const z_owned_hello_t* : z_hello_loan, \
         z_owned_hello_t : z_hello_loan, \
+        const z_owned_keyexpr_t* : z_keyexpr_loan, \
         z_owned_keyexpr_t : z_keyexpr_loan, \
+        const z_owned_publisher_t* : z_publisher_loan, \
         z_owned_publisher_t : z_publisher_loan, \
+        const z_owned_query_t* : z_query_loan, \
         z_owned_query_t : z_query_loan, \
+        const z_owned_queryable_t* : z_queryable_loan, \
         z_owned_queryable_t : z_queryable_loan, \
+        const z_owned_reply_err_t* : z_reply_err_loan, \
         z_owned_reply_err_t : z_reply_err_loan, \
+        const z_owned_reply_t* : z_reply_loan, \
         z_owned_reply_t : z_reply_loan, \
+        const z_owned_ring_handler_query_t* : z_ring_handler_query_loan, \
         z_owned_ring_handler_query_t : z_ring_handler_query_loan, \
+        const z_owned_ring_handler_reply_t* : z_ring_handler_reply_loan, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_loan, \
+        const z_owned_ring_handler_sample_t* : z_ring_handler_sample_loan, \
         z_owned_ring_handler_sample_t : z_ring_handler_sample_loan, \
+        const z_owned_sample_t* : z_sample_loan, \
         z_owned_sample_t : z_sample_loan, \
+        const z_owned_session_t* : z_session_loan, \
         z_owned_session_t : z_session_loan, \
+        const z_owned_slice_t* : z_slice_loan, \
         z_owned_slice_t : z_slice_loan, \
+        const z_owned_string_array_t* : z_string_array_loan, \
         z_owned_string_array_t : z_string_array_loan, \
+        const z_owned_string_t* : z_string_loan, \
         z_owned_string_t : z_string_loan, \
+        const z_owned_subscriber_t* : z_subscriber_loan, \
         z_owned_subscriber_t : z_subscriber_loan, \
+        const z_view_keyexpr_t* : z_view_keyexpr_loan, \
         z_view_keyexpr_t : z_view_keyexpr_loan, \
+        const z_view_slice_t* : z_view_slice_loan, \
         z_view_slice_t : z_view_slice_loan, \
+        const z_view_string_t* : z_view_string_loan, \
         z_view_string_t : z_view_string_loan, \
+        const zc_owned_closure_log_t* : zc_closure_log_loan, \
         zc_owned_closure_log_t : zc_closure_log_loan \
-    )(&this_)
+    )(_Generic((this_), \
+        const z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        const z_owned_closure_hello_t* : (this_), \
+        z_owned_closure_hello_t : (&this_), \
+        const z_owned_closure_query_t* : (this_), \
+        z_owned_closure_query_t : (&this_), \
+        const z_owned_closure_reply_t* : (this_), \
+        z_owned_closure_reply_t : (&this_), \
+        const z_owned_closure_sample_t* : (this_), \
+        z_owned_closure_sample_t : (&this_), \
+        const z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        const z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        const z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        const z_owned_fifo_handler_query_t* : (this_), \
+        z_owned_fifo_handler_query_t : (&this_), \
+        const z_owned_fifo_handler_reply_t* : (this_), \
+        z_owned_fifo_handler_reply_t : (&this_), \
+        const z_owned_fifo_handler_sample_t* : (this_), \
+        z_owned_fifo_handler_sample_t : (&this_), \
+        const z_owned_hello_t* : (this_), \
+        z_owned_hello_t : (&this_), \
+        const z_owned_keyexpr_t* : (this_), \
+        z_owned_keyexpr_t : (&this_), \
+        const z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        const z_owned_query_t* : (this_), \
+        z_owned_query_t : (&this_), \
+        const z_owned_queryable_t* : (this_), \
+        z_owned_queryable_t : (&this_), \
+        const z_owned_reply_err_t* : (this_), \
+        z_owned_reply_err_t : (&this_), \
+        const z_owned_reply_t* : (this_), \
+        z_owned_reply_t : (&this_), \
+        const z_owned_ring_handler_query_t* : (this_), \
+        z_owned_ring_handler_query_t : (&this_), \
+        const z_owned_ring_handler_reply_t* : (this_), \
+        z_owned_ring_handler_reply_t : (&this_), \
+        const z_owned_ring_handler_sample_t* : (this_), \
+        z_owned_ring_handler_sample_t : (&this_), \
+        const z_owned_sample_t* : (this_), \
+        z_owned_sample_t : (&this_), \
+        const z_owned_session_t* : (this_), \
+        z_owned_session_t : (&this_), \
+        const z_owned_slice_t* : (this_), \
+        z_owned_slice_t : (&this_), \
+        const z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_), \
+        const z_owned_string_t* : (this_), \
+        z_owned_string_t : (&this_), \
+        const z_owned_subscriber_t* : (this_), \
+        z_owned_subscriber_t : (&this_), \
+        const z_view_keyexpr_t* : (this_), \
+        z_view_keyexpr_t : (&this_), \
+        const z_view_slice_t* : (this_), \
+        z_view_slice_t : (&this_), \
+        const z_view_string_t* : (this_), \
+        z_view_string_t : (&this_), \
+        const zc_owned_closure_log_t* : (this_), \
+        zc_owned_closure_log_t : (&this_) \
+    ))
+
 
 #define z_loan_mut(this_) \
     _Generic((this_), \
+        z_owned_bytes_t* : z_bytes_loan_mut, \
         z_owned_bytes_t : z_bytes_loan_mut, \
+        z_owned_condvar_t* : z_condvar_loan_mut, \
         z_owned_condvar_t : z_condvar_loan_mut, \
+        z_owned_config_t* : z_config_loan_mut, \
         z_owned_config_t : z_config_loan_mut, \
+        z_owned_encoding_t* : z_encoding_loan_mut, \
         z_owned_encoding_t : z_encoding_loan_mut, \
+        z_owned_mutex_t* : z_mutex_loan_mut, \
         z_owned_mutex_t : z_mutex_loan_mut, \
+        z_owned_publisher_t* : z_publisher_loan_mut, \
         z_owned_publisher_t : z_publisher_loan_mut, \
+        z_owned_string_array_t* : z_string_array_loan_mut, \
         z_owned_string_array_t : z_string_array_loan_mut \
-    )(&this_)
+    )(_Generic((this_), \
+        z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        z_owned_mutex_t* : (this_), \
+        z_owned_mutex_t : (&this_), \
+        z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_) \
+    ))
+
 
 #define z_drop(this_) \
     _Generic((this_), \
@@ -116,39 +234,132 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
         zc_moved_closure_log_t* : zc_closure_log_drop \
     )(this_)
 
+
 #define z_move(this_) \
     _Generic((this_), \
+        z_owned_bytes_t* : z_bytes_move, \
         z_owned_bytes_t : z_bytes_move, \
+        z_owned_closure_hello_t* : z_closure_hello_move, \
         z_owned_closure_hello_t : z_closure_hello_move, \
+        z_owned_closure_query_t* : z_closure_query_move, \
         z_owned_closure_query_t : z_closure_query_move, \
+        z_owned_closure_reply_t* : z_closure_reply_move, \
         z_owned_closure_reply_t : z_closure_reply_move, \
+        z_owned_closure_sample_t* : z_closure_sample_move, \
         z_owned_closure_sample_t : z_closure_sample_move, \
+        z_owned_condvar_t* : z_condvar_move, \
         z_owned_condvar_t : z_condvar_move, \
+        z_owned_config_t* : z_config_move, \
         z_owned_config_t : z_config_move, \
+        z_owned_encoding_t* : z_encoding_move, \
         z_owned_encoding_t : z_encoding_move, \
+        z_owned_fifo_handler_query_t* : z_fifo_handler_query_move, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_move, \
+        z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_move, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_move, \
+        z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_move, \
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_move, \
+        z_owned_hello_t* : z_hello_move, \
         z_owned_hello_t : z_hello_move, \
+        z_owned_keyexpr_t* : z_keyexpr_move, \
         z_owned_keyexpr_t : z_keyexpr_move, \
+        z_owned_mutex_t* : z_mutex_move, \
         z_owned_mutex_t : z_mutex_move, \
+        z_owned_publisher_t* : z_publisher_move, \
         z_owned_publisher_t : z_publisher_move, \
+        z_owned_query_t* : z_query_move, \
         z_owned_query_t : z_query_move, \
+        z_owned_queryable_t* : z_queryable_move, \
         z_owned_queryable_t : z_queryable_move, \
+        z_owned_reply_t* : z_reply_move, \
         z_owned_reply_t : z_reply_move, \
+        z_owned_reply_err_t* : z_reply_err_move, \
         z_owned_reply_err_t : z_reply_err_move, \
+        z_owned_ring_handler_query_t* : z_ring_handler_query_move, \
         z_owned_ring_handler_query_t : z_ring_handler_query_move, \
+        z_owned_ring_handler_reply_t* : z_ring_handler_reply_move, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_move, \
+        z_owned_ring_handler_sample_t* : z_ring_handler_sample_move, \
         z_owned_ring_handler_sample_t : z_ring_handler_sample_move, \
+        z_owned_sample_t* : z_sample_move, \
         z_owned_sample_t : z_sample_move, \
+        z_owned_session_t* : z_session_move, \
         z_owned_session_t : z_session_move, \
+        z_owned_slice_t* : z_slice_move, \
         z_owned_slice_t : z_slice_move, \
+        z_owned_string_array_t* : z_string_array_move, \
         z_owned_string_array_t : z_string_array_move, \
+        z_owned_string_t* : z_string_move, \
         z_owned_string_t : z_string_move, \
+        z_owned_subscriber_t* : z_subscriber_move, \
         z_owned_subscriber_t : z_subscriber_move, \
+        z_owned_task_t* : z_task_move, \
         z_owned_task_t : z_task_move, \
+        zc_owned_closure_log_t* : zc_closure_log_move, \
         zc_owned_closure_log_t : zc_closure_log_move \
-    )(&this_)
+    )(_Generic((this_), \
+        z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        z_owned_closure_hello_t* : (this_), \
+        z_owned_closure_hello_t : (&this_), \
+        z_owned_closure_query_t* : (this_), \
+        z_owned_closure_query_t : (&this_), \
+        z_owned_closure_reply_t* : (this_), \
+        z_owned_closure_reply_t : (&this_), \
+        z_owned_closure_sample_t* : (this_), \
+        z_owned_closure_sample_t : (&this_), \
+        z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        z_owned_fifo_handler_query_t* : (this_), \
+        z_owned_fifo_handler_query_t : (&this_), \
+        z_owned_fifo_handler_reply_t* : (this_), \
+        z_owned_fifo_handler_reply_t : (&this_), \
+        z_owned_fifo_handler_sample_t* : (this_), \
+        z_owned_fifo_handler_sample_t : (&this_), \
+        z_owned_hello_t* : (this_), \
+        z_owned_hello_t : (&this_), \
+        z_owned_keyexpr_t* : (this_), \
+        z_owned_keyexpr_t : (&this_), \
+        z_owned_mutex_t* : (this_), \
+        z_owned_mutex_t : (&this_), \
+        z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        z_owned_query_t* : (this_), \
+        z_owned_query_t : (&this_), \
+        z_owned_queryable_t* : (this_), \
+        z_owned_queryable_t : (&this_), \
+        z_owned_reply_t* : (this_), \
+        z_owned_reply_t : (&this_), \
+        z_owned_reply_err_t* : (this_), \
+        z_owned_reply_err_t : (&this_), \
+        z_owned_ring_handler_query_t* : (this_), \
+        z_owned_ring_handler_query_t : (&this_), \
+        z_owned_ring_handler_reply_t* : (this_), \
+        z_owned_ring_handler_reply_t : (&this_), \
+        z_owned_ring_handler_sample_t* : (this_), \
+        z_owned_ring_handler_sample_t : (&this_), \
+        z_owned_sample_t* : (this_), \
+        z_owned_sample_t : (&this_), \
+        z_owned_session_t* : (this_), \
+        z_owned_session_t : (&this_), \
+        z_owned_slice_t* : (this_), \
+        z_owned_slice_t : (&this_), \
+        z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_), \
+        z_owned_string_t* : (this_), \
+        z_owned_string_t : (&this_), \
+        z_owned_subscriber_t* : (this_), \
+        z_owned_subscriber_t : (&this_), \
+        z_owned_task_t* : (this_), \
+        z_owned_task_t : (&this_), \
+        zc_owned_closure_log_t* : (this_), \
+        zc_owned_closure_log_t : (&this_) \
+    ))
+
 
 #define z_null(this_) \
     _Generic((this_), \
@@ -183,6 +394,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
         z_owned_task_t* : z_task_null, \
         zc_owned_closure_log_t* : zc_closure_log_null \
     )(this_)
+
 
 static inline void z_bytes_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) { *this_ = x->_this; z_bytes_null(&x->_this); }
 static inline void z_closure_hello_take(z_owned_closure_hello_t* this_, z_moved_closure_hello_t* x) { *this_ = x->_this; z_closure_hello_null(&x->_this); }
@@ -250,39 +462,132 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         zc_owned_closure_log_t* : zc_closure_log_take \
     )(this_, x)
 
+
 #define z_check(this_) \
     _Generic((this_), \
+        const z_owned_bytes_t* : z_bytes_check, \
         z_owned_bytes_t : z_bytes_check, \
+        const z_owned_closure_hello_t* : z_closure_hello_check, \
         z_owned_closure_hello_t : z_closure_hello_check, \
+        const z_owned_closure_query_t* : z_closure_query_check, \
         z_owned_closure_query_t : z_closure_query_check, \
+        const z_owned_closure_reply_t* : z_closure_reply_check, \
         z_owned_closure_reply_t : z_closure_reply_check, \
+        const z_owned_closure_sample_t* : z_closure_sample_check, \
         z_owned_closure_sample_t : z_closure_sample_check, \
+        const z_owned_condvar_t* : z_condvar_check, \
         z_owned_condvar_t : z_condvar_check, \
+        const z_owned_config_t* : z_config_check, \
         z_owned_config_t : z_config_check, \
+        const z_owned_encoding_t* : z_encoding_check, \
         z_owned_encoding_t : z_encoding_check, \
+        const z_owned_fifo_handler_query_t* : z_fifo_handler_query_check, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_check, \
+        const z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_check, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_check, \
+        const z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_check, \
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_check, \
+        const z_owned_hello_t* : z_hello_check, \
         z_owned_hello_t : z_hello_check, \
+        const z_owned_keyexpr_t* : z_keyexpr_check, \
         z_owned_keyexpr_t : z_keyexpr_check, \
+        const z_owned_mutex_t* : z_mutex_check, \
         z_owned_mutex_t : z_mutex_check, \
+        const z_owned_publisher_t* : z_publisher_check, \
         z_owned_publisher_t : z_publisher_check, \
+        const z_owned_query_t* : z_query_check, \
         z_owned_query_t : z_query_check, \
+        const z_owned_queryable_t* : z_queryable_check, \
         z_owned_queryable_t : z_queryable_check, \
+        const z_owned_reply_t* : z_reply_check, \
         z_owned_reply_t : z_reply_check, \
+        const z_owned_reply_err_t* : z_reply_err_check, \
         z_owned_reply_err_t : z_reply_err_check, \
+        const z_owned_ring_handler_query_t* : z_ring_handler_query_check, \
         z_owned_ring_handler_query_t : z_ring_handler_query_check, \
+        const z_owned_ring_handler_reply_t* : z_ring_handler_reply_check, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_check, \
+        const z_owned_ring_handler_sample_t* : z_ring_handler_sample_check, \
         z_owned_ring_handler_sample_t : z_ring_handler_sample_check, \
+        const z_owned_sample_t* : z_sample_check, \
         z_owned_sample_t : z_sample_check, \
+        const z_owned_session_t* : z_session_check, \
         z_owned_session_t : z_session_check, \
+        const z_owned_slice_t* : z_slice_check, \
         z_owned_slice_t : z_slice_check, \
+        const z_owned_string_array_t* : z_string_array_check, \
         z_owned_string_array_t : z_string_array_check, \
+        const z_owned_string_t* : z_string_check, \
         z_owned_string_t : z_string_check, \
+        const z_owned_subscriber_t* : z_subscriber_check, \
         z_owned_subscriber_t : z_subscriber_check, \
+        const z_owned_task_t* : z_task_check, \
         z_owned_task_t : z_task_check, \
+        const zc_owned_closure_log_t* : zc_closure_log_check, \
         zc_owned_closure_log_t : zc_closure_log_check \
-    )(&this_)
+    )(_Generic((this_), \
+        const z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        const z_owned_closure_hello_t* : (this_), \
+        z_owned_closure_hello_t : (&this_), \
+        const z_owned_closure_query_t* : (this_), \
+        z_owned_closure_query_t : (&this_), \
+        const z_owned_closure_reply_t* : (this_), \
+        z_owned_closure_reply_t : (&this_), \
+        const z_owned_closure_sample_t* : (this_), \
+        z_owned_closure_sample_t : (&this_), \
+        const z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        const z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        const z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        const z_owned_fifo_handler_query_t* : (this_), \
+        z_owned_fifo_handler_query_t : (&this_), \
+        const z_owned_fifo_handler_reply_t* : (this_), \
+        z_owned_fifo_handler_reply_t : (&this_), \
+        const z_owned_fifo_handler_sample_t* : (this_), \
+        z_owned_fifo_handler_sample_t : (&this_), \
+        const z_owned_hello_t* : (this_), \
+        z_owned_hello_t : (&this_), \
+        const z_owned_keyexpr_t* : (this_), \
+        z_owned_keyexpr_t : (&this_), \
+        const z_owned_mutex_t* : (this_), \
+        z_owned_mutex_t : (&this_), \
+        const z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        const z_owned_query_t* : (this_), \
+        z_owned_query_t : (&this_), \
+        const z_owned_queryable_t* : (this_), \
+        z_owned_queryable_t : (&this_), \
+        const z_owned_reply_t* : (this_), \
+        z_owned_reply_t : (&this_), \
+        const z_owned_reply_err_t* : (this_), \
+        z_owned_reply_err_t : (&this_), \
+        const z_owned_ring_handler_query_t* : (this_), \
+        z_owned_ring_handler_query_t : (&this_), \
+        const z_owned_ring_handler_reply_t* : (this_), \
+        z_owned_ring_handler_reply_t : (&this_), \
+        const z_owned_ring_handler_sample_t* : (this_), \
+        z_owned_ring_handler_sample_t : (&this_), \
+        const z_owned_sample_t* : (this_), \
+        z_owned_sample_t : (&this_), \
+        const z_owned_session_t* : (this_), \
+        z_owned_session_t : (&this_), \
+        const z_owned_slice_t* : (this_), \
+        z_owned_slice_t : (&this_), \
+        const z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_), \
+        const z_owned_string_t* : (this_), \
+        z_owned_string_t : (&this_), \
+        const z_owned_subscriber_t* : (this_), \
+        z_owned_subscriber_t : (&this_), \
+        const z_owned_task_t* : (this_), \
+        z_owned_task_t : (&this_), \
+        const zc_owned_closure_log_t* : (this_), \
+        zc_owned_closure_log_t : (&this_) \
+    ))
+
 
 #define z_call(closure, hello) \
     _Generic((closure), \
@@ -291,6 +596,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_closure_reply_t* : z_closure_reply_call, \
         const z_loaned_closure_sample_t* : z_closure_sample_call \
     )(closure, hello)
+
 
 #define z_closure(x, callback, dropper, ctx) \
     {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}
@@ -305,6 +611,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_ring_handler_sample_t* : z_ring_handler_sample_try_recv \
     )(this_, query)
 
+
 #define z_recv(this_, query) \
     _Generic((this_), \
         const z_loaned_fifo_handler_query_t* : z_fifo_handler_query_recv, \
@@ -314,6 +621,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_ring_handler_reply_t* : z_ring_handler_reply_recv, \
         const z_loaned_ring_handler_sample_t* : z_ring_handler_sample_recv \
     )(this_, query)
+
 #else  // #ifndef __cplusplus
 
 
