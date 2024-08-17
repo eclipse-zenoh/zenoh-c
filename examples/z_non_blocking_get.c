@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     struct args_t args = parse_args(argc, argv, &config);
 
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr_from_str(&keyexpr, args.keyexpr) < 0) {
+    if (z_view_keyexpr_from_str(&keyexpr, args.selector) < 0) {
         printf("%s is not a valid key expression", args.selector);
         exit(-1);
     }
