@@ -32,14 +32,8 @@ struct args_t {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
-    struct args_t args = parse_args(argc, argv, &config);
-
     z_owned_config_t config;
-    if (args.config_path) {
-        zc_config_from_file(&config, args.config_path);
-    } else {
-        z_config_default(&config);
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     z_mutex_init(&mutex);
     z_condvar_init(&cond);

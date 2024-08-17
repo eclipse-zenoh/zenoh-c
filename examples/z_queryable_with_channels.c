@@ -30,7 +30,6 @@ z_view_keyexpr_t ke;
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
@@ -41,7 +40,7 @@ int main(int argc, char** argv) {
     }
 
     if (z_view_keyexpr_from_str(&ke, args.keyexpr) < 0) {
-        printf("%s is not a valid key expression", keyexpr);
+        printf("%s is not a valid key expression", args.keyexpr);
         exit(-1);
     }
 
@@ -84,7 +83,7 @@ int main(int argc, char** argv) {
         z_query_reply_options_default(&options);
 
         z_owned_bytes_t reply_payload;
-        z_bytes_from_static_str(&reply_payload, value);
+        z_bytes_from_static_str(&reply_payload, args.value);
         z_query_reply(query, z_loan(ke), z_move(reply_payload), &options);
         z_drop(z_move(oquery));
     }

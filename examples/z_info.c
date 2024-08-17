@@ -27,7 +27,6 @@ void print_zid(const z_id_t* id, void* ctx) {
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     parse_args(argc, argv, &config);
 
     printf("Opening session...\n");

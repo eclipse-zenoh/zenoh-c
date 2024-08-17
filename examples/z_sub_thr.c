@@ -64,7 +64,6 @@ void drop_stats(void *context) {
 
 int main(int argc, char **argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     parse_args(argc, argv, &config);
 
 #ifdef SHARED_MEMORY

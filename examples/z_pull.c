@@ -38,7 +38,6 @@ void handle_sample(const z_loaned_sample_t* sample) {
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
@@ -52,9 +51,9 @@ int main(int argc, char** argv) {
     z_owned_ring_handler_sample_t handler;
     z_owned_closure_sample_t closure;
 
-    printf("Declaring Subscriber on '%s'...\n", expr);
+    printf("Declaring Subscriber on '%s'...\n", args.keyexpr);
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_str(&ke, expr);
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
     z_owned_subscriber_t sub;
 
     if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(closure), NULL) < 0) {

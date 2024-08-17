@@ -25,12 +25,6 @@ int main(int argc, char** argv) {
     z_owned_config_t config;
     parse_args(argc, argv, &config);
 
-    if (args.config_path) {
-        zc_config_from_file(&config, args.config_path);
-    } else {
-        z_config_default(&config);
-    }
-
     z_owned_session_t session;
     z_open(&session, z_move(config));
     z_view_keyexpr_t ping;

@@ -23,6 +23,7 @@ struct args_t {
     char* keyexpr;  // -k
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+const char* kind_to_str(z_sample_kind_t kind);
 
 void data_handler(const z_loaned_sample_t* sample, void* arg) {
     z_view_string_t key_string;
@@ -63,7 +64,6 @@ void data_handler(const z_loaned_sample_t* sample, void* arg) {
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
     struct args_t args = parse_args(argc, argv, &config);
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, args.keyexpr);
