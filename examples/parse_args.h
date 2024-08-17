@@ -208,7 +208,8 @@ void parse_zenoh_common_args(const int argc, char** argv, z_owned_config_t* conf
     parse_zenoh_json_list_config(argc, argv, "l", Z_CONFIG_LISTEN_KEY, config);
     // --no-multicast-scrouting: Disable the multicast-based scouting mechanism.
     const char* no_multicast_scouting = parse_opt(argc, argv, "no-multicast-scouting", false);
-    if (no_multicast_scouting && zc_config_insert_json(z_loan_mut(*config), Z_CONFIG_MULTICAST_SCOUTING_KEY, "false") < 0) {
+    if (no_multicast_scouting &&
+        zc_config_insert_json(z_loan_mut(*config), Z_CONFIG_MULTICAST_SCOUTING_KEY, "false") < 0) {
         printf("Couldn't disable multicast-scouting.\n");
         exit(-1);
     }
