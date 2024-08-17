@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
         zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
     }
 #else
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
         exit(-1);
     }
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 #ifdef UNSTABLE
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         zc_publisher_matching_listener_undeclare(z_move(listener));
     }
 #endif

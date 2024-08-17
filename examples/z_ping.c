@@ -32,9 +32,9 @@ struct args_t {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
-    z_owned_config_t config;
     if (args.config_path) {
         zc_config_from_file(&config, args.config_path);
     } else {
