@@ -35,12 +35,6 @@ int main(int argc, char** argv) {
     z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
-    if (args.config_path) {
-        zc_config_from_file(&config, args.config_path);
-    } else {
-        z_config_default(&config);
-    }
-
     z_mutex_init(&mutex);
     z_condvar_init(&cond);
     z_owned_session_t session;
