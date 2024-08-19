@@ -25,19 +25,19 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
 };
 decl_c_type!(
     owned(z_owned_fifo_handler_sample_t, option flume::Receiver<Sample>),
     loaned(z_loaned_fifo_handler_sample_t),
-    moved(z_moved_fifo_handler_sample_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_fifo_handler_sample_drop(this: z_moved_fifo_handler_sample_t) {}
+pub extern "C" fn z_fifo_handler_sample_drop(this_: &mut z_moved_fifo_handler_sample_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
@@ -49,8 +49,8 @@ pub extern "C" fn z_fifo_handler_sample_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_sample_check(this: &z_owned_fifo_handler_sample_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_fifo_handler_sample_check(this_: &z_owned_fifo_handler_sample_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 extern "C" fn __z_handler_sample_send(sample: &z_loaned_sample_t, context: *mut c_void) {
@@ -153,13 +153,13 @@ decl_c_type!(
         option RingChannelHandler<Sample>,
     ),
     loaned(z_loaned_ring_handler_sample_t),
-    moved(z_moved_ring_handler_sample_t)
 );
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_ring_handler_sample_drop(this: z_moved_ring_handler_sample_t) {}
+pub extern "C" fn z_ring_handler_sample_drop(this_: &mut z_moved_ring_handler_sample_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
@@ -171,8 +171,8 @@ pub extern "C" fn z_ring_handler_sample_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_sample_check(this: &z_owned_ring_handler_sample_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_ring_handler_sample_check(this_: &z_owned_ring_handler_sample_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs send and recieve ends of the ring channel

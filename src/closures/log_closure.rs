@@ -15,7 +15,7 @@
 use std::mem::MaybeUninit;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_string_t,
 };
 
@@ -102,13 +102,13 @@ pub struct zc_loaned_closure_log_t {
 /// Moved closure.
 #[repr(C)]
 pub struct zc_moved_closure_log_t {
-    _ptr: Option<&'static mut zc_owned_closure_log_t>,
+    _this: zc_owned_closure_log_t,
 }
 
 decl_c_type!(
     owned(zc_owned_closure_log_t),
     loaned(zc_loaned_closure_log_t),
-    moved(zc_moved_closure_log_t)
+    moved(zc_moved_closure_log_t),
 );
 
 impl Default for zc_owned_closure_log_t {
@@ -146,8 +146,8 @@ impl Drop for zc_owned_closure_log_t {
 /// Constructs a closure in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_closure_log_null(this: *mut MaybeUninit<zc_owned_closure_log_t>) {
-    (*this).write(zc_owned_closure_log_t::default());
+pub unsafe extern "C" fn zc_closure_log_null(this_: *mut MaybeUninit<zc_owned_closure_log_t>) {
+    (*this_).write(zc_owned_closure_log_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
@@ -166,13 +166,14 @@ pub extern "C" fn zc_closure_log_call(
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn zc_closure_log_drop(closure: zc_moved_closure_log_t) {}
+pub extern "C" fn zc_closure_log_drop(closure_: &mut zc_moved_closure_log_t) {
+    let _ = closure_.take_rust_type();
+}
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_closure_log_check(this: &zc_owned_closure_log_t) -> bool {
-    !this.is_empty()
+pub extern "C" fn zc_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
+    !this_.is_empty()
 }
 
 /// Borrows closure.

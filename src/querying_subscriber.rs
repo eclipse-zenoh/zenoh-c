@@ -23,7 +23,7 @@ use zenoh_ext::*;
 use crate::{
     opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
     z_query_consolidation_t, z_query_target_default, z_query_target_t, z_reliability_t,
@@ -39,7 +39,6 @@ decl_c_type!(
         option(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
     ),
     loaned(ze_loaned_querying_subscriber_t),
-    moved(ze_moved_querying_subscriber_t)
 );
 
 /// Constructs a querying subscriber in a gravestone state.
@@ -108,15 +107,12 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: z_moved_closure_sample_t,
+    callback: &mut z_moved_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
-    let Some(callback) = callback.into_rust_type() else {
-        this.write(None);
-        return result::Z_EINVAL;
-    };
+    let callback = callback.take_rust_type();
     let mut sub = session
         .declare_subscriber(key_expr.as_rust_type_ref())
         .querying();
@@ -177,18 +173,18 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                 let mut get = session.get(selector).callback(cb);
 
                 if let Some(options) = options {
-                    if let Some(payload) = options.payload.take_rust_type() {
-                        get = get.payload(payload);
+                    if let Some(payload) = options.payload.take() {
+                        get = get.payload(payload.take_rust_type());
                     }
-                    if let Some(encoding) = options.encoding.take_rust_type() {
-                        get = get.encoding(encoding);
+                    if let Some(encoding) = options.encoding.take() {
+                        get = get.encoding(encoding.take_rust_type());
                     }
                     #[cfg(feature = "unstable")]
-                    if let Some(source_info) = options.source_info.take_rust_type() {
-                        get = get.source_info(source_info);
+                    if let Some(source_info) = options.source_info.take() {
+                        get = get.source_info(source_info.take_rust_type());
                     }
-                    if let Some(attachment) = options.attachment.take_rust_type() {
-                        get = get.attachment(attachment);
+                    if let Some(attachment) = options.attachment.take() {
+                        get = get.attachment(attachment.take_rust_type());
                     }
 
                     get = get
@@ -216,9 +212,9 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
-    this: ze_moved_querying_subscriber_t,
+    _this: &mut ze_moved_querying_subscriber_t,
 ) -> result::z_result_t {
-    if let Some(s) = this.into_rust_type() {
+    if let Some(s) = _this.take_rust_type() {
         if let Err(e) = s.0.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -229,14 +225,14 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 
 /// Drops querying subscriber. Also attempts to undeclare it.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_drop(this: ze_moved_querying_subscriber_t) {
-    ze_undeclare_querying_subscriber(this);
+pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
+    ze_undeclare_querying_subscriber(this_);
 }
 
 /// Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_check(this: &ze_owned_querying_subscriber_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn ze_querying_subscriber_check(this_: &ze_owned_querying_subscriber_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows querying subscriber.

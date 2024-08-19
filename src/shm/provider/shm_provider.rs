@@ -34,7 +34,7 @@ use crate::{
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
         provider::types::z_buf_layout_alloc_result_t,
     },
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
@@ -52,7 +52,6 @@ pub enum CSHMProvider {
 decl_c_type!(
     owned(z_owned_shm_provider_t, option CSHMProvider),
     loaned(z_loaned_shm_provider_t),
-    moved(z_moved_shm_provider_t)
 );
 
 /// Creates a new SHM Provider
@@ -93,14 +92,14 @@ pub extern "C" fn z_shm_provider_threadsafe_new(
 
 /// Constructs SHM Provider in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_provider_null(this: &mut MaybeUninit<z_owned_shm_provider_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_shm_provider_null(this_: &mut MaybeUninit<z_owned_shm_provider_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shm_provider_check(this: &z_owned_shm_provider_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_shm_provider_check(this_: &z_owned_shm_provider_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows SHM Provider
@@ -117,8 +116,9 @@ pub unsafe extern "C" fn z_shm_provider_loan(
 
 /// Deletes SHM Provider
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_shm_provider_drop(this: z_moved_shm_provider_t) {}
+pub extern "C" fn z_shm_provider_drop(this_: &mut z_moved_shm_provider_t) {
+    let _ = this_.take_rust_type();
+}
 
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc(

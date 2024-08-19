@@ -30,7 +30,7 @@ use zenoh::{
 
 use crate::{
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
@@ -72,58 +72,58 @@ pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyErrorNewtype),
     loaned(z_loaned_reply_err_t, ReplyErrorNewtype),
-    moved(z_moved_reply_err_t)
 );
 
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
-pub extern "C" fn z_reply_err_null(this: &mut MaybeUninit<z_owned_reply_err_t>) {
-    this.as_rust_type_mut_uninit()
+pub extern "C" fn z_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
+    this_
+        .as_rust_type_mut_uninit()
         .write(ReplyErrorNewtype::default());
 }
 
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_reply_err_check(this: &'static z_owned_reply_err_t) -> bool {
-    !this.as_rust_type_ref().payload().is_empty()
+pub extern "C" fn z_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
+    !this_.as_rust_type_ref().payload().is_empty()
 }
 
 /// Returns reply error payload.
 #[no_mangle]
-pub extern "C" fn z_reply_err_payload(this: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().payload().as_loaned_c_type_ref()
+pub extern "C" fn z_reply_err_payload(this_: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
+    this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
 /// Returns reply error encoding.
 #[no_mangle]
-pub extern "C" fn z_reply_err_encoding(this: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().encoding().as_loaned_c_type_ref()
+pub extern "C" fn z_reply_err_encoding(this_: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
+    this_.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 
 /// Borrows reply error.
 #[no_mangle]
-pub extern "C" fn z_reply_err_loan(this: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Frees the memory and resets the reply error it to its default value.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_reply_err_drop(this: z_moved_reply_err_t) {}
+pub extern "C" fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
+    let _ = this_.take_rust_type();
+}
 
 pub use crate::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
 decl_c_type!(
     owned(z_owned_reply_t, option Reply),
     loaned(z_loaned_reply_t),
-    moved(z_moved_reply_t)
 );
 
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
-    this.as_rust_type_ref().result().is_ok()
+pub unsafe extern "C" fn z_reply_is_ok(this_: &z_loaned_reply_t) -> bool {
+    this_.as_rust_type_ref().result().is_ok()
 }
 
 /// Yields the contents of the reply by asserting it indicates a success.
@@ -131,8 +131,8 @@ pub unsafe extern "C" fn z_reply_is_ok(this: &z_loaned_reply_t) -> bool {
 /// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_sample_t {
-    match this.as_rust_type_ref().result() {
+pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned_sample_t {
+    match this_.as_rust_type_ref().result() {
         Ok(sample) => sample.as_loaned_c_type_ref() as _,
         Err(_) => null(),
     }
@@ -143,8 +143,8 @@ pub unsafe extern "C" fn z_reply_ok(this: &z_loaned_reply_t) -> *const z_loaned_
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(this: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
-    match this.as_rust_type_ref().result() {
+pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
+    match this_.as_rust_type_ref().result() {
         Ok(_) => null(),
         Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_c_type_ref(),
     }
@@ -170,14 +170,14 @@ pub unsafe extern "C" fn z_reply_replier_id(
 
 /// Constructs the reply in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_reply_null(this: &mut MaybeUninit<z_owned_reply_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_reply_null(this_: &mut MaybeUninit<z_owned_reply_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 /// Constructs an owned shallow copy of reply in provided uninitialized memory location.
 #[no_mangle]
-pub extern "C" fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this: &z_loaned_reply_t) {
+pub extern "C" fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this_: &z_loaned_reply_t) {
     dst.as_rust_type_mut_uninit()
-        .write(Some(this.as_rust_type_ref().clone()));
+        .write(Some(this_.as_rust_type_ref().clone()));
 }
 
 /// Options passed to the `z_get()` function.
@@ -188,9 +188,9 @@ pub struct z_get_options_t {
     /// The replies consolidation strategy to apply on replies to the query.
     pub consolidation: z_query_consolidation_t,
     /// An optional payload to attach to the query.
-    pub payload: z_moved_bytes_t,
+    pub payload: Option<&'static mut z_moved_bytes_t>,
     /// An optional encoding of the query payload and or attachment.
-    pub encoding: z_moved_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing the query.
     pub congestion_control: z_congestion_control_t,
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
@@ -205,17 +205,17 @@ pub struct z_get_options_t {
     pub priority: z_priority_t,
     #[cfg(feature = "unstable")]
     /// The source info for the query.
-    pub source_info: z_moved_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// An optional attachment to attach to the query.
-    pub attachment: z_moved_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
 }
 
 /// Constructs default `z_get_options_t`
 #[no_mangle]
-pub extern "C" fn z_get_options_default(this: &mut MaybeUninit<z_get_options_t>) {
-    this.write(z_get_options_t {
+pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
+    this_.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::default().into(),
@@ -226,11 +226,11 @@ pub extern "C" fn z_get_options_default(this: &mut MaybeUninit<z_get_options_t>)
         priority: Priority::default().into(),
         is_express: false,
         timeout_ms: 0,
-        payload: None.into(),
-        encoding: None.into(),
+        payload: None,
+        encoding: None,
         #[cfg(feature = "unstable")]
-        source_info: None.into(),
-        attachment: None.into(),
+        source_info: None,
+        attachment: None,
     });
 }
 
@@ -250,12 +250,10 @@ pub unsafe extern "C" fn z_get(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,
-    callback: z_moved_closure_reply_t,
+    callback: &mut z_moved_closure_reply_t,
     options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
-    let Some(callback) = callback.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let callback = callback.take_rust_type();
     let p = if parameters.is_null() {
         ""
     } else {
@@ -265,18 +263,18 @@ pub unsafe extern "C" fn z_get(
     let key_expr = key_expr.as_rust_type_ref();
     let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
-        if let Some(payload) = options.payload.take_rust_type() {
-            get = get.payload(payload);
+        if let Some(payload) = options.payload.take() {
+            get = get.payload(payload.take_rust_type());
         }
-        if let Some(encoding) = options.encoding.take_rust_type() {
-            get = get.encoding(encoding);
+        if let Some(encoding) = options.encoding.take() {
+            get = get.encoding(encoding.take_rust_type());
         }
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take_rust_type() {
-            get = get.source_info(source_info);
+        if let Some(source_info) = options.source_info.take() {
+            get = get.source_info(source_info.take_rust_type());
         }
-        if let Some(attachment) = options.attachment.take_rust_type() {
-            get = get.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            get = get.attachment(attachment.take_rust_type());
         }
 
         get = get
@@ -315,20 +313,22 @@ pub unsafe extern "C" fn z_get(
 
 /// Frees reply, resetting it to its gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_reply_drop(this: z_moved_reply_t) {}
+pub extern "C" fn z_reply_drop(this_: &mut z_moved_reply_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_reply_check(this: &z_owned_reply_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_reply_check(this_: &z_owned_reply_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows reply.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_loan(this: &z_owned_reply_t) -> &z_loaned_reply_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_reply_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()

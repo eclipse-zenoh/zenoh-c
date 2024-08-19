@@ -174,22 +174,26 @@ pub struct {type_name} {{
         .as_str();
         if category == Some("owned") {
             let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
+            // Note: owned type {type_name} should implement "Default" trait, this is
+            // done by "decl_c_type!" macro in transmute module.
             s += format!(
                 "#[repr(C)]
 #[derive(Default)]
 pub struct {moved_type_name} {{
-    pub _ptr: Option<&'static mut {type_name}>,
+    _this: {type_name},
 }}
 
-impl {moved_type_name} {{
-    pub fn take(&mut self) -> Option<{type_name}> {{
-        self._ptr.take().map(std::mem::take)
+impl crate::transmute::TakeCType for {moved_type_name} {{
+    type CType = {type_name};
+    fn take_c_type(&mut self) -> Self::CType {{
+        std::mem::take(&mut self._this)
     }}
 }}
 
-impl From<Option<&'static mut {type_name}>> for {moved_type_name} {{
-    fn from(ptr: Option<&'static mut {type_name}>) -> Self {{
-        Self {{ _ptr: ptr }}
+impl Drop for {type_name} {{
+    fn drop(&mut self) {{
+        use crate::transmute::RustTypeRef;
+        std::mem::take(self.as_rust_type_mut());
     }}
 }}
 "
@@ -1137,7 +1141,7 @@ pub fn make_move_take_signatures(
     path_in: &str,
 ) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(\w+)_drop\(struct (\w+) (\w+)\);").unwrap();
+    let re = Regex::new(r"(\w+)_drop\(struct (\w+) \*(\w+)\);").unwrap();
     let mut move_funcs = Vec::<FunctionSignature>::new();
     let mut take_funcs = Vec::<FunctionSignature>::new();
 
@@ -1146,10 +1150,10 @@ pub fn make_move_take_signatures(
     {
         let (prefix, _, semantic, postfix) = split_type_name(arg_type);
         let z_owned_type = format!("{}_{}_{}_{}*", prefix, "owned", semantic, postfix);
-        let z_moved_type = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
+        let z_moved_type = format!("{}_{}_{}_{}*", prefix, "moved", semantic, postfix);
         let move_f = FunctionSignature::new(
             semantic,
-            arg_type,
+            &z_moved_type,
             func_name_prefix.to_string() + "_move",
             vec![FuncArg::new(&z_owned_type, arg_name)],
         );
@@ -1213,7 +1217,7 @@ pub fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(.+?) +(\w+_drop)\(struct (\w+) (\w+)\);").unwrap();
+    let re = Regex::new(r"(.+?) +(\w+_drop)\(struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [return_type, func_name, arg_type, arg_name]) in
@@ -1226,11 +1230,12 @@ pub fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
             .collect::<Vec<_>>()
             .join(" ");
         let (_, _, semantic, _) = split_type_name(arg_type);
+        let arg_type = arg_type.to_string() + "*";
         let f = FunctionSignature::new(
             semantic,
             return_type.as_str(),
             func_name.to_string(),
-            vec![FuncArg::new(arg_type, arg_name)],
+            vec![FuncArg::new(&arg_type, arg_name)],
         );
         res.push(f);
     }
@@ -1340,7 +1345,9 @@ pub fn generate_generic_c(
     let va_args = macro_func
         .iter()
         .any(|f| f.args.len() != macro_func[0].args.len());
-    let mut args = macro_func[0]
+    let mut args = macro_func
+        .first()
+        .unwrap_or_else(|| panic!("no sigatures found for building generic {generic_name}"))
         .args
         .iter()
         .map(|a| a.name.to_string())
@@ -1408,7 +1415,7 @@ pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
     for sig in macro_func {
         let (prefix, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
         out += &format!(
-            "static inline void {}({} {}, {} {}) {{ *{} = *{}._ptr; {}_{}_null({}._ptr); }}\n",
+            "static inline void {}({} {}, {} {}) {{ *{} = {}->_this; {}_{}_null(&{}->_this); }}\n",
             sig.func_name,
             sig.args[0].typename.typename,
             sig.args[0].name,
@@ -1428,7 +1435,7 @@ pub fn generate_move_functions_c(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
-            "static inline {} {}({} x) {{ return ({}){{x}}; }}\n",
+            "static inline {} {}({} x) {{ return ({})(x); }}\n",
             sig.return_type.typename,
             sig.func_name,
             sig.args[0].typename.typename,
@@ -1442,7 +1449,7 @@ pub fn generate_move_functions_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         out += &format!(
-            "static inline {} {}({} x) {{ return {}{{x}}; }}\n",
+            "static inline {} {}({} x) {{ return reinterpret_cast<{}>(x); }}\n",
             sig.return_type.typename,
             sig.func_name,
             sig.args[0].typename.typename,

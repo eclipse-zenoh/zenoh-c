@@ -26,7 +26,7 @@ use super::chunk::z_allocated_chunk_t;
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
     shm::buffer::zshmmut::z_shm_mut_null,
-    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t,
     z_moved_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
@@ -114,7 +114,6 @@ decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 decl_c_type_inequal!(
     owned(z_owned_memory_layout_t, option MemoryLayout),
     loaned(z_loaned_memory_layout_t),
-    moved(z_moved_memory_layout_t)
 );
 
 /// Creates a new Memory Layout
@@ -146,14 +145,14 @@ fn create_memory_layout(
 
 /// Constructs Memory Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_memory_layout_null(this: &mut MaybeUninit<z_owned_memory_layout_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_memory_layout_check(this: &z_owned_memory_layout_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows Memory Layout
@@ -170,8 +169,9 @@ pub unsafe extern "C" fn z_memory_layout_loan(
 
 /// Deletes Memory Layout
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_memory_layout_drop(this: z_moved_memory_layout_t) {}
+pub extern "C" fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Extract data from Memory Layout
 #[no_mangle]
@@ -188,7 +188,6 @@ pub extern "C" fn z_memory_layout_get_data(
 decl_c_type!(
     owned(z_owned_chunk_alloc_result_t, option ChunkAllocResult),
     loaned(z_loaned_chunk_alloc_result_t),
-    moved(z_moved_chunk_alloc_result_t)
 );
 
 /// Creates a new Chunk Alloc Result with Ok value
@@ -218,14 +217,14 @@ pub extern "C" fn z_chunk_alloc_result_new_error(
 
 /// Constructs Chunk Alloc Result in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_null(this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_chunk_alloc_result_null(this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_check(this: &z_owned_chunk_alloc_result_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_chunk_alloc_result_check(this_: &z_owned_chunk_alloc_result_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows Chunk Alloc Result
@@ -242,8 +241,9 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
 
 /// Deletes Chunk Alloc Result
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_chunk_alloc_result_drop(this: z_moved_chunk_alloc_result_t) {}
+pub extern "C" fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
+    let _ = this_.take_rust_type();
+}
 
 #[repr(C)]
 pub struct z_buf_alloc_result_t {

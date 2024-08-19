@@ -16,7 +16,7 @@ use zenoh::{prelude::*, session::ZenohId};
 pub use crate::opaque_types::z_id_t;
 use crate::{
     result,
-    transmute::{CTypeRef, IntoCType, IntoRustType, RustTypeRef},
+    transmute::{CTypeRef, IntoCType, RustTypeRef, TakeRustType},
     z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
 };
 decl_c_type!(copy(z_id_t, ZenohId));
@@ -49,12 +49,10 @@ pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
 #[no_mangle]
 pub unsafe extern "C" fn z_info_peers_zid(
     session: &z_loaned_session_t,
-    callback: z_moved_closure_zid_t,
+    callback: &mut z_moved_closure_zid_t,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
-    let Some(callback) = callback.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let callback = callback.take_rust_type();
     for id in session.info().peers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
@@ -71,12 +69,10 @@ pub unsafe extern "C" fn z_info_peers_zid(
 #[no_mangle]
 pub unsafe extern "C" fn z_info_routers_zid(
     session: &z_loaned_session_t,
-    callback: z_moved_closure_zid_t,
+    callback: &mut z_moved_closure_zid_t,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
-    let Some(callback) = callback.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let callback = callback.take_rust_type();
     for id in session.info().routers_zid().wait() {
         z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
