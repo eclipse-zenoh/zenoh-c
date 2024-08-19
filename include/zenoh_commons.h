@@ -413,6 +413,43 @@ typedef struct zc_owned_closure_log_t {
    */
   void (*drop)(void *context);
 } zc_owned_closure_log_t;
+/**
+ * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
+ */
+#if defined(UNSTABLE)
+typedef struct zc_matching_status_t {
+  /**
+   * True if there exist Subscribers matching the Publisher's key expression, false otherwise.
+   */
+  bool matching;
+} zc_matching_status_t;
+#endif
+/**
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ */
+#if defined(UNSTABLE)
+typedef struct zc_owned_closure_matching_status_t {
+  /**
+   * An optional pointer to a closure state.
+   */
+  void *context;
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct zc_matching_status_t *matching_status, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
+} zc_owned_closure_matching_status_t;
+#endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 typedef struct z_buf_alloc_result_t {
   z_owned_shm_mut_t buf;
@@ -1006,43 +1043,6 @@ typedef struct zc_loaned_closure_matching_status_t {
 } zc_loaned_closure_matching_status_t;
 #endif
 /**
- * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
- */
-#if defined(UNSTABLE)
-typedef struct zc_matching_status_t {
-  /**
-   * True if there exist Subscribers matching the Publisher's key expression, false otherwise.
-   */
-  bool matching;
-} zc_matching_status_t;
-#endif
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-#if defined(UNSTABLE)
-typedef struct zc_owned_closure_matching_status_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(const struct zc_matching_status_t *matching_status, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
-} zc_owned_closure_matching_status_t;
-#endif
-/**
  * Moved closure.
  */
 #if defined(UNSTABLE)
@@ -1520,6 +1520,79 @@ ZENOHC_API bool _zc_closure_log_check(const struct zc_owned_closure_log_t *this_
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void _zc_closure_log_null(struct zc_owned_closure_log_t *this_);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+bool _zc_closure_matching_status_check(const struct zc_owned_closure_matching_status_t *this_);
+#endif
+/**
+ * Constructs a null value of 'zc_owned_closure_matching_status_t' type
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void _zc_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
+#endif
+/**
+ * Returns ``true`` if liveliness token is valid, ``false`` otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool _zc_liveliness_token_check(const zc_owned_liveliness_token_t *this_);
+#endif
+/**
+ * Constructs liveliness token in its gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void _zc_liveliness_token_null(zc_owned_liveliness_token_t *this_);
+#endif
+/**
+ * Checks the matching listener is for the gravestone state
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool _zc_matching_listener_check(const zc_owned_matching_listener_t *this_);
+#endif
+/**
+ * Constructs an empty matching listener
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void _zc_matching_listener_null(zc_owned_matching_listener_t *this_);
+#endif
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool _zc_shm_client_list_check(const zc_owned_shm_client_list_t *this_);
+#endif
+/**
+ * Constructs SHM client list in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void _zc_shm_client_list_null(zc_owned_shm_client_list_t *this_);
+#endif
+/**
+ * Returns ``true`` if publication cache is valid, ``false`` otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool _ze_publication_cache_check(const ze_owned_publication_cache_t *this_);
+#endif
+/**
+ * Constructs a publication cache in a gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void _ze_publication_cache_null(ze_owned_publication_cache_t *this_);
+#endif
+/**
+ * Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool _ze_querying_subscriber_check(const ze_owned_querying_subscriber_t *this_);
+#endif
+/**
+ * Constructs a querying subscriber in a gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void _ze_querying_subscriber_null(ze_owned_querying_subscriber_t *this_);
+#endif
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
 void z_alloc_layout_alloc(struct z_buf_alloc_result_t *out_result,
@@ -4414,13 +4487,6 @@ void zc_closure_matching_status_call(const struct zc_loaned_closure_matching_sta
                                      const struct zc_matching_status_t *mathing_status);
 #endif
 /**
- * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
- */
-#if defined(UNSTABLE)
-ZENOHC_API
-bool zc_closure_matching_status_check(const struct zc_owned_closure_matching_status_t *this_);
-#endif
-/**
  * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
  */
 #if defined(UNSTABLE)
@@ -4433,12 +4499,6 @@ void zc_closure_matching_status_drop(struct zc_moved_closure_matching_status_t *
 #if defined(UNSTABLE)
 ZENOHC_API
 const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loan(const struct zc_owned_closure_matching_status_t *closure);
-#endif
-/**
- * Constructs a null value of 'zc_owned_closure_matching_status_t' type
- */
-#if defined(UNSTABLE)
-ZENOHC_API void zc_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
 #endif
 /**
  * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
@@ -4595,12 +4655,6 @@ ZENOHC_API
 void zc_liveliness_subscriber_options_default(struct zc_liveliness_subscriber_options_t *this_);
 #endif
 /**
- * Returns ``true`` if liveliness token is valid, ``false`` otherwise.
- */
-#if defined(UNSTABLE)
-ZENOHC_API bool zc_liveliness_token_check(const zc_owned_liveliness_token_t *this_);
-#endif
-/**
  * Undeclares liveliness token, frees memory and resets it to a gravestone state.
  */
 #if defined(UNSTABLE)
@@ -4614,12 +4668,6 @@ ZENOHC_API
 const zc_loaned_liveliness_token_t *zc_liveliness_token_loan(const zc_owned_liveliness_token_t *this_);
 #endif
 /**
- * Constructs liveliness token in its gravestone state.
- */
-#if defined(UNSTABLE)
-ZENOHC_API void zc_liveliness_token_null(zc_owned_liveliness_token_t *this_);
-#endif
-/**
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
 #if defined(UNSTABLE)
@@ -4630,18 +4678,6 @@ ZENOHC_API z_result_t zc_liveliness_undeclare_token(zc_moved_liveliness_token_t 
  */
 #if defined(UNSTABLE)
 ZENOHC_API enum zc_locality_t zc_locality_default(void);
-#endif
-/**
- * Checks the matching listener is for the gravestone state
- */
-#if defined(UNSTABLE)
-ZENOHC_API bool zc_matching_listener_check(const zc_owned_matching_listener_t *this_);
-#endif
-/**
- * Constructs an empty matching listener
- */
-#if defined(UNSTABLE)
-ZENOHC_API void zc_matching_listener_null(zc_owned_matching_listener_t *this_);
 #endif
 /**
  * Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
@@ -4697,12 +4733,6 @@ z_result_t zc_shm_client_list_add_client(z_protocol_id_t id,
                                          zc_loaned_shm_client_list_t *list);
 #endif
 /**
- * Returns ``true`` if `this` is valid.
- */
-#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API bool zc_shm_client_list_check(const zc_owned_shm_client_list_t *this_);
-#endif
-/**
  * Deletes list of SHM Clients
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
@@ -4727,12 +4757,6 @@ zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(zc_owned_shm_client_lis
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API void zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
-#endif
-/**
- * Constructs SHM client list in its gravestone value.
- */
-#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
-ZENOHC_API void zc_shm_client_list_null(zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * Stops all Zenoh tasks and drops all related static variables.
@@ -4779,34 +4803,16 @@ z_result_t ze_declare_querying_subscriber(ze_owned_querying_subscriber_t *this_,
                                           struct ze_querying_subscriber_options_t *options);
 #endif
 /**
- * Returns ``true`` if publication cache is valid, ``false`` otherwise.
- */
-#if defined(UNSTABLE)
-ZENOHC_API bool ze_publication_cache_check(const ze_owned_publication_cache_t *this_);
-#endif
-/**
  * Drops publication cache. Also attempts to undeclare it.
  */
 #if defined(UNSTABLE)
 ZENOHC_API void ze_publication_cache_drop(ze_moved_publication_cache_t *this_);
 #endif
 /**
- * Constructs a publication cache in a gravestone state.
- */
-#if defined(UNSTABLE)
-ZENOHC_API void ze_publication_cache_null(ze_owned_publication_cache_t *this_);
-#endif
-/**
  * Constructs the default value for `ze_publication_cache_options_t`.
  */
 #if defined(UNSTABLE)
 ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
-#endif
-/**
- * Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
- */
-#if defined(UNSTABLE)
-ZENOHC_API bool ze_querying_subscriber_check(const ze_owned_querying_subscriber_t *this_);
 #endif
 /**
  * Drops querying subscriber. Also attempts to undeclare it.
@@ -4831,12 +4837,6 @@ z_result_t ze_querying_subscriber_get(const ze_loaned_querying_subscriber_t *thi
 #if defined(UNSTABLE)
 ZENOHC_API
 const ze_loaned_querying_subscriber_t *ze_querying_subscriber_loan(const ze_owned_querying_subscriber_t *this_);
-#endif
-/**
- * Constructs a querying subscriber in a gravestone state.
- */
-#if defined(UNSTABLE)
-ZENOHC_API void ze_querying_subscriber_null(ze_owned_querying_subscriber_t *this_);
 #endif
 /**
  * Constructs the default value for `ze_querying_subscriber_options_t`.

@@ -298,14 +298,14 @@ decl_c_type!(
 /// Constructs an empty matching listener
 #[no_mangle]
 #[cfg(feature = "unstable")]
-pub extern "C" fn zc_matching_listener_null(this_: &mut MaybeUninit<zc_owned_matching_listener_t>) {
+pub extern "C" fn _zc_matching_listener_null(this_: &mut MaybeUninit<zc_owned_matching_listener_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Checks the matching listener is for the gravestone state
 #[no_mangle]
 #[cfg(feature = "unstable")]
-pub extern "C" fn zc_matching_listener_check(this_: &zc_owned_matching_listener_t) -> bool {
+pub extern "C" fn _zc_matching_listener_check(this_: &zc_owned_matching_listener_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

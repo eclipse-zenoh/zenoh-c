@@ -39,13 +39,13 @@ pub extern "C" fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_cl
 
 /// Constructs SHM client list in its gravestone value.
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_null(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
+pub extern "C" fn _zc_shm_client_list_null(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn zc_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
+pub extern "C" fn _zc_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

@@ -118,14 +118,14 @@ pub extern "C" fn ze_declare_publication_cache(
 /// Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_null(this_: &mut MaybeUninit<ze_owned_publication_cache_t>) {
+pub extern "C" fn _ze_publication_cache_null(this_: &mut MaybeUninit<ze_owned_publication_cache_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_check(this_: &ze_owned_publication_cache_t) -> bool {
+pub extern "C" fn _ze_publication_cache_check(this_: &ze_owned_publication_cache_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
