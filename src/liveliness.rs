@@ -101,7 +101,7 @@ pub extern "C" fn zc_liveliness_declare_token(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to undeclare token: {e}");
+            tracing::error!("Failed to undeclare liveliness token: {e}");
             this.write(None);
             result::Z_EGENERIC
         }

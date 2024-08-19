@@ -38,49 +38,167 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 
 #define z_loan(this_) \
     _Generic((this_), \
+        const z_owned_bytes_t* : z_bytes_loan, \
         z_owned_bytes_t : z_bytes_loan, \
+        const z_owned_closure_hello_t* : z_closure_hello_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
+        const z_owned_closure_query_t* : z_closure_query_loan, \
         z_owned_closure_query_t : z_closure_query_loan, \
+        const z_owned_closure_reply_t* : z_closure_reply_loan, \
         z_owned_closure_reply_t : z_closure_reply_loan, \
+        const z_owned_closure_sample_t* : z_closure_sample_loan, \
         z_owned_closure_sample_t : z_closure_sample_loan, \
+        const z_owned_condvar_t* : z_condvar_loan, \
         z_owned_condvar_t : z_condvar_loan, \
+        const z_owned_config_t* : z_config_loan, \
         z_owned_config_t : z_config_loan, \
+        const z_owned_encoding_t* : z_encoding_loan, \
         z_owned_encoding_t : z_encoding_loan, \
+        const z_owned_fifo_handler_query_t* : z_fifo_handler_query_loan, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_loan, \
+        const z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_loan, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_loan, \
+        const z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_loan, \
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_loan, \
+        const z_owned_hello_t* : z_hello_loan, \
         z_owned_hello_t : z_hello_loan, \
+        const z_owned_keyexpr_t* : z_keyexpr_loan, \
         z_owned_keyexpr_t : z_keyexpr_loan, \
+        const z_owned_publisher_t* : z_publisher_loan, \
         z_owned_publisher_t : z_publisher_loan, \
+        const z_owned_query_t* : z_query_loan, \
         z_owned_query_t : z_query_loan, \
+        const z_owned_queryable_t* : z_queryable_loan, \
         z_owned_queryable_t : z_queryable_loan, \
+        const z_owned_reply_err_t* : z_reply_err_loan, \
         z_owned_reply_err_t : z_reply_err_loan, \
+        const z_owned_reply_t* : z_reply_loan, \
         z_owned_reply_t : z_reply_loan, \
+        const z_owned_ring_handler_query_t* : z_ring_handler_query_loan, \
         z_owned_ring_handler_query_t : z_ring_handler_query_loan, \
+        const z_owned_ring_handler_reply_t* : z_ring_handler_reply_loan, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_loan, \
+        const z_owned_ring_handler_sample_t* : z_ring_handler_sample_loan, \
         z_owned_ring_handler_sample_t : z_ring_handler_sample_loan, \
+        const z_owned_sample_t* : z_sample_loan, \
         z_owned_sample_t : z_sample_loan, \
+        const z_owned_session_t* : z_session_loan, \
         z_owned_session_t : z_session_loan, \
+        const z_owned_slice_t* : z_slice_loan, \
         z_owned_slice_t : z_slice_loan, \
+        const z_owned_string_array_t* : z_string_array_loan, \
         z_owned_string_array_t : z_string_array_loan, \
+        const z_owned_string_t* : z_string_loan, \
         z_owned_string_t : z_string_loan, \
+        const z_owned_subscriber_t* : z_subscriber_loan, \
         z_owned_subscriber_t : z_subscriber_loan, \
+        const z_view_keyexpr_t* : z_view_keyexpr_loan, \
         z_view_keyexpr_t : z_view_keyexpr_loan, \
+        const z_view_slice_t* : z_view_slice_loan, \
         z_view_slice_t : z_view_slice_loan, \
+        const z_view_string_t* : z_view_string_loan, \
         z_view_string_t : z_view_string_loan, \
+        const zc_owned_closure_log_t* : zc_closure_log_loan, \
         zc_owned_closure_log_t : zc_closure_log_loan \
-    )(&this_)
+    )(_Generic((this_), \
+        const z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        const z_owned_closure_hello_t* : (this_), \
+        z_owned_closure_hello_t : (&this_), \
+        const z_owned_closure_query_t* : (this_), \
+        z_owned_closure_query_t : (&this_), \
+        const z_owned_closure_reply_t* : (this_), \
+        z_owned_closure_reply_t : (&this_), \
+        const z_owned_closure_sample_t* : (this_), \
+        z_owned_closure_sample_t : (&this_), \
+        const z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        const z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        const z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        const z_owned_fifo_handler_query_t* : (this_), \
+        z_owned_fifo_handler_query_t : (&this_), \
+        const z_owned_fifo_handler_reply_t* : (this_), \
+        z_owned_fifo_handler_reply_t : (&this_), \
+        const z_owned_fifo_handler_sample_t* : (this_), \
+        z_owned_fifo_handler_sample_t : (&this_), \
+        const z_owned_hello_t* : (this_), \
+        z_owned_hello_t : (&this_), \
+        const z_owned_keyexpr_t* : (this_), \
+        z_owned_keyexpr_t : (&this_), \
+        const z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        const z_owned_query_t* : (this_), \
+        z_owned_query_t : (&this_), \
+        const z_owned_queryable_t* : (this_), \
+        z_owned_queryable_t : (&this_), \
+        const z_owned_reply_err_t* : (this_), \
+        z_owned_reply_err_t : (&this_), \
+        const z_owned_reply_t* : (this_), \
+        z_owned_reply_t : (&this_), \
+        const z_owned_ring_handler_query_t* : (this_), \
+        z_owned_ring_handler_query_t : (&this_), \
+        const z_owned_ring_handler_reply_t* : (this_), \
+        z_owned_ring_handler_reply_t : (&this_), \
+        const z_owned_ring_handler_sample_t* : (this_), \
+        z_owned_ring_handler_sample_t : (&this_), \
+        const z_owned_sample_t* : (this_), \
+        z_owned_sample_t : (&this_), \
+        const z_owned_session_t* : (this_), \
+        z_owned_session_t : (&this_), \
+        const z_owned_slice_t* : (this_), \
+        z_owned_slice_t : (&this_), \
+        const z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_), \
+        const z_owned_string_t* : (this_), \
+        z_owned_string_t : (&this_), \
+        const z_owned_subscriber_t* : (this_), \
+        z_owned_subscriber_t : (&this_), \
+        const z_view_keyexpr_t* : (this_), \
+        z_view_keyexpr_t : (&this_), \
+        const z_view_slice_t* : (this_), \
+        z_view_slice_t : (&this_), \
+        const z_view_string_t* : (this_), \
+        z_view_string_t : (&this_), \
+        const zc_owned_closure_log_t* : (this_), \
+        zc_owned_closure_log_t : (&this_) \
+    ))
+
 
 #define z_loan_mut(this_) \
     _Generic((this_), \
+        z_owned_bytes_t* : z_bytes_loan_mut, \
         z_owned_bytes_t : z_bytes_loan_mut, \
+        z_owned_condvar_t* : z_condvar_loan_mut, \
         z_owned_condvar_t : z_condvar_loan_mut, \
+        z_owned_config_t* : z_config_loan_mut, \
         z_owned_config_t : z_config_loan_mut, \
+        z_owned_encoding_t* : z_encoding_loan_mut, \
         z_owned_encoding_t : z_encoding_loan_mut, \
+        z_owned_mutex_t* : z_mutex_loan_mut, \
         z_owned_mutex_t : z_mutex_loan_mut, \
+        z_owned_publisher_t* : z_publisher_loan_mut, \
         z_owned_publisher_t : z_publisher_loan_mut, \
+        z_owned_string_array_t* : z_string_array_loan_mut, \
         z_owned_string_array_t : z_string_array_loan_mut \
-    )(&this_)
+    )(_Generic((this_), \
+        z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        z_owned_mutex_t* : (this_), \
+        z_owned_mutex_t : (&this_), \
+        z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_) \
+    ))
+
 
 #define z_drop(this_) \
     _Generic((this_), \
@@ -116,39 +234,132 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
         zc_moved_closure_log_t* : zc_closure_log_drop \
     )(this_)
 
+
 #define z_move(this_) \
     _Generic((this_), \
+        z_owned_bytes_t* : z_bytes_move, \
         z_owned_bytes_t : z_bytes_move, \
+        z_owned_closure_hello_t* : z_closure_hello_move, \
         z_owned_closure_hello_t : z_closure_hello_move, \
+        z_owned_closure_query_t* : z_closure_query_move, \
         z_owned_closure_query_t : z_closure_query_move, \
+        z_owned_closure_reply_t* : z_closure_reply_move, \
         z_owned_closure_reply_t : z_closure_reply_move, \
+        z_owned_closure_sample_t* : z_closure_sample_move, \
         z_owned_closure_sample_t : z_closure_sample_move, \
+        z_owned_condvar_t* : z_condvar_move, \
         z_owned_condvar_t : z_condvar_move, \
+        z_owned_config_t* : z_config_move, \
         z_owned_config_t : z_config_move, \
+        z_owned_encoding_t* : z_encoding_move, \
         z_owned_encoding_t : z_encoding_move, \
+        z_owned_fifo_handler_query_t* : z_fifo_handler_query_move, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_move, \
+        z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_move, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_move, \
+        z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_move, \
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_move, \
+        z_owned_hello_t* : z_hello_move, \
         z_owned_hello_t : z_hello_move, \
+        z_owned_keyexpr_t* : z_keyexpr_move, \
         z_owned_keyexpr_t : z_keyexpr_move, \
+        z_owned_mutex_t* : z_mutex_move, \
         z_owned_mutex_t : z_mutex_move, \
+        z_owned_publisher_t* : z_publisher_move, \
         z_owned_publisher_t : z_publisher_move, \
+        z_owned_query_t* : z_query_move, \
         z_owned_query_t : z_query_move, \
+        z_owned_queryable_t* : z_queryable_move, \
         z_owned_queryable_t : z_queryable_move, \
+        z_owned_reply_t* : z_reply_move, \
         z_owned_reply_t : z_reply_move, \
+        z_owned_reply_err_t* : z_reply_err_move, \
         z_owned_reply_err_t : z_reply_err_move, \
+        z_owned_ring_handler_query_t* : z_ring_handler_query_move, \
         z_owned_ring_handler_query_t : z_ring_handler_query_move, \
+        z_owned_ring_handler_reply_t* : z_ring_handler_reply_move, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_move, \
+        z_owned_ring_handler_sample_t* : z_ring_handler_sample_move, \
         z_owned_ring_handler_sample_t : z_ring_handler_sample_move, \
+        z_owned_sample_t* : z_sample_move, \
         z_owned_sample_t : z_sample_move, \
+        z_owned_session_t* : z_session_move, \
         z_owned_session_t : z_session_move, \
+        z_owned_slice_t* : z_slice_move, \
         z_owned_slice_t : z_slice_move, \
+        z_owned_string_array_t* : z_string_array_move, \
         z_owned_string_array_t : z_string_array_move, \
+        z_owned_string_t* : z_string_move, \
         z_owned_string_t : z_string_move, \
+        z_owned_subscriber_t* : z_subscriber_move, \
         z_owned_subscriber_t : z_subscriber_move, \
+        z_owned_task_t* : z_task_move, \
         z_owned_task_t : z_task_move, \
+        zc_owned_closure_log_t* : zc_closure_log_move, \
         zc_owned_closure_log_t : zc_closure_log_move \
-    )(&this_)
+    )(_Generic((this_), \
+        z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        z_owned_closure_hello_t* : (this_), \
+        z_owned_closure_hello_t : (&this_), \
+        z_owned_closure_query_t* : (this_), \
+        z_owned_closure_query_t : (&this_), \
+        z_owned_closure_reply_t* : (this_), \
+        z_owned_closure_reply_t : (&this_), \
+        z_owned_closure_sample_t* : (this_), \
+        z_owned_closure_sample_t : (&this_), \
+        z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        z_owned_fifo_handler_query_t* : (this_), \
+        z_owned_fifo_handler_query_t : (&this_), \
+        z_owned_fifo_handler_reply_t* : (this_), \
+        z_owned_fifo_handler_reply_t : (&this_), \
+        z_owned_fifo_handler_sample_t* : (this_), \
+        z_owned_fifo_handler_sample_t : (&this_), \
+        z_owned_hello_t* : (this_), \
+        z_owned_hello_t : (&this_), \
+        z_owned_keyexpr_t* : (this_), \
+        z_owned_keyexpr_t : (&this_), \
+        z_owned_mutex_t* : (this_), \
+        z_owned_mutex_t : (&this_), \
+        z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        z_owned_query_t* : (this_), \
+        z_owned_query_t : (&this_), \
+        z_owned_queryable_t* : (this_), \
+        z_owned_queryable_t : (&this_), \
+        z_owned_reply_t* : (this_), \
+        z_owned_reply_t : (&this_), \
+        z_owned_reply_err_t* : (this_), \
+        z_owned_reply_err_t : (&this_), \
+        z_owned_ring_handler_query_t* : (this_), \
+        z_owned_ring_handler_query_t : (&this_), \
+        z_owned_ring_handler_reply_t* : (this_), \
+        z_owned_ring_handler_reply_t : (&this_), \
+        z_owned_ring_handler_sample_t* : (this_), \
+        z_owned_ring_handler_sample_t : (&this_), \
+        z_owned_sample_t* : (this_), \
+        z_owned_sample_t : (&this_), \
+        z_owned_session_t* : (this_), \
+        z_owned_session_t : (&this_), \
+        z_owned_slice_t* : (this_), \
+        z_owned_slice_t : (&this_), \
+        z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_), \
+        z_owned_string_t* : (this_), \
+        z_owned_string_t : (&this_), \
+        z_owned_subscriber_t* : (this_), \
+        z_owned_subscriber_t : (&this_), \
+        z_owned_task_t* : (this_), \
+        z_owned_task_t : (&this_), \
+        zc_owned_closure_log_t* : (this_), \
+        zc_owned_closure_log_t : (&this_) \
+    ))
+
 
 #define z_null(this_) \
     _Generic((this_), \
@@ -183,6 +394,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
         z_owned_task_t* : z_task_null, \
         zc_owned_closure_log_t* : zc_closure_log_null \
     )(this_)
+
 
 static inline void z_bytes_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) { *this_ = x->_this; z_bytes_null(&x->_this); }
 static inline void z_closure_hello_take(z_owned_closure_hello_t* this_, z_moved_closure_hello_t* x) { *this_ = x->_this; z_closure_hello_null(&x->_this); }
@@ -250,39 +462,132 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         zc_owned_closure_log_t* : zc_closure_log_take \
     )(this_, x)
 
+
 #define z_check(this_) \
     _Generic((this_), \
+        const z_owned_bytes_t* : z_bytes_check, \
         z_owned_bytes_t : z_bytes_check, \
+        const z_owned_closure_hello_t* : z_closure_hello_check, \
         z_owned_closure_hello_t : z_closure_hello_check, \
+        const z_owned_closure_query_t* : z_closure_query_check, \
         z_owned_closure_query_t : z_closure_query_check, \
+        const z_owned_closure_reply_t* : z_closure_reply_check, \
         z_owned_closure_reply_t : z_closure_reply_check, \
+        const z_owned_closure_sample_t* : z_closure_sample_check, \
         z_owned_closure_sample_t : z_closure_sample_check, \
+        const z_owned_condvar_t* : z_condvar_check, \
         z_owned_condvar_t : z_condvar_check, \
+        const z_owned_config_t* : z_config_check, \
         z_owned_config_t : z_config_check, \
+        const z_owned_encoding_t* : z_encoding_check, \
         z_owned_encoding_t : z_encoding_check, \
+        const z_owned_fifo_handler_query_t* : z_fifo_handler_query_check, \
         z_owned_fifo_handler_query_t : z_fifo_handler_query_check, \
+        const z_owned_fifo_handler_reply_t* : z_fifo_handler_reply_check, \
         z_owned_fifo_handler_reply_t : z_fifo_handler_reply_check, \
+        const z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_check, \
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_check, \
+        const z_owned_hello_t* : z_hello_check, \
         z_owned_hello_t : z_hello_check, \
+        const z_owned_keyexpr_t* : z_keyexpr_check, \
         z_owned_keyexpr_t : z_keyexpr_check, \
+        const z_owned_mutex_t* : z_mutex_check, \
         z_owned_mutex_t : z_mutex_check, \
+        const z_owned_publisher_t* : z_publisher_check, \
         z_owned_publisher_t : z_publisher_check, \
+        const z_owned_query_t* : z_query_check, \
         z_owned_query_t : z_query_check, \
+        const z_owned_queryable_t* : z_queryable_check, \
         z_owned_queryable_t : z_queryable_check, \
+        const z_owned_reply_t* : z_reply_check, \
         z_owned_reply_t : z_reply_check, \
+        const z_owned_reply_err_t* : z_reply_err_check, \
         z_owned_reply_err_t : z_reply_err_check, \
+        const z_owned_ring_handler_query_t* : z_ring_handler_query_check, \
         z_owned_ring_handler_query_t : z_ring_handler_query_check, \
+        const z_owned_ring_handler_reply_t* : z_ring_handler_reply_check, \
         z_owned_ring_handler_reply_t : z_ring_handler_reply_check, \
+        const z_owned_ring_handler_sample_t* : z_ring_handler_sample_check, \
         z_owned_ring_handler_sample_t : z_ring_handler_sample_check, \
+        const z_owned_sample_t* : z_sample_check, \
         z_owned_sample_t : z_sample_check, \
+        const z_owned_session_t* : z_session_check, \
         z_owned_session_t : z_session_check, \
+        const z_owned_slice_t* : z_slice_check, \
         z_owned_slice_t : z_slice_check, \
+        const z_owned_string_array_t* : z_string_array_check, \
         z_owned_string_array_t : z_string_array_check, \
+        const z_owned_string_t* : z_string_check, \
         z_owned_string_t : z_string_check, \
+        const z_owned_subscriber_t* : z_subscriber_check, \
         z_owned_subscriber_t : z_subscriber_check, \
+        const z_owned_task_t* : z_task_check, \
         z_owned_task_t : z_task_check, \
+        const zc_owned_closure_log_t* : zc_closure_log_check, \
         zc_owned_closure_log_t : zc_closure_log_check \
-    )(&this_)
+    )(_Generic((this_), \
+        const z_owned_bytes_t* : (this_), \
+        z_owned_bytes_t : (&this_), \
+        const z_owned_closure_hello_t* : (this_), \
+        z_owned_closure_hello_t : (&this_), \
+        const z_owned_closure_query_t* : (this_), \
+        z_owned_closure_query_t : (&this_), \
+        const z_owned_closure_reply_t* : (this_), \
+        z_owned_closure_reply_t : (&this_), \
+        const z_owned_closure_sample_t* : (this_), \
+        z_owned_closure_sample_t : (&this_), \
+        const z_owned_condvar_t* : (this_), \
+        z_owned_condvar_t : (&this_), \
+        const z_owned_config_t* : (this_), \
+        z_owned_config_t : (&this_), \
+        const z_owned_encoding_t* : (this_), \
+        z_owned_encoding_t : (&this_), \
+        const z_owned_fifo_handler_query_t* : (this_), \
+        z_owned_fifo_handler_query_t : (&this_), \
+        const z_owned_fifo_handler_reply_t* : (this_), \
+        z_owned_fifo_handler_reply_t : (&this_), \
+        const z_owned_fifo_handler_sample_t* : (this_), \
+        z_owned_fifo_handler_sample_t : (&this_), \
+        const z_owned_hello_t* : (this_), \
+        z_owned_hello_t : (&this_), \
+        const z_owned_keyexpr_t* : (this_), \
+        z_owned_keyexpr_t : (&this_), \
+        const z_owned_mutex_t* : (this_), \
+        z_owned_mutex_t : (&this_), \
+        const z_owned_publisher_t* : (this_), \
+        z_owned_publisher_t : (&this_), \
+        const z_owned_query_t* : (this_), \
+        z_owned_query_t : (&this_), \
+        const z_owned_queryable_t* : (this_), \
+        z_owned_queryable_t : (&this_), \
+        const z_owned_reply_t* : (this_), \
+        z_owned_reply_t : (&this_), \
+        const z_owned_reply_err_t* : (this_), \
+        z_owned_reply_err_t : (&this_), \
+        const z_owned_ring_handler_query_t* : (this_), \
+        z_owned_ring_handler_query_t : (&this_), \
+        const z_owned_ring_handler_reply_t* : (this_), \
+        z_owned_ring_handler_reply_t : (&this_), \
+        const z_owned_ring_handler_sample_t* : (this_), \
+        z_owned_ring_handler_sample_t : (&this_), \
+        const z_owned_sample_t* : (this_), \
+        z_owned_sample_t : (&this_), \
+        const z_owned_session_t* : (this_), \
+        z_owned_session_t : (&this_), \
+        const z_owned_slice_t* : (this_), \
+        z_owned_slice_t : (&this_), \
+        const z_owned_string_array_t* : (this_), \
+        z_owned_string_array_t : (&this_), \
+        const z_owned_string_t* : (this_), \
+        z_owned_string_t : (&this_), \
+        const z_owned_subscriber_t* : (this_), \
+        z_owned_subscriber_t : (&this_), \
+        const z_owned_task_t* : (this_), \
+        z_owned_task_t : (&this_), \
+        const zc_owned_closure_log_t* : (this_), \
+        zc_owned_closure_log_t : (&this_) \
+    ))
+
 
 #define z_call(closure, hello) \
     _Generic((closure), \
@@ -291,6 +596,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_closure_reply_t* : z_closure_reply_call, \
         const z_loaned_closure_sample_t* : z_closure_sample_call \
     )(closure, hello)
+
 
 #define z_closure(x, callback, dropper, ctx) \
     {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}
@@ -305,6 +611,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_ring_handler_sample_t* : z_ring_handler_sample_try_recv \
     )(this_, query)
 
+
 #define z_recv(this_, query) \
     _Generic((this_), \
         const z_loaned_fifo_handler_query_t* : z_fifo_handler_query_recv, \
@@ -314,6 +621,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_ring_handler_reply_t* : z_ring_handler_reply_recv, \
         const z_loaned_ring_handler_sample_t* : z_ring_handler_sample_recv \
     )(this_, query)
+
 #else  // #ifndef __cplusplus
 
 
@@ -350,6 +658,37 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 
 
 
+inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t* this_) { return z_bytes_loan(this_); };
+inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t* closure) { return z_closure_hello_loan(closure); };
+inline const z_loaned_closure_query_t* z_loan(const z_owned_closure_query_t* closure) { return z_closure_query_loan(closure); };
+inline const z_loaned_closure_reply_t* z_loan(const z_owned_closure_reply_t* closure) { return z_closure_reply_loan(closure); };
+inline const z_loaned_closure_sample_t* z_loan(const z_owned_closure_sample_t* closure) { return z_closure_sample_loan(closure); };
+inline const z_loaned_condvar_t* z_loan(const z_owned_condvar_t* this_) { return z_condvar_loan(this_); };
+inline const z_loaned_config_t* z_loan(const z_owned_config_t* this_) { return z_config_loan(this_); };
+inline const z_loaned_encoding_t* z_loan(const z_owned_encoding_t* this_) { return z_encoding_loan(this_); };
+inline const z_loaned_fifo_handler_query_t* z_loan(const z_owned_fifo_handler_query_t* this_) { return z_fifo_handler_query_loan(this_); };
+inline const z_loaned_fifo_handler_reply_t* z_loan(const z_owned_fifo_handler_reply_t* this_) { return z_fifo_handler_reply_loan(this_); };
+inline const z_loaned_fifo_handler_sample_t* z_loan(const z_owned_fifo_handler_sample_t* this_) { return z_fifo_handler_sample_loan(this_); };
+inline const z_loaned_hello_t* z_loan(const z_owned_hello_t* this_) { return z_hello_loan(this_); };
+inline const z_loaned_keyexpr_t* z_loan(const z_owned_keyexpr_t* this_) { return z_keyexpr_loan(this_); };
+inline const z_loaned_publisher_t* z_loan(const z_owned_publisher_t* this_) { return z_publisher_loan(this_); };
+inline const z_loaned_query_t* z_loan(const z_owned_query_t* this_) { return z_query_loan(this_); };
+inline const z_loaned_queryable_t* z_loan(const z_owned_queryable_t* this_) { return z_queryable_loan(this_); };
+inline const z_loaned_reply_err_t* z_loan(const z_owned_reply_err_t* this_) { return z_reply_err_loan(this_); };
+inline const z_loaned_reply_t* z_loan(const z_owned_reply_t* this_) { return z_reply_loan(this_); };
+inline const z_loaned_ring_handler_query_t* z_loan(const z_owned_ring_handler_query_t* this_) { return z_ring_handler_query_loan(this_); };
+inline const z_loaned_ring_handler_reply_t* z_loan(const z_owned_ring_handler_reply_t* this_) { return z_ring_handler_reply_loan(this_); };
+inline const z_loaned_ring_handler_sample_t* z_loan(const z_owned_ring_handler_sample_t* this_) { return z_ring_handler_sample_loan(this_); };
+inline const z_loaned_sample_t* z_loan(const z_owned_sample_t* this_) { return z_sample_loan(this_); };
+inline const z_loaned_session_t* z_loan(const z_owned_session_t* this_) { return z_session_loan(this_); };
+inline const z_loaned_slice_t* z_loan(const z_owned_slice_t* this_) { return z_slice_loan(this_); };
+inline const z_loaned_string_array_t* z_loan(const z_owned_string_array_t* this_) { return z_string_array_loan(this_); };
+inline const z_loaned_string_t* z_loan(const z_owned_string_t* this_) { return z_string_loan(this_); };
+inline const z_loaned_subscriber_t* z_loan(const z_owned_subscriber_t* this_) { return z_subscriber_loan(this_); };
+inline const z_loaned_keyexpr_t* z_loan(const z_view_keyexpr_t* this_) { return z_view_keyexpr_loan(this_); };
+inline const z_loaned_slice_t* z_loan(const z_view_slice_t* this_) { return z_view_slice_loan(this_); };
+inline const z_loaned_string_t* z_loan(const z_view_string_t* this_) { return z_view_string_loan(this_); };
+inline const zc_loaned_closure_log_t* z_loan(const zc_owned_closure_log_t* closure) { return zc_closure_log_loan(closure); };
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
 inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t& closure) { return z_closure_hello_loan(&closure); };
 inline const z_loaned_closure_query_t* z_loan(const z_owned_closure_query_t& closure) { return z_closure_query_loan(&closure); };
@@ -383,6 +722,13 @@ inline const z_loaned_string_t* z_loan(const z_view_string_t& this_) { return z_
 inline const zc_loaned_closure_log_t* z_loan(const zc_owned_closure_log_t& closure) { return zc_closure_log_loan(&closure); };
 
 
+inline z_loaned_bytes_t* z_loan_mut(z_owned_bytes_t* this_) { return z_bytes_loan_mut(this_); };
+inline z_loaned_condvar_t* z_loan_mut(z_owned_condvar_t* this_) { return z_condvar_loan_mut(this_); };
+inline z_loaned_config_t* z_loan_mut(z_owned_config_t* this_) { return z_config_loan_mut(this_); };
+inline z_loaned_encoding_t* z_loan_mut(z_owned_encoding_t* this_) { return z_encoding_loan_mut(this_); };
+inline z_loaned_mutex_t* z_loan_mut(z_owned_mutex_t* this_) { return z_mutex_loan_mut(this_); };
+inline z_loaned_publisher_t* z_loan_mut(z_owned_publisher_t* this_) { return z_publisher_loan_mut(this_); };
+inline z_loaned_string_array_t* z_loan_mut(z_owned_string_array_t* this_) { return z_string_array_loan_mut(this_); };
 inline z_loaned_bytes_t* z_loan_mut(z_owned_bytes_t& this_) { return z_bytes_loan_mut(&this_); };
 inline z_loaned_condvar_t* z_loan_mut(z_owned_condvar_t& this_) { return z_condvar_loan_mut(&this_); };
 inline z_loaned_config_t* z_loan_mut(z_owned_config_t& this_) { return z_config_loan_mut(&this_); };
@@ -424,6 +770,36 @@ inline void z_drop(z_moved_task_t* this_) { z_task_drop(this_); };
 inline void z_drop(zc_moved_closure_log_t* closure_) { zc_closure_log_drop(closure_); };
 
 
+inline z_moved_bytes_t* z_move(z_owned_bytes_t* this_) { return z_bytes_move(this_); };
+inline z_moved_closure_hello_t* z_move(z_owned_closure_hello_t* this_) { return z_closure_hello_move(this_); };
+inline z_moved_closure_query_t* z_move(z_owned_closure_query_t* closure_) { return z_closure_query_move(closure_); };
+inline z_moved_closure_reply_t* z_move(z_owned_closure_reply_t* closure_) { return z_closure_reply_move(closure_); };
+inline z_moved_closure_sample_t* z_move(z_owned_closure_sample_t* closure_) { return z_closure_sample_move(closure_); };
+inline z_moved_condvar_t* z_move(z_owned_condvar_t* this_) { return z_condvar_move(this_); };
+inline z_moved_config_t* z_move(z_owned_config_t* this_) { return z_config_move(this_); };
+inline z_moved_encoding_t* z_move(z_owned_encoding_t* this_) { return z_encoding_move(this_); };
+inline z_moved_fifo_handler_query_t* z_move(z_owned_fifo_handler_query_t* this_) { return z_fifo_handler_query_move(this_); };
+inline z_moved_fifo_handler_reply_t* z_move(z_owned_fifo_handler_reply_t* this_) { return z_fifo_handler_reply_move(this_); };
+inline z_moved_fifo_handler_sample_t* z_move(z_owned_fifo_handler_sample_t* this_) { return z_fifo_handler_sample_move(this_); };
+inline z_moved_hello_t* z_move(z_owned_hello_t* this_) { return z_hello_move(this_); };
+inline z_moved_keyexpr_t* z_move(z_owned_keyexpr_t* this_) { return z_keyexpr_move(this_); };
+inline z_moved_mutex_t* z_move(z_owned_mutex_t* this_) { return z_mutex_move(this_); };
+inline z_moved_publisher_t* z_move(z_owned_publisher_t* this_) { return z_publisher_move(this_); };
+inline z_moved_query_t* z_move(z_owned_query_t* this_) { return z_query_move(this_); };
+inline z_moved_queryable_t* z_move(z_owned_queryable_t* this_) { return z_queryable_move(this_); };
+inline z_moved_reply_t* z_move(z_owned_reply_t* this_) { return z_reply_move(this_); };
+inline z_moved_reply_err_t* z_move(z_owned_reply_err_t* this_) { return z_reply_err_move(this_); };
+inline z_moved_ring_handler_query_t* z_move(z_owned_ring_handler_query_t* this_) { return z_ring_handler_query_move(this_); };
+inline z_moved_ring_handler_reply_t* z_move(z_owned_ring_handler_reply_t* this_) { return z_ring_handler_reply_move(this_); };
+inline z_moved_ring_handler_sample_t* z_move(z_owned_ring_handler_sample_t* this_) { return z_ring_handler_sample_move(this_); };
+inline z_moved_sample_t* z_move(z_owned_sample_t* this_) { return z_sample_move(this_); };
+inline z_moved_session_t* z_move(z_owned_session_t* this_) { return z_session_move(this_); };
+inline z_moved_slice_t* z_move(z_owned_slice_t* this_) { return z_slice_move(this_); };
+inline z_moved_string_array_t* z_move(z_owned_string_array_t* this_) { return z_string_array_move(this_); };
+inline z_moved_string_t* z_move(z_owned_string_t* this_) { return z_string_move(this_); };
+inline z_moved_subscriber_t* z_move(z_owned_subscriber_t* this_) { return z_subscriber_move(this_); };
+inline z_moved_task_t* z_move(z_owned_task_t* this_) { return z_task_move(this_); };
+inline zc_moved_closure_log_t* z_move(zc_owned_closure_log_t* closure_) { return zc_closure_log_move(closure_); };
 inline z_moved_bytes_t* z_move(z_owned_bytes_t& this_) { return z_bytes_move(&this_); };
 inline z_moved_closure_hello_t* z_move(z_owned_closure_hello_t& this_) { return z_closure_hello_move(&this_); };
 inline z_moved_closure_query_t* z_move(z_owned_closure_query_t& closure_) { return z_closure_query_move(&closure_); };
@@ -612,6 +988,36 @@ inline void z_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) 
 };
 
 
+inline bool z_check(const z_owned_bytes_t* this_) { return z_bytes_check(this_); };
+inline bool z_check(const z_owned_closure_hello_t* this_) { return z_closure_hello_check(this_); };
+inline bool z_check(const z_owned_closure_query_t* this_) { return z_closure_query_check(this_); };
+inline bool z_check(const z_owned_closure_reply_t* this_) { return z_closure_reply_check(this_); };
+inline bool z_check(const z_owned_closure_sample_t* this_) { return z_closure_sample_check(this_); };
+inline bool z_check(const z_owned_condvar_t* this_) { return z_condvar_check(this_); };
+inline bool z_check(const z_owned_config_t* this_) { return z_config_check(this_); };
+inline bool z_check(const z_owned_encoding_t* this_) { return z_encoding_check(this_); };
+inline bool z_check(const z_owned_fifo_handler_query_t* this_) { return z_fifo_handler_query_check(this_); };
+inline bool z_check(const z_owned_fifo_handler_reply_t* this_) { return z_fifo_handler_reply_check(this_); };
+inline bool z_check(const z_owned_fifo_handler_sample_t* this_) { return z_fifo_handler_sample_check(this_); };
+inline bool z_check(const z_owned_hello_t* this_) { return z_hello_check(this_); };
+inline bool z_check(const z_owned_keyexpr_t* this_) { return z_keyexpr_check(this_); };
+inline bool z_check(const z_owned_mutex_t* this_) { return z_mutex_check(this_); };
+inline bool z_check(const z_owned_publisher_t* this_) { return z_publisher_check(this_); };
+inline bool z_check(const z_owned_query_t* query) { return z_query_check(query); };
+inline bool z_check(const z_owned_queryable_t* this_) { return z_queryable_check(this_); };
+inline bool z_check(const z_owned_reply_t* this_) { return z_reply_check(this_); };
+inline bool z_check(const z_owned_reply_err_t* this_) { return z_reply_err_check(this_); };
+inline bool z_check(const z_owned_ring_handler_query_t* this_) { return z_ring_handler_query_check(this_); };
+inline bool z_check(const z_owned_ring_handler_reply_t* this_) { return z_ring_handler_reply_check(this_); };
+inline bool z_check(const z_owned_ring_handler_sample_t* this_) { return z_ring_handler_sample_check(this_); };
+inline bool z_check(const z_owned_sample_t* this_) { return z_sample_check(this_); };
+inline bool z_check(const z_owned_session_t* this_) { return z_session_check(this_); };
+inline bool z_check(const z_owned_slice_t* this_) { return z_slice_check(this_); };
+inline bool z_check(const z_owned_string_array_t* this_) { return z_string_array_check(this_); };
+inline bool z_check(const z_owned_string_t* this_) { return z_string_check(this_); };
+inline bool z_check(const z_owned_subscriber_t* this_) { return z_subscriber_check(this_); };
+inline bool z_check(const z_owned_task_t* this_) { return z_task_check(this_); };
+inline bool z_check(const zc_owned_closure_log_t* this_) { return zc_closure_log_check(this_); };
 inline bool z_check(const z_owned_bytes_t& this_) { return z_bytes_check(&this_); };
 inline bool z_check(const z_owned_closure_hello_t& this_) { return z_closure_hello_check(&this_); };
 inline bool z_check(const z_owned_closure_query_t& this_) { return z_closure_query_check(&this_); };

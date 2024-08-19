@@ -14,30 +14,21 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-int main(int argc, char **argv) {
-    if (argc < 2) {
-        printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
-        exit(-1);
-    }
+struct args_t {
+    unsigned int size;  // positional_1
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-    char *keyexpr = "test/thr";
-    size_t len = atoi(argv[1]);
-    uint8_t *value = (uint8_t *)z_malloc(len);
-    memset(value, 1, len);
+int main(int argc, char** argv) {
+    char* keyexpr = "test/thr";
 
     z_owned_config_t config;
-    z_config_default(&config);
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
+    uint8_t* value = (uint8_t*)z_malloc(args.size);
+    memset(value, 1, args.size);
 
     z_owned_session_t s;
     if (z_open(&s, z_move(config)) < 0) {
@@ -57,12 +48,52 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    printf("Press CTRL-C to quit...\n");
     z_owned_bytes_t payload;
     while (1) {
-        z_bytes_from_buf(&payload, value, len, NULL, NULL);
+        z_bytes_from_buf(&payload, value, args.size, NULL, NULL);
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
     z_undeclare_publisher(z_move(pub));
     z_close(z_move(s));
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_pub_thr [OPTIONS] <PAYLOAD_SIZE>\n\n\
+    Arguments:\n\
+        <PAYLOAD_SIZE> (required, int): Size of the payload to publish\n\n\
+    Options:\n");
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args) {
+        printf("Unexpected additional positional arguments\n");
+        exit(-1);
+    }
+    if (!pos_args[0]) {
+        printf("<PAYLOAD_SIZE> argument is required\n");
+        free(pos_args);
+        exit(-1);
+    }
+    unsigned int size = atoi(pos_args[0]);
+    free(pos_args);
+    return (struct args_t){.size = size};
 }
