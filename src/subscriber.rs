@@ -66,7 +66,7 @@ decl_c_type!(
 
 /// Constructs a subscriber in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_subscriber_null(this_: &mut MaybeUninit<z_owned_subscriber_t>) {
+pub extern "C" fn _z_subscriber_null(this_: &mut MaybeUninit<z_owned_subscriber_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -174,6 +174,6 @@ pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
+pub extern "C" fn _z_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }

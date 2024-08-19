@@ -76,7 +76,7 @@ decl_c_type!(
 
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
-pub extern "C" fn z_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
+pub extern "C" fn _z_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
     this_
         .as_rust_type_mut_uninit()
         .write(ReplyErrorNewtype::default());
@@ -85,7 +85,7 @@ pub extern "C" fn z_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>)
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
+pub extern "C" fn _z_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
     !this_.as_rust_type_ref().payload().is_empty()
 }
 
@@ -170,7 +170,7 @@ pub unsafe extern "C" fn z_reply_replier_id(
 
 /// Constructs the reply in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_reply_null(this_: &mut MaybeUninit<z_owned_reply_t>) {
+pub extern "C" fn _z_reply_null(this_: &mut MaybeUninit<z_owned_reply_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 /// Constructs an owned shallow copy of reply in provided uninitialized memory location.
@@ -319,7 +319,7 @@ pub extern "C" fn z_reply_drop(this_: &mut z_moved_reply_t) {
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_reply_check(this_: &z_owned_reply_t) -> bool {
+pub extern "C" fn _z_reply_check(this_: &z_owned_reply_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

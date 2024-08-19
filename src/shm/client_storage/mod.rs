@@ -150,13 +150,13 @@ pub extern "C" fn z_shm_client_storage_clone(
 
 /// Constructs SHM Client Storage in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_null(this_: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
+pub extern "C" fn _z_shm_client_storage_null(this_: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shm_client_storage_check(this_: &z_owned_shm_client_storage_t) -> bool {
+pub extern "C" fn _z_shm_client_storage_check(this_: &z_owned_shm_client_storage_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

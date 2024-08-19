@@ -145,13 +145,13 @@ fn create_memory_layout(
 
 /// Constructs Memory Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
+pub extern "C" fn _z_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
+pub extern "C" fn _z_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -217,13 +217,13 @@ pub extern "C" fn z_chunk_alloc_result_new_error(
 
 /// Constructs Chunk Alloc Result in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_null(this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
+pub extern "C" fn _z_chunk_alloc_result_null(this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_check(this_: &z_owned_chunk_alloc_result_t) -> bool {
+pub extern "C" fn _z_chunk_alloc_result_check(this_: &z_owned_chunk_alloc_result_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

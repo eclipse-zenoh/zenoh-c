@@ -41,7 +41,7 @@ pub extern "C" fn z_fifo_handler_sample_drop(this_: &mut z_moved_fifo_handler_sa
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_sample_null(
+pub extern "C" fn _z_fifo_handler_sample_null(
     this: &mut MaybeUninit<z_owned_fifo_handler_sample_t>,
 ) {
     this.as_rust_type_mut_uninit().write(None);
@@ -49,7 +49,7 @@ pub extern "C" fn z_fifo_handler_sample_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_sample_check(this_: &z_owned_fifo_handler_sample_t) -> bool {
+pub extern "C" fn _z_fifo_handler_sample_check(this_: &z_owned_fifo_handler_sample_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -163,7 +163,7 @@ pub extern "C" fn z_ring_handler_sample_drop(this_: &mut z_moved_ring_handler_sa
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_sample_null(
+pub extern "C" fn _z_ring_handler_sample_null(
     this: &mut MaybeUninit<z_owned_ring_handler_sample_t>,
 ) {
     this.as_rust_type_mut_uninit().write(None);
@@ -171,7 +171,7 @@ pub extern "C" fn z_ring_handler_sample_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_sample_check(this_: &z_owned_ring_handler_sample_t) -> bool {
+pub extern "C" fn _z_ring_handler_sample_check(this_: &z_owned_ring_handler_sample_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
