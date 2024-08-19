@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     // we'll just have to make sure we `z_move` it again to avoid mem-leaks.
     printf("peers ids:\n");
     z_owned_closure_zid_t callback2;
-    z_closure(&callback, print_zid, NULL, NULL);
+    z_closure(&callback2, print_zid, NULL, NULL);
     z_info_peers_zid(z_loan(s), z_move(callback2));
 
     z_close(z_move(s));
