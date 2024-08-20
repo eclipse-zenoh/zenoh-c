@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG CMakeFiles/z_build_static.dir/z_build_static.c.o -o ../target/release/tests/z_build_static   -L/home/zenoh/actions-runner/_work/devops/devops/target/release  -Wl,-rpath,/home/zenoh/actions-runner/_work/devops/devops/target/release -lzenohc 

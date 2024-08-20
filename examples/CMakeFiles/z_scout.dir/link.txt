@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG CMakeFiles/z_scout.dir/z_scout.c.o -o ../target/release/examples/z_scout   -L/home/zenoh/actions-runner/_work/devops/devops/target/release  -Wl,-rpath,/home/zenoh/actions-runner/_work/devops/devops/target/release -lzenohc 
