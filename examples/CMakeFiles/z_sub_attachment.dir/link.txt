@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG CMakeFiles/z_sub_attachment.dir/z_sub_attachment.c.o -o ../target/release/examples/z_sub_attachment   -L/home/zenoh/actions-runner/_work/devops/devops/target/release  -Wl,-rpath,/home/zenoh/actions-runner/_work/devops/devops/target/release -lzenohc 
