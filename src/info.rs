@@ -11,13 +11,15 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use std::mem::MaybeUninit;
 use zenoh::{prelude::*, session::ZenohId};
 
 pub use crate::opaque_types::z_id_t;
 use crate::{
     result,
-    transmute::{CTypeRef, IntoCType, RustTypeRef, TakeRustType},
+    transmute::{CTypeRef, IntoCType, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
+    z_owned_string_t,
 };
 decl_c_type!(copy(z_id_t, ZenohId));
 
@@ -25,6 +27,13 @@ impl From<[u8; 16]> for z_id_t {
     fn from(value: [u8; 16]) -> Self {
         z_id_t { id: value }
     }
+}
+
+/// Formats the `z_id_t` into 16-digit hex string (LSB-first order)
+#[no_mangle]
+pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_string_t>) {
+    let zid = zid.as_rust_type_ref();
+    dst.as_rust_type_mut_uninit().write(zid.to_string().into());
 }
 
 /// Returns the session's Zenoh ID.

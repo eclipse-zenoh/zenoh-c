@@ -203,11 +203,10 @@ int main(int argc, char **argv) {
 
 #ifdef UNSTABLE
     z_id_t _ret_zid = z_info_zid(z_loan(s1));
-    printf("Session 1 with PID: 0x");
-    for (unsigned long i = 0; i < sizeof(_ret_zid); i++) {
-        printf("%.2X", _ret_zid.id[i]);
-    }
-    printf("\n");
+    z_owned_string_t str;
+    z_id_to_string(&_ret_zid, &str);
+    printf("Session 1 with PID: 0x%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 
     z_owned_closure_zid_t _ret_closure_zid;
     z_closure(&_ret_closure_zid, zid_handler, NULL, NULL);
@@ -248,11 +247,9 @@ int main(int argc, char **argv) {
 
 #ifdef UNSTABLE
     _ret_zid = z_info_zid(z_loan(s2));
-    printf("Session 2 with PID: 0x");
-    for (unsigned long i = 0; i < sizeof(_ret_zid); i++) {
-        printf("%.2X", _ret_zid.id[i]);
-    }
-    printf("\n");
+    z_id_to_string(&_ret_zid, &str);
+    printf("Session 2 with PID: 0x%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 #endif
 
 #ifdef ZENOH_PICO

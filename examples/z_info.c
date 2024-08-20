@@ -16,10 +16,10 @@
 #include "zenoh.h"
 
 void print_zid(const z_id_t *id, void *ctx) {
-    for (int i = 0; i < 16; i++) {
-        printf("%02x", id->id[i]);
-    }
-    printf("\n");
+    z_owned_string_t str;
+    z_id_to_string(id, &str);
+    printf("%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 }
 
 int main(int argc, char **argv) {
