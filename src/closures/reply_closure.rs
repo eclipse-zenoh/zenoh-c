@@ -84,13 +84,15 @@ impl Drop for z_owned_closure_reply_t {
 /// Constructs a closure int its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn _z_closure_reply_null(this_: *mut MaybeUninit<z_owned_closure_reply_t>) {
+pub unsafe extern "C" fn z_internal_closure_reply_null(
+    this_: *mut MaybeUninit<z_owned_closure_reply_t>,
+) {
     (*this_).write(z_owned_closure_reply_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn _z_closure_reply_check(this_: &z_owned_closure_reply_t) -> bool {
+pub extern "C" fn z_internal_closure_reply_check(this_: &z_owned_closure_reply_t) -> bool {
     !this_.is_empty()
 }
 

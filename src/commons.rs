@@ -188,7 +188,7 @@ pub extern "C" fn z_sample_congestion_control(this_: &z_loaned_sample_t) -> z_co
 
 /// Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn _z_sample_check(this_: &z_owned_sample_t) -> bool {
+pub extern "C" fn z_internal_sample_check(this_: &z_owned_sample_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -211,7 +211,7 @@ pub extern "C" fn z_sample_drop(this_: &mut z_moved_sample_t) {
 
 /// Constructs sample in its gravestone state.
 #[no_mangle]
-pub extern "C" fn _z_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
+pub extern "C" fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -526,7 +526,7 @@ pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u64 {
 #[cfg(feature = "unstable")]
 /// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn _z_source_info_check(this_: &z_owned_source_info_t) -> bool {
+pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
     this_.as_rust_type_ref().source_id.is_some() || this_.as_rust_type_ref().source_sn.is_some()
 }
 
@@ -547,6 +547,6 @@ pub extern "C" fn z_source_info_drop(this_: &mut z_moved_source_info_t) {
 #[cfg(feature = "unstable")]
 /// Constructs source info in its gravestone state.
 #[no_mangle]
-pub extern "C" fn _z_source_info_null(this_: &mut MaybeUninit<z_owned_source_info_t>) {
+pub extern "C" fn z_internal_source_info_null(this_: &mut MaybeUninit<z_owned_source_info_t>) {
     this_.as_rust_type_mut_uninit().write(SourceInfo::default());
 }

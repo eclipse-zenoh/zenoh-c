@@ -146,7 +146,9 @@ impl Drop for zc_owned_closure_log_t {
 /// Constructs a closure in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn _zc_closure_log_null(this_: *mut MaybeUninit<zc_owned_closure_log_t>) {
+pub unsafe extern "C" fn zc_internal_closure_log_null(
+    this_: *mut MaybeUninit<zc_owned_closure_log_t>,
+) {
     (*this_).write(zc_owned_closure_log_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
@@ -172,7 +174,7 @@ pub extern "C" fn zc_closure_log_drop(closure_: &mut zc_moved_closure_log_t) {
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn _zc_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
+pub extern "C" fn zc_internal_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
     !this_.is_empty()
 }
 

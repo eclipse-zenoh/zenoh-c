@@ -45,7 +45,7 @@ decl_c_type! {
 
 /// The gravestone value for `z_owned_bytes_t`.
 #[no_mangle]
-extern "C" fn _z_bytes_null(this: &mut MaybeUninit<z_owned_bytes_t>) {
+extern "C" fn z_internal_bytes_null(this: &mut MaybeUninit<z_owned_bytes_t>) {
     this.as_rust_type_mut_uninit().write(ZBytes::default());
 }
 
@@ -64,7 +64,7 @@ extern "C" fn z_bytes_drop(this_: &mut z_moved_bytes_t) {
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
-extern "C" fn _z_bytes_check(this: &z_owned_bytes_t) -> bool {
+extern "C" fn z_internal_bytes_check(this: &z_owned_bytes_t) -> bool {
     !this.as_rust_type_ref().is_empty()
 }
 

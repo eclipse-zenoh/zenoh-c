@@ -25,7 +25,7 @@ use zenoh::{
 use super::chunk::z_allocated_chunk_t;
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
-    shm::buffer::zshmmut::z_shm_mut_null,
+    shm::buffer::zshmmut::z_internal_shm_mut_null,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t,
     z_moved_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
@@ -145,13 +145,13 @@ fn create_memory_layout(
 
 /// Constructs Memory Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn _z_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
+pub extern "C" fn z_internal_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn _z_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
+pub extern "C" fn z_internal_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -217,13 +217,17 @@ pub extern "C" fn z_chunk_alloc_result_new_error(
 
 /// Constructs Chunk Alloc Result in its gravestone value.
 #[no_mangle]
-pub extern "C" fn _z_chunk_alloc_result_null(this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
+pub extern "C" fn z_internal_chunk_alloc_result_null(
+    this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
+) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn _z_chunk_alloc_result_check(this_: &z_owned_chunk_alloc_result_t) -> bool {
+pub extern "C" fn z_internal_chunk_alloc_result_check(
+    this_: &z_owned_chunk_alloc_result_t,
+) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -264,7 +268,7 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
                 }
             }
             Err(error) => {
-                z_shm_mut_null(&mut buf);
+                z_internal_shm_mut_null(&mut buf);
                 Self {
                     // SAFETY: this is safe because buf is gravestone-initialized above
                     buf: unsafe { buf.assume_init() },
@@ -298,7 +302,7 @@ impl From<BufLayoutAllocResult> for z_buf_layout_alloc_result_t {
                 }
             }
             Err(error) => {
-                z_shm_mut_null(&mut buf);
+                z_internal_shm_mut_null(&mut buf);
                 match error {
                     zenoh::shm::ZLayoutAllocError::Alloc(alloc) => {
                         Self {

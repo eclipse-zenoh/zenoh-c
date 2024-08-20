@@ -39,13 +39,15 @@ pub extern "C" fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_cl
 
 /// Constructs SHM client list in its gravestone value.
 #[no_mangle]
-pub extern "C" fn _zc_shm_client_list_null(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
+pub extern "C" fn zc_internal_shm_client_list_null(
+    this_: &mut MaybeUninit<zc_owned_shm_client_list_t>,
+) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn _zc_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
+pub extern "C" fn zc_internal_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -150,13 +152,17 @@ pub extern "C" fn z_shm_client_storage_clone(
 
 /// Constructs SHM Client Storage in its gravestone value.
 #[no_mangle]
-pub extern "C" fn _z_shm_client_storage_null(this_: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
+pub extern "C" fn z_internal_shm_client_storage_null(
+    this_: &mut MaybeUninit<z_owned_shm_client_storage_t>,
+) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn _z_shm_client_storage_check(this_: &z_owned_shm_client_storage_t) -> bool {
+pub extern "C" fn z_internal_shm_client_storage_check(
+    this_: &z_owned_shm_client_storage_t,
+) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
