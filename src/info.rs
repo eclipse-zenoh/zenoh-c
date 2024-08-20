@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use std::mem::MaybeUninit;
+
 use zenoh::{prelude::*, session::ZenohId};
 
 pub use crate::opaque_types::z_id_t;
