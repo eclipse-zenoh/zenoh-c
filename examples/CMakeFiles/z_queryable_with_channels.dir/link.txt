@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG CMakeFiles/z_queryable_with_channels.dir/z_queryable_with_channels.c.o -o ../target/release/examples/z_queryable_with_channels   -L/home/zenoh/actions-runner/_work/devops/devops/target/release  -Wl,-rpath,/home/zenoh/actions-runner/_work/devops/devops/target/release -lzenohc 

@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG CMakeFiles/z_api_alignment_test.dir/z_api_alignment_test.c.o -o ../target/release/tests/z_api_alignment_test   -L/home/zenoh/actions-runner/_work/devops/devops/target/release  -Wl,-rpath,/home/zenoh/actions-runner/_work/devops/devops/target/release -lzenohc 
