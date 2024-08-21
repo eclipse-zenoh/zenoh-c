@@ -165,6 +165,7 @@ typedef enum z_query_target_t {
 /**
  * The subscription reliability.
  */
+#if defined(UNSTABLE)
 typedef enum z_reliability_t {
   /**
    * Defines reliability as ``BEST_EFFORT``
@@ -175,6 +176,7 @@ typedef enum z_reliability_t {
    */
   Z_RELIABILITY_RELIABLE,
 } z_reliability_t;
+#endif
 typedef enum z_sample_kind_t {
   /**
    * The Sample was issued by a ``put`` operation.
@@ -561,10 +563,12 @@ typedef struct z_queryable_options_t {
  * Options passed to the `z_declare_subscriber()` function.
  */
 typedef struct z_subscriber_options_t {
+#if defined(UNSTABLE)
   /**
    * The subscription reliability.
    */
   enum z_reliability_t reliability;
+#endif
 } z_subscriber_options_t;
 /**
  * Options passed to the `z_delete()` function.
