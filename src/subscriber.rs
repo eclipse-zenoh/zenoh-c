@@ -14,11 +14,9 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{
-    prelude::SessionDeclarations,
-    pubsub::{Reliability, Subscriber},
-    Wait,
-};
+#[cfg(feature = "unstable")]
+use zenoh::pubsub::Reliability;
+use zenoh::{prelude::SessionDeclarations, pubsub::Subscriber, Wait};
 
 use crate::{
     keyexpr::*,
@@ -28,6 +26,7 @@ use crate::{
 };
 
 /// The subscription reliability.
+#[cfg(feature = "unstable")]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -38,6 +37,7 @@ pub enum z_reliability_t {
     RELIABLE,
 }
 
+#[cfg(feature = "unstable")]
 impl From<Reliability> for z_reliability_t {
     #[inline]
     fn from(r: Reliability) -> Self {
@@ -48,6 +48,7 @@ impl From<Reliability> for z_reliability_t {
     }
 }
 
+#[cfg(feature = "unstable")]
 impl From<z_reliability_t> for Reliability {
     #[inline]
     fn from(val: z_reliability_t) -> Self {
@@ -86,6 +87,7 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 #[repr(C)]
 pub struct z_subscriber_options_t {
     /// The subscription reliability.
+    #[cfg(feature = "unstable")]
     pub reliability: z_reliability_t,
 }
 
@@ -93,6 +95,7 @@ pub struct z_subscriber_options_t {
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
     this_.write(z_subscriber_options_t {
+        #[cfg(feature = "unstable")]
         reliability: Reliability::DEFAULT.into(),
     });
 }
@@ -119,12 +122,17 @@ pub extern "C" fn z_declare_subscriber(
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let callback = callback.take_rust_type();
-    let mut subscriber = session
+    let subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         });
+    #[cfg(not(feature = "unstable"))]
+    let _ = options;
+    #[cfg(feature = "unstable")]
+    let mut subscriber = subscriber;
+    #[cfg(feature = "unstable")]
     if let Some(options) = options {
         subscriber = subscriber.reliability(options.reliability.into());
     }
