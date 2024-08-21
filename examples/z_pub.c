@@ -14,10 +14,21 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
+#define DEFAULT_KEYEXPR "demo/example/zenoh-c-pub"
+#define DEFAULT_VALUE "Pub from C!"
+
+struct args_t {
+    char* keyexpr;               // -k
+    char* value;                 // -v
+    bool add_matching_listener;  // --add-matching-listener
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
 #ifdef UNSTABLE
-void matching_status_handler(const zc_matching_status_t *matching_status, void *arg) {
+void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");
     } else {
@@ -26,26 +37,9 @@ void matching_status_handler(const zc_matching_status_t *matching_status, void *
 }
 #endif
 
-int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-pub";
-    char *value = "Pub from C!";
-    bool add_matching_listener = false;
-
-    if (argc > 1) keyexpr = argv[1];
-    if (argc > 2) value = argv[2];
-    if (argc > 3) add_matching_listener = atoi(argv[3]);
-
+int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
-    if (argc > 4) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[4]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[4], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
     z_owned_session_t s;
@@ -54,10 +48,10 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    printf("Declaring Publisher on '%s'...\n", args.keyexpr);
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_str(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
     if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
@@ -65,23 +59,24 @@ int main(int argc, char **argv) {
 
 #ifdef UNSTABLE
     zc_owned_matching_listener_t listener;
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
         zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
     }
 #else
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
         exit(-1);
     }
 #endif
 
+    printf("Press CTRL-C to quit...\n");
     char buf[256] = {};
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
-        sprintf(buf, "[%4d] %s", idx, value);
-        printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
+        sprintf(buf, "[%4d] %s", idx, args.value);
+        printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
 
@@ -91,7 +86,7 @@ int main(int argc, char **argv) {
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 #ifdef UNSTABLE
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         zc_publisher_matching_listener_undeclare(z_move(listener));
     }
 #endif
@@ -99,4 +94,54 @@ int main(int argc, char **argv) {
     z_undeclare_publisher(z_move(pub));
     z_close(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_pub [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
+        -v <VALUE> (optional, string, default='%s'): The value to write\n\
+        --add-matching-listener (optional): Add matching listener\n",
+        DEFAULT_KEYEXPR, DEFAULT_VALUE);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    const char* value = parse_opt(argc, argv, "v", true);
+    if (!value) {
+        value = DEFAULT_VALUE;
+    }
+    const char* arg = parse_opt(argc, argv, "add-matching-listener", false);
+    bool add_matching_listener = false;
+    if (arg) {
+        add_matching_listener = true;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return (struct args_t){
+        .keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
 }
