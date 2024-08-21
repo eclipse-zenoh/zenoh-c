@@ -82,7 +82,7 @@ impl Drop for zc_owned_closure_matching_status_t {
 /// Constructs a null value of 'zc_owned_closure_matching_status_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_closure_matching_status_null(
+pub unsafe extern "C" fn zc_internal_closure_matching_status_null(
     this: *mut MaybeUninit<zc_owned_closure_matching_status_t>,
 ) {
     (*this).write(zc_owned_closure_matching_status_t::default());
@@ -90,7 +90,7 @@ pub unsafe extern "C" fn zc_closure_matching_status_null(
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_closure_matching_status_check(
+pub extern "C" fn zc_internal_closure_matching_status_check(
     this: &zc_owned_closure_matching_status_t,
 ) -> bool {
     !this.is_empty()

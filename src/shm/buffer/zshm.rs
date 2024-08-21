@@ -41,13 +41,13 @@ pub extern "C" fn z_shm_from_mut(
 
 /// Constructs ZShm slice in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_null(this_: &mut MaybeUninit<z_owned_shm_t>) {
+pub extern "C" fn z_internal_shm_null(this_: &mut MaybeUninit<z_owned_shm_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shm_check(this_: &z_owned_shm_t) -> bool {
+pub extern "C" fn z_internal_shm_check(this_: &z_owned_shm_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

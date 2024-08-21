@@ -44,7 +44,7 @@ decl_c_type!(
 /// Constructs a querying subscriber in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_querying_subscriber_null(
+pub extern "C" fn ze_internal_querying_subscriber_null(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
 ) {
     this.as_rust_type_mut_uninit().write(None);
@@ -231,7 +231,9 @@ pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subs
 
 /// Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_check(this_: &ze_owned_querying_subscriber_t) -> bool {
+pub extern "C" fn ze_internal_querying_subscriber_check(
+    this_: &ze_owned_querying_subscriber_t,
+) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

@@ -53,13 +53,13 @@ pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hell
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_check(this_: &z_owned_hello_t) -> bool {
+pub extern "C" fn z_internal_hello_check(this_: &z_owned_hello_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs hello message in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>) {
+pub extern "C" fn z_internal_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 

@@ -43,7 +43,7 @@ pub unsafe extern "C" fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_
 /// Constructs a Zenoh session in its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_session_null(this_: &mut MaybeUninit<z_owned_session_t>) {
+pub extern "C" fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_session_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -117,7 +117,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
 /// Returns ``true`` if `session` is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_session_check(this_: &z_owned_session_t) -> bool {
+pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

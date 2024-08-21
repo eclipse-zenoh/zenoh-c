@@ -19,7 +19,7 @@ use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
 use crate::{
     result::{self, z_result_t, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_owned_string_t, z_string_copy_from_substr, z_string_null,
+    z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
 };
 
 #[no_mangle]
@@ -100,7 +100,7 @@ pub extern "C" fn z_config_default(
 
 /// Constructs config in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_config_null(this_: &mut MaybeUninit<z_owned_config_t>) {
+pub extern "C" fn z_internal_config_null(this_: &mut MaybeUninit<z_owned_config_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -137,7 +137,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
 ) -> result::z_result_t {
     let config = this.as_rust_type_ref();
     if key.is_null() {
-        z_string_null(out_value_string);
+        z_internal_string_null(out_value_string);
         return result::Z_EINVAL;
     }
 
@@ -145,7 +145,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
         Ok(s) => s,
         Err(e) => {
             tracing::error!("Config key is not a valid utf-8 string: {}", e);
-            z_string_null(out_value_string);
+            z_internal_string_null(out_value_string);
             return result::Z_EINVAL;
         }
     };
@@ -161,7 +161,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
         }
         None => {
             tracing::error!("No value was found in the config for key: '{}'", key);
-            z_string_null(out_value_string);
+            z_internal_string_null(out_value_string);
             result::Z_EUNAVAILABLE
         }
     }
@@ -230,7 +230,7 @@ pub extern "C" fn z_config_drop(this_: &mut z_moved_config_t) {
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_config_check(this_: &z_owned_config_t) -> bool {
+pub extern "C" fn z_internal_config_check(this_: &z_owned_config_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -245,7 +245,7 @@ pub unsafe extern "C" fn zc_config_from_str(
 ) -> result::z_result_t {
     let mut res = result::Z_OK;
     if s.is_null() {
-        z_config_null(this);
+        z_internal_config_null(this);
         res = result::Z_EINVAL;
     } else {
         let conf_str = CStr::from_ptr(s);
@@ -281,7 +281,7 @@ pub unsafe extern "C" fn zc_config_to_string(
         }
         Err(e) => {
             tracing::error!("Config is not a valid json5: {}", e);
-            z_string_null(out_config_string);
+            z_internal_string_null(out_config_string);
             result::Z_EPARSE
         }
     }
@@ -380,7 +380,7 @@ pub unsafe extern "C" fn z_config_client(
     {
         locators
     } else {
-        z_config_null(this);
+        z_internal_config_null(this);
         return res;
     };
     this.as_rust_type_mut_uninit()
