@@ -84,14 +84,16 @@ impl Drop for z_owned_closure_zid_t {
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_zid_check(this_: &z_owned_closure_zid_t) -> bool {
+pub unsafe extern "C" fn z_internal_closure_zid_check(this_: &z_owned_closure_zid_t) -> bool {
     !this_.is_empty()
 }
 
 /// Constructs a null closure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_zid_null(this_: &mut MaybeUninit<z_owned_closure_zid_t>) {
+pub unsafe extern "C" fn z_internal_closure_zid_null(
+    this_: &mut MaybeUninit<z_owned_closure_zid_t>,
+) {
     this_.write(z_owned_closure_zid_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.

@@ -40,7 +40,7 @@ decl_c_type!(
 
 /// Constructs a queryable in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_queryable_null(this_: &mut MaybeUninit<z_owned_queryable_t>) {
+pub extern "C" fn z_internal_queryable_null(this_: &mut MaybeUninit<z_owned_queryable_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -63,12 +63,12 @@ decl_c_type!(
 
 /// Constructs query in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_null(this_: &mut MaybeUninit<z_owned_query_t>) {
+pub extern "C" fn z_internal_query_null(this_: &mut MaybeUninit<z_owned_query_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
 #[no_mangle]
-pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
+pub extern "C" fn z_internal_query_check(query: &z_owned_query_t) -> bool {
     query.as_rust_type_ref().is_some()
 }
 /// Borrows the query.
@@ -273,7 +273,7 @@ pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
 
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_queryable_check(this_: &z_owned_queryable_t) -> bool {
+pub extern "C" fn z_internal_queryable_check(this_: &z_owned_queryable_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

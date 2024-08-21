@@ -34,13 +34,15 @@ decl_c_type!(
 
 /// Constructs liveliness token in its gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_token_null(this_: &mut MaybeUninit<zc_owned_liveliness_token_t>) {
+pub extern "C" fn zc_internal_liveliness_token_null(
+    this_: &mut MaybeUninit<zc_owned_liveliness_token_t>,
+) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
+pub extern "C" fn zc_internal_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -101,7 +103,7 @@ pub extern "C" fn zc_liveliness_declare_token(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to undeclare token: {e}");
+            tracing::error!("Failed to undeclare liveliness token: {e}");
             this.write(None);
             result::Z_EGENERIC
         }

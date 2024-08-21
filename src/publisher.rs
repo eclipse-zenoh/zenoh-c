@@ -125,14 +125,14 @@ pub extern "C" fn z_declare_publisher(
 /// Constructs a publisher in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_null(this_: &mut MaybeUninit<z_owned_publisher_t>) {
+pub extern "C" fn z_internal_publisher_null(this_: &mut MaybeUninit<z_owned_publisher_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publisher is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_publisher_check(this_: &z_owned_publisher_t) -> bool {
+pub extern "C" fn z_internal_publisher_check(this_: &z_owned_publisher_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -298,14 +298,18 @@ decl_c_type!(
 /// Constructs an empty matching listener
 #[no_mangle]
 #[cfg(feature = "unstable")]
-pub extern "C" fn zc_matching_listener_null(this_: &mut MaybeUninit<zc_owned_matching_listener_t>) {
+pub extern "C" fn zc_internal_matching_listener_null(
+    this_: &mut MaybeUninit<zc_owned_matching_listener_t>,
+) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Checks the matching listener is for the gravestone state
 #[no_mangle]
 #[cfg(feature = "unstable")]
-pub extern "C" fn zc_matching_listener_check(this_: &zc_owned_matching_listener_t) -> bool {
+pub extern "C" fn zc_internal_matching_listener_check(
+    this_: &zc_owned_matching_listener_t,
+) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
