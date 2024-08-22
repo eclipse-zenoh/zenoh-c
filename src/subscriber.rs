@@ -89,6 +89,9 @@ pub struct z_subscriber_options_t {
     /// The subscription reliability.
     #[cfg(feature = "unstable")]
     pub reliability: z_reliability_t,
+    /// Dummy field to avoid having fieldless struct
+    #[cfg(not(feature = "unstable"))]
+    pub _0: u8,
 }
 
 /// Constructs the default value for `z_subscriber_options_t`.
@@ -97,6 +100,8 @@ pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscri
     this_.write(z_subscriber_options_t {
         #[cfg(feature = "unstable")]
         reliability: Reliability::DEFAULT.into(),
+        #[cfg(not(feature = "unstable"))]
+        _0: 0,
     });
 }
 
