@@ -202,6 +202,50 @@ typedef enum z_whatami_t {
   Z_WHATAMI_CLIENT = 4,
 } z_whatami_t;
 /**
+ * Status of SHM buffer allocation operation
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef enum zc_buf_alloc_status_t {
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation ok
+   */
+  ZC_BUF_ALLOC_STATUS_OK = 0,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation error
+   */
+  ZC_BUF_ALLOC_STATUS_ALLOC_ERROR = 1,
+#endif
+} zc_buf_alloc_status_t;
+#endif
+/**
+ * Status of SHM buffer layouting + allocation operation
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef enum zc_buf_layout_alloc_status_t {
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation ok
+   */
+  ZC_BUF_LAYOUT_ALLOC_STATUS_OK = 0,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation error
+   */
+  ZC_BUF_LAYOUT_ALLOC_STATUS_ALLOC_ERROR = 1,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Layouting error
+   */
+  ZC_BUF_LAYOUT_ALLOC_STATUS_LAYOUT_ERROR = 2,
+#endif
+} zc_buf_layout_alloc_status_t;
+#endif
+/**
  * The locality of samples to be received by subscribers or targeted by publishers.
  */
 typedef enum zc_locality_t {
@@ -268,8 +312,12 @@ typedef enum zc_reply_keyexpr_t {
   ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zc_reply_keyexpr_t;
 #endif
+/**
+ * A result of SHM buffer allocation operation
+ */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 typedef struct z_buf_alloc_result_t {
+  enum zc_buf_alloc_status_t status;
   z_owned_shm_mut_t buf;
   enum z_alloc_error_t error;
 } z_buf_alloc_result_t;
@@ -897,10 +945,13 @@ typedef struct zc_shm_client_callbacks_t {
   bool (*attach_fn)(struct z_shm_segment_t *out_segment, z_segment_id_t segment_id, void *context);
 } zc_shm_client_callbacks_t;
 #endif
+/**
+ * A result of SHM buffer layouting + allocation operation
+ */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 typedef struct z_buf_layout_alloc_result_t {
+  enum zc_buf_layout_alloc_status_t status;
   z_owned_shm_mut_t buf;
-  bool error_is_alloc;
   enum z_alloc_error_t alloc_error;
   enum z_layout_error_t layout_error;
 } z_buf_layout_alloc_result_t;

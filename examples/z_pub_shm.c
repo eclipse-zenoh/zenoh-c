@@ -22,10 +22,21 @@
 #define DEFAULT_VALUE "Pub from C!"
 
 struct args_t {
-    char* keyexpr;  // -k
-    char* value;    // -v
+    char* keyexpr;               // -k
+    char* value;                 // -v
+    bool add_matching_listener;  // --add-matching-listener
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+#ifdef UNSTABLE
+void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
+    if (matching_status->matching) {
+        printf("Subscriber matched\n");
+    } else {
+        printf("No Subscribers matched\n");
+    }
+}
+#endif
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
@@ -48,7 +59,7 @@ int main(int argc, char** argv) {
     }
 #ifdef UNSTABLE
     zc_owned_matching_listener_t listener;
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
         zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
@@ -76,7 +87,7 @@ int main(int argc, char** argv) {
 
         z_buf_layout_alloc_result_t alloc;
         z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
-        if (z_check(alloc.buf)) {
+        if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
             {
                 uint8_t* buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
                 sprintf((char*)buf, "[%4d] %s", idx, args.value);
@@ -97,7 +108,7 @@ int main(int argc, char** argv) {
     }
 
 #ifdef UNSTABLE
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         zc_publisher_matching_listener_undeclare(z_move(listener));
     }
 #endif
@@ -138,8 +149,13 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     if (!value) {
         value = DEFAULT_VALUE;
     }
+    const char* arg = parse_opt(argc, argv, "add-matching-listener", false);
+    bool add_matching_listener = false;
+    if (arg) {
+        add_matching_listener = true;
+    }
     parse_zenoh_common_args(argc, argv, config);
-    const char* arg = check_unknown_opts(argc, argv);
+    arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
@@ -151,5 +167,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value};
+    return (struct args_t){
+        .keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
 }

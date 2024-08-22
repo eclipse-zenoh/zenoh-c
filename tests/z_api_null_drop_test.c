@@ -54,7 +54,9 @@ int main(void) {
     TEST(closure_query)
     TEST(closure_reply)
     TEST(closure_hello)
+#ifdef UNSTABLE
     TEST(closure_zid)
+#endif
     TEST(string)
     TEST(string_array)
     TEST(sample)

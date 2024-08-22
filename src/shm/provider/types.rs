@@ -249,8 +249,20 @@ pub extern "C" fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_resu
     let _ = this_.take_rust_type();
 }
 
+/// Status of SHM buffer allocation operation
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum zc_buf_alloc_status_t {
+    /// Allocation ok
+    OK = 0,
+    /// Allocation error
+    ALLOC_ERROR = 1,
+}
+
+/// A result of SHM buffer allocation operation
 #[repr(C)]
 pub struct z_buf_alloc_result_t {
+    status: zc_buf_alloc_status_t,
     buf: z_owned_shm_mut_t,
     error: z_alloc_error_t,
 }
@@ -262,6 +274,7 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
             Ok(val) => {
                 buf.as_rust_type_mut_uninit().write(Some(val));
                 Self {
+                    status: zc_buf_alloc_status_t::OK,
                     // SAFETY: this is safe because buf is gravestone-initialized above
                     buf: unsafe { buf.assume_init() },
                     error: z_alloc_error_t::OTHER,
@@ -270,6 +283,7 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
             Err(error) => {
                 z_internal_shm_mut_null(&mut buf);
                 Self {
+                    status: zc_buf_alloc_status_t::ALLOC_ERROR,
                     // SAFETY: this is safe because buf is gravestone-initialized above
                     buf: unsafe { buf.assume_init() },
                     error: error.into(),
@@ -279,10 +293,23 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
     }
 }
 
+/// Status of SHM buffer layouting + allocation operation
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum zc_buf_layout_alloc_status_t {
+    /// Allocation ok
+    OK = 0,
+    /// Allocation error
+    ALLOC_ERROR = 1,
+    /// Layouting error
+    LAYOUT_ERROR = 2,
+}
+
+/// A result of SHM buffer layouting + allocation operation
 #[repr(C)]
 pub struct z_buf_layout_alloc_result_t {
+    status: zc_buf_layout_alloc_status_t,
     buf: z_owned_shm_mut_t,
-    error_is_alloc: bool,
     alloc_error: z_alloc_error_t,
     layout_error: z_layout_error_t,
 }
@@ -294,9 +321,9 @@ impl From<BufLayoutAllocResult> for z_buf_layout_alloc_result_t {
             Ok(val) => {
                 buf.as_rust_type_mut_uninit().write(Some(val));
                 Self {
-                    // SAFETY: this is safe because buf is gravestone-initialized above
+                    status: zc_buf_layout_alloc_status_t::OK,
+                    // SAFETY: this is safe because buf is initialized above
                     buf: unsafe { buf.assume_init() },
-                    error_is_alloc: false,
                     alloc_error: z_alloc_error_t::OTHER,
                     layout_error: z_layout_error_t::PROVIDER_INCOMPATIBLE_LAYOUT,
                 }
@@ -306,18 +333,18 @@ impl From<BufLayoutAllocResult> for z_buf_layout_alloc_result_t {
                 match error {
                     zenoh::shm::ZLayoutAllocError::Alloc(alloc) => {
                         Self {
+                            status: zc_buf_layout_alloc_status_t::ALLOC_ERROR,
                             // SAFETY: this is safe because buf is gravestone-initialized above
                             buf: unsafe { buf.assume_init() },
-                            error_is_alloc: true,
                             alloc_error: alloc.into(),
                             layout_error: z_layout_error_t::PROVIDER_INCOMPATIBLE_LAYOUT,
                         }
                     }
                     zenoh::shm::ZLayoutAllocError::Layout(layout) => {
                         Self {
+                            status: zc_buf_layout_alloc_status_t::LAYOUT_ERROR,
                             // SAFETY: this is safe because buf is gravestone-initialized above
                             buf: unsafe { buf.assume_init() },
-                            error_is_alloc: false,
                             alloc_error: z_alloc_error_t::OTHER,
                             layout_error: layout.into(),
                         }

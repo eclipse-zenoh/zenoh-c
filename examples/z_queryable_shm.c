@@ -51,7 +51,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_alloc_alignment_t alignment = {0};
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc_gc_defrag_blocking(&alloc, provider, value_len, alignment);
-    if (z_check(alloc.buf)) {
+    if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         {
             uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
             memcpy(buf, value, value_len);
