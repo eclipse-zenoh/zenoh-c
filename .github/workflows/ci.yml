@@ -108,6 +108,7 @@ jobs:
         run: cargo test --verbose --release --features=logger-autoinit
 
       - name: Upload artifact
+        if: ${{ matrix.unstable == 'false' && matrix.shm == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           # Artifact name
