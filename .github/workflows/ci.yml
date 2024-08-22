@@ -89,10 +89,10 @@ jobs:
       - name: Build examples with zenoh-c as subbroject and static library and in debug mode and in separate directory
         shell: bash
         run: |
-          mkdir -p $CI_PROJECT_DIR/build_examples
-          cmake -S examples -B $CI_PROJECT_DIR/build_examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_LIB_STATIC=TRUE
-          cmake --build $CI_PROJECT_DIR/build_examples --config Debug
-          rm -rf $CI_PROJECT_DIR/build_examples
+          mkdir -p ../build_examples
+          cmake -S examples -B ../build_examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_LIB_STATIC=TRUE
+          cmake --build ../build_examples --config Debug
+          rm -rf ../build_examples
 
       - name: Build examples with zenoh-c as installed package
         shell: bash
