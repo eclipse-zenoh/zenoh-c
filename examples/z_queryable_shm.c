@@ -51,7 +51,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     z_alloc_alignment_t alignment = {0};
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc_gc_defrag_blocking(&alloc, provider, value_len, alignment);
-    if (z_check(alloc.buf)) {
+    if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         {
             uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
             memcpy(buf, value, value_len);
@@ -89,16 +89,6 @@ int main(int argc, char **argv) {
                 argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
             exit(-1);
         }
-    }
-
-    // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
-    // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
-        printf(
-            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized value\n",
-            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
-        exit(-1);
     }
 
     printf("Opening session...\n");

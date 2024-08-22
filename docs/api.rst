@@ -29,10 +29,6 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_slice_null
-.. doxygenfunction:: z_view_slice_null
-.. doxygenfunction:: z_slice_check
-.. doxygenfunction:: z_view_slice_check
 .. doxygenfunction:: z_slice_loan
 .. doxygenfunction:: z_view_slice_loan
 .. doxygenfunction:: z_slice_drop
@@ -57,10 +53,6 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_string_check
-.. doxygenfunction:: z_view_string_check
-.. doxygenfunction:: z_string_null
-.. doxygenfunction:: z_view_string_null
 .. doxygenfunction:: z_string_loan
 .. doxygenfunction:: z_view_string_loan
 .. doxygenfunction:: z_string_drop
@@ -85,8 +77,6 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_string_array_check
-.. doxygenfunction:: z_string_array_null
 .. doxygenfunction:: z_string_array_drop
 .. doxygenfunction:: z_string_array_loan
 .. doxygenfunction:: z_string_array_loan_mut
@@ -154,8 +144,6 @@ Functions
 .. doxygenfunction:: z_bytes_clone
 .. doxygenfunction:: z_bytes_loan
 .. doxygenfunction:: z_bytes_loan_mut
-.. doxygenfunction:: z_bytes_null
-.. doxygenfunction:: z_bytes_check
 .. doxygenfunction:: z_bytes_drop
 
 .. doxygenfunction:: z_bytes_get_reader
@@ -200,8 +188,6 @@ Functions
 
 .. doxygenfunction:: z_keyexpr_loan
 .. doxygenfunction:: z_view_keyexpr_loan
-.. doxygenfunction:: z_keyexpr_check
-.. doxygenfunction:: z_view_keyexpr_check
 .. doxygenfunction:: z_keyexpr_drop
 
 .. doxygenfunction:: z_keyexpr_as_view_string
@@ -228,10 +214,8 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_encoding_null
 .. doxygenfunction:: z_encoding_loan
 .. doxygenfunction:: z_encoding_loan_mut
-.. doxygenfunction:: z_encoding_check
 .. doxygenfunction:: z_encoding_drop
 .. doxygenfunction:: z_encoding_loan_default
 .. doxygenfunction:: z_encoding_from_str
@@ -320,9 +304,7 @@ Functions
 .. doxygenfunction:: z_reply_err_payload
 .. doxygenfunction:: z_reply_err_encoding
 
-.. doxygenfunction:: z_reply_err_null
 .. doxygenfunction:: z_reply_err_loan
-.. doxygenfunction:: z_reply_err_check
 .. doxygenfunction:: z_reply_err_drop
 
 Sample
@@ -336,8 +318,6 @@ Types
 Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_sample_loan
-.. doxygenfunction:: z_sample_check
-.. doxygenfunction:: z_sample_null
 .. doxygenfunction:: z_sample_drop
 
 .. doxygenfunction:: z_sample_timestamp
@@ -412,8 +392,6 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_mutex_check
-.. doxygenfunction:: z_mutex_null
 .. doxygenfunction:: z_mutex_loan_mut
 .. doxygenfunction:: z_mutex_drop
 
@@ -432,8 +410,6 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_condvar_check
-.. doxygenfunction:: z_condvar_null
 .. doxygenfunction:: z_condvar_loan
 .. doxygenfunction:: z_condvar_drop
 
@@ -450,9 +426,6 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_task_check
-.. doxygenfunction:: z_task_null
-
 .. doxygenfunction:: z_task_join
 .. doxygenfunction:: z_task_detach
 
@@ -468,10 +441,8 @@ Types
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_config_null
 .. doxygenfunction:: z_config_loan
 .. doxygenfunction:: z_config_loan_mut
-.. doxygenfunction:: z_config_check
 .. doxygenfunction:: z_config_drop
 
 .. doxygenfunction:: z_config_default
@@ -501,8 +472,6 @@ Functions
 .. doxygenfunction:: z_close
 
 .. doxygenfunction:: z_session_loan
-.. doxygenfunction:: z_session_check
-.. doxygenfunction:: z_session_null
 .. doxygenfunction:: z_session_drop
 
 .. doxygenfunction:: z_session_clone
@@ -511,8 +480,6 @@ Functions
 .. doxygenfunction:: z_info_routers_zid
 .. doxygenfunction:: z_info_peers_zid
 
-.. doxygenfunction:: z_closure_zid_check
-.. doxygenfunction:: z_closure_zid_null
 .. doxygenfunction:: z_closure_zid_drop
 .. doxygenfunction:: z_closure_zid_call
 
@@ -553,9 +520,7 @@ Functions
 .. doxygenfunction:: z_publisher_keyexpr
 .. doxygenfunction:: z_publisher_id
 
-.. doxygenfunction:: z_publisher_null
 .. doxygenfunction:: z_publisher_loan
-.. doxygenfunction:: z_publisher_check
 .. doxygenfunction:: z_publisher_drop
 
 .. doxygenfunction:: z_put_options_default
@@ -600,29 +565,21 @@ Functions
 .. doxygenfunction:: z_declare_subscriber
 .. doxygenfunction:: z_undeclare_subscriber
 
-.. doxygenfunction:: z_subscriber_check
-.. doxygenfunction:: z_subscriber_null
 .. doxygenfunction:: z_subscriber_drop
 
 .. doxygenfunction:: z_closure_sample_call
 .. doxygenfunction:: z_closure_sample_drop
-.. doxygenfunction:: z_closure_sample_null
-.. doxygenfunction:: z_closure_sample_check
 
 .. doxygenfunction:: z_subscriber_options_default
 
 .. doxygenfunction:: z_fifo_channel_sample_new
 .. doxygenfunction:: z_ring_channel_sample_new
 
-.. doxygenfunction:: z_fifo_handler_sample_check
-.. doxygenfunction:: z_fifo_handler_sample_null
 .. doxygenfunction:: z_fifo_handler_sample_drop
 .. doxygenfunction:: z_fifo_handler_sample_loan
 .. doxygenfunction:: z_fifo_handler_sample_recv
 .. doxygenfunction:: z_fifo_handler_sample_try_recv
 
-.. doxygenfunction:: z_ring_handler_sample_check
-.. doxygenfunction:: z_ring_handler_sample_null
 .. doxygenfunction:: z_ring_handler_sample_drop
 .. doxygenfunction:: z_ring_handler_sample_loan
 .. doxygenfunction:: z_ring_handler_sample_recv
@@ -663,13 +620,9 @@ Functions
 .. doxygenfunction:: z_query_reply_options_default
 .. doxygenfunction:: z_query_reply_err_options_default
 
-.. doxygenfunction:: z_queryable_null
-.. doxygenfunction:: z_queryable_check
 .. doxygenfunction:: z_queryable_loan
 .. doxygenfunction:: z_queryable_drop
 
-.. doxygenfunction:: z_query_null
-.. doxygenfunction:: z_query_check
 .. doxygenfunction:: z_query_loan
 .. doxygenfunction:: z_query_drop
 .. doxygenfunction:: z_query_clone
@@ -682,23 +635,17 @@ Functions
 .. doxygenfunction:: z_query_reply
 .. doxygenfunction:: z_query_reply_err
 
-.. doxygenfunction:: z_closure_query_null
-.. doxygenfunction:: z_closure_query_check
 .. doxygenfunction:: z_closure_query_call
 .. doxygenfunction:: z_closure_query_drop
 
 .. doxygenfunction:: z_fifo_channel_query_new
 .. doxygenfunction:: z_ring_channel_query_new
 
-.. doxygenfunction:: z_fifo_handler_query_check
-.. doxygenfunction:: z_fifo_handler_query_null
 .. doxygenfunction:: z_fifo_handler_query_drop
 .. doxygenfunction:: z_fifo_handler_query_loan
 .. doxygenfunction:: z_fifo_handler_query_recv
 .. doxygenfunction:: z_fifo_handler_query_try_recv
 
-.. doxygenfunction:: z_ring_handler_query_check
-.. doxygenfunction:: z_ring_handler_query_null
 .. doxygenfunction:: z_ring_handler_query_drop
 .. doxygenfunction:: z_ring_handler_query_loan
 .. doxygenfunction:: z_ring_handler_query_recv
@@ -739,31 +686,23 @@ Functions
 .. doxygenfunction:: z_query_consolidation_latest
 .. doxygenfunction:: z_query_target_default
 
-.. doxygenfunction:: z_reply_check
 .. doxygenfunction:: z_reply_drop
 .. doxygenfunction:: z_reply_clone
 .. doxygenfunction:: z_reply_is_ok
 .. doxygenfunction:: z_reply_ok
 .. doxygenfunction:: z_reply_err
-.. doxygenfunction:: z_reply_null
 
-.. doxygenfunction:: z_closure_reply_null
-.. doxygenfunction:: z_closure_reply_check
 .. doxygenfunction:: z_closure_reply_call
 .. doxygenfunction:: z_closure_reply_drop
 
 .. doxygenfunction:: z_fifo_channel_reply_new
 .. doxygenfunction:: z_ring_channel_reply_new
 
-.. doxygenfunction:: z_fifo_handler_reply_check
-.. doxygenfunction:: z_fifo_handler_reply_null
 .. doxygenfunction:: z_fifo_handler_reply_drop
 .. doxygenfunction:: z_fifo_handler_reply_loan
 .. doxygenfunction:: z_fifo_handler_reply_recv
 .. doxygenfunction:: z_fifo_handler_reply_try_recv
 
-.. doxygenfunction:: z_ring_handler_reply_check
-.. doxygenfunction:: z_ring_handler_reply_null
 .. doxygenfunction:: z_ring_handler_reply_drop
 .. doxygenfunction:: z_ring_handler_reply_loan
 .. doxygenfunction:: z_ring_handler_reply_recv
@@ -790,8 +729,6 @@ Functions
 .. doxygenfunction:: z_hello_zid
 .. doxygenfunction:: z_hello_loan
 .. doxygenfunction:: z_hello_drop
-.. doxygenfunction:: z_hello_null
-.. doxygenfunction:: z_hello_check
 
 .. doxygenfunction:: z_whatami_to_view_string
 
@@ -799,8 +736,6 @@ Functions
 
 .. doxygenfunction:: z_closure_hello_call
 .. doxygenfunction:: z_closure_hello_drop
-.. doxygenfunction:: z_closure_hello_null
-.. doxygenfunction:: z_closure_hello_check
 
 Liveliness
 ==========
@@ -821,8 +756,6 @@ Functions
 .. doxygenfunction:: zc_liveliness_declare_token
 .. doxygenfunction:: zc_liveliness_undeclare_token
 .. doxygenfunction:: zc_liveliness_token_loan
-.. doxygenfunction:: zc_liveliness_token_null
-.. doxygenfunction:: zc_liveliness_token_check
 .. doxygenfunction:: zc_liveliness_token_drop
 
 .. doxygenfunction:: zc_liveliness_subscriber_options_default
@@ -846,8 +779,6 @@ Functions
 .. doxygenfunction:: ze_declare_publication_cache
 .. doxygenfunction:: ze_undeclare_publication_cache
 
-.. doxygenfunction:: ze_publication_cache_check
-.. doxygenfunction:: ze_publication_cache_null
 .. doxygenfunction:: ze_publication_cache_drop
 
 .. doxygenfunction:: ze_publication_cache_options_default
@@ -871,8 +802,6 @@ Functions
 .. doxygenfunction:: ze_undeclare_querying_subscriber
 .. doxygenfunction:: ze_querying_subscriber_get
 
-.. doxygenfunction:: ze_querying_subscriber_check
-.. doxygenfunction:: ze_querying_subscriber_null
 .. doxygenfunction:: ze_querying_subscriber_drop
 
 .. doxygenfunction:: ze_querying_subscriber_options_default

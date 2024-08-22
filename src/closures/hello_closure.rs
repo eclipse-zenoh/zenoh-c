@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_hello_t,
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -48,13 +48,13 @@ pub struct z_loaned_closure_hello_t {
 /// Moved closure.
 #[repr(C)]
 pub struct z_moved_closure_hello_t {
-    pub _ptr: Option<&'static mut z_owned_closure_hello_t>,
+    _this: z_owned_closure_hello_t,
 }
 
 decl_c_type!(
     owned(z_owned_closure_hello_t),
     loaned(z_loaned_closure_hello_t),
-    moved(z_moved_closure_hello_t)
+    moved(z_moved_closure_hello_t),
 );
 
 impl Default for z_owned_closure_hello_t {
@@ -83,8 +83,10 @@ impl Drop for z_owned_closure_hello_t {
 /// Constructs a closure in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_hello_null(this: *mut MaybeUninit<z_owned_closure_hello_t>) {
-    (*this).write(z_owned_closure_hello_t::default());
+pub unsafe extern "C" fn z_internal_closure_hello_null(
+    this_: *mut MaybeUninit<z_owned_closure_hello_t>,
+) {
+    (*this_).write(z_owned_closure_hello_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
@@ -102,8 +104,9 @@ pub extern "C" fn z_closure_hello_call(
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_closure_hello_drop(_closure: z_moved_closure_hello_t) {}
+pub extern "C" fn z_closure_hello_drop(this_: &mut z_moved_closure_hello_t) {
+    let _ = this_.take_rust_type();
+}
 
 impl<F: Fn(&z_loaned_hello_t)> From<F> for z_owned_closure_hello_t {
     fn from(f: F) -> Self {
@@ -128,8 +131,8 @@ impl<F: Fn(&z_loaned_hello_t)> From<F> for z_owned_closure_hello_t {
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_closure_hello_check(this: &z_owned_closure_hello_t) -> bool {
-    !this.is_empty()
+pub extern "C" fn z_internal_closure_hello_check(this_: &z_owned_closure_hello_t) -> bool {
+    !this_.is_empty()
 }
 
 /// Borrows closure.

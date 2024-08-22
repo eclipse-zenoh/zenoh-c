@@ -16,7 +16,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     zc_matching_status_t,
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -46,13 +46,13 @@ pub struct zc_loaned_closure_matching_status_t {
 /// Moved closure.
 #[repr(C)]
 pub struct zc_moved_closure_matching_status_t {
-    pub _ptr: Option<&'static mut zc_owned_closure_matching_status_t>,
+    _this: zc_owned_closure_matching_status_t,
 }
 
 decl_c_type!(
     owned(zc_owned_closure_matching_status_t),
     loaned(zc_loaned_closure_matching_status_t),
-    moved(zc_moved_closure_matching_status_t)
+    moved(zc_moved_closure_matching_status_t),
 );
 
 impl Default for zc_owned_closure_matching_status_t {
@@ -82,7 +82,7 @@ impl Drop for zc_owned_closure_matching_status_t {
 /// Constructs a null value of 'zc_owned_closure_matching_status_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_closure_matching_status_null(
+pub unsafe extern "C" fn zc_internal_closure_matching_status_null(
     this: *mut MaybeUninit<zc_owned_closure_matching_status_t>,
 ) {
     (*this).write(zc_owned_closure_matching_status_t::default());
@@ -90,7 +90,7 @@ pub unsafe extern "C" fn zc_closure_matching_status_null(
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_closure_matching_status_check(
+pub extern "C" fn zc_internal_closure_matching_status_check(
     this: &zc_owned_closure_matching_status_t,
 ) -> bool {
     !this.is_empty()
@@ -112,8 +112,11 @@ pub extern "C" fn zc_closure_matching_status_call(
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn zc_closure_matching_status_drop(closure: zc_moved_closure_matching_status_t) {}
+pub extern "C" fn zc_closure_matching_status_drop(
+    closure_: &mut zc_moved_closure_matching_status_t,
+) {
+    let _ = closure_.take_rust_type();
+}
 
 impl<F: Fn(&zc_matching_status_t)> From<F> for zc_owned_closure_matching_status_t {
     fn from(f: F) -> Self {

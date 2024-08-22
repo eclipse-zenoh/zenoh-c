@@ -86,6 +86,7 @@ zenoh_opaque.h:
   - z_owned_alloc_layout_t!#shared-memory#unstable
   - z_loaned_alloc_layout_t!#shared-memory#unstable
   - z_buf_alloc_result_t!#shared-memory#unstable
+  - zc_buf_alloc_status_t!#shared-memory#unstable
   - z_alloc_alignment_t!#shared-memory#unstable
   - z_chunk_descriptor_t!#shared-memory#unstable
   - z_allocated_chunk_t!#shared-memory#unstable
@@ -93,6 +94,7 @@ zenoh_opaque.h:
   - z_shm_segment_t!#shared-memory#unstable
   - zc_shm_client_callbacks_t!#shared-memory#unstable
   - z_buf_layout_alloc_result_t!#shared-memory#unstable
+  - zc_buf_layout_alloc_status_t!#shared-memory#unstable
   - zc_shm_provider_backend_callbacks_t!#shared-memory#unstable
   - z_layout_error_t!#shared-memory#unstable
   - z_alloc_error_t!#shared-memory#unstable

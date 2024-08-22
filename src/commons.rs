@@ -36,7 +36,7 @@ use crate::z_id_t;
 use crate::z_moved_source_info_t;
 use crate::{
     result,
-    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 
@@ -87,15 +87,15 @@ pub extern "C" fn z_timestamp_new(
 
 /// Returns NPT64 time associated with this timestamp.
 #[no_mangle]
-pub extern "C" fn z_timestamp_ntp64_time(this: &z_timestamp_t) -> u64 {
-    this.as_rust_type_ref().get_time().0
+pub extern "C" fn z_timestamp_ntp64_time(this_: &z_timestamp_t) -> u64 {
+    this_.as_rust_type_ref().get_time().0
 }
 
 #[cfg(feature = "unstable")]
 /// Returns id associated with this timestamp.
 #[no_mangle]
-pub extern "C" fn z_timestamp_id(this: &z_timestamp_t) -> z_id_t {
-    this.as_rust_type_ref().get_id().to_le_bytes().into()
+pub extern "C" fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
+    this_.as_rust_type_ref().get_id().to_le_bytes().into()
 }
 
 use crate::opaque_types::z_loaned_sample_t;
@@ -103,36 +103,35 @@ pub use crate::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
     owned(z_owned_sample_t, option Sample),
     loaned(z_loaned_sample_t),
-    moved(z_moved_sample_t)
 );
 
 /// Returns the key expression of the sample.
 #[no_mangle]
-pub extern "C" fn z_sample_keyexpr(this: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
+pub extern "C" fn z_sample_keyexpr(this_: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
+    this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 /// Returns the encoding associated with the sample data.
 #[no_mangle]
-pub extern "C" fn z_sample_encoding(this: &z_loaned_sample_t) -> &z_loaned_encoding_t {
-    this.as_rust_type_ref().encoding().as_loaned_c_type_ref()
+pub extern "C" fn z_sample_encoding(this_: &z_loaned_sample_t) -> &z_loaned_encoding_t {
+    this_.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 /// Returns the sample payload data.
 #[no_mangle]
-pub extern "C" fn z_sample_payload(this: &z_loaned_sample_t) -> &z_loaned_bytes_t {
-    this.as_rust_type_ref().payload().as_loaned_c_type_ref()
+pub extern "C" fn z_sample_payload(this_: &z_loaned_sample_t) -> &z_loaned_bytes_t {
+    this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
 /// Returns the sample kind.
 #[no_mangle]
-pub extern "C" fn z_sample_kind(this: &z_loaned_sample_t) -> z_sample_kind_t {
-    this.as_rust_type_ref().kind().into()
+pub extern "C" fn z_sample_kind(this_: &z_loaned_sample_t) -> z_sample_kind_t {
+    this_.as_rust_type_ref().kind().into()
 }
 /// Returns the sample timestamp.
 ///
 /// Will return `NULL`, if sample is not associated with a timestamp.
 #[no_mangle]
-pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_timestamp_t> {
-    if let Some(t) = this.as_rust_type_ref().timestamp() {
+pub extern "C" fn z_sample_timestamp(this_: &z_loaned_sample_t) -> Option<&z_timestamp_t> {
+    if let Some(t) = this_.as_rust_type_ref().timestamp() {
         Some(t.as_ctype_ref())
     } else {
         None
@@ -143,8 +142,8 @@ pub extern "C" fn z_sample_timestamp(this: &z_loaned_sample_t) -> Option<&z_time
 ///
 /// Returns `NULL`, if sample does not contain any attachment.
 #[no_mangle]
-pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
-    match this.as_rust_type_ref().attachment() {
+pub extern "C" fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
+    match this_.as_rust_type_ref().attachment() {
         Some(attachment) => attachment.as_loaned_c_type_ref() as *const _,
         None => null(),
     }
@@ -152,8 +151,11 @@ pub extern "C" fn z_sample_attachment(this: &z_loaned_sample_t) -> *const z_loan
 #[cfg(feature = "unstable")]
 /// Returns the sample source_info.
 #[no_mangle]
-pub extern "C" fn z_sample_source_info(this: &z_loaned_sample_t) -> &z_loaned_source_info_t {
-    this.as_rust_type_ref().source_info().as_loaned_c_type_ref()
+pub extern "C" fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_source_info_t {
+    this_
+        .as_rust_type_ref()
+        .source_info()
+        .as_loaned_c_type_ref()
 }
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
@@ -168,33 +170,34 @@ pub extern "C" fn z_sample_clone(
 
 /// Returns sample qos priority value.
 #[no_mangle]
-pub extern "C" fn z_sample_priority(this: &z_loaned_sample_t) -> z_priority_t {
-    this.as_rust_type_ref().priority().into()
+pub extern "C" fn z_sample_priority(this_: &z_loaned_sample_t) -> z_priority_t {
+    this_.as_rust_type_ref().priority().into()
 }
 
 /// Returns whether sample qos express flag was set or not.
 #[no_mangle]
-pub extern "C" fn z_sample_express(this: &z_loaned_sample_t) -> bool {
-    this.as_rust_type_ref().express()
+pub extern "C" fn z_sample_express(this_: &z_loaned_sample_t) -> bool {
+    this_.as_rust_type_ref().express()
 }
 
 /// Returns sample qos congestion control value.
 #[no_mangle]
-pub extern "C" fn z_sample_congestion_control(this: &z_loaned_sample_t) -> z_congestion_control_t {
-    this.as_rust_type_ref().congestion_control().into()
+pub extern "C" fn z_sample_congestion_control(this_: &z_loaned_sample_t) -> z_congestion_control_t {
+    this_.as_rust_type_ref().congestion_control().into()
 }
 
 /// Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_sample_check(this: &z_owned_sample_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_sample_check(this_: &z_owned_sample_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows sample.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sample_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sample_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -202,13 +205,14 @@ pub unsafe extern "C" fn z_sample_loan(this: &z_owned_sample_t) -> &z_loaned_sam
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_sample_drop(this: z_moved_sample_t) {}
+pub extern "C" fn z_sample_drop(this_: &mut z_moved_sample_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Constructs sample in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_sample_null(this: &mut MaybeUninit<z_owned_sample_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// The locality of samples to be received by subscribers or targeted by publishers.
@@ -467,14 +471,14 @@ decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 #[cfg(feature = "unstable")]
 /// Returns the zenoh id of entity global id.
 #[no_mangle]
-pub extern "C" fn z_entity_global_id_zid(this: &z_entity_global_id_t) -> z_id_t {
-    this.as_rust_type_ref().zid().into_c_type()
+pub extern "C" fn z_entity_global_id_zid(this_: &z_entity_global_id_t) -> z_id_t {
+    this_.as_rust_type_ref().zid().into_c_type()
 }
 #[cfg(feature = "unstable")]
 /// Returns the entity id of the entity global id.
 #[no_mangle]
-pub extern "C" fn z_entity_global_id_eid(this: &z_entity_global_id_t) -> u32 {
-    this.as_rust_type_ref().eid()
+pub extern "C" fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
+    this_.as_rust_type_ref().eid()
 }
 #[cfg(feature = "unstable")]
 pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
@@ -482,7 +486,6 @@ pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),
-    moved(z_moved_source_info_t)
 );
 
 #[cfg(feature = "unstable")]
@@ -505,8 +508,8 @@ pub extern "C" fn z_source_info_new(
 #[cfg(feature = "unstable")]
 /// Returns the source_id of the source info.
 #[no_mangle]
-pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_global_id_t {
-    match this.as_rust_type_ref().source_id {
+pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
+    match this_.as_rust_type_ref().source_id {
         Some(source_id) => source_id,
         None => EntityGlobalId::default(),
     }
@@ -516,33 +519,34 @@ pub extern "C" fn z_source_info_id(this: &z_loaned_source_info_t) -> z_entity_gl
 #[cfg(feature = "unstable")]
 /// Returns the source_sn of the source info.
 #[no_mangle]
-pub extern "C" fn z_source_info_sn(this: &z_loaned_source_info_t) -> u64 {
-    this.as_rust_type_ref().source_sn.unwrap_or(0)
+pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u64 {
+    this_.as_rust_type_ref().source_sn.unwrap_or(0)
 }
 
 #[cfg(feature = "unstable")]
 /// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_source_info_check(this: &z_owned_source_info_t) -> bool {
-    this.as_rust_type_ref().source_id.is_some() || this.as_rust_type_ref().source_sn.is_some()
+pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
+    this_.as_rust_type_ref().source_id.is_some() || this_.as_rust_type_ref().source_sn.is_some()
 }
 
 #[cfg(feature = "unstable")]
 /// Borrows source info.
 #[no_mangle]
-pub extern "C" fn z_source_info_loan(this: &z_owned_source_info_t) -> &z_loaned_source_info_t {
-    this.as_rust_type_ref().as_loaned_c_type_ref()
+pub extern "C" fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_info_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 #[cfg(feature = "unstable")]
 /// Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_source_info_drop(this: z_moved_source_info_t) {}
+pub extern "C" fn z_source_info_drop(this_: &mut z_moved_source_info_t) {
+    let _ = this_.take_rust_type();
+}
 
 #[cfg(feature = "unstable")]
 /// Constructs source info in its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_source_info_null(this: &mut MaybeUninit<z_owned_source_info_t>) {
-    this.as_rust_type_mut_uninit().write(SourceInfo::default());
+pub extern "C" fn z_internal_source_info_null(this_: &mut MaybeUninit<z_owned_source_info_t>) {
+    this_.as_rust_type_mut_uninit().write(SourceInfo::default());
 }

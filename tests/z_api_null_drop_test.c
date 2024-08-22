@@ -30,19 +30,19 @@
 // set v1 to null
 // move v to v1
 // make sure that v is null now
-#define TEST(name)                 \
-    {                              \
-        z_owned_##name##_t v;      \
-        memset(&v, -1, sizeof(v)); \
-        z_null(&v);                \
-        assert(!z_check(v));       \
-        z_drop(z_move(v));         \
-        z_drop(z_move(v));         \
-        z_owned_##name##_t v1;     \
-        z_null(&v1);               \
-        memset(&v, -1, sizeof(v)); \
-        z_take(&v1, z_move(v));    \
-        assert(!z_check(v));       \
+#define TEST(name)                    \
+    {                                 \
+        z_owned_##name##_t v;         \
+        memset(&v, -1, sizeof(v));    \
+        z_internal_null(&v);          \
+        assert(!z_internal_check(v)); \
+        z_drop(z_move(v));            \
+        z_drop(z_move(v));            \
+        z_owned_##name##_t v1;        \
+        z_internal_null(&v1);         \
+        memset(&v, -1, sizeof(v));    \
+        z_take(&v1, z_move(v));       \
+        assert(!z_internal_check(v)); \
     }
 
 int main(void) {
@@ -54,7 +54,9 @@ int main(void) {
     TEST(closure_query)
     TEST(closure_reply)
     TEST(closure_hello)
+#ifdef UNSTABLE
     TEST(closure_zid)
+#endif
     TEST(string)
     TEST(string_array)
     TEST(sample)

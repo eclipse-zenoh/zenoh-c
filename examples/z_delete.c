@@ -14,24 +14,19 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-put";
+#define DEFAULT_KEYEXPR "demo/example/zenoh-c-put"
 
-    if (argc > 1) keyexpr = argv[1];
+struct args_t {
+    char* keyexpr;  // -k
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
+int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
-    if (argc > 3) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
     z_owned_session_t s;
@@ -40,9 +35,9 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Deleting resources matching '%s'...\n", keyexpr);
+    printf("Deleting resources matching '%s'...\n", args.keyexpr);
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_str(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
     int res = z_delete(z_loan(s), z_loan(ke), NULL);
     if (res < 0) {
         printf("Delete failed...\n");
@@ -50,4 +45,42 @@ int main(int argc, char **argv) {
 
     z_close(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_delete [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEY> (optional, string, default='%s'): The key expression to write to\n",
+        DEFAULT_KEYEXPR);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return (struct args_t){.keyexpr = (char*)keyexpr};
 }

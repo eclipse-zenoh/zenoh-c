@@ -19,7 +19,7 @@ use zenoh_ext::SessionExt;
 
 use crate::{
     result,
-    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
+    transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
 #[cfg(feature = "unstable")]
@@ -65,7 +65,6 @@ decl_c_type!(
         option zenoh_ext::PublicationCache<'static>,
     ),
     loaned(ze_loaned_publication_cache_t),
-    moved(ze_moved_publication_cache_t)
 );
 
 /// Constructs and declares a publication cache.
@@ -119,15 +118,19 @@ pub extern "C" fn ze_declare_publication_cache(
 /// Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_null(this: &mut MaybeUninit<ze_owned_publication_cache_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn ze_internal_publication_cache_null(
+    this_: &mut MaybeUninit<ze_owned_publication_cache_t>,
+) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn ze_internal_publication_cache_check(
+    this_: &ze_owned_publication_cache_t,
+) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Undeclares and drops publication cache.
@@ -135,9 +138,9 @@ pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
-    this: ze_moved_publication_cache_t,
+    this: &mut ze_moved_publication_cache_t,
 ) -> result::z_result_t {
-    if let Some(p) = this.into_rust_type() {
+    if let Some(p) = this.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -149,6 +152,6 @@ pub extern "C" fn ze_undeclare_publication_cache(
 /// Drops publication cache. Also attempts to undeclare it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_drop(this: ze_moved_publication_cache_t) {
-    ze_undeclare_publication_cache(this);
+pub extern "C" fn ze_publication_cache_drop(this_: &mut ze_moved_publication_cache_t) {
+    ze_undeclare_publication_cache(this_);
 }

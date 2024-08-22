@@ -14,20 +14,19 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{
-    prelude::SessionDeclarations,
-    pubsub::{Reliability, Subscriber},
-    Wait,
-};
+#[cfg(feature = "unstable")]
+use zenoh::pubsub::Reliability;
+use zenoh::{prelude::SessionDeclarations, pubsub::Subscriber, Wait};
 
 use crate::{
     keyexpr::*,
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 
 /// The subscription reliability.
+#[cfg(feature = "unstable")]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -38,6 +37,7 @@ pub enum z_reliability_t {
     RELIABLE,
 }
 
+#[cfg(feature = "unstable")]
 impl From<Reliability> for z_reliability_t {
     #[inline]
     fn from(r: Reliability) -> Self {
@@ -48,6 +48,7 @@ impl From<Reliability> for z_reliability_t {
     }
 }
 
+#[cfg(feature = "unstable")]
 impl From<z_reliability_t> for Reliability {
     #[inline]
     fn from(val: z_reliability_t) -> Self {
@@ -62,20 +63,20 @@ pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_own
 decl_c_type!(
     owned(z_owned_subscriber_t, option Subscriber<'static, ()>),
     loaned(z_loaned_subscriber_t),
-    moved(z_moved_subscriber_t)
 );
 
 /// Constructs a subscriber in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_subscriber_null(this: &mut MaybeUninit<z_owned_subscriber_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_subscriber_null(this_: &mut MaybeUninit<z_owned_subscriber_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Borrows subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -86,13 +87,15 @@ pub unsafe extern "C" fn z_subscriber_loan(this: &z_owned_subscriber_t) -> &z_lo
 #[repr(C)]
 pub struct z_subscriber_options_t {
     /// The subscription reliability.
+    #[cfg(feature = "unstable")]
     pub reliability: z_reliability_t,
 }
 
 /// Constructs the default value for `z_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn z_subscriber_options_default(this: &mut MaybeUninit<z_subscriber_options_t>) {
-    this.write(z_subscriber_options_t {
+pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
+    this_.write(z_subscriber_options_t {
+        #[cfg(feature = "unstable")]
         reliability: Reliability::DEFAULT.into(),
     });
 }
@@ -112,22 +115,24 @@ pub extern "C" fn z_declare_subscriber(
     this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    callback: z_moved_closure_sample_t,
+    callback: &mut z_moved_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let Some(callback) = callback.into_rust_type() else {
-        this.write(None);
-        return result::Z_EINVAL;
-    };
-    let mut subscriber = session
+    let callback = callback.take_rust_type();
+    let subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         });
+    #[cfg(not(feature = "unstable"))]
+    let _ = options;
+    #[cfg(feature = "unstable")]
+    let mut subscriber = subscriber;
+    #[cfg(feature = "unstable")]
     if let Some(options) = options {
         subscriber = subscriber.reliability(options.reliability.into());
     }
@@ -159,8 +164,8 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> result::z_result_t {
-    if let Some(s) = this.into_rust_type() {
+pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
+    if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -171,11 +176,12 @@ pub extern "C" fn z_undeclare_subscriber(this: z_moved_subscriber_t) -> result::
 
 /// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_subscriber_drop(this: z_moved_subscriber_t) {}
+pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_subscriber_check(this: &z_owned_subscriber_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }

@@ -33,23 +33,23 @@
         return -300;      \
     }
 
-#define ASSERT_CHECK(var) \
-    if (!z_check(var)) {  \
-        assert(false);    \
-        return -100;      \
+#define ASSERT_CHECK(var)         \
+    if (!z_internal_check(var)) { \
+        assert(false);            \
+        return -100;              \
     }
 
-#define ASSERT_CHECK_ERR(var) \
-    if (z_check(var)) {       \
-        assert(false);        \
-        return -200;          \
+#define ASSERT_CHECK_ERR(var)    \
+    if (z_internal_check(var)) { \
+        assert(false);           \
+        return -200;             \
     }
 
-int test_shm_buffer(z_moved_shm_mut_t mbuf) {
-    assert(mbuf._ptr != NULL);
+int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
+    ASSERT_CHECK(mbuf->_this);
     z_owned_shm_mut_t buf;
     z_take(&buf, mbuf);
-    ASSERT_CHECK_ERR(*mbuf._ptr);
+    ASSERT_CHECK_ERR(mbuf->_this);
     ASSERT_CHECK(buf);
 
     { z_loaned_shm_mut_t* loaned = z_loan_mut(buf); }
@@ -57,6 +57,7 @@ int test_shm_buffer(z_moved_shm_mut_t mbuf) {
     z_owned_shm_t immut;
     z_shm_from_mut(&immut, z_move(buf));
     ASSERT_CHECK(immut);
+    ASSERT_CHECK_ERR(buf);
 
     { const z_loaned_shm_t* loaned = z_loan(immut); }
 
@@ -95,7 +96,8 @@ int test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
     z_alloc_error_t shm_error;
 
     z_alloc_layout_alloc_gc(&alloc, alloc_layout);
-    if (z_check(alloc.buf)) {
+    if (alloc.status == ZC_BUF_ALLOC_STATUS_OK) {
+        ASSERT_CHECK(alloc.buf);
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
         return Z_OK;
@@ -110,7 +112,8 @@ int test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_allo
     z_alloc_error_t shm_error;
 
     z_shm_provider_alloc_gc(&alloc, provider, size, alignment);
-    if (z_check(alloc.buf)) {
+    if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
+        ASSERT_CHECK(alloc.buf);
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
         return Z_OK;
@@ -243,7 +246,7 @@ void layout_for_fn(struct z_owned_memory_layout_t* layout, void* context) {
     assert(context);
     assert(layout);
 
-    assert(z_check(*layout));
+    assert(z_internal_check(*layout));
 
     // check size and alignment
     size_t size = 0;

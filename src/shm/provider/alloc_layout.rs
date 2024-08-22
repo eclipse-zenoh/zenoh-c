@@ -28,7 +28,7 @@ use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
     z_owned_alloc_layout_t,
 };
@@ -48,7 +48,6 @@ pub enum CSHMLayout {
 decl_c_type!(
     owned(z_owned_alloc_layout_t, option CSHMLayout),
     loaned(z_loaned_alloc_layout_t),
-    moved(z_moved_alloc_layout_t)
 );
 
 /// Creates a new Alloc Layout for SHM Provider
@@ -64,14 +63,14 @@ pub extern "C" fn z_alloc_layout_new(
 
 /// Constructs Alloc Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_null(this: &mut MaybeUninit<z_owned_alloc_layout_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_alloc_layout_null(this_: &mut MaybeUninit<z_owned_alloc_layout_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_check(this: &z_owned_alloc_layout_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows Alloc Layout
@@ -88,8 +87,9 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 
 /// Deletes Alloc Layout
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_alloc_layout_drop(this: z_moved_alloc_layout_t) {}
+pub extern "C" fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {
+    let _ = this_.take_rust_type();
+}
 
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc(

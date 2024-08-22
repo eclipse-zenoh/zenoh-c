@@ -22,7 +22,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result::{self, Z_OK},
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, zc_init_logging, CString, CStringView, ZVector,
 };
@@ -31,20 +31,21 @@ use crate::{transmute::IntoCType, z_id_t};
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
     loaned(z_loaned_hello_t),
-    moved(z_moved_hello_t)
 );
 
 /// Frees memory and resets hello message to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-#[allow(unused_variables)]
-pub unsafe extern "C" fn z_hello_drop(this: z_moved_hello_t) {}
+pub unsafe extern "C" fn z_hello_drop(this_: &mut z_moved_hello_t) {
+    let _ = this_.take_rust_type();
+}
 
 /// Borrows hello message.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_loan(this: &z_owned_hello_t) -> &z_loaned_hello_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hello_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap()
         .as_loaned_c_type_ref()
@@ -52,27 +53,27 @@ pub unsafe extern "C" fn z_hello_loan(this: &z_owned_hello_t) -> &z_loaned_hello
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_check(this: &z_owned_hello_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_hello_check(this_: &z_owned_hello_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs hello message in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_null(this: &mut MaybeUninit<z_owned_hello_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 #[cfg(feature = "unstable")]
 /// Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
-pub extern "C" fn z_hello_zid(this: &z_loaned_hello_t) -> z_id_t {
-    this.as_rust_type_ref().zid().into_c_type()
+pub extern "C" fn z_hello_zid(this_: &z_loaned_hello_t) -> z_id_t {
+    this_.as_rust_type_ref().zid().into_c_type()
 }
 
 /// Returns type of Zenoh entity that transmitted hello message.
 #[no_mangle]
-pub extern "C" fn z_hello_whatami(this: &z_loaned_hello_t) -> z_whatami_t {
-    match this.as_rust_type_ref().whatami() {
+pub extern "C" fn z_hello_whatami(this_: &z_loaned_hello_t) -> z_whatami_t {
+    match this_.as_rust_type_ref().whatami() {
         WhatAmI::Router => z_whatami_t::ROUTER,
         WhatAmI::Peer => z_whatami_t::PEER,
         WhatAmI::Client => z_whatami_t::CLIENT,
@@ -141,8 +142,8 @@ pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
 /// Constructs the default values for the scouting operation.
 #[no_mangle]
-pub extern "C" fn z_scout_options_default(this: &mut MaybeUninit<z_scout_options_t>) {
-    this.write(z_scout_options_t::default());
+pub extern "C" fn z_scout_options_default(this_: &mut MaybeUninit<z_scout_options_t>) {
+    this_.write(z_scout_options_t::default());
 }
 
 /// Scout for routers and/or peers.
@@ -155,22 +156,20 @@ pub extern "C" fn z_scout_options_default(this: &mut MaybeUninit<z_scout_options
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_scout(
-    config: z_moved_config_t,
-    callback: z_moved_closure_hello_t,
+    config: &mut z_moved_config_t,
+    callback: &mut z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
 ) -> result::z_result_t {
     if cfg!(feature = "logger-autoinit") {
         zc_init_logging();
     }
-    let Some(callback) = callback.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let callback = callback.take_rust_type();
     let options = options.cloned().unwrap_or_default();
     let what =
         WhatAmIMatcher::try_from(options.what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
-    let Some(config) = config.into_rust_type() else {
+    let Some(config) = config.take_rust_type() else {
         tracing::error!("Config not provided");
         return result::Z_EINVAL;
     };

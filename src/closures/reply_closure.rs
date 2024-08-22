@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_reply_t,
 };
 /// A structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -46,14 +46,15 @@ pub struct z_loaned_closure_reply_t {
 
 /// Moved closure.
 #[repr(C)]
+#[derive(Default)]
 pub struct z_moved_closure_reply_t {
-    pub _ptr: Option<&'static mut z_owned_closure_reply_t>,
+    pub _this: z_owned_closure_reply_t,
 }
 
 decl_c_type!(
     owned(z_owned_closure_reply_t),
     loaned(z_loaned_closure_reply_t),
-    moved(z_moved_closure_reply_t)
+    moved(z_moved_closure_reply_t),
 );
 
 impl Default for z_owned_closure_reply_t {
@@ -83,14 +84,16 @@ impl Drop for z_owned_closure_reply_t {
 /// Constructs a closure int its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_reply_null(this: *mut MaybeUninit<z_owned_closure_reply_t>) {
-    (*this).write(z_owned_closure_reply_t::default());
+pub unsafe extern "C" fn z_internal_closure_reply_null(
+    this_: *mut MaybeUninit<z_owned_closure_reply_t>,
+) {
+    (*this_).write(z_owned_closure_reply_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_closure_reply_check(this: &z_owned_closure_reply_t) -> bool {
-    !this.is_empty()
+pub extern "C" fn z_internal_closure_reply_check(this_: &z_owned_closure_reply_t) -> bool {
+    !this_.is_empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
@@ -109,8 +112,9 @@ pub extern "C" fn z_closure_reply_call(
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
 #[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn z_closure_reply_drop(closure: z_moved_closure_reply_t) {}
+pub extern "C" fn z_closure_reply_drop(closure_: &mut z_moved_closure_reply_t) {
+    let _ = closure_.take_rust_type();
+}
 
 impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
     fn from(f: F) -> Self {

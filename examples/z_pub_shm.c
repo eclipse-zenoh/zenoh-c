@@ -14,10 +14,22 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
+#define N 10
+#define DEFAULT_KEYEXPR "demo/example/zenoh-c-pub-shm"
+#define DEFAULT_VALUE "Pub from C!"
+
+struct args_t {
+    char* keyexpr;               // -k
+    char* value;                 // -v
+    bool add_matching_listener;  // --add-matching-listener
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
 #ifdef UNSTABLE
-void matching_status_handler(const zc_matching_status_t *matching_status, void *arg) {
+void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");
     } else {
@@ -26,38 +38,9 @@ void matching_status_handler(const zc_matching_status_t *matching_status, void *
 }
 #endif
 
-int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-pub";
-    char *value = "Pub from C SHM!";
-    bool add_matching_listener = false;
-
-    if (argc > 1) keyexpr = argv[1];
-    if (argc > 2) value = argv[2];
-    if (argc > 3) add_matching_listener = atoi(argv[3]);
-
+int main(int argc, char** argv) {
     z_owned_config_t config;
-    z_config_default(&config);
-
-    // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
-    // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
-    // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
-        printf(
-            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized value\n",
-            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
-        exit(-1);
-    }
-
-    if (argc > 4) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[4]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[4], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
     z_owned_session_t s;
@@ -66,17 +49,17 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
+    printf("Declaring Publisher on '%s'...\n", args.keyexpr);
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
-    z_view_keyexpr_from_str(&ke, keyexpr);
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
     if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
 #ifdef UNSTABLE
     zc_owned_matching_listener_t listener;
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
         zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
@@ -104,11 +87,11 @@ int main(int argc, char **argv) {
 
         z_buf_layout_alloc_result_t alloc;
         z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
-        if (z_check(alloc.buf)) {
+        if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
             {
-                uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
-                sprintf((char *)buf, "[%4d] %s", idx, value);
-                printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
+                uint8_t* buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
+                sprintf((char*)buf, "[%4d] %s", idx, args.value);
+                printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
             }
 
             z_publisher_put_options_t options;
@@ -125,7 +108,7 @@ int main(int argc, char **argv) {
     }
 
 #ifdef UNSTABLE
-    if (add_matching_listener) {
+    if (args.add_matching_listener) {
         zc_publisher_matching_listener_undeclare(z_move(listener));
     }
 #endif
@@ -137,4 +120,53 @@ int main(int argc, char **argv) {
     z_drop(z_move(layout));
 
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_pub_shm [OPTIONS]\n\n\
+    Options:\n\
+        -k <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
+        -v <VALUE> (optional, string, default='%s'): The value to write\n",
+        DEFAULT_KEYEXPR, DEFAULT_VALUE);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    const char* keyexpr = parse_opt(argc, argv, "k", true);
+    if (!keyexpr) {
+        keyexpr = DEFAULT_KEYEXPR;
+    }
+    const char* value = parse_opt(argc, argv, "v", true);
+    if (!value) {
+        value = DEFAULT_VALUE;
+    }
+    const char* arg = parse_opt(argc, argv, "add-matching-listener", false);
+    bool add_matching_listener = false;
+    if (arg) {
+        add_matching_listener = true;
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return (struct args_t){
+        .keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
 }

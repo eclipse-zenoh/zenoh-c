@@ -34,7 +34,7 @@ use crate::{
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
     /// The encoding of the message.
-    pub encoding: z_moved_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing this message.
     pub congestion_control: z_congestion_control_t,
     /// The priority of this message.
@@ -48,17 +48,17 @@ pub struct z_put_options_t {
     pub allowed_destination: zc_locality_t,
     /// The source info for the message.
     #[cfg(feature = "unstable")]
-    pub source_info: z_moved_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this message.
-    pub attachment: z_moved_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
 /// Constructs the default value for `z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put_options_default(this: &mut MaybeUninit<z_put_options_t>) {
-    this.write(z_put_options_t {
-        encoding: None.into(),
+pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
+    this_.write(z_put_options_t {
+        encoding: None,
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
@@ -66,8 +66,8 @@ pub extern "C" fn z_put_options_default(this: &mut MaybeUninit<z_put_options_t>)
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
-        source_info: None.into(),
-        attachment: None.into(),
+        source_info: None,
+        attachment: None,
     });
 }
 
@@ -84,26 +84,23 @@ pub extern "C" fn z_put_options_default(this: &mut MaybeUninit<z_put_options_t>)
 pub extern "C" fn z_put(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    payload: z_moved_bytes_t,
+    payload: &mut z_moved_bytes_t,
     options: Option<&mut z_put_options_t>,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let Some(payload) = payload.into_rust_type() else {
-        return result::Z_EINVAL;
-    };
-
+    let payload = payload.take_rust_type();
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
-        if let Some(encoding) = options.encoding.take_rust_type() {
-            put = put.encoding(encoding);
+        if let Some(encoding) = options.encoding.take() {
+            put = put.encoding(encoding.take_rust_type());
         };
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take_rust_type() {
-            put = put.source_info(source_info);
+        if let Some(source_info) = options.source_info.take() {
+            put = put.source_info(source_info.take_rust_type());
         };
-        if let Some(attachment) = options.attachment.take_rust_type() {
-            put = put.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            put = put.attachment(attachment.take_rust_type());
         }
         if let Some(timestamp) = options.timestamp.as_ref() {
             put = put.timestamp(Some(timestamp.into_rust_type()));
@@ -145,8 +142,8 @@ pub struct z_delete_options_t {
 /// Constructs the default value for `z_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete_options_default(this: &mut MaybeUninit<z_delete_options_t>) {
-    this.write(z_delete_options_t {
+pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
+    this_.write(z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
