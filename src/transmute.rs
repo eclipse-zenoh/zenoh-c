@@ -14,48 +14,57 @@
 
 use std::mem::MaybeUninit;
 
+#[allow(dead_code)]
 pub(crate) trait CTypeRef: Sized {
     type CType;
     fn as_ctype_ref(&self) -> &Self::CType;
     fn as_ctype_mut(&mut self) -> &mut Self::CType;
 }
+#[allow(dead_code)]
 pub(crate) trait OwnedCTypeRef: Sized {
     type OwnedCType;
     fn as_owned_c_type_ref(&self) -> &Self::OwnedCType;
     fn as_owned_c_type_mut(&mut self) -> &mut Self::OwnedCType;
 }
+#[allow(dead_code)]
 pub(crate) trait LoanedCTypeRef: Sized {
     type LoanedCType;
     fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType;
     fn as_loaned_c_type_mut(&mut self) -> &mut Self::LoanedCType;
 }
+#[allow(dead_code)]
 pub(crate) trait ViewCTypeRef: Sized {
     type ViewCType;
     fn as_view_c_type_ref(&self) -> &Self::ViewCType;
     fn as_view_c_type_mut(&mut self) -> &mut Self::ViewCType;
 }
+#[allow(dead_code)]
 pub(crate) trait RustTypeRef: Sized {
     type RustType;
     fn as_rust_type_ref(&self) -> &Self::RustType;
     fn as_rust_type_mut(&mut self) -> &mut Self::RustType;
 }
+#[allow(dead_code)]
 pub(crate) trait RustTypeRefUninit: Sized {
     type RustType;
     fn as_rust_type_mut_uninit(&mut self) -> &mut MaybeUninit<Self::RustType>;
 }
+#[allow(dead_code)]
 pub(crate) trait IntoRustType: Sized {
     type RustType;
     fn into_rust_type(self) -> Self::RustType;
 }
+#[allow(dead_code)]
 pub(crate) trait IntoCType: Sized {
     type CType;
     fn into_c_type(self) -> Self::CType;
 }
-
+#[allow(dead_code)]
 pub(crate) trait TakeRustType: Sized {
     type RustType;
     fn take_rust_type(&mut self) -> Self::RustType;
 }
+#[allow(dead_code)]
 pub(crate) trait TakeCType: Sized {
     type CType;
     fn take_c_type(&mut self) -> Self::CType;
