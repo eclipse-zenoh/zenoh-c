@@ -150,6 +150,16 @@ else()
 endif()
 
 #
+# Copy toolchain configuration to build directory to ensure it is used when cargo is invoked from a directory other
+# than the directory containing the manifest file
+#
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/rust-toolchain.toml")
+	file(COPY
+		${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
+		DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
+#
 # Configure result library names
 #
 macro(set_lib list var value)
