@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     printf("Allocating single SHM buffer\n");
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc(&alloc, z_loan(provider), len, alignment);
-    if (!z_check(alloc.buf)) {
+    if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...\n");
         return -1;
     }
