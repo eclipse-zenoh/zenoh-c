@@ -30,6 +30,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
+        shm: [false, true]
+        unstable: [false, true]
 
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +52,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build && cd build 
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target install --config Release
 
       - name: Install valgrind
@@ -61,7 +63,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. -DZENOHC_LIB_STATIC=FALSE -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_LIB_STATIC=FALSE -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_static)"
 
@@ -69,14 +71,14 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_TESTS_WITH_CXX=TRUE
+          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_TESTS_WITH_CXX=TRUE -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Debug
 
       - name: Run cmake tests with zenoh-c as static library
         shell: bash
         run: |
           cd build
-          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_shared)"
 
@@ -106,6 +108,7 @@ jobs:
         run: cargo test --verbose --release --features=logger-autoinit
 
       - name: Upload artifact
+        if: ${{ matrix.unstable == 'false' && matrix.shm == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           # Artifact name

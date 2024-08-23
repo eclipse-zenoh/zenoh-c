@@ -617,6 +617,12 @@ typedef struct z_subscriber_options_t {
    */
   enum z_reliability_t reliability;
 #endif
+#if !defined(UNSTABLE)
+  /**
+   * Dummy field to avoid having fieldless struct
+   */
+  uint8_t _0;
+#endif
 } z_subscriber_options_t;
 /**
  * Options passed to the `z_delete()` function.
