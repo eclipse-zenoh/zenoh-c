@@ -110,12 +110,12 @@ void test_bounded(void) {
     for (size_t i = 0; i < 10; ++i) {
         z_owned_bytes_t b;
         z_bytes_serialize_from_uint32(&b, data[i]);
-        assert(z_bytes_writer_append_bounded(&writer, z_move(b)) == 0);
+        z_bytes_writer_append_bounded(&writer, z_move(b));
     }
     {
         z_owned_bytes_t b;
         z_bytes_serialize_from_str(&b, "test");
-        assert(z_bytes_writer_append_bounded(&writer, z_move(b)) == 0);
+        z_bytes_writer_append_bounded(&writer, z_move(b));
     }
 
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
@@ -154,7 +154,7 @@ void test_append(void) {
     {
         z_owned_bytes_t b;
         z_bytes_serialize_from_buf(&b, data + 5, 5);
-        assert(z_bytes_writer_append(&writer, z_move(b)) == 0);
+        z_bytes_writer_append(&writer, z_move(b));
     }
 
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));

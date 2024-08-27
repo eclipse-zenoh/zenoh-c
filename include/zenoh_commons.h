@@ -1438,20 +1438,18 @@ z_result_t z_bytes_from_buf(struct z_owned_bytes_t *this_,
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
  * @param context: Arbitrary context that will be passed to iterator_body.
- * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_result_t z_bytes_from_iter(struct z_owned_bytes_t *this_,
-                             bool (*iterator_body)(struct z_owned_bytes_t *data, void *context),
-                             void *context);
+void z_bytes_from_iter(struct z_owned_bytes_t *this_,
+                       bool (*iterator_body)(struct z_owned_bytes_t *data, void *context),
+                       void *context);
 /**
  * Serializes a pair of `z_owned_bytes_t` objects which are consumed in the process.
- * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_result_t z_bytes_from_pair(struct z_owned_bytes_t *this_,
-                             struct z_moved_bytes_t *first,
-                             struct z_moved_bytes_t *second);
+void z_bytes_from_pair(struct z_owned_bytes_t *this_,
+                       struct z_moved_bytes_t *first,
+                       struct z_moved_bytes_t *second);
 /**
  * Serializes a slice.
  * The slice is consumed upon function return.
@@ -1657,20 +1655,16 @@ ZENOHC_API void z_bytes_serialize_from_uint8(struct z_owned_bytes_t *this_, uint
  * Appends bytes.
  * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
  * Said in other terms, it allows to create a linear view on different memory regions without copy.
- *
- * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
-                                 struct z_moved_bytes_t *bytes);
+void z_bytes_writer_append(struct z_bytes_writer_t *this_,
+                           struct z_moved_bytes_t *bytes);
 /**
  * Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.
- *
- * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_append_bounded(struct z_bytes_writer_t *this_,
-                                         struct z_moved_bytes_t *bytes);
+void z_bytes_writer_append_bounded(struct z_bytes_writer_t *this_,
+                                   struct z_moved_bytes_t *bytes);
 /**
  * Writes `len` bytes from `src` into underlying data.
  *

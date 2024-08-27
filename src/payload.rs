@@ -652,16 +652,14 @@ pub unsafe extern "C" fn z_bytes_serialize_from_str(
 }
 
 /// Serializes a pair of `z_owned_bytes_t` objects which are consumed in the process.
-/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_bytes_from_pair(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     first: &mut z_moved_bytes_t,
     second: &mut z_moved_bytes_t,
-) -> z_result_t {
+) {
     let payload = ZBytes::serialize((first.take_rust_type(), second.take_rust_type()));
     this.as_rust_type_mut_uninit().write(payload);
-    Z_OK
 }
 
 /// Deserializes into a pair of `z_owned_bytes_t` objects.
@@ -712,7 +710,6 @@ impl Iterator for ZBytesInIterator {
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
 /// @param context: Arbitrary context that will be passed to iterator_body.
-/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_bytes_from_iter(
     this: &mut MaybeUninit<z_owned_bytes_t>,
@@ -721,7 +718,7 @@ pub extern "C" fn z_bytes_from_iter(
         context: *mut c_void,
     ) -> bool,
     context: *mut c_void,
-) -> z_result_t {
+) {
     let it = ZBytesInIterator {
         body: iterator_body,
         context,
@@ -729,7 +726,6 @@ pub extern "C" fn z_bytes_from_iter(
 
     let b = ZBytes::from_iter(it);
     this.as_rust_type_mut_uninit().write(b);
-    Z_OK
 }
 
 pub use crate::z_bytes_iterator_t;
@@ -925,27 +921,21 @@ unsafe extern "C" fn z_bytes_writer_write_all(
 /// Appends bytes.     
 /// This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
 /// Said in other terms, it allows to create a linear view on different memory regions without copy.
-///
-/// @return 0 in case of success, negative error code otherwise
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_append(
     this: &mut z_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
-) -> z_result_t {
+) {
     this.as_rust_type_mut().append(bytes.take_rust_type());
-    result::Z_OK
 }
 
 /// Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.    
-///
-/// @return 0 in case of success, negative error code otherwise
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 unsafe extern "C" fn z_bytes_writer_append_bounded(
     this: &mut z_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
-) -> z_result_t {
+) {
     this.as_rust_type_mut().serialize(bytes.take_rust_type());
-    result::Z_OK
 }
