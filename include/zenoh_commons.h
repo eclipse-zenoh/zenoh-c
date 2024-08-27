@@ -2672,7 +2672,7 @@ ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subs
 ZENOHC_API
 int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
                                   struct z_keyexpr_t selector,
-                                  const struct ze_querying_subscriber_options_t *options);
+                                  const struct z_get_options_t *options);
 /**
  * Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
  */
