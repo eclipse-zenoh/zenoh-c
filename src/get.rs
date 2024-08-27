@@ -35,8 +35,8 @@ use crate::attachment::{
 };
 use crate::{
     impl_guarded_transmute, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_reply_t, z_sample_t, z_session_t, GuardedTransmute,
-    LOG_INVALID_SESSION,
+    z_keyexpr_t, z_owned_closure_reply_t, z_sample_t, z_session_t, zcu_reply_keyexpr_default,
+    zcu_reply_keyexpr_t, GuardedTransmute, LOG_INVALID_SESSION,
 };
 
 type ReplyInner = Option<Reply>;
@@ -168,6 +168,7 @@ pub struct z_get_options_t {
     pub value: z_value_t,
     pub attachment: z_attachment_t,
     pub timeout_ms: u64,
+    pub accept_replies: zcu_reply_keyexpr_t,
 }
 #[no_mangle]
 pub extern "C" fn z_get_options_default() -> z_get_options_t {
@@ -182,6 +183,7 @@ pub extern "C" fn z_get_options_default() -> z_get_options_t {
             }
         },
         attachment: z_attachment_null(),
+        accept_replies: zcu_reply_keyexpr_default(),
     }
 }
 
