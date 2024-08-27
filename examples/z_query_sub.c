@@ -25,30 +25,39 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 const char* kind_to_str(z_sample_kind_t kind);
 
-void data_handler(const z_sample_t* sample, void* arg) {
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
-    printf(">> [Subscriber] Received %s ('%s': '%.*s')\n", kind_to_str(sample->kind), z_loan(keystr),
-           (int)sample->payload.len, sample->payload.start);
-    z_drop(z_move(keystr));
+void data_handler(const z_loaned_sample_t* sample, void* arg) {
+    z_view_string_t key_string;
+    z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
+    z_owned_string_t payload_string;
+    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+
+    printf(">> [Subscriber] Received %s ('%.*s': '%.*s')\n", kind_to_str(z_sample_kind(sample)),
+           (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+           (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
+    z_drop(z_move(payload_string));
 }
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config))) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    ze_querying_subscriber_options_t sub_opts = ze_querying_subscriber_options_default();
-    z_owned_closure_sample_t callback = z_closure(data_handler);
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+
+    ze_querying_subscriber_options_t sub_opts;
+    ze_querying_subscriber_options_default(&sub_opts);
+    z_owned_closure_sample_t callback;
+    z_closure(&callback, data_handler, NULL, NULL);
     printf("Declaring querying subscriber on '%s'...\n", args.keyexpr);
-    ze_owned_querying_subscriber_t sub =
-        ze_declare_querying_subscriber(z_loan(s), z_keyexpr(args.keyexpr), z_move(callback), &sub_opts);
-    if (!z_check(sub)) {
+    ze_owned_querying_subscriber_t sub;
+    if (ze_declare_querying_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), &sub_opts) < 0) {
         printf("Unable to declare querying subscriber.\n");
         exit(-1);
     }
@@ -58,7 +67,7 @@ int main(int argc, char** argv) {
         z_sleep_s(1);
     }
 
-    z_drop(z_move(sub));
+    ze_undeclare_querying_subscriber(z_move(sub));
     z_close(z_move(s));
 
     return 0;

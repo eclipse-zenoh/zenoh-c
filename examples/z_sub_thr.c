@@ -36,7 +36,7 @@ z_stats_t *z_stats_make() {
     return stats;
 }
 
-void on_sample(const z_sample_t *sample, void *context) {
+void on_sample(const z_loaned_sample_t *sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
         stats->start = z_clock_now();
@@ -63,21 +63,38 @@ void drop_stats(void *context) {
 }
 
 int main(int argc, char **argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     parse_args(argc, argv, &config);
 
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+#ifdef SHARED_MEMORY
+    // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
+    // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
+        printf(
+            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
+            "JSON-serialized value\n",
+            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
+        exit(-1);
+    }
+#endif
+
+    z_owned_session_t s;
+
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    z_owned_keyexpr_t ke = z_declare_keyexpr(z_loan(s), z_keyexpr("test/thr"));
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, "test/thr");
+    z_owned_keyexpr_t declared_ke;
+    z_declare_keyexpr(&declared_ke, z_loan(s), z_loan(ke));
 
     z_stats_t *context = z_stats_make();
-    z_owned_closure_sample_t callback = z_closure(on_sample, drop_stats, context);
-    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_loan(ke), z_move(callback), NULL);
-    if (!z_check(sub)) {
+    z_owned_closure_sample_t callback;
+    z_closure(&callback, on_sample, drop_stats, context);
+    z_owned_subscriber_t sub;
+    if (z_declare_subscriber(&sub, z_loan(s), z_loan(declared_ke), z_move(callback), NULL)) {
         printf("Unable to create subscriber.\n");
         exit(-1);
     }
@@ -88,7 +105,7 @@ int main(int argc, char **argv) {
     }
 
     z_undeclare_subscriber(z_move(sub));
-    z_undeclare_keyexpr(z_loan(s), z_move(ke));
+    z_undeclare_keyexpr(z_move(declared_ke), z_loan(s));
     z_close(z_move(s));
     return 0;
 }

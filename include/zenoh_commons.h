@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -11,262 +11,404 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+// clang-format off
 #ifdef DOCS
 #define ALIGN(n)
 #define ZENOHC_API
 #endif
 /**
- * The kind of congestion control.
+ * Allocation errors
  *
- *     - **BLOCK**
- *     - **DROP**
+ *     - **NEED_DEFRAGMENT**: defragmentation needed
+ *     - **OUT_OF_MEMORY**: the provider is out of memory
+ *     - **OTHER**: other error
  */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef enum z_alloc_error_t {
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  Z_ALLOC_ERROR_NEED_DEFRAGMENT,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  Z_ALLOC_ERROR_OUT_OF_MEMORY,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  Z_ALLOC_ERROR_OTHER,
+#endif
+} z_alloc_error_t;
+#endif
 typedef enum z_congestion_control_t {
+  /**
+   * Messages are not dropped in case of congestion.
+   */
   Z_CONGESTION_CONTROL_BLOCK,
+  /**
+   * Messages are dropped in case of congestion.
+   */
   Z_CONGESTION_CONTROL_DROP,
 } z_congestion_control_t;
 /**
  * Consolidation mode values.
- *
- *     - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
- *       If the selector contains time range properties, consolidation mode `NONE` is used.
- *       Otherwise the `LATEST` consolidation mode is used.
- *     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
- *     - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
- *       w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
- *       replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
- *       ts2 > ts1. It optimizes latency.
- *     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
- *       It optimizes bandwidth.
  */
 typedef enum z_consolidation_mode_t {
+  /**
+   * Let Zenoh decide the best consolidation mode depending on the query selector.
+   * If the selector contains time range properties, consolidation mode `NONE` is used.
+   * Otherwise the `LATEST` consolidation mode is used.
+   */
   Z_CONSOLIDATION_MODE_AUTO = -1,
+  /**
+   *  No consolidation is applied. Replies may come in any order and any number.
+   */
   Z_CONSOLIDATION_MODE_NONE = 0,
+  /**
+   * It guarantees that any reply for a given key expression will be monotonic in time
+   * w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+   * replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+   * ts2 > ts1. It optimizes latency.
+   */
   Z_CONSOLIDATION_MODE_MONOTONIC = 1,
+  /**
+   * It guarantees unicity of replies for the same key expression.
+   * It optimizes bandwidth.
+   */
   Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
 /**
- * A :c:type:`z_encoding_t` integer `prefix`.
- *
- *     - **Z_ENCODING_PREFIX_EMPTY**
- *     - **Z_ENCODING_PREFIX_APP_OCTET_STREAM**
- *     - **Z_ENCODING_PREFIX_APP_CUSTOM**
- *     - **Z_ENCODING_PREFIX_TEXT_PLAIN**
- *     - **Z_ENCODING_PREFIX_APP_PROPERTIES**
- *     - **Z_ENCODING_PREFIX_APP_JSON**
- *     - **Z_ENCODING_PREFIX_APP_SQL**
- *     - **Z_ENCODING_PREFIX_APP_INTEGER**
- *     - **Z_ENCODING_PREFIX_APP_FLOAT**
- *     - **Z_ENCODING_PREFIX_APP_XML**
- *     - **Z_ENCODING_PREFIX_APP_XHTML_XML**
- *     - **Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED**
- *     - **Z_ENCODING_PREFIX_TEXT_JSON**
- *     - **Z_ENCODING_PREFIX_TEXT_HTML**
- *     - **Z_ENCODING_PREFIX_TEXT_XML**
- *     - **Z_ENCODING_PREFIX_TEXT_CSS**
- *     - **Z_ENCODING_PREFIX_TEXT_CSV**
- *     - **Z_ENCODING_PREFIX_TEXT_JAVASCRIPT**
- *     - **Z_ENCODING_PREFIX_IMAGE_JPEG**
- *     - **Z_ENCODING_PREFIX_IMAGE_PNG**
- *     - **Z_ENCODING_PREFIX_IMAGE_GIF**
+ * Intersection level of 2 key expressions.
  */
-typedef enum z_encoding_prefix_t {
-  Z_ENCODING_PREFIX_EMPTY = 0,
-  Z_ENCODING_PREFIX_APP_OCTET_STREAM = 1,
-  Z_ENCODING_PREFIX_APP_CUSTOM = 2,
-  Z_ENCODING_PREFIX_TEXT_PLAIN = 3,
-  Z_ENCODING_PREFIX_APP_PROPERTIES = 4,
-  Z_ENCODING_PREFIX_APP_JSON = 5,
-  Z_ENCODING_PREFIX_APP_SQL = 6,
-  Z_ENCODING_PREFIX_APP_INTEGER = 7,
-  Z_ENCODING_PREFIX_APP_FLOAT = 8,
-  Z_ENCODING_PREFIX_APP_XML = 9,
-  Z_ENCODING_PREFIX_APP_XHTML_XML = 10,
-  Z_ENCODING_PREFIX_APP_X_WWW_FORM_URLENCODED = 11,
-  Z_ENCODING_PREFIX_TEXT_JSON = 12,
-  Z_ENCODING_PREFIX_TEXT_HTML = 13,
-  Z_ENCODING_PREFIX_TEXT_XML = 14,
-  Z_ENCODING_PREFIX_TEXT_CSS = 15,
-  Z_ENCODING_PREFIX_TEXT_CSV = 16,
-  Z_ENCODING_PREFIX_TEXT_JAVASCRIPT = 17,
-  Z_ENCODING_PREFIX_IMAGE_JPEG = 18,
-  Z_ENCODING_PREFIX_IMAGE_PNG = 19,
-  Z_ENCODING_PREFIX_IMAGE_GIF = 20,
-} z_encoding_prefix_t;
-/**
- * A :c:type:`z_keyexpr_intersection_level_t`.
- *
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT**
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS**
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES**
- *     - **Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS**
- */
+#if defined(UNSTABLE)
 typedef enum z_keyexpr_intersection_level_t {
+  /**
+   * 2 key expressions do not intersect.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT = 0,
+  /**
+   * 2 key expressions intersect, i.e. there exists at least one key expression that is included by both.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS = 1,
+  /**
+   * First key expression is the superset of second one.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES = 2,
+  /**
+   * 2 key expressions are equal.
+   */
   Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
 } z_keyexpr_intersection_level_t;
+#endif
+/**
+ * Layouting errors
+ *
+ * INCORRECT_LAYOUT_ARGS: layout arguments are incorrect
+ * PROVIDER_INCOMPATIBLE_LAYOUT: layout incompatible with provider
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef enum z_layout_error_t {
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  Z_LAYOUT_ERROR_INCORRECT_LAYOUT_ARGS,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  Z_LAYOUT_ERROR_PROVIDER_INCOMPATIBLE_LAYOUT,
+#endif
+} z_layout_error_t;
+#endif
 /**
  * The priority of zenoh messages.
- *
- *     - **REAL_TIME**
- *     - **INTERACTIVE_HIGH**
- *     - **INTERACTIVE_LOW**
- *     - **DATA_HIGH**
- *     - **DATA**
- *     - **DATA_LOW**
- *     - **BACKGROUND**
  */
 typedef enum z_priority_t {
+  /**
+   * Priority for ``RealTime`` messages.
+   */
   Z_PRIORITY_REAL_TIME = 1,
+  /**
+   * Highest priority for ``Interactive`` messages.
+   */
   Z_PRIORITY_INTERACTIVE_HIGH = 2,
+  /**
+   * Lowest priority for ``Interactive`` messages.
+   */
   Z_PRIORITY_INTERACTIVE_LOW = 3,
+  /**
+   * Highest priority for ``Data`` messages.
+   */
   Z_PRIORITY_DATA_HIGH = 4,
+  /**
+   * Default priority for ``Data`` messages.
+   */
   Z_PRIORITY_DATA = 5,
+  /**
+   * Lowest priority for ``Data`` messages.
+   */
   Z_PRIORITY_DATA_LOW = 6,
+  /**
+   * Priority for ``Background traffic`` messages.
+   */
   Z_PRIORITY_BACKGROUND = 7,
 } z_priority_t;
 /**
- * The Queryables that should be target of a :c:func:`z_get`.
- *
- *     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
- *     - **ALL_COMPLETE**: All complete queryables.
- *     - **ALL**: All matching queryables.
+ * The Queryables that should be target of a `z_get()`.
  */
 typedef enum z_query_target_t {
+  /**
+   * The nearest complete queryable if any else all matching queryables.
+   */
   Z_QUERY_TARGET_BEST_MATCHING,
+  /**
+   * All matching queryables.
+   */
   Z_QUERY_TARGET_ALL,
+  /**
+   * All complete queryables.
+   */
   Z_QUERY_TARGET_ALL_COMPLETE,
 } z_query_target_t;
 /**
  * The subscription reliability.
- *
- *     - **Z_RELIABILITY_BEST_EFFORT**
- *     - **Z_RELIABILITY_RELIABLE**
  */
+#if defined(UNSTABLE)
 typedef enum z_reliability_t {
+  /**
+   * Defines reliability as ``BEST_EFFORT``
+   */
   Z_RELIABILITY_BEST_EFFORT,
+  /**
+   * Defines reliability as ``RELIABLE``
+   */
   Z_RELIABILITY_RELIABLE,
 } z_reliability_t;
+#endif
 typedef enum z_sample_kind_t {
+  /**
+   * The Sample was issued by a ``put`` operation.
+   */
   Z_SAMPLE_KIND_PUT = 0,
+  /**
+   * The Sample was issued by a ``delete`` operation.
+   */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
-typedef enum zcu_locality_t {
-  ZCU_LOCALITY_ANY = 0,
-  ZCU_LOCALITY_SESSION_LOCAL = 1,
-  ZCU_LOCALITY_REMOTE = 2,
-} zcu_locality_t;
-typedef enum zcu_reply_keyexpr_t {
-  ZCU_REPLY_KEYEXPR_ANY = 0,
-  ZCU_REPLY_KEYEXPR_MATCHING_QUERY = 1,
-} zcu_reply_keyexpr_t;
+typedef enum z_what_t {
+  Z_WHAT_ROUTER = 1,
+  Z_WHAT_PEER = 2,
+  Z_WHAT_CLIENT = 4,
+  Z_WHAT_ROUTER_PEER = (1 | 2),
+  Z_WHAT_ROUTER_CLIENT = (1 | 4),
+  Z_WHAT_PEER_CLIENT = (2 | 4),
+  Z_WHAT_ROUTER_PEER_CLIENT = ((1 | 2) | 4),
+} z_what_t;
+typedef enum z_whatami_t {
+  Z_WHATAMI_ROUTER = 1,
+  Z_WHATAMI_PEER = 2,
+  Z_WHATAMI_CLIENT = 4,
+} z_whatami_t;
 /**
- * A contiguous view of bytes owned by some other entity.
- *
- * `start` being `null` is considered a gravestone value,
- * and empty slices are represented using a possibly dangling pointer for `start`.
+ * Status of SHM buffer allocation operation
  */
-typedef struct z_bytes_t {
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef enum zc_buf_alloc_status_t {
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation ok
+   */
+  ZC_BUF_ALLOC_STATUS_OK = 0,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation error
+   */
+  ZC_BUF_ALLOC_STATUS_ALLOC_ERROR = 1,
+#endif
+} zc_buf_alloc_status_t;
+#endif
+/**
+ * Status of SHM buffer layouting + allocation operation
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef enum zc_buf_layout_alloc_status_t {
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation ok
+   */
+  ZC_BUF_LAYOUT_ALLOC_STATUS_OK = 0,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Allocation error
+   */
+  ZC_BUF_LAYOUT_ALLOC_STATUS_ALLOC_ERROR = 1,
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+  /**
+   * Layouting error
+   */
+  ZC_BUF_LAYOUT_ALLOC_STATUS_LAYOUT_ERROR = 2,
+#endif
+} zc_buf_layout_alloc_status_t;
+#endif
+/**
+ * The locality of samples to be received by subscribers or targeted by publishers.
+ */
+typedef enum zc_locality_t {
+  /**
+   * Any
+   */
+  ZC_LOCALITY_ANY = 0,
+  /**
+   * Only from local sessions.
+   */
+  ZC_LOCALITY_SESSION_LOCAL = 1,
+  /**
+   * Only from remote sessions.
+   */
+  ZC_LOCALITY_REMOTE = 2,
+} zc_locality_t;
+/**
+ * Severity level of Zenoh log message.
+ */
+typedef enum zc_log_severity_t {
+  /**
+   * The `trace` level.
+   *
+   * Designates very low priority, often extremely verbose, information.
+   */
+  ZC_LOG_SEVERITY_TRACE = 0,
+  /**
+   * The "debug" level.
+   *
+   * Designates lower priority information.
+   */
+  ZC_LOG_SEVERITY_DEBUG = 1,
+  /**
+   * The "info" level.
+   *
+   * Designates useful information.
+   */
+  ZC_LOG_SEVERITY_INFO = 2,
+  /**
+   * The "warn" level.
+   *
+   * Designates hazardous situations.
+   */
+  ZC_LOG_SEVERITY_WARN = 3,
+  /**
+   * The "error" level.
+   *
+   * Designates very serious errors.
+   */
+  ZC_LOG_SEVERITY_ERROR = 4,
+} zc_log_severity_t;
+/**
+ * Key expressions types to which Queryable should reply to.
+ */
+#if defined(UNSTABLE)
+typedef enum zc_reply_keyexpr_t {
+  /**
+   * Replies to any key expression queries.
+   */
+  ZC_REPLY_KEYEXPR_ANY = 0,
+  /**
+   * Replies only to queries with intersecting key expressions.
+   */
+  ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
+} zc_reply_keyexpr_t;
+#endif
+/**
+ * A result of SHM buffer allocation operation
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct z_buf_alloc_result_t {
+  enum zc_buf_alloc_status_t status;
+  z_owned_shm_mut_t buf;
+  enum z_alloc_error_t error;
+} z_buf_alloc_result_t;
+#endif
+typedef int8_t z_result_t;
+/**
+ * An AllocAlignment.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct z_alloc_alignment_t {
+  uint8_t pow;
+} z_alloc_alignment_t;
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct zc_threadsafe_context_data_t {
+  void *ptr;
+} zc_threadsafe_context_data_t;
+#endif
+/**
+ * A tread-safe droppable context.
+ * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
+ * information to each callback.
+ *
+ * This is a thread-safe context - the associated callbacks may be executed concurrently with the same
+ * zc_context_t instance. In other words, all the callbacks associated with this context data MUST be
+ * thread-safe.
+ *
+ * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted.The
+ * delete_fn is guaranteed to be executed only once at some point of time after the last associated
+ * callback call returns.
+ * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
+ * be executed.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct zc_threadsafe_context_t {
+  struct zc_threadsafe_context_data_t context;
+  void (*delete_fn)(void*);
+} zc_threadsafe_context_t;
+#endif
+typedef struct z_moved_bytes_t {
+  struct z_owned_bytes_t _this;
+} z_moved_bytes_t;
+typedef struct z_moved_slice_t {
+  struct z_owned_slice_t _this;
+} z_moved_slice_t;
+typedef struct z_moved_string_t {
+  struct z_owned_string_t _this;
+} z_moved_string_t;
+/**
+ * Unique segment identifier
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef uint32_t z_segment_id_t;
+#endif
+/**
+ * Chunk id within it's segment
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef uint32_t z_chunk_id_t;
+#endif
+/**
+ * A ChunkDescriptor
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct z_chunk_descriptor_t {
+  z_segment_id_t segment;
+  z_chunk_id_t chunk;
   size_t len;
-  const uint8_t *start;
-} z_bytes_t;
+} z_chunk_descriptor_t;
+#endif
 /**
- * The body of a loop over an attachment's key-value pairs.
- *
- * `key` and `value` are loaned to the body for the duration of a single call.
- * `context` is passed transparently through the iteration driver.
- *
- * Returning `0` is treated as `continue`.
- * Returning any other value is treated as `break`.
+ * An AllocatedChunk
  */
-typedef int8_t (*z_attachment_iter_body_t)(struct z_bytes_t key,
-                                           struct z_bytes_t value,
-                                           void *context);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct z_allocated_chunk_t {
+  struct z_chunk_descriptor_t descriptpr;
+  void *data;
+} z_allocated_chunk_t;
+#endif
 /**
- * The driver of a loop over an attachment's key-value pairs.
- *
- * This function is expected to call `loop_body` once for each key-value pair
- * within `iterator`, passing `context`, and returning any non-zero value immediately (breaking iteration).
- */
-typedef int8_t (*z_attachment_iter_driver_t)(const void *iterator,
-                                             z_attachment_iter_body_t loop_body,
-                                             void *context);
-/**
- * A iteration based map of byte slice to byte slice.
- *
- * `iteration_driver == NULL` marks the gravestone value, as this type is often optional.
- * Users are encouraged to use `z_attachment_null` and `z_attachment_check` to interact.
- */
-typedef struct z_attachment_t {
-  const void *data;
-  z_attachment_iter_driver_t iteration_driver;
-} z_attachment_t;
-/**
- * A map of maybe-owned vector of bytes to owned vector of bytes.
- *
- * In Zenoh C, this map is backed by Rust's standard HashMap, with a DoS-resistant hasher
- */
-typedef struct z_owned_bytes_map_t {
-  uint64_t _0[2];
-  size_t _1[4];
-} z_owned_bytes_map_t;
-/**
- * Clock
- * Uses monotonic clock
+ * Monotonic clock
  */
 typedef struct z_clock_t {
   uint64_t t;
   const void *t_base;
 } z_clock_t;
-/**
- * Represents a Zenoh ID.
- *
- * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
- */
-typedef struct z_id_t {
-  uint8_t id[16];
-} z_id_t;
-/**
- * An owned array of owned, zenoh allocated, NULL terminated strings.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_str_array_t {
-  char **val;
-  size_t len;
-} z_owned_str_array_t;
-/**
- * A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
- *
- * Members:
- *   unsigned int whatami: The kind of zenoh entity.
- *   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
- *   z_owned_str_array_t locators: The locators of the scouted entity.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-typedef struct z_owned_hello_t {
-  unsigned int _whatami;
-  struct z_id_t _pid;
-  struct z_owned_str_array_t _locators;
-} z_owned_hello_t;
+typedef struct z_moved_session_t {
+  struct z_owned_session_t _this;
+} z_moved_session_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
@@ -277,749 +419,792 @@ typedef struct z_owned_hello_t {
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_hello_t {
+  /**
+   * An optional pointer to a closure state.
+   */
   void *context;
-  void (*call)(struct z_owned_hello_t*, void*);
-  void (*drop)(void*);
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct z_loaned_hello_t *hello, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
 } z_owned_closure_hello_t;
 /**
- * Owned variant of a Query received by a Queryable.
- *
- * You may construct it by `z_query_clone`-ing a loaned query.
- * When the last `z_owned_query_t` corresponding to a query is destroyed, or the callback that produced the query cloned to build them returns,
- * the query will receive its termination signal.
- *
- * Holding onto an `z_owned_query_t` for too long (10s by default, can be set in `z_get`'s options) will trigger a timeout error
- * to be sent to the querier by the infrastructure, and new responses to the outdated query will be silently dropped.
+ * Moved closure.
  */
-typedef struct z_owned_query_t {
-  void *_0;
-} z_owned_query_t;
+typedef struct z_moved_closure_hello_t {
+  struct z_owned_closure_hello_t _this;
+} z_moved_closure_hello_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
- *
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_closure_owned_query_t {
-  void *context;
-  void (*call)(struct z_owned_query_t*, void *context);
-  void (*drop)(void*);
-} z_owned_closure_owned_query_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_query_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_query_t {
+  /**
+   * An optional pointer to a context representing a closure state.
+   */
   void *context;
-  void (*call)(const struct z_query_t*, void *context);
-  void (*drop)(void*);
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct z_loaned_query_t *reply, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
 } z_owned_closure_query_t;
 /**
- * An owned reply to a :c:func:`z_get`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
+ * Moved closure.
  */
-#if !defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[30];
-} z_owned_reply_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_reply_t {
-  uint64_t _0[21];
-} z_owned_reply_t;
-#endif
+typedef struct z_moved_closure_query_t {
+  struct z_owned_closure_query_t _this;
+} z_moved_closure_query_t;
 /**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
+ * A structure that contains all the elements for stateful, memory-leak-free callbacks.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
- *
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_reply_t {
+  /**
+   * An optional pointer to a context representing a closure state.
+   */
   void *context;
-  void (*call)(struct z_owned_reply_t*, void*);
-  void (*drop)(void*);
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct z_loaned_reply_t *reply, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
 } z_owned_closure_reply_t;
 /**
- * A loaned key expression.
- *
- * Key expressions can identify a single key or a set of keys.
- *
- * Examples :
- *    - ``"key/expression"``.
- *    - ``"key/ex*"``.
- *
- * Using :c:func:`z_declare_keyexpr` allows zenoh to optimize a key expression,
- * both for local processing and network-wise.
+ * Moved closure.
  */
-#if !defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_keyexpr_t {
-  uint64_t _0[4];
-} z_keyexpr_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_keyexpr_t {
-  uint32_t _0[5];
-} z_keyexpr_t;
-#endif
-/**
- * The encoding of a payload, in a MIME-like format.
- *
- * For wire and matching efficiency, common MIME types are represented using an integer as `prefix`, and a `suffix` may be used to either provide more detail, or in combination with the `Empty` prefix to write arbitrary MIME types.
- *
- * Members:
- *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
- *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
- */
-typedef struct z_encoding_t {
-  enum z_encoding_prefix_t prefix;
-  struct z_bytes_t suffix;
-} z_encoding_t;
-typedef struct z_timestamp_t {
-  uint64_t time;
-  struct z_id_t id;
-} z_timestamp_t;
-/**
- * QoS settings of zenoh message.
- *
- */
-typedef struct z_qos_t {
-  uint8_t _0;
-} z_qos_t;
-/**
- * A data sample.
- *
- * A sample is the value associated to a given resource at a given point in time.
- *
- * Members:
- *   z_keyexpr_t keyexpr: The resource key of this data sample.
- *   z_bytes_t payload: The value of this data sample.
- *   z_encoding_t encoding: The encoding of the value of this data sample.
- *   z_sample_kind_t kind: The kind of this data sample (PUT or DELETE).
- *   z_timestamp_t timestamp: The timestamp of this data sample.
- *   z_attachment_t attachment: The attachment of this data sample.
- */
-typedef struct z_sample_t {
-  struct z_keyexpr_t keyexpr;
-  struct z_bytes_t payload;
-  struct z_encoding_t encoding;
-  const void *_zc_buf;
-  enum z_sample_kind_t kind;
-  struct z_timestamp_t timestamp;
-  struct z_qos_t qos;
-  struct z_attachment_t attachment;
-} z_sample_t;
+typedef struct z_moved_closure_reply_t {
+  struct z_owned_closure_reply_t _this;
+} z_moved_closure_reply_t;
 /**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
- *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_sample_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
- *
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_sample_t {
+  /**
+   * An optional pointer to a context representing a closure state.
+   */
   void *context;
-  void (*call)(const struct z_sample_t*, void *context);
-  void (*drop)(void*);
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct z_loaned_sample_t *sample, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
 } z_owned_closure_sample_t;
 /**
+ * Moved closure.
+ */
+typedef struct z_moved_closure_sample_t {
+  struct z_owned_closure_sample_t _this;
+} z_moved_closure_sample_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
- *
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
+#if defined(UNSTABLE)
 typedef struct z_owned_closure_zid_t {
+  /**
+   * An optional pointer to a closure state.
+   */
   void *context;
-  void (*call)(const struct z_id_t*, void*);
-  void (*drop)(void*);
+  /**
+   * A callback function.
+   */
+  void (*call)(const z_id_t *z_id, void *context);
+  /**
+   * An optional function that will be called upon closure drop.
+   */
+  void (*drop)(void *context);
 } z_owned_closure_zid_t;
-/**
- * Condvar
- *
- */
-typedef struct z_condvar_t {
-  size_t _0;
-} z_condvar_t;
-/**
- * Mutex
- *
- */
-typedef struct z_mutex_t {
-  size_t _0;
-} z_mutex_t;
-/**
- * An owned zenoh configuration.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-typedef struct z_owned_config_t {
-  void *_0;
-} z_owned_config_t;
-/**
- * A loaned zenoh configuration.
- */
-typedef struct z_config_t {
-  const struct z_owned_config_t *_0;
-} z_config_t;
-/**
- * A zenoh-allocated key expression.
- *
- * Key expressions can identify a single key or a set of keys.
- *
- * Examples :
- *    - ``"key/expression"``.
- *    - ``"key/ex*"``.
- *
- * Key expressions can be mapped to numerical ids through :c:func:`z_declare_expr`
- * for wire and computation efficiency.
- *
- * A `key expression <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Key%20Expressions.md>`_ can be either:
- *   - A plain string expression.
- *   - A pure numerical id.
- *   - The combination of a numerical prefix and a string suffix.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- */
-#if !defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_keyexpr_t {
-  uint64_t _0[4];
-} z_owned_keyexpr_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_owned_keyexpr_t {
-  uint32_t _0[5];
-} z_owned_keyexpr_t;
 #endif
 /**
- * An owned zenoh publisher.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * Moved closure.
  */
-#if !defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) z_owned_publisher_t {
-  uint64_t _0[7];
-} z_owned_publisher_t;
+#if defined(UNSTABLE)
+typedef struct z_moved_closure_zid_t {
+  struct z_owned_closure_zid_t _this;
+} z_moved_closure_zid_t;
 #endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) z_owned_publisher_t {
-  uint32_t _0[8];
-} z_owned_publisher_t;
-#endif
+typedef struct z_moved_condvar_t {
+  struct z_owned_condvar_t _this;
+} z_moved_condvar_t;
+typedef struct z_moved_config_t {
+  struct z_owned_config_t _this;
+} z_moved_config_t;
+typedef struct z_moved_encoding_t {
+  struct z_owned_encoding_t _this;
+} z_moved_encoding_t;
 /**
- * Options passed to the :c:func:`z_declare_publisher` function.
- *
- * Members:
- *     z_congestion_control_t congestion_control: The congestion control to apply when routing messages from this publisher.
- *     z_priority_t priority: The priority of messages from this publisher.
+ * Options passed to the `z_declare_publisher()` function.
  */
 typedef struct z_publisher_options_t {
+  /**
+   * Default encoding for messages put by this publisher.
+   */
+  struct z_moved_encoding_t *encoding;
+  /**
+   * The congestion control to apply when routing messages from this publisher.
+   */
   enum z_congestion_control_t congestion_control;
+  /**
+   * The priority of messages from this publisher.
+   */
   enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+   */
+  bool is_express;
+#if defined(UNSTABLE)
+  /**
+   * The allowed destination for this publisher.
+   */
+  enum zc_locality_t allowed_destination;
+#endif
 } z_publisher_options_t;
 /**
- * Represents the set of options that can be applied to a pull subscriber,
- * upon its declaration via :c:func:`z_declare_pull_subscriber`.
- *
- * Members:
- *   z_reliability_t reliability: The subscription reliability.
- */
-typedef struct z_pull_subscriber_options_t {
-  enum z_reliability_t reliability;
-} z_pull_subscriber_options_t;
-/**
- * Options passed to the :c:func:`z_declare_queryable` function.
- *
- * Members:
- *     bool complete: The completeness of the Queryable.
+ * Options passed to the `z_declare_queryable()` function.
  */
 typedef struct z_queryable_options_t {
+  /**
+   * The completeness of the Queryable.
+   */
   bool complete;
 } z_queryable_options_t;
 /**
- * Options passed to the :c:func:`z_declare_subscriber` or :c:func:`z_declare_pull_subscriber` function.
- *
- * Members:
- *     z_reliability_t reliability: The subscription reliability.
+ * Options passed to the `z_declare_subscriber()` function.
  */
 typedef struct z_subscriber_options_t {
+#if defined(UNSTABLE)
+  /**
+   * The subscription reliability.
+   */
   enum z_reliability_t reliability;
+#endif
+#if !defined(UNSTABLE)
+  /**
+   * Dummy field to avoid having fieldless struct
+   */
+  uint8_t _0;
+#endif
 } z_subscriber_options_t;
 /**
- * Options passed to the :c:func:`z_delete` function.
+ * Options passed to the `z_delete()` function.
  */
 typedef struct z_delete_options_t {
+  /**
+   * The congestion control to apply when routing this delete message.
+   */
   enum z_congestion_control_t congestion_control;
+  /**
+   * The priority of the delete message.
+   */
   enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
+  /**
+   * The timestamp of this message.
+   */
+  struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
+  /**
+   * The allowed destination of this message.
+   */
+  enum zc_locality_t allowed_destination;
+#endif
 } z_delete_options_t;
+typedef struct z_moved_fifo_handler_query_t {
+  struct z_owned_fifo_handler_query_t _this;
+} z_moved_fifo_handler_query_t;
+typedef struct z_moved_fifo_handler_reply_t {
+  struct z_owned_fifo_handler_reply_t _this;
+} z_moved_fifo_handler_reply_t;
+typedef struct z_moved_fifo_handler_sample_t {
+  struct z_owned_fifo_handler_sample_t _this;
+} z_moved_fifo_handler_sample_t;
 /**
- * An owned payload encoding.
- *
- * Members:
- *   z_encoding_prefix_t prefix: The integer prefix of this encoding.
- *   z_bytes_t suffix: The suffix of this encoding. `suffix` MUST be a valid UTF-8 string.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-typedef struct z_owned_encoding_t {
-  enum z_encoding_prefix_t prefix;
-  struct z_bytes_t suffix;
-  bool _dropped;
-} z_owned_encoding_t;
-/**
- * The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+ * The replies consolidation strategy to apply on replies to a `z_get()`.
  */
 typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 /**
- * A zenoh value.
- *
- * Members:
- *   z_bytes_t payload: The payload of this zenoh value.
- *   z_encoding_t encoding: The encoding of this zenoh value `payload`.
- */
-typedef struct z_value_t {
-  struct z_bytes_t payload;
-  struct z_encoding_t encoding;
-} z_value_t;
-/**
- * Options passed to the :c:func:`z_get` function.
- *
- * Members:
- *     z_query_target_t target: The Queryables that should be target of the query.
- *     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
- *     z_value_t value: An optional value to attach to the query.
- *     z_attachment_t attachment: The attachment to attach to the query.
- *     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
+ * Options passed to the `z_get()` function.
  */
 typedef struct z_get_options_t {
+  /**
+   * The Queryables that should be target of the query.
+   */
   enum z_query_target_t target;
+  /**
+   * The replies consolidation strategy to apply on replies to the query.
+   */
   struct z_query_consolidation_t consolidation;
-  struct z_value_t value;
-  struct z_attachment_t attachment;
+  /**
+   * An optional payload to attach to the query.
+   */
+  struct z_moved_bytes_t *payload;
+  /**
+   * An optional encoding of the query payload and or attachment.
+   */
+  struct z_moved_encoding_t *encoding;
+  /**
+   * The congestion control to apply when routing the query.
+   */
+  enum z_congestion_control_t congestion_control;
+  /**
+   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+   */
+  bool is_express;
+#if defined(UNSTABLE)
+  /**
+   * The allowed destination for the query.
+   */
+  enum zc_locality_t allowed_destination;
+#endif
+#if defined(UNSTABLE)
+  /**
+   * The accepted replies for the query.
+   */
+  enum zc_reply_keyexpr_t accept_replies;
+#endif
+  /**
+   * The priority of the query.
+   */
+  enum z_priority_t priority;
+#if defined(UNSTABLE)
+  /**
+   * The source info for the query.
+   */
+  z_moved_source_info_t *source_info;
+#endif
+  /**
+   * An optional attachment to attach to the query.
+   */
+  struct z_moved_bytes_t *attachment;
+  /**
+   * The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
+   */
   uint64_t timeout_ms;
 } z_get_options_t;
-/**
- * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
- */
-typedef struct z_str_array_t {
-  size_t len;
-  const char *const *val;
-} z_str_array_t;
-/**
- * A reference-type hello message returned by a zenoh entity to a scout message sent with `z_scout`.
- *
- * Members:
- *   unsigned int whatami: The kind of zenoh entity.
- *   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
- *   z_owned_str_array_t locators: The locators of the scouted entity.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
- */
-typedef struct z_hello_t {
-  unsigned int whatami;
-  struct z_id_t pid;
-  struct z_str_array_t locators;
-} z_hello_t;
-/**
- * The wrapper type for null-terminated string values allocated by zenoh. The instances of `z_owned_str_t`
- * should be released with `z_drop` macro or with `z_str_drop` function and checked to validity with
- * `z_check` and `z_str_check` correspondently
- */
-typedef struct z_owned_str_t {
-  char *_cstr;
-} z_owned_str_t;
-/**
- * A loaned zenoh publisher.
- */
-typedef struct z_publisher_t {
-  const struct z_owned_publisher_t *_0;
-} z_publisher_t;
+typedef struct z_moved_hello_t {
+  struct z_owned_hello_t _this;
+} z_moved_hello_t;
+typedef struct z_moved_keyexpr_t {
+  struct z_owned_keyexpr_t _this;
+} z_moved_keyexpr_t;
+typedef struct z_moved_mutex_t {
+  struct z_owned_mutex_t _this;
+} z_moved_mutex_t;
 /**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
- * whenever issued via :c:func:`z_publisher_delete`.
+ * whenever issued via `z_publisher_delete()`.
  */
 typedef struct z_publisher_delete_options_t {
-  uint8_t __dummy;
+  /**
+   * The timestamp of this message.
+   */
+  const struct z_timestamp_t *timestamp;
 } z_publisher_delete_options_t;
+typedef struct z_moved_publisher_t {
+  struct z_owned_publisher_t _this;
+} z_moved_publisher_t;
 /**
- * Options passed to the :c:func:`z_publisher_put` function.
- *
- * Members:
- *     z_encoding_t encoding: The encoding of the payload.
- *     z_attachment_t attachment: The attachment to attach to the publication.
+ * Options passed to the `z_publisher_put()` function.
  */
 typedef struct z_publisher_put_options_t {
-  struct z_encoding_t encoding;
-  struct z_attachment_t attachment;
+  /**
+   *  The encoding of the data to publish.
+   */
+  struct z_moved_encoding_t *encoding;
+  /**
+   * The timestamp of the publication.
+   */
+  const struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
+  /**
+   * The source info for the publication.
+   */
+  z_moved_source_info_t *source_info;
+#endif
+  /**
+   * The attachment to attach to the publication.
+   */
+  struct z_moved_bytes_t *attachment;
 } z_publisher_put_options_t;
-typedef struct z_pull_subscriber_t {
-  const struct z_owned_pull_subscriber_t *_0;
-} z_pull_subscriber_t;
 /**
- * Options passed to the :c:func:`z_put` function.
- *
- * Members:
- *     z_encoding_t encoding: The encoding of the payload.
- *     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
- *     z_priority_t priority: The priority of this message.
- *     z_attachment_t attachment: The attachment to this message.
+ * Options passed to the `z_put()` function.
  */
 typedef struct z_put_options_t {
-  struct z_encoding_t encoding;
+  /**
+   * The encoding of the message.
+   */
+  struct z_moved_encoding_t *encoding;
+  /**
+   * The congestion control to apply when routing this message.
+   */
   enum z_congestion_control_t congestion_control;
+  /**
+   * The priority of this message.
+   */
   enum z_priority_t priority;
-  struct z_attachment_t attachment;
+  /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
+  /**
+   * The timestamp of this message.
+   */
+  struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
+  /**
+   * The allowed destination of this message.
+   */
+  enum zc_locality_t allowed_destination;
+#endif
+#if defined(UNSTABLE)
+  /**
+   * The source info for the message.
+   */
+  z_moved_source_info_t *source_info;
+#endif
+  /**
+   * The attachment to this message.
+   */
+  struct z_moved_bytes_t *attachment;
 } z_put_options_t;
-/**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- */
-typedef struct z_owned_query_channel_closure_t {
-  void *context;
-  bool (*call)(struct z_owned_query_t*, void*);
-  void (*drop)(void*);
-} z_owned_query_channel_closure_t;
-/**
- * A pair of closures
- */
-typedef struct z_owned_query_channel_t {
-  struct z_owned_closure_owned_query_t send;
-  struct z_owned_query_channel_closure_t recv;
-} z_owned_query_channel_t;
+typedef struct z_moved_query_t {
+  struct z_owned_query_t _this;
+} z_moved_query_t;
 /**
  * Represents the set of options that can be applied to a query reply,
- * sent via :c:func:`z_query_reply`.
- *
- * Members:
- *   z_encoding_t encoding: The encoding of the payload.
- *   z_attachment_t attachment: The attachment to this reply.
+ * sent via `z_query_reply()`.
  */
 typedef struct z_query_reply_options_t {
-  struct z_encoding_t encoding;
-  struct z_attachment_t attachment;
+  /**
+   * The encoding of the reply payload.
+   */
+  struct z_moved_encoding_t *encoding;
+  /**
+   * The congestion control to apply when routing the reply.
+   */
+  enum z_congestion_control_t congestion_control;
+  /**
+   * The priority of the reply.
+   */
+  enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
+  /**
+   * The timestamp of the reply.
+   */
+  struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
+  /**
+   * The source info for the reply.
+   */
+  z_moved_source_info_t *source_info;
+#endif
+  /**
+   * The attachment to this reply.
+   */
+  struct z_moved_bytes_t *attachment;
 } z_query_reply_options_t;
 /**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- * - `this` is a pointer to an arbitrary state.
- * - `call` is the typical callback function. `this` will be passed as its last argument.
- * - `drop` allows the callback's state to be freed.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * We guarantee that:
- * - `call` will never be called once `drop` has started.
- * - `drop` will only be called ONCE, and AFTER EVERY `call` has ended.
- * - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * Represents the set of options that can be applied to a query delete reply,
+ * sent via `z_query_reply_del()`.
  */
-typedef struct z_owned_reply_channel_closure_t {
+typedef struct z_query_reply_del_options_t {
+  /**
+   * The congestion control to apply when routing the reply.
+   */
+  enum z_congestion_control_t congestion_control;
+  /**
+   * The priority of the reply.
+   */
+  enum z_priority_t priority;
+  /**
+   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   */
+  bool is_express;
+  /**
+   * The timestamp of the reply.
+   */
+  struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
+  /**
+   * The source info for the reply.
+   */
+  z_moved_source_info_t *source_info;
+#endif
+  /**
+   * The attachment to this reply.
+   */
+  struct z_moved_bytes_t *attachment;
+} z_query_reply_del_options_t;
+/**
+ * Represents the set of options that can be applied to a query reply error,
+ * sent via `z_query_reply_err()`.
+ */
+typedef struct z_query_reply_err_options_t {
+  /**
+   * The encoding of the error payload.
+   */
+  struct z_moved_encoding_t *encoding;
+} z_query_reply_err_options_t;
+typedef struct z_moved_queryable_t {
+  struct z_owned_queryable_t _this;
+} z_moved_queryable_t;
+typedef struct z_moved_reply_t {
+  struct z_owned_reply_t _this;
+} z_moved_reply_t;
+typedef struct z_moved_reply_err_t {
+  struct z_owned_reply_err_t _this;
+} z_moved_reply_err_t;
+typedef struct z_moved_ring_handler_query_t {
+  struct z_owned_ring_handler_query_t _this;
+} z_moved_ring_handler_query_t;
+typedef struct z_moved_ring_handler_reply_t {
+  struct z_owned_ring_handler_reply_t _this;
+} z_moved_ring_handler_reply_t;
+typedef struct z_moved_ring_handler_sample_t {
+  struct z_owned_ring_handler_sample_t _this;
+} z_moved_ring_handler_sample_t;
+typedef struct z_moved_sample_t {
+  struct z_owned_sample_t _this;
+} z_moved_sample_t;
+/**
+ * Options to pass to `z_scout()`.
+ */
+typedef struct z_scout_options_t {
+  /**
+   * The maximum duration in ms the scouting can take.
+   */
+  uint64_t timeout_ms;
+  /**
+   * Type of entities to scout for.
+   */
+  enum z_what_t what;
+} z_scout_options_t;
+/**
+ * A callbacks for ShmSegment
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct zc_shm_segment_callbacks_t {
+  uint8_t *(*map_fn)(z_chunk_id_t chunk_id, void *context);
+} zc_shm_segment_callbacks_t;
+#endif
+/**
+ * A ShmSegment
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct z_shm_segment_t {
+  struct zc_threadsafe_context_t context;
+  struct zc_shm_segment_callbacks_t callbacks;
+} z_shm_segment_t;
+#endif
+/**
+ * A callbacks for ShmClient
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct zc_shm_client_callbacks_t {
+  bool (*attach_fn)(struct z_shm_segment_t *out_segment, z_segment_id_t segment_id, void *context);
+} zc_shm_client_callbacks_t;
+#endif
+/**
+ * A result of SHM buffer layouting + allocation operation
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct z_buf_layout_alloc_result_t {
+  enum zc_buf_layout_alloc_status_t status;
+  z_owned_shm_mut_t buf;
+  enum z_alloc_error_t alloc_error;
+  enum z_layout_error_t layout_error;
+} z_buf_layout_alloc_result_t;
+#endif
+/**
+ * Unique protocol identifier.
+ * Here is a contract: it is up to user to make sure that incompatible ShmClient
+ * and ShmProviderBackend implementations will never use the same ProtocolID
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef uint32_t z_protocol_id_t;
+#endif
+/**
+ * A non-tread-safe droppable context.
+ * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
+ * information to each callback.
+ *
+ * This is a non-thread-safe context - zenoh-c guarantees that associated callbacks that share the same
+ * zc_context_t instance will never be executed concurrently. In other words, all the callbacks associated
+ * with this context data are not required to be thread-safe.
+ *
+ * NOTE: Remember that the same callback interfaces associated with different zc_context_t instances can
+ * still be executed concurrently. The exact behavior depends on user's application, but we strongly
+ * discourage our users from pinning to some specific behavior unless they _really_ understand what they
+ * are doing.
+ *
+ * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted. The
+ * delete_fn is guaranteed to be executed only once at some point of time after the last associated
+ * callback call returns.
+ * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
+ * be executed.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct zc_context_t {
   void *context;
-  bool (*call)(struct z_owned_reply_t*, void*);
-  void (*drop)(void*);
-} z_owned_reply_channel_closure_t;
+  void (*delete_fn)(void*);
+} zc_context_t;
+#endif
 /**
- * A pair of closures, the `send` one accepting
+ * A callbacks for ShmProviderBackend
  */
-typedef struct z_owned_reply_channel_t {
-  struct z_owned_closure_reply_t send;
-  struct z_owned_reply_channel_closure_t recv;
-} z_owned_reply_channel_t;
-typedef struct z_owned_scouting_config_t {
-  struct z_owned_config_t _config;
-  unsigned long zc_timeout_ms;
-  uint8_t zc_what;
-} z_owned_scouting_config_t;
-/**
- * A loaned zenoh subscriber.
- */
-typedef struct z_subscriber_t {
-  const struct z_owned_subscriber_t *_0;
-} z_subscriber_t;
-/**
- * Task
- *
- */
-typedef struct z_task_t {
-  size_t _0;
-} z_task_t;
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+typedef struct zc_shm_provider_backend_callbacks_t {
+  void (*alloc_fn)(z_owned_chunk_alloc_result_t *out_result,
+                   const z_loaned_memory_layout_t *layout,
+                   void *context);
+  void (*free_fn)(const struct z_chunk_descriptor_t *chunk, void *context);
+  size_t (*defragment_fn)(void *context);
+  size_t (*available_fn)(void *context);
+  void (*layout_for_fn)(z_owned_memory_layout_t *layout, void *context);
+} zc_shm_provider_backend_callbacks_t;
+#endif
+typedef struct z_moved_string_array_t {
+  struct z_owned_string_array_t _this;
+} z_moved_string_array_t;
+typedef struct z_moved_subscriber_t {
+  struct z_owned_subscriber_t _this;
+} z_moved_subscriber_t;
+typedef struct z_moved_task_t {
+  struct z_owned_task_t _this;
+} z_moved_task_t;
 typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
 /**
- * Time
- * Uses system clock
+ * Returns system clock time point corresponding to the current time instant.
  */
 typedef struct z_time_t {
   uint64_t t;
 } z_time_t;
 /**
- * The options for `zc_liveliness_declare_token`
- */
-typedef struct zc_owned_liveliness_declaration_options_t {
-  uint8_t _inner;
-} zc_owned_liveliness_declaration_options_t;
-/**
- * The options for :c:func:`zc_liveliness_declare_subscriber`
- */
-typedef struct zc_owned_liveliness_declare_subscriber_options_t {
-  uint8_t _inner;
-} zc_owned_liveliness_declare_subscriber_options_t;
-/**
- * A liveliness token that can be used to provide the network with information about connectivity to its
- * declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
- * expressions.
- *
- * A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
- */
-typedef struct zc_owned_liveliness_token_t {
-  size_t _inner[4];
-} zc_owned_liveliness_token_t;
-/**
- * The options for :c:func:`zc_liveliness_declare_subscriber`
- */
-typedef struct zc_liveliness_get_options_t {
-  uint32_t timeout_ms;
-} zc_liveliness_get_options_t;
-/**
- * An owned payload, backed by a reference counted owner.
- *
- * The `payload` field may be modified, and Zenoh will take the new values into account,
- * however, assuming `ostart` and `olen` are the respective values of `payload.start` and
- * `payload.len` when constructing the `zc_owned_payload_t payload` value was created,
- * then `payload.start` MUST remain within the `[ostart, ostart + olen[` interval, and
- * `payload.len` must remain within `[0, olen -(payload.start - ostart)]`.
- *
- * Should this invariant be broken when the payload is passed to one of zenoh's `put_owned`
- * functions, then the operation will fail (but the passed value will still be consumed).
- */
-typedef struct zc_owned_payload_t {
-  struct z_bytes_t payload;
-  size_t _owner[5];
-} zc_owned_payload_t;
-typedef struct zc_owned_shmbuf_t {
-  size_t _0[9];
-} zc_owned_shmbuf_t;
-typedef struct zc_owned_shm_manager_t {
-  size_t _0;
-} zc_owned_shm_manager_t;
-/**
- * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
- *
- * Members:
- *   bool matching: true if there exist Subscribers matching the Publisher's key expression.
- */
-typedef struct zcu_matching_status_t {
-  bool matching;
-} zcu_matching_status_t;
-/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
- *
- * Members:
- *   void *context: a pointer to an arbitrary state.
- *   void *call(const struct z_owned_reply_t*, const void *context): the typical callback function. `context` will be passed as its last argument.
- *   void *drop(void*): allows the callback's state to be freed.
  *
  * Closures are not guaranteed not to be called concurrently.
  *
  * It is guaranteed that:
- *
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
-typedef struct zcu_owned_closure_matching_status_t {
+typedef struct zc_owned_closure_log_t {
+  /**
+   * An optional pointer to a closure state.
+   */
   void *context;
-  void (*call)(const struct zcu_matching_status_t*, void*);
-  void (*drop)(void*);
-} zcu_owned_closure_matching_status_t;
+  /**
+   * A closure body.
+   */
+  void (*call)(enum zc_log_severity_t severity, const struct z_loaned_string_t *msg, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
+} zc_owned_closure_log_t;
 /**
- * An owned zenoh matching listener. Destroying the matching listener cancels the subscription.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * Moved closure.
  */
-#if !defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(8) zcu_owned_matching_listener_t {
-  uint64_t _0[4];
-} zcu_owned_matching_listener_t;
-#endif
-#if defined(TARGET_ARCH_ARM)
-typedef struct ALIGN(4) zcu_owned_matching_listener_t {
-  uint32_t _0[4];
-} zcu_owned_matching_listener_t;
+typedef struct zc_moved_closure_log_t {
+  struct zc_owned_closure_log_t _this;
+} zc_moved_closure_log_t;
+/**
+ * Loaned closure.
+ */
+#if defined(UNSTABLE)
+typedef struct zc_loaned_closure_matching_status_t {
+  size_t _0[3];
+} zc_loaned_closure_matching_status_t;
 #endif
 /**
- * An owned zenoh publication_cache.
- *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * A struct that indicates if there exist Subscribers matching the Publisher's key expression.
  */
-typedef struct ze_owned_publication_cache_t {
-  size_t _0[1];
-} ze_owned_publication_cache_t;
+#if defined(UNSTABLE)
+typedef struct zc_matching_status_t {
+  /**
+   * True if there exist Subscribers matching the Publisher's key expression, false otherwise.
+   */
+  bool matching;
+} zc_matching_status_t;
+#endif
 /**
- * Options passed to the :c:func:`ze_declare_publication_cache` function.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
- * Members:
- *     z_keyexpr_t queryable_prefix: The prefix used for queryable
- *     zcu_locality_t queryable_origin: The restriction for the matching queries that will be receive by this
- *                       publication cache
- *     bool queryable_complete: the `complete` option for the queryable
- *     size_t history: The the history size
- *     size_t resources_limit: The limit number of cached resources
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
+#if defined(UNSTABLE)
+typedef struct zc_owned_closure_matching_status_t {
+  /**
+   * An optional pointer to a closure state.
+   */
+  void *context;
+  /**
+   * A closure body.
+   */
+  void (*call)(const struct zc_matching_status_t *matching_status, void *context);
+  /**
+   * An optional drop function that will be called when the closure is dropped.
+   */
+  void (*drop)(void *context);
+} zc_owned_closure_matching_status_t;
+#endif
+/**
+ * Moved closure.
+ */
+#if defined(UNSTABLE)
+typedef struct zc_moved_closure_matching_status_t {
+  struct zc_owned_closure_matching_status_t _this;
+} zc_moved_closure_matching_status_t;
+#endif
+/**
+ * The options for `zc_liveliness_declare_token()`.
+ */
+#if defined(UNSTABLE)
+typedef struct zc_liveliness_declaration_options_t {
+  uint8_t _dummy;
+} zc_liveliness_declaration_options_t;
+#endif
+/**
+ * The options for `zc_liveliness_declare_subscriber()`
+ */
+#if defined(UNSTABLE)
+typedef struct zc_liveliness_subscriber_options_t {
+  uint8_t _dummy;
+} zc_liveliness_subscriber_options_t;
+#endif
+/**
+ * The options for `zc_liveliness_get()`
+ */
+#if defined(UNSTABLE)
+typedef struct zc_liveliness_get_options_t {
+  uint32_t timeout_ms;
+} zc_liveliness_get_options_t;
+#endif
+/**
+ * Options passed to the `ze_declare_publication_cache()` function.
+ */
+#if defined(UNSTABLE)
 typedef struct ze_publication_cache_options_t {
-  struct z_keyexpr_t queryable_prefix;
-  enum zcu_locality_t queryable_origin;
+  /**
+   * The prefix used for queryable.
+   */
+  const struct z_loaned_keyexpr_t *queryable_prefix;
+#if defined(UNSTABLE)
+  /**
+   * The restriction for the matching queries that will be receive by this publication cache.
+   */
+  enum zc_locality_t queryable_origin;
+#endif
+  /**
+   * The `complete` option for the queryable.
+   */
   bool queryable_complete;
+  /**
+   * The the history size (i.e. maximum number of messages to store).
+   */
   size_t history;
+  /**
+   * The limit number of cached resources.
+   */
   size_t resources_limit;
 } ze_publication_cache_options_t;
+#endif
 /**
- * An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
+ * A set of options that can be applied to a querying subscriber,
+ * upon its declaration via `ze_declare_querying_subscriber()`.
  *
- * Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
- *
- * Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
  */
-typedef struct ze_owned_querying_subscriber_t {
-  size_t _0[1];
-} ze_owned_querying_subscriber_t;
-/**
- * Represents the set of options that can be applied to a querying subscriber,
- * upon its declaration via :c:func:`ze_declare_querying_subscriber`.
- *
- * Members:
- *   z_reliability_t reliability: The subscription reliability.
- *   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
- *                                  receive by this subscriber.
- *   z_keyexpr_t query_selector: The selector to be used for queries.
- *   z_query_target_t query_target: The target to be used for queries.
- *   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
- *   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
- *   uint64_t query_timeout_ms: The timeout to be used for queries.
- */
+#if defined(UNSTABLE)
 typedef struct ze_querying_subscriber_options_t {
+  /**
+   * The subscription reliability.
+   */
   enum z_reliability_t reliability;
-  enum zcu_locality_t allowed_origin;
-  struct z_keyexpr_t query_selector;
+#if defined(UNSTABLE)
+  /**
+   * The restriction for the matching publications that will be receive by this subscriber.
+   */
+  enum zc_locality_t allowed_origin;
+#endif
+  /**
+   * The selector to be used for queries.
+   */
+  const struct z_loaned_keyexpr_t *query_selector;
+  /**
+   * The target to be used for queries.
+   */
   enum z_query_target_t query_target;
+  /**
+   * The consolidation mode to be used for queries.
+   */
   struct z_query_consolidation_t query_consolidation;
-  enum zcu_reply_keyexpr_t query_accept_replies;
+#if defined(UNSTABLE)
+  /**
+   * The accepted replies for queries.
+   */
+  enum zc_reply_keyexpr_t query_accept_replies;
+#endif
+  /**
+   * The timeout to be used for queries.
+   */
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
-typedef struct ze_querying_subscriber_t {
-  const struct ze_owned_querying_subscriber_t *_0;
-} ze_querying_subscriber_t;
+#endif
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
@@ -1034,516 +1219,1400 @@ ZENOHC_API extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
+ZENOHC_API extern const char *Z_CONFIG_SHARED_MEMORY_KEY;
+ZENOHC_API extern const unsigned int Z_SHM_POSIX_PROTOCOL_ID;
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_alloc_layout_alloc(struct z_buf_alloc_result_t *out_result,
+                          const z_loaned_alloc_layout_t *layout);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_alloc_layout_alloc_gc(struct z_buf_alloc_result_t *out_result,
+                             const z_loaned_alloc_layout_t *layout);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_alloc_layout_alloc_gc_defrag(struct z_buf_alloc_result_t *out_result,
+                                    const z_loaned_alloc_layout_t *layout);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_alloc_layout_alloc_gc_defrag_blocking(struct z_buf_alloc_result_t *out_result,
+                                             const z_loaned_alloc_layout_t *layout);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_alloc_layout_alloc_gc_defrag_dealloc(struct z_buf_alloc_result_t *out_result,
+                                            const z_loaned_alloc_layout_t *layout);
+#endif
 /**
- * Returns the gravestone value for `z_attachment_t`.
+ * Deletes Alloc Layout
  */
-ZENOHC_API bool z_attachment_check(const struct z_attachment_t *this_);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_alloc_layout_drop(z_moved_alloc_layout_t *this_);
+#endif
 /**
- * Returns the value associated with the key.
+ * Borrows Alloc Layout
  */
-ZENOHC_API struct z_bytes_t z_attachment_get(struct z_attachment_t this_, struct z_bytes_t key);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API const z_loaned_alloc_layout_t *z_alloc_layout_loan(const z_owned_alloc_layout_t *this_);
+#endif
 /**
- * Returns true if `z_attachment_t` contains no key-value pairs, false otherwise.
+ * Creates a new Alloc Layout for SHM Provider
  */
-ZENOHC_API bool z_attachment_is_empty(struct z_attachment_t this_);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_alloc_layout_new(z_owned_alloc_layout_t *this_,
+                              const z_loaned_shm_provider_t *provider,
+                              size_t size,
+                              struct z_alloc_alignment_t alignment);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(struct z_buf_alloc_result_t *out_result,
+                                                           const z_loaned_alloc_layout_t *layout,
+                                                           struct zc_threadsafe_context_t result_context,
+                                                           void (*result_callback)(void*,
+                                                                                   struct z_buf_alloc_result_t*));
+#endif
 /**
- * Iterate over `this`'s key-value pairs, breaking if `body` returns a non-zero
- * value for a key-value pair, and returning the latest return value.
- *
- * `context` is passed to `body` to allow stateful closures.
- *
- * This function takes no ownership whatsoever.
+ * Constructs an owned shallow copy of data in provided uninitialized memory location.
+ */
+ZENOHC_API void z_bytes_clone(struct z_owned_bytes_t *dst, const struct z_loaned_bytes_t *this_);
+/**
+ * Deserializes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-int8_t z_attachment_iterate(struct z_attachment_t this_,
-                            z_attachment_iter_body_t body,
+z_result_t z_bytes_deserialize_into_double(const struct z_loaned_bytes_t *this_,
+                                           double *dst);
+/**
+ * Deserializes into a float.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_float(const struct z_loaned_bytes_t *this_,
+                                          float *dst);
+/**
+ * Deserializes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_int16(const struct z_loaned_bytes_t *this_,
+                                          int16_t *dst);
+/**
+ * Deserializes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_int32(const struct z_loaned_bytes_t *this_,
+                                          int32_t *dst);
+/**
+ * Deserializes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_int64(const struct z_loaned_bytes_t *this_,
+                                          int64_t *dst);
+/**
+ * Deserializes into a signed integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_int8(const struct z_loaned_bytes_t *this_,
+                                         int8_t *dst);
+/**
+ * Deserializes data into a loaned SHM buffer
+ *
+ * @param this_: Data to deserialize.
+ * @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_loaned_shm(const struct z_loaned_bytes_t *this_,
+                                               const z_loaned_shm_t **dst);
+#endif
+/**
+ * Deserializes data into a mutably loaned SHM buffer
+ *
+ * @param this_: Data to deserialize.
+ * @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_mut_loaned_shm(struct z_loaned_bytes_t *this_,
+                                                   z_loaned_shm_t **dst);
+#endif
+/**
+ * Deserializes data into an owned SHM buffer by copying it's shared reference
+ *
+ * @param this_: Data to deserialize.
+ * @param dst: An uninitialized memory location where to construct a deserialized string.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_owned_shm(const struct z_loaned_bytes_t *this_,
+                                              z_owned_shm_t *dst);
+#endif
+/**
+ * Deserializes into a pair of `z_owned_bytes_t` objects.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_pair(const struct z_loaned_bytes_t *this_,
+                                         struct z_owned_bytes_t *first,
+                                         struct z_owned_bytes_t *second);
+/**
+ * Deserializes data into an owned slice.
+ *
+ * @param this_: Data to deserialize.
+ * @param dst: An uninitialized memory location where to construct a slice.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_slice(const struct z_loaned_bytes_t *this_,
+                                          struct z_owned_slice_t *dst);
+/**
+ * Deserializes data into an owned non-null-terminated string.
+ *
+ * @param this_: Data to deserialize.
+ * @param dst: An uninitialized memory location where to construct a deserialized string.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_string(const struct z_loaned_bytes_t *this_,
+                                           struct z_owned_string_t *dst);
+/**
+ * Deserializes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_uint16(const struct z_loaned_bytes_t *this_,
+                                           uint16_t *dst);
+/**
+ * Deserializes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_uint32(const struct z_loaned_bytes_t *this_,
+                                           uint32_t *dst);
+/**
+ * Deserializes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_uint64(const struct z_loaned_bytes_t *this_,
+                                           uint64_t *dst);
+/**
+ * Deserializes into an unsigned integer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_deserialize_into_uint8(const struct z_loaned_bytes_t *this_,
+                                          uint8_t *dst);
+/**
+ * Drops `this_`, resetting it to gravestone value. If there are any shallow copies
+ * created by `z_bytes_clone()`, they would still stay valid.
+ */
+ZENOHC_API void z_bytes_drop(struct z_moved_bytes_t *this_);
+/**
+ * Constructs an empty instance of `z_owned_bytes_t`.
+ */
+ZENOHC_API void z_bytes_empty(struct z_owned_bytes_t *this_);
+/**
+ * Serializes a data from buffer.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param data: A pointer to the buffer containing data. `this_` will take ownership of the buffer.
+ * @param len: Length of the buffer.
+ * @param deleter: A thread-safe function, that will be called on `data` when `this_` is dropped. Can be `NULL` if `data` is located in static memory and does not require a drop.
+ * @param context: An optional context to be passed to `deleter`.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_from_buf(struct z_owned_bytes_t *this_,
+                            uint8_t *data,
+                            size_t len,
+                            void (*deleter)(void *data, void *context),
                             void *context);
 /**
- * Returns number of key-value pairs for `z_attachment_t`.
- *
- * Does so by iterating over all existing key-value pairs.
- */
-ZENOHC_API size_t z_attachment_len(struct z_attachment_t this_);
-/**
- * Returns the gravestone value for `z_attachment_t`.
- */
-ZENOHC_API struct z_attachment_t z_attachment_null(void);
-/**
- * Returns ``true`` if `b` is initialized.
- */
-ZENOHC_API bool z_bytes_check(const struct z_bytes_t *b);
-/**
- * Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
- *
- * `str == NULL` will cause this to return `z_bytes_null()`
- */
-ZENOHC_API struct z_bytes_t z_bytes_from_str(const char *str);
-/**
- * Aliases `this` into a generic `z_attachment_t`, allowing it to be passed to corresponding APIs.
- */
-ZENOHC_API struct z_attachment_t z_bytes_map_as_attachment(const struct z_owned_bytes_map_t *this_);
-/**
- * Returns `true` if the map is not in its gravestone state
- */
-ZENOHC_API bool z_bytes_map_check(const struct z_owned_bytes_map_t *this_);
-/**
- * Destroys the map, resetting `this` to its gravestone value.
- *
- * This function is double-free safe, passing a pointer to the gravestone value will have no effect.
- */
-ZENOHC_API void z_bytes_map_drop(struct z_owned_bytes_map_t *this_);
-/**
- * Constructs a map from the provided attachment, copying keys and values.
- *
- * If `this` is at gravestone value, the returned value will also be at gravestone value.
- */
-ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_from_attachment(struct z_attachment_t this_);
-/**
- * Constructs a map from the provided attachment, aliasing the attachment's keys and values.
- *
- * If `this` is at gravestone value, the returned value will also be at gravestone value.
+ * Constructs payload from an iterator to `z_owned_bytes_t`.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param iterator_body: Iterator body function, providing data items. Returning false is treated as iteration end.
+ * @param context: Arbitrary context that will be passed to iterator_body.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_bytes_map_t z_bytes_map_from_attachment_aliasing(struct z_attachment_t this_);
+z_result_t z_bytes_from_iter(struct z_owned_bytes_t *this_,
+                             bool (*iterator_body)(struct z_owned_bytes_t *data, void *context),
+                             void *context);
 /**
- * Returns the value associated with `key`, returning a gravestone value if:
- * - `this` or `key` is in gravestone state.
- * - `this` has no value associated to `key`
+ * Serializes a pair of `z_owned_bytes_t` objects which are consumed in the process.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_bytes_t z_bytes_map_get(const struct z_owned_bytes_map_t *this_,
-                                 struct z_bytes_t key);
+z_result_t z_bytes_from_pair(struct z_owned_bytes_t *this_,
+                             struct z_moved_bytes_t *first,
+                             struct z_moved_bytes_t *second);
 /**
- * Associates `value` to `key` in the map, aliasing them.
- *
- * Note that once `key` is aliased, reinserting at the same key may alias the previous instance, or the new instance of `key`.
- *
- * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ * Serializes a slice.
+ * The slice is consumed upon function return.
+ */
+ZENOHC_API void z_bytes_from_slice(struct z_owned_bytes_t *this_, struct z_moved_slice_t *slice);
+/**
+ * Serializes a statically allocated constant data.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param data: A pointer to the statically allocated constant data.
+ * @param len: Number of bytes to serialize.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-void z_bytes_map_insert_by_alias(const struct z_owned_bytes_map_t *this_,
-                                 struct z_bytes_t key,
-                                 struct z_bytes_t value);
+z_result_t z_bytes_from_static_buf(struct z_owned_bytes_t *this_,
+                                   uint8_t *data,
+                                   size_t len);
 /**
- * Associates `value` to `key` in the map, copying them to obtain ownership: `key` and `value` are not aliased past the function's return.
- *
- * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ * Serializes a statically allocated constant null-terminated string by aliasing.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param str: a pointer to the statically allocated constant string.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_bytes_from_static_str(struct z_owned_bytes_t *this_, const char *str);
+/**
+ * Serializes a null-terminated string.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param str: a pointer to the string. `this_` will take ownership of the buffer.
+ * @param deleter: A thread-safe function, that will be called on `str` when `this_` is dropped. Can be `NULL` if `str` is located in static memory and does not require a drop.
+ * @param context: An optional context to be passed to `deleter`.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-void z_bytes_map_insert_by_copy(const struct z_owned_bytes_map_t *this_,
-                                struct z_bytes_t key,
-                                struct z_bytes_t value);
+z_result_t z_bytes_from_str(struct z_owned_bytes_t *this_,
+                            char *str,
+                            void (*deleter)(void *data, void *context),
+                            void *context);
 /**
- * Returns true if the map is empty, false otherwise.
+ * Serializes a string.
+ * The string is consumed upon function return.
  */
-ZENOHC_API bool z_bytes_map_is_empty(struct z_owned_bytes_map_t *this_);
+ZENOHC_API void z_bytes_from_string(struct z_owned_bytes_t *this_, struct z_moved_string_t *s);
 /**
- * Iterates over the key-value pairs in the map.
+ * Returns an iterator for multi-element serialized data.
  *
- * `body` will be called once per pair, with `ctx` as its last argument.
- * If `body` returns a non-zero value, the iteration will stop immediately and the value will be returned.
- * Otherwise, this will return 0 once all pairs have been visited.
- * `body` is not given ownership of the key nor value, which alias the pairs in the map.
- * It is safe to keep these aliases until existing keys are modified/removed, or the map is destroyed.
- * Note that this map is unordered.
+ * The `data` should outlive the iterator.
+ */
+ZENOHC_API struct z_bytes_iterator_t z_bytes_get_iterator(const struct z_loaned_bytes_t *data);
+/**
+ * Returns a reader for the data.
  *
- * Calling this with `NULL` or the gravestone value is undefined behaviour.
+ * The `data` should outlive the reader.
+ */
+ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_bytes_t *data);
+/**
+ * Gets writer for `this_`.
+ */
+ZENOHC_API struct z_bytes_writer_t z_bytes_get_writer(struct z_loaned_bytes_t *this_);
+/**
+ * Returns ``true`` if `this_` is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_bytes_is_empty(const struct z_loaned_bytes_t *this_);
+/**
+ * Constructs `z_owned_bytes_t` object corresponding to the next element of serialized data.
+ *
+ * Will construct null-state `z_owned_bytes_t` when iterator reaches the end.
+ * @return ``false`` when iterator reaches the end,  ``true`` otherwise
+ */
+ZENOHC_API bool z_bytes_iterator_next(struct z_bytes_iterator_t *iter, struct z_owned_bytes_t *out);
+/**
+ * Returns total number of bytes in the payload.
+ */
+ZENOHC_API size_t z_bytes_len(const struct z_loaned_bytes_t *this_);
+/**
+ * Borrows data.
+ */
+ZENOHC_API const struct z_loaned_bytes_t *z_bytes_loan(const struct z_owned_bytes_t *this_);
+/**
+ * Muatably borrows data.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_bytes_loan_mut(struct z_owned_bytes_t *this_);
+/**
+ * Reads data into specified destination.
+ *
+ * @param this_: Data reader to read from.
+ * @param dst: Buffer where the read data is written.
+ * @param len: Maximum number of bytes to read.
+ * @return number of bytes read. If return value is smaller than `len`, it means that  theend of the data was reached.
  */
 ZENOHC_API
-int8_t z_bytes_map_iter(const struct z_owned_bytes_map_t *this_,
-                        z_attachment_iter_body_t body,
-                        void *ctx);
+size_t z_bytes_reader_read(struct z_bytes_reader_t *this_,
+                           uint8_t *dst,
+                           size_t len);
 /**
- * Returns number of key-value pairs in the map.
- */
-ZENOHC_API size_t z_bytes_map_len(struct z_owned_bytes_map_t *this_);
-/**
- * Constructs a new map.
- */
-ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_new(void);
-/**
- * Constructs the gravestone value for `z_owned_bytes_map_t`
- */
-ZENOHC_API struct z_owned_bytes_map_t z_bytes_map_null(void);
-/**
- * Deprecated in favor of `z_bytes_from_str`: Returns a view of `str` using `strlen` (this should therefore not be used with untrusted inputs).
+ * Reads data into specified destination.
  *
- * `str == NULL` will cause this to return `z_bytes_null()`
+ * @param this_: Data reader to read from.
+ * @param dst: An uninitialized memory location where a new piece of data will be read. Note that it does not involve a copy, but only increases reference count.
+ * @return ​0​ upon success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_bytes_t z_bytes_new(const char *str);
+z_result_t z_bytes_reader_read_bounded(struct z_bytes_reader_t *this_,
+                                       struct z_owned_bytes_t *dst);
 /**
- * Returns the gravestone value for `z_bytes_t`
+ * Sets the `reader` position indicator for the payload to the value pointed to by offset.
+ * The new position is exactly `offset` bytes measured from the beginning of the payload if origin is `SEEK_SET`,
+ * from the current reader position if origin is `SEEK_CUR`, and from the end of the payload if origin is `SEEK_END`.
+ * @return ​0​ upon success, negative error code otherwise.
  */
-ZENOHC_API struct z_bytes_t z_bytes_null(void);
+ZENOHC_API
+z_result_t z_bytes_reader_seek(struct z_bytes_reader_t *this_,
+                               int64_t offset,
+                               int origin);
 /**
- * Constructs a `len` bytes long view starting at `start`.
+ * Gets the read position indicator.
+ * @return read position indicator on success or -1L if failure occurs.
  */
-ZENOHC_API struct z_bytes_t z_bytes_wrap(const uint8_t *start, size_t len);
+ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
+/**
+ * Serializes a data from buffer by copying.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param data: A pointer to the buffer containing data.
+ * @param len: Length of the buffer.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_serialize_from_buf(struct z_owned_bytes_t *this_,
+                                      const uint8_t *data,
+                                      size_t len);
+/**
+ * Serializes a double.
+ */
+ZENOHC_API void z_bytes_serialize_from_double(struct z_owned_bytes_t *this_, double val);
+/**
+ * Serializes a float.
+ */
+ZENOHC_API void z_bytes_serialize_from_float(struct z_owned_bytes_t *this_, float val);
+/**
+ * Serializes a signed integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_int16(struct z_owned_bytes_t *this_, int16_t val);
+/**
+ * Serializes a signed integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_int32(struct z_owned_bytes_t *this_, int32_t val);
+/**
+ * Serializes a signed integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_int64(struct z_owned_bytes_t *this_, int64_t val);
+/**
+ * Serializes a signed integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_int8(struct z_owned_bytes_t *this_, int8_t val);
+/**
+ * Serializes from an immutable SHM buffer consuming it
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API z_result_t z_bytes_serialize_from_shm(struct z_owned_bytes_t *this_, z_moved_shm_t *shm);
+#endif
+/**
+ * Serializes from a mutable SHM buffer consuming it
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_bytes_serialize_from_shm_mut(struct z_owned_bytes_t *this_,
+                                          z_moved_shm_mut_t *shm);
+#endif
+/**
+ * Serializes a slice by copying.
+ */
+ZENOHC_API
+void z_bytes_serialize_from_slice(struct z_owned_bytes_t *this_,
+                                  const struct z_loaned_slice_t *slice);
+/**
+ * Serializes a null-terminated string by copying.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param str: a pointer to the null-terminated string. `this_` will take ownership of the string.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_bytes_serialize_from_str(struct z_owned_bytes_t *this_, const char *str);
+/**
+ * Serializes a string by copying.
+ */
+ZENOHC_API
+void z_bytes_serialize_from_string(struct z_owned_bytes_t *this_,
+                                   const struct z_loaned_string_t *str);
+/**
+ * Serializes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_uint16(struct z_owned_bytes_t *this_, uint16_t val);
+/**
+ * Serializes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_uint32(struct z_owned_bytes_t *this_, uint32_t val);
+/**
+ * Serializes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_uint64(struct z_owned_bytes_t *this_, uint64_t val);
+/**
+ * Serializes an unsigned integer.
+ */
+ZENOHC_API void z_bytes_serialize_from_uint8(struct z_owned_bytes_t *this_, uint8_t val);
+/**
+ * Appends bytes.
+ * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
+ * Said in other terms, it allows to create a linear view on different memory regions without copy.
+ *
+ * @return 0 in case of success, negative error code otherwise
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
+                                 struct z_moved_bytes_t *bytes);
+/**
+ * Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.
+ *
+ * @return 0 in case of success, negative error code otherwise
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_append_bounded(struct z_bytes_writer_t *this_,
+                                         struct z_moved_bytes_t *bytes);
+/**
+ * Writes `len` bytes from `src` into underlying data.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_write_all(struct z_bytes_writer_t *this_,
+                                    const uint8_t *src,
+                                    size_t len);
+/**
+ * Deletes Chunk Alloc Result
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_chunk_alloc_result_drop(z_moved_chunk_alloc_result_t *this_);
+#endif
+/**
+ * Borrows Chunk Alloc Result
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+const z_loaned_chunk_alloc_result_t *z_chunk_alloc_result_loan(const z_owned_chunk_alloc_result_t *this_);
+#endif
+/**
+ * Creates a new Chunk Alloc Result with Error value
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_chunk_alloc_result_new_error(z_owned_chunk_alloc_result_t *this_,
+                                    enum z_alloc_error_t alloc_error);
+#endif
+/**
+ * Creates a new Chunk Alloc Result with Ok value
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_chunk_alloc_result_new_ok(z_owned_chunk_alloc_result_t *this_,
+                                       struct z_allocated_chunk_t allocated_chunk);
+#endif
+/**
+ * Get number of milliseconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_clock_elapsed_ms(const struct z_clock_t *time);
+/**
+ * Get number of seconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_clock_elapsed_s(const struct z_clock_t *time);
+/**
+ * Get number of microseconds passed since creation of `time`.
+ */
 ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
+/**
+ * Returns monotonic clock time point corresponding to the current time instant.
+ */
 ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
- * Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
+ * Closes a zenoh session. This alos drops and invalidates `session`.
  *
- * Returns a negative value if an error occured while closing the session.
- * Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
+ * @return 0 in  case of success, a negative value if an error occured while closing the session,
+ * the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
  */
-ZENOHC_API int8_t z_close(struct z_owned_session_t *session);
+ZENOHC_API
+z_result_t z_close(struct z_moved_session_t *session);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_hello_call(const struct z_owned_closure_hello_t *closure,
-                          struct z_owned_hello_t *hello);
+void z_closure_hello_call(const struct z_loaned_closure_hello_t *closure,
+                          const struct z_loaned_hello_t *hello);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_closure_hello_drop(struct z_owned_closure_hello_t *closure);
+ZENOHC_API void z_closure_hello_drop(struct z_moved_closure_hello_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_closure_hello_t' type
+ * Borrows closure.
  */
-ZENOHC_API struct z_owned_closure_hello_t z_closure_hello_null(void);
+ZENOHC_API
+const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned_closure_hello_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_owned_query_call(const struct z_owned_closure_owned_query_t *closure,
-                                struct z_owned_query_t *query);
+void z_closure_query_call(const struct z_loaned_closure_query_t *closure,
+                          const struct z_loaned_query_t *query);
 /**
- * Drops the closure. Droping an uninitialized closure is a no-op.
+ * Drops the closure, resetting it to its gravestone state.
  */
-ZENOHC_API void z_closure_owned_query_drop(struct z_owned_closure_owned_query_t *closure);
+ZENOHC_API void z_closure_query_drop(struct z_moved_closure_query_t *closure_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
+ * Borrows closure.
  */
-ZENOHC_API struct z_owned_closure_owned_query_t z_closure_owned_query_null(void);
+ZENOHC_API
+const struct z_loaned_closure_query_t *z_closure_query_loan(const struct z_owned_closure_query_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_query_call(const struct z_owned_closure_query_t *closure,
-                          const struct z_query_t *query);
+void z_closure_reply_call(const struct z_loaned_closure_reply_t *closure,
+                          const struct z_loaned_reply_t *reply);
 /**
- * Drops the closure. Droping an uninitialized closure is a no-op.
+ * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_closure_query_drop(struct z_owned_closure_query_t *closure);
+ZENOHC_API
+void z_closure_reply_drop(struct z_moved_closure_reply_t *closure_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_closure_query_t' type
+ * Borrows closure.
  */
-ZENOHC_API struct z_owned_closure_query_t z_closure_query_null(void);
+ZENOHC_API
+const struct z_loaned_closure_reply_t *z_closure_reply_loan(const struct z_owned_closure_reply_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-void z_closure_reply_call(const struct z_owned_closure_reply_t *closure,
-                          struct z_owned_reply_t *sample);
+void z_closure_sample_call(const struct z_loaned_closure_sample_t *closure,
+                           const struct z_loaned_sample_t *sample);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_closure_reply_drop(struct z_owned_closure_reply_t *closure);
+ZENOHC_API void z_closure_sample_drop(struct z_moved_closure_sample_t *closure_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_closure_reply_t' type
+ * Borrows closure.
  */
-ZENOHC_API struct z_owned_closure_reply_t z_closure_reply_null(void);
+ZENOHC_API
+const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_owned_closure_sample_t *closure);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-void z_closure_sample_call(const struct z_owned_closure_sample_t *closure,
-                           const struct z_sample_t *sample);
+void z_closure_zid_call(const struct z_loaned_closure_zid_t *closure,
+                        const z_id_t *z_id);
+#endif
 /**
- * Drops the closure. Droping an uninitialized closure is a no-op.
+ * Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
  */
-ZENOHC_API void z_closure_sample_drop(struct z_owned_closure_sample_t *closure);
+#if defined(UNSTABLE)
+ZENOHC_API
+void z_closure_zid_drop(struct z_moved_closure_zid_t *closure_);
+#endif
 /**
- * Constructs a null safe-to-drop value of 'z_owned_closure_sample_t' type
+ * Vorrows closure.
  */
-ZENOHC_API struct z_owned_closure_sample_t z_closure_sample_null(void);
+#if defined(UNSTABLE)
+ZENOHC_API
+const struct z_loaned_closure_zid_t *z_closure_zid_loan(const struct z_owned_closure_zid_t *closure);
+#endif
 /**
- * Calls the closure. Calling an uninitialized closure is a no-op.
+ * Drops conditional variable.
+ */
+ZENOHC_API void z_condvar_drop(struct z_moved_condvar_t *this_);
+/**
+ * Constructs conditional variable.
+ */
+ZENOHC_API void z_condvar_init(struct z_owned_condvar_t *this_);
+/**
+ * Borrows conditional variable.
+ */
+ZENOHC_API const struct z_loaned_condvar_t *z_condvar_loan(const struct z_owned_condvar_t *this_);
+/**
+ * Mutably borrows conditional variable.
+ */
+ZENOHC_API struct z_loaned_condvar_t *z_condvar_loan_mut(struct z_owned_condvar_t *this_);
+/**
+ * Wakes up one blocked thread waiting on this condiitonal variable.
+ * @return 0 in case of success, negative error code in case of failure.
+ */
+ZENOHC_API z_result_t z_condvar_signal(const struct z_loaned_condvar_t *this_);
+/**
+ * Blocks the current thread until the conditional variable receives a notification.
+ *
+ * The function atomically unlocks the guard mutex `m` and blocks the current thread.
+ * When the function returns the lock will have been re-aquired again.
+ * Note: The function may be subject to spurious wakeups.
  */
 ZENOHC_API
-void z_closure_zid_call(const struct z_owned_closure_zid_t *closure,
-                        const struct z_id_t *sample);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API void z_closure_zid_drop(struct z_owned_closure_zid_t *closure);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_closure_zid_t' type
- */
-ZENOHC_API struct z_owned_closure_zid_t z_closure_zid_null(void);
-ZENOHC_API int8_t z_condvar_free(struct z_condvar_t *cv);
-ZENOHC_API int8_t z_condvar_init(struct z_condvar_t *cv);
-ZENOHC_API int8_t z_condvar_signal(struct z_condvar_t *cv);
-ZENOHC_API int8_t z_condvar_wait(struct z_condvar_t *cv, struct z_mutex_t *m);
-/**
- * Returns ``true`` if `config` is valid.
- */
-ZENOHC_API bool z_config_check(const struct z_owned_config_t *config);
+z_result_t z_condvar_wait(const struct z_loaned_condvar_t *this_,
+                          struct z_loaned_mutex_t *m);
 /**
  * Constructs a default, zenoh-allocated, client mode configuration.
- * If `peer` is not null, it is added to the configuration as remote peer.
- */
-ZENOHC_API struct z_owned_config_t z_config_client(const char *const *peers, size_t n_peers);
-/**
- * Creates a default, zenoh-allocated, configuration.
- */
-ZENOHC_API struct z_owned_config_t z_config_default(void);
-/**
- * Frees `config`, invalidating it for double-drop safety.
- */
-ZENOHC_API void z_config_drop(struct z_owned_config_t *config);
-/**
- * Returns a :c:type:`z_config_t` loaned from `s`.
- */
-ZENOHC_API struct z_config_t z_config_loan(const struct z_owned_config_t *s);
-/**
- * Return a new, zenoh-allocated, empty configuration.
  *
- * Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
- * The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
+ * @param peers: Array with `size >= n_peers`, containing peer locators to add to the config.
+ * @param n_peers: Number of peers to add to the config.
  *
- * Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- * To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- * After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_config_t z_config_new(void);
+z_result_t z_config_client(struct z_owned_config_t *this_,
+                           const char *const *peers,
+                           size_t n_peers);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_config_t' type
+ * Clones the config into provided uninitialized memory location.
  */
-ZENOHC_API struct z_owned_config_t z_config_null(void);
+ZENOHC_API void z_config_clone(struct z_owned_config_t *dst, const struct z_loaned_config_t *this_);
 /**
- * Constructs a default, zenoh-allocated, peer mode configuration.
+ * Constructs a new empty configuration.
  */
-ZENOHC_API struct z_owned_config_t z_config_peer(void);
+ZENOHC_API z_result_t z_config_default(struct z_owned_config_t *this_);
 /**
- * Declare a key expression. The id is returned as a :c:type:`z_keyexpr_t` with a nullptr suffix.
+ * Frees `config`, and resets it to its gravestone state.
+ */
+ZENOHC_API void z_config_drop(struct z_moved_config_t *this_);
+/**
+ * Borrows config.
+ */
+ZENOHC_API const struct z_loaned_config_t *z_config_loan(const struct z_owned_config_t *this_);
+/**
+ * Mutably borrows config.
+ */
+ZENOHC_API struct z_loaned_config_t *z_config_loan_mut(struct z_owned_config_t *this_);
+/**
+ * Constructs a default peer mode configuration.
+ */
+ZENOHC_API z_result_t z_config_peer(struct z_owned_config_t *this_);
+/**
+ * Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
+ * which allows to save the bandwith, when passing key expression between Zenoh entities.
  *
- * This numerical id will be used on the network to save bandwidth and
- * ease the retrieval of the concerned resource in the routing tables.
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
+ * @param session: Session on which to declare key expression.
+ * @param key_expr: Key expression to declare on network.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_keyexpr_t z_declare_keyexpr(struct z_session_t session,
-                                           struct z_keyexpr_t keyexpr);
+z_result_t z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
+                             const struct z_loaned_session_t *session,
+                             const struct z_loaned_keyexpr_t *key_expr);
 /**
- * Declares a publisher for the given key expression.
+ * Constructs and declares a publisher for the given key expression.
  *
  * Data can be put and deleted with this publisher with the help of the
- * :c:func:`z_publisher_put` and :c:func:`z_publisher_delete` functions.
+ * `z_publisher_put()` and `z_publisher_delete()` functions.
  *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to publish.
- *     options: additional options for the publisher.
+ * @param this_: An unitilized location in memory where publisher will be constructed.
+ * @param session: The Zenoh session.
+ * @param key_expr: The key expression to publish.
+ * @param options: Additional options for the publisher.
  *
- * Returns:
- *    A :c:type:`z_owned_publisherr_t`.
- *
- *    To check if the publisher decalration succeeded and if the publisher is still valid,
- *    you may use `z_publisher_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- *
- *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * Example:
- *    Declaring a publisher passing `NULL` for the options:
- *
- *    .. code-block:: C
- *
- *       z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(expr), NULL);
- *
- *    is equivalent to initializing and passing the default publisher options:
- *
- *    .. code-block:: C
- *
- *       z_publisher_options_t opts = z_publisher_options_default();
- *       z_owned_publisher_t sub = z_declare_publisher(z_loan(s), z_keyexpr(expr), &opts);
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_publisher_t z_declare_publisher(struct z_session_t session,
-                                               struct z_keyexpr_t keyexpr,
-                                               const struct z_publisher_options_t *options);
+z_result_t z_declare_publisher(struct z_owned_publisher_t *this_,
+                               const struct z_loaned_session_t *session,
+                               const struct z_loaned_keyexpr_t *key_expr,
+                               struct z_publisher_options_t *options);
 /**
- * Declares a pull subscriber for a given key expression.
+ * Constructs a Queryable for the given key expression.
  *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to subscribe.
- *     callback: The callback function that will be called each time a data matching the subscribed expression is received.
- *     opts: additional options for the pull subscriber.
+ * @param this_: An uninitialized memory location where queryable will be constructed.
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression the Queryable will reply to.
+ * @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
+ * @param options: Options for the queryable.
  *
- * Returns:
- *    A :c:type:`z_owned_subscriber_t`.
- *
- *    To check if the subscription succeeded and if the pull subscriber is still valid,
- *    you may use `z_pull_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- *
- *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * Example:
- *    Declaring a subscriber passing ``NULL`` for the options:
- *
- *    .. code-block:: C
- *
- *       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
- *
- *    is equivalent to initializing and passing the default subscriber options:
- *
- *    .. code-block:: C
- *
- *       z_subscriber_options_t opts = z_subscriber_options_default();
- *       z_owned_subscriber_t sub = z_declare_pull_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ * @return 0 in case of success, negative error code otherwise (in this case )
  */
 ZENOHC_API
-struct z_owned_pull_subscriber_t z_declare_pull_subscriber(struct z_session_t session,
-                                                           struct z_keyexpr_t keyexpr,
-                                                           struct z_owned_closure_sample_t *callback,
-                                                           const struct z_pull_subscriber_options_t *opts);
+z_result_t z_declare_queryable(struct z_owned_queryable_t *this_,
+                               const struct z_loaned_session_t *session,
+                               const struct z_loaned_keyexpr_t *key_expr,
+                               struct z_moved_closure_query_t *callback,
+                               struct z_queryable_options_t *options);
 /**
- * Creates a Queryable for the given key expression.
+ * Constructs and declares a subscriber for a given key expression. Dropping subscriber
  *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression the Queryable will reply to.
- *     callback: The callback function that will be called each time a matching query is received.
- *     options: Options for the queryable.
+ * @param this_: An uninitialized location in memory, where subscriber will be constructed.
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression to subscribe.
+ * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+ * @param options: The options to be passed to the subscriber declaration.
  *
- * Returns:
- *    The created :c:type:`z_owned_queryable_t` or ``null`` if the creation failed.
+ * @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
  */
 ZENOHC_API
-struct z_owned_queryable_t z_declare_queryable(struct z_session_t session,
-                                               struct z_keyexpr_t keyexpr,
-                                               struct z_owned_closure_query_t *callback,
-                                               const struct z_queryable_options_t *options);
+z_result_t z_declare_subscriber(struct z_owned_subscriber_t *this_,
+                                const struct z_loaned_session_t *session,
+                                const struct z_loaned_keyexpr_t *key_expr,
+                                struct z_moved_closure_sample_t *callback,
+                                struct z_subscriber_options_t *options);
 /**
- * Declare a subscriber for a given key expression.
+ * Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).
  *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to subscribe.
- *     callback: The callback function that will be called each time a data matching the subscribed expression is received.
- *     opts: The options to be passed to describe the options to be passed to the subscriber declaration.
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression to delete.
+ * @param options: The delete options.
  *
- * Returns:
- *    A :c:type:`z_owned_subscriber_t`.
- *
- *    To check if the subscription succeeded and if the subscriber is still valid,
- *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- *
- *    Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * Example:
- *    Declaring a subscriber passing `NULL` for the options:
- *
- *    .. code-block:: C
- *
- *       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
- *
- *    is equivalent to initializing and passing the default subscriber options:
- *
- *    .. code-block:: C
- *
- *       z_subscriber_options_t opts = z_subscriber_options_default();
- *       z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+ * @return 0 in case of success, negative values in case of failure.
  */
 ZENOHC_API
-struct z_owned_subscriber_t z_declare_subscriber(struct z_session_t session,
-                                                 struct z_keyexpr_t keyexpr,
-                                                 struct z_owned_closure_sample_t *callback,
-                                                 const struct z_subscriber_options_t *opts);
+z_result_t z_delete(const struct z_loaned_session_t *session,
+                    const struct z_loaned_keyexpr_t *key_expr,
+                    struct z_delete_options_t *options);
 /**
- * Delete data.
+ * Constructs the default value for `z_delete_options_t`.
+ */
+ZENOHC_API void z_delete_options_default(struct z_delete_options_t *this_);
+/**
+ * A Concise Binary Object Representation (CBOR)-encoded data.
  *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to delete.
- *     options: The put options.
- * Returns:
- *     ``0`` in case of success, negative values in case of failure.
+ * Constant alias for string: `"application/cbor"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_cbor(void);
+/**
+ * A Common Data Representation (CDR)-encoded data.
+ *
+ * Constant alias for string: `"application/cdr"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_cdr(void);
+/**
+ * Constrained Application Protocol (CoAP) data intended for CoAP-to-HTTP and HTTP-to-CoAP proxies.
+ *
+ * Constant alias for string: `"application/coap-payload"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_coap_payload(void);
+/**
+ * A Java serialized object.
+ *
+ * Constant alias for string: `"application/java-serialized-object"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_java_serialized_object(void);
+/**
+ * JSON data intended to be consumed by an application.
+ *
+ * Constant alias for string: `"application/json"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_json(void);
+/**
+ * Defines a JSON document structure for expressing a sequence of operations to apply to a JSON document.
+ *
+ * Constant alias for string: `"application/json-patch+json"`.
  */
 ZENOHC_API
-int8_t z_delete(struct z_session_t session,
-                struct z_keyexpr_t keyexpr,
-                const struct z_delete_options_t *opts);
+const struct z_loaned_encoding_t *z_encoding_application_json_patch_json(void);
 /**
- * Constructs the default value for :c:type:`z_put_options_t`.
+ * A JSON text sequence consists of any number of JSON texts, all encoded in UTF-8.
+ *
+ * Constant alias for string: `"application/json-seq"`.
  */
-ZENOHC_API struct z_delete_options_t z_delete_options_default(void);
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_json_seq(void);
 /**
- * Constructs a specific :c:type:`z_encoding_t`.
+ * A JSONPath defines a string syntax for selecting and extracting JSON values from within a given JSON value.
+ *
+ * Constant alias for string: `"application/jsonpath"`.
  */
-ZENOHC_API struct z_encoding_t z_encoding(enum z_encoding_prefix_t prefix, const char *suffix);
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_application_jsonpath(void);
 /**
- * Returns ``true`` if `encoding` is valid.
+ * A JSON Web Token (JWT).
+ *
+ * Constant alias for string: `"application/jwt"`.
  */
-ZENOHC_API bool z_encoding_check(const struct z_owned_encoding_t *encoding);
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_jwt(void);
 /**
- * Constructs a default :c:type:`z_encoding_t`.
+ * An application-specific MPEG-4 encoded data, either audio or video.
+ *
+ * Constant alias for string: `"application/mp4"`.
  */
-ZENOHC_API struct z_encoding_t z_encoding_default(void);
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_mp4(void);
 /**
- * Frees `encoding`, invalidating it for double-drop safety.
+ * An application-specific stream of bytes.
+ *
+ * Constant alias for string: `"application/octet-stream"`.
  */
-ZENOHC_API void z_encoding_drop(struct z_owned_encoding_t *encoding);
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_octet_stream(void);
 /**
- * Returns a :c:type:`z_encoding_t` loaned from `encoding`.
+ * An [openmetrics](https://github.com/OpenObservability/OpenMetrics) data, common used by [Prometheus](https://prometheus.io/).
+ *
+ * Constant alias for string: `"application/openmetrics-text"`.
  */
-ZENOHC_API struct z_encoding_t z_encoding_loan(const struct z_owned_encoding_t *encoding);
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_application_openmetrics_text(void);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_encoding_t' type
+ * An application-specific protobuf-encoded data.
+ *
+ * Constant alias for string: `"application/protobuf"`.
  */
-ZENOHC_API struct z_owned_encoding_t z_encoding_null(void);
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_protobuf(void);
+/**
+ * A Python object serialized using [pickle](https://docs.python.org/3/library/pickle.html).
+ *
+ * Constant alias for string: `"application/python-serialized-object"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_python_serialized_objects(void);
+/**
+ * A SOAP 1.2 message serialized as XML 1.0.
+ *
+ * Constant alias for string: `"application/soap+xml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_soap_xml(void);
+/**
+ * An application-specific SQL query.
+ *
+ * Constant alias for string: `"application/sql"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_sql(void);
+/**
+ * An encoded a list of tuples, each consisting of a name and a value.
+ *
+ * Constant alias for string: `"application/x-www-form-urlencoded"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_x_www_form_urlencoded(void);
+/**
+ * An XML file intended to be consumed by an application..
+ *
+ * Constant alias for string: `"application/xml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_xml(void);
+/**
+ * YAML data intended to be consumed by an application.
+ *
+ * Constant alias for string: `"application/yaml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_yaml(void);
+/**
+ * A YANG-encoded data commonly used by the Network Configuration Protocol (NETCONF).
+ *
+ * Constant alias for string: `"application/yang"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_yang(void);
+/**
+ * A MPEG-4 Advanced Audio Coding (AAC) media.
+ *
+ * Constant alias for string: `"audio/aac"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_aac(void);
+/**
+ * A Free Lossless Audio Codec (FLAC) media.
+ *
+ * Constant alias for string: `"audio/flac"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_flac(void);
+/**
+ * An audio codec defined in MPEG-1, MPEG-2, MPEG-4, or registered at the MP4 registration authority.
+ *
+ * Constant alias for string: `"audio/mp4"`.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_audio_mp4(void);
+/**
+ * An Ogg-encapsulated audio stream.
+ *
+ * Constant alias for string: `"audio/ogg"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_ogg(void);
+/**
+ * A Vorbis-encoded audio stream.
+ *
+ * Constant alias for string: `"audio/vorbis"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_audio_vorbis(void);
+/**
+ * Constructs an owned copy of the encoding in provided uninitilized memory location.
+ */
+ZENOHC_API
+void z_encoding_clone(struct z_owned_encoding_t *dst,
+                      const struct z_loaned_encoding_t *this_);
+/**
+ * Frees the memory and resets the encoding it to its default value.
+ */
+ZENOHC_API void z_encoding_drop(struct z_moved_encoding_t *this_);
+/**
+ * Constructs a `z_owned_encoding_t` from a specified string.
+ */
+ZENOHC_API z_result_t z_encoding_from_str(struct z_owned_encoding_t *this_, const char *s);
+/**
+ * Constructs a `z_owned_encoding_t` from a specified substring.
+ */
+ZENOHC_API
+z_result_t z_encoding_from_substr(struct z_owned_encoding_t *this_,
+                                  const char *s,
+                                  size_t len);
+/**
+ * A BitMap (BMP) image.
+ *
+ * Constant alias for string: `"image/bmp"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_bmp(void);
+/**
+ * A Graphics Interchange Format (GIF) image.
+ *
+ * Constant alias for string: `"image/gif"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_gif(void);
+/**
+ * A Joint Photographic Experts Group (JPEG) image.
+ *
+ * Constant alias for string: `"image/jpeg"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_jpeg(void);
+/**
+ * A Portable Network Graphics (PNG) image.
+ *
+ * Constant alias for string: `"image/png"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_png(void);
+/**
+ * A Web Portable (WebP) image.
+ *
+ *  Constant alias for string: `"image/webp"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_image_webp(void);
+/**
+ * Borrows encoding.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_loan(const struct z_owned_encoding_t *this_);
+/**
+ * Returns a loaned default `z_loaned_encoding_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
+/**
+ * Mutably borrows encoding.
+ */
+ZENOHC_API struct z_loaned_encoding_t *z_encoding_loan_mut(struct z_owned_encoding_t *this_);
+/**
+ * Set a schema to this encoding from a c string. Zenoh does not define what a schema is and its semantichs is left to the implementer.
+ * E.g. a common schema for `text/plain` encoding is `utf-8`.
+ */
+ZENOHC_API
+z_result_t z_encoding_set_schema_from_str(struct z_loaned_encoding_t *this_,
+                                          const char *s);
+/**
+ * Set a schema to this encoding from a c substring. Zenoh does not define what a schema is and its semantichs is left to the implementer.
+ * E.g. a common schema for `text/plain` encoding is `utf-8`.
+ */
+ZENOHC_API
+z_result_t z_encoding_set_schema_from_substr(struct z_loaned_encoding_t *this_,
+                                             const char *s,
+                                             size_t len);
+/**
+ * A CSS file.
+ *
+ * Constant alias for string: `"text/css"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_css(void);
+/**
+ * A CSV file.
+ *
+ * Constant alias for string: `"text/csv"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_csv(void);
+/**
+ * An HTML file.
+ *
+ * Constant alias for string: `"text/html"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_html(void);
+/**
+ * A JavaScript file.
+ *
+ * Constant alias for string: `"text/javascript"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_javascript(void);
+/**
+ * JSON data intended to be human readable.
+ *
+ * Constant alias for string: `"text/json"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_json(void);
+/**
+ * JSON5 encoded data that are human readable.
+ *
+ * Constant alias for string: `"text/json5"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_json5(void);
+/**
+ * A MarkDown file.
+ *
+ * Constant alias for string: `"text/markdown"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_markdown(void);
+/**
+ * A textual file.
+ *
+ * Constant alias for string: `"text/plain"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_plain(void);
+/**
+ * An XML file that is human readable.
+ *
+ * Constant alias for string: `"text/xml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_xml(void);
+/**
+ * YAML data intended to be human readable.
+ *
+ * Constant alias for string: `"text/yaml"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_text_yaml(void);
+/**
+ * Constructs an owned non-null-terminated string from encoding
+ *
+ * @param this_: Encoding.
+ * @param out_str: Uninitialized memory location where a string to be constructed.
+ */
+ZENOHC_API
+void z_encoding_to_string(const struct z_loaned_encoding_t *this_,
+                          struct z_owned_string_t *out_str);
+/**
+ * A h261-encoded video stream.
+ *
+ * Constant alias for string: `"video/h261"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h261(void);
+/**
+ * A h263-encoded video stream.
+ *
+ * Constant alias for string: `"video/h263"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h263(void);
+/**
+ * A h264-encoded video stream.
+ *
+ * Constant alias for string: `"video/h264"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h264(void);
+/**
+ * A h265-encoded video stream.
+ *
+ * Constant alias for string: `"video/h265"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h265(void);
+/**
+ * A h266-encoded video stream.
+ *
+ * Constant alias for string: `"video/h266"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_h266(void);
+/**
+ * A video codec defined in MPEG-1, MPEG-2, MPEG-4, or registered at the MP4 registration authority.
+ *
+ * Constant alias for string: `"video/mp4"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_mp4(void);
+/**
+ * An Ogg-encapsulated video stream.
+ *
+ * Constant alias for string: `"video/ogg"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_ogg(void);
+/**
+ * An uncompressed, studio-quality video stream.
+ *
+ * Constant alias for string: `"video/raw"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_raw(void);
+/**
+ * A VP8-encoded video stream.
+ *
+ * Constant alias for string: `"video/vp8"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_vp8(void);
+/**
+ * A VP9-encoded video stream.
+ *
+ * Constant alias for string: `"video/vp9"`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_vp9(void);
+/**
+ * A boolean. `0` is `false`, `1` is `true`. Other values are invalid.
+ *
+ * Constant alias for string: `"zenoh/bool"`.
+ *
+ * Usually used for types: `bool`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_bool(void);
+/**
+ * Just some bytes.
+ *
+ * Constant alias for string: `"zenoh/bytes"`.
+ *
+ * Usually used for types: `uint8_t[]`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_bytes(void);
+/**
+ * A zenoh error.
+ *
+ * Constant alias for string: `"zenoh/error"`.
+ *
+ * Usually used for types: `z_reply_error_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_error(void);
+/**
+ * A VLE-encoded 32bit float. Binary representation uses *IEEE 754-2008* *binary32* .
+ *
+ * Constant alias for string: `"zenoh/float32"`.
+ *
+ * Usually used for types: `float`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_float32(void);
+/**
+ * A VLE-encoded 64bit float. Binary representation uses *IEEE 754-2008* *binary64*.
+ *
+ * Constant alias for string: `"zenoh/float64"`.
+ *
+ * Usually used for types: `double`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_float64(void);
+/**
+ * A VLE-encoded signed little-endian 128bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int128"`.
+ *
+ * Usually used for types: `int128_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int128(void);
+/**
+ * A VLE-encoded signed little-endian 16bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int16"`.
+ *
+ * Usually used for types: `int16_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int16(void);
+/**
+ * A VLE-encoded signed little-endian 32bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int32"`.
+ *
+ * Usually used for types: `int32_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int32(void);
+/**
+ * A VLE-encoded signed little-endian 64bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int64"`.
+ *
+ * Usually used for types: `int64_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int64(void);
+/**
+ * A VLE-encoded signed little-endian 8bit integer. Binary representation uses two's complement.
+ *
+ * Constant alias for string: `"zenoh/int8"`.
+ *
+ * Usually used for types: `int8_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int8(void);
+/**
+ * A UTF-8 string.
+ *
+ * Constant alias for string: `"zenoh/string"`.
+ *
+ * Usually used for types: `const char*`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_string(void);
+/**
+ * A VLE-encoded unsigned little-endian 128bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint128"`.
+ *
+ * Usually used for types: `uint128_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint128(void);
+/**
+ * A VLE-encoded unsigned little-endian 16bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint16"`.
+ *
+ * Usually used for types: `uint16_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint16(void);
+/**
+ * A VLE-encoded unsigned little-endian 32bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint32"`.
+ *
+ * Usually used for types: `uint32_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint32(void);
+/**
+ * A VLE-encoded unsigned little-endian 64bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint64"`.
+ *
+ * Usually used for types: `uint64_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint64(void);
+/**
+ * A VLE-encoded unsigned little-endian 8bit integer.
+ *
+ * Constant alias for string: `"zenoh/uint8"`.
+ *
+ * Usually used for types: `uint8_t`.
+ */
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint8(void);
+/**
+ * Returns the entity id of the entity global id.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API uint32_t z_entity_global_id_eid(const z_entity_global_id_t *this_);
+#endif
+/**
+ * Returns the zenoh id of entity global id.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_id_t z_entity_global_id_zid(const z_entity_global_id_t *this_);
+#endif
+/**
+ * Constructs send and recieve ends of the fifo channel
+ */
+ZENOHC_API
+void z_fifo_channel_query_new(struct z_owned_closure_query_t *callback,
+                              struct z_owned_fifo_handler_query_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the fifo channel
+ */
+ZENOHC_API
+void z_fifo_channel_reply_new(struct z_owned_closure_reply_t *callback,
+                              struct z_owned_fifo_handler_reply_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the fifo channel
+ */
+ZENOHC_API
+void z_fifo_channel_sample_new(struct z_owned_closure_sample_t *callback,
+                               struct z_owned_fifo_handler_sample_t *handler,
+                               size_t capacity);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_query_drop(struct z_moved_fifo_handler_query_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_fifo_handler_query_t *z_fifo_handler_query_loan(const struct z_owned_fifo_handler_query_t *this_);
+/**
+ * Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
+ * the channel is dropped (normally when Queryable is dropped).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_fifo_handler_query_recv(const struct z_loaned_fifo_handler_query_t *this_,
+                                     struct z_owned_query_t *query);
+/**
+ * Returns query from the fifo buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_fifo_handler_query_try_recv(const struct z_loaned_fifo_handler_query_t *this_,
+                                         struct z_owned_query_t *query);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_reply_drop(struct z_moved_fifo_handler_reply_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_fifo_handler_reply_t *z_fifo_handler_reply_loan(const struct z_owned_fifo_handler_reply_t *this_);
+/**
+ * Returns reply from the fifo buffer. If there are no more pending replies will block until next reply is received, or until
+ * the channel is dropped (normally when all replies are received).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_fifo_handler_reply_recv(const struct z_loaned_fifo_handler_reply_t *this_,
+                                     struct z_owned_reply_t *reply);
+/**
+ * Returns reply from the fifo buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the reply will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_fifo_handler_reply_try_recv(const struct z_loaned_fifo_handler_reply_t *this_,
+                                         struct z_owned_reply_t *reply);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_fifo_handler_sample_drop(struct z_moved_fifo_handler_sample_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_fifo_handler_sample_t *z_fifo_handler_sample_loan(const struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
+ * the channel is dropped (normally when there are no more samples to receive).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_fifo_handler_sample_recv(const struct z_loaned_fifo_handler_sample_t *this_,
+                                      struct z_owned_sample_t *sample);
+/**
+ * Returns sample from the fifo buffer.
+ * If there are no more pending replies will return immediately (with sample set to its gravestone state).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the sample will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_fifo_handler_sample_try_recv(const struct z_loaned_fifo_handler_sample_t *this_,
+                                          struct z_owned_sample_t *sample);
 /**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
- * Returns a negative value upon failure.
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression matching resources to query.
+ * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+ * @param options: Additional options for the get. All owned fields will be consumed.
  *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression matching resources to query.
- *     parameters: The query's parameters, similar to a url's query segment.
- *     callback: The callback function that will be called on reception of replies for this query.
- *               Note that the `reply` parameter of the callback is passed by mutable reference,
- *               but **will** be dropped once your callback exits to help you avoid memory leaks.
- *               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
- *     options: additional options for the get.
+ * @return 0 in case of success, a negative error value upon failure.
  */
 ZENOHC_API
-int8_t z_get(struct z_session_t session,
-             struct z_keyexpr_t keyexpr,
-             const char *parameters,
-             struct z_owned_closure_reply_t *callback,
-             const struct z_get_options_t *options);
-ZENOHC_API struct z_get_options_t z_get_options_default(void);
+z_result_t z_get(const struct z_loaned_session_t *session,
+                 const struct z_loaned_keyexpr_t *key_expr,
+                 const char *parameters,
+                 struct z_moved_closure_reply_t *callback,
+                 struct z_get_options_t *options);
 /**
- * Returns ``true`` if `hello` is valid.
+ * Constructs default `z_get_options_t`
  */
-ZENOHC_API bool z_hello_check(const struct z_owned_hello_t *hello);
+ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
 /**
- * Frees `hello`, invalidating it for double-drop safety.
+ * Frees memory and resets hello message to its gravestone state.
  */
-ZENOHC_API void z_hello_drop(struct z_owned_hello_t *hello);
+ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
 /**
- * Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
+ * Borrows hello message.
  */
-ZENOHC_API struct z_hello_t z_hello_loan(const struct z_owned_hello_t *hello);
+ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hello_t *this_);
 /**
- * Constructs a gravestone value for hello, useful to steal one from a callback
+ * Constructs an array of non-owned locators (in the form non-null-terminated strings) of Zenoh entity that sent hello message.
+ *
+ * The lifetime of locator strings is bound to `this_`.
  */
-ZENOHC_API struct z_owned_hello_t z_hello_null(void);
+ZENOHC_API
+void z_hello_locators(const struct z_loaned_hello_t *this_,
+                      struct z_owned_string_array_t *locators_out);
+/**
+ * Returns type of Zenoh entity that transmitted hello message.
+ */
+ZENOHC_API enum z_whatami_t z_hello_whatami(const struct z_loaned_hello_t *this_);
+/**
+ * Returns id of Zenoh entity that transmitted hello message.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
+#endif
 /**
  * Fetches the Zenoh IDs of all connected peers.
  *
@@ -1552,9 +2621,11 @@ ZENOHC_API struct z_owned_hello_t z_hello_null(void);
  *
  * Retuns 0 on success, negative values on failure
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-int8_t z_info_peers_zid(struct z_session_t session,
-                        struct z_owned_closure_zid_t *callback);
+z_result_t z_info_peers_zid(const struct z_loaned_session_t *session,
+                            struct z_moved_closure_zid_t *callback);
+#endif
 /**
  * Fetches the Zenoh IDs of all connected routers.
  *
@@ -1563,1136 +2634,2297 @@ int8_t z_info_peers_zid(struct z_session_t session,
  *
  * Retuns 0 on success, negative values on failure.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-int8_t z_info_routers_zid(struct z_session_t session,
-                          struct z_owned_closure_zid_t *callback);
+z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
+                              struct z_moved_closure_zid_t *callback);
+#endif
 /**
- * Returns the local Zenoh ID.
+ * Returns the session's Zenoh ID.
  *
  * Unless the `session` is invalid, that ID is guaranteed to be non-zero.
  * In other words, this function returning an array of 16 zeros means you failed
  * to pass it a valid session.
  */
-ZENOHC_API struct z_id_t z_info_zid(struct z_session_t session);
+#if defined(UNSTABLE)
+ZENOHC_API z_id_t z_info_zid(const struct z_loaned_session_t *session);
+#endif
 /**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string.
- * It is a loaned key expression that aliases `name`.
+ * Returns ``true`` if `this` is valid.
  */
-ZENOHC_API struct z_keyexpr_t z_keyexpr(const char *name);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_alloc_layout_check(const z_owned_alloc_layout_t *this_);
+#endif
 /**
- * Returns the key expression's internal string by aliasing it.
- *
- * Currently exclusive to zenoh-c
+ * Constructs Alloc Layout in its gravestone value.
  */
-ZENOHC_API struct z_bytes_t z_keyexpr_as_bytes(struct z_keyexpr_t keyexpr);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_alloc_layout_null(z_owned_alloc_layout_t *this_);
+#endif
 /**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string.
- * It is a loaned key expression that aliases `name`.
- * The string is canonized in-place before being passed to keyexpr.
- * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_internal_bytes_check(const struct z_owned_bytes_t *this_);
+/**
+ * The gravestone value for `z_owned_bytes_t`.
+ */
+ZENOHC_API void z_internal_bytes_null(struct z_owned_bytes_t *this_);
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_chunk_alloc_result_check(const z_owned_chunk_alloc_result_t *this_);
+#endif
+/**
+ * Constructs Chunk Alloc Result in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_chunk_alloc_result_null(z_owned_chunk_alloc_result_t *this_);
+#endif
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_internal_closure_hello_check(const struct z_owned_closure_hello_t *this_);
+/**
+ * Constructs a closure in a gravestone state.
+ */
+ZENOHC_API void z_internal_closure_hello_null(struct z_owned_closure_hello_t *this_);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_internal_closure_query_check(const struct z_owned_closure_query_t *this_);
+/**
+ * Constructs a closure in its gravestone state.
+ */
+ZENOHC_API void z_internal_closure_query_null(struct z_owned_closure_query_t *this_);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_internal_closure_reply_check(const struct z_owned_closure_reply_t *this_);
+/**
+ * Constructs a closure int its gravestone state.
+ */
+ZENOHC_API void z_internal_closure_reply_null(struct z_owned_closure_reply_t *this_);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_internal_closure_sample_check(const struct z_owned_closure_sample_t *this_);
+/**
+ * Constructs a closure in its gravestone state.
+ */
+ZENOHC_API void z_internal_closure_sample_null(struct z_owned_closure_sample_t *this_);
+/**
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool z_internal_closure_zid_check(const struct z_owned_closure_zid_t *this_);
+#endif
+/**
+ * Constructs a null closure.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void z_internal_closure_zid_null(struct z_owned_closure_zid_t *this_);
+#endif
+/**
+ * Returns ``true`` if conditional variable is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_condvar_check(const struct z_owned_condvar_t *this_);
+/**
+ * Constructs conditional variable in a gravestone state.
+ */
+ZENOHC_API void z_internal_condvar_null(struct z_owned_condvar_t *this_);
+/**
+ * Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_internal_config_check(const struct z_owned_config_t *this_);
+/**
+ * Constructs config in its gravestone state.
+ */
+ZENOHC_API void z_internal_config_null(struct z_owned_config_t *this_);
+/**
+ * Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_encoding_check(const struct z_owned_encoding_t *this_);
+/**
+ * Constructs a default `z_owned_encoding_t`.
+ */
+ZENOHC_API void z_internal_encoding_null(struct z_owned_encoding_t *this_);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API
-struct z_keyexpr_t z_keyexpr_autocanonize(char *name);
+bool z_internal_fifo_handler_query_check(const struct z_owned_fifo_handler_query_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_internal_fifo_handler_query_null(struct z_owned_fifo_handler_query_t *this_);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API
+bool z_internal_fifo_handler_reply_check(const struct z_owned_fifo_handler_reply_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_internal_fifo_handler_reply_null(struct z_owned_fifo_handler_reply_t *this_);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API
+bool z_internal_fifo_handler_sample_check(const struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_internal_fifo_handler_sample_null(struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_internal_hello_check(const struct z_owned_hello_t *this_);
+/**
+ * Constructs hello message in a gravestone state.
+ */
+ZENOHC_API void z_internal_hello_null(struct z_owned_hello_t *this_);
+/**
+ * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_internal_keyexpr_check(const struct z_owned_keyexpr_t *this_);
+/**
+ * Constructs an owned key expression in a gravestone state.
+ */
+ZENOHC_API void z_internal_keyexpr_null(struct z_owned_keyexpr_t *this_);
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_memory_layout_check(const z_owned_memory_layout_t *this_);
+#endif
+/**
+ * Constructs Memory Layout in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_memory_layout_null(z_owned_memory_layout_t *this_);
+#endif
+/**
+ * Returns ``true`` if mutex is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_mutex_check(const struct z_owned_mutex_t *this_);
+/**
+ * Constructs mutex in a gravestone state.
+ */
+ZENOHC_API void z_internal_mutex_null(struct z_owned_mutex_t *this_);
+/**
+ * Returns ``true`` if publisher is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_publisher_check(const struct z_owned_publisher_t *this_);
+/**
+ * Constructs a publisher in a gravestone state.
+ */
+ZENOHC_API void z_internal_publisher_null(struct z_owned_publisher_t *this_);
+/**
+ * Returns `false` if `this` is in a gravestone state, `true` otherwise.
+ */
+ZENOHC_API bool z_internal_query_check(const struct z_owned_query_t *query);
+/**
+ * Constructs query in its gravestone value.
+ */
+ZENOHC_API void z_internal_query_null(struct z_owned_query_t *this_);
+/**
+ * Returns ``true`` if queryable is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_queryable_check(const struct z_owned_queryable_t *this_);
+/**
+ * Constructs a queryable in its gravestone value.
+ */
+ZENOHC_API void z_internal_queryable_null(struct z_owned_queryable_t *this_);
+/**
+ * Returns ``true`` if `reply` is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_reply_check(const struct z_owned_reply_t *this_);
+/**
+ * Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_reply_err_check(const struct z_owned_reply_err_t *this_);
+/**
+ * Constructs an empty `z_owned_reply_err_t`.
+ */
+ZENOHC_API void z_internal_reply_err_null(struct z_owned_reply_err_t *this_);
+/**
+ * Constructs the reply in its gravestone state.
+ */
+ZENOHC_API void z_internal_reply_null(struct z_owned_reply_t *this_);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API
+bool z_internal_ring_handler_query_check(const struct z_owned_ring_handler_query_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_internal_ring_handler_query_null(struct z_owned_ring_handler_query_t *this_);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API
+bool z_internal_ring_handler_reply_check(const struct z_owned_ring_handler_reply_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_internal_ring_handler_reply_null(struct z_owned_ring_handler_reply_t *this_);
+/**
+ * Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API
+bool z_internal_ring_handler_sample_check(const struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Constructs a handler in gravestone state.
+ */
+ZENOHC_API void z_internal_ring_handler_sample_null(struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_internal_sample_check(const struct z_owned_sample_t *this_);
+/**
+ * Constructs sample in its gravestone state.
+ */
+ZENOHC_API void z_internal_sample_null(struct z_owned_sample_t *this_);
+/**
+ * Returns ``true`` if `session` is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_session_check(const struct z_owned_session_t *this_);
+/**
+ * Constructs a Zenoh session in its gravestone state.
+ */
+ZENOHC_API void z_internal_session_null(struct z_owned_session_t *this_);
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_shm_check(const z_owned_shm_t *this_);
+#endif
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_shm_client_check(const z_owned_shm_client_t *this_);
+#endif
+/**
+ * Constructs SHM client in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_shm_client_null(z_owned_shm_client_t *this_);
+#endif
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_shm_client_storage_check(const z_owned_shm_client_storage_t *this_);
+#endif
+/**
+ * Constructs SHM Client Storage in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_shm_client_storage_null(z_owned_shm_client_storage_t *this_);
+#endif
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_shm_mut_check(const z_owned_shm_mut_t *this_);
+#endif
+/**
+ * Constructs ZShmMut slice in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_shm_mut_null(z_owned_shm_mut_t *this_);
+#endif
+/**
+ * Constructs ZShm slice in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_shm_null(z_owned_shm_t *this_);
+#endif
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool z_internal_shm_provider_check(const z_owned_shm_provider_t *this_);
+#endif
+/**
+ * Constructs SHM Provider in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_internal_shm_provider_null(z_owned_shm_provider_t *this_);
+#endif
+/**
+ * @return ``true`` if slice is not empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_slice_check(const struct z_owned_slice_t *this_);
+/**
+ * Constructs an empty `z_owned_slice_t`.
+ */
+ZENOHC_API void z_internal_slice_null(struct z_owned_slice_t *this_);
+/**
+ * Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool z_internal_source_info_check(const z_owned_source_info_t *this_);
+#endif
+/**
+ * Constructs source info in its gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void z_internal_source_info_null(z_owned_source_info_t *this_);
+#endif
+/**
+ * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_internal_string_array_check(const struct z_owned_string_array_t *this_);
+/**
+ * Constructs string array in its gravestone state.
+ */
+ZENOHC_API void z_internal_string_array_null(struct z_owned_string_array_t *this_);
+/**
+ * @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_internal_string_check(const struct z_owned_string_t *this_);
+/**
+ * Constructs owned string in a gravestone state.
+ */
+ZENOHC_API void z_internal_string_null(struct z_owned_string_t *this_);
+/**
+ * Returns ``true`` if subscriber is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_subscriber_check(const struct z_owned_subscriber_t *this_);
+/**
+ * Constructs a subscriber in a gravestone state.
+ */
+ZENOHC_API void z_internal_subscriber_null(struct z_owned_subscriber_t *this_);
+/**
+ * Returns ``true`` if task is valid, ``false`` otherwise.
+ */
+ZENOHC_API bool z_internal_task_check(const struct z_owned_task_t *this_);
+/**
+ * Constructs task in a gravestone state.
+ */
+ZENOHC_API void z_internal_task_null(struct z_owned_task_t *this_);
+/**
+ * Constructs a non-owned non-null-terminated string from key expression.
+ */
+ZENOHC_API
+void z_keyexpr_as_view_string(const struct z_loaned_keyexpr_t *this_,
+                              struct z_view_string_t *out_string);
 /**
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
- * Returns ``0`` upon success, negative values upon failure.
- * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
- * key expression for reasons other than a non-canon form.
- *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ *
+ * @return 0 upon success, negative error values upon failure (if the passed string was an invalid
+ * key expression for reasons other than a non-canon form).
  */
 ZENOHC_API
-int8_t z_keyexpr_canonize(char *start,
-                          size_t *len);
+z_result_t z_keyexpr_canonize(char *start,
+                              size_t *len);
 /**
  * Canonizes the passed string in place, possibly shortening it by placing a new null-terminator.
- *
- * Returns ``0`` upon success, negative values upon failure.
- * Returns a negative value if canonization failed, which indicates that the passed string was an invalid
- * key expression for reasons other than a non-canon form.
- *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ *
+ * @return 0 upon success, negative error values upon failure (if the passed string was an invalid
+ * key expression for reasons other than a non-canon form).
  */
 ZENOHC_API
-int8_t z_keyexpr_canonize_null_terminated(char *start);
+z_result_t z_keyexpr_canonize_null_terminated(char *start);
 /**
- * Returns ``true`` if `keyexpr` is valid.
- */
-ZENOHC_API bool z_keyexpr_check(const struct z_owned_keyexpr_t *keyexpr);
-/**
- * Performs string concatenation and returns the result as a `z_owned_keyexpr_t`.
- * In case of error, the return value will be set to its invalidated state.
+ * Constructs key expression by concatenation of key expression in `left` with a string in `right`.
+ * Returns 0 in case of success, negative error code otherwise.
  *
  * You should probably prefer `z_keyexpr_join` as Zenoh may then take advantage of the hierachical separation it inserts.
- *
  * To avoid odd behaviors, concatenating a key expression starting with `*` to one ending with `*` is forbidden by this operation,
  * as this would extremely likely cause bugs.
  */
 ZENOHC_API
-struct z_owned_keyexpr_t z_keyexpr_concat(struct z_keyexpr_t left,
-                                          const char *right_start,
-                                          size_t right_len);
+z_result_t z_keyexpr_concat(struct z_owned_keyexpr_t *this_,
+                            const struct z_loaned_keyexpr_t *left,
+                            const char *right_start,
+                            size_t right_len);
 /**
- * Frees `keyexpr` and invalidates it for double-drop safety.
+ * Frees key expression and resets it to its gravestone state.
  */
-ZENOHC_API void z_keyexpr_drop(struct z_owned_keyexpr_t *keyexpr);
+ZENOHC_API void z_keyexpr_drop(struct z_moved_keyexpr_t *this_);
 /**
- * Returns ``0`` if both ``left`` and ``right`` are equal. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
- */
-ZENOHC_API
-int8_t z_keyexpr_equals(struct z_keyexpr_t left,
-                        struct z_keyexpr_t right);
-/**
- * Returns ``0`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
- * defined by ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+ * Returns ``true`` if both ``left`` and ``right`` are equal, ``false`` otherwise.
  */
 ZENOHC_API
-int8_t z_keyexpr_includes(struct z_keyexpr_t left,
-                          struct z_keyexpr_t right);
+bool z_keyexpr_equals(const struct z_loaned_keyexpr_t *left,
+                      const struct z_loaned_keyexpr_t *right);
 /**
- * Returns ``0`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
- * sets defined by ``left`` and ``right``. Otherwise, it returns a ``-1``, or other ``negative value`` for errors.
+ * Constructs a `z_owned_keyexpr_t` from a string, copying the passed string.
+ * @return 0 in case of success, negative error code in case of failure (for example if `expr` is not a valid key expression or if it is
+ * not in canon form.
  */
 ZENOHC_API
-int8_t z_keyexpr_intersects(struct z_keyexpr_t left,
-                            struct z_keyexpr_t right);
+z_result_t z_keyexpr_from_str(struct z_owned_keyexpr_t *this_,
+                              const char *expr);
 /**
- * Returns ``0`` if the passed string is a valid (and canon) key expression.
- * Otherwise returns error value
- */
-ZENOHC_API int8_t z_keyexpr_is_canon(const char *start, size_t len);
-/**
- * Returns ``true`` if `keyexpr` is initialized.
- */
-ZENOHC_API bool z_keyexpr_is_initialized(const struct z_keyexpr_t *keyexpr);
-/**
- * Performs path-joining (automatically inserting) and returns the result as a `z_owned_keyexpr_t`.
- * In case of error, the return value will be set to its invalidated state.
+ * Constructs `z_owned_keyexpr_t` from a string, copying the passed string. The copied string is canonized.
+ * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression
+ * even despite canonization).
  */
 ZENOHC_API
-struct z_owned_keyexpr_t z_keyexpr_join(struct z_keyexpr_t left,
-                                        struct z_keyexpr_t right);
+z_result_t z_keyexpr_from_str_autocanonize(struct z_owned_keyexpr_t *this_,
+                                           const char *expr);
 /**
- * Returns a :c:type:`z_keyexpr_t` loaned from :c:type:`z_owned_keyexpr_t`.
- */
-ZENOHC_API struct z_keyexpr_t z_keyexpr_loan(const struct z_owned_keyexpr_t *keyexpr);
-/**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string.
- */
-ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_new(const char *name);
-/**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string, copying the passed string. The copied string is canonized.
+ * Constructs a `z_owned_keyexpr_t` by copying a substring.
+ *
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
+ * @param expr: A buffer with length >= `len`.
+ * @param len: Number of characters from `expr` to consider.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_keyexpr_t z_keyexpr_new_autocanonize(const char *name);
+z_result_t z_keyexpr_from_substr(struct z_owned_keyexpr_t *this_,
+                                 const char *expr,
+                                 size_t len);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_keyexpr_t' type
+ * Constructs a `z_keyexpr_t` by copying a substring.
+ *
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
+ * @param expr: A buffer of with length >= `len`.
+ * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
+ * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API struct z_owned_keyexpr_t z_keyexpr_null(void);
+ZENOHC_API
+z_result_t z_keyexpr_from_substr_autocanonize(struct z_owned_keyexpr_t *this_,
+                                              const char *start,
+                                              size_t *len);
+/**
+ * Returns ``true`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
+ * defined by ``right``, ``false`` otherwise.
+ */
+ZENOHC_API
+bool z_keyexpr_includes(const struct z_loaned_keyexpr_t *left,
+                        const struct z_loaned_keyexpr_t *right);
+/**
+ * Returns ``true`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
+ * sets defined by ``left`` and ``right``, ``false`` otherwise.
+ */
+ZENOHC_API
+bool z_keyexpr_intersects(const struct z_loaned_keyexpr_t *left,
+                          const struct z_loaned_keyexpr_t *right);
+/**
+ * Returns 0 if the passed string is a valid (and canon) key expression.
+ * Otherwise returns negative error value.
+ */
+ZENOHC_API z_result_t z_keyexpr_is_canon(const char *start, size_t len);
+/**
+ * Constructs key expression by performing path-joining (automatically inserting) of `left` with `right`.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_keyexpr_join(struct z_owned_keyexpr_t *this_,
+                          const struct z_loaned_keyexpr_t *left,
+                          const struct z_loaned_keyexpr_t *right);
+/**
+ * Borrows `z_owned_keyexpr_t`.
+ */
+ZENOHC_API const struct z_loaned_keyexpr_t *z_keyexpr_loan(const struct z_owned_keyexpr_t *this_);
 /**
  * Returns the relation between `left` and `right` from `left`'s point of view.
  *
  * Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(struct z_keyexpr_t left,
-                                                          struct z_keyexpr_t right);
+enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_keyexpr_t *left,
+                                                          const struct z_loaned_keyexpr_t *right);
+#endif
 /**
- * Constructs a null-terminated string departing from a :c:type:`z_keyexpr_t`.
- * The user is responsible of droping the returned string using `z_drop`
+ * Deletes Memory Layout
  */
-ZENOHC_API struct z_owned_str_t z_keyexpr_to_string(struct z_keyexpr_t keyexpr);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_memory_layout_drop(z_moved_memory_layout_t *this_);
+#endif
 /**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
- *
- *  - `name` MUST be valid UTF8.
- *  - `name` MUST follow the Key Expression specification, ie:
- *
- *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
- *   - any instance of `**` may only be lead or followed by `/`.
- *   - the key expression must have canon form.
- *
- * It is a loaned key expression that aliases `name`.
+ * Extract data from Memory Layout
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_memory_layout_get_data(size_t *out_size,
+                              struct z_alloc_alignment_t *out_alignment,
+                              const z_loaned_memory_layout_t *this_);
+#endif
+/**
+ * Borrows Memory Layout
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+const z_loaned_memory_layout_t *z_memory_layout_loan(const z_owned_memory_layout_t *this_);
+#endif
+/**
+ * Creates a new Memory Layout
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_memory_layout_new(z_owned_memory_layout_t *this_,
+                               size_t size,
+                               struct z_alloc_alignment_t alignment);
+#endif
+/**
+ * Drops mutex and resets it to its gravestone state.
+ */
+ZENOHC_API void z_mutex_drop(struct z_moved_mutex_t *this_);
+/**
+ * Constructs a mutex.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_mutex_init(struct z_owned_mutex_t *this_);
+/**
+ * Mutably borrows mutex.
+ */
+ZENOHC_API struct z_loaned_mutex_t *z_mutex_loan_mut(struct z_owned_mutex_t *this_);
+/**
+ * Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
+ * @return 0 in case of success, negative error code in case of failure.
+ */
+ZENOHC_API z_result_t z_mutex_lock(struct z_loaned_mutex_t *this_);
+/**
+ * Tries to lock mutex. If mutex is already locked, return immediately.
+ * @return 0 in case of success, negative value if failed to aquire the lock.
+ */
+ZENOHC_API z_result_t z_mutex_try_lock(struct z_loaned_mutex_t *this_);
+/**
+ * Unlocks previously locked mutex. If mutex was not locked by the current thread, the behaviour is undefined.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_keyexpr_t z_keyexpr_unchecked(const char *name);
-ZENOHC_API int8_t z_mutex_free(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_init(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_lock(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_try_lock(struct z_mutex_t *m);
-ZENOHC_API int8_t z_mutex_unlock(struct z_mutex_t *m);
+z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
 /**
- * Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
+ * Constructs and opens a new Zenoh session.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
  */
 ZENOHC_API
-struct z_owned_session_t z_open(struct z_owned_config_t *config);
+z_result_t z_open(struct z_owned_session_t *this_,
+                  struct z_moved_config_t *config);
 /**
- * Returns ``true`` if `pub` is valid.
+ * Constructs and opens a new Zenoh session with specified client storage.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
  */
-ZENOHC_API bool z_publisher_check(const struct z_owned_publisher_t *pbl);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_open_with_custom_shm_clients(struct z_owned_session_t *this_,
+                                          struct z_moved_config_t *config,
+                                          const z_loaned_shm_client_storage_t *shm_clients);
+#endif
+/**
+ * Creates a new POSIX SHM Client
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_posix_shm_client_new(z_owned_shm_client_t *this_);
+#endif
+/**
+ * Creates a new POSIX SHM Provider
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_posix_shm_provider_new(z_owned_shm_provider_t *this_,
+                                    const z_loaned_memory_layout_t *layout);
+#endif
+/**
+ * Returns the default value of #z_priority_t.
+ */
+ZENOHC_API enum z_priority_t z_priority_default(void);
 /**
  * Sends a `DELETE` message onto the publisher's key expression.
  *
- * Returns:
- *     ``0`` in case of success, ``1`` in case of failure.
+ * @return 0 in case of success, negative error code in case of failure.
  */
 ZENOHC_API
-int8_t z_publisher_delete(struct z_publisher_t publisher,
-                          const struct z_publisher_delete_options_t *_options);
+z_result_t z_publisher_delete(const struct z_loaned_publisher_t *publisher,
+                              const struct z_publisher_delete_options_t *options);
 /**
  * Constructs the default values for the delete operation via a publisher entity.
- *
- * Returns:
- *   Returns the constructed :c:type:`z_publisher_delete_options_t`.
  */
-ZENOHC_API struct z_publisher_delete_options_t z_publisher_delete_options_default(void);
+ZENOHC_API void z_publisher_delete_options_default(struct z_publisher_delete_options_t *this_);
 /**
- * Returns the key expression of the publisher
+ * Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.
  */
-ZENOHC_API struct z_owned_keyexpr_t z_publisher_keyexpr(struct z_publisher_t publisher);
+ZENOHC_API void z_publisher_drop(struct z_moved_publisher_t *this_);
 /**
- * Returns a :c:type:`z_publisher_t` loaned from `p`.
+ * Returns the ID of the publisher.
  */
-ZENOHC_API struct z_publisher_t z_publisher_loan(const struct z_owned_publisher_t *p);
+#if defined(UNSTABLE)
+ZENOHC_API z_entity_global_id_t z_publisher_id(const struct z_loaned_publisher_t *publisher);
+#endif
 /**
- * Constructs a null safe-to-drop value of 'z_owned_publisher_t' type
- */
-ZENOHC_API struct z_owned_publisher_t z_publisher_null(void);
-/**
- * Constructs the default value for :c:type:`z_publisher_options_t`.
- */
-ZENOHC_API struct z_publisher_options_t z_publisher_options_default(void);
-/**
- * Sends a `PUT` message onto the publisher's key expression.
- *
- * The payload's encoding can be sepcified through the options.
- *
- * Parameters:
- *     session: The zenoh session.
- *     payload: The value to put.
- *     len: The length of the value to put.
- *     options: The publisher put options.
- * Returns:
- *     ``0`` in case of success, negative values in case of failure.
+ * Returns the key expression of the publisher.
  */
 ZENOHC_API
-int8_t z_publisher_put(struct z_publisher_t publisher,
-                       const uint8_t *payload,
-                       size_t len,
-                       const struct z_publisher_put_options_t *options);
+const struct z_loaned_keyexpr_t *z_publisher_keyexpr(const struct z_loaned_publisher_t *publisher);
 /**
- * Constructs the default value for :c:type:`z_publisher_put_options_t`.
- */
-ZENOHC_API struct z_publisher_put_options_t z_publisher_put_options_default(void);
-/**
- * Returns ``true`` if `sub` is valid.
- */
-ZENOHC_API bool z_pull_subscriber_check(const struct z_owned_pull_subscriber_t *sub);
-/**
- * Returns ``true`` if `sub` is valid.
+ * Borrows publisher.
  */
 ZENOHC_API
-struct z_pull_subscriber_t z_pull_subscriber_loan(const struct z_owned_pull_subscriber_t *sub);
+const struct z_loaned_publisher_t *z_publisher_loan(const struct z_owned_publisher_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_pull_subscriber_t' type
+ * Mutably borrows publisher.
  */
-ZENOHC_API struct z_owned_pull_subscriber_t z_pull_subscriber_null(void);
+ZENOHC_API struct z_loaned_publisher_t *z_publisher_loan_mut(struct z_owned_publisher_t *this_);
 /**
- * Constructs the default value for :c:type:`z_pull_subscriber_options_t`.
+ * Constructs the default value for `z_publisher_options_t`.
  */
-ZENOHC_API struct z_pull_subscriber_options_t z_pull_subscriber_options_default(void);
+ZENOHC_API void z_publisher_options_default(struct z_publisher_options_t *this_);
 /**
- * Put data.
+ * Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
  *
- * The payload's encoding can be sepcified through the options.
  *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to put.
- *     payload: The value to put.
- *     len: The length of the value to put.
- *     options: The put options.
- * Returns:
- *     ``0`` in case of success, negative values in case of failure.
+ * The payload and all owned options fields are consumed upon function return.
+ *
+ * @param this_: The publisher.
+ * @param session: The Zenoh session.
+ * @param payload: The dat to publish. WIll be consumed.
+ * @param options: The publisher put options. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, negative error values in case of failure.
  */
 ZENOHC_API
-int8_t z_put(struct z_session_t session,
-             struct z_keyexpr_t keyexpr,
-             const uint8_t *payload,
-             size_t len,
-             const struct z_put_options_t *opts);
+z_result_t z_publisher_put(const struct z_loaned_publisher_t *this_,
+                           struct z_moved_bytes_t *payload,
+                           struct z_publisher_put_options_t *options);
 /**
- * Constructs the default value for :c:type:`z_put_options_t`.
+ * Constructs the default value for `z_publisher_put_options_t`.
  */
-ZENOHC_API struct z_put_options_t z_put_options_default(void);
+ZENOHC_API void z_publisher_put_options_default(struct z_publisher_put_options_t *this_);
 /**
- * Returns default qos settings.
- */
-ZENOHC_API struct z_qos_t z_qos_default(void);
-/**
- * Returns message congestion control.
- */
-ZENOHC_API enum z_congestion_control_t z_qos_get_congestion_control(struct z_qos_t qos);
-/**
- * Returns message express flag. If set to true, the message is not batched to reduce the latency.
- */
-ZENOHC_API bool z_qos_get_express(struct z_qos_t qos);
-/**
- * Returns message priority.
- */
-ZENOHC_API enum z_priority_t z_qos_get_priority(struct z_qos_t qos);
-/**
- * Returns the attachment to the query by aliasing.
+ * Publishes data on specified key expression.
  *
- * `z_check(return_value) == false` if there was no attachment to the query.
- */
-ZENOHC_API struct z_attachment_t z_query_attachment(const struct z_query_t *query);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
+ * @param session: The Zenoh session.
+ * @param key_expr: The key expression to publish to.
+ * @param payload: The value to put (consumed upon function return).
+ * @param options: The put options (all owned values will be consumed upon function return).
+ *
+ * @return 0 in case of success, negative error values in case of failure.
  */
 ZENOHC_API
-bool z_query_channel_closure_call(const struct z_owned_query_channel_closure_t *closure,
-                                  struct z_owned_query_t *sample);
+z_result_t z_put(const struct z_loaned_session_t *session,
+                 const struct z_loaned_keyexpr_t *key_expr,
+                 struct z_moved_bytes_t *payload,
+                 struct z_put_options_t *options);
 /**
- * Drops the closure. Droping an uninitialized closure is a no-op.
+ * Constructs the default value for `z_put_options_t`.
  */
-ZENOHC_API void z_query_channel_closure_drop(struct z_owned_query_channel_closure_t *closure);
+ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_query_channel_closure_t' type
- */
-ZENOHC_API struct z_owned_query_channel_closure_t z_query_channel_closure_null(void);
-ZENOHC_API void z_query_channel_drop(struct z_owned_query_channel_t *channel);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_query_channel_t' type
- */
-ZENOHC_API struct z_owned_query_channel_t z_query_channel_null(void);
-/**
- * Returns `false` if `this` is in a gravestone state, `true` otherwise.
+ * Gets query attachment.
  *
- * This function may not be called with the null pointer, but can be called with the gravestone value.
+ * Returns NULL if query does not contain an attachment.
  */
-ZENOHC_API
-bool z_query_check(const struct z_owned_query_t *this_);
+ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *this_);
 /**
- * Clones the query, allowing to keep it in an "open" state past the callback's return.
+ * Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
  *
  * This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
  */
 ZENOHC_API
-struct z_owned_query_t z_query_clone(const struct z_query_t *query);
+void z_query_clone(struct z_owned_query_t *dst,
+                   const struct z_loaned_query_t *this_);
 /**
  * Automatic query consolidation strategy selection.
  *
  * A query consolidation strategy will automatically be selected depending the query selector.
  * If the selector contains time range properties, no consolidation is performed.
- * Otherwise the :c:func:`z_query_consolidation_latest` strategy is used.
- *
- * Returns:
- *   Returns the constructed :c:type:`z_query_consolidation_t`.
+ * Otherwise the `z_query_consolidation_latest` strategy is used.
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_auto(void);
 /**
- * Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
+ * Creates a default `z_query_consolidation_t` (consolidation mode AUTO).
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_default(void);
 /**
- * Latest value consolidation.
+ * Latest consolidation.
+ *
+ * This strategy optimizes bandwidth on all links in the system but will provide a very poor latency.
  */
-ZENOHC_API struct z_query_consolidation_t z_query_consolidation_latest(void);
+ZENOHC_API
+struct z_query_consolidation_t z_query_consolidation_latest(void);
 /**
  * Monotonic consolidation.
+ *
+ * This strategy offers the best latency. Replies are directly transmitted to the application when received
+ * without needing to wait for all replies. This mode does not guarantee that there will be no duplicates.
  */
-ZENOHC_API struct z_query_consolidation_t z_query_consolidation_monotonic(void);
+ZENOHC_API
+struct z_query_consolidation_t z_query_consolidation_monotonic(void);
 /**
- * Disable consolidation.
+ * No consolidation.
+ *
+ * This strategy is useful when querying timeseries data bases or when using quorums.
  */
 ZENOHC_API struct z_query_consolidation_t z_query_consolidation_none(void);
 /**
- * Destroys the query, setting `this` to its gravestone value to prevent double-frees.
+ * Destroys the query resetting it to its gravestone value.
+ */
+ZENOHC_API void z_query_drop(struct z_moved_query_t *this_);
+/**
+ * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
  *
- * This function may not be called with the null pointer, but can be called with the gravestone value.
+ * Returns NULL if query does not contain an encoding.
  */
 ZENOHC_API
-void z_query_drop(struct z_owned_query_t *this_);
+const struct z_loaned_encoding_t *z_query_encoding(const struct z_loaned_query_t *this_);
 /**
- * Get a query's key by aliasing it.
+ * Gets query key expression.
  */
-ZENOHC_API struct z_keyexpr_t z_query_keyexpr(const struct z_query_t *query);
+ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loaned_query_t *this_);
 /**
- * Aliases the query.
+ * Borrows the query.
+ */
+ZENOHC_API const struct z_loaned_query_t *z_query_loan(const struct z_owned_query_t *this_);
+/**
+ * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
+ */
+ZENOHC_API
+void z_query_parameters(const struct z_loaned_query_t *this_,
+                        struct z_view_string_t *parameters);
+/**
+ * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
  *
- * This function may not be called with the null pointer, but can be called with the gravestone value.
+ * Returns NULL if query does not contain a payload.
  */
 ZENOHC_API
-struct z_query_t z_query_loan(const struct z_owned_query_t *this_);
+const struct z_loaned_bytes_t *z_query_payload(const struct z_loaned_query_t *this_);
 /**
- * The gravestone value of `z_owned_query_t`.
- */
-ZENOHC_API struct z_owned_query_t z_query_null(void);
-/**
- * Get a query's `value selector <https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors>`_ by aliasing it.
- */
-ZENOHC_API
-struct z_bytes_t z_query_parameters(const struct z_query_t *query);
-/**
- * Send a reply to a query.
+ * Sends a reply to a query.
  *
  * This function must be called inside of a Queryable callback passing the
  * query received as parameters of the callback function. This function can
  * be called multiple times to send multiple replies to a query. The reply
  * will be considered complete when the Queryable callback returns.
  *
- * Parameters:
- *     query: The query to reply to.
- *     key: The key of this reply.
- *     payload: The value of this reply.
- *     len: The length of the value of this reply.
- *     options: The options of this reply.
+ * @param this_: The query to reply to.
+ * @param key_expr: The key of this reply.
+ * @param payload: The payload of this reply. Will be consumed.
+ * @param options: The options of this reply. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-int8_t z_query_reply(const struct z_query_t *query,
-                     struct z_keyexpr_t key,
-                     const uint8_t *payload,
-                     size_t len,
-                     const struct z_query_reply_options_t *options);
+z_result_t z_query_reply(const struct z_loaned_query_t *this_,
+                         const struct z_loaned_keyexpr_t *key_expr,
+                         struct z_moved_bytes_t *payload,
+                         struct z_query_reply_options_t *options);
 /**
- * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ * Sends a delete reply to a query.
+ *
+ * This function must be called inside of a Queryable callback passing the
+ * query received as parameters of the callback function. This function can
+ * be called multiple times to send multiple replies to a query. The reply
+ * will be considered complete when the Queryable callback returns.
+ *
+ * @param this: The query to reply to.
+ * @param key_expr: The key of this delete reply.
+ * @param options: The options of this delete reply. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API struct z_query_reply_options_t z_query_reply_options_default(void);
+ZENOHC_API
+z_result_t z_query_reply_del(const struct z_loaned_query_t *this_,
+                             const struct z_loaned_keyexpr_t *key_expr,
+                             struct z_query_reply_del_options_t *options);
 /**
- * Create a default :c:type:`z_query_target_t`.
+ * Constructs the default value for `z_query_reply_del_options_t`.
+ */
+ZENOHC_API void z_query_reply_del_options_default(struct z_query_reply_del_options_t *this_);
+/**
+ * Sends a error reply to a query.
+ *
+ * This function must be called inside of a Queryable callback passing the
+ * query received as parameters of the callback function. This function can
+ * be called multiple times to send multiple replies to a query. The reply
+ * will be considered complete when the Queryable callback returns.
+ *
+ * @param this_: The query to reply to.
+ * @param payload: The payload carrying error message. Will be consumed.
+ * @param options: The options of this reply. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_query_reply_err(const struct z_loaned_query_t *this_,
+                             struct z_moved_bytes_t *payload,
+                             struct z_query_reply_err_options_t *options);
+/**
+ * Constructs the default value for `z_query_reply_err_options_t`.
+ */
+ZENOHC_API void z_query_reply_err_options_default(struct z_query_reply_err_options_t *this_);
+/**
+ * Constructs the default value for `z_query_reply_options_t`.
+ */
+ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *this_);
+/**
+ * Create a default `z_query_target_t`.
  */
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
 /**
- * Get a query's `payload value <https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md>`_ by aliasing it.
+ * Frees memory and resets it to its gravesztone state. Will also attempt to undeclare queryable.
+ */
+ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
+ZENOHC_API
+const struct z_loaned_queryable_t *z_queryable_loan(const struct z_owned_queryable_t *this_);
+/**
+ * Constructs the default value for `z_query_reply_options_t`.
+ */
+ZENOHC_API void z_queryable_options_default(struct z_queryable_options_t *this_);
+/**
+ * Fills buffer with random data.
+ */
+ZENOHC_API void z_random_fill(void *buf, size_t len);
+/**
+ * Generates random `uint16_t`.
+ */
+ZENOHC_API uint16_t z_random_u16(void);
+/**
+ * Generates random `uint32_t`.
+ */
+ZENOHC_API uint32_t z_random_u32(void);
+/**
+ * Generates random `uint64_t`.
+ */
+ZENOHC_API uint64_t z_random_u64(void);
+/**
+ * Generates random `uint8_t`.
+ */
+ZENOHC_API uint8_t z_random_u8(void);
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_ref_shm_client_storage_global(z_owned_shm_client_storage_t *this_);
+#endif
+/**
+ * Constructs an owned shallow copy of reply in provided uninitialized memory location.
+ */
+ZENOHC_API void z_reply_clone(struct z_owned_reply_t *dst, const struct z_loaned_reply_t *this_);
+/**
+ * Frees reply, resetting it to its gravestone state.
+ */
+ZENOHC_API void z_reply_drop(struct z_moved_reply_t *this_);
+/**
+ * Yields the contents of the reply by asserting it indicates a failure.
  *
- * **WARNING: This API has been marked as unstable: it works as advertised, but it may change in a future release.**
+ * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
+ */
+ZENOHC_API const struct z_loaned_reply_err_t *z_reply_err(const struct z_loaned_reply_t *this_);
+/**
+ * Frees the memory and resets the reply error it to its default value.
+ */
+ZENOHC_API void z_reply_err_drop(struct z_moved_reply_err_t *this_);
+/**
+ * Returns reply error encoding.
  */
 ZENOHC_API
-struct z_value_t z_query_value(const struct z_query_t *query);
+const struct z_loaned_encoding_t *z_reply_err_encoding(const struct z_loaned_reply_err_t *this_);
 /**
- * Returns ``true`` if `qable` is valid.
+ * Borrows reply error.
  */
-ZENOHC_API bool z_queryable_check(const struct z_owned_queryable_t *qable);
+ZENOHC_API
+const struct z_loaned_reply_err_t *z_reply_err_loan(const struct z_owned_reply_err_t *this_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_queryable_t' type
+ * Returns reply error payload.
  */
-ZENOHC_API struct z_owned_queryable_t z_queryable_null(void);
+ZENOHC_API
+const struct z_loaned_bytes_t *z_reply_err_payload(const struct z_loaned_reply_err_t *this_);
 /**
- * Constructs the default value for :c:type:`z_query_reply_options_t`.
+ * Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
  */
-ZENOHC_API struct z_queryable_options_t z_queryable_options_default(void);
-ZENOHC_API void z_random_fill(void *buf, size_t len);
-ZENOHC_API uint16_t z_random_u16(void);
-ZENOHC_API uint32_t z_random_u32(void);
-ZENOHC_API uint64_t z_random_u64(void);
-ZENOHC_API uint8_t z_random_u8(void);
+ZENOHC_API
+bool z_reply_is_ok(const struct z_loaned_reply_t *this_);
+/**
+ * Borrows reply.
+ */
+ZENOHC_API const struct z_loaned_reply_t *z_reply_loan(const struct z_owned_reply_t *this_);
+/**
+ * Yields the contents of the reply by asserting it indicates a success.
+ *
+ * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
+ */
+ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *this_);
+/**
+ * Gets the id of the zenoh instance that answered this Reply.
+ * Returns `true` if id is present.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool z_reply_replier_id(const struct z_loaned_reply_t *this_, z_id_t *out_id);
+#endif
+/**
+ * Constructs send and recieve ends of the ring channel
+ */
+ZENOHC_API
+void z_ring_channel_query_new(struct z_owned_closure_query_t *callback,
+                              struct z_owned_ring_handler_query_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the ring channel
+ */
+ZENOHC_API
+void z_ring_channel_reply_new(struct z_owned_closure_reply_t *callback,
+                              struct z_owned_ring_handler_reply_t *handler,
+                              size_t capacity);
+/**
+ * Constructs send and recieve ends of the ring channel
+ */
+ZENOHC_API
+void z_ring_channel_sample_new(struct z_owned_closure_sample_t *callback,
+                               struct z_owned_ring_handler_sample_t *handler,
+                               size_t capacity);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_ring_handler_query_drop(struct z_moved_ring_handler_query_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_ring_handler_query_t *z_ring_handler_query_loan(const struct z_owned_ring_handler_query_t *this_);
+/**
+ * Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until
+ * the channel is dropped (normally when Queryable is dropped).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_ring_handler_query_recv(const struct z_loaned_ring_handler_query_t *this_,
+                                     struct z_owned_query_t *query);
+/**
+ * Returns query from the ring buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
+ * Z_CHANNEL_NODATA if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_ring_handler_query_try_recv(const struct z_loaned_ring_handler_query_t *this_,
+                                         struct z_owned_query_t *query);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_ring_handler_reply_drop(struct z_moved_ring_handler_reply_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_ring_handler_reply_t *z_ring_handler_reply_loan(const struct z_owned_ring_handler_reply_t *this_);
+/**
+ * Returns reply from the ring buffer. If there are no more pending replies will block until next reply is received, or until
+ * the channel is dropped (normally when all replies are received).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_ring_handler_reply_recv(const struct z_loaned_ring_handler_reply_t *this_,
+                                     struct z_owned_reply_t *reply);
+/**
+ * Returns reply from the ring buffer. If there are no more pending replies will return immediately (with reply set to its gravestone state).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the reply will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_ring_handler_reply_try_recv(const struct z_loaned_ring_handler_reply_t *this_,
+                                         struct z_owned_reply_t *reply);
+/**
+ * Drops the handler and resets it to a gravestone state.
+ */
+ZENOHC_API void z_ring_handler_sample_drop(struct z_moved_ring_handler_sample_t *this_);
+/**
+ * Borrows handler.
+ */
+ZENOHC_API
+const struct z_loaned_ring_handler_sample_t *z_ring_handler_sample_loan(const struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until
+ * the channel is dropped (normally when there are no more replies to receive).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_ring_handler_sample_recv(const struct z_loaned_ring_handler_sample_t *this_,
+                                      struct z_owned_sample_t *sample);
+/**
+ * Returns sample from the ring buffer. If there are no more pending replies will return immediately (with sample set to its gravestone state).
+ * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state),
+ * `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the sample will be in the gravestone state).
+ */
+ZENOHC_API
+z_result_t z_ring_handler_sample_try_recv(const struct z_loaned_ring_handler_sample_t *this_,
+                                          struct z_owned_sample_t *sample);
+/**
+ * Returns sample attachment.
+ *
+ * Returns `NULL`, if sample does not contain any attachment.
+ */
+ZENOHC_API
+const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_t *this_);
+/**
+ * Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
+ */
+ZENOHC_API
+void z_sample_clone(struct z_owned_sample_t *dst,
+                    const struct z_loaned_sample_t *this_);
+/**
+ * Returns sample qos congestion control value.
+ */
+ZENOHC_API
+enum z_congestion_control_t z_sample_congestion_control(const struct z_loaned_sample_t *this_);
+/**
+ * Frees the memory and invalidates the sample, resetting it to a gravestone state.
+ */
+ZENOHC_API void z_sample_drop(struct z_moved_sample_t *this_);
+/**
+ * Returns the encoding associated with the sample data.
+ */
+ZENOHC_API
+const struct z_loaned_encoding_t *z_sample_encoding(const struct z_loaned_sample_t *this_);
+/**
+ * Returns whether sample qos express flag was set or not.
+ */
+ZENOHC_API bool z_sample_express(const struct z_loaned_sample_t *this_);
+/**
+ * Returns the key expression of the sample.
+ */
+ZENOHC_API const struct z_loaned_keyexpr_t *z_sample_keyexpr(const struct z_loaned_sample_t *this_);
+/**
+ * Returns the sample kind.
+ */
+ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_loaned_sample_t *this_);
+/**
+ * Borrows sample.
+ */
+ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sample_t *this_);
+/**
+ * Returns the sample payload data.
+ */
+ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned_sample_t *this_);
+/**
+ * Returns sample qos priority value.
+ */
+ZENOHC_API enum z_priority_t z_sample_priority(const struct z_loaned_sample_t *this_);
+/**
+ * Returns the sample source_info.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+const z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
+#endif
+/**
+ * Returns the sample timestamp.
+ *
+ * Will return `NULL`, if sample is not associated with a timestamp.
+ */
+ZENOHC_API const struct z_timestamp_t *z_sample_timestamp(const struct z_loaned_sample_t *this_);
+/**
+ * Scout for routers and/or peers.
+ *
+ * @param config: A set of properties to configure scouting session.
+ * @param callback: A closure that will be called on each hello message received from discoverd Zenoh entities.
+ * @param options: A set of scouting options
+ *
+ * @return 0 if successful, negative error values upon failure.
+ */
+ZENOHC_API
+z_result_t z_scout(struct z_moved_config_t *config,
+                   struct z_moved_closure_hello_t *callback,
+                   const struct z_scout_options_t *options);
+/**
+ * Constructs the default values for the scouting operation.
+ */
+ZENOHC_API void z_scout_options_default(struct z_scout_options_t *this_);
+/**
+ * Constructs an owned shallow copy of the session in provided uninitialized memory location.
+ */
+ZENOHC_API
+void z_session_clone(struct z_owned_session_t *dst,
+                     const struct z_loaned_session_t *this_);
+/**
+ * Frees memory and invalidates the session.
+ *
+ * This will also close the session if it does not have any clones left.
+ */
+ZENOHC_API void z_session_drop(struct z_moved_session_t *this_);
+/**
+ * Borrows session.
+ */
+ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_session_t *this_);
+/**
+ * Deletes SHM Client
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_client_drop(z_moved_shm_client_t *this_);
+#endif
+/**
+ * Creates a new SHM Client
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_client_new(z_owned_shm_client_t *this_,
+                      struct zc_threadsafe_context_t context,
+                      struct zc_shm_client_callbacks_t callbacks);
+#endif
+/**
+ * Performs a shallow copy of SHM Client Storage
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_client_storage_clone(z_owned_shm_client_storage_t *this_,
+                                const z_loaned_shm_client_storage_t *from);
+#endif
+/**
+ * Derefs SHM Client Storage
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_client_storage_drop(z_moved_shm_client_storage_t *this_);
+#endif
+/**
+ * Borrows SHM Client Storage
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+const z_loaned_shm_client_storage_t *z_shm_client_storage_loan(const z_owned_shm_client_storage_t *this_);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_shm_client_storage_new(z_owned_shm_client_storage_t *this_,
+                                    const zc_loaned_shm_client_list_t *clients,
+                                    bool add_default_client_set);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_client_storage_new_default(z_owned_shm_client_storage_t *this_);
+#endif
+/**
+ * Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_clone(z_owned_shm_t *out, const z_loaned_shm_t *this_);
+#endif
+/**
+ * @return the pointer of the ZShm slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API const unsigned char *z_shm_data(const z_loaned_shm_t *this_);
+#endif
+/**
+ * Deletes ZShm slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_drop(z_moved_shm_t *this_);
+#endif
+/**
+ * Constructs ZShm slice from ZShmMut slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_from_mut(z_owned_shm_t *this_, z_moved_shm_mut_t *that);
+#endif
+/**
+ * @return the length of the ZShm slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API size_t z_shm_len(const z_loaned_shm_t *this_);
+#endif
+/**
+ * Borrows ZShm slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API const z_loaned_shm_t *z_shm_loan(const z_owned_shm_t *this_);
+#endif
+/**
+ * Mutably borrows ZShm slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API z_loaned_shm_t *z_shm_loan_mut(z_owned_shm_t *this_);
+#endif
+/**
+ * @return the immutable pointer to the underlying data
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API const unsigned char *z_shm_mut_data(const z_loaned_shm_mut_t *this_);
+#endif
+/**
+ * @return the mutable pointer to the underlying data
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API unsigned char *z_shm_mut_data_mut(z_loaned_shm_mut_t *this_);
+#endif
+/**
+ * Deletes ZShmMut slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_mut_drop(z_moved_shm_mut_t *this_);
+#endif
+/**
+ * @return the length of the ZShmMut slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API size_t z_shm_mut_len(const z_loaned_shm_mut_t *this_);
+#endif
+/**
+ * Borrows ZShmMut slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API const z_loaned_shm_mut_t *z_shm_mut_loan(const z_owned_shm_mut_t *this_);
+#endif
+/**
+ * Mutably borrows ZShmMut slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API z_loaned_shm_mut_t *z_shm_mut_loan_mut(z_owned_shm_mut_t *this_);
+#endif
+/**
+ * Tries to construct ZShmMut slice from ZShm slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_mut_try_from_immut(z_owned_shm_mut_t *this_, z_moved_shm_t *that);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_provider_alloc(struct z_buf_layout_alloc_result_t *out_result,
+                          const z_loaned_shm_provider_t *provider,
+                          size_t size,
+                          struct z_alloc_alignment_t alignment);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_provider_alloc_gc(struct z_buf_layout_alloc_result_t *out_result,
+                             const z_loaned_shm_provider_t *provider,
+                             size_t size,
+                             struct z_alloc_alignment_t alignment);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_provider_alloc_gc_defrag(struct z_buf_layout_alloc_result_t *out_result,
+                                    const z_loaned_shm_provider_t *provider,
+                                    size_t size,
+                                    struct z_alloc_alignment_t alignment);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_shm_provider_alloc_gc_defrag_async(struct z_buf_layout_alloc_result_t *out_result,
+                                                const z_loaned_shm_provider_t *provider,
+                                                size_t size,
+                                                struct z_alloc_alignment_t alignment,
+                                                struct zc_threadsafe_context_t result_context,
+                                                void (*result_callback)(void*,
+                                                                        struct z_buf_layout_alloc_result_t*));
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_provider_alloc_gc_defrag_blocking(struct z_buf_layout_alloc_result_t *out_result,
+                                             const z_loaned_shm_provider_t *provider,
+                                             size_t size,
+                                             struct z_alloc_alignment_t alignment);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_provider_alloc_gc_defrag_dealloc(struct z_buf_layout_alloc_result_t *out_result,
+                                            const z_loaned_shm_provider_t *provider,
+                                            size_t size,
+                                            struct z_alloc_alignment_t alignment);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API size_t z_shm_provider_available(const z_loaned_shm_provider_t *provider);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API size_t z_shm_provider_defragment(const z_loaned_shm_provider_t *provider);
+#endif
+/**
+ * Deletes SHM Provider
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void z_shm_provider_drop(z_moved_shm_provider_t *this_);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API size_t z_shm_provider_garbage_collect(const z_loaned_shm_provider_t *provider);
+#endif
+/**
+ * Borrows SHM Provider
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API const z_loaned_shm_provider_t *z_shm_provider_loan(const z_owned_shm_provider_t *this_);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t z_shm_provider_map(z_owned_shm_mut_t *out_result,
+                              const z_loaned_shm_provider_t *provider,
+                              struct z_allocated_chunk_t allocated_chunk,
+                              size_t len);
+#endif
+/**
+ * Creates a new SHM Provider
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_provider_new(z_owned_shm_provider_t *this_,
+                        z_protocol_id_t id,
+                        struct zc_context_t context,
+                        struct zc_shm_provider_backend_callbacks_t callbacks);
+#endif
+/**
+ * Creates a new threadsafe SHM Provider
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_provider_threadsafe_new(z_owned_shm_provider_t *this_,
+                                   z_protocol_id_t id,
+                                   struct zc_threadsafe_context_t context,
+                                   struct zc_shm_provider_backend_callbacks_t callbacks);
+#endif
+/**
+ * Mutably borrows ZShm slice as borrowed ZShmMut slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API z_loaned_shm_mut_t *z_shm_try_mut(z_owned_shm_t *this_);
+#endif
+/**
+ * Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API z_loaned_shm_mut_t *z_shm_try_reloan_mut(z_loaned_shm_t *this_);
+#endif
+/**
+ * Puts current thread to sleep for specified amount of milliseconds.
+ */
+ZENOHC_API int8_t z_sleep_ms(size_t time);
+/**
+ * Puts current thread to sleep for specified amount of seconds.
+ */
+ZENOHC_API int8_t z_sleep_s(size_t time);
+/**
+ * Puts current thread to sleep for specified amount of microseconds.
+ */
+ZENOHC_API int8_t z_sleep_us(size_t time);
+/**
+ * Constructs an owned copy of a slice.
+ */
+ZENOHC_API void z_slice_clone(struct z_owned_slice_t *dst, const struct z_loaned_slice_t *this_);
+/**
+ * Constructs a slice by copying a `len` bytes long sequence starting at `start`.
+ *
+ * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_slice_copy_from_buf(struct z_owned_slice_t *this_,
+                                 const uint8_t *start,
+                                 size_t len);
+/**
+ * @return the pointer to the slice data.
+ */
+ZENOHC_API const uint8_t *z_slice_data(const struct z_loaned_slice_t *this_);
+/**
+ * Frees the memory and invalidates the slice.
+ */
+ZENOHC_API void z_slice_drop(struct z_moved_slice_t *this_);
+/**
+ * Constructs an empty `z_owned_slice_t`.
+ */
+ZENOHC_API void z_slice_empty(struct z_owned_slice_t *this_);
+/**
+ * Constructs a slice by transferring ownership of `data` to it.
+ * @param this_: Pointer to an uninitialized memoery location where slice will be constructed.
+ * @param data: Pointer to the data to be owned by `this_`.
+ * @param len: Number of bytes in `data`.
+ * @param deleter: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
+ * @param context: An optional context to be passed to the `deleter`.
+ *
+ * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_slice_from_buf(struct z_owned_slice_t *this_,
+                            uint8_t *data,
+                            size_t len,
+                            void (*drop)(void *data, void *context),
+                            void *context);
+/**
+ * @return ``true`` if slice is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_slice_is_empty(const struct z_loaned_slice_t *this_);
+/**
+ * @return the length of the slice.
+ */
+ZENOHC_API size_t z_slice_len(const struct z_loaned_slice_t *this_);
+/**
+ * Borrows slice.
+ */
+ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slice_t *this_);
+/**
+ * Frees the memory and invalidates the source info, resetting it to a gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void z_source_info_drop(z_moved_source_info_t *this_);
+#endif
+/**
+ * Returns the source_id of the source info.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_entity_global_id_t z_source_info_id(const z_loaned_source_info_t *this_);
+#endif
+/**
+ * Borrows source info.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API const z_loaned_source_info_t *z_source_info_loan(const z_owned_source_info_t *this_);
+#endif
+/**
+ * Create source info
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+z_result_t z_source_info_new(z_owned_source_info_t *this_,
+                             const z_entity_global_id_t *source_id,
+                             uint64_t source_sn);
+#endif
+/**
+ * Returns the source_sn of the source info.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API uint64_t z_source_info_sn(const z_loaned_source_info_t *this_);
+#endif
+/**
+ * Destroys the string array, resetting it to its gravestone value.
+ */
+ZENOHC_API void z_string_array_drop(struct z_moved_string_array_t *this_);
+/**
+ * @return the value at the position of index in the string array.
+ *
+ * Will return `NULL` if the index is out of bounds.
+ */
+ZENOHC_API
+const struct z_loaned_string_t *z_string_array_get(const struct z_loaned_string_array_t *this_,
+                                                   size_t index);
+/**
+ * @return ``true`` if the array is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_string_array_is_empty(const struct z_loaned_string_array_t *this_);
+/**
+ * @return number of elements in the array.
+ */
+ZENOHC_API size_t z_string_array_len(const struct z_loaned_string_array_t *this_);
+/**
+ * Borrows string array.
+ */
+ZENOHC_API
+const struct z_loaned_string_array_t *z_string_array_loan(const struct z_owned_string_array_t *this_);
+/**
+ * Mutably borrows string array.
+ */
+ZENOHC_API
+struct z_loaned_string_array_t *z_string_array_loan_mut(struct z_owned_string_array_t *this_);
+/**
+ * Constructs a new empty string array.
+ */
+ZENOHC_API void z_string_array_new(struct z_owned_string_array_t *this_);
+/**
+ * Appends specified value to the end of the string array by alias.
+ *
+ * @return the new length of the array.
+ */
+ZENOHC_API
+size_t z_string_array_push_by_alias(struct z_loaned_string_array_t *this_,
+                                    const struct z_loaned_string_t *value);
+/**
+ * Appends specified value to the end of the string array by copying.
+ *
+ * @return the new length of the array.
+ */
+ZENOHC_API
+size_t z_string_array_push_by_copy(struct z_loaned_string_array_t *this_,
+                                   const struct z_loaned_string_t *value);
+ZENOHC_API const struct z_loaned_slice_t *z_string_as_slice(const struct z_loaned_string_t *this_);
+/**
+ * Constructs an owned copy of a string.
+ */
+ZENOHC_API void z_string_clone(struct z_owned_string_t *dst, const struct z_loaned_string_t *this_);
+/**
+ * Constructs an owned string by copying `str` into it (including terminating 0), using `strlen` (this should therefore not be used with untrusted inputs).
+ *
+ * @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_string_copy_from_str(struct z_owned_string_t *this_,
+                                  const char *str);
+/**
+ * Constructs an owned string by copying a `str` substring of length `len`.
+ *
+ * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_string_copy_from_substr(struct z_owned_string_t *this_,
+                                     const char *str,
+                                     size_t len);
+/**
+ * @return the pointer of the string data.
+ */
+ZENOHC_API const char *z_string_data(const struct z_loaned_string_t *this_);
+/**
+ * Frees memory and invalidates `z_owned_string_t`, putting it in gravestone state.
+ */
+ZENOHC_API void z_string_drop(struct z_moved_string_t *this_);
+/**
+ * Constructs an empty owned string.
+ */
+ZENOHC_API void z_string_empty(struct z_owned_string_t *this_);
+/**
+ * Constructs an owned string by transferring ownership of a null-terminated string `str` to it.
+ * @param this_: Pointer to an uninitialized memory location where an owned string will be constructed.
+ * @param value: Pointer to a null terminated string to be owned by `this_`.
+ * @param deleter: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
+ * @param context: An optional context to be passed to the `deleter`.
+ * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_string_from_str(struct z_owned_string_t *this_,
+                             char *str,
+                             void (*drop)(void *value, void *context),
+                             void *context);
+/**
+ * @return ``true`` if string is empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_string_is_empty(const struct z_loaned_string_t *this_);
+/**
+ * @return the length of the string (without terminating 0 character).
+ */
+ZENOHC_API size_t z_string_len(const struct z_loaned_string_t *this_);
+/**
+ * Borrows string.
+ */
+ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_string_t *this_);
+/**
+ * Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
+ */
+ZENOHC_API void z_subscriber_drop(struct z_moved_subscriber_t *this_);
+/**
+ * Returns the key expression of the subscriber.
+ */
+ZENOHC_API
+const struct z_loaned_keyexpr_t *z_subscriber_keyexpr(const struct z_loaned_subscriber_t *subscriber);
+/**
+ * Borrows subscriber.
+ */
+ZENOHC_API
+const struct z_loaned_subscriber_t *z_subscriber_loan(const struct z_owned_subscriber_t *this_);
+/**
+ * Constructs the default value for `z_subscriber_options_t`.
+ */
+ZENOHC_API void z_subscriber_options_default(struct z_subscriber_options_t *this_);
+/**
+ * Detaches the task and releases all allocated resources.
+ */
+ZENOHC_API void z_task_detach(struct z_moved_task_t *this_);
+/**
+ * Drop the task. Same as `z_task_detach`. Use `z_task_join` to wait for the task completion.
+ */
+ZENOHC_API void z_task_drop(struct z_moved_task_t *this_);
+/**
+ * Constructs a new task.
+ *
+ * @param this_: An uninitialized memory location where task will be constructed.
+ * @param _attr: Attributes of the task (currently unused).
+ * @param fun: Function to be executed by the task.
+ * @param arg: Argument that will be passed to the function `fun`.
+ */
+ZENOHC_API
+z_result_t z_task_init(struct z_owned_task_t *this_,
+                       const struct z_task_attr_t *_attr,
+                       void (*fun)(void *arg),
+                       void *arg);
+/**
+ * Joins the task and releases all allocated resources
+ */
+ZENOHC_API z_result_t z_task_join(struct z_moved_task_t *this_);
+/**
+ * Get number of milliseconds passed since creation of `time`.
+ */
+ZENOHC_API uint64_t z_time_elapsed_ms(const struct z_time_t *time);
+/**
+ * Get number of seconds passed since creation of `time`.
+ */
+ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
+/**
+ * Get number of microseconds passed since creation of `time`.
+ */
+ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
+/**
+ * Initialize clock with current time instant.
+ */
+ZENOHC_API struct z_time_t z_time_now(void);
+/**
+ * Converts current system time into null-terminated human readable string and writes it to the `buf`.
+ *
+ * @param buf: A buffer where the string will be writtent
+ * @param len: Maximum number of characters to write (including terminating 0). The string will be truncated
+ * if it is longer than `len`.
+ */
+ZENOHC_API
+const char *z_time_now_as_str(const char *buf,
+                              size_t len);
+/**
+ * Returns id associated with this timestamp.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
+#endif
+/**
+ * Create uhlc timestamp from session id.
+ */
+ZENOHC_API
+z_result_t z_timestamp_new(struct z_timestamp_t *this_,
+                           const struct z_loaned_session_t *session);
+/**
+ * Returns NPT64 time associated with this timestamp.
+ */
+ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
+/**
+ * Undeclares the key expression generated by a call to `z_declare_keyexpr()`.
+ * The key expression is consumed.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_undeclare_keyexpr(struct z_moved_keyexpr_t *this_,
+                               const struct z_loaned_session_t *session);
+/**
+ * Undeclares the given publisher, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_undeclare_publisher(struct z_moved_publisher_t *this_);
+/**
+ * Undeclares a `z_owned_queryable_t` and drops it.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_undeclare_queryable(struct z_moved_queryable_t *this_);
+/**
+ * Undeclares subscriber and drops subscriber.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_undeclare_subscriber(struct z_moved_subscriber_t *this_);
+/**
+ * Constructs a view key expression in empty state
+ */
+ZENOHC_API void z_view_keyexpr_empty(struct z_view_keyexpr_t *this_);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a string.
+ * @return 0 in case of success, negative error code in case of failure (for example if expr is not a valid key expression or if it is
+ * not in canon form.
+ * `expr` must outlive the constucted key expression.
+ */
+ZENOHC_API
+z_result_t z_view_keyexpr_from_str(struct z_view_keyexpr_t *this_,
+                                   const char *expr);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a string.
+ * The string is canonized in-place before being passed to keyexpr, possibly shortening it by modifying `len`.
+ * May SEGFAULT if `expr` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * `expr` must outlive the constucted key expression.
+ */
+ZENOHC_API
+z_result_t z_view_keyexpr_from_str_autocanonize(struct z_view_keyexpr_t *this_,
+                                                char *expr);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
+ *
+ *  - `s` MUST be valid UTF8.
+ *  - `s` MUST follow the Key Expression specification, i.e.:
+ *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
+ *   - any instance of `**` may only be lead or followed by `/`.
+ *   - the key expression must have canon form.
+ *
+ * `s` must outlive constructed key expression.
+ */
+ZENOHC_API
+void z_view_keyexpr_from_str_unchecked(struct z_view_keyexpr_t *this_,
+                                       const char *s);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a substring.
+ * `expr` must outlive the constucted key expression.
+ *
+ * @param this_: An uninitialized location in memory where key expression will be constructed.
+ * @param expr: A buffer with length >= `len`.
+ * @param len: Number of characters from `expr` to consider.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_view_keyexpr_from_substr(struct z_view_keyexpr_t *this_,
+                                      const char *expr,
+                                      size_t len);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a substring.
+ * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
+ * `expr` must outlive the constucted key expression.
+ *
+ * @param this_: An uninitialized location in memory where key expression will be constructed
+ * @param expr: A buffer of with length >= `len`.
+ * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_view_keyexpr_from_substr_autocanonize(struct z_view_keyexpr_t *this_,
+                                                   char *start,
+                                                   size_t *len);
+/**
+ * Constructs a `z_view_keyexpr_t` by aliasing a substring without checking any of `z_view_keyexpr_t`'s assertions:
+ *
+ * - `start` MUST be valid UTF8.
+ * - `start` MUST follow the Key Expression specification, i.e.:
+ *  - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
+ *  - any instance of ``**`` may only be lead or followed by ``/``.
+ *  - the key expression must have canon form.
+ *
+ * `start` must outlive constructed key expression.
+ */
+ZENOHC_API
+void z_view_keyexpr_from_substr_unchecked(struct z_view_keyexpr_t *this_,
+                                          const char *start,
+                                          size_t len);
+/**
+ * Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API bool z_view_keyexpr_is_empty(const struct z_view_keyexpr_t *this_);
+/**
+ * Borrows `z_view_keyexpr_t`.
+ */
+ZENOHC_API
+const struct z_loaned_keyexpr_t *z_view_keyexpr_loan(const struct z_view_keyexpr_t *this_);
+/**
+ * Constructs an empty view slice.
+ */
+ZENOHC_API void z_view_slice_empty(struct z_view_slice_t *this_);
+/**
+ * Constructs a `len` bytes long view starting at `start`.
+ *
+ * @return -1 if `start == NULL` and `len > 0` (and creates an empty view slice), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_view_slice_from_buf(struct z_view_slice_t *this_,
+                                 const uint8_t *start,
+                                 size_t len);
+/**
+ * @return ``true`` if the slice is not empty, ``false`` otherwise.
+ */
+ZENOHC_API bool z_view_slice_is_empty(const struct z_view_slice_t *this_);
+/**
+ * Borrows view slice.
+ */
+ZENOHC_API const struct z_loaned_slice_t *z_view_slice_loan(const struct z_view_slice_t *this_);
+/**
+ * Constructs an empty view string.
+ */
+ZENOHC_API void z_view_string_empty(struct z_view_string_t *this_);
+/**
+ * Constructs a view string of `str`, using `strlen` (this should therefore not be used with untrusted inputs).
+ *
+ * @return -1 if `str == NULL` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_view_string_from_str(struct z_view_string_t *this_,
+                                  const char *str);
+/**
+ * Constructs a view string to a specified substring of length `len`.
+ *
+ * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
+ */
+ZENOHC_API
+z_result_t z_view_string_from_substr(struct z_view_string_t *this_,
+                                     const char *str,
+                                     size_t len);
+/**
+ * @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_view_string_is_empty(const struct z_view_string_t *this_);
+/**
+ * Borrows view string.
+ */
+ZENOHC_API const struct z_loaned_string_t *z_view_string_loan(const struct z_view_string_t *this_);
+/**
+ * Constructs a non-owned non-null-terminated string from the kind of zenoh entity.
+ *
+ * The string has static storage (i.e. valid until the end of the program).
+ * @param whatami: A whatami bitmask of zenoh entity kind.
+ * @param str_out: An uninitialized memory location where strring will be constructed.
+ * @param len: Maximum number of bytes that can be written to the `buf`.
+ *
+ * @return 0 if successful, negative error values if whatami contains an invalid bitmask.
+ */
+ZENOHC_API
+z_result_t z_whatami_to_view_string(enum z_whatami_t whatami,
+                                    struct z_view_string_t *str_out);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
 ZENOHC_API
-bool z_reply_channel_closure_call(const struct z_owned_reply_channel_closure_t *closure,
-                                  struct z_owned_reply_t *sample);
+void zc_closure_log_call(const struct zc_loaned_closure_log_t *closure,
+                         enum zc_log_severity_t severity,
+                         const struct z_loaned_string_t *msg);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API void z_reply_channel_closure_drop(struct z_owned_reply_channel_closure_t *closure);
+ZENOHC_API void zc_closure_log_drop(struct zc_moved_closure_log_t *closure_);
 /**
- * Constructs a null safe-to-drop value of 'z_owned_reply_channel_closure_t' type
- */
-ZENOHC_API struct z_owned_reply_channel_closure_t z_reply_channel_closure_null(void);
-ZENOHC_API void z_reply_channel_drop(struct z_owned_reply_channel_t *channel);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_reply_channel_t' type
- */
-ZENOHC_API struct z_owned_reply_channel_t z_reply_channel_null(void);
-/**
- * Returns ``true`` if `reply_data` is valid.
- */
-ZENOHC_API bool z_reply_check(const struct z_owned_reply_t *reply_data);
-/**
- * Frees `reply_data`, invalidating it for double-drop safety.
- */
-ZENOHC_API void z_reply_drop(struct z_owned_reply_t *reply_data);
-/**
- * Yields the contents of the reply by asserting it indicates a failure.
- *
- * You should always make sure that :c:func:`z_reply_is_ok` returns ``false`` before calling this function.
+ * Borrows closure.
  */
 ZENOHC_API
-struct z_value_t z_reply_err(const struct z_owned_reply_t *reply);
+const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_closure_log_t *closure);
 /**
- * Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
- *
- * If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
+ * Calls the closure. Calling an uninitialized closure is a no-op.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-bool z_reply_is_ok(const struct z_owned_reply_t *reply);
+void zc_closure_matching_status_call(const struct zc_loaned_closure_matching_status_t *closure,
+                                     const struct zc_matching_status_t *mathing_status);
+#endif
 /**
- * Returns an invalidated :c:type:`z_owned_reply_t`.
- *
- * This is useful when you wish to take ownership of a value from a callback to :c:func:`z_get`:
- *
- *     - copy the value of the callback's argument's pointee,
- *     - overwrite the pointee with this function's return value,
- *     - you are now responsible for dropping your copy of the reply.
+ * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
  */
-ZENOHC_API struct z_owned_reply_t z_reply_null(void);
-/**
- * Yields the contents of the reply by asserting it indicates a success.
- *
- * You should always make sure that :c:func:`z_reply_is_ok` returns ``true`` before calling this function.
- */
+#if defined(UNSTABLE)
 ZENOHC_API
-struct z_sample_t z_reply_ok(const struct z_owned_reply_t *reply);
+void zc_closure_matching_status_drop(struct zc_moved_closure_matching_status_t *closure_);
+#endif
 /**
- * Scout for routers and/or peers.
- *
- * Parameters:
- *     what: A whatami bitmask of zenoh entities kind to scout for.
- *     config: A set of properties to configure the scouting.
- *     timeout: The time (in milliseconds) that should be spent scouting.
- *
- * Returns 0 if successful, negative values upon failure.
+ * Borrows closure.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-int8_t z_scout(struct z_owned_scouting_config_t *config,
-               struct z_owned_closure_hello_t *callback);
-ZENOHC_API bool z_scouting_config_check(const struct z_owned_scouting_config_t *config);
-ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_default(void);
-ZENOHC_API void z_scouting_config_drop(struct z_owned_scouting_config_t *config);
-ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_from(struct z_config_t config);
-ZENOHC_API struct z_owned_scouting_config_t z_scouting_config_null(void);
+const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loan(const struct zc_owned_closure_matching_status_t *closure);
+#endif
 /**
- * Returns ``true`` if `session` is valid.
- */
-ZENOHC_API bool z_session_check(const struct z_owned_session_t *session);
-/**
- * Returns a :c:type:`z_session_t` loaned from `s`.
+ * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
  *
- * This handle doesn't increase the refcount of the session, but does allow to do so with `zc_session_rcinc`.
- *
- * # Safety
- * The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
- * attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
- * have been destroyed is UB (likely SEGFAULT)
+ * Returns 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API
-struct z_session_t z_session_loan(const struct z_owned_session_t *s);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_session_t' type
- */
-ZENOHC_API struct z_owned_session_t z_session_null(void);
-ZENOHC_API int8_t z_sleep_ms(size_t time);
-ZENOHC_API int8_t z_sleep_s(size_t time);
-ZENOHC_API int8_t z_sleep_us(size_t time);
-/**
- * Returns ``true`` if `strs` is valid.
- */
-ZENOHC_API bool z_str_array_check(const struct z_owned_str_array_t *strs);
-/**
- * Frees `strs` and invalidates it for double-drop safety.
- */
-ZENOHC_API void z_str_array_drop(struct z_owned_str_array_t *strs);
-/**
- * Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
- */
-ZENOHC_API struct z_str_array_t z_str_array_loan(const struct z_owned_str_array_t *strs);
-/**
- * Returns ``true`` if `s` is a valid string
- */
-ZENOHC_API bool z_str_check(const struct z_owned_str_t *s);
-/**
- * Frees `z_owned_str_t`, invalidating it for double-drop safety.
- */
-ZENOHC_API void z_str_drop(struct z_owned_str_t *s);
-/**
- * Returns :c:type:`z_str_t` structure loaned from :c:type:`z_owned_str_t`.
- */
-ZENOHC_API const char *z_str_loan(const struct z_owned_str_t *s);
-/**
- * Returns undefined `z_owned_str_t`
- */
-ZENOHC_API struct z_owned_str_t z_str_null(void);
-/**
- * Returns ``true`` if `sub` is valid.
- */
-ZENOHC_API bool z_subscriber_check(const struct z_owned_subscriber_t *sub);
-/**
- * Returns the key expression of the subscriber.
- */
-ZENOHC_API struct z_owned_keyexpr_t z_subscriber_keyexpr(struct z_subscriber_t subscriber);
-/**
- * Returns a :c:type:`z_subscriber_t` loaned from `p`.
- */
-ZENOHC_API struct z_subscriber_t z_subscriber_loan(const struct z_owned_subscriber_t *p);
-/**
- * Constructs a null safe-to-drop value of 'z_owned_subscriber_t' type
- */
-ZENOHC_API struct z_owned_subscriber_t z_subscriber_null(void);
-/**
- * Constructs the default value for :c:type:`z_subscriber_options_t`.
- */
-ZENOHC_API struct z_subscriber_options_t z_subscriber_options_default(void);
-/**
- * Pull data for :c:type:`z_owned_pull_subscriber_t`. The pulled data will be provided
- * by calling the **callback** function provided to the :c:func:`z_declare_subscriber` function.
- *
- * Parameters:
- *     sub: The :c:type:`z_owned_pull_subscriber_t` to pull from.
- */
-ZENOHC_API int8_t z_subscriber_pull(struct z_pull_subscriber_t sub);
-ZENOHC_API
-int8_t z_task_init(struct z_task_t *task,
-                   const struct z_task_attr_t *_attr,
-                   void (*fun)(void *arg),
-                   void *arg);
-ZENOHC_API int8_t z_task_join(struct z_task_t *task);
-ZENOHC_API uint64_t z_time_elapsed_ms(const struct z_time_t *time);
-ZENOHC_API uint64_t z_time_elapsed_s(const struct z_time_t *time);
-ZENOHC_API uint64_t z_time_elapsed_us(const struct z_time_t *time);
-ZENOHC_API struct z_time_t z_time_now(void);
-ZENOHC_API const char *z_time_now_as_str(const char *buf, size_t len);
-/**
- * Returns ``true`` if `ts` is a valid timestamp
- */
-ZENOHC_API bool z_timestamp_check(struct z_timestamp_t ts);
-/**
- * Undeclare the key expression generated by a call to :c:func:`z_declare_keyexpr`.
- */
-ZENOHC_API int8_t z_undeclare_keyexpr(struct z_session_t session, struct z_owned_keyexpr_t *kexpr);
-/**
- * Undeclares the given :c:type:`z_owned_publisher_t`, droping it and invalidating it for double-drop safety.
- */
-ZENOHC_API
-int8_t z_undeclare_publisher(struct z_owned_publisher_t *publisher);
-/**
- * Undeclares the given :c:type:`z_owned_pull_subscriber_t`, droping it and invalidating it for double-drop safety.
- */
-ZENOHC_API
-int8_t z_undeclare_pull_subscriber(struct z_owned_pull_subscriber_t *sub);
-/**
- * Undeclares a `z_owned_queryable_t`, droping it and invalidating it for doube-drop safety.
- *
- * Parameters:
- *     qable: The :c:type:`z_owned_queryable_t` to undeclare.
- */
-ZENOHC_API int8_t z_undeclare_queryable(struct z_owned_queryable_t *qable);
-/**
- * Undeclares the given :c:type:`z_owned_subscriber_t`, droping it and invalidating it for double-drop safety.
- */
-ZENOHC_API
-int8_t z_undeclare_subscriber(struct z_owned_subscriber_t *sub);
-/**
- * Converts the kind of zenoh entity into a string.
- *
- * Parameters:
- *     whatami: A whatami bitmask of zenoh entity kind.
- *     buf: Buffer to write a null-terminated string to.
- *     len: Maximum number of bytes that can be written to the `buf`.
- *
- * Returns 0 if successful, negative values if whatami contains an invalid bitmask or `buf` is null,
- * or number of remaining bytes, if the null-terminated string size exceeds `len`.
- */
-ZENOHC_API int8_t z_whatami_to_str(uint8_t whatami, char *buf, size_t len);
+ZENOHC_API z_result_t zc_config_from_env(struct z_owned_config_t *this_);
 /**
  * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_config_t zc_config_from_file(const char *path);
+z_result_t zc_config_from_file(struct z_owned_config_t *this_,
+                               const char *path);
 /**
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
- * Passing a null-ptr will result in a gravestone value (`z_check(x) == false`).
+ * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_config_t zc_config_from_str(const char *s);
+z_result_t zc_config_from_str(struct z_owned_config_t *this_,
+                              const char *s);
 /**
- * Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
- * Use `z_drop` to safely deallocate this string
+ * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
 ZENOHC_API
-struct z_owned_str_t zc_config_get(struct z_config_t config,
-                                   const char *key);
+z_result_t zc_config_get_from_str(const struct z_loaned_config_t *this_,
+                                  const char *key,
+                                  struct z_owned_string_t *out_value_string);
+/**
+ * Gets the property with the given path key from the configuration, and constructs and owned string from it.
+ */
+ZENOHC_API
+z_result_t zc_config_get_from_substr(const struct z_loaned_config_t *this_,
+                                     const char *key,
+                                     size_t key_len,
+                                     struct z_owned_string_t *out_value_string);
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
- * Returns 0 if successful, a negative value otherwise.
+ * Returns 0 if successful, a negative error code otherwise.
  */
 ZENOHC_API
-int8_t zc_config_insert_json(struct z_config_t config,
-                             const char *key,
-                             const char *value);
+z_result_t zc_config_insert_json(struct z_loaned_config_t *this_,
+                                 const char *key,
+                                 const char *value);
 /**
- * Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+ * Inserts a JSON-serialized `value` at the `key` position of the configuration.
+ *
+ * Returns 0 if successful, a negative error code otherwise.
  */
 ZENOHC_API
-struct z_owned_str_t zc_config_to_string(struct z_config_t config);
+z_result_t zc_config_insert_json_from_substr(struct z_loaned_config_t *this_,
+                                             const char *key,
+                                             size_t key_len,
+                                             const char *value,
+                                             size_t value_len);
 /**
- * Initialises the zenoh runtime logger.
+ * Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
+                               struct z_owned_string_t *out_config_string);
+/**
+ * Initializes the zenoh runtime logger, using rust environment settings.
  *
  * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
  * this will be performed automatically by `z_open` and `z_scout`.
  */
-ZENOHC_API void zc_init_logger(void);
+ZENOHC_API void zc_init_logging(void);
 /**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string.
- * It is a loaned key expression that aliases `name`.
- */
-ZENOHC_API struct z_keyexpr_t zc_keyexpr_from_slice(const char *name, size_t len);
-/**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string.
- * It is a loaned key expression that aliases `name`.
- * The string is canonized in-place before being passed to keyexpr.
- * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
- */
-ZENOHC_API
-struct z_keyexpr_t zc_keyexpr_from_slice_autocanonize(char *name,
-                                                      size_t *len);
-/**
- * Constructs a :c:type:`z_keyexpr_t` departing from a string without checking any of `z_keyexpr_t`'s assertions:
- * - `name` MUST be valid UTF8.
- * - `name` MUST follow the Key Expression specification, ie:
- *   - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
- *   - any instance of ``**`` may only be lead or followed by ``/``.
- *   - the key expression must have canon form.
+ * Initializes the zenoh runtime logger with custom callback.
  *
- * It is a loaned key expression that aliases `name`.
+ * @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
+ * Messages with lower severity levels will be ignored.
+ * @param callback: A closure that will be called with each log message severity level and content.
  */
 ZENOHC_API
-struct z_keyexpr_t zc_keyexpr_from_slice_unchecked(const char *start,
-                                                   size_t len);
+void zc_init_logging_with_callback(enum zc_log_severity_t min_severity,
+                                   struct zc_owned_closure_log_t *callback);
 /**
- * Returns `true` if the options are valid.
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
-ZENOHC_API
-bool zc_liveliness_declaration_options_check(const struct zc_owned_liveliness_declaration_options_t *_opts);
+ZENOHC_API bool zc_internal_closure_log_check(const struct zc_owned_closure_log_t *this_);
 /**
- * Destroys the options.
+ * Constructs a closure in a gravestone state.
  */
-ZENOHC_API
-void zc_liveliness_declaration_options_drop(struct zc_owned_liveliness_declaration_options_t *opts);
+ZENOHC_API void zc_internal_closure_log_null(struct zc_owned_closure_log_t *this_);
 /**
- * The gravestone value for `zc_owned_liveliness_declaration_options_t`
+ * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-struct zc_owned_liveliness_declaration_options_t zc_liveliness_declaration_options_null(void);
+bool zc_internal_closure_matching_status_check(const struct zc_owned_closure_matching_status_t *this_);
+#endif
 /**
- * Declares a subscriber on liveliness tokens that intersect `key`.
+ * Constructs a null value of 'zc_owned_closure_matching_status_t' type
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+void zc_internal_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
+#endif
+/**
+ * Returns ``true`` if liveliness token is valid, ``false`` otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool zc_internal_liveliness_token_check(const zc_owned_liveliness_token_t *this_);
+#endif
+/**
+ * Constructs liveliness token in its gravestone state.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void zc_internal_liveliness_token_null(zc_owned_liveliness_token_t *this_);
+#endif
+/**
+ * Checks the matching listener is for the gravestone state
+ */
+#if defined(UNSTABLE)
+ZENOHC_API bool zc_internal_matching_listener_check(const zc_owned_matching_listener_t *this_);
+#endif
+/**
+ * Constructs an empty matching listener
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void zc_internal_matching_listener_null(zc_owned_matching_listener_t *this_);
+#endif
+/**
+ * Returns ``true`` if `this` is valid.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API bool zc_internal_shm_client_list_check(const zc_owned_shm_client_list_t *this_);
+#endif
+/**
+ * Constructs SHM client list in its gravestone value.
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void zc_internal_shm_client_list_null(zc_owned_shm_client_list_t *this_);
+#endif
+/**
+ * Constructs default value for `zc_liveliness_declaration_options_t`.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+void zc_liveliness_declaration_options_default(struct zc_liveliness_declaration_options_t *this_);
+#endif
+/**
+ * Declares a subscriber on liveliness tokens that intersect `key_expr`.
  *
- * Parameters:
- *     z_session_t session: The zenoh session.
- *     z_keyexpr_t keyexpr: The key expression to subscribe.
- *     z_owned_closure_sample_t callback: The callback function that will be called each time a
- *                                        liveliness token status changed.
- *     zc_owned_liveliness_declare_subscriber_options_t _options: The options to be passed to describe the options to be passed to the liveliness subscriber declaration.
+ * @param this_: An uninitialized memory location where subscriber will be constructed.
+ * @param session: The Zenoh session.
+ * @param key_expr: The key expression to subscribe to.
+ * @param callback: The callback function that will be called each time a liveliness token status is changed.
+ * @param _options: The options to be passed to the liveliness subscriber declaration.
  *
- * Returns:
- *    A :c:type:`z_owned_subscriber_t`.
- *
- *    To check if the subscription succeeded and if the subscriber is still valid,
- *    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+ * @return 0 in case of success, negative error values otherwise.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-struct z_owned_subscriber_t zc_liveliness_declare_subscriber(struct z_session_t session,
-                                                             struct z_keyexpr_t key,
-                                                             struct z_owned_closure_sample_t *callback,
-                                                             const struct zc_owned_liveliness_declare_subscriber_options_t *_options);
+z_result_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
+                                            const struct z_loaned_session_t *session,
+                                            const struct z_loaned_keyexpr_t *key_expr,
+                                            struct z_moved_closure_sample_t *callback,
+                                            struct zc_liveliness_subscriber_options_t *_options);
+#endif
 /**
  * Constructs and declares a liveliness token on the network.
  *
  * Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
  * is achieved, and a DELETE sample if it's lost.
  *
- * Passing `NULL` as options is valid and equivalent to a pointer to the default options.
+ * @param this_: An uninitialized memory location where liveliness token will be constructed.
+ * @param session: A Zenos session to declare the liveliness token.
+ * @param key_expr: A keyexpr to declare a liveliess token for.
+ * @param _options: Liveliness token declaration properties.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-struct zc_owned_liveliness_token_t zc_liveliness_declare_token(struct z_session_t session,
-                                                               struct z_keyexpr_t key,
-                                                               const struct zc_owned_liveliness_declaration_options_t *_options);
+z_result_t zc_liveliness_declare_token(zc_owned_liveliness_token_t *this_,
+                                       const struct z_loaned_session_t *session,
+                                       const struct z_loaned_keyexpr_t *key_expr,
+                                       const struct zc_liveliness_declaration_options_t *_options);
+#endif
 /**
- * Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
+ * Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
  *
- * Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
- *
- * Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+ * @param session: The Zenoh session.
+ * @param key_expr: The key expression to query liveliness tokens for.
+ * @param callback: The callback function that will be called for each received reply.
+ * @param options: Additional options for the liveliness get operation.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-int8_t zc_liveliness_get(struct z_session_t session,
-                         struct z_keyexpr_t key,
-                         struct z_owned_closure_reply_t *callback,
-                         const struct zc_liveliness_get_options_t *options);
+z_result_t zc_liveliness_get(const struct z_loaned_session_t *session,
+                             const struct z_loaned_keyexpr_t *key_expr,
+                             struct z_moved_closure_reply_t *callback,
+                             struct zc_liveliness_get_options_t *options);
+#endif
 /**
- * Returns `true` if the options are valid.
+ * Constructs default value `zc_liveliness_get_options_t`.
  */
-ZENOHC_API bool zc_liveliness_get_options_check(const struct zc_liveliness_get_options_t *_opts);
+#if defined(UNSTABLE)
+ZENOHC_API void zc_liveliness_get_options_default(struct zc_liveliness_get_options_t *this_);
+#endif
 /**
- * The gravestone value for `zc_liveliness_get_options_t`
+ * Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
  */
-ZENOHC_API struct zc_liveliness_get_options_t zc_liveliness_get_options_default(void);
-/**
- * Destroys the options.
- */
-ZENOHC_API void zc_liveliness_get_options_drop(struct zc_liveliness_get_options_t *opts);
-/**
- * The gravestone value for `zc_liveliness_get_options_t`
- */
-ZENOHC_API struct zc_liveliness_get_options_t zc_liveliness_get_options_null(void);
-/**
- * Returns `true` if the options are valid.
- */
+#if defined(UNSTABLE)
 ZENOHC_API
-bool zc_liveliness_subscriber_options_check(const struct zc_owned_liveliness_declare_subscriber_options_t *_opts);
+void zc_liveliness_subscriber_options_default(struct zc_liveliness_subscriber_options_t *this_);
+#endif
 /**
- * Destroys the options.
+ * Undeclares liveliness token, frees memory and resets it to a gravestone state.
  */
+#if defined(UNSTABLE)
+ZENOHC_API void zc_liveliness_token_drop(zc_moved_liveliness_token_t *this_);
+#endif
+/**
+ * Borrows token.
+ */
+#if defined(UNSTABLE)
 ZENOHC_API
-void zc_liveliness_subscriber_options_drop(struct zc_owned_liveliness_declare_subscriber_options_t *opts);
-/**
- * The gravestone value for `zc_owned_liveliness_declare_subscriber_options_t`
- */
-ZENOHC_API
-struct zc_owned_liveliness_declare_subscriber_options_t zc_liveliness_subscriber_options_null(void);
-/**
- * Returns `true` unless the token is at its gravestone value.
- */
-ZENOHC_API bool zc_liveliness_token_check(const struct zc_owned_liveliness_token_t *token);
-/**
- * The gravestone value for liveliness tokens.
- */
-ZENOHC_API struct zc_owned_liveliness_token_t zc_liveliness_token_null(void);
+const zc_loaned_liveliness_token_t *zc_liveliness_token_loan(const zc_owned_liveliness_token_t *this_);
+#endif
 /**
  * Destroys a liveliness token, notifying subscribers of its destruction.
  */
-ZENOHC_API void zc_liveliness_undeclare_token(struct zc_owned_liveliness_token_t *token);
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t zc_liveliness_undeclare_token(zc_moved_liveliness_token_t *this_);
+#endif
 /**
- * Returns `false` if `payload` is the gravestone value.
+ * Returns default value of `zc_locality_t`
  */
-ZENOHC_API bool zc_payload_check(const struct zc_owned_payload_t *payload);
+#if defined(UNSTABLE)
+ZENOHC_API enum zc_locality_t zc_locality_default(void);
+#endif
 /**
- * Decrements `payload`'s backing refcount, releasing the memory if appropriate.
- */
-ZENOHC_API void zc_payload_drop(struct zc_owned_payload_t *payload);
-/**
- * Constructs `zc_owned_payload_t`'s gravestone value.
- */
-ZENOHC_API struct zc_owned_payload_t zc_payload_null(void);
-/**
- * Clones the `payload` by incrementing its reference counter.
- */
-ZENOHC_API struct zc_owned_payload_t zc_payload_rcinc(const struct zc_owned_payload_t *payload);
-/**
- * Sends a `PUT` message onto the publisher's key expression, transfering the buffer ownership.
+ * Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
  *
- * This is avoids copies when transfering data that was either:
- * - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
- * - constructed from a `zc_owned_shmbuf_t`
+ * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *this_,
+                                            struct zc_matching_status_t *matching_status);
+#endif
+/**
+ * Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
  *
- * The payload's encoding can be sepcified through the options.
+ * @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
+ * @param publisher: A publisher to associate with matching listener.
+ * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
  *
- * Parameters:
- *     session: The zenoh session.
- *     payload: The value to put.
- *     len: The length of the value to put.
- *     options: The publisher put options.
- * Returns:
- *     ``0`` in case of success, negative values in case of failure.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+z_result_t zc_publisher_matching_listener_declare(zc_owned_matching_listener_t *this_,
+                                                  const struct z_loaned_publisher_t *publisher,
+                                                  struct zc_moved_closure_matching_status_t *callback);
+#endif
+/**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t zc_publisher_matching_listener_drop(zc_moved_matching_listener_t *this_);
+#endif
+/**
+ * Undeclares the given matching listener, droping and invalidating it.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t zc_publisher_matching_listener_undeclare(zc_moved_matching_listener_t *this_);
+#endif
+/**
+ * Returns the default value of #zc_reply_keyexpr_t.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
+#endif
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+z_result_t zc_shm_client_list_add_client(z_protocol_id_t id,
+                                         z_moved_shm_client_t *client,
+                                         zc_loaned_shm_client_list_t *list);
+#endif
+/**
+ * Deletes list of SHM Clients
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void zc_shm_client_list_drop(zc_moved_shm_client_list_t *this_);
+#endif
+/**
+ * Borrows list of SHM Clients
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+const zc_loaned_shm_client_list_t *zc_shm_client_list_loan(const zc_owned_shm_client_list_t *this_);
+#endif
+/**
+ * Mutably borrows list of SHM Clients
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(zc_owned_shm_client_list_t *this_);
+#endif
+/**
+ * Creates a new empty list of SHM Clients
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API void zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
+#endif
+/**
+ * Stops all Zenoh tasks and drops all related static variables.
+ * All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
+ * None of Zenoh functionality can be used after this call.
+ * Useful to suppress memory leaks messages due to Zenoh static variables (since they are never destroyed due to Rust language design).
  */
 ZENOHC_API
-int8_t zc_publisher_put_owned(struct z_publisher_t publisher,
-                              struct zc_owned_payload_t *payload,
-                              const struct z_publisher_put_options_t *options);
+void zc_stop_z_runtime(void);
 /**
- * Put data, transfering the buffer ownership.
+ * Constructs and declares a publication cache.
  *
- * This is avoids copies when transfering data that was either:
- * - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
- * - constructed from a `zc_owned_shmbuf_t`
+ * @param this_: An uninitialized location in memory where publication cache will be constructed.
+ * @param session: A Zenoh session.
+ * @param key_expr: The key expression to publish to.
+ * @param options: Additional options for the publication cache.
  *
- * The payload's encoding can be sepcified through the options.
- *
- * Parameters:
- *     session: The zenoh session.
- *     keyexpr: The key expression to put.
- *     payload: The value to put.
- *     options: The put options.
- * Returns:
- *     ``0`` in case of success, negative values in case of failure.
+ * @returns 0 in case of success, negative error code otherwise.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-int8_t zc_put_owned(struct z_session_t session,
-                    struct z_keyexpr_t keyexpr,
-                    struct zc_owned_payload_t *payload,
-                    const struct z_put_options_t *opts);
+z_result_t ze_declare_publication_cache(ze_owned_publication_cache_t *this_,
+                                        const struct z_loaned_session_t *session,
+                                        const struct z_loaned_keyexpr_t *key_expr,
+                                        struct ze_publication_cache_options_t *options);
+#endif
 /**
- * Creates a new blocking fifo channel, returned as a pair of closures.
+ * Constructs and declares a querying subscriber for a given key expression.
  *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
+ * @param this_: An uninitialized memory location where querying subscriber will be constructed.
+ * @param session: A Zenoh session.
+ * @param key_expr: A key expression to subscribe to.
+ * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+ * @param options: Additional options for the querying subscriber.
  *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
- * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
- * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+ * @return 0 in case of success, negative error code otherwise.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-struct z_owned_query_channel_t zc_query_fifo_new(size_t bound);
+z_result_t ze_declare_querying_subscriber(ze_owned_querying_subscriber_t *this_,
+                                          const struct z_loaned_session_t *session,
+                                          const struct z_loaned_keyexpr_t *key_expr,
+                                          struct z_moved_closure_sample_t *callback,
+                                          struct ze_querying_subscriber_options_t *options);
+#endif
 /**
- * Creates a new non-blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_query_t` is available,
- * which it will then return; or until the `send` closure is dropped and all queries have been consumed,
- * at which point it will return an invalidated `z_owned_query_t`, and so will further calls.
+ * Returns ``true`` if publication cache is valid, ``false`` otherwise.
  */
-ZENOHC_API
-struct z_owned_query_channel_t zc_query_non_blocking_fifo_new(size_t bound);
+#if defined(UNSTABLE)
+ZENOHC_API bool ze_internal_publication_cache_check(const ze_owned_publication_cache_t *this_);
+#endif
 /**
- * Creates a new blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
- * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
- * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ * Constructs a publication cache in a gravestone state.
  */
-ZENOHC_API
-struct z_owned_reply_channel_t zc_reply_fifo_new(size_t bound);
+#if defined(UNSTABLE)
+ZENOHC_API void ze_internal_publication_cache_null(ze_owned_publication_cache_t *this_);
+#endif
 /**
- * Creates a new non-blocking fifo channel, returned as a pair of closures.
- *
- * If `bound` is different from 0, that channel will be bound and apply back-pressure when full.
- *
- * The `send` end should be passed as callback to a `z_get` call.
- *
- * The `recv` end is a synchronous closure that will block until either a `z_owned_reply_t` is available,
- * which it will then return; or until the `send` closure is dropped and all replies have been consumed,
- * at which point it will return an invalidated `z_owned_reply_t`, and so will further calls.
+ * Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
  */
-ZENOHC_API
-struct z_owned_reply_channel_t zc_reply_non_blocking_fifo_new(size_t bound);
+#if defined(UNSTABLE)
+ZENOHC_API bool ze_internal_querying_subscriber_check(const ze_owned_querying_subscriber_t *this_);
+#endif
 /**
- * Clones the sample's payload by incrementing its backing refcount (this doesn't imply any copies).
+ * Constructs a querying subscriber in a gravestone state.
  */
-ZENOHC_API struct zc_owned_payload_t zc_sample_payload_rcinc(const struct z_sample_t *sample);
+#if defined(UNSTABLE)
+ZENOHC_API void ze_internal_querying_subscriber_null(ze_owned_querying_subscriber_t *this_);
+#endif
 /**
- * Increments the session's reference count, returning a new owning handle.
+ * Drops publication cache. Also attempts to undeclare it.
  */
-ZENOHC_API struct z_owned_session_t zc_session_rcinc(struct z_session_t session);
+#if defined(UNSTABLE)
+ZENOHC_API void ze_publication_cache_drop(ze_moved_publication_cache_t *this_);
+#endif
 /**
- * Allocates a buffer of size `capacity` in the manager's memory.
- *
- * # Safety
- * Calling this function concurrently with other shm functions on the same manager is UB.
+ * Constructs the default value for `ze_publication_cache_options_t`.
  */
-ZENOHC_API
-struct zc_owned_shmbuf_t zc_shm_alloc(const struct zc_owned_shm_manager_t *manager,
-                                      size_t capacity);
+#if defined(UNSTABLE)
+ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
+#endif
 /**
- * Runs a defragmentation pass on the SHM manager.
- *
- * Note that this doesn't trigger a garbage collection pass, nor does it move currently allocated data.
- *
- * # Safety
- * Calling this function concurrently with other shm functions on the same manager is UB.
+ * Drops querying subscriber. Also attempts to undeclare it.
  */
-ZENOHC_API
-size_t zc_shm_defrag(const struct zc_owned_shm_manager_t *manager);
+#if defined(UNSTABLE)
+ZENOHC_API void ze_querying_subscriber_drop(ze_moved_querying_subscriber_t *this_);
+#endif
 /**
- * Runs a garbage collection pass on the SHM manager.
- *
- * Returns the number of bytes that have been freed by the pass.
- *
- * # Safety
- * Calling this function concurrently with other shm functions on the same manager is UB.
- */
-ZENOHC_API size_t zc_shm_gc(const struct zc_owned_shm_manager_t *manager);
-ZENOHC_API bool zc_shm_manager_check(const struct zc_owned_shm_manager_t *manager);
-ZENOHC_API void zc_shm_manager_drop(struct zc_owned_shm_manager_t *manager);
-ZENOHC_API
-struct zc_owned_shm_manager_t zc_shm_manager_new(struct z_session_t session,
-                                                 const char *id,
-                                                 size_t size);
-ZENOHC_API struct zc_owned_shm_manager_t zc_shm_manager_null(void);
-/**
- * Returns the capacity of the SHM buffer.
- */
-ZENOHC_API size_t zc_shmbuf_capacity(const struct zc_owned_shmbuf_t *buf);
-/**
- * Returns `false` if `buf` is in its gravestone state.
- */
-ZENOHC_API bool zc_shmbuf_check(const struct zc_owned_shmbuf_t *buf);
-/**
- * Drops the SHM buffer, decrementing its backing reference counter.
- */
-ZENOHC_API void zc_shmbuf_drop(struct zc_owned_shmbuf_t *buf);
-/**
- * Constructs an owned payload from an owned SHM buffer.
- */
-ZENOHC_API struct zc_owned_payload_t zc_shmbuf_into_payload(struct zc_owned_shmbuf_t *buf);
-/**
- * Returns the length of the SHM buffer.
- *
- * Note that when constructing an SHM buffer, length is defaulted to its capacity.
- */
-ZENOHC_API size_t zc_shmbuf_length(const struct zc_owned_shmbuf_t *buf);
-/**
- * Constructs a null safe-to-drop value of type `zc_owned_shmbuf_t`
- */
-ZENOHC_API struct zc_owned_shmbuf_t zc_shmbuf_null(void);
-/**
- * Returns the start of the SHM buffer.
- */
-ZENOHC_API uint8_t *zc_shmbuf_ptr(const struct zc_owned_shmbuf_t *buf);
-/**
- * Sets the length of the SHM buffer.
- *
- * This lets Zenoh know how much of the data to write over the network when sending the value to non-SHM-compatible neighboors.
- */
-ZENOHC_API
-void zc_shmbuf_set_length(const struct zc_owned_shmbuf_t *buf,
-                          size_t len);
-/**
- * Calls the closure. Calling an uninitialized closure is a no-op.
- */
-ZENOHC_API
-void zcu_closure_matching_status_call(const struct zcu_owned_closure_matching_status_t *closure,
-                                      const struct zcu_matching_status_t *sample);
-/**
- * Drops the closure. Droping an uninitialized closure is a no-op.
- */
-ZENOHC_API
-void zcu_closure_matching_status_drop(struct zcu_owned_closure_matching_status_t *closure);
-/**
- * Constructs a null safe-to-drop value of 'zcu_owned_closure_matching_status_t' type
- */
-ZENOHC_API struct zcu_owned_closure_matching_status_t zcu_closure_matching_status_null(void);
-ZENOHC_API enum zcu_locality_t zcu_locality_default(void);
-/**
- * Register callback for notifying subscribers matching.
- */
-ZENOHC_API
-struct zcu_owned_matching_listener_t zcu_publisher_matching_listener_callback(struct z_publisher_t publisher,
-                                                                              struct zcu_owned_closure_matching_status_t *callback);
-ZENOHC_API enum zcu_reply_keyexpr_t zcu_reply_keyexpr_default(void);
-/**
- * Declares a Publication Cache.
- *
- * Parameters:
- *     z_session_t session: The zenoh session.
- *     z_keyexpr_t keyexpr: The key expression to publish.
- *     ze_publication_cache_options_t options: Additional options for the publication_cache.
- *
- * Returns:
- *    :c:type:`ze_owned_publication_cache_t`.
- *
- *
- * Example:
- *    Declaring a publication cache `NULL` for the options:
- *
- *    .. code-block:: C
- *
- *       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), NULL);
- *
- *    is equivalent to initializing and passing the default publication cache options:
- *
- *    .. code-block:: C
- *
- *       ze_publication_cache_options_t opts = ze_publication_cache_options_default();
- *       ze_owned_publication_cache_t pub_cache = ze_declare_publication_cache(z_loan(s), z_keyexpr(expr), &opts);
- */
-ZENOHC_API
-struct ze_owned_publication_cache_t ze_declare_publication_cache(struct z_session_t session,
-                                                                 struct z_keyexpr_t keyexpr,
-                                                                 const struct ze_publication_cache_options_t *options);
-/**
- * Declares a Querying Subscriber for a given key expression.
- *
- * Parameters:
- *     z_session_t session: The zenoh session.
- *     z_keyexpr_t keyexpr: The key expression to subscribe.
- *     z_owned_closure_sample_t callback: The callback function that will be called each time a data matching the subscribed expression is received.
- *     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
- *
- * Returns:
- *    :c:type:`ze_owned_subscriber_t`.
- *
- *    To check if the subscription succeeded and if the querying subscriber is still valid,
- *    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
- *
- *    Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
- *    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
- *    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
- *
- * Example:
- *    Declaring a subscriber passing ``NULL`` for the options:
- *
- *    .. code-block:: C
- *
- *       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
- *
- *    is equivalent to initializing and passing the default subscriber options:
- *
- *    .. code-block:: C
- *
- *       z_subscriber_options_t opts = z_subscriber_options_default();
- *       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
- */
-ZENOHC_API
-struct ze_owned_querying_subscriber_t ze_declare_querying_subscriber(struct z_session_t session,
-                                                                     struct z_keyexpr_t keyexpr,
-                                                                     struct z_owned_closure_sample_t *callback,
-                                                                     const struct ze_querying_subscriber_options_t *options);
-/**
- * Returns ``true`` if `pub_cache` is valid.
- */
-ZENOHC_API bool ze_publication_cache_check(const struct ze_owned_publication_cache_t *pub_cache);
-/**
- * Constructs a null safe-to-drop value of 'ze_owned_publication_cache_t' type
- */
-ZENOHC_API struct ze_owned_publication_cache_t ze_publication_cache_null(void);
-/**
- * Constructs the default value for :c:type:`ze_publication_cache_options_t`.
- */
-ZENOHC_API struct ze_publication_cache_options_t ze_publication_cache_options_default(void);
-/**
- * Returns ``true`` if `sub` is valid.
- */
-ZENOHC_API bool ze_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *sub);
-/**
- * Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
+ * Make querying subscriber perform an additional query on a specified selector.
  * The queried samples will be merged with the received publications and made available in the subscriber callback.
+ * @return 0 in case of success, negative error code otherwise.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-int8_t ze_querying_subscriber_get(struct ze_querying_subscriber_t sub,
-                                  struct z_keyexpr_t selector,
-                                  const struct z_get_options_t *options);
+z_result_t ze_querying_subscriber_get(const ze_loaned_querying_subscriber_t *this_,
+                                      const struct z_loaned_keyexpr_t *selector,
+                                      struct z_get_options_t *options);
+#endif
 /**
- * Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
+ * Borrows querying subscriber.
  */
+#if defined(UNSTABLE)
 ZENOHC_API
-struct ze_querying_subscriber_t ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *p);
+const ze_loaned_querying_subscriber_t *ze_querying_subscriber_loan(const ze_owned_querying_subscriber_t *this_);
+#endif
 /**
- * Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
+ * Constructs the default value for `ze_querying_subscriber_options_t`.
  */
-ZENOHC_API struct ze_owned_querying_subscriber_t ze_querying_subscriber_null(void);
-/**
- * Constructs the default value for :c:type:`ze_querying_subscriber_options_t`.
- */
-ZENOHC_API struct ze_querying_subscriber_options_t ze_querying_subscriber_options_default(void);
-/**
- * Closes the given :c:type:`ze_owned_publication_cache_t`, droping it and invalidating it for double-drop safety.
- */
+#if defined(UNSTABLE)
 ZENOHC_API
-int8_t ze_undeclare_publication_cache(struct ze_owned_publication_cache_t *pub_cache);
+void ze_querying_subscriber_options_default(struct ze_querying_subscriber_options_t *this_);
+#endif
 /**
- * Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
+ * Undeclares and drops publication cache.
+ * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API
-int8_t ze_undeclare_querying_subscriber(struct ze_owned_querying_subscriber_t *sub);
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t ze_undeclare_publication_cache(ze_moved_publication_cache_t *this_);
+#endif
+/**
+ * Undeclares the given querying subscriber, drops it and resets to a gravestone state.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_result_t ze_undeclare_querying_subscriber(ze_moved_querying_subscriber_t *_this);
+#endif

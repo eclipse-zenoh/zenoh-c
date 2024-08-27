@@ -1,0 +1,19 @@
+[package]
+name = "opaque-types"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+shared-memory = ["zenoh/shared-memory", "dep:zenoh-ext", "zenoh-ext/shared-memory", "zenoh-protocol/shared-memory"]
+unstable = ["zenoh/unstable", "zenoh-ext/unstable", "dep:zenoh-ext"]
+panic = [] # The whole purpose of this project is to generate set of compilation panic messages with calculated structure sizes. To do it the "panic" feature should be set. By default we just want to check if build is successful.
+default = ["zenoh/default"]
+
+[dependencies]
+zenoh = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", default-features = false, features = ["internal"]  }
+zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0", optional = true}
+zenoh-protocol = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "dev/1.0.0" }
+const_format = "0.2.32"
+flume = "*"

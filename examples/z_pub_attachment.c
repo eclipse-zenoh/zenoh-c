@@ -20,6 +20,29 @@
 #define DEFAULT_KEYEXPR "demo/example/zenoh-c-pub"
 #define DEFAULT_VALUE "Pub from C!"
 
+typedef struct kv_pair_t {
+    const char* key;
+    const char* value;
+} kv_pair_t;
+
+typedef struct kv_it {
+    kv_pair_t* current;
+    kv_pair_t* end;
+} kv_it;
+
+bool create_attachment_iter(z_owned_bytes_t* kv_pair, void* context) {
+    kv_it* it = (kv_it*)(context);
+    if (it->current == it->end) {
+        return false;
+    }
+    z_owned_bytes_t k, v;
+    z_bytes_serialize_from_str(&k, it->current->key);
+    z_bytes_serialize_from_str(&v, it->current->value);
+    z_bytes_from_pair(kv_pair, z_move(k), z_move(v));
+    it->current++;
+    return true;
+};
+
 struct args_t {
     char* keyexpr;  // -k
     char* value;    // -v
@@ -27,34 +50,34 @@ struct args_t {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Publisher on '%s'...\n", args.keyexpr);
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(args.keyexpr), NULL);
-    if (!z_check(pub)) {
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+    z_owned_publisher_t pub;
+    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL)) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
 
-    z_publisher_put_options_t options = z_publisher_put_options_default();
-    options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
+    z_publisher_put_options_t options;
+    z_publisher_put_options_default(&options);
 
-    // allocate attachment map
-    z_owned_bytes_map_t map = z_bytes_map_new();
-
-    // set it as an attachment
-    options.attachment = z_bytes_map_as_attachment(&map);
-
-    // add some value
-    z_bytes_map_insert_by_alias(&map, z_bytes_from_str("source"), z_bytes_from_str("C"));
+    // allocate attachment data
+    kv_pair_t kvs[2];
+    kvs[0] = (kv_pair_t){.key = "source", .value = "C"};
+    // allocate attachment and payload
+    z_owned_bytes_t attachment;
+    z_owned_bytes_t payload;
 
     printf("Press CTRL-C to quit...\n");
     char buf[256];
@@ -64,17 +87,21 @@ int main(int argc, char** argv) {
 
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
-        z_bytes_map_insert_by_alias(&map, z_bytes_from_str("index"), z_bytes_from_str(buf_ind));
+        kvs[1] = (kv_pair_t){.key = "index", .value = buf_ind};
+        kv_it it = {.current = kvs, .end = kvs + 2};
+        z_bytes_from_iter(&attachment, create_attachment_iter, (void*)&it);
+        options.attachment = z_move(attachment);
 
         sprintf(buf, "[%4d] %s", idx, args.value);
         printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
-        z_publisher_put(z_loan(pub), (const uint8_t*)buf, strlen(buf), &options);
+
+        z_bytes_serialize_from_str(&payload, buf);
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
     z_undeclare_publisher(z_move(pub));
 
     z_close(z_move(s));
-    z_drop(z_move(map));
 
     return 0;
 }

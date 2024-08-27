@@ -10,6 +10,14 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+    rust: "1.75"
+  apt_packages:
+    - cargo
+  jobs:
+    # Run cargo build to build git ignored files that are platform specific (e.g. include/zenoh_opaque.h)
+    pre_build:
+      - cargo build --release --manifest-path=./Cargo.toml --features=logger-autoinit --features=unstable --features=shared-memory
+
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:

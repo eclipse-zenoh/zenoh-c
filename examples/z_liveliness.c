@@ -24,26 +24,26 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-int main(int argc, char **argv) {
-    z_owned_config_t config = z_config_default();
+int main(int argc, char** argv) {
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
-    z_keyexpr_t keyexpr = z_keyexpr(args.keyexpr);
-    if (!z_check(keyexpr)) {
+    z_view_keyexpr_t keyexpr;
+    if (z_view_keyexpr_from_str(&keyexpr, args.keyexpr) < 0) {
         printf("%s is not a valid key expression\n", args.keyexpr);
         exit(-1);
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config))) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring liveliness token '%s'...\n", args.keyexpr);
-    zc_owned_liveliness_token_t token = zc_liveliness_declare_token(z_loan(s), keyexpr, NULL);
-    if (!z_check(token)) {
+    zc_owned_liveliness_token_t token;
+    if (zc_liveliness_declare_token(&token, z_loan(s), z_loan(keyexpr), NULL) < 0) {
         printf("Unable to create liveliness token!\n");
         exit(-1);
     }
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     // Use the code below to manually undeclare it if needed
     printf("Undeclaring liveliness token...\n");
     z_drop(z_move(token));
-    
+
     z_close(z_move(s));
     return 0;
 }

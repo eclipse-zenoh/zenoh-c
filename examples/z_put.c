@@ -27,30 +27,40 @@ struct args_t {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
-    z_owned_bytes_map_t attachment = z_bytes_map_new();
-    z_bytes_map_insert_by_alias(&attachment, z_bytes_from_str("hello"), z_bytes_from_str("there"));
-
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Putting Data ('%s': '%s')...\n", args.keyexpr, args.value);
-    z_put_options_t options = z_put_options_default();
-    options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    options.attachment = z_bytes_map_as_attachment(&attachment);
-    int res = z_put(z_loan(s), z_keyexpr(args.keyexpr), (const uint8_t*)args.value, strlen(args.value), &options);
+
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+
+    z_owned_bytes_t payload;
+    z_bytes_from_static_str(&payload, args.value);
+
+    z_owned_bytes_t attachment, key, val;
+    z_bytes_from_static_str(&key, (char*)"hello");
+    z_bytes_from_static_str(&val, (char*)"there");
+    z_bytes_from_pair(&attachment, z_move(key), z_move(val));
+
+    z_put_options_t options;
+    z_put_options_default(&options);
+    options.attachment =
+        z_move(attachment);  // attachement is going to be consumed by z_put, so no need to drop it manually
+
+    int res = z_put(z_loan(s), z_loan(ke), z_move(payload), &options);
     if (res < 0) {
         printf("Put failed...\n");
     }
 
     z_close(z_move(s));
-    z_drop(z_move(attachment));
     return 0;
 }
 

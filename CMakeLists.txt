@@ -7,7 +7,7 @@ project(
 	VERSION ${version}
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
-	LANGUAGES C
+	LANGUAGES C CXX
 )
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -28,7 +28,9 @@ enable_testing()
 #
 declare_cache_var_true_if_vscode(ZENOHC_BUILD_IN_SOURCE_TREE "Do build inside source tree")
 declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
-declare_cache_var(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE BOOL "Enable shared-memory zenoh-c feature")
+declare_cache_var(ZENOHC_BUILD_WITH_SHARED_MEMORY FALSE BOOL "Enable shared-memory zenoh-c feature")
+declare_cache_var(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE BOOL "Enable unstable API feature")
+declare_cache_var(ZENOHC_BUILD_TESTS_WITH_CXX FALSE BOOL "Use C++ compiler for building tests to check API's C++ compatibility")
 declare_cache_var(ZENOHC_CUSTOM_TARGET "" STRING "Rust target for cross compilation, 'aarch64-unknown-linux-gnu' for example")
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
@@ -115,6 +117,11 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			DESTINATION ${cargo_toml_dir})
+		file(COPY
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_constants.h
+			DESTINATION ${cargo_toml_dir}/include/)
 	endif()	
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
 endfunction()
@@ -140,6 +147,16 @@ else()
 	endif()
 	configure_cargo_toml(${cargo_toml_dir_debug} ${project_version} ${cargo_lib_name_debug})
 	configure_cargo_toml(${cargo_toml_dir_release} ${project_version} ${cargo_lib_name_release})
+endif()
+
+#
+# Copy toolchain configuration to build directory to ensure it is used when cargo is invoked from a directory other
+# than the directory containing the manifest file
+#
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/rust-toolchain.toml")
+	file(COPY
+		${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
+		DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
 #
@@ -190,6 +207,11 @@ endif()
 if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
 	set(cargo_flags ${cargo_flags} --features=shared-memory)
 endif()
+
+if(ZENOHC_BUILD_WITH_UNSTABLE_API)
+	set(cargo_flags ${cargo_flags} --features=unstable)
+endif()
+
 
 if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
 	set(cargo_flags ${cargo_flags} --target=${ZENOHC_CUSTOM_TARGET})
@@ -270,12 +292,13 @@ endif()
 # Define include directories for library targets
 status_print(source_include_dir)
 status_print(cargo_generated_include_dir)
-target_include_directories(zenohc_static INTERFACE ${source_include_dir})
-target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
 
 if(NOT(cargo_generated_include_dir STREQUAL ${source_include_dir}))
 	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
 	target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
+else()
+	target_include_directories(zenohc_static INTERFACE ${source_include_dir})
+	target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
 endif()
 
 set_target_properties(zenohc_shared zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)

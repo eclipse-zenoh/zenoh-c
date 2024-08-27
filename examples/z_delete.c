@@ -25,19 +25,20 @@ struct args_t {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Deleting resources matching '%s'...\n", args.keyexpr);
-    z_delete_options_t options = z_delete_options_default();
-    int res = z_delete(z_loan(s), z_keyexpr(args.keyexpr), &options);
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+    int res = z_delete(z_loan(s), z_loan(ke), NULL);
     if (res < 0) {
         printf("Delete failed...\n");
     }

@@ -14,6 +14,8 @@
 
 @PACKAGE_INIT@
 
+set(ZENOHC_BUILD_WITH_UNSTABLE_API @ZENOHC_BUILD_WITH_UNSTABLE_API@)
+set(ZENOHC_BUILD_WITH_SHARED_MEMORY @ZENOHC_BUILD_WITH_SHARED_MEMORY@)
 # Compute the installation prefix relative to this file.
 get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
 get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)

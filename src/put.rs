@@ -11,290 +11,185 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::commons::*;
-use crate::keyexpr::*;
-use crate::session::*;
-use crate::LOG_INVALID_SESSION;
-use libc::c_void;
-use libc::size_t;
-use zenoh::prelude::{sync::SyncResolve, Priority, SampleKind};
-use zenoh::publication::CongestionControl;
-use zenoh::sample::AttachmentBuilder;
-use zenoh_util::core::zresult::ErrNo;
+use std::mem::MaybeUninit;
 
-use crate::attachment::{
-    insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
-    z_attachment_t,
+use zenoh::{
+    bytes::EncodingBuilderTrait,
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    sample::{SampleBuilderTrait, TimestampBuilderTrait},
+    Wait,
 };
 
-/// The priority of zenoh messages.
-///
-///     - **REAL_TIME**
-///     - **INTERACTIVE_HIGH**
-///     - **INTERACTIVE_LOW**
-///     - **DATA_HIGH**
-///     - **DATA**
-///     - **DATA_LOW**
-///     - **BACKGROUND**
-#[allow(non_camel_case_types)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_priority_t {
-    REAL_TIME = 1,
-    INTERACTIVE_HIGH = 2,
-    INTERACTIVE_LOW = 3,
-    DATA_HIGH = 4,
-    DATA = 5,
-    DATA_LOW = 6,
-    BACKGROUND = 7,
-}
+#[cfg(feature = "unstable")]
+use crate::z_moved_source_info_t;
+use crate::{
+    commons::*,
+    result,
+    transmute::{IntoRustType, RustTypeRef, TakeRustType},
+    z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
+};
 
-impl From<Priority> for z_priority_t {
-    fn from(p: Priority) -> Self {
-        match p {
-            Priority::RealTime => z_priority_t::REAL_TIME,
-            Priority::InteractiveHigh => z_priority_t::INTERACTIVE_HIGH,
-            Priority::InteractiveLow => z_priority_t::INTERACTIVE_LOW,
-            Priority::DataHigh => z_priority_t::DATA_HIGH,
-            Priority::Data => z_priority_t::DATA,
-            Priority::DataLow => z_priority_t::DATA_LOW,
-            Priority::Background => z_priority_t::BACKGROUND,
-        }
-    }
-}
-
-impl From<z_priority_t> for Priority {
-    fn from(p: z_priority_t) -> Self {
-        match p {
-            z_priority_t::REAL_TIME => Priority::RealTime,
-            z_priority_t::INTERACTIVE_HIGH => Priority::InteractiveHigh,
-            z_priority_t::INTERACTIVE_LOW => Priority::InteractiveLow,
-            z_priority_t::DATA_HIGH => Priority::DataHigh,
-            z_priority_t::DATA => Priority::Data,
-            z_priority_t::DATA_LOW => Priority::DataLow,
-            z_priority_t::BACKGROUND => Priority::Background,
-        }
-    }
-}
-
-/// The kind of congestion control.
-///
-///     - **BLOCK**
-///     - **DROP**
-#[allow(non_camel_case_types)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_congestion_control_t {
-    BLOCK,
-    DROP,
-}
-
-impl From<CongestionControl> for z_congestion_control_t {
-    fn from(cc: CongestionControl) -> Self {
-        match cc {
-            CongestionControl::Block => z_congestion_control_t::BLOCK,
-            CongestionControl::Drop => z_congestion_control_t::DROP,
-        }
-    }
-}
-
-impl From<z_congestion_control_t> for CongestionControl {
-    fn from(cc: z_congestion_control_t) -> Self {
-        match cc {
-            z_congestion_control_t::BLOCK => CongestionControl::Block,
-            z_congestion_control_t::DROP => CongestionControl::Drop,
-        }
-    }
-}
-
-/// Options passed to the :c:func:`z_put` function.
-///
-/// Members:
-///     z_encoding_t encoding: The encoding of the payload.
-///     z_congestion_control_t congestion_control: The congestion control to apply when routing this message.
-///     z_priority_t priority: The priority of this message.
-///     z_attachment_t attachment: The attachment to this message.
+/// Options passed to the `z_put()` function.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
-    pub encoding: z_encoding_t,
+    /// The encoding of the message.
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
+    /// The congestion control to apply when routing this message.
     pub congestion_control: z_congestion_control_t,
+    /// The priority of this message.
     pub priority: z_priority_t,
-    pub attachment: z_attachment_t,
+    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    pub is_express: bool,
+    /// The timestamp of this message.
+    pub timestamp: Option<&'static mut z_timestamp_t>,
+    /// The allowed destination of this message.
+    #[cfg(feature = "unstable")]
+    pub allowed_destination: zc_locality_t,
+    /// The source info for the message.
+    #[cfg(feature = "unstable")]
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    /// The attachment to this message.
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
-/// Constructs the default value for :c:type:`z_put_options_t`.
+/// Constructs the default value for `z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put_options_default() -> z_put_options_t {
-    z_put_options_t {
-        encoding: z_encoding_default(),
+pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
+    this_.write(z_put_options_t {
+        encoding: None,
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
-        attachment: z_attachment_null(),
-    }
+        is_express: false,
+        timestamp: None,
+        #[cfg(feature = "unstable")]
+        allowed_destination: zc_locality_default(),
+        #[cfg(feature = "unstable")]
+        source_info: None,
+        attachment: None,
+    });
 }
 
-/// Put data.
+/// Publishes data on specified key expression.
 ///
-/// The payload's encoding can be sepcified through the options.
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to publish to.
+/// @param payload: The value to put (consumed upon function return).
+/// @param options: The put options (all owned values will be consumed upon function return).
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     keyexpr: The key expression to put.
-///     payload: The value to put.
-///     len: The length of the value to put.
-///     options: The put options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
+/// @return 0 in case of success, negative error values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_put(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    payload: *const u8,
-    len: size_t,
-    opts: Option<&z_put_options_t>,
-) -> i8 {
-    match session.upgrade() {
-        Some(s) => {
-            let mut res = s
-                .put(keyexpr, std::slice::from_raw_parts(payload, len))
-                .kind(SampleKind::Put);
-            if let Some(opts) = opts {
-                res = res
-                    .encoding(opts.encoding)
-                    .congestion_control(opts.congestion_control.into())
-                    .priority(opts.priority.into());
-                if z_attachment_check(&opts.attachment) {
-                    let mut attachment_builder = AttachmentBuilder::new();
-                    z_attachment_iterate(
-                        opts.attachment,
-                        insert_in_attachment_builder,
-                        &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-                    );
-                    res = res.with_attachment(attachment_builder.build());
-                };
-            }
-            match res.res_sync() {
-                Err(e) => {
-                    tracing::error!("{}", e);
-                    e.errno().get()
-                }
-                Ok(()) => 0,
-            }
+pub extern "C" fn z_put(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    payload: &mut z_moved_bytes_t,
+    options: Option<&mut z_put_options_t>,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    let payload = payload.take_rust_type();
+    let mut put = session.put(key_expr, payload);
+    if let Some(options) = options {
+        if let Some(encoding) = options.encoding.take() {
+            put = put.encoding(encoding.take_rust_type());
+        };
+        #[cfg(feature = "unstable")]
+        if let Some(source_info) = options.source_info.take() {
+            put = put.source_info(source_info.take_rust_type());
+        };
+        if let Some(attachment) = options.attachment.take() {
+            put = put.attachment(attachment.take_rust_type());
         }
-        None => {
-            tracing::debug!("{}", LOG_INVALID_SESSION);
-            i8::MIN
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            put = put.timestamp(Some(timestamp.into_rust_type()));
         }
+        put = put.priority(options.priority.into());
+        put = put.congestion_control(options.congestion_control.into());
+        put = put.express(options.is_express);
+        #[cfg(feature = "unstable")]
+        {
+            put = put.allowed_destination(options.allowed_destination.into());
+        }
+    }
+
+    if let Err(e) = put.wait() {
+        tracing::error!("{}", e);
+        result::Z_EGENERIC
+    } else {
+        result::Z_OK
     }
 }
 
-/// Put data, transfering the buffer ownership.
-///
-/// This is avoids copies when transfering data that was either:
-/// - `zc_sample_payload_rcinc`'d from a sample, when forwarding samples from a subscriber/query to a publisher
-/// - constructed from a `zc_owned_shmbuf_t`
-///
-/// The payload's encoding can be sepcified through the options.
-///
-/// Parameters:
-///     session: The zenoh session.
-///     keyexpr: The key expression to put.
-///     payload: The value to put.
-///     options: The put options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_put_owned(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    payload: Option<&mut zc_owned_payload_t>,
-    opts: Option<&z_put_options_t>,
-) -> i8 {
-    match session.upgrade() {
-        Some(s) => {
-            if let Some(payload) = payload.and_then(|p| p.take()) {
-                let mut res = s.put(keyexpr, payload).kind(SampleKind::Put);
-                if let Some(opts) = opts {
-                    res = res
-                        .encoding(opts.encoding)
-                        .congestion_control(opts.congestion_control.into())
-                        .priority(opts.priority.into());
-                }
-                match res.res_sync() {
-                    Err(e) => {
-                        tracing::error!("{}", e);
-                        e.errno().get()
-                    }
-                    Ok(()) => 0,
-                }
-            } else {
-                tracing::debug!("zc_payload_null was provided as payload for put");
-                i8::MIN
-            }
-        }
-        None => {
-            tracing::debug!("{}", LOG_INVALID_SESSION);
-            i8::MIN
-        }
-    }
-}
-
-/// Options passed to the :c:func:`z_delete` function.
+/// Options passed to the `z_delete()` function.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_delete_options_t {
+    /// The congestion control to apply when routing this delete message.
     pub congestion_control: z_congestion_control_t,
+    /// The priority of the delete message.
     pub priority: z_priority_t,
+    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    pub is_express: bool,
+    /// The timestamp of this message.
+    pub timestamp: Option<&'static mut z_timestamp_t>,
+    /// The allowed destination of this message.
+    #[cfg(feature = "unstable")]
+    pub allowed_destination: zc_locality_t,
 }
 
-/// Constructs the default value for :c:type:`z_put_options_t`.
+/// Constructs the default value for `z_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete_options_default() -> z_delete_options_t {
-    z_delete_options_t {
+pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
+    this_.write(z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
-    }
+        is_express: false,
+        timestamp: None,
+        #[cfg(feature = "unstable")]
+        allowed_destination: zc_locality_default(),
+    });
 }
 
-/// Delete data.
+/// Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     keyexpr: The key expression to delete.
-///     options: The put options.
-/// Returns:
-///     ``0`` in case of success, negative values in case of failure.
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression to delete.
+/// @param options: The delete options.
+///
+/// @return 0 in case of success, negative values in case of failure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_delete(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    opts: Option<&z_delete_options_t>,
-) -> i8 {
-    match session.upgrade() {
-        Some(s) => {
-            let mut res = s.delete(keyexpr);
-            if let Some(opts) = opts {
-                res = res
-                    .congestion_control(opts.congestion_control.into())
-                    .priority(opts.priority.into());
-            }
-            match res.res_sync() {
-                Err(e) => {
-                    tracing::error!("{}", e);
-                    e.errno().get()
-                }
-                Ok(()) => 0,
-            }
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    options: Option<&mut z_delete_options_t>,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    let mut del = session.delete(key_expr);
+    if let Some(options) = options {
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            del = del.timestamp(Some(timestamp.into_rust_type()));
         }
-        None => {
-            tracing::debug!("{}", LOG_INVALID_SESSION);
-            i8::MIN
+        del = del
+            .congestion_control(options.congestion_control.into())
+            .priority(options.priority.into())
+            .express(options.is_express);
+
+        #[cfg(feature = "unstable")]
+        {
+            del = del.allowed_destination(options.allowed_destination.into());
         }
+    }
+
+    match del.wait() {
+        Err(e) => {
+            tracing::error!("{}", e);
+            result::Z_EGENERIC
+        }
+        Ok(()) => result::Z_OK,
     }
 }

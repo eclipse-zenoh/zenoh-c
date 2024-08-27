@@ -29,29 +29,32 @@ struct args_t {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
-    if (zc_config_insert_json(z_loan(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
+    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
         printf("Unable to configure timestamps!\n");
         exit(-1);
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    ze_publication_cache_options_t pub_cache_opts = ze_publication_cache_options_default();
-    pub_cache_opts.history = args.history;
+    ze_publication_cache_options_t pub_cache_opts;
+    ze_publication_cache_options_default(&pub_cache_opts);
+    pub_cache_opts.history = 42;
     pub_cache_opts.queryable_complete = false;
 
     printf("Declaring publication cache on '%s'...\n", args.keyexpr);
-    ze_owned_publication_cache_t pub_cache =
-        ze_declare_publication_cache(z_loan(s), z_keyexpr(args.keyexpr), &pub_cache_opts);
-    if (!z_check(pub_cache)) {
+    ze_owned_publication_cache_t pub_cache;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+
+    if (ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts) != Z_OK) {
         printf("Unable to declare publication cache for key expression!\n");
         exit(-1);
     }
@@ -62,10 +65,13 @@ int main(int argc, char** argv) {
         z_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, args.value);
         printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
-        z_put(z_loan(s), z_keyexpr(args.keyexpr), (const uint8_t*)buf, strlen(buf), NULL);
+        z_owned_bytes_t payload;
+        z_bytes_serialize_from_str(&payload, buf);
+
+        z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 
-    z_drop(z_move(pub_cache));
+    ze_undeclare_publication_cache(z_move(pub_cache));
     z_close(z_move(s));
 
     return 0;
