@@ -37,12 +37,12 @@ type FetchingSubscriber = Option<Box<FetchingSubscriberWrapper>>;
 
 /// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
 ///
-/// Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
+/// Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.
+/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.
 ///
-/// Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
+/// Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
+/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 #[repr(C)]
@@ -132,8 +132,8 @@ pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscr
 ///    To check if the subscription succeeded and if the querying subscriber is still valid,
 ///    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
 ///
-///    Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
+///    Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
+///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
 ///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
 ///
 /// Example:
@@ -234,6 +234,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                                 .target(options.target.into())
                                 .consolidation(options.consolidation)
                                 .timeout(std::time::Duration::from_millis(options.timeout_ms))
+                                .accept_replies(options.accept_replies.into())
                                 .callback(cb)
                                 .res_sync(),
                             None => s.get(selector).callback(cb).res_sync(),

@@ -677,6 +677,7 @@ typedef struct z_get_options_t {
   struct z_value_t value;
   struct z_attachment_t attachment;
   uint64_t timeout_ms;
+  enum zcu_reply_keyexpr_t accept_replies;
 } z_get_options_t;
 /**
  * An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
