@@ -724,7 +724,6 @@ typedef struct z_get_options_t {
    * The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
   uint64_t timeout_ms;
-  enum zcu_reply_keyexpr_t accept_replies;
 } z_get_options_t;
 typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;

@@ -210,7 +210,6 @@ pub struct z_get_options_t {
     pub attachment: Option<&'static mut z_moved_bytes_t>,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
-    pub accept_replies: zcu_reply_keyexpr_t,
 }
 
 /// Constructs default `z_get_options_t`
