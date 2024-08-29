@@ -43,28 +43,36 @@ function(install_zenohc_lib configurations property_postfix package_name)
     # Generate <Package>Config.cmake
     configure_package_config_file(
         "PackageConfig.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}Config.cmake"
         INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 
     # Generate <Package>Version.cmake
     write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}ConfigVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}ConfigVersion.cmake"
         VERSION ${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion)
 
     install(
-        FILES "${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake"
-              "${CMAKE_CURRENT_BINARY_DIR}/${package_name}ConfigVersion.cmake"
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}Config.cmake"
         DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
         CONFIGURATIONS ${configurations}
+        RENAME ${package_name}Config.cmake
+        COMPONENT dev)
+
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}ConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+        CONFIGURATIONS ${configurations}
+        RENAME ${package_name}ConfigVersion.cmake
         COMPONENT dev)
 
     if(APPLE OR UNIX)
         get_filename_component(LIBNAME ${DYLIB} NAME_WE)
-        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc @ONLY)
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc 
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc @ONLY)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc 
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" 
             CONFIGURATIONS ${configurations}
+            RENAME ${package_name}.pc
             OPTIONAL)
     endif()
 endfunction()
