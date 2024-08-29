@@ -102,7 +102,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
    - `zenohc::static` for linking static library
    - `zenohc::lib` for linking static or dynamic library depending on boolean variable `ZENOHC_LIB_STATIC`
 
-   For `Debug` configuration the library package `zenohc_debug` is installed side-by-side with release `zenohc` library. Suffix `d` is added to names of library files (libzenohc**d**.so).
+   For `Debug` configuration suffix `d` is added to names of library files (libzenohc**d**.so).
 
 5. VScode
 
