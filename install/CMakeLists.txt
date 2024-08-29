@@ -4,8 +4,7 @@ declare_cache_var(ZENOHC_INSTALL_STATIC_LIBRARY FALSE BOOL "Install zenoh-c stat
 
 #
 # Installation
-# For debug configuration installs libraries with 'd' added to filename and
-# package named 'zenohc_debug'
+# For debug configuration installs libraries with 'd' added to filename
 #
 status_print(CMAKE_INSTALL_PREFIX)
 
@@ -83,4 +82,4 @@ endforeach()
 # Install lib files 
 #
 install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel;None" "RELEASE" zenohc)
-install_zenohc_lib("Debug" "DEBUG" zenohc_debug)
+install_zenohc_lib("Debug" "DEBUG" zenohc)
