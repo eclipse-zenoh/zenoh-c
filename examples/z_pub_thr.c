@@ -25,29 +25,34 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 int main(int argc, char** argv) {
     char* keyexpr = "test/thr";
 
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
     uint8_t* value = (uint8_t*)z_malloc(args.size);
     memset(value, 1, args.size);
 
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    z_publisher_options_t options = z_publisher_options_default();
+    z_publisher_options_t options;
+    z_publisher_options_default(&options);
     options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
 
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), &options);
-    if (!z_check(pub)) {
+    z_owned_publisher_t pub;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, keyexpr);
+    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &options)) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
 
     printf("Press CTRL-C to quit...\n");
+    z_owned_bytes_t payload;
     while (1) {
-        z_publisher_put(z_loan(pub), (const uint8_t*)value, args.size, NULL);
+        z_bytes_from_buf(&payload, value, args.size, NULL, NULL);
+        z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
     z_undeclare_publisher(z_move(pub));

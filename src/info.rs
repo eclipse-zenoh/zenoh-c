@@ -11,32 +11,32 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{session::*, z_closure_zid_call, z_owned_closure_zid_t};
-use zenoh::prelude::sync::SyncResolve;
-use zenoh::SessionDeclarations;
-use zenoh_protocol::core::ZenohId;
+use zenoh::{prelude::*, session::ZenohId};
 
-/// Represents a Zenoh ID.
-///
-/// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct z_id_t {
-    pub id: [u8; 16],
+pub use crate::opaque_types::z_id_t;
+use crate::{
+    result,
+    transmute::{CTypeRef, IntoCType, RustTypeRef, TakeRustType},
+    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
+};
+decl_c_type!(copy(z_id_t, ZenohId));
+
+impl From<[u8; 16]> for z_id_t {
+    fn from(value: [u8; 16]) -> Self {
+        z_id_t { id: value }
+    }
 }
 
-/// Returns the local Zenoh ID.
+/// Returns the session's Zenoh ID.
 ///
 /// Unless the `session` is invalid, that ID is guaranteed to be non-zero.
 /// In other words, this function returning an array of 16 zeros means you failed
 /// to pass it a valid session.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
-    match session.upgrade() {
-        Some(s) => std::mem::transmute::<ZenohId, z_id_t>(s.info().zid().res_sync()),
-        None => z_id_t { id: [0; 16] },
-    }
+pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
+    let session = session.as_rust_type_ref();
+    session.info().zid().wait().into_c_type()
 }
 
 /// Fetches the Zenoh IDs of all connected peers.
@@ -48,20 +48,15 @@ pub unsafe extern "C" fn z_info_zid(session: z_session_t) -> z_id_t {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_peers_zid(
-    session: z_session_t,
-    callback: &mut z_owned_closure_zid_t,
-) -> i8 {
-    let mut closure = z_owned_closure_zid_t::empty();
-    std::mem::swap(&mut closure, callback);
-    match session.upgrade() {
-        Some(s) => {
-            for id in s.info().peers_zid().res_sync() {
-                z_closure_zid_call(&closure, &std::mem::transmute(id));
-            }
-            0
-        }
-        None => i8::MIN,
+    session: &z_loaned_session_t,
+    callback: &mut z_moved_closure_zid_t,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    for id in session.info().peers_zid().wait() {
+        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
+    result::Z_OK
 }
 
 /// Fetches the Zenoh IDs of all connected routers.
@@ -73,18 +68,13 @@ pub unsafe extern "C" fn z_info_peers_zid(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_info_routers_zid(
-    session: z_session_t,
-    callback: &mut z_owned_closure_zid_t,
-) -> i8 {
-    let mut closure = z_owned_closure_zid_t::empty();
-    std::mem::swap(&mut closure, callback);
-    match session.upgrade() {
-        Some(s) => {
-            for id in s.info().routers_zid().res_sync() {
-                z_closure_zid_call(&closure, &std::mem::transmute(id));
-            }
-            0
-        }
-        None => i8::MIN,
+    session: &z_loaned_session_t,
+    callback: &mut z_moved_closure_zid_t,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    for id in session.info().routers_zid().wait() {
+        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
     }
+    result::Z_OK
 }

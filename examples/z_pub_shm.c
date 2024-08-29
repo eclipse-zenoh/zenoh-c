@@ -11,8 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -24,69 +22,103 @@
 #define DEFAULT_VALUE "Pub from C!"
 
 struct args_t {
-    char* keyexpr;  // -k
-    char* value;    // -v
+    char* keyexpr;               // -k
+    char* value;                 // -v
+    bool add_matching_listener;  // --add-matching-listener
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
+#ifdef UNSTABLE
+void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
+    if (matching_status->matching) {
+        printf("Subscriber matched\n");
+    } else {
+        printf("No Subscribers matched\n");
+    }
+}
+#endif
+
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
-    // Enable shared memory
-    if (zc_config_insert_json(z_loan(config), "transport/shared_memory/enabled", "true") < 0) {
-        printf("Error enabling Shared Memory");
-        exit(-1);
-    }
-
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    z_id_t id = z_info_zid(z_loan(s));
-    char idstr[33];
-    for (int i = 0; i < 16; i++) {
-        sprintf(idstr + 2 * i, "%02x", id.id[i]);
-    }
-    idstr[32] = 0;
-    zc_owned_shm_manager_t manager = zc_shm_manager_new(z_loan(s), idstr, N * 1000000);
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Publisher on '%s'...\n", args.keyexpr);
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(args.keyexpr), NULL);
-    if (!z_check(pub)) {
+    z_owned_publisher_t pub;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
+#ifdef UNSTABLE
+    zc_owned_matching_listener_t listener;
+    if (args.add_matching_listener) {
+        zc_owned_closure_matching_status_t callback;
+        z_closure(&callback, matching_status_handler, NULL, NULL);
+        zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
+    }
+#else
+    if (add_matching_listener) {
+        printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
+        exit(-1);
+    }
+#endif
 
-    printf("Press CTRL-C to quit...\n");
-    for (int idx = 0; true; ++idx) {
-        zc_owned_shmbuf_t shmbuf = zc_shm_alloc(&manager, 256);
-        if (!z_check(shmbuf)) {
-            zc_shm_gc(&manager);
-            shmbuf = zc_shm_alloc(&manager, 256);
-            if (!z_check(shmbuf)) {
-                printf("Failed to allocate a SHM buffer, even after GCing\n");
-                exit(-1);
-            }
-        }
-        char* buf = (char*)zc_shmbuf_ptr(&shmbuf);
-        buf[256] = 0;
-        snprintf(buf, 255, "[%4d] %s", idx, args.value);
-        size_t len = strlen(buf);
-        zc_shmbuf_set_length(&shmbuf, len);
+    printf("Creating POSIX SHM Provider...\n");
+    const size_t total_size = 4096;
+    const size_t buf_ok_size = total_size / 4;
+
+    z_alloc_alignment_t alignment = {0};
+    z_owned_memory_layout_t layout;
+    z_memory_layout_new(&layout, total_size, alignment);
+
+    z_owned_shm_provider_t provider;
+    z_posix_shm_provider_new(&provider, z_loan(layout));
+
+    for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
-        printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
-        z_publisher_put_options_t options = z_publisher_put_options_default();
-        options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        zc_owned_payload_t payload = zc_shmbuf_into_payload(z_move(shmbuf));
-        zc_publisher_put_owned(z_loan(pub), z_move(payload), &options);
+
+        z_buf_layout_alloc_result_t alloc;
+        z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
+        if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
+            {
+                uint8_t* buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
+                sprintf((char*)buf, "[%4d] %s", idx, args.value);
+                printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
+            }
+
+            z_publisher_put_options_t options;
+            z_publisher_put_options_default(&options);
+
+            z_owned_bytes_t payload;
+            z_bytes_serialize_from_shm_mut(&payload, z_move(alloc.buf));
+
+            z_publisher_put(z_loan(pub), z_move(payload), &options);
+        } else {
+            printf("Unexpected failure during SHM buffer allocation...");
+            break;
+        }
     }
 
-    z_undeclare_publisher(z_move(pub));
+#ifdef UNSTABLE
+    if (args.add_matching_listener) {
+        zc_publisher_matching_listener_undeclare(z_move(listener));
+    }
+#endif
 
+    z_undeclare_publisher(z_move(pub));
     z_close(z_move(s));
+
+    z_drop(z_move(provider));
+    z_drop(z_move(layout));
+
     return 0;
 }
 
@@ -117,8 +149,13 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     if (!value) {
         value = DEFAULT_VALUE;
     }
+    const char* arg = parse_opt(argc, argv, "add-matching-listener", false);
+    bool add_matching_listener = false;
+    if (arg) {
+        add_matching_listener = true;
+    }
     parse_zenoh_common_args(argc, argv, config);
-    const char* arg = check_unknown_opts(argc, argv);
+    arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
@@ -130,5 +167,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value};
+    return (struct args_t){
+        .keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
 }

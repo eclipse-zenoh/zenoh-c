@@ -8,7 +8,21 @@ on:
   schedule:
     - cron: "0 6 * * 1-5"
 
+env:
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+  CARGO_PROFILE_DEV_DEBUG: false
+
 jobs:
+  check_format:
+    name: Check codebase format with clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run clang-format dry-run
+        run: find include/ src/ tests/ examples/ -iname "*.h" -o -iname "*.c" | xargs clang-format -n -Werror
+
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -16,6 +30,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
+        shm: [false, true]
+        unstable: [false, true]
 
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +43,7 @@ jobs:
         run: cargo clippy --all-targets --all-features -- --deny warnings
 
       - name: Run rustfmt
-        run: cargo fmt --check
+        run: cargo fmt --check -- --config "unstable_features=true,imports_granularity=Crate,group_imports=StdExternalCrate"
 
       - name: Check for feature leaks
         run: cargo test --no-default-features
@@ -36,22 +52,33 @@ jobs:
         shell: bash
         run: |
           mkdir -p build && cd build 
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target install --config Release
+
+      - name: Install valgrind
+        uses: taiki-e/install-action@valgrind
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Run cmake tests with zenoh-c as dynamic library
         shell: bash
         run: |
           cd build
-          cmake .. -DZENOHC_LIB_STATIC=FALSE -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_LIB_STATIC=FALSE -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_static)"
+
+      - name: Build cmake tests with C++ compiler to make sure that C API is C++ compatible
+        shell: bash
+        run: |
+          cd build
+          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_TESTS_WITH_CXX=TRUE -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
+          cmake --build . --target tests --config Debug
 
       - name: Run cmake tests with zenoh-c as static library
         shell: bash
         run: |
           cd build
-          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_LIB_STATIC=TRUE -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_shared)"
 
@@ -61,24 +88,27 @@ jobs:
           cd build
           cmake --build . --target examples
 
-      - name: Build examples with zenoh-c as subbroject and static library and in debug mode
+      - name: Build examples with zenoh-c as subbroject and static library and in debug mode and in separate directory
         shell: bash
         run: |
-          mkdir -p build_examples_subproj && cd build_examples_subproj
-          cmake ../examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_LIB_STATIC=TRUE
-          cmake --build . --config Debug
+          mkdir -p ../build_examples
+          cmake -S examples -B ../build_examples -DCMAKE_BUILD_TYPE=Debug -DZENOHC_LIB_STATIC=TRUE
+          cmake --build ../build_examples --config Debug
+          rm -rf ../build_examples
 
       - name: Build examples with zenoh-c as installed package
         shell: bash
         run: |
-          mkdir -p build_examples_findproj && cd build_examples_findproj
+          mkdir -p build_examples && cd build_examples
           cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE=PACKAGE
           cmake --build . --config Release
+          cd .. && rm -rf build_examples
 
       - name: Run rust tests
-        run: cargo test --verbose --release --features=logger-autoinit --features=shared-memory
+        run: cargo test --verbose --release --features=logger-autoinit
 
       - name: Upload artifact
+        if: ${{ matrix.unstable == 'false' && matrix.shm == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           # Artifact name

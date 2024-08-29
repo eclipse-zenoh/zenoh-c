@@ -12,128 +12,123 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use crate::{config::*, impl_guarded_transmute, zc_init_logger};
-use std::sync::{Arc, Weak};
-use zenoh::prelude::sync::SyncResolve;
-use zenoh::Session;
-use zenoh_util::core::zresult::ErrNo;
+use std::{mem::MaybeUninit, sync::Arc};
 
-/// An owned zenoh session.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_session_t(usize);
+use zenoh::{Session, Wait};
 
-impl_guarded_transmute!(Option<Arc<Session>>, z_owned_session_t);
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use crate::z_loaned_shm_client_storage_t;
+use crate::{
+    opaque_types::{z_loaned_session_t, z_owned_session_t},
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_moved_config_t, z_moved_session_t, zc_init_logging,
+};
+decl_c_type!(
+    owned(z_owned_session_t, option Arc<Session>),
+    loaned(z_loaned_session_t),
+);
 
-impl AsRef<Option<Weak<Session>>> for z_session_t {
-    fn as_ref(&self) -> &Option<Weak<Session>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl z_session_t {
-    pub fn upgrade(&self) -> Option<Arc<Session>> {
-        self.as_ref().as_ref().and_then(Weak::upgrade)
-    }
-}
-
-impl From<Option<Weak<Session>>> for z_session_t {
-    fn from(val: Option<Weak<Session>>) -> Self {
-        unsafe { std::mem::transmute(val) }
-    }
-}
-
-impl z_owned_session_t {
-    pub fn new(session: Arc<Session>) -> Self {
-        Some(session).into()
-    }
-    pub fn null() -> Self {
-        None::<Arc<Session>>.into()
-    }
-}
-
-/// A loaned zenoh session.
-#[allow(non_camel_case_types)]
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub struct z_session_t(usize);
-
-/// Returns a :c:type:`z_session_t` loaned from `s`.
-///
-/// This handle doesn't increase the refcount of the session, but does allow to do so with `zc_session_rcinc`.
-///
-/// # Safety
-/// The returned `z_session_t` aliases `z_owned_session_t`'s internal allocation,
-/// attempting to use it after all owned handles to the session (including publishers, queryables and subscribers)
-/// have been destroyed is UB (likely SEGFAULT)
-#[no_mangle]
-pub extern "C" fn z_session_loan(s: &z_owned_session_t) -> z_session_t {
-    match s.as_ref() {
-        Some(s) => {
-            let mut weak = Arc::downgrade(s);
-            unsafe { std::ptr::drop_in_place(&mut weak) };
-            Some(weak)
-        }
-        None => None,
-    }
-    .into()
-}
-
-/// Constructs a null safe-to-drop value of 'z_owned_session_t' type
+/// Borrows session.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_session_null() -> z_owned_session_t {
-    z_owned_session_t::null()
+pub unsafe extern "C" fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
-/// Opens a zenoh session. Should the session opening fail, `z_check` ing the returned value will return `false`.
+/// Constructs a Zenoh session in its gravestone state.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_session_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// Constructs and opens a new Zenoh session.
+///
+/// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_open(config: &mut z_owned_config_t) -> z_owned_session_t {
+pub extern "C" fn z_open(
+    this: &mut MaybeUninit<z_owned_session_t>,
+    config: &mut z_moved_config_t,
+) -> result::z_result_t {
+    let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
-        zc_init_logger();
+        zc_init_logging();
     }
-
-    let config = match config.as_mut().take() {
-        Some(c) => c,
-        None => {
-            tracing::error!("Config not provided");
-            return z_owned_session_t::null();
-        }
+    let Some(config) = config.take_rust_type().take() else {
+        tracing::error!("Config not provided");
+        this.write(None);
+        return result::Z_EINVAL;
     };
-    match zenoh::open(*config).res() {
-        Ok(s) => z_owned_session_t::new(Arc::new(s)),
+    match zenoh::open(config).wait() {
+        Ok(s) => {
+            this.write(Some(Arc::new(s)));
+            result::Z_OK
+        }
         Err(e) => {
             tracing::error!("Error opening session: {}", e);
-            z_owned_session_t::null()
+            this.write(None);
+            result::Z_ENETWORK
         }
     }
 }
 
-/// Returns ``true`` if `session` is valid.
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// Constructs and opens a new Zenoh session with specified client storage.
+///
+/// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_session_check(session: &z_owned_session_t) -> bool {
-    session.as_ref().is_some()
+pub extern "C" fn z_open_with_custom_shm_clients(
+    this: &mut MaybeUninit<z_owned_session_t>,
+    config: &mut z_moved_config_t,
+    shm_clients: &z_loaned_shm_client_storage_t,
+) -> result::z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    if cfg!(feature = "logger-autoinit") {
+        zc_init_logging();
+    }
+    let Some(config) = config.take_rust_type() else {
+        tracing::error!("Config not provided");
+        this.write(None);
+        return result::Z_EINVAL;
+    };
+    match zenoh::open(config)
+        .with_shm_clients(shm_clients.as_rust_type_ref().clone())
+        .wait()
+    {
+        Ok(s) => {
+            this.write(Some(Arc::new(s)));
+            result::Z_OK
+        }
+        Err(e) => {
+            tracing::error!("Error opening session: {}", e);
+            this.write(None);
+            result::Z_ENETWORK
+        }
+    }
 }
 
-/// Closes a zenoh session. This drops and invalidates `session` for double-drop safety.
-///
-/// Returns a negative value if an error occured while closing the session.
-/// Returns the remaining reference count of the session otherwise, saturating at i8::MAX.
+/// Returns ``true`` if `session` is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
-    let Some(s) = session.take() else {
-        return 0;
+pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// Closes a zenoh session. This alos drops and invalidates `session`.
+///
+/// @return 0 in  case of success, a negative value if an error occured while closing the session,
+/// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
+#[no_mangle]
+pub extern "C" fn z_close(session: &mut z_moved_session_t) -> result::z_result_t {
+    let Some(s) = session.take_rust_type() else {
+        return result::Z_EINVAL;
     };
     let s = match Arc::try_unwrap(s) {
         Ok(s) => s,
@@ -141,15 +136,30 @@ pub extern "C" fn z_close(session: &mut z_owned_session_t) -> i8 {
             return (Arc::strong_count(&s) - 1).min(i8::MAX as usize) as i8;
         }
     };
-    match s.close().res() {
-        Err(e) => e.errno().get(),
-        Ok(_) => 0,
+    match s.close().wait() {
+        Err(e) => {
+            tracing::error!("Error closing session: {}", e);
+            result::Z_EGENERIC
+        }
+        Ok(_) => result::Z_OK,
     }
 }
 
-/// Increments the session's reference count, returning a new owning handle.
+/// Frees memory and invalidates the session.
+///
+/// This will also close the session if it does not have any clones left.
+#[no_mangle]
+pub extern "C" fn z_session_drop(this_: &mut z_moved_session_t) {
+    let _ = this_.take_rust_type();
+}
+
+/// Constructs an owned shallow copy of the session in provided uninitialized memory location.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn zc_session_rcinc(session: z_session_t) -> z_owned_session_t {
-    session.as_ref().as_ref().and_then(|s| s.upgrade()).into()
+pub extern "C" fn z_session_clone(
+    dst: &mut MaybeUninit<z_owned_session_t>,
+    this: &z_loaned_session_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
 }

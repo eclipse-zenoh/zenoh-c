@@ -23,48 +23,63 @@ struct args_t {
     char* keyexpr;  // -k
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
-
 const char* kind_to_str(z_sample_kind_t kind);
 
-int8_t attachment_reader(z_bytes_t key, z_bytes_t val, void* ctx) {
-    printf("   attachment: %.*s: '%.*s'\n", (int)key.len, key.start, (int)val.len, val.start);
-    return 0;
-}
+void data_handler(const z_loaned_sample_t* sample, void* arg) {
+    z_view_string_t key_string;
+    z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
-void data_handler(const z_sample_t* sample, void* arg) {
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
-    printf(">> [Subscriber] Received %s ('%s': '%.*s')\n", kind_to_str(sample->kind), z_loan(keystr),
-           (int)sample->payload.len, sample->payload.start);
+    z_owned_string_t payload_string;
+    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
 
+    printf(">> [Subscriber] Received %s ('%.*s': '%.*s')\n", kind_to_str(z_sample_kind(sample)),
+           (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+           (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
+
+    const z_loaned_bytes_t* attachment = z_sample_attachment(sample);
     // checks if attachment exists
-    if (z_check(sample->attachment)) {
+    if (attachment != NULL) {
         // reads full attachment
-        z_attachment_iterate(sample->attachment, attachment_reader, NULL);
+        z_bytes_iterator_t iter = z_bytes_get_iterator(attachment);
+        z_owned_bytes_t kv;
+        while (z_bytes_iterator_next(&iter, &kv)) {
+            z_owned_bytes_t k, v;
+            z_owned_string_t key, value;
+            z_bytes_deserialize_into_pair(z_loan(kv), &k, &v);
 
-        // reads particular attachment item
-        z_bytes_t index = z_attachment_get(sample->attachment, z_bytes_from_str("index"));
-        if (z_check(index)) {
-            printf("   message number: %.*s\n", (int)index.len, index.start);
+            z_bytes_deserialize_into_string(z_loan(k), &key);
+            z_bytes_deserialize_into_string(z_loan(v), &value);
+
+            printf("   attachment: %.*s: '%.*s'\n", (int)z_string_len(z_loan(key)), z_string_data(z_loan(key)),
+                   (int)z_string_len(z_loan(value)), z_string_data(z_loan(value)));
+            z_drop(z_move(kv));
+            z_drop(z_move(k));
+            z_drop(z_move(v));
+            z_drop(z_move(key));
+            z_drop(z_move(value));
         }
     }
-    z_drop(z_move(keystr));
+    z_drop(z_move(payload_string));
 }
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config))) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    z_owned_closure_sample_t callback = z_closure(data_handler);
+    z_owned_closure_sample_t callback;
+    z_closure(&callback, data_handler, NULL, NULL);
     printf("Declaring Subscriber on '%s'...\n", args.keyexpr);
-    z_owned_subscriber_t sub = z_declare_subscriber(z_loan(s), z_keyexpr(args.keyexpr), z_move(callback), NULL);
-    if (!z_check(sub)) {
+    z_owned_subscriber_t sub;
+    if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL)) {
         printf("Unable to declare subscriber.\n");
         exit(-1);
     }

@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <zenoh_macros.h>
 
 #include "parse_args.h"
 #include "zenoh.h"
@@ -27,60 +26,71 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-void query_handler(const z_query_t* query, void* context) {
-    z_owned_closure_owned_query_t* channel = (z_owned_closure_owned_query_t*)context;
-    z_owned_query_t oquery = z_query_clone(query);
-    z_call(*channel, &oquery);
-}
+z_view_keyexpr_t ke;
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
-    z_keyexpr_t keyexpr = z_keyexpr(args.keyexpr);
-    if (!z_check(keyexpr)) {
+
+    if (z_view_keyexpr_from_str(&ke, args.keyexpr) < 0) {
         printf("%s is not a valid key expression", args.keyexpr);
         exit(-1);
     }
 
     printf("Declaring Queryable on '%s'...\n", args.keyexpr);
-    z_owned_query_channel_t channel = zc_query_fifo_new(16);
-    z_owned_closure_query_t callback = z_closure(query_handler, NULL, &channel.send);
-    z_owned_queryable_t qable = z_declare_queryable(z_loan(s), keyexpr, z_move(callback), NULL);
-    if (!z_check(qable)) {
+    z_owned_fifo_handler_query_t handler;
+    z_owned_closure_query_t closure;
+    z_fifo_channel_query_new(&closure, &handler, 16);
+    z_owned_queryable_t qable;
+
+    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(closure), NULL) < 0) {
         printf("Unable to create queryable.\n");
         exit(-1);
     }
 
     printf("Press CTRL-C to quit...\n");
-    z_owned_query_t oquery = z_query_null();
-    for (z_call(channel.recv, &oquery); z_check(oquery); z_call(channel.recv, &oquery)) {
-        z_query_t query = z_loan(oquery);
-        z_owned_str_t keystr = z_keyexpr_to_string(z_query_keyexpr(&query));
-        z_bytes_t pred = z_query_parameters(&query);
-        z_value_t payload_value = z_query_value(&query);
-        if (payload_value.payload.len > 0) {
-            printf(">> [Queryable ] Received Query '%s?%.*s' with value '%.*s'\n", z_loan(keystr), (int)pred.len,
-                   pred.start, (int)payload_value.payload.len, payload_value.payload.start);
+    z_owned_query_t oquery;
+    for (z_result_t res = z_recv(z_loan(handler), &oquery); res == Z_OK; res = z_recv(z_loan(handler), &oquery)) {
+        const z_loaned_query_t* query = z_loan(oquery);
+        z_view_string_t key_string;
+        z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
+
+        z_view_string_t params;
+        z_query_parameters(query, &params);
+
+        const z_loaned_bytes_t* payload = z_query_payload(query);
+        if (payload != NULL && z_bytes_len(payload) > 0) {
+            z_owned_string_t payload_string;
+            z_bytes_deserialize_into_string(payload, &payload_string);
+
+            printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n",
+                   (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
+                   (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)),
+                   (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
+            z_drop(z_move(payload_string));
         } else {
-            printf(">> [Queryable ] Received Query '%s?%.*s'\n", z_loan(keystr), (int)pred.len, pred.start);
+            printf(">> [Queryable ] Received Query '%.*s?%.*s'\n", (int)z_string_len(z_loan(key_string)),
+                   z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(params)), z_string_data(z_loan(params)));
         }
-        z_query_reply_options_t options = z_query_reply_options_default();
-        options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        z_query_reply(&query, keyexpr, (const unsigned char*)args.value, strlen(args.value), &options);
-        z_drop(z_move(keystr));
+        z_query_reply_options_t options;
+        z_query_reply_options_default(&options);
+
+        z_owned_bytes_t reply_payload;
+        z_bytes_from_static_str(&reply_payload, args.value);
+        z_query_reply(query, z_loan(ke), z_move(reply_payload), &options);
         z_drop(z_move(oquery));
     }
 
-    z_drop(z_move(qable));
-    z_drop(z_move(channel));
-    z_drop(z_move(s));
+    z_undeclare_queryable(z_move(qable));
+    z_drop(z_move(handler));
+    z_close(z_move(s));
     return 0;
 }
 

@@ -12,388 +12,329 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use libc::c_char;
-use libc::c_void;
 use std::{
-    borrow::Cow,
-    convert::TryFrom,
     ffi::CStr,
+    mem::MaybeUninit,
     ops::{Deref, DerefMut},
+    ptr::null,
 };
 
+use libc::c_char;
 use zenoh::{
-    prelude::{ConsolidationMode, KeyExpr, QueryTarget, SplitBuffer},
-    query::{Mode, QueryConsolidation, Reply},
-    sample::AttachmentBuilder,
-    value::Value,
+    bytes::{Encoding, EncodingBuilderTrait, ZBytes},
+    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
+    sample::SampleBuilderTrait,
+    Wait,
 };
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
-use crate::attachment::{
-    insert_in_attachment_builder, z_attachment_check, z_attachment_iterate, z_attachment_null,
-    z_attachment_t,
-};
 use crate::{
-    impl_guarded_transmute, z_bytes_t, z_closure_reply_call, z_encoding_default, z_encoding_t,
-    z_keyexpr_t, z_owned_closure_reply_t, z_sample_t, z_session_t, zcu_reply_keyexpr_default,
-    zcu_reply_keyexpr_t, GuardedTransmute, LOG_INVALID_SESSION,
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
+    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
+    z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
+    z_query_target_t,
+};
+#[cfg(feature = "unstable")]
+use crate::{
+    transmute::IntoCType, z_id_t, z_moved_source_info_t, zc_locality_default, zc_locality_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 
-type ReplyInner = Option<Reply>;
-
-/// An owned reply to a :c:func:`z_get`.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[cfg(not(target_arch = "arm"))]
-#[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 30]);
-
-#[cfg(target_arch = "arm")]
-#[repr(C, align(8))]
-pub struct z_owned_reply_t([u64; 21]);
-
-impl_guarded_transmute!(noderefs ReplyInner, z_owned_reply_t);
-
-impl From<ReplyInner> for z_owned_reply_t {
-    fn from(mut val: ReplyInner) -> Self {
-        if let Some(val) = &mut val {
-            match &mut val.sample {
-                Ok(inner) => inner.payload = inner.payload.contiguous().into_owned().into(),
-                Err(inner) => inner.payload = inner.payload.contiguous().into_owned().into(),
-            };
-        }
-        val.transmute()
+// we need to add Default to ReplyError
+#[repr(transparent)]
+pub(crate) struct ReplyErrorNewtype(ReplyError);
+impl Default for ReplyErrorNewtype {
+    fn default() -> Self {
+        Self(zenoh::internal::Value::new(ZBytes::empty(), Encoding::default()).into())
     }
 }
-impl From<Reply> for z_owned_reply_t {
-    fn from(val: Reply) -> z_owned_reply_t {
-        Some(val).into()
-    }
-}
-impl Deref for z_owned_reply_t {
-    type Target = ReplyInner;
+impl Deref for ReplyErrorNewtype {
+    type Target = ReplyError;
     fn deref(&self) -> &Self::Target {
-        unsafe { std::mem::transmute::<&Self, &Self::Target>(self) }
+        &self.0
     }
 }
-impl DerefMut for z_owned_reply_t {
+impl DerefMut for ReplyErrorNewtype {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { std::mem::transmute::<&mut Self, &mut Self::Target>(self) }
+        &mut self.0
     }
 }
-/// Returns ``true`` if the queryable answered with an OK, which allows this value to be treated as a sample.
-///
-/// If this returns ``false``, you should use :c:func:`z_check` before trying to use :c:func:`z_reply_err` if you want to process the error that may be here.
+impl From<&ReplyError> for &ReplyErrorNewtype {
+    fn from(value: &ReplyError) -> Self {
+        // SAFETY: ReplyErrorNewtype is repr(transparent) to ReplyError
+        unsafe { core::mem::transmute::<&ReplyError, Self>(value) }
+    }
+}
+
+pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
+decl_c_type!(
+    owned(z_owned_reply_err_t, ReplyErrorNewtype),
+    loaned(z_loaned_reply_err_t, ReplyErrorNewtype),
+);
+
+/// Constructs an empty `z_owned_reply_err_t`.
+#[no_mangle]
+pub extern "C" fn z_internal_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
+    this_
+        .as_rust_type_mut_uninit()
+        .write(ReplyErrorNewtype::default());
+}
+
+/// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_is_ok(reply: &z_owned_reply_t) -> bool {
-    reply.as_ref().map(|r| r.sample.is_ok()).unwrap_or(false)
+pub extern "C" fn z_internal_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
+    !this_.as_rust_type_ref().payload().is_empty()
+}
+
+/// Returns reply error payload.
+#[no_mangle]
+pub extern "C" fn z_reply_err_payload(this_: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
+    this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
+}
+
+/// Returns reply error encoding.
+#[no_mangle]
+pub extern "C" fn z_reply_err_encoding(this_: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
+    this_.as_rust_type_ref().encoding().as_loaned_c_type_ref()
+}
+
+/// Borrows reply error.
+#[no_mangle]
+pub extern "C" fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
+}
+
+/// Frees the memory and resets the reply error it to its default value.
+#[no_mangle]
+pub extern "C" fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
+    let _ = this_.take_rust_type();
+}
+
+pub use crate::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
+decl_c_type!(
+    owned(z_owned_reply_t, option Reply),
+    loaned(z_loaned_reply_t),
+);
+
+/// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_is_ok(this_: &z_loaned_reply_t) -> bool {
+    this_.as_rust_type_ref().result().is_ok()
 }
 
 /// Yields the contents of the reply by asserting it indicates a success.
 ///
-/// You should always make sure that :c:func:`z_reply_is_ok` returns ``true`` before calling this function.
+/// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok(reply: &z_owned_reply_t) -> z_sample_t {
-    if let Some(sample) = reply.as_ref().and_then(|s| s.sample.as_ref().ok()) {
-        if let Cow::Owned(_) = sample.payload.contiguous() {
-            unreachable!("z_reply_ok found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions. This is definitely a bug with zenoh, please contact us.")
-        }
-        z_sample_t::new(sample, &sample.payload)
-    } else {
-        panic!("Assertion failed: tried to treat `z_owned_reply_t` as Ok despite that not being the case")
+pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned_sample_t {
+    match this_.as_rust_type_ref().result() {
+        Ok(sample) => sample.as_loaned_c_type_ref() as _,
+        Err(_) => null(),
     }
-}
-
-/// A zenoh value.
-///
-/// Members:
-///   z_bytes_t payload: The payload of this zenoh value.
-///   z_encoding_t encoding: The encoding of this zenoh value `payload`.
-#[repr(C)]
-pub struct z_value_t {
-    pub payload: z_bytes_t,
-    pub encoding: z_encoding_t,
 }
 
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
-/// You should always make sure that :c:func:`z_reply_is_ok` returns ``false`` before calling this function.
+/// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(reply: &z_owned_reply_t) -> z_value_t {
-    if let Some(inner) = reply.as_ref().and_then(|s| s.sample.as_ref().err()) {
-        z_value_t {
-            payload: match &inner.payload.contiguous() {
-                Cow::Borrowed(payload) => crate::z_bytes_t { start: payload.as_ptr(), len: payload.len() },
-                Cow::Owned(_) => unreachable!("z_reply_err found a payload that wasn't contiguous by the time it was reached, which breaks some crate assertions."),
-            },
-            encoding: (&inner.encoding).into(),
-        }
-    } else {
-        panic!("Assertion failed: tried to treat `z_owned_reply_t` as Err despite that not being the case")
+pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
+    match this_.as_rust_type_ref().result() {
+        Ok(_) => null(),
+        Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_c_type_ref(),
     }
 }
 
-/// Returns an invalidated :c:type:`z_owned_reply_t`.
-///
-/// This is useful when you wish to take ownership of a value from a callback to :c:func:`z_get`:
-///
-///     - copy the value of the callback's argument's pointee,
-///     - overwrite the pointee with this function's return value,
-///     - you are now responsible for dropping your copy of the reply.
+#[cfg(feature = "unstable")]
+/// Gets the id of the zenoh instance that answered this Reply.
+/// Returns `true` if id is present.
 #[no_mangle]
-#[allow(improper_ctypes_definitions)]
-pub extern "C" fn z_reply_null() -> z_owned_reply_t {
-    None.into()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_replier_id(
+    this: &z_loaned_reply_t,
+    out_id: &mut MaybeUninit<z_id_t>,
+) -> bool {
+    match this.as_rust_type_ref().replier_id() {
+        Some(val) => {
+            out_id.write(val.into_c_type());
+            true
+        }
+        None => false,
+    }
 }
 
-/// Options passed to the :c:func:`z_get` function.
-///
-/// Members:
-///     z_query_target_t target: The Queryables that should be target of the query.
-///     z_query_consolidation_t consolidation: The replies consolidation strategy to apply on replies to the query.
-///     z_value_t value: An optional value to attach to the query.
-///     z_attachment_t attachment: The attachment to attach to the query.
-///     uint64_t timeout: The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
+/// Constructs the reply in its gravestone state.
+#[no_mangle]
+pub extern "C" fn z_internal_reply_null(this_: &mut MaybeUninit<z_owned_reply_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+/// Constructs an owned shallow copy of reply in provided uninitialized memory location.
+#[no_mangle]
+pub extern "C" fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this_: &z_loaned_reply_t) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this_.as_rust_type_ref().clone()));
+}
+
+/// Options passed to the `z_get()` function.
 #[repr(C)]
 pub struct z_get_options_t {
+    /// The Queryables that should be target of the query.
     pub target: z_query_target_t,
+    /// The replies consolidation strategy to apply on replies to the query.
     pub consolidation: z_query_consolidation_t,
-    pub value: z_value_t,
-    pub attachment: z_attachment_t,
+    /// An optional payload to attach to the query.
+    pub payload: Option<&'static mut z_moved_bytes_t>,
+    /// An optional encoding of the query payload and or attachment.
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
+    /// The congestion control to apply when routing the query.
+    pub congestion_control: z_congestion_control_t,
+    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+    pub is_express: bool,
+    #[cfg(feature = "unstable")]
+    /// The allowed destination for the query.
+    pub allowed_destination: zc_locality_t,
+    #[cfg(feature = "unstable")]
+    /// The accepted replies for the query.
+    pub accept_replies: zc_reply_keyexpr_t,
+    /// The priority of the query.
+    pub priority: z_priority_t,
+    #[cfg(feature = "unstable")]
+    /// The source info for the query.
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    /// An optional attachment to attach to the query.
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
+    /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
-    pub accept_replies: zcu_reply_keyexpr_t,
 }
+
+/// Constructs default `z_get_options_t`
 #[no_mangle]
-pub extern "C" fn z_get_options_default() -> z_get_options_t {
-    z_get_options_t {
+pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
+    this_.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
+        congestion_control: CongestionControl::default().into(),
+        #[cfg(feature = "unstable")]
+        allowed_destination: zc_locality_default(),
+        #[cfg(feature = "unstable")]
+        accept_replies: zc_reply_keyexpr_default(),
+        priority: Priority::default().into(),
+        is_express: false,
         timeout_ms: 0,
-        value: {
-            z_value_t {
-                payload: z_bytes_t::empty(),
-                encoding: z_encoding_default(),
-            }
-        },
-        attachment: z_attachment_null(),
-        accept_replies: zcu_reply_keyexpr_default(),
-    }
+        payload: None,
+        encoding: None,
+        #[cfg(feature = "unstable")]
+        source_info: None,
+        attachment: None,
+    });
 }
 
 /// Query data from the matching queryables in the system.
 /// Replies are provided through a callback function.
 ///
-/// Returns a negative value upon failure.
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression matching resources to query.
+/// @param parameters: The query's parameters, similar to a url's query segment.
+/// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+/// @param options: Additional options for the get. All owned fields will be consumed.
 ///
-/// Parameters:
-///     session: The zenoh session.
-///     keyexpr: The key expression matching resources to query.
-///     parameters: The query's parameters, similar to a url's query segment.
-///     callback: The callback function that will be called on reception of replies for this query.
-///               Note that the `reply` parameter of the callback is passed by mutable reference,
-///               but **will** be dropped once your callback exits to help you avoid memory leaks.
-///               If you'd rather take ownership, please refer to the documentation of :c:func:`z_reply_null`
-///     options: additional options for the get.
+/// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_get(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,
-    callback: &mut z_owned_closure_reply_t,
-    options: Option<&z_get_options_t>,
-) -> i8 {
-    let mut closure = z_owned_closure_reply_t::empty();
-    std::mem::swap(callback, &mut closure);
+    callback: &mut z_moved_closure_reply_t,
+    options: Option<&mut z_get_options_t>,
+) -> result::z_result_t {
+    let callback = callback.take_rust_type();
     let p = if parameters.is_null() {
         ""
     } else {
         CStr::from_ptr(parameters).to_str().unwrap()
     };
-    let Some(s) = session.upgrade() else {
-        tracing::error!("{LOG_INVALID_SESSION}");
-        return i8::MIN;
-    };
-    let mut q = s.get(KeyExpr::try_from(keyexpr).unwrap().with_parameters(p));
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    let mut get = session.get(Selector::from((key_expr, p)));
     if let Some(options) = options {
-        q = q
+        if let Some(payload) = options.payload.take() {
+            get = get.payload(payload.take_rust_type());
+        }
+        if let Some(encoding) = options.encoding.take() {
+            get = get.encoding(encoding.take_rust_type());
+        }
+        #[cfg(feature = "unstable")]
+        if let Some(source_info) = options.source_info.take() {
+            get = get.source_info(source_info.take_rust_type());
+        }
+        if let Some(attachment) = options.attachment.take() {
+            get = get.attachment(attachment.take_rust_type());
+        }
+
+        get = get
             .consolidation(options.consolidation)
             .target(options.target.into())
-            .with_value(&options.value);
-        if options.timeout_ms != 0 {
-            q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));
+            .congestion_control(options.congestion_control.into())
+            .priority(options.priority.into())
+            .express(options.is_express);
+        #[cfg(feature = "unstable")]
+        {
+            get = get
+                .allowed_destination(options.allowed_destination.into())
+                .accept_replies(options.accept_replies.into());
         }
-        if z_attachment_check(&options.attachment) {
-            let mut attachment_builder = AttachmentBuilder::new();
-            z_attachment_iterate(
-                options.attachment,
-                insert_in_attachment_builder,
-                &mut attachment_builder as *mut AttachmentBuilder as *mut c_void,
-            );
-            q = q.with_attachment(attachment_builder.build());
-        };
+
+        if options.timeout_ms != 0 {
+            get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
+        }
     }
-    match q
-        .callback(move |response| z_closure_reply_call(&closure, &mut response.into()))
-        .res_sync()
+    match get
+        .callback(move |response| {
+            z_closure_reply_call(
+                z_closure_reply_loan(&callback),
+                response.as_loaned_c_type_ref(),
+            )
+        })
+        .wait()
     {
-        Ok(()) => 0,
+        Ok(()) => result::Z_OK,
         Err(e) => {
             tracing::error!("{}", e);
-            e.errno().get()
+            result::Z_EGENERIC
         }
     }
 }
 
-/// Frees `reply_data`, invalidating it for double-drop safety.
+/// Frees reply, resetting it to its gravestone state.
+#[no_mangle]
+pub extern "C" fn z_reply_drop(this_: &mut z_moved_reply_t) {
+    let _ = this_.take_rust_type();
+}
+
+/// Returns ``true`` if `reply` is valid, ``false`` otherwise.
+#[no_mangle]
+pub extern "C" fn z_internal_reply_check(this_: &z_owned_reply_t) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// Borrows reply.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_drop(reply_data: &mut z_owned_reply_t) {
-    std::mem::drop(reply_data.take());
-}
-/// Returns ``true`` if `reply_data` is valid.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_check(reply_data: &z_owned_reply_t) -> bool {
-    reply_data.is_some()
+pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_reply_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
-/// The Queryables that should be target of a :c:func:`z_get`.
-///
-///     - **BEST_MATCHING**: The nearest complete queryable if any else all matching queryables.
-///     - **ALL_COMPLETE**: All complete queryables.
-///     - **ALL**: All matching queryables.
-#[allow(non_camel_case_types)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_query_target_t {
-    BEST_MATCHING,
-    ALL,
-    ALL_COMPLETE,
-}
-
-impl From<QueryTarget> for z_query_target_t {
-    #[inline]
-    fn from(t: QueryTarget) -> Self {
-        match t {
-            QueryTarget::BestMatching => z_query_target_t::BEST_MATCHING,
-            QueryTarget::All => z_query_target_t::ALL,
-            QueryTarget::AllComplete => z_query_target_t::ALL_COMPLETE,
-        }
-    }
-}
-
-impl From<z_query_target_t> for QueryTarget {
-    #[inline]
-    fn from(val: z_query_target_t) -> Self {
-        match val {
-            z_query_target_t::BEST_MATCHING => QueryTarget::BestMatching,
-            z_query_target_t::ALL => QueryTarget::All,
-            z_query_target_t::ALL_COMPLETE => QueryTarget::AllComplete,
-        }
-    }
-}
-
-impl From<&z_value_t> for Value {
-    #[inline]
-    fn from(val: &z_value_t) -> Value {
-        unsafe {
-            let value: Value =
-                std::slice::from_raw_parts(val.payload.start, val.payload.len).into();
-            let encoding = std::str::from_utf8(std::slice::from_raw_parts(
-                val.encoding.suffix.start,
-                val.encoding.suffix.len,
-            ))
-            .expect("encodings must be UTF8");
-            value.encoding(
-                zenoh::prelude::Encoding::new(val.encoding.prefix as u8, encoding).unwrap(),
-            )
-        }
-    }
-}
-
-impl From<&Value> for z_value_t {
-    #[inline]
-    fn from(val: &Value) -> z_value_t {
-        let std::borrow::Cow::Borrowed(payload) = val.payload.contiguous() else {
-            panic!("Would have returned a reference to a temporary, make sure you the Value's payload is contiguous BEFORE calling this constructor.")
-        };
-        z_value_t {
-            encoding: (&val.encoding).into(),
-            payload: payload.into(),
-        }
-    }
-}
-
-/// Create a default :c:type:`z_query_target_t`.
-#[no_mangle]
-pub extern "C" fn z_query_target_default() -> z_query_target_t {
-    QueryTarget::default().into()
-}
-
-/// Consolidation mode values.
-///
-///     - **Z_CONSOLIDATION_MODE_AUTO**: Let Zenoh decide the best consolidation mode depending on the query selector
-///       If the selector contains time range properties, consolidation mode `NONE` is used.
-///       Otherwise the `LATEST` consolidation mode is used.
-///     - **Z_CONSOLIDATION_MODE_NONE**: No consolidation is applied. Replies may come in any order and any number.
-///     - **Z_CONSOLIDATION_MODE_MONOTONIC**: It guarantees that any reply for a given key expression will be monotonic in time
-///       w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
-///       replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
-///       ts2 > ts1. It optimizes latency.
-///     - **Z_CONSOLIDATION_MODE_LATEST**: It guarantees unicity of replies for the same key expression.
-///       It optimizes bandwidth.
-#[repr(C)]
-#[derive(Clone, Copy, Default)]
-pub enum z_consolidation_mode_t {
-    AUTO = -1,
-    #[default]
-    NONE = 0,
-    MONOTONIC = 1,
-    LATEST = 2,
-}
-
-impl From<Mode<ConsolidationMode>> for z_consolidation_mode_t {
-    #[inline]
-    fn from(cm: Mode<ConsolidationMode>) -> Self {
-        match cm {
-            Mode::Manual(cm) => Self::from(cm),
-            Mode::Auto => z_consolidation_mode_t::AUTO,
-        }
-    }
-}
-
-impl From<ConsolidationMode> for z_consolidation_mode_t {
-    #[inline]
-    fn from(cm: ConsolidationMode) -> Self {
-        match cm {
-            ConsolidationMode::None => z_consolidation_mode_t::NONE,
-            ConsolidationMode::Monotonic => z_consolidation_mode_t::MONOTONIC,
-            ConsolidationMode::Latest => z_consolidation_mode_t::LATEST,
-        }
-    }
-}
-
-impl From<z_consolidation_mode_t> for Mode<ConsolidationMode> {
-    #[inline]
-    fn from(val: z_consolidation_mode_t) -> Self {
-        match val {
-            z_consolidation_mode_t::AUTO => Mode::Auto,
-            z_consolidation_mode_t::NONE => Mode::Manual(ConsolidationMode::None),
-            z_consolidation_mode_t::MONOTONIC => Mode::Manual(ConsolidationMode::Monotonic),
-            z_consolidation_mode_t::LATEST => Mode::Manual(ConsolidationMode::Latest),
-        }
-    }
-}
-
-/// The replies consolidation strategy to apply on replies to a :c:func:`z_get`.
+/// The replies consolidation strategy to apply on replies to a `z_get()`.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_query_consolidation_t {
@@ -412,15 +353,12 @@ impl From<QueryConsolidation> for z_query_consolidation_t {
 impl From<z_query_consolidation_t> for QueryConsolidation {
     #[inline]
     fn from(val: z_query_consolidation_t) -> Self {
-        let cm: Mode<ConsolidationMode> = val.mode.into();
-        match cm {
-            Mode::Manual(cm) => QueryConsolidation::from(cm),
-            Mode::Auto => QueryConsolidation::AUTO,
-        }
+        let cm: ConsolidationMode = val.mode.into();
+        cm.into()
     }
 }
 
-/// Creates a default :c:type:`z_query_consolidation_t` (consolidation mode AUTO).
+/// Creates a default `z_query_consolidation_t` (consolidation mode AUTO).
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
@@ -430,28 +368,32 @@ pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
 ///
 /// A query consolidation strategy will automatically be selected depending the query selector.
 /// If the selector contains time range properties, no consolidation is performed.
-/// Otherwise the :c:func:`z_query_consolidation_latest` strategy is used.
-///
-/// Returns:
-///   Returns the constructed :c:type:`z_query_consolidation_t`.
+/// Otherwise the `z_query_consolidation_latest` strategy is used.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
     QueryConsolidation::AUTO.into()
 }
 
-/// Latest value consolidation.
+/// Latest consolidation.
+///
+/// This strategy optimizes bandwidth on all links in the system but will provide a very poor latency.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Latest).into()
 }
 
 /// Monotonic consolidation.
+///
+/// This strategy offers the best latency. Replies are directly transmitted to the application when received
+/// without needing to wait for all replies. This mode does not guarantee that there will be no duplicates.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Monotonic).into()
 }
 
-/// Disable consolidation.
+/// No consolidation.
+///
+/// This strategy is useful when querying timeseries data bases or when using quorums.
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::None).into()

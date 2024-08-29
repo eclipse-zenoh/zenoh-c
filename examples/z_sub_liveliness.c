@@ -23,40 +23,42 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-void data_handler(const z_sample_t* sample, void* arg) {
-    z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
-    switch (sample->kind) {
+void data_handler(const z_loaned_sample_t* sample, void* arg) {
+    z_view_string_t key_string;
+    z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
+    switch (z_sample_kind(sample)) {
         case Z_SAMPLE_KIND_PUT:
-            printf(">> [LivelinessSubscriber] New alive token ('%s')\n", z_loan(keystr));
+            printf(">> [LivelinessSubscriber] New alive token ('%.*s')\n", (int)z_string_len(z_loan(key_string)),
+                   z_string_data(z_loan(key_string)));
             break;
         case Z_SAMPLE_KIND_DELETE:
-            printf(">> [LivelinessSubscriber] Dropped token ('%s')\n", z_loan(keystr));
+            printf(">> [LivelinessSubscriber] Dropped token ('%.*s')\n", (int)z_string_len(z_loan(key_string)),
+                   z_string_data(z_loan(key_string)));
             break;
     }
-    z_drop(z_move(keystr));
 }
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
-
-    z_keyexpr_t keyexpr = z_keyexpr(args.keyexpr);
-    if (!z_check(keyexpr)) {
+    z_view_keyexpr_t ke;
+    if (z_view_keyexpr_from_str(&ke, args.keyexpr) < 0) {
         printf("%s is not a valid key expression\n", args.keyexpr);
         exit(-1);
     }
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring liveliness subscriber on '%s'...\n", args.keyexpr);
-    z_owned_closure_sample_t callback = z_closure(data_handler);
-    z_owned_subscriber_t sub = zc_liveliness_declare_subscriber(z_loan(s), keyexpr, z_move(callback), NULL);
-    if (!z_check(sub)) {
+    z_owned_closure_sample_t callback;
+    z_closure(&callback, data_handler, NULL, NULL);
+    z_owned_subscriber_t sub;
+    if (zc_liveliness_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
         printf("Unable to declare liveliness subscriber.\n");
         exit(-1);
     }

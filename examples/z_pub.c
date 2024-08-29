@@ -27,51 +27,71 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-void matching_status_handler(const zcu_matching_status_t* matching_status, void* arg) {
+#ifdef UNSTABLE
+void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");
     } else {
         printf("No Subscribers matched\n");
     }
 }
+#endif
 
 int main(int argc, char** argv) {
-    z_owned_config_t config = z_config_default();
+    z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config)) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
     printf("Declaring Publisher on '%s'...\n", args.keyexpr);
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(args.keyexpr), NULL);
-    if (!z_check(pub)) {
+    z_owned_publisher_t pub;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
 
-    zcu_owned_matching_listener_t listener;
+#ifdef UNSTABLE
+    zc_owned_matching_listener_t listener;
     if (args.add_matching_listener) {
-        zcu_owned_closure_matching_status_t callback = z_closure(matching_status_handler);
-        listener = zcu_publisher_matching_listener_callback(z_loan(pub), z_move(callback));
+        zc_owned_closure_matching_status_t callback;
+        z_closure(&callback, matching_status_handler, NULL, NULL);
+        zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
     }
+#else
+    if (args.add_matching_listener) {
+        printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
+        exit(-1);
+    }
+#endif
 
     printf("Press CTRL-C to quit...\n");
-    char buf[256];
+    char buf[256] = {};
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, args.value);
         printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
-        z_publisher_put_options_t options = z_publisher_put_options_default();
-        options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        z_publisher_put(z_loan(pub), (const uint8_t*)buf, strlen(buf), &options);
+        z_publisher_put_options_t options;
+        z_publisher_put_options_default(&options);
+
+        z_owned_bytes_t payload;
+        z_bytes_serialize_from_str(&payload, buf);
+
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
+#ifdef UNSTABLE
+    if (args.add_matching_listener) {
+        zc_publisher_matching_listener_undeclare(z_move(listener));
+    }
+#endif
 
     z_undeclare_publisher(z_move(pub));
-
     z_close(z_move(s));
     return 0;
 }
@@ -122,5 +142,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
+    return (struct args_t){
+        .keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
 }
