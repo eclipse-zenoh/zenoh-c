@@ -18,7 +18,7 @@ enable_testing()
 #
 # Build zenohc library from rust sources
 #
-# target zenohc::lib - for linking zenoh-c as static or dynamic library depending on ZENOHC_STATIC boolean cache var
+# target zenohc::lib - for linking zenoh-c as static or dynamic library depending on BUILD_SHARED_LIBS boolean cache var
 # target zenohc::static - for linking zenoh-c as static library
 # target zenohc::shared - for linking zenoh-c as dynamic library
 #
@@ -34,7 +34,7 @@ declare_cache_var(ZENOHC_BUILD_TESTS_WITH_CXX FALSE BOOL "Use C++ compiler for b
 declare_cache_var(ZENOHC_CUSTOM_TARGET "" STRING "Rust target for cross compilation, 'aarch64-unknown-linux-gnu' for example")
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
-declare_cache_var(ZENOHC_LIB_STATIC FALSE BOOL "Alias zenohc::lib target to zenohc::static if TRUE, to zenohc::shared if FALSE")
+declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")
 
 #
 # Setup project version
@@ -234,31 +234,6 @@ add_custom_target(cargo ALL DEPENDS "${libs}")
 #
 # Define libraries built by cargo as targets
 #
-add_library(zenohc_static STATIC IMPORTED GLOBAL)
-add_library(zenohc_shared SHARED IMPORTED GLOBAL)
-add_library(zenohc::static ALIAS zenohc_static)
-add_library(zenohc::shared ALIAS zenohc_shared)
-if (ZENOHC_LIB_STATIC)
-	add_library(zenohc::lib ALIAS zenohc_static)
-else()
-	add_library(zenohc::lib ALIAS zenohc_shared)
-endif()
-add_dependencies(zenohc_static cargo)
-add_dependencies(zenohc_shared cargo)
-
-#
-# Setup additional properties for library targets
-# *IMPORTANT* any options in this section should be repeated in install/PackageConfig.cmake.in
-# to achieve correct behavior of find_package(zenohc)
-#
-get_required_static_libs(NATIVE_STATIC_LIBS)
-target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
-target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
-
-# Workaroud for https://github.com/rust-lang/cargo/issues/5045
-# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
-# If it's fixed, do not forget to correct PackageConfig.cmake.in also
-set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
 
 function(set_target_imported_locations target libr libd)
 	set_target_properties(${target}
@@ -282,26 +257,38 @@ function(set_target_imported_implib target libr libd)
 	)
 endfunction()
 
-set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
-set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
-
-if(DEFINED implibr)
-	set_target_imported_implib(zenohc_shared ${implibr} ${implibd})
-endif()
-
-# Define include directories for library targets
-status_print(source_include_dir)
-status_print(cargo_generated_include_dir)
-
-if(NOT(cargo_generated_include_dir STREQUAL ${source_include_dir}))
-	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
+#
+# Setup additional properties for library targets
+# *IMPORTANT* any options in this section should be repeated in install/PackageConfig.cmake.in
+# to achieve correct behavior of find_package(zenohc)
+#
+if (BUILD_SHARED_LIBS)
+	add_library(zenohc_shared SHARED IMPORTED GLOBAL)
+	add_library(zenohc::lib ALIAS zenohc_shared)
+	add_dependencies(zenohc_shared cargo)
+	target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
+	# Workaroud for https://github.com/rust-lang/cargo/issues/5045
+	# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
+	# If it's fixed, do not forget to correct PackageConfig.cmake.in also
+	set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
+	set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
+	if(DEFINED implibr)
+		set_target_imported_implib(zenohc_shared ${implibr} ${implibd})
+	endif()
 	target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
+	set_target_properties(zenohc_shared PROPERTIES IMPORTED_GLOBAL TRUE)
 else()
-	target_include_directories(zenohc_static INTERFACE ${source_include_dir})
-	target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
+	add_library(zenohc_static STATIC IMPORTED GLOBAL)
+	add_library(zenohc::lib ALIAS zenohc_static)
+	add_library(zenohc::static ALIAS zenohc_static)
+	add_dependencies(zenohc_static cargo)
+	get_required_static_libs(NATIVE_STATIC_LIBS)
+	target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
+	set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
+	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
+	set_target_properties(zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 endif()
 
-set_target_properties(zenohc_shared zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 
 #
 # Components included only if project is the root project
