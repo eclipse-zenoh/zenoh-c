@@ -1619,7 +1619,7 @@ pub fn generate_generic_recv_cpp(macro_func: &[FunctionSignature]) -> String {
 pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
     let mut out = "".to_owned();
 
-    out += "extern \"C\" typedef void (*z_closure_drop_callback_t)(void*);\n";
+    out += "extern \"C\" using z_closure_drop_callback_t = void(void*);\n";
     for func in macro_func {
         let return_type = &func.return_type.typename;
         let closure_name = &func.args[0].name;
@@ -1639,11 +1639,11 @@ pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String 
             .replace("_loaned", "");
         out += "\n";
         out += &format!(
-            "extern \"C\" typedef {return_type} (*{callback_type})({arg_type}, void*);
+            "extern \"C\" using {callback_type} = {return_type}({arg_type}, void*);
 inline void z_closure(
     {closure_type} {closure_name},
-    {callback_type} call,
-    z_closure_drop_callback_t drop,
+    {callback_type}* call,
+    z_closure_drop_callback_t* drop,
     void *context) {{
     {closure_name}->context = context;
     {closure_name}->drop = drop;
