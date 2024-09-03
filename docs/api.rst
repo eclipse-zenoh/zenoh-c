@@ -479,6 +479,7 @@ Functions
 .. doxygenfunction:: z_info_zid
 .. doxygenfunction:: z_info_routers_zid
 .. doxygenfunction:: z_info_peers_zid
+.. doxygenfunction:: z_id_to_string
 
 .. doxygenfunction:: z_closure_zid_drop
 .. doxygenfunction:: z_closure_zid_call

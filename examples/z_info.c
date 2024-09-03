@@ -16,14 +16,14 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
-void parse_args(int argc, char** argv, z_owned_config_t* config);
-
 void print_zid(const z_id_t* id, void* ctx) {
-    for (int i = 0; i < 16; i++) {
-        printf("%02x", id->id[i]);
-    }
-    printf("\n");
+    z_owned_string_t str;
+    z_id_to_string(id, &str);
+    printf("%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 }
+
+void parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
     z_owned_config_t config;
