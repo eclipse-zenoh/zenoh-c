@@ -221,9 +221,9 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_undeclare_querying_subscriber(
-    _this: &mut ze_moved_querying_subscriber_t,
+    this_: &mut ze_moved_querying_subscriber_t,
 ) -> result::z_result_t {
-    if let Some(s) = _this.take_rust_type() {
+    if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.0.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
@@ -232,10 +232,10 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
     result::Z_OK
 }
 
-/// Drops querying subscriber. Also attempts to undeclare it.
+/// Drops querying subscriber.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
-    ze_undeclare_querying_subscriber(this_);
+    std::mem::drop(this_.take_rust_type())
 }
 
 /// Returns ``true`` if querying subscriber is valid, ``false`` otherwise.

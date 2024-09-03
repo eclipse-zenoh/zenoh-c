@@ -430,9 +430,9 @@ pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> resu
     result::Z_OK
 }
 
-/// Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.
+/// Frees memory and resets publisher to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_drop(this_: &mut z_moved_publisher_t) {
-    z_undeclare_publisher(this_);
+pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
+    std::mem::drop(this.take_rust_type())
 }
