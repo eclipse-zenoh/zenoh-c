@@ -770,6 +770,7 @@ Types
 -----
 
 .. doxygenstruct:: ze_owned_publication_cache_t
+.. doxygenstruct:: ze_loaned_publication_cache_t
 .. doxygenstruct:: ze_publication_cache_options_t
     :members:
 .. doxygenenum:: zc_locality_t
@@ -781,6 +782,8 @@ Functions
 .. doxygenfunction:: ze_undeclare_publication_cache
 
 .. doxygenfunction:: ze_publication_cache_drop
+.. doxygenfunction:: ze_publication_cache_loan
+.. doxygenfunction:: ze_publication_cache_keyexpr
 
 .. doxygenfunction:: ze_publication_cache_options_default
 
