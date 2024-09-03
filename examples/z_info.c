@@ -16,7 +16,7 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
-void print_zid(const z_id_t *id, void *ctx) {
+void print_zid(const z_id_t* id, void* ctx) {
     z_owned_string_t str;
     z_id_to_string(id, &str);
     printf("%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
