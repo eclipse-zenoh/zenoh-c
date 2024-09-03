@@ -88,10 +88,10 @@ This repository provides a C binding based on the main [Zenoh implementation wri
    cmake --build . --target install
    ```
 
-   By default only dynamic library is installed. Set `ZENOHC_INSTALL_STATIC_LIBRARY` variable to true to install static library also:
+   By default only dynamic library is built and installed. Set `BUILD_SHARED_LIBS` variable to false to build and install static library:
 
    ```bash
-   cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local -DZENOHC_INSTALL_STATIC_LIBRARY=TRUE
+   cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local -DBUILD_SHARED_LIBS=FALSE
    cmake --build . --target install
    ```
 
@@ -100,7 +100,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
    - `zenohc::shared` for linking dynamic library
    - `zenohc::static` for linking static library
-   - `zenohc::lib` for linking static or dynamic library depending on boolean variable `ZENOHC_LIB_STATIC`
+   - `zenohc::lib` for linking static or dynamic library depending on boolean variable `BUILD_SHARED_LIBS`
 
    For `Debug` configuration suffix `d` is added to names of library files (libzenohc**d**.so).
 

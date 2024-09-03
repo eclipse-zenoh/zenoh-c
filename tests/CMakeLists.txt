@@ -22,6 +22,13 @@ foreach(file ${files})
         endif()
     endif()
 
+    if (BUILD_SHARED_LIBS AND (${target} MATCHES "^.*_build_static.*$"))
+        continue()
+    endif()
+    if (NOT BUILD_SHARED_LIBS AND (${target} MATCHES "^.*_build_shared.*$"))
+        continue()
+    endif()
+
     # Check the filename prefix to determine the test type
     if (${file} MATCHES "^.*z_api_.*$")
         set(test_type "unit")
