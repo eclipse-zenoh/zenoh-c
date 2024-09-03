@@ -19,7 +19,7 @@ use zenoh_ext::SessionExt;
 
 use crate::{
     result,
-    transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
 #[cfg(feature = "unstable")]
@@ -154,4 +154,25 @@ pub extern "C" fn ze_undeclare_publication_cache(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_publication_cache_drop(this_: &mut ze_moved_publication_cache_t) {
     ze_undeclare_publication_cache(this_);
+}
+
+/// Returns the key expression of the publication cache.
+#[no_mangle]
+pub extern "C" fn ze_publication_cache_keyexpr(
+    this_: &ze_loaned_publication_cache_t,
+) -> &z_loaned_keyexpr_t {
+    this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
+}
+
+/// Borrows querying subscriber.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_publication_cache_loan(
+    this_: &ze_owned_publication_cache_t,
+) -> &ze_loaned_publication_cache_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }

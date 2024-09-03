@@ -615,6 +615,7 @@ Functions
 ---------
 .. doxygenfunction:: z_declare_queryable
 .. doxygenfunction:: z_undeclare_queryable
+.. doxygenfunction:: z_queryable_id
 
 .. doxygenfunction:: z_queryable_options_default
 .. doxygenfunction:: z_query_reply_options_default
