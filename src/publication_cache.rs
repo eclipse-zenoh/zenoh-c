@@ -149,9 +149,9 @@ pub extern "C" fn ze_undeclare_publication_cache(
     result::Z_OK
 }
 
-/// Drops publication cache. Also attempts to undeclare it.
+/// Drops publication cache and resets it to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_drop(this_: &mut ze_moved_publication_cache_t) {
-    ze_undeclare_publication_cache(this_);
+pub extern "C" fn ze_publication_cache_drop(this: &mut ze_moved_publication_cache_t) {
+    std::mem::drop(this.take_rust_type())
 }

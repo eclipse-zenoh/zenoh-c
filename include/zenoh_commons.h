@@ -3247,7 +3247,7 @@ z_result_t z_publisher_delete(const struct z_loaned_publisher_t *publisher,
  */
 ZENOHC_API void z_publisher_delete_options_default(struct z_publisher_delete_options_t *this_);
 /**
- * Frees memory and resets publisher to its gravestone state. Also attempts undeclare publisher.
+ * Frees memory and resets publisher to its gravestone state.
  */
 ZENOHC_API void z_publisher_drop(struct z_moved_publisher_t *this_);
 /**
@@ -3466,7 +3466,7 @@ ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *th
  */
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
 /**
- * Frees memory and resets it to its gravesztone state. Will also attempt to undeclare queryable.
+ * Frees memory and resets queryable to its gravestone state.
  */
 ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
 ZENOHC_API
@@ -4188,7 +4188,7 @@ ZENOHC_API size_t z_string_len(const struct z_loaned_string_t *this_);
  */
 ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_string_t *this_);
 /**
- * Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
+ * Drops subscriber and resets it to its gravestone state.
  */
 ZENOHC_API void z_subscriber_drop(struct z_moved_subscriber_t *this_);
 /**
@@ -4871,7 +4871,7 @@ ZENOHC_API bool ze_internal_querying_subscriber_check(const ze_owned_querying_su
 ZENOHC_API void ze_internal_querying_subscriber_null(ze_owned_querying_subscriber_t *this_);
 #endif
 /**
- * Drops publication cache. Also attempts to undeclare it.
+ * Drops publication cache and resets it to its gravestone state.
  */
 #if defined(UNSTABLE)
 ZENOHC_API void ze_publication_cache_drop(ze_moved_publication_cache_t *this_);
@@ -4883,7 +4883,7 @@ ZENOHC_API void ze_publication_cache_drop(ze_moved_publication_cache_t *this_);
 ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
 #endif
 /**
- * Drops querying subscriber. Also attempts to undeclare it.
+ * Drops querying subscriber.
  */
 #if defined(UNSTABLE)
 ZENOHC_API void ze_querying_subscriber_drop(ze_moved_querying_subscriber_t *this_);
@@ -4926,5 +4926,5 @@ ZENOHC_API z_result_t ze_undeclare_publication_cache(ze_moved_publication_cache_
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(UNSTABLE)
-ZENOHC_API z_result_t ze_undeclare_querying_subscriber(ze_moved_querying_subscriber_t *_this);
+ZENOHC_API z_result_t ze_undeclare_querying_subscriber(ze_moved_querying_subscriber_t *this_);
 #endif

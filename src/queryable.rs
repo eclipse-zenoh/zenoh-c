@@ -264,11 +264,11 @@ pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> resu
     result::Z_OK
 }
 
-/// Frees memory and resets it to its gravesztone state. Will also attempt to undeclare queryable.
+/// Frees memory and resets queryable to its gravestone state.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
-    z_undeclare_queryable(this_);
+    std::mem::drop(this_.take_rust_type())
 }
 
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.

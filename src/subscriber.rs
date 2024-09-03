@@ -179,10 +179,10 @@ pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> re
     result::Z_OK
 }
 
-/// Drops subscriber and resets it to its gravestone state. Also attempts to undeclare it.
+/// Drops subscriber and resets it to its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
-    let _ = this_.take_rust_type();
+    std::mem::drop(this_.take_rust_type())
 }
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
