@@ -657,38 +657,43 @@ inline void z_call(const z_loaned_closure_sample_t* closure, const z_loaned_samp
     z_closure_sample_call(closure, sample);
 };
 
+extern "C" typedef void (*z_closure_drop_callback_t)(void*);
 
+extern "C" typedef void (*z_closure_hello_callback_t)(const z_loaned_hello_t*, void*);
 inline void z_closure(
     z_owned_closure_hello_t* closure,
-    void (*call)(const z_loaned_hello_t*, void*),
-    void (*drop)(void*),
+    z_closure_hello_callback_t call,
+    z_closure_drop_callback_t drop,
     void *context) {
     closure->context = context;
     closure->drop = drop;
     closure->call = call;
 };
+extern "C" typedef void (*z_closure_query_callback_t)(const z_loaned_query_t*, void*);
 inline void z_closure(
     z_owned_closure_query_t* closure,
-    void (*call)(const z_loaned_query_t*, void*),
-    void (*drop)(void*),
+    z_closure_query_callback_t call,
+    z_closure_drop_callback_t drop,
     void *context) {
     closure->context = context;
     closure->drop = drop;
     closure->call = call;
 };
+extern "C" typedef void (*z_closure_reply_callback_t)(const z_loaned_reply_t*, void*);
 inline void z_closure(
     z_owned_closure_reply_t* closure,
-    void (*call)(const z_loaned_reply_t*, void*),
-    void (*drop)(void*),
+    z_closure_reply_callback_t call,
+    z_closure_drop_callback_t drop,
     void *context) {
     closure->context = context;
     closure->drop = drop;
     closure->call = call;
 };
+extern "C" typedef void (*z_closure_sample_callback_t)(const z_loaned_sample_t*, void*);
 inline void z_closure(
     z_owned_closure_sample_t* closure,
-    void (*call)(const z_loaned_sample_t*, void*),
-    void (*drop)(void*),
+    z_closure_sample_callback_t call,
+    z_closure_drop_callback_t drop,
     void *context) {
     closure->context = context;
     closure->drop = drop;
