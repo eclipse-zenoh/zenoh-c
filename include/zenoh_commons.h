@@ -3469,6 +3469,12 @@ ZENOHC_API enum z_query_target_t z_query_target_default(void);
  * Frees memory and resets queryable to its gravestone state.
  */
 ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
+/**
+ * Returns the ID of the queryable.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API z_entity_global_id_t z_queryable_id(const struct z_loaned_queryable_t *queryable);
+#endif
 ZENOHC_API
 const struct z_loaned_queryable_t *z_queryable_loan(const struct z_owned_queryable_t *this_);
 /**
@@ -4875,6 +4881,20 @@ ZENOHC_API void ze_internal_querying_subscriber_null(ze_owned_querying_subscribe
  */
 #if defined(UNSTABLE)
 ZENOHC_API void ze_publication_cache_drop(ze_moved_publication_cache_t *this_);
+#endif
+/**
+ * Returns the key expression of the publication cache.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+const struct z_loaned_keyexpr_t *ze_publication_cache_keyexpr(const ze_loaned_publication_cache_t *this_);
+#endif
+/**
+ * Borrows querying subscriber.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API
+const ze_loaned_publication_cache_t *ze_publication_cache_loan(const ze_owned_publication_cache_t *this_);
 #endif
 /**
  * Constructs the default value for `ze_publication_cache_options_t`.
