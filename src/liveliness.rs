@@ -162,7 +162,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     match session
         .liveliness()
         .declare_subscriber(key_expr)
-        .history(options.is_some_and(|o|o.history))
+        .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
