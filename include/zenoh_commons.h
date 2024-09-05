@@ -2614,6 +2614,12 @@ ZENOHC_API enum z_whatami_t z_hello_whatami(const struct z_loaned_hello_t *this_
 ZENOHC_API z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
 #endif
 /**
+ * Formats the `z_id_t` into 16-digit hex string (LSB-first order)
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void z_id_to_string(const z_id_t *zid, struct z_owned_string_t *dst);
+#endif
+/**
  * Fetches the Zenoh IDs of all connected peers.
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
