@@ -50,17 +50,13 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 #[repr(C)]
 pub struct z_subscriber_options_t {
     /// Dummy field to avoid having fieldless struct
-    #[cfg(not(feature = "unstable"))]
     pub _0: u8,
 }
 
 /// Constructs the default value for `z_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
-    this_.write(z_subscriber_options_t {
-        #[cfg(not(feature = "unstable"))]
-        _0: 0,
-    });
+    this_.write(z_subscriber_options_t { _0: 0 });
 }
 
 /// Constructs and declares a subscriber for a given key expression. Dropping subscriber

@@ -619,12 +619,10 @@ typedef struct z_queryable_options_t {
  * Options passed to the `z_declare_subscriber()` function.
  */
 typedef struct z_subscriber_options_t {
-#if !defined(UNSTABLE)
   /**
    * Dummy field to avoid having fieldless struct
    */
   uint8_t _0;
-#endif
 } z_subscriber_options_t;
 /**
  * Options passed to the `z_delete()` function.
