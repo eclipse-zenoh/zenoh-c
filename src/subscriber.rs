@@ -14,52 +14,15 @@
 
 use std::mem::MaybeUninit;
 
-#[cfg(feature = "unstable")]
-use zenoh::pubsub::Reliability;
 use zenoh::{prelude::SessionDeclarations, pubsub::Subscriber, Wait};
 
+pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
 use crate::{
     keyexpr::*,
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
-
-/// The subscription reliability.
-#[cfg(feature = "unstable")]
-#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum z_reliability_t {
-    /// Defines reliability as ``BEST_EFFORT``
-    BEST_EFFORT,
-    /// Defines reliability as ``RELIABLE``
-    RELIABLE,
-}
-
-#[cfg(feature = "unstable")]
-impl From<Reliability> for z_reliability_t {
-    #[inline]
-    fn from(r: Reliability) -> Self {
-        match r {
-            Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
-            Reliability::Reliable => z_reliability_t::RELIABLE,
-        }
-    }
-}
-
-#[cfg(feature = "unstable")]
-impl From<z_reliability_t> for Reliability {
-    #[inline]
-    fn from(val: z_reliability_t) -> Self {
-        match val {
-            z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
-            z_reliability_t::RELIABLE => Reliability::Reliable,
-        }
-    }
-}
-
-pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
 decl_c_type!(
     owned(z_owned_subscriber_t, option Subscriber<'static, ()>),
     loaned(z_loaned_subscriber_t),
@@ -86,9 +49,6 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
-    /// The subscription reliability.
-    #[cfg(feature = "unstable")]
-    pub reliability: z_reliability_t,
     /// Dummy field to avoid having fieldless struct
     #[cfg(not(feature = "unstable"))]
     pub _0: u8,
@@ -98,8 +58,6 @@ pub struct z_subscriber_options_t {
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
     this_.write(z_subscriber_options_t {
-        #[cfg(feature = "unstable")]
-        reliability: Reliability::DEFAULT.into(),
         #[cfg(not(feature = "unstable"))]
         _0: 0,
     });
@@ -121,7 +79,7 @@ pub extern "C" fn z_declare_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
-    options: Option<&mut z_subscriber_options_t>,
+    _options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
@@ -133,14 +91,6 @@ pub extern "C" fn z_declare_subscriber(
             let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         });
-    #[cfg(not(feature = "unstable"))]
-    let _ = options;
-    #[cfg(feature = "unstable")]
-    let mut subscriber = subscriber;
-    #[cfg(feature = "unstable")]
-    if let Some(options) = options {
-        subscriber = subscriber.reliability(options.reliability.into());
-    }
     match subscriber.wait() {
         Ok(sub) => {
             this.write(Some(sub));

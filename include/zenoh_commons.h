@@ -163,7 +163,9 @@ typedef enum z_query_target_t {
   Z_QUERY_TARGET_ALL_COMPLETE,
 } z_query_target_t;
 /**
- * The subscription reliability.
+ * The publisher reliability.
+ * NOTE: Currently `reliability` does not trigger any data retransmission on the wire.
+ * It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
  */
 #if defined(UNSTABLE)
 typedef enum z_reliability_t {
@@ -593,6 +595,12 @@ typedef struct z_publisher_options_t {
   bool is_express;
 #if defined(UNSTABLE)
   /**
+   * The publisher reliability.
+   */
+  enum z_reliability_t reliability;
+#endif
+#if defined(UNSTABLE)
+  /**
    * The allowed destination for this publisher.
    */
   enum zc_locality_t allowed_destination;
@@ -611,12 +619,6 @@ typedef struct z_queryable_options_t {
  * Options passed to the `z_declare_subscriber()` function.
  */
 typedef struct z_subscriber_options_t {
-#if defined(UNSTABLE)
-  /**
-   * The subscription reliability.
-   */
-  enum z_reliability_t reliability;
-#endif
 #if !defined(UNSTABLE)
   /**
    * Dummy field to avoid having fieldless struct
@@ -644,6 +646,12 @@ typedef struct z_delete_options_t {
    * The timestamp of this message.
    */
   struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
+  /**
+   * The delete operation reliability.
+   */
+  enum z_reliability_t reliability;
+#endif
 #if defined(UNSTABLE)
   /**
    * The allowed destination of this message.
@@ -794,6 +802,12 @@ typedef struct z_put_options_t {
    * The timestamp of this message.
    */
   struct z_timestamp_t *timestamp;
+#if defined(UNSTABLE)
+  /**
+   * The put operation reliability.
+   */
+  enum z_reliability_t reliability;
+#endif
 #if defined(UNSTABLE)
   /**
    * The allowed destination of this message.
@@ -1947,7 +1961,7 @@ z_result_t z_declare_subscriber(struct z_owned_subscriber_t *this_,
                                 const struct z_loaned_session_t *session,
                                 const struct z_loaned_keyexpr_t *key_expr,
                                 struct z_moved_closure_sample_t *callback,
-                                struct z_subscriber_options_t *options);
+                                struct z_subscriber_options_t *_options);
 /**
  * Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).
  *
@@ -2612,6 +2626,12 @@ ZENOHC_API enum z_whatami_t z_hello_whatami(const struct z_loaned_hello_t *this_
  */
 #if defined(UNSTABLE)
 ZENOHC_API z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
+#endif
+/**
+ * Formats the `z_id_t` into 16-digit hex string (LSB-first order)
+ */
+#if defined(UNSTABLE)
+ZENOHC_API void z_id_to_string(const z_id_t *zid, struct z_owned_string_t *dst);
 #endif
 /**
  * Fetches the Zenoh IDs of all connected peers.
@@ -3505,6 +3525,12 @@ ZENOHC_API uint8_t z_random_u8(void);
 ZENOHC_API void z_ref_shm_client_storage_global(z_owned_shm_client_storage_t *this_);
 #endif
 /**
+ * Returns the default value for `reliability`.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API enum z_reliability_t z_reliability_default(void);
+#endif
+/**
  * Constructs an owned shallow copy of reply in provided uninitialized memory location.
  */
 ZENOHC_API void z_reply_clone(struct z_owned_reply_t *dst, const struct z_loaned_reply_t *this_);
@@ -3706,6 +3732,12 @@ ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned
  * Returns sample qos priority value.
  */
 ZENOHC_API enum z_priority_t z_sample_priority(const struct z_loaned_sample_t *this_);
+/**
+ * Returns the reliability setting the sample was delieverd with.
+ */
+#if defined(UNSTABLE)
+ZENOHC_API enum z_reliability_t z_sample_reliability(const struct z_loaned_sample_t *this_);
+#endif
 /**
  * Returns the sample source_info.
  */

@@ -327,6 +327,7 @@ Functions
 .. doxygenfunction:: z_sample_priority
 .. doxygenfunction:: z_sample_congestion_control
 .. doxygenfunction:: z_sample_express
+.. doxygenfunction:: z_sample_reliability
 
 
 Timestamp
@@ -495,6 +496,7 @@ Types
 
 .. doxygenenum:: z_congestion_control_t
 .. doxygenenum:: z_priority_t
+.. doxygenenum:: z_reliability_t
 
 .. doxygenstruct:: z_put_options_t
     :members:
@@ -530,6 +532,8 @@ Functions
 .. doxygenfunction:: z_publisher_put_options_default
 .. doxygenfunction:: z_publisher_delete_options_default
 
+.. doxygenfunction:: z_reliability_default
+
 .. doxygenfunction:: zc_closure_matching_status_check
 .. doxygenfunction:: zc_closure_matching_status_null
 .. doxygenfunction:: zc_closure_matching_status_drop
@@ -549,8 +553,6 @@ Types
 
 .. doxygenstruct:: z_owned_closure_sample_t
     :members:
-
-.. doxygenenum:: z_reliability_t
 
 .. doxygenstruct:: z_subscriber_options_t
     :members:
