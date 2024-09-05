@@ -367,6 +367,12 @@ typedef struct z_moved_string_t {
   struct z_owned_string_t _this;
 } z_moved_string_t;
 /**
+ * An iterator over slices of serialized data.
+ */
+typedef struct ALIGN(8) z_bytes_slice_iterator_t {
+  uint8_t _0[24];
+} z_bytes_slice_iterator_t;
+/**
  * Unique segment identifier
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
@@ -1506,6 +1512,16 @@ ZENOHC_API struct z_bytes_iterator_t z_bytes_get_iterator(const struct z_loaned_
  */
 ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_bytes_t *data);
 /**
+ * Returns an iterator on raw bytes slices contained in the `z_loaned_bytes_t`.
+ *
+ * Zenoh may store data in non-contiguous regions of memory, this iterator
+ * then allows to access raw data directly without any attempt of deserializing it.
+ * Please note that no guarantee is provided on the internal memory layout.
+ * The only provided guarantee is on the bytes order that is preserved.
+ */
+ZENOHC_API
+struct z_bytes_slice_iterator_t z_bytes_get_slice_iterator(const struct z_loaned_bytes_t *this_);
+/**
  * Gets writer for `this_`.
  */
 ZENOHC_API struct z_bytes_writer_t z_bytes_get_writer(struct z_loaned_bytes_t *this_);
@@ -1653,6 +1669,15 @@ ZENOHC_API void z_bytes_serialize_from_uint64(struct z_owned_bytes_t *this_, uin
  * Serializes an unsigned integer.
  */
 ZENOHC_API void z_bytes_serialize_from_uint8(struct z_owned_bytes_t *this_, uint8_t val);
+/**
+ * Gets next slice.
+ * @param this_: Slice iterator.
+ * @param slice: An unitialized memory location where the view for the next slice will be constructed.
+ * @return `false` if there are no more slices (in this case slice will stay unchanged), `true` otherwise.
+ */
+ZENOHC_API
+bool z_bytes_slice_iterator_next(struct z_bytes_slice_iterator_t *this_,
+                                 struct z_view_slice_t *slice);
 /**
  * Appends bytes.
  * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
