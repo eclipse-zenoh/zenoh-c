@@ -43,6 +43,9 @@ pub struct z_put_options_t {
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
+    /// The put operation reliability.
+    #[cfg(feature = "unstable")]
+    reliability: z_reliability_t,
     /// The allowed destination of this message.
     #[cfg(feature = "unstable")]
     pub allowed_destination: zc_locality_t,
@@ -63,6 +66,8 @@ pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
@@ -95,22 +100,24 @@ pub extern "C" fn z_put(
         if let Some(encoding) = options.encoding.take() {
             put = put.encoding(encoding.take_rust_type());
         };
-        #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take() {
-            put = put.source_info(source_info.take_rust_type());
-        };
         if let Some(attachment) = options.attachment.take() {
             put = put.attachment(attachment.take_rust_type());
         }
         if let Some(timestamp) = options.timestamp.as_ref() {
             put = put.timestamp(Some(timestamp.into_rust_type()));
         }
-        put = put.priority(options.priority.into());
-        put = put.congestion_control(options.congestion_control.into());
-        put = put.express(options.is_express);
+        put = put
+            .priority(options.priority.into())
+            .congestion_control(options.congestion_control.into())
+            .express(options.is_express);
         #[cfg(feature = "unstable")]
         {
-            put = put.allowed_destination(options.allowed_destination.into());
+            put = put
+                .reliability(options.reliability.into())
+                .allowed_destination(options.allowed_destination.into());
+            if let Some(source_info) = options.source_info.take() {
+                put = put.source_info(source_info.take_rust_type());
+            };
         }
     }
 
@@ -134,6 +141,9 @@ pub struct z_delete_options_t {
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
+    /// The delete operation reliability.
+    #[cfg(feature = "unstable")]
+    pub reliability: z_reliability_t,
     /// The allowed destination of this message.
     #[cfg(feature = "unstable")]
     pub allowed_destination: zc_locality_t,
@@ -148,6 +158,8 @@ pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_dele
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
     });
@@ -181,7 +193,9 @@ pub extern "C" fn z_delete(
 
         #[cfg(feature = "unstable")]
         {
-            del = del.allowed_destination(options.allowed_destination.into());
+            del = del
+                .reliability(options.reliability.into())
+                .allowed_destination(options.allowed_destination.into());
         }
     }
 
