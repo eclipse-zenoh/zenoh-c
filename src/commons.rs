@@ -15,17 +15,18 @@
 use std::{mem::MaybeUninit, ptr::null};
 
 use libc::c_ulong;
+#[cfg(feature = "unstable")]
+use zenoh::{
+    pubsub::Reliability,
+    query::ReplyKeyExpr,
+    sample::{Locality, SourceInfo},
+    session::EntityGlobalId,
+};
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
     sample::{Sample, SampleKind},
     time::Timestamp,
-};
-#[cfg(feature = "unstable")]
-use zenoh::{
-    query::ReplyKeyExpr,
-    sample::{Locality, SourceInfo},
-    session::EntityGlobalId,
 };
 
 #[cfg(feature = "unstable")]
@@ -186,6 +187,13 @@ pub extern "C" fn z_sample_congestion_control(this_: &z_loaned_sample_t) -> z_co
     this_.as_rust_type_ref().congestion_control().into()
 }
 
+#[cfg(feature = "unstable")]
+/// Returns the reliability setting the sample was delieverd with.
+#[no_mangle]
+pub extern "C" fn z_sample_reliability(this_: &z_loaned_sample_t) -> z_reliability_t {
+    this_.as_rust_type_ref().reliability().into()
+}
+
 /// Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_sample_check(this_: &z_owned_sample_t) -> bool {
@@ -254,6 +262,49 @@ impl From<zc_locality_t> for Locality {
 #[no_mangle]
 pub extern "C" fn zc_locality_default() -> zc_locality_t {
     Locality::default().into()
+}
+
+/// The publisher reliability.
+/// NOTE: Currently `reliability` does not trigger any data retransmission on the wire.
+/// It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
+#[cfg(feature = "unstable")]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum z_reliability_t {
+    /// Defines reliability as ``BEST_EFFORT``
+    BEST_EFFORT,
+    /// Defines reliability as ``RELIABLE``
+    RELIABLE,
+}
+
+#[cfg(feature = "unstable")]
+impl From<Reliability> for z_reliability_t {
+    #[inline]
+    fn from(r: Reliability) -> Self {
+        match r {
+            Reliability::BestEffort => z_reliability_t::BEST_EFFORT,
+            Reliability::Reliable => z_reliability_t::RELIABLE,
+        }
+    }
+}
+
+#[cfg(feature = "unstable")]
+/// Returns the default value for `reliability`.
+#[no_mangle]
+pub extern "C" fn z_reliability_default() -> z_reliability_t {
+    Reliability::default().into()
+}
+
+#[cfg(feature = "unstable")]
+impl From<z_reliability_t> for Reliability {
+    #[inline]
+    fn from(val: z_reliability_t) -> Self {
+        match val {
+            z_reliability_t::BEST_EFFORT => Reliability::BestEffort,
+            z_reliability_t::RELIABLE => Reliability::Reliable,
+        }
+    }
 }
 
 #[cfg(feature = "unstable")]

@@ -34,8 +34,9 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, zc_closure_matching_status_call,
-    zc_closure_matching_status_loan, zc_locality_default, zc_locality_t,
+    transmute::IntoCType, z_entity_global_id_t, z_reliability_default, z_reliability_t,
+    zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
+    zc_locality_t,
 };
 
 /// Options passed to the `z_declare_publisher()` function.
@@ -49,6 +50,9 @@ pub struct z_publisher_options_t {
     pub priority: z_priority_t,
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
+    /// The publisher reliability.
+    #[cfg(feature = "unstable")]
+    pub reliability: z_reliability_t,
     #[cfg(feature = "unstable")]
     /// The allowed destination for this publisher.
     pub allowed_destination: zc_locality_t,
@@ -62,6 +66,8 @@ pub extern "C" fn z_publisher_options_default(this_: &mut MaybeUninit<z_publishe
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
     });
@@ -103,7 +109,9 @@ pub extern "C" fn z_declare_publisher(
             .express(options.is_express);
         #[cfg(feature = "unstable")]
         {
-            p = p.allowed_destination(options.allowed_destination.into());
+            p = p
+                .reliability(options.reliability.into())
+                .allowed_destination(options.allowed_destination.into());
         }
         if let Some(encoding) = options.encoding.take() {
             p = p.encoding(encoding.take_rust_type());
