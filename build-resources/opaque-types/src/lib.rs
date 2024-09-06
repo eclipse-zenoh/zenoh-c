@@ -6,7 +6,7 @@ use std::{
 };
 
 use zenoh::{
-    bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter},
+    bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
     config::Config,
     handlers::RingChannelHandler,
     key_expr::KeyExpr,
@@ -96,8 +96,11 @@ get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
 /// A writer for serialized data.
 get_opaque_type_data!(ZBytesWriter<'static>, z_bytes_writer_t);
 
-/// An iterator over multi-element serialized data
+/// An iterator over multi-element serialized data.
 get_opaque_type_data!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
+
+/// An iterator over slices of serialized data.
+get_opaque_type_data!(ZBytesSliceIterator<'static>, z_bytes_slice_iterator_t);
 
 /// The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
