@@ -26,7 +26,8 @@ use crate::{
     z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
 };
 
-/// A callbacks for ShmProviderBackend
+/// @attention Unstable feature.
+/// @brief Callbacks for ShmProviderBackend.
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_provider_backend_callbacks_t {

@@ -25,7 +25,8 @@ use crate::{
 #[cfg(feature = "unstable")]
 use crate::{zc_locality_default, zc_locality_t};
 
-/// Options passed to the `ze_declare_publication_cache()` function.
+/// @attention Unstable feature.
+/// @brief Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     /// The prefix used for queryable.
@@ -41,7 +42,8 @@ pub struct ze_publication_cache_options_t {
     pub resources_limit: usize,
 }
 
-/// Constructs the default value for `ze_publication_cache_options_t`.
+/// @attention Unstable feature.
+/// @brief Constructs the default value for `ze_publication_cache_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_publication_cache_options_default(
     this: &mut MaybeUninit<ze_publication_cache_options_t>,
@@ -67,7 +69,8 @@ decl_c_type!(
     loaned(ze_loaned_publication_cache_t),
 );
 
-/// Constructs and declares a publication cache.
+/// @attention Unstable feature.
+/// @brief Constructs and declares a publication cache.
 ///
 /// @param this_: An uninitialized location in memory where publication cache will be constructed.
 /// @param session: A Zenoh session.
@@ -115,7 +118,8 @@ pub extern "C" fn ze_declare_publication_cache(
     }
 }
 
-/// Constructs a publication cache in a gravestone state.
+/// @attention Unstable feature.
+/// @brief Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_internal_publication_cache_null(
@@ -124,7 +128,8 @@ pub extern "C" fn ze_internal_publication_cache_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if publication cache is valid, ``false`` otherwise.
+/// @attention Unstable feature.
+/// @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_internal_publication_cache_check(
@@ -133,7 +138,8 @@ pub extern "C" fn ze_internal_publication_cache_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// Undeclares and drops publication cache.
+/// @attention Unstable feature.
+/// @brief Undeclares and drops publication cache.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -149,14 +155,16 @@ pub extern "C" fn ze_undeclare_publication_cache(
     result::Z_OK
 }
 
-/// Drops publication cache and resets it to its gravestone state.
+/// @attention Unstable feature.
+/// @brief Drops publication cache and resets it to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_publication_cache_drop(this: &mut ze_moved_publication_cache_t) {
     std::mem::drop(this.take_rust_type())
 }
 
-/// Returns the key expression of the publication cache.
+/// @attention Unstable feature.
+/// @brief Returns the key expression of the publication cache.
 #[no_mangle]
 pub extern "C" fn ze_publication_cache_keyexpr(
     this_: &ze_loaned_publication_cache_t,
@@ -164,7 +172,8 @@ pub extern "C" fn ze_publication_cache_keyexpr(
     this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
-/// Borrows querying subscriber.
+/// @attention Unstable feature.
+/// @brief Borrows querying subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_publication_cache_loan(

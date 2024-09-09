@@ -50,7 +50,8 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
     this.as_rust_type_mut_uninit().write(None);
 }
 
-/// A set of options that can be applied to a querying subscriber,
+/// @attention Unstable feature.
+/// @brief A set of options that can be applied to a querying subscriber,
 /// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
 #[repr(C)]
@@ -74,7 +75,8 @@ pub struct ze_querying_subscriber_options_t {
     query_timeout_ms: u64,
 }
 
-/// Constructs the default value for `ze_querying_subscriber_options_t`.
+/// @attention Unstable feature.
+/// @brief Constructs the default value for `ze_querying_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_options_default(
     this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
@@ -92,7 +94,8 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     });
 }
 
-/// Constructs and declares a querying subscriber for a given key expression.
+/// @attention Unstable feature.
+/// @brief Constructs and declares a querying subscriber for a given key expression.
 ///
 /// @param this_: An uninitialized memory location where querying subscriber will be constructed.
 /// @param session: A Zenoh session.
@@ -152,7 +155,8 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
 }
 
-/// Make querying subscriber perform an additional query on a specified selector.
+/// @attention Unstable feature.
+/// @brief Make querying subscriber perform an additional query on a specified selector.
 /// The queried samples will be merged with the received publications and made available in the subscriber callback.
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
@@ -216,7 +220,8 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     result::Z_OK
 }
 
-/// Undeclares the given querying subscriber, drops it and resets to a gravestone state.
+/// @attention Unstable feature.
+/// @brief Undeclares the given querying subscriber, drops it and resets to a gravestone state.
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -232,13 +237,15 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
     result::Z_OK
 }
 
-/// Drops querying subscriber.
+/// @attention Unstable feature.
+/// @brief Drops querying subscriber.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
 }
 
-/// Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
+/// @attention Unstable feature.
+/// @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn ze_internal_querying_subscriber_check(
     this_: &ze_owned_querying_subscriber_t,
@@ -246,7 +253,8 @@ pub extern "C" fn ze_internal_querying_subscriber_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// Borrows querying subscriber.
+/// @attention Unstable feature.
+/// @brief Borrows querying subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_querying_subscriber_loan(

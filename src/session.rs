@@ -79,7 +79,8 @@ pub extern "C" fn z_open(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Constructs and opens a new Zenoh session with specified client storage.
+/// @attention Unstable feature.
+/// @brief Constructs and opens a new Zenoh session with specified client storage.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]

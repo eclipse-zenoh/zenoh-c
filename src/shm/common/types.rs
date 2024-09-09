@@ -12,16 +12,19 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-/// Unique protocol identifier.
+/// @attention Unstable feature.
+/// @brief Unique protocol identifier.
 /// Here is a contract: it is up to user to make sure that incompatible ShmClient
-/// and ShmProviderBackend implementations will never use the same ProtocolID
+/// and ShmProviderBackend implementations will never use the same ProtocolID.
 #[allow(non_camel_case_types)]
 pub type z_protocol_id_t = u32;
 
-/// Unique segment identifier
+/// @attention Unstable feature.
+/// @brief Unique segment identifier.
 #[allow(non_camel_case_types)]
 pub type z_segment_id_t = u32;
 
-/// Chunk id within it's segment
+/// @attention Unstable feature.
+/// @brief Chunk id within it's segment.
 #[allow(non_camel_case_types)]
 pub type z_chunk_id_t = u32;

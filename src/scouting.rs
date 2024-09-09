@@ -64,7 +64,8 @@ pub extern "C" fn z_internal_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>
 }
 
 #[cfg(feature = "unstable")]
-/// Returns id of Zenoh entity that transmitted hello message.
+/// @attention Unstable feature.
+/// @brief Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_zid(this_: &z_loaned_hello_t) -> z_id_t {
     this_.as_rust_type_ref().zid().into_c_type()
