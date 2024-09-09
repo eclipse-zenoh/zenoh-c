@@ -50,10 +50,14 @@ pub struct z_publisher_options_t {
     pub priority: z_priority_t,
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
-    /// The publisher reliability.
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
+    /// The publisher reliability.
     pub reliability: z_reliability_t,
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
     /// The allowed destination for this publisher.
     pub allowed_destination: zc_locality_t,
 }
@@ -174,8 +178,10 @@ pub struct z_publisher_put_options_t {
     pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The timestamp of the publication.
     pub timestamp: Option<&'static z_timestamp_t>,
-    /// The source info for the publication.
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
+    /// The source info for the publication.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to attach to the publication.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
@@ -281,7 +287,8 @@ pub extern "C" fn z_publisher_delete(
     }
 }
 #[cfg(feature = "unstable")]
-/// Returns the ID of the publisher.
+/// @attention Unstable feature.
+/// @brief Returns the ID of the publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {
     publisher.as_rust_type_ref().id().into_c_type()
@@ -303,18 +310,20 @@ decl_c_type!(
     owned(zc_owned_matching_listener_t, option MatchingListener<'static, ()>),
 );
 
-/// Constructs an empty matching listener
 #[no_mangle]
 #[cfg(feature = "unstable")]
+/// @attention Unstable feature.
+/// @brief Constructs an empty matching listener.
 pub extern "C" fn zc_internal_matching_listener_null(
     this_: &mut MaybeUninit<zc_owned_matching_listener_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Checks the matching listener is for the gravestone state
 #[no_mangle]
 #[cfg(feature = "unstable")]
+/// @attention Unstable feature.
+/// @brief Checks the matching listener is for the gravestone state
 pub extern "C" fn zc_internal_matching_listener_check(
     this_: &zc_owned_matching_listener_t,
 ) -> bool {
@@ -322,7 +331,8 @@ pub extern "C" fn zc_internal_matching_listener_check(
 }
 
 #[cfg(feature = "unstable")]
-/// A struct that indicates if there exist Subscribers matching the Publisher's key expression.
+/// @attention Unstable feature.
+/// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct zc_matching_status_t {
@@ -331,7 +341,8 @@ pub struct zc_matching_status_t {
 }
 
 #[cfg(feature = "unstable")]
-/// Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
+/// @attention Unstable feature.
+/// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
 /// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
 /// @param publisher: A publisher to associate with matching listener.
@@ -370,7 +381,8 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
 }
 
 #[cfg(feature = "unstable")]
-/// Undeclares the given matching listener, droping and invalidating it.
+/// @attention Unstable feature.
+/// @brief Undeclares the given matching listener, droping and invalidating it.
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -388,19 +400,17 @@ pub extern "C" fn zc_publisher_matching_listener_undeclare(
 }
 
 #[cfg(feature = "unstable")]
-/// Undeclares the given matching listener, droping and invalidating it.
-///
-/// @return 0 in case of success, negative error code otherwise.
+/// @attention Unstable feature.
+/// @brief Undeclares the given matching listener, droping and invalidating it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_matching_listener_drop(
-    this: &mut zc_moved_matching_listener_t,
-) -> result::z_result_t {
-    zc_publisher_matching_listener_undeclare(this)
+pub extern "C" fn zc_publisher_matching_listener_drop(this: &mut zc_moved_matching_listener_t) {
+    std::mem::drop(this.take_rust_type())
 }
 
 #[cfg(feature = "unstable")]
-/// Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
+/// @attention Unstable feature.
+/// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
 #[no_mangle]
@@ -423,11 +433,11 @@ pub extern "C" fn zc_publisher_get_matching_status(
     }
 }
 
-/// Undeclares the given publisher, droping and invalidating it.
-///
-/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+/// @brief Undeclares the given publisher, droping and invalidating it.
+///
+/// @return 0 in case of success, negative error code otherwise.
 pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {

@@ -32,16 +32,16 @@ use crate::{
     z_owned_shm_mut_t,
 };
 
-/// Allocation errors
-///
-///     - **NEED_DEFRAGMENT**: defragmentation needed
-///     - **OUT_OF_MEMORY**: the provider is out of memory
-///     - **OTHER**: other error
+/// @attention Unstable feature.
+/// @brief Allocation errors
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_alloc_error_t {
+    /// Defragmentation needed.
     NEED_DEFRAGMENT,
+    /// The provider is out of memory.
     OUT_OF_MEMORY,
+    /// Other error.
     OTHER,
 }
 
@@ -67,14 +67,14 @@ impl From<z_alloc_error_t> for ZAllocError {
     }
 }
 
-/// Layouting errors
-///
-/// INCORRECT_LAYOUT_ARGS: layout arguments are incorrect
-/// PROVIDER_INCOMPATIBLE_LAYOUT: layout incompatible with provider
+/// @attention Unstable feature.
+/// @brief Layouting errors
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_layout_error_t {
+    /// Layout arguments are incorrect.
     INCORRECT_LAYOUT_ARGS,
+    /// Layout incompatible with provider.
     PROVIDER_INCOMPATIBLE_LAYOUT,
 }
 
@@ -102,7 +102,8 @@ impl From<z_layout_error_t> for ZLayoutError {
     }
 }
 
-/// An AllocAlignment.
+/// @attention Unstable feature.
+/// @brief An AllocAlignment.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_alloc_alignment_t {
@@ -116,7 +117,8 @@ decl_c_type_inequal!(
     loaned(z_loaned_memory_layout_t),
 );
 
-/// Creates a new Memory Layout
+/// @attention Unstable feature.
+/// @brief Creates a new Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_new(
     this: &mut MaybeUninit<z_owned_memory_layout_t>,
@@ -143,19 +145,22 @@ fn create_memory_layout(
     MemoryLayout::new(size, alignment)
 }
 
-/// Constructs Memory Layout in its gravestone value.
+/// @attention Unstable feature.
+/// @brief Constructs Memory Layout in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if `this` is valid.
+/// @attention Unstable feature.
+/// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// Borrows Memory Layout
+/// @attention Unstable feature.
+/// @brief Borrows Memory Layout.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_memory_layout_loan(
@@ -167,13 +172,15 @@ pub unsafe extern "C" fn z_memory_layout_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Deletes Memory Layout
+/// @attention Unstable feature.
+/// @brief Deletes Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
     let _ = this_.take_rust_type();
 }
 
-/// Extract data from Memory Layout
+/// @attention Unstable feature.
+/// @brief Extract data from Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_get_data(
     out_size: &mut MaybeUninit<usize>,
@@ -190,7 +197,8 @@ decl_c_type!(
     loaned(z_loaned_chunk_alloc_result_t),
 );
 
-/// Creates a new Chunk Alloc Result with Ok value
+/// @attention Unstable feature.
+/// @brief Creates a new Chunk Alloc Result with Ok value.
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_new_ok(
     this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
@@ -205,7 +213,8 @@ pub extern "C" fn z_chunk_alloc_result_new_ok(
     }
 }
 
-/// Creates a new Chunk Alloc Result with Error value
+/// @attention Unstable feature.
+/// @brief Creates a new Chunk Alloc Result with Error value.
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_new_error(
     this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
@@ -215,7 +224,8 @@ pub extern "C" fn z_chunk_alloc_result_new_error(
         .write(Some(Err(alloc_error.into())));
 }
 
-/// Constructs Chunk Alloc Result in its gravestone value.
+/// @attention Unstable feature.
+/// @brief Constructs Chunk Alloc Result in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_chunk_alloc_result_null(
     this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
@@ -223,7 +233,8 @@ pub extern "C" fn z_internal_chunk_alloc_result_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if `this` is valid.
+/// @attention Unstable feature.
+/// @return ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_chunk_alloc_result_check(
     this_: &z_owned_chunk_alloc_result_t,
@@ -231,7 +242,8 @@ pub extern "C" fn z_internal_chunk_alloc_result_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// Borrows Chunk Alloc Result
+/// @attention Unstable feature.
+/// @brief Borrows Chunk Alloc Result.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_chunk_alloc_result_loan(
@@ -243,13 +255,15 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Deletes Chunk Alloc Result
+/// @attention Unstable feature.
+/// @brief Deletes Chunk Alloc Result.
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
     let _ = this_.take_rust_type();
 }
 
-/// Status of SHM buffer allocation operation
+/// @attention Unstable feature.
+/// @brief Status of SHM buffer allocation operation.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_buf_alloc_status_t {
@@ -259,7 +273,8 @@ pub enum zc_buf_alloc_status_t {
     ALLOC_ERROR = 1,
 }
 
-/// A result of SHM buffer allocation operation
+/// @attention Unstable feature.
+/// @brief A result of SHM buffer allocation operation.
 #[repr(C)]
 pub struct z_buf_alloc_result_t {
     status: zc_buf_alloc_status_t,
@@ -293,7 +308,8 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
     }
 }
 
-/// Status of SHM buffer layouting + allocation operation
+/// @attention Unstable feature.
+/// @brief Status of SHM buffer layouting + allocation operation.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_buf_layout_alloc_status_t {
@@ -305,7 +321,8 @@ pub enum zc_buf_layout_alloc_status_t {
     LAYOUT_ERROR = 2,
 }
 
-/// A result of SHM buffer layouting + allocation operation
+/// @attention Unstable feature.
+/// @brief A result of SHM buffer layouting + allocation operation.
 #[repr(C)]
 pub struct z_buf_layout_alloc_result_t {
     status: zc_buf_layout_alloc_status_t,
