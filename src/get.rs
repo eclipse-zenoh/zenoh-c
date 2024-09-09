@@ -21,10 +21,9 @@ use std::{
 
 use libc::c_char;
 use zenoh::{
-    bytes::{Encoding, EncodingBuilderTrait, ZBytes},
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    bytes::{Encoding, ZBytes},
+    qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
-    sample::SampleBuilderTrait,
     Wait,
 };
 

@@ -14,9 +14,7 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    bytes::EncodingBuilderTrait,
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
-    sample::{SampleBuilderTrait, TimestampBuilderTrait},
+    qos::{CongestionControl, Priority},
     Wait,
 };
 

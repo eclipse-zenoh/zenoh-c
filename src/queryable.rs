@@ -14,11 +14,10 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    bytes::{Encoding, EncodingBuilderTrait},
+    bytes::Encoding,
     prelude::SessionDeclarations,
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    qos::{CongestionControl, Priority},
     query::{Query, Queryable},
-    sample::{SampleBuilderTrait, TimestampBuilderTrait},
     Wait,
 };
 
