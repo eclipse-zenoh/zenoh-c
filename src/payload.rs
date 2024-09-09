@@ -23,7 +23,10 @@ use std::{
 };
 
 use zenoh::{
-    bytes::{Deserialize, Serialize, ZBytes, ZBytesIterator, ZBytesReader, ZBytesWriter, ZSerde},
+    bytes::{
+        Deserialize, Serialize, ZBytes, ZBytesIterator, ZBytesReader, ZBytesSliceIterator,
+        ZBytesWriter, ZSerde,
+    },
     internal::buffers::{ZBuf, ZSliceBuffer},
 };
 
@@ -34,7 +37,8 @@ use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
-    z_owned_slice_t, z_owned_string_t, CSlice, CSliceOwned, CString, CStringOwned,
+    z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CString,
+    CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
@@ -684,6 +688,42 @@ pub extern "C" fn z_bytes_deserialize_into_pair(
             tracing::error!("Failed to deserialize the payload: {:?}", e);
             Z_EPARSE
         }
+    }
+}
+
+pub use crate::z_bytes_slice_iterator_t;
+decl_c_type!(loaned(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
+
+/// Returns an iterator on raw bytes slices contained in the `z_loaned_bytes_t`.
+///
+/// Zenoh may store data in non-contiguous regions of memory, this iterator
+/// then allows to access raw data directly without any attempt of deserializing it.
+/// Please note that no guarantee is provided on the internal memory layout.
+/// The only provided guarantee is on the bytes order that is preserved.
+#[no_mangle]
+pub extern "C" fn z_bytes_get_slice_iterator(
+    this: &'static z_loaned_bytes_t,
+) -> z_bytes_slice_iterator_t {
+    *this.as_rust_type_ref().slices().as_loaned_c_type_ref()
+}
+
+/// Gets next slice.
+/// @param this_: Slice iterator.
+/// @param slice: An unitialized memory location where the view for the next slice will be constructed.
+/// @return `false` if there are no more slices (in this case slice will stay unchanged), `true` otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_slice_iterator_next(
+    this: &mut z_bytes_slice_iterator_t,
+    slice: &mut MaybeUninit<z_view_slice_t>,
+) -> bool {
+    match this.as_rust_type_mut().next() {
+        Some(s) => {
+            slice
+                .as_rust_type_mut_uninit()
+                .write(CSliceView::from_slice(s));
+            true
+        }
+        None => false,
     }
 }
 
