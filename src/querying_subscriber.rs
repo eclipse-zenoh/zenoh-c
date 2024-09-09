@@ -14,10 +14,7 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{
-    bytes::EncodingBuilderTrait, prelude::SessionDeclarations, pubsub::Reliability,
-    qos::QoSBuilderTrait, sample::SampleBuilderTrait, session::Session, Wait,
-};
+use zenoh::{prelude::SessionDeclarations, pubsub::Reliability, session::Session, Wait};
 use zenoh_ext::*;
 
 use crate::{
