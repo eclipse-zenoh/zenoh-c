@@ -3947,15 +3947,7 @@ z_result_t z_scout(struct z_moved_config_t *config,
  */
 ZENOHC_API void z_scout_options_default(struct z_scout_options_t *this_);
 /**
- * Constructs an owned shallow copy of the session in provided uninitialized memory location.
- */
-ZENOHC_API
-void z_session_clone(struct z_owned_session_t *dst,
-                     const struct z_loaned_session_t *this_);
-/**
  * Frees memory and invalidates the session.
- *
- * This will also close the session if it does not have any clones left.
  */
 ZENOHC_API void z_session_drop(struct z_moved_session_t *this_);
 /**

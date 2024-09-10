@@ -475,8 +475,6 @@ Functions
 .. doxygenfunction:: z_session_loan
 .. doxygenfunction:: z_session_drop
 
-.. doxygenfunction:: z_session_clone
-
 .. doxygenfunction:: z_info_zid
 .. doxygenfunction:: z_info_routers_zid
 .. doxygenfunction:: z_info_peers_zid
