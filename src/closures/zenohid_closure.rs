@@ -20,7 +20,8 @@ use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_id_t,
 };
-/// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+/// @attention Unstable feature.
+/// @brief A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
 /// Closures are not guaranteed not to be called concurrently.
 ///
@@ -38,13 +39,15 @@ pub struct z_owned_closure_zid_t {
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
-/// Loaned closure.
+/// @attention Unstable feature.
+/// @brief Loaned closure.
 #[repr(C)]
 pub struct z_loaned_closure_zid_t {
     _0: [usize; 3],
 }
 
-/// Moved closure.
+/// @attention Unstable feature.
+/// @brief Moved closure.
 #[repr(C)]
 pub struct z_moved_closure_zid_t {
     pub _this: z_owned_closure_zid_t,
@@ -81,14 +84,16 @@ impl Drop for z_owned_closure_zid_t {
     }
 }
 
-/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+/// @attention Unstable feature.
+/// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_internal_closure_zid_check(this_: &z_owned_closure_zid_t) -> bool {
     !this_.is_empty()
 }
 
-/// Constructs a null closure.
+/// @attention Unstable feature.
+/// @brief Constructs a null closure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_internal_closure_zid_null(
@@ -96,7 +101,9 @@ pub unsafe extern "C" fn z_internal_closure_zid_null(
 ) {
     this_.write(z_owned_closure_zid_t::default());
 }
-/// Calls the closure. Calling an uninitialized closure is a no-op.
+
+/// @attention Unstable feature.
+/// @brief Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
     let closure = closure.as_owned_c_type_ref();
@@ -107,7 +114,9 @@ pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_
         }
     }
 }
-/// Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
+
+/// @attention Unstable feature.
+/// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_drop(closure_: &mut z_moved_closure_zid_t) {
     let _ = closure_.take_rust_type();
@@ -131,7 +140,8 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
     }
 }
 
-/// Vorrows closure.
+/// @attention Unstable feature.
+/// @brief Borrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
     closure.as_loaned_c_type_ref()

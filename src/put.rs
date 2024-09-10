@@ -14,9 +14,7 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    bytes::EncodingBuilderTrait,
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
-    sample::{SampleBuilderTrait, TimestampBuilderTrait},
+    qos::{CongestionControl, Priority},
     Wait,
 };
 
@@ -43,14 +41,20 @@ pub struct z_put_options_t {
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
+    #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
     /// The put operation reliability.
-    #[cfg(feature = "unstable")]
     reliability: z_reliability_t,
+    #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
     /// The allowed destination of this message.
-    #[cfg(feature = "unstable")]
     pub allowed_destination: zc_locality_t,
-    /// The source info for the message.
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
+    /// The source info for the message.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this message.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
@@ -141,11 +145,15 @@ pub struct z_delete_options_t {
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
+    #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
     /// The delete operation reliability.
-    #[cfg(feature = "unstable")]
     pub reliability: z_reliability_t,
-    /// The allowed destination of this message.
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
+    /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
 }
 

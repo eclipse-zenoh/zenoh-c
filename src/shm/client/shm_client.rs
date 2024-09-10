@@ -28,7 +28,8 @@ use crate::{
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
-/// A callbacks for ShmClient
+/// @attention Unstable feature.
+/// @brief Callback for ShmClient.
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_client_callbacks_t {
@@ -67,7 +68,8 @@ impl ShmClient for DynamicShmClient {
     }
 }
 
-/// Creates a new SHM Client
+/// @attention Unstable feature.
+/// @brief Creates a new SHM Client.
 #[no_mangle]
 pub extern "C" fn z_shm_client_new(
     this: &mut MaybeUninit<z_owned_shm_client_t>,
@@ -78,19 +80,22 @@ pub extern "C" fn z_shm_client_new(
     this.as_rust_type_mut_uninit().write(Some(client));
 }
 
-/// Constructs SHM client in its gravestone value.
+/// @attention Unstable feature.
+/// @brief Constructs SHM client in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_client_null(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if `this` is valid.
+/// @attention Unstable feature.
+/// @return Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_client_check(this_: &z_owned_shm_client_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// Deletes SHM Client
+/// @attention Unstable feature.
+/// @brief Deletes SHM Client.
 #[no_mangle]
 pub extern "C" fn z_shm_client_drop(this_: &mut z_moved_shm_client_t) {
     let _ = this_.take_rust_type();

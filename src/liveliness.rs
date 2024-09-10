@@ -32,7 +32,8 @@ decl_c_type!(
     loaned(zc_loaned_liveliness_token_t),
 );
 
-/// Constructs liveliness token in its gravestone state.
+/// @attention Unstable feature.
+/// @brief Constructs liveliness token in its gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_internal_liveliness_token_null(
     this_: &mut MaybeUninit<zc_owned_liveliness_token_t>,
@@ -40,25 +41,29 @@ pub extern "C" fn zc_internal_liveliness_token_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if liveliness token is valid, ``false`` otherwise.
+/// @attention Unstable feature.
+/// @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn zc_internal_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// Undeclares liveliness token, frees memory and resets it to a gravestone state.
+/// @attention Unstable feature.
+/// @brief Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_token_drop(this_: &mut zc_moved_liveliness_token_t) {
     let _ = this_.take_rust_type();
 }
 
-/// The options for `zc_liveliness_declare_token()`.
+/// @attention Unstable feature.
+/// @brief The options for `zc_liveliness_declare_token()`.
 #[repr(C)]
 pub struct zc_liveliness_declaration_options_t {
     _dummy: u8,
 }
 
-/// Constructs default value for `zc_liveliness_declaration_options_t`.
+/// @attention Unstable feature.
+/// @brief Constructs default value for `zc_liveliness_declaration_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declaration_options_default(
     this: &mut MaybeUninit<zc_liveliness_declaration_options_t>,
@@ -66,7 +71,8 @@ pub extern "C" fn zc_liveliness_declaration_options_default(
     this.write(zc_liveliness_declaration_options_t { _dummy: 0 });
 }
 
-/// Borrows token.
+/// @attention Unstable feature.
+/// @brief Borrows token.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_liveliness_token_loan(
@@ -78,7 +84,8 @@ pub unsafe extern "C" fn zc_liveliness_token_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Constructs and declares a liveliness token on the network.
+/// @attention Unstable feature.
+/// @brief Constructs and declares a liveliness token on the network.
 ///
 /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
 /// is achieved, and a DELETE sample if it's lost.
@@ -110,7 +117,8 @@ pub extern "C" fn zc_liveliness_declare_token(
     }
 }
 
-/// Destroys a liveliness token, notifying subscribers of its destruction.
+/// @attention Unstable feature.
+/// @brief Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_undeclare_token(
     this: &mut zc_moved_liveliness_token_t,
@@ -124,13 +132,15 @@ pub extern "C" fn zc_liveliness_undeclare_token(
     result::Z_OK
 }
 
-/// The options for `zc_liveliness_declare_subscriber()`
+/// @attention Unstable feature.
+/// @brief The options for `zc_liveliness_declare_subscriber()`
 #[repr(C)]
 pub struct zc_liveliness_subscriber_options_t {
     history: bool,
 }
 
-/// Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
+/// @attention Unstable feature.
+/// @brief Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_default(
     this: &mut MaybeUninit<zc_liveliness_subscriber_options_t>,
@@ -138,7 +148,8 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
     this.write(zc_liveliness_subscriber_options_t { history: false });
 }
 
-/// Declares a subscriber on liveliness tokens that intersect `key_expr`.
+/// @attention Unstable feature.
+/// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
 ///
 /// @param this_: An uninitialized memory location where subscriber will be constructed.
 /// @param session: The Zenoh session.
@@ -181,13 +192,15 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     }
 }
 
-/// The options for `zc_liveliness_get()`
+/// @attention Unstable feature.
+/// @brief The options for `zc_liveliness_get()`
 #[repr(C)]
 pub struct zc_liveliness_get_options_t {
     timeout_ms: u32,
 }
 
-/// Constructs default value `zc_liveliness_get_options_t`.
+/// @attention Unstable feature.
+/// @brief Constructs default value `zc_liveliness_get_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_get_options_default(
     this: &mut MaybeUninit<zc_liveliness_get_options_t>,
@@ -195,7 +208,8 @@ pub extern "C" fn zc_liveliness_get_options_default(
     this.write(zc_liveliness_get_options_t { timeout_ms: 10000 });
 }
 
-/// Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+/// @attention Unstable feature.
+/// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
 ///
 /// @param session: The Zenoh session.
 /// @param key_expr: The key expression to query liveliness tokens for.

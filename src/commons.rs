@@ -93,7 +93,8 @@ pub extern "C" fn z_timestamp_ntp64_time(this_: &z_timestamp_t) -> u64 {
 }
 
 #[cfg(feature = "unstable")]
-/// Returns id associated with this timestamp.
+/// @attention Unstable feature.
+/// @brief Returns id associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
     this_.as_rust_type_ref().get_id().to_le_bytes().into()
@@ -150,7 +151,8 @@ pub extern "C" fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loa
     }
 }
 #[cfg(feature = "unstable")]
-/// Returns the sample source_info.
+/// @attention Unstable feature.
+/// @brief Returns the sample source_info.
 #[no_mangle]
 pub extern "C" fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_source_info_t {
     this_
@@ -188,7 +190,8 @@ pub extern "C" fn z_sample_congestion_control(this_: &z_loaned_sample_t) -> z_co
 }
 
 #[cfg(feature = "unstable")]
-/// Returns the reliability setting the sample was delieverd with.
+/// @attention Unstable feature.
+/// @brief Returns the reliability setting the sample was delieverd with.
 #[no_mangle]
 pub extern "C" fn z_sample_reliability(this_: &z_loaned_sample_t) -> z_reliability_t {
     this_.as_rust_type_ref().reliability().into()
@@ -258,14 +261,16 @@ impl From<zc_locality_t> for Locality {
 }
 
 #[cfg(feature = "unstable")]
-/// Returns default value of `zc_locality_t`
+/// @attention Unstable feature.
+/// @brief Returns default value of `zc_locality_t`
 #[no_mangle]
 pub extern "C" fn zc_locality_default() -> zc_locality_t {
     Locality::default().into()
 }
 
-/// The publisher reliability.
-/// NOTE: Currently `reliability` does not trigger any data retransmission on the wire.
+/// @attention Unstable feature.
+/// @brief The publisher reliability.
+/// @note Currently `reliability` does not trigger any data retransmission on the wire.
 /// It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
 #[cfg(feature = "unstable")]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
@@ -290,7 +295,8 @@ impl From<Reliability> for z_reliability_t {
 }
 
 #[cfg(feature = "unstable")]
-/// Returns the default value for `reliability`.
+/// @attention Unstable feature.
+/// @brief Returns the default value for `reliability`.
 #[no_mangle]
 pub extern "C" fn z_reliability_default() -> z_reliability_t {
     Reliability::default().into()
@@ -308,7 +314,8 @@ impl From<z_reliability_t> for Reliability {
 }
 
 #[cfg(feature = "unstable")]
-/// Key expressions types to which Queryable should reply to.
+/// @attention Unstable feature.
+/// @brief Key expressions types to which Queryable should reply to.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_reply_keyexpr_t {
@@ -339,7 +346,8 @@ impl From<zc_reply_keyexpr_t> for ReplyKeyExpr {
 }
 
 #[cfg(feature = "unstable")]
-/// Returns the default value of #zc_reply_keyexpr_t.
+/// @attention Unstable feature.
+/// @brief Returns the default value of #zc_reply_keyexpr_t.
 #[no_mangle]
 pub extern "C" fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
@@ -520,13 +528,15 @@ use crate::z_entity_global_id_t;
 decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 
 #[cfg(feature = "unstable")]
-/// Returns the zenoh id of entity global id.
+/// @attention Unstable feature.
+/// @brief Returns the zenoh id of entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_zid(this_: &z_entity_global_id_t) -> z_id_t {
     this_.as_rust_type_ref().zid().into_c_type()
 }
 #[cfg(feature = "unstable")]
-/// Returns the entity id of the entity global id.
+/// @attention Unstable feature.
+/// @brief Returns the entity id of the entity global id.
 #[no_mangle]
 pub extern "C" fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
     this_.as_rust_type_ref().eid()
@@ -540,7 +550,8 @@ decl_c_type!(
 );
 
 #[cfg(feature = "unstable")]
-/// Create source info
+/// @attention Unstable feature.
+/// @brief Creates source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_new(
     this: &mut MaybeUninit<z_owned_source_info_t>,
@@ -557,7 +568,8 @@ pub extern "C" fn z_source_info_new(
 }
 
 #[cfg(feature = "unstable")]
-/// Returns the source_id of the source info.
+/// @attention Unstable feature.
+/// @brief Returns the source_id of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
     match this_.as_rust_type_ref().source_id {
@@ -568,35 +580,40 @@ pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_g
 }
 
 #[cfg(feature = "unstable")]
-/// Returns the source_sn of the source info.
+/// @attention Unstable feature.
+/// @brief Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u64 {
     this_.as_rust_type_ref().source_sn.unwrap_or(0)
 }
 
 #[cfg(feature = "unstable")]
-/// Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
+/// @attention Unstable feature.
+/// @brief Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
     this_.as_rust_type_ref().source_id.is_some() || this_.as_rust_type_ref().source_sn.is_some()
 }
 
 #[cfg(feature = "unstable")]
-/// Borrows source info.
+/// @attention Unstable feature.
+/// @brief Borrows source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_info_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 #[cfg(feature = "unstable")]
-/// Frees the memory and invalidates the source info, resetting it to a gravestone state.
+/// @attention Unstable feature.
+/// @brief Frees the memory and invalidates the source info, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_source_info_drop(this_: &mut z_moved_source_info_t) {
     let _ = this_.take_rust_type();
 }
 
 #[cfg(feature = "unstable")]
-/// Constructs source info in its gravestone state.
+/// @attention Unstable feature.
+/// @brief Constructs source info in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_source_info_null(this_: &mut MaybeUninit<z_owned_source_info_t>) {
     this_.as_rust_type_mut_uninit().write(SourceInfo::default());

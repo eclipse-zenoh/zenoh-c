@@ -14,11 +14,10 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    bytes::{Encoding, EncodingBuilderTrait},
+    bytes::Encoding,
     prelude::SessionDeclarations,
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    qos::{CongestionControl, Priority},
     query::{Query, Queryable},
-    sample::{SampleBuilderTrait, TimestampBuilderTrait},
     Wait,
 };
 
@@ -126,8 +125,10 @@ pub struct z_query_reply_options_t {
     pub is_express: bool,
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,
-    /// The source info for the reply.
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
+    /// The source info for the reply.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this reply.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
@@ -180,8 +181,10 @@ pub struct z_query_reply_del_options_t {
     pub is_express: bool,
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,
-    /// The source info for the reply.
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
+    /// The source info for the reply.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this reply.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
@@ -280,7 +283,8 @@ pub extern "C" fn z_internal_queryable_check(this_: &z_owned_queryable_t) -> boo
 }
 
 #[cfg(feature = "unstable")]
-/// Returns the ID of the queryable.
+/// @attention Unstable feature.
+/// @brief Returns the ID of the queryable.
 #[no_mangle]
 pub extern "C" fn z_queryable_id(queryable: &z_loaned_queryable_t) -> z_entity_global_id_t {
     queryable.as_rust_type_ref().id().into_c_type()

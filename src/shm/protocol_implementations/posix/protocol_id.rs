@@ -15,6 +15,7 @@
 use libc::c_uint;
 use zenoh::shm::POSIX_PROTOCOL_ID;
 
-// Protocol identifier for POSIX SHM Protocol
+/// @attention Unstable feature.
+/// @brief fProtocol identifier for POSIX SHM Protocol.
 #[no_mangle]
 pub static Z_SHM_POSIX_PROTOCOL_ID: c_uint = POSIX_PROTOCOL_ID as c_uint;

@@ -30,14 +30,16 @@ impl From<[u8; 16]> for z_id_t {
     }
 }
 
-/// Formats the `z_id_t` into 16-digit hex string (LSB-first order)
+/// @attention Unstable feature.
+/// @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)
 #[no_mangle]
 pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_string_t>) {
     let zid = zid.as_rust_type_ref();
     dst.as_rust_type_mut_uninit().write(zid.to_string().into());
 }
 
-/// Returns the session's Zenoh ID.
+/// @attention Unstable feature.
+/// @brief Returns the session's Zenoh ID.
 ///
 /// Unless the `session` is invalid, that ID is guaranteed to be non-zero.
 /// In other words, this function returning an array of 16 zeros means you failed
@@ -49,7 +51,8 @@ pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
     session.info().zid().wait().into_c_type()
 }
 
-/// Fetches the Zenoh IDs of all connected peers.
+/// @attention Unstable feature.
+/// @brief Fetches the Zenoh IDs of all connected peers.
 ///
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
@@ -69,7 +72,8 @@ pub unsafe extern "C" fn z_info_peers_zid(
     result::Z_OK
 }
 
-/// Fetches the Zenoh IDs of all connected routers.
+/// @attention Unstable feature.
+/// @brief Fetches the Zenoh IDs of all connected routers.
 ///
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
