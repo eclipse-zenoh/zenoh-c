@@ -30,14 +30,16 @@ decl_c_type!(
     loaned(zc_loaned_shm_client_list_t),
 );
 
-/// Creates a new empty list of SHM Clients
+/// @attention Unstable feature.
+/// @brief Creates a new empty list of SHM Clients.
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
     let client_list: Vec<(ProtocolID, Arc<dyn ShmClient>)> = Vec::default();
     this_.as_rust_type_mut_uninit().write(Some(client_list));
 }
 
-/// Constructs SHM client list in its gravestone value.
+/// @attention Unstable feature.
+/// @brief Constructs SHM client list in its gravestone value.
 #[no_mangle]
 pub extern "C" fn zc_internal_shm_client_list_null(
     this_: &mut MaybeUninit<zc_owned_shm_client_list_t>,
@@ -45,19 +47,22 @@ pub extern "C" fn zc_internal_shm_client_list_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if `this` is valid.
+/// @attention Unstable feature.
+/// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn zc_internal_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// Deletes list of SHM Clients
+/// @attention Unstable feature.
+/// @brief Deletes list of SHM Clients.
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_drop(this_: &mut zc_moved_shm_client_list_t) {
     let _ = this_.take_rust_type();
 }
 
-/// Borrows list of SHM Clients
+/// @attention Unstable feature.
+/// @brief Borrows list of SHM Clients.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_shm_client_list_loan(
@@ -69,7 +74,8 @@ pub unsafe extern "C" fn zc_shm_client_list_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Mutably borrows list of SHM Clients
+/// @attention Unstable feature.
+/// @brief Mutably borrows list of SHM Clients.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
@@ -81,6 +87,7 @@ pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
         .as_loaned_c_type_mut()
 }
 
+/// @attention Unstable feature.
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_add_client(
     this: &mut zc_loaned_shm_client_list_t,
@@ -99,6 +106,7 @@ decl_c_type!(
     loaned(z_loaned_shm_client_storage_t),
 );
 
+/// @attention Unstable feature.
 #[no_mangle]
 pub extern "C" fn z_ref_shm_client_storage_global(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
@@ -107,6 +115,7 @@ pub extern "C" fn z_ref_shm_client_storage_global(
         .write(Some(Arc::clone(&GLOBAL_CLIENT_STORAGE.read())));
 }
 
+/// @attention Unstable feature.
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_new_default(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
@@ -118,6 +127,7 @@ pub extern "C" fn z_shm_client_storage_new_default(
     )));
 }
 
+/// @attention Unstable feature.
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_new(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
@@ -140,7 +150,8 @@ pub extern "C" fn z_shm_client_storage_new(
     Z_OK
 }
 
-/// Performs a shallow copy of SHM Client Storage
+/// @attention Unstable feature.
+/// @brief Performs a shallow copy of SHM Client Storage.
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_clone(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
@@ -150,6 +161,7 @@ pub extern "C" fn z_shm_client_storage_clone(
         .write(Some(from.as_rust_type_ref().clone()));
 }
 
+/// @attention Unstable feature.
 /// Constructs SHM Client Storage in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_client_storage_null(
@@ -158,7 +170,8 @@ pub extern "C" fn z_internal_shm_client_storage_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if `this` is valid.
+/// @attention Unstable feature.
+/// @return ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_client_storage_check(
     this_: &z_owned_shm_client_storage_t,
@@ -166,13 +179,15 @@ pub extern "C" fn z_internal_shm_client_storage_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// Derefs SHM Client Storage
+/// @attention Unstable feature.
+/// @brief Derefs SHM Client Storage.
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_drop(this_: &mut z_moved_shm_client_storage_t) {
     let _ = this_.take_rust_type();
 }
 
-/// Borrows SHM Client Storage
+/// @attention Unstable feature.
+/// @brief Borrows SHM Client Storage.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_client_storage_loan(

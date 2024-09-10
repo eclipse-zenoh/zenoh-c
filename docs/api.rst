@@ -534,8 +534,6 @@ Functions
 
 .. doxygenfunction:: z_reliability_default
 
-.. doxygenfunction:: zc_closure_matching_status_check
-.. doxygenfunction:: zc_closure_matching_status_null
 .. doxygenfunction:: zc_closure_matching_status_drop
 .. doxygenfunction:: zc_closure_matching_status_call
 

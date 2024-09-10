@@ -18,7 +18,8 @@ use zenoh::shm::{PosixShmClient, ShmClient};
 
 use crate::{transmute::RustTypeRefUninit, z_owned_shm_client_t};
 
-/// Creates a new POSIX SHM Client
+/// @attention Unstable feature.
+/// @brief Creates a new POSIX SHM Client.
 #[no_mangle]
 pub extern "C" fn z_posix_shm_client_new(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
     let client = Arc::new(PosixShmClient) as Arc<dyn ShmClient>;

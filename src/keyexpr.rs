@@ -607,7 +607,8 @@ pub extern "C" fn z_keyexpr_join(
     }
 }
 #[cfg(feature = "unstable")]
-/// Intersection level of 2 key expressions.
+/// @attention Unstable feature.
+/// @brief Intersection level of 2 key expressions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub enum z_keyexpr_intersection_level_t {
@@ -633,9 +634,10 @@ impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
 }
 #[cfg(feature = "unstable")]
 #[no_mangle]
-/// Returns the relation between `left` and `right` from `left`'s point of view.
+/// @attention Unstable feature.
+/// @brief Returns the relation between `left` and `right` from `left`'s point of view.
 ///
-/// Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
+/// @note This is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
 pub extern "C" fn z_keyexpr_relation_to(
     left: &z_loaned_keyexpr_t,
     right: &z_loaned_keyexpr_t,

@@ -152,7 +152,8 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Deserializes data into an owned SHM buffer by copying it's shared reference
+/// @attention Unstable feature.
+/// @brief Deserializes data into an owned SHM buffer by copying it's shared reference.
 ///
 /// @param this_: Data to deserialize.
 /// @param dst: An uninitialized memory location where to construct a deserialized string.
@@ -179,7 +180,8 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Deserializes data into a loaned SHM buffer
+/// @attention Unstable feature.
+/// @brief Deserializes data into a loaned SHM buffer.
 ///
 /// @param this_: Data to deserialize.
 /// @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
@@ -205,7 +207,8 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Deserializes data into a mutably loaned SHM buffer
+/// @attention Unstable feature.
+/// @brief Deserializes data into a mutably loaned SHM buffer.
 ///
 /// @param this_: Data to deserialize.
 /// @param dst: An uninitialized memory location where to construct a deserialized SHM buffer.
@@ -810,7 +813,8 @@ pub extern "C" fn z_bytes_iterator_next(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Serializes from an immutable SHM buffer consuming it
+/// @attention Unstable feature.
+/// @brief Serializes from an immutable SHM buffer consuming it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_serialize_from_shm(
@@ -826,7 +830,8 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// Serializes from a mutable SHM buffer consuming it
+/// @attention Unstable feature.
+/// @brief Serializes from a mutable SHM buffer consuming it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_serialize_from_shm_mut(

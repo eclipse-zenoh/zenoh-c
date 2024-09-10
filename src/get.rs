@@ -21,10 +21,9 @@ use std::{
 
 use libc::c_char;
 use zenoh::{
-    bytes::{Encoding, EncodingBuilderTrait, ZBytes},
-    qos::{CongestionControl, Priority, QoSBuilderTrait},
+    bytes::{Encoding, ZBytes},
+    qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
-    sample::SampleBuilderTrait,
     Wait,
 };
 
@@ -151,8 +150,9 @@ pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loane
 }
 
 #[cfg(feature = "unstable")]
-/// Gets the id of the zenoh instance that answered this Reply.
-/// Returns `true` if id is present.
+/// @attention Unstable feature.
+/// @brief Gets the id of the zenoh instance that answered this Reply.
+/// @return `true` if id is present.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_replier_id(
@@ -196,14 +196,20 @@ pub struct z_get_options_t {
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
     /// The allowed destination for the query.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
     /// The accepted replies for the query.
     pub accept_replies: zc_reply_keyexpr_t,
     /// The priority of the query.
     pub priority: z_priority_t,
     #[cfg(feature = "unstable")]
+    /// @attention Unstable feature.
+    ///
     /// The source info for the query.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// An optional attachment to attach to the query.

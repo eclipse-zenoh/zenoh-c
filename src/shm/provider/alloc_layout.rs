@@ -50,7 +50,8 @@ decl_c_type!(
     loaned(z_loaned_alloc_layout_t),
 );
 
-/// Creates a new Alloc Layout for SHM Provider
+/// @attention Unstable feature.
+/// @brief Creates a new Alloc Layout for SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_new(
     this: &mut MaybeUninit<z_owned_alloc_layout_t>,
