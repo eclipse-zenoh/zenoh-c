@@ -437,6 +437,12 @@ typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
 /**
+ * Options passed to the `z_open()` function.
+ */
+typedef struct z_open_options_t {
+  uint8_t _dummy;
+} z_open_options_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -1203,7 +1209,7 @@ typedef struct zc_liveliness_declaration_options_t {
  */
 #if defined(UNSTABLE)
 typedef struct zc_liveliness_subscriber_options_t {
-  uint8_t _dummy;
+  bool history;
 } zc_liveliness_subscriber_options_t;
 #endif
 /**
@@ -1843,7 +1849,8 @@ ZENOHC_API struct z_clock_t z_clock_now(void);
  * the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
  */
 ZENOHC_API
-z_result_t z_close(struct z_moved_session_t *session);
+z_result_t z_close(struct z_moved_session_t *session,
+                   const struct z_open_options_t *_options);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -3354,7 +3361,8 @@ z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
  */
 ZENOHC_API
 z_result_t z_open(struct z_owned_session_t *this_,
-                  struct z_moved_config_t *config);
+                  struct z_moved_config_t *config,
+                  const struct z_open_options_t *_options);
 /**
  * @attention Unstable feature.
  * @brief Constructs and opens a new Zenoh session with specified client storage.
@@ -4920,7 +4928,7 @@ z_result_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
                                             const struct z_loaned_session_t *session,
                                             const struct z_loaned_keyexpr_t *key_expr,
                                             struct z_moved_closure_sample_t *callback,
-                                            struct zc_liveliness_subscriber_options_t *_options);
+                                            struct zc_liveliness_subscriber_options_t *options);
 #endif
 /**
  * @attention Unstable feature.

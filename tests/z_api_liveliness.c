@@ -63,8 +63,8 @@ void test_liveliness_sub() {
     z_view_keyexpr_from_str(&k1, token1_expr);
     z_view_keyexpr_from_str(&k2, token2_expr);
 
-    z_open(&s1, z_move(c1));
-    z_open(&s2, z_move(c2));
+    z_open(&s1, z_move(c1), NULL);
+    z_open(&s2, z_move(c2), NULL);
 
     z_owned_closure_sample_t closure;
     context_t context = {false, false, false, false};
@@ -105,8 +105,8 @@ void test_liveliness_get() {
     z_view_keyexpr_from_str(&k, expr);
     z_view_keyexpr_from_str(&k1, token1_expr);
 
-    z_open(&s1, z_move(c1));
-    z_open(&s2, z_move(c2));
+    z_open(&s1, z_move(c1), NULL);
+    z_open(&s2, z_move(c2), NULL);
 
     z_sleep_s(1);
     zc_owned_liveliness_token_t t1;

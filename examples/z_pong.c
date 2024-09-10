@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     parse_args(argc, argv, &config);
 
     z_owned_session_t session;
-    z_open(&session, z_move(config));
+    z_open(&session, z_move(config), NULL);
     z_view_keyexpr_t ping;
     z_view_keyexpr_from_str_unchecked(&ping, "test/ping");
     z_view_keyexpr_t pong;
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
         z_sleep_s(1);
     }
     z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(session));
+    z_close(z_move(session), NULL);
 }
 
 void print_help() {

@@ -86,7 +86,7 @@ void undeclare() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    z_open(&s, z_move(config));
+    z_open(&s, z_move(config), NULL);
 
     z_view_keyexpr_t view_ke;
     z_view_keyexpr_from_str(&view_ke, "test/thr");

@@ -26,7 +26,7 @@ void put() {
     z_config_default(&config);
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         exit(-1);
     }
@@ -42,7 +42,7 @@ void put() {
     z_put(z_loan(s), z_loan(ke), z_move(payload), &opts);
     assert(!z_internal_check(payload));
     assert(!z_internal_check(attachment));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 }
 
 void get() {
@@ -50,7 +50,7 @@ void get() {
     z_config_default(&config);
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         exit(-1);
     }
@@ -70,7 +70,7 @@ void get() {
     z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
     assert(!z_internal_check(payload));
     assert(!z_internal_check(attachment));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 }
 
 int main(int argc, char **argv) {
