@@ -1203,7 +1203,7 @@ typedef struct zc_liveliness_declaration_options_t {
  */
 #if defined(UNSTABLE)
 typedef struct zc_liveliness_subscriber_options_t {
-  uint8_t _dummy;
+  bool history;
 } zc_liveliness_subscriber_options_t;
 #endif
 /**
@@ -3324,9 +3324,9 @@ void z_memory_layout_drop(z_moved_memory_layout_t *this_);
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_memory_layout_get_data(size_t *out_size,
-                              struct z_alloc_alignment_t *out_alignment,
-                              const z_loaned_memory_layout_t *this_);
+void z_memory_layout_get_data(const z_loaned_memory_layout_t *this_,
+                              size_t *out_size,
+                              struct z_alloc_alignment_t *out_alignment);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4127,12 +4127,19 @@ z_loaned_shm_mut_t *z_shm_mut_loan_mut(z_owned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Tries to construct ZShmMut slice from ZShm slice.
+ * @brief Tries to obtain mutable SHM buffer instead of immutable one.
+ * @param this: mutable SHM buffer to be initialized upon success
+ * @param that: immutable SHM buffer
+ * @param immut: immutable SHM buffer returned back to caller's side
+ * ONLY in case of Z_EUNAVAILABLE failure
+ * @return Z_OK in case of success, Z_EUNAVAILABLE in case of unsuccessful write access,
+ * Z_EINVAL if moved value is incorrect.
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-void z_shm_mut_try_from_immut(z_owned_shm_mut_t *this_,
-                              z_moved_shm_t *that);
+z_result_t z_shm_mut_try_from_immut(z_owned_shm_mut_t *this_,
+                                    z_moved_shm_t *that,
+                                    z_owned_shm_t *immut);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4982,7 +4989,7 @@ z_result_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
                                             const struct z_loaned_session_t *session,
                                             const struct z_loaned_keyexpr_t *key_expr,
                                             struct z_moved_closure_sample_t *callback,
-                                            struct zc_liveliness_subscriber_options_t *_options);
+                                            struct zc_liveliness_subscriber_options_t *options);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5125,9 +5132,9 @@ enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
  */
 #if (defined(SHARED_MEMORY) && defined(UNSTABLE))
 ZENOHC_API
-z_result_t zc_shm_client_list_add_client(z_protocol_id_t id,
-                                         z_moved_shm_client_t *client,
-                                         zc_loaned_shm_client_list_t *list);
+z_result_t zc_shm_client_list_add_client(zc_loaned_shm_client_list_t *this_,
+                                         z_protocol_id_t id,
+                                         z_moved_shm_client_t *client);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

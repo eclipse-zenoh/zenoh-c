@@ -136,7 +136,7 @@ pub extern "C" fn zc_liveliness_undeclare_token(
 /// @brief The options for `zc_liveliness_declare_subscriber()`
 #[repr(C)]
 pub struct zc_liveliness_subscriber_options_t {
-    _dummy: u8,
+    history: bool,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -145,7 +145,7 @@ pub struct zc_liveliness_subscriber_options_t {
 pub extern "C" fn zc_liveliness_subscriber_options_default(
     this: &mut MaybeUninit<zc_liveliness_subscriber_options_t>,
 ) {
-    this.write(zc_liveliness_subscriber_options_t { _dummy: 0 });
+    this.write(zc_liveliness_subscriber_options_t { history: false });
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -164,7 +164,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
-    _options: Option<&mut zc_liveliness_subscriber_options_t>,
+    options: Option<&mut zc_liveliness_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
@@ -173,6 +173,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     match session
         .liveliness()
         .declare_subscriber(key_expr)
+        .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let sample = sample.as_loaned_c_type_ref();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)

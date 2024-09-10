@@ -90,14 +90,14 @@ pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_add_client(
+    this: &mut zc_loaned_shm_client_list_t,
     id: z_protocol_id_t,
     client: &mut z_moved_shm_client_t,
-    list: &mut zc_loaned_shm_client_list_t,
 ) -> z_result_t {
     let Some(client) = client.take_rust_type() else {
         return Z_EINVAL;
     };
-    list.as_rust_type_mut().push((id, client));
+    this.as_rust_type_mut().push((id, client));
     Z_OK
 }
 
