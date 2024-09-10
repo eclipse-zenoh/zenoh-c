@@ -77,12 +77,14 @@ int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
     ASSERT_CHECK(immut2);
 
     z_owned_shm_mut_t mut;
-    z_shm_mut_try_from_immut(&mut, z_move(immut2));
-    ASSERT_CHECK_ERR(immut2);
-    ASSERT_CHECK_ERR(mut);
+    ASSERT_TRUE(Z_EUNAVAILABLE == z_shm_mut_try_from_immut(&mut, z_move(immut2), &immut2));
+    ASSERT_CHECK(immut2);
 
-    z_shm_mut_try_from_immut(&mut, z_move(immut));
+    z_drop(z_move(immut2));
+
+    ASSERT_TRUE(Z_OK == z_shm_mut_try_from_immut(&mut, z_move(immut), &immut));
     ASSERT_CHECK(mut);
+    ASSERT_CHECK_ERR(immut);
 
     z_drop(z_move(mut));
     ASSERT_CHECK_ERR(mut);
@@ -189,7 +191,7 @@ void alloc_fn(struct z_owned_chunk_alloc_result_t* result, const struct z_loaned
     // check size and alignment
     size_t size = 0;
     z_alloc_alignment_t alignment;
-    z_memory_layout_get_data(&size, &alignment, layout);
+    z_memory_layout_get_data(layout, &size, &alignment);
     assert(size == 1);
     assert(alignment.pow == 0);
 
@@ -251,7 +253,7 @@ void layout_for_fn(struct z_owned_memory_layout_t* layout, void* context) {
     // check size and alignment
     size_t size = 0;
     z_alloc_alignment_t alignment;
-    z_memory_layout_get_data(&size, &alignment, z_loan(*layout));
+    z_memory_layout_get_data(z_loan(*layout), &size, &alignment);
 
     if (size != 1 || alignment.pow != 0) {
         z_memory_layout_drop(z_move(*layout));
@@ -377,7 +379,7 @@ int run_client_storage() {
     ASSERT_CHECK(client);
 
     // add client to the list
-    ASSERT_OK(zc_shm_client_list_add_client(Z_SHM_POSIX_PROTOCOL_ID, z_move(client), z_loan_mut(list)));
+    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), Z_SHM_POSIX_PROTOCOL_ID, z_move(client)));
     ASSERT_CHECK_ERR(client);
 
     // create client storage from the list
@@ -426,7 +428,7 @@ int run_c_client() {
     ASSERT_CHECK(client);
 
     // add client to the list
-    ASSERT_OK(zc_shm_client_list_add_client(100500, z_move(client), z_loan_mut(list)));
+    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), 100500, z_move(client)));
     ASSERT_CHECK_ERR(client);
 
     // create client storage from the list

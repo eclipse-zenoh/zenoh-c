@@ -183,9 +183,9 @@ pub extern "C" fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
 /// @brief Extract data from Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_get_data(
+    this: &z_loaned_memory_layout_t,
     out_size: &mut MaybeUninit<usize>,
     out_alignment: &mut MaybeUninit<z_alloc_alignment_t>,
-    this: &z_loaned_memory_layout_t,
 ) {
     let layout = this.as_rust_type_ref();
     out_size.write(layout.size().into());
