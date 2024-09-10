@@ -30,7 +30,7 @@ impl From<[u8; 16]> for z_id_t {
     }
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)
 #[no_mangle]
 pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_string_t>) {
@@ -38,7 +38,7 @@ pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_str
     dst.as_rust_type_mut_uninit().write(zid.to_string().into());
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the session's Zenoh ID.
 ///
 /// Unless the `session` is invalid, that ID is guaranteed to be non-zero.
@@ -51,7 +51,7 @@ pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
     session.info().zid().wait().into_c_type()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Fetches the Zenoh IDs of all connected peers.
 ///
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,
@@ -72,7 +72,7 @@ pub unsafe extern "C" fn z_info_peers_zid(
     result::Z_OK
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Fetches the Zenoh IDs of all connected routers.
 ///
 /// `callback` will be called once for each ID, is guaranteed to never be called concurrently,

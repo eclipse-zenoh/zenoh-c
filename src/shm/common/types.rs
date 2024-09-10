@@ -12,19 +12,19 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Unique protocol identifier.
 /// Here is a contract: it is up to user to make sure that incompatible ShmClient
 /// and ShmProviderBackend implementations will never use the same ProtocolID.
 #[allow(non_camel_case_types)]
 pub type z_protocol_id_t = u32;
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Unique segment identifier.
 #[allow(non_camel_case_types)]
 pub type z_segment_id_t = u32;
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Chunk id within it's segment.
 #[allow(non_camel_case_types)]
 pub type z_chunk_id_t = u32;

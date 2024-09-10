@@ -131,7 +131,7 @@ get_opaque_type_data!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
 get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh querying subscriber.
 ///
 /// In addition to receiving the data it is subscribed to,
@@ -141,7 +141,7 @@ get_opaque_type_data!(
     ze_owned_querying_subscriber_t
 );
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned Zenoh querying subscriber.
 get_opaque_type_data!(
     (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
@@ -190,7 +190,7 @@ get_opaque_type_data!(Option<Config>, z_owned_config_t);
 get_opaque_type_data!(Config, z_loaned_config_t);
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -207,7 +207,7 @@ get_opaque_type_data!(Option<Publisher<'static>>, z_owned_publisher_t);
 get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh matching listener.
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
@@ -226,7 +226,7 @@ get_opaque_type_data!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
 get_opaque_type_data!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
 /// expressions.
@@ -237,10 +237,10 @@ get_opaque_type_data!(
     zc_owned_liveliness_token_t
 );
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh publication cache.
 ///
 /// Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
@@ -250,7 +250,7 @@ get_opaque_type_data!(
     ze_owned_publication_cache_t
 );
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned Zenoh publication cache.
 get_opaque_type_data!(
     zenoh_ext::PublicationCache<'static>,
@@ -284,18 +284,18 @@ get_opaque_type_data!(Option<Hello>, z_owned_hello_t);
 get_opaque_type_data!(Hello, z_loaned_hello_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned SHM Client.
 get_opaque_type_data!(Option<Arc<dyn ShmClient>>, z_owned_shm_client_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned list of SHM Clients.
 get_opaque_type_data!(
     Option<Vec<(ProtocolID, Arc<dyn ShmClient>)>>,
     zc_owned_shm_client_list_t
 );
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned list of SHM Clients.
 get_opaque_type_data!(
     Vec<(ProtocolID, Arc<dyn ShmClient>)>,
@@ -303,7 +303,7 @@ get_opaque_type_data!(
 );
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned SHM Client Storage
 get_opaque_type_data!(Option<Arc<ShmClientStorage>>, z_owned_shm_client_storage_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -311,38 +311,38 @@ get_opaque_type_data!(Option<Arc<ShmClientStorage>>, z_owned_shm_client_storage_
 get_opaque_type_data!(Arc<ShmClientStorage>, z_loaned_shm_client_storage_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned MemoryLayout.
 get_opaque_type_data!(Option<MemoryLayout>, z_owned_memory_layout_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned MemoryLayout.
 get_opaque_type_data!(MemoryLayout, z_loaned_memory_layout_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned ChunkAllocResult.
 get_opaque_type_data!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned ChunkAllocResult.
 get_opaque_type_data!(ChunkAllocResult, z_loaned_chunk_alloc_result_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned ZShm slice.
 get_opaque_type_data!(Option<ZShm>, z_owned_shm_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned ZShm slice.
 get_opaque_type_data!(zshm, z_loaned_shm_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned ZShmMut slice.
 get_opaque_type_data!(Option<ZShmMut>, z_owned_shm_mut_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned ZShmMut slice.
 get_opaque_type_data!(zshmmut, z_loaned_shm_mut_t);
 
@@ -408,11 +408,11 @@ enum CDummySHMProvider {
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned ShmProvider.
 get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shm_provider_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned ShmProvider.
 get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
 
@@ -430,11 +430,11 @@ enum CSHMLayout {
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned ShmProvider's AllocLayout.
 get_opaque_type_data!(Option<CSHMLayout>, z_owned_alloc_layout_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned ShmProvider's AllocLayout.
 get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
 
@@ -481,14 +481,14 @@ get_opaque_type_data!(
 get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh-allocated source info`.
 get_opaque_type_data!(SourceInfo, z_owned_source_info_t);
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned source info.
 get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An entity gloabal id.
 get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);

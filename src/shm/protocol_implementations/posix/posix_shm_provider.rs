@@ -32,7 +32,7 @@ pub type PosixShmProvider =
 pub type PosixAllocLayout =
     AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new POSIX SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_posix_shm_provider_new(

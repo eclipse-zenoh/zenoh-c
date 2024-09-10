@@ -79,7 +79,7 @@ pub extern "C" fn z_open(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs and opens a new Zenoh session with specified client storage.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).

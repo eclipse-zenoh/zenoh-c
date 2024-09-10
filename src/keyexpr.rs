@@ -607,7 +607,7 @@ pub extern "C" fn z_keyexpr_join(
     }
 }
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Intersection level of 2 key expressions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
@@ -634,7 +634,7 @@ impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
 }
 #[cfg(feature = "unstable")]
 #[no_mangle]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the relation between `left` and `right` from `left`'s point of view.
 ///
 /// @note This is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.

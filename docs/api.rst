@@ -501,11 +501,13 @@ Types
 .. doxygenstruct:: z_put_options_t
     :members:
 .. doxygenstruct:: z_delete_options_t
+    :members:
 .. doxygenstruct:: z_publisher_options_t
     :members:
 .. doxygenstruct:: z_publisher_put_options_t
     :members:
 .. doxygenstruct:: z_publisher_delete_options_t
+    :members:
 
 .. doxygenstruct:: zc_owned_matching_listener_t
 .. doxygenstruct:: zc_owned_closure_matching_status_t

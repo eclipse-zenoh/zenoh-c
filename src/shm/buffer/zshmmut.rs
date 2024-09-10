@@ -30,14 +30,14 @@ decl_c_type!(
     loaned(z_loaned_shm_mut_t, zshmmut),
 );
 
-/// @attention Unstable feature.
-/// Tries to obtain mutable SHM buffer instead of immutable one
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Tries to obtain mutable SHM buffer instead of immutable one.
 /// @param this: mutable SHM buffer to be initialized upon success
 /// @param that: immutable SHM buffer
 /// @param immut: immutable SHM buffer returned back to caller's side
 /// ONLY in case of Z_EUNAVAILABLE failure
 /// @return Z_OK in case of success, Z_EUNAVAILABLE in case of unsuccessful write access,
-/// Z_EINVAL if moved value is incorrect
+/// Z_EINVAL if moved value is incorrect.
 #[no_mangle]
 pub extern "C" fn z_shm_mut_try_from_immut(
     this: &mut MaybeUninit<z_owned_shm_mut_t>,
@@ -59,21 +59,21 @@ pub extern "C" fn z_shm_mut_try_from_immut(
     result::Z_EINVAL
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs ZShmMut slice in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_mut_null(this_: &mut MaybeUninit<z_owned_shm_mut_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_mut_check(this_: &z_owned_shm_mut_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows ZShmMut slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -86,7 +86,7 @@ pub unsafe extern "C" fn z_shm_mut_loan(this_: &z_owned_shm_mut_t) -> &z_loaned_
     shmmut.as_loaned_c_type_ref()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Mutably borrows ZShmMut slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -101,21 +101,21 @@ pub unsafe extern "C" fn z_shm_mut_loan_mut(
     shmmut.as_loaned_c_type_mut()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes ZShmMut slice.
 #[no_mangle]
 pub extern "C" fn z_shm_mut_drop(this_: &mut z_moved_shm_mut_t) {
     let _ = this_.take_rust_type();
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the length of the ZShmMut slice.
 #[no_mangle]
 pub extern "C" fn z_shm_mut_len(this_: &z_loaned_shm_mut_t) -> usize {
     this_.as_rust_type_ref().len()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the immutable pointer to the underlying data.
 #[no_mangle]
 pub extern "C" fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_uchar {
@@ -123,7 +123,7 @@ pub extern "C" fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_u
     s.as_ref().as_ptr()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the mutable pointer to the underlying data.
 #[no_mangle]
 pub extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {

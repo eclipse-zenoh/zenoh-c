@@ -32,7 +32,7 @@ use crate::{
     z_owned_shm_mut_t,
 };
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Allocation errors
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -67,7 +67,7 @@ impl From<z_alloc_error_t> for ZAllocError {
     }
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Layouting errors
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -102,7 +102,7 @@ impl From<z_layout_error_t> for ZLayoutError {
     }
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An AllocAlignment.
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -117,7 +117,7 @@ decl_c_type_inequal!(
     loaned(z_loaned_memory_layout_t),
 );
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_new(
@@ -145,21 +145,21 @@ fn create_memory_layout(
     MemoryLayout::new(size, alignment)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs Memory Layout in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows Memory Layout.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -172,14 +172,14 @@ pub unsafe extern "C" fn z_memory_layout_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
     let _ = this_.take_rust_type();
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Extract data from Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_get_data(
@@ -197,7 +197,7 @@ decl_c_type!(
     loaned(z_loaned_chunk_alloc_result_t),
 );
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Chunk Alloc Result with Ok value.
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_new_ok(
@@ -213,7 +213,7 @@ pub extern "C" fn z_chunk_alloc_result_new_ok(
     }
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Chunk Alloc Result with Error value.
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_new_error(
@@ -224,7 +224,7 @@ pub extern "C" fn z_chunk_alloc_result_new_error(
         .write(Some(Err(alloc_error.into())));
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs Chunk Alloc Result in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_chunk_alloc_result_null(
@@ -233,7 +233,7 @@ pub extern "C" fn z_internal_chunk_alloc_result_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_chunk_alloc_result_check(
@@ -242,7 +242,7 @@ pub extern "C" fn z_internal_chunk_alloc_result_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows Chunk Alloc Result.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -255,14 +255,14 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Chunk Alloc Result.
 #[no_mangle]
 pub extern "C" fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
     let _ = this_.take_rust_type();
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Status of SHM buffer allocation operation.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -273,7 +273,7 @@ pub enum zc_buf_alloc_status_t {
     ALLOC_ERROR = 1,
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A result of SHM buffer allocation operation.
 #[repr(C)]
 pub struct z_buf_alloc_result_t {
@@ -308,7 +308,7 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
     }
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Status of SHM buffer layouting + allocation operation.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -321,7 +321,7 @@ pub enum zc_buf_layout_alloc_status_t {
     LAYOUT_ERROR = 2,
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A result of SHM buffer layouting + allocation operation.
 #[repr(C)]
 pub struct z_buf_layout_alloc_result_t {

@@ -26,7 +26,7 @@ use crate::{
     shm::common::types::z_chunk_id_t,
 };
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Callbacks for ShmSegment.
 #[derive(Debug)]
 #[repr(C)]
@@ -34,7 +34,7 @@ pub struct zc_shm_segment_callbacks_t {
     map_fn: unsafe extern "C" fn(chunk_id: z_chunk_id_t, context: *mut c_void) -> *mut u8,
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An ShmSegment.
 #[derive(Debug)]
 #[repr(C)]

@@ -51,12 +51,12 @@ pub struct z_publisher_options_t {
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The publisher reliability.
     pub reliability: z_reliability_t,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The allowed destination for this publisher.
     pub allowed_destination: zc_locality_t,
@@ -179,7 +179,7 @@ pub struct z_publisher_put_options_t {
     /// The timestamp of the publication.
     pub timestamp: Option<&'static z_timestamp_t>,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the publication.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
@@ -287,7 +287,7 @@ pub extern "C" fn z_publisher_delete(
     }
 }
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the publisher.
 #[no_mangle]
 pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {
@@ -312,7 +312,7 @@ decl_c_type!(
 
 #[no_mangle]
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs an empty matching listener.
 pub extern "C" fn zc_internal_matching_listener_null(
     this_: &mut MaybeUninit<zc_owned_matching_listener_t>,
@@ -322,7 +322,7 @@ pub extern "C" fn zc_internal_matching_listener_null(
 
 #[no_mangle]
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Checks the matching listener is for the gravestone state
 pub extern "C" fn zc_internal_matching_listener_check(
     this_: &zc_owned_matching_listener_t,
@@ -331,7 +331,7 @@ pub extern "C" fn zc_internal_matching_listener_check(
 }
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -341,7 +341,7 @@ pub struct zc_matching_status_t {
 }
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
 /// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
@@ -381,7 +381,7 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
 }
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares the given matching listener, droping and invalidating it.
 ///
 /// @return 0 in case of success, negative error code otherwise.
@@ -400,7 +400,7 @@ pub extern "C" fn zc_publisher_matching_listener_undeclare(
 }
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares the given matching listener, droping and invalidating it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -409,7 +409,7 @@ pub extern "C" fn zc_publisher_matching_listener_drop(this: &mut zc_moved_matchi
 }
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).

@@ -50,7 +50,7 @@ decl_c_type!(
     loaned(z_loaned_alloc_layout_t),
 );
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Alloc Layout for SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_new(
