@@ -14,10 +14,10 @@
 use std::{ffi::CStr, mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
 
 use libc::{c_char, c_uint};
-use zenoh::config::{Config, Locator, ValidatedMap, WhatAmI};
+use zenoh::config::{Config, ValidatedMap, WhatAmI};
 
 use crate::{
-    result::{self, z_result_t, Z_OK},
+    result::{self, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
 };
@@ -335,55 +335,4 @@ pub unsafe extern "C" fn zc_config_from_env(
             result::Z_EIO
         }
     }
-}
-
-/// Constructs a default peer mode configuration.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_config_peer(this_: &mut MaybeUninit<z_owned_config_t>) -> result::z_result_t {
-    this_
-        .as_rust_type_mut_uninit()
-        .write(Some(zenoh::config::peer()));
-    Z_OK
-}
-
-/// Constructs a default, zenoh-allocated, client mode configuration.
-///
-/// @param peers: Array with `size >= n_peers`, containing peer locators to add to the config.
-/// @param n_peers: Number of peers to add to the config.
-///
-/// @return 0 in case of success, negative error code otherwise.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_config_client(
-    this: &mut MaybeUninit<z_owned_config_t>,
-    peers: *const *const c_char,
-    n_peers: usize,
-) -> z_result_t {
-    let mut res = result::Z_OK;
-    let locators = if peers.is_null() {
-        Vec::new()
-    } else if let Ok(locators) = std::slice::from_raw_parts(peers, n_peers)
-        .iter()
-        .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
-        .try_fold(Vec::<Locator>::new(), |mut acc, it| match it {
-            Err(e) => {
-                tracing::error!("Error parsing peer address: {}", e);
-                res = result::Z_EPARSE;
-                Err(())
-            }
-            Ok(loc) => {
-                acc.push(loc);
-                Ok(acc)
-            }
-        })
-    {
-        locators
-    } else {
-        z_internal_config_null(this);
-        return res;
-    };
-    this.as_rust_type_mut_uninit()
-        .write(Some(zenoh::config::client(locators)));
-    res
 }
