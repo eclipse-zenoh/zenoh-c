@@ -47,6 +47,12 @@ pub extern "C" fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_sessio
     this_.as_rust_type_mut_uninit().write(None);
 }
 
+/// Options passed to the `z_open()` function.
+#[repr(C)]
+pub struct z_open_options_t {
+    _dummy: u8,
+}
+
 /// Constructs and opens a new Zenoh session.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
@@ -55,6 +61,7 @@ pub extern "C" fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_sessio
 pub extern "C" fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
+    _options: Option<&z_open_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if cfg!(feature = "logger-autoinit") {
@@ -122,12 +129,21 @@ pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
+/// Options passed to the `z_close()` function.
+#[repr(C)]
+pub struct z_close_options_t {
+    _dummy: u8,
+}
+
 /// Closes a zenoh session. This alos drops and invalidates `session`.
 ///
 /// @return 0 in  case of success, a negative value if an error occured while closing the session,
 /// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
 #[no_mangle]
-pub extern "C" fn z_close(session: &mut z_moved_session_t) -> result::z_result_t {
+pub extern "C" fn z_close(
+    session: &mut z_moved_session_t,
+    _options: Option<&z_open_options_t>,
+) -> result::z_result_t {
     let Some(s) = session.take_rust_type() else {
         return result::Z_EINVAL;
     };
