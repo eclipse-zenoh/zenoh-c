@@ -1203,7 +1203,7 @@ typedef struct zc_liveliness_declaration_options_t {
  */
 #if defined(UNSTABLE)
 typedef struct zc_liveliness_subscriber_options_t {
-  uint8_t _dummy;
+  bool history;
 } zc_liveliness_subscriber_options_t;
 #endif
 /**
@@ -4920,7 +4920,7 @@ z_result_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
                                             const struct z_loaned_session_t *session,
                                             const struct z_loaned_keyexpr_t *key_expr,
                                             struct z_moved_closure_sample_t *callback,
-                                            struct zc_liveliness_subscriber_options_t *_options);
+                                            struct zc_liveliness_subscriber_options_t *options);
 #endif
 /**
  * @attention Unstable feature.
