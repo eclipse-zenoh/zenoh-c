@@ -3206,6 +3206,12 @@ z_result_t z_keyexpr_canonize(char *start,
 ZENOHC_API
 z_result_t z_keyexpr_canonize_null_terminated(char *start);
 /**
+ * Constructs a copy of the key expression.
+ */
+ZENOHC_API
+void z_keyexpr_clone(struct z_owned_keyexpr_t *dst,
+                     const struct z_loaned_keyexpr_t *this_);
+/**
  * Constructs key expression by concatenation of key expression in `left` with a string in `right`.
  * Returns 0 in case of success, negative error code otherwise.
  *
@@ -3716,6 +3722,12 @@ ZENOHC_API void z_reply_drop(struct z_moved_reply_t *this_);
  * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
  */
 ZENOHC_API const struct z_loaned_reply_err_t *z_reply_err(const struct z_loaned_reply_t *this_);
+/**
+ * Constructs a copy of the reply error message.
+ */
+ZENOHC_API
+void z_reply_err_clone(struct z_owned_reply_err_t *dst,
+                       const struct z_loaned_reply_err_t *this_);
 /**
  * Frees the memory and resets the reply error it to its default value.
  */

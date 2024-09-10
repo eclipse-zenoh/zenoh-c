@@ -646,3 +646,10 @@ pub extern "C" fn z_keyexpr_relation_to(
     let r = right.as_rust_type_ref();
     l.relation_to(r).into()
 }
+
+/// Constructs a copy of the key expression.
+#[no_mangle]
+extern "C" fn z_keyexpr_clone(dst: &mut MaybeUninit<z_owned_keyexpr_t>, this: &z_loaned_keyexpr_t) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
+}

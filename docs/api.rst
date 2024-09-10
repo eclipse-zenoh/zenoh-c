@@ -188,6 +188,7 @@ Functions
 
 .. doxygenfunction:: z_keyexpr_loan
 .. doxygenfunction:: z_view_keyexpr_loan
+.. doxygenfunction:: z_keyexpr_clone
 .. doxygenfunction:: z_keyexpr_drop
 
 .. doxygenfunction:: z_keyexpr_as_view_string
@@ -305,6 +306,7 @@ Functions
 .. doxygenfunction:: z_reply_err_encoding
 
 .. doxygenfunction:: z_reply_err_loan
+.. doxygenfunction:: z_reply_err_clone
 .. doxygenfunction:: z_reply_err_drop
 
 Sample
