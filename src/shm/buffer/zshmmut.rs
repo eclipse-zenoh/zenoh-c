@@ -20,8 +20,9 @@ use std::{
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
+    result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_loaned_shm_mut_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t,
+    z_loaned_shm_mut_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 
 decl_c_type!(
@@ -29,17 +30,32 @@ decl_c_type!(
     loaned(z_loaned_shm_mut_t, zshmmut),
 );
 
-/// Tries to construct ZShmMut slice from ZShm slice
+/// Tries to obtain mutable SHM buffer instead of immutable one
+/// @param this: mutable SHM buffer to be initialized upon success
+/// @param that: immutable SHM buffer
+/// @param immut: immutable SHM buffer returned back to caller's side
+/// ONLY in case of Z_EUNAVAILABLE failure
+/// @return Z_OK in case of success, Z_EUNAVAILABLE in case of unsuccessful write access,
+/// Z_EINVAL if moved value is incorrect
 #[no_mangle]
 pub extern "C" fn z_shm_mut_try_from_immut(
     this: &mut MaybeUninit<z_owned_shm_mut_t>,
     that: &mut z_moved_shm_t,
-) {
-    let shm: Option<ZShmMut> = that
-        .take_rust_type()
-        .take()
-        .and_then(|val| val.try_into().ok());
-    this.as_rust_type_mut_uninit().write(shm);
+    immut: &mut MaybeUninit<z_owned_shm_t>,
+) -> result::z_result_t {
+    if let Some(shm) = that.take_rust_type() {
+        return match ZShmMut::try_from(shm) {
+            Ok(val) => {
+                this.as_rust_type_mut_uninit().write(Some(val));
+                result::Z_OK
+            }
+            Err(old) => {
+                immut.as_rust_type_mut_uninit().write(Some(old));
+                result::Z_EUNAVAILABLE
+            }
+        };
+    }
+    result::Z_EINVAL
 }
 
 /// Constructs ZShmMut slice in its gravestone value.
