@@ -54,7 +54,7 @@ decl_c_type!(
     loaned(z_loaned_shm_provider_t),
 );
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_new(
@@ -73,7 +73,7 @@ pub extern "C" fn z_shm_provider_new(
         .write(Some(CSHMProvider::Dynamic(provider)));
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new threadsafe SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_threadsafe_new(
@@ -92,21 +92,21 @@ pub extern "C" fn z_shm_provider_threadsafe_new(
         .write(Some(CSHMProvider::DynamicThreadsafe(provider)));
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs SHM Provider in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_provider_null(this_: &mut MaybeUninit<z_owned_shm_provider_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_shm_provider_check(this_: &z_owned_shm_provider_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows SHM Provider.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -119,14 +119,14 @@ pub unsafe extern "C" fn z_shm_provider_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_drop(this_: &mut z_moved_shm_provider_t) {
     let _ = this_.take_rust_type();
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -137,7 +137,7 @@ pub extern "C" fn z_shm_provider_alloc(
     alloc::<JustAlloc>(out_result, provider, size, alignment)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -148,7 +148,7 @@ pub extern "C" fn z_shm_provider_alloc_gc(
     alloc::<GarbageCollect>(out_result, provider, size, alignment)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -159,7 +159,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag(
     alloc::<Defragment<GarbageCollect>>(out_result, provider, size, alignment)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -170,7 +170,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
     alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -181,7 +181,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
     alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -204,25 +204,25 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
     )
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_defragment(provider: &z_loaned_shm_provider_t) -> usize {
     defragment(provider)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
     garbage_collect(provider)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_available(provider: &z_loaned_shm_provider_t) -> usize {
     available(provider)
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_map(
     out_result: &mut MaybeUninit<z_owned_shm_mut_t>,

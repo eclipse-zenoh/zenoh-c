@@ -151,7 +151,7 @@ pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loane
 }
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets the id of the zenoh instance that answered this Reply.
 /// @return `true` if id is present.
 #[no_mangle]
@@ -197,19 +197,19 @@ pub struct z_get_options_t {
     /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
     pub is_express: bool,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The allowed destination for the query.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The accepted replies for the query.
     pub accept_replies: zc_reply_keyexpr_t,
     /// The priority of the query.
     pub priority: z_priority_t,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the query.
     pub source_info: Option<&'static mut z_moved_source_info_t>,

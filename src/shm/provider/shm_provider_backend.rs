@@ -26,7 +26,7 @@ use crate::{
     z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
 };
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Callbacks for ShmProviderBackend.
 #[derive(Debug)]
 #[repr(C)]

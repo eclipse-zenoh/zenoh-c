@@ -152,7 +152,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_slice(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes data into an owned SHM buffer by copying it's shared reference.
 ///
 /// @param this_: Data to deserialize.
@@ -180,7 +180,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_owned_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes data into a loaned SHM buffer.
 ///
 /// @param this_: Data to deserialize.
@@ -207,7 +207,7 @@ pub unsafe extern "C" fn z_bytes_deserialize_into_loaned_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes data into a mutably loaned SHM buffer.
 ///
 /// @param this_: Data to deserialize.
@@ -813,7 +813,7 @@ pub extern "C" fn z_bytes_iterator_next(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes from an immutable SHM buffer consuming it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -830,7 +830,7 @@ pub unsafe extern "C" fn z_bytes_serialize_from_shm(
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes from a mutable SHM buffer consuming it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

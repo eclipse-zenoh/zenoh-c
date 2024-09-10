@@ -44,17 +44,17 @@ pub struct z_put_options_t {
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The put operation reliability.
     reliability: z_reliability_t,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the message.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
@@ -148,12 +148,12 @@ pub struct z_delete_options_t {
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The delete operation reliability.
     pub reliability: z_reliability_t,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,

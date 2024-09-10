@@ -18,7 +18,7 @@ use zenoh::shm::{AllocatedChunk, ChunkDescriptor};
 
 use crate::shm::common::types::{z_chunk_id_t, z_segment_id_t};
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A ChunkDescriptor.
 #[repr(C)]
 pub struct z_chunk_descriptor_t {
@@ -44,7 +44,7 @@ impl From<&ChunkDescriptor> for z_chunk_descriptor_t {
     }
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An AllocatedChunk.
 #[repr(C)]
 pub struct z_allocated_chunk_t {

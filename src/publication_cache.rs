@@ -25,7 +25,7 @@ use crate::{
 #[cfg(feature = "unstable")]
 use crate::{zc_locality_default, zc_locality_t};
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
@@ -42,7 +42,7 @@ pub struct ze_publication_cache_options_t {
     pub resources_limit: usize,
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_publication_cache_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_publication_cache_options_default(
@@ -69,7 +69,7 @@ decl_c_type!(
     loaned(ze_loaned_publication_cache_t),
 );
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs and declares a publication cache.
 ///
 /// @param this_: An uninitialized location in memory where publication cache will be constructed.
@@ -118,7 +118,7 @@ pub extern "C" fn ze_declare_publication_cache(
     }
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -128,7 +128,7 @@ pub extern "C" fn ze_internal_publication_cache_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -138,7 +138,7 @@ pub extern "C" fn ze_internal_publication_cache_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares and drops publication cache.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -155,7 +155,7 @@ pub extern "C" fn ze_undeclare_publication_cache(
     result::Z_OK
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops publication cache and resets it to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -163,7 +163,7 @@ pub extern "C" fn ze_publication_cache_drop(this: &mut ze_moved_publication_cach
     std::mem::drop(this.take_rust_type())
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the key expression of the publication cache.
 #[no_mangle]
 pub extern "C" fn ze_publication_cache_keyexpr(
@@ -172,7 +172,7 @@ pub extern "C" fn ze_publication_cache_keyexpr(
     this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows querying subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

@@ -127,7 +127,7 @@ pub struct z_query_reply_options_t {
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the reply.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
@@ -183,7 +183,7 @@ pub struct z_query_reply_del_options_t {
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
-    /// @attention Unstable feature.
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the reply.
     pub source_info: Option<&'static mut z_moved_source_info_t>,
@@ -284,7 +284,7 @@ pub extern "C" fn z_internal_queryable_check(this_: &z_owned_queryable_t) -> boo
 }
 
 #[cfg(feature = "unstable")]
-/// @attention Unstable feature.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the queryable.
 #[no_mangle]
 pub extern "C" fn z_queryable_id(queryable: &z_loaned_queryable_t) -> z_entity_global_id_t {
