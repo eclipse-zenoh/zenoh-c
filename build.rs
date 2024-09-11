@@ -964,6 +964,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     let check_funcs = find_check_functions(path_in);
     let call_funcs = find_call_functions(path_in);
     let recv_funcs = find_recv_functions(path_in);
+    let clone_funcs = find_clone_functions(path_in);
 
     let drops = drop_funcs
         .iter()
@@ -1072,6 +1073,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
 
     let out = generate_generic_recv_c(&recv_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_clone_c(&clone_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
 
     //
     // C++ part
@@ -1126,6 +1131,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let out = generate_generic_recv_cpp(&recv_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_clone_cpp(&clone_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1337,6 +1346,32 @@ pub fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
+pub fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(
+        r"(\w+)\s+z_(\w+)_clone\(struct\s+(\w+)\s+\*(\w+),\s+const\s+struct\s+(\w+)\s+\*(\w+)\);",
+    )
+    .unwrap();
+    let mut res = Vec::<FunctionSignature>::new();
+
+    for (_, [return_type, func_name, dst_type, dst_name, src_type, src_name]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
+    {
+        let (_, _, semantic, _) = split_type_name(dst_type);
+        let f = FunctionSignature::new(
+            semantic,
+            return_type,
+            "z_".to_string() + func_name + "_clone",
+            vec![
+                FuncArg::new(&(dst_type.to_string() + "*"), dst_name),
+                FuncArg::new(&(src_type.to_string() + "*"), src_name),
+            ],
+        );
+        res.push(f);
+    }
+    res
+}
+
 pub fn generate_generic_c(
     macro_func: &[FunctionSignature],
     generic_name: &str,
@@ -1408,6 +1443,10 @@ pub fn generate_generic_take_c(macro_func: &[FunctionSignature]) -> String {
 
 pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_drop", false)
+}
+
+pub fn generate_generic_clone_c(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_c(macro_func, "z_clone", false)
 }
 
 pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
@@ -1598,6 +1637,10 @@ pub fn generate_generic_check_cpp(macro_func: &[FunctionSignature]) -> String {
 
 pub fn generate_generic_call_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_call", false)
+}
+
+pub fn generate_generic_clone_cpp(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_cpp(macro_func, "z_clone", false)
 }
 
 pub fn generate_generic_recv_cpp(macro_func: &[FunctionSignature]) -> String {
