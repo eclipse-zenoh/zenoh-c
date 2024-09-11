@@ -56,9 +56,7 @@ pub struct z_open_options_t {
 /// Constructs the default value for `z_open_options_t`.
 #[no_mangle]
 pub extern "C" fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_t>) {
-    this_.write(z_open_options_t {
-        _dummy: 0,
-    });
+    this_.write(z_open_options_t { _dummy: 0 });
 }
 
 /// Constructs and opens a new Zenoh session.
@@ -146,9 +144,7 @@ pub struct z_close_options_t {
 /// Constructs the default value for `z_close_options_t`.
 #[no_mangle]
 pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
-    this_.write(z_close_options_t {
-        _dummy: 0,
-    });
+    this_.write(z_close_options_t { _dummy: 0 });
 }
 
 /// Closes a zenoh session. This alos drops and invalidates `session`.
