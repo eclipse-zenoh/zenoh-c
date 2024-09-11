@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
 
     printf("Opening session...\n");
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)), NULL) {
+    if (z_open(&s, z_move(config), NULL)) {
         printf("Unable to open session!\n");
         exit(-1);
     }
