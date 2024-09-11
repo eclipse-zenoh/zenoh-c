@@ -314,6 +314,20 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_ring_handler_reply_t* : z_ring_handler_reply_recv, \
         const z_loaned_ring_handler_sample_t* : z_ring_handler_sample_recv \
     )(this_, query)
+
+#define z_clone(dst, this_) \
+    _Generic((dst), \
+        z_owned_bytes_t : z_bytes_clone, \
+        z_owned_config_t : z_config_clone, \
+        z_owned_encoding_t : z_encoding_clone, \
+        z_owned_keyexpr_t : z_keyexpr_clone, \
+        z_owned_query_t : z_query_clone, \
+        z_owned_reply_t : z_reply_clone, \
+        z_owned_reply_err_t : z_reply_err_clone, \
+        z_owned_sample_t : z_sample_clone, \
+        z_owned_slice_t : z_slice_clone, \
+        z_owned_string_t : z_string_clone \
+    )(&dst, this_)
 #else  // #ifndef __cplusplus
 
 
@@ -738,6 +752,38 @@ inline z_result_t z_recv(const z_loaned_ring_handler_reply_t* this_, z_owned_rep
 };
 inline z_result_t z_recv(const z_loaned_ring_handler_sample_t* this_, z_owned_sample_t* sample) {
     return z_ring_handler_sample_recv(this_, sample);
+};
+
+
+inline void z_clone(z_owned_bytes_t& dst, z_loaned_bytes_t* this_) {
+    z_bytes_clone(&dst, this_);
+};
+inline void z_clone(z_owned_config_t& dst, z_loaned_config_t* this_) {
+    z_config_clone(&dst, this_);
+};
+inline void z_clone(z_owned_encoding_t& dst, z_loaned_encoding_t* this_) {
+    z_encoding_clone(&dst, this_);
+};
+inline void z_clone(z_owned_keyexpr_t& dst, z_loaned_keyexpr_t* this_) {
+    z_keyexpr_clone(&dst, this_);
+};
+inline void z_clone(z_owned_query_t& dst, z_loaned_query_t* this_) {
+    z_query_clone(&dst, this_);
+};
+inline void z_clone(z_owned_reply_t& dst, z_loaned_reply_t* this_) {
+    z_reply_clone(&dst, this_);
+};
+inline void z_clone(z_owned_reply_err_t& dst, z_loaned_reply_err_t* this_) {
+    z_reply_err_clone(&dst, this_);
+};
+inline void z_clone(z_owned_sample_t& dst, z_loaned_sample_t* this_) {
+    z_sample_clone(&dst, this_);
+};
+inline void z_clone(z_owned_slice_t& dst, z_loaned_slice_t* this_) {
+    z_slice_clone(&dst, this_);
+};
+inline void z_clone(z_owned_string_t& dst, z_loaned_string_t* this_) {
+    z_string_clone(&dst, this_);
 };
 
 template<class T> struct z_loaned_to_owned_type_t {};
