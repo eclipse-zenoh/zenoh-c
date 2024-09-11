@@ -19,6 +19,7 @@ use zenoh::shm::{
     BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc, ShmProvider,
     ShmProviderBuilder,
 };
+use zenoh::Wait;
 
 use super::{
     chunk::z_allocated_chunk_t,
@@ -67,7 +68,7 @@ pub extern "C" fn z_shm_provider_new(
     let provider = ShmProviderBuilder::builder()
         .dynamic_protocol_id(id)
         .backend(backend)
-        .res();
+        .wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::Dynamic(provider)));
@@ -86,7 +87,7 @@ pub extern "C" fn z_shm_provider_threadsafe_new(
     let provider = ShmProviderBuilder::builder()
         .dynamic_protocol_id(id)
         .backend(backend)
-        .res();
+        .wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::DynamicThreadsafe(provider)));

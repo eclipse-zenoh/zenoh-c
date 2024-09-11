@@ -18,6 +18,7 @@ use zenoh::shm::{
     AllocLayout, PosixShmProviderBackend, ShmProvider, ShmProviderBuilder, StaticProtocolID,
     POSIX_PROTOCOL_ID,
 };
+use zenoh::Wait;
 
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
@@ -41,13 +42,13 @@ pub extern "C" fn z_posix_shm_provider_new(
 ) -> z_result_t {
     match PosixShmProviderBackend::builder()
         .with_layout(layout.as_rust_type_ref())
-        .res()
+        .wait()
     {
         Ok(backend) => {
             let provider = ShmProviderBuilder::builder()
                 .protocol_id::<POSIX_PROTOCOL_ID>()
                 .backend(backend)
-                .res();
+                .wait();
             this.as_rust_type_mut_uninit()
                 .write(Some(CSHMProvider::Posix(provider)));
             Z_OK
