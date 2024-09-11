@@ -48,8 +48,9 @@ int main(int argc, char** argv) {
         exit(-1);
     }
 
-    z_owned_ring_handler_sample_t handler;
     z_owned_closure_sample_t closure;
+    z_owned_ring_handler_sample_t handler;
+    z_ring_channel_sample_new(&closure, &handler, 3);
 
     printf("Declaring Subscriber on '%s'...\n", args.keyexpr);
     z_view_keyexpr_t ke;
