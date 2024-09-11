@@ -53,6 +53,14 @@ pub struct z_open_options_t {
     _dummy: u8,
 }
 
+/// Constructs the default value for `z_open_options_t`.
+#[no_mangle]
+pub extern "C" fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_t>) {
+    this_.write(z_open_options_t {
+        _dummy: 0,
+    });
+}
+
 /// Constructs and opens a new Zenoh session.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
@@ -135,6 +143,14 @@ pub struct z_close_options_t {
     _dummy: u8,
 }
 
+/// Constructs the default value for `z_close_options_t`.
+#[no_mangle]
+pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
+    this_.write(z_close_options_t {
+        _dummy: 0,
+    });
+}
+
 /// Closes a zenoh session. This alos drops and invalidates `session`.
 ///
 /// @return 0 in  case of success, a negative value if an error occured while closing the session,
@@ -142,7 +158,7 @@ pub struct z_close_options_t {
 #[no_mangle]
 pub extern "C" fn z_close(
     session: &mut z_moved_session_t,
-    _options: Option<&z_open_options_t>,
+    _options: Option<&z_close_options_t>,
 ) -> result::z_result_t {
     let Some(s) = session.take_rust_type() else {
         return result::Z_EINVAL;
