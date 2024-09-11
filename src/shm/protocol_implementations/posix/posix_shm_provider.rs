@@ -14,11 +14,13 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::shm::{
-    AllocLayout, PosixShmProviderBackend, ShmProvider, ShmProviderBuilder, StaticProtocolID,
-    POSIX_PROTOCOL_ID,
+use zenoh::{
+    shm::{
+        AllocLayout, PosixShmProviderBackend, ShmProvider, ShmProviderBuilder, StaticProtocolID,
+        POSIX_PROTOCOL_ID,
+    },
+    Wait,
 };
-use zenoh::Wait;
 
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},

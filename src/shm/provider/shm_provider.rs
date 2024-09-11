@@ -15,11 +15,13 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
-use zenoh::shm::{
-    BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc, ShmProvider,
-    ShmProviderBuilder,
+use zenoh::{
+    shm::{
+        BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc, ShmProvider,
+        ShmProviderBuilder,
+    },
+    Wait,
 };
-use zenoh::Wait;
 
 use super::{
     chunk::z_allocated_chunk_t,
