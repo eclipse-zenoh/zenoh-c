@@ -1965,18 +1965,6 @@ ZENOHC_API
 z_result_t z_condvar_wait(const struct z_loaned_condvar_t *this_,
                           struct z_loaned_mutex_t *m);
 /**
- * Constructs a default, zenoh-allocated, client mode configuration.
- *
- * @param peers: Array with `size >= n_peers`, containing peer locators to add to the config.
- * @param n_peers: Number of peers to add to the config.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_result_t z_config_client(struct z_owned_config_t *this_,
-                           const char *const *peers,
-                           size_t n_peers);
-/**
  * Clones the config into provided uninitialized memory location.
  */
 ZENOHC_API void z_config_clone(struct z_owned_config_t *dst, const struct z_loaned_config_t *this_);
@@ -1996,10 +1984,6 @@ ZENOHC_API const struct z_loaned_config_t *z_config_loan(const struct z_owned_co
  * Mutably borrows config.
  */
 ZENOHC_API struct z_loaned_config_t *z_config_loan_mut(struct z_owned_config_t *this_);
-/**
- * Constructs a default peer mode configuration.
- */
-ZENOHC_API z_result_t z_config_peer(struct z_owned_config_t *this_);
 /**
  * Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
  * which allows to save the bandwith, when passing key expression between Zenoh entities.
