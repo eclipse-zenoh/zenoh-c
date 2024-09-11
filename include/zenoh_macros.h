@@ -5,6 +5,7 @@
 #ifndef __cplusplus
 
 static inline z_moved_bytes_t* z_bytes_move(z_owned_bytes_t* x) { return (z_moved_bytes_t*)(x); }
+static inline z_moved_bytes_writer_t* z_bytes_writer_move(z_owned_bytes_writer_t* x) { return (z_moved_bytes_writer_t*)(x); }
 static inline z_moved_closure_hello_t* z_closure_hello_move(z_owned_closure_hello_t* x) { return (z_moved_closure_hello_t*)(x); }
 static inline z_moved_closure_query_t* z_closure_query_move(z_owned_closure_query_t* x) { return (z_moved_closure_query_t*)(x); }
 static inline z_moved_closure_reply_t* z_closure_reply_move(z_owned_closure_reply_t* x) { return (z_moved_closure_reply_t*)(x); }
@@ -39,6 +40,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 #define z_loan(this_) \
     _Generic((this_), \
         z_owned_bytes_t : z_bytes_loan, \
+        z_owned_bytes_writer_t : z_bytes_writer_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
         z_owned_closure_query_t : z_closure_query_loan, \
         z_owned_closure_reply_t : z_closure_reply_loan, \
@@ -74,6 +76,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 #define z_loan_mut(this_) \
     _Generic((this_), \
         z_owned_bytes_t : z_bytes_loan_mut, \
+        z_owned_bytes_writer_t : z_bytes_writer_loan_mut, \
         z_owned_condvar_t : z_condvar_loan_mut, \
         z_owned_config_t : z_config_loan_mut, \
         z_owned_encoding_t : z_encoding_loan_mut, \
@@ -85,6 +88,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 #define z_drop(this_) \
     _Generic((this_), \
         z_moved_bytes_t* : z_bytes_drop, \
+        z_moved_bytes_writer_t* : z_bytes_writer_drop, \
         z_moved_closure_hello_t* : z_closure_hello_drop, \
         z_moved_closure_query_t* : z_closure_query_drop, \
         z_moved_closure_reply_t* : z_closure_reply_drop, \
@@ -119,6 +123,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 #define z_move(this_) \
     _Generic((this_), \
         z_owned_bytes_t : z_bytes_move, \
+        z_owned_bytes_writer_t : z_bytes_writer_move, \
         z_owned_closure_hello_t : z_closure_hello_move, \
         z_owned_closure_query_t : z_closure_query_move, \
         z_owned_closure_reply_t : z_closure_reply_move, \
@@ -153,6 +158,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 #define z_internal_null(this_) \
     _Generic((this_), \
         z_owned_bytes_t* : z_internal_bytes_null, \
+        z_owned_bytes_writer_t* : z_internal_bytes_writer_null, \
         z_owned_closure_hello_t* : z_internal_closure_hello_null, \
         z_owned_closure_query_t* : z_internal_closure_query_null, \
         z_owned_closure_reply_t* : z_internal_closure_reply_null, \
@@ -185,6 +191,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
     )(this_)
 
 static inline void z_bytes_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) { *this_ = x->_this; z_internal_bytes_null(&x->_this); }
+static inline void z_bytes_writer_take(z_owned_bytes_writer_t* this_, z_moved_bytes_writer_t* x) { *this_ = x->_this; z_internal_bytes_writer_null(&x->_this); }
 static inline void z_closure_hello_take(z_owned_closure_hello_t* this_, z_moved_closure_hello_t* x) { *this_ = x->_this; z_internal_closure_hello_null(&x->_this); }
 static inline void z_closure_query_take(z_owned_closure_query_t* closure_, z_moved_closure_query_t* x) { *closure_ = x->_this; z_internal_closure_query_null(&x->_this); }
 static inline void z_closure_reply_take(z_owned_closure_reply_t* closure_, z_moved_closure_reply_t* x) { *closure_ = x->_this; z_internal_closure_reply_null(&x->_this); }
@@ -219,6 +226,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
 #define z_take(this_, x) \
     _Generic((this_), \
         z_owned_bytes_t* : z_bytes_take, \
+        z_owned_bytes_writer_t* : z_bytes_writer_take, \
         z_owned_closure_hello_t* : z_closure_hello_take, \
         z_owned_closure_query_t* : z_closure_query_take, \
         z_owned_closure_reply_t* : z_closure_reply_take, \
@@ -253,6 +261,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
 #define z_internal_check(this_) \
     _Generic((this_), \
         z_owned_bytes_t : z_internal_bytes_check, \
+        z_owned_bytes_writer_t : z_internal_bytes_writer_check, \
         z_owned_closure_hello_t : z_internal_closure_hello_check, \
         z_owned_closure_query_t : z_internal_closure_query_check, \
         z_owned_closure_reply_t : z_internal_closure_reply_check, \
@@ -332,6 +341,7 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
 
 
 static inline z_moved_bytes_t* z_bytes_move(z_owned_bytes_t* x) { return reinterpret_cast<z_moved_bytes_t*>(x); }
+static inline z_moved_bytes_writer_t* z_bytes_writer_move(z_owned_bytes_writer_t* x) { return reinterpret_cast<z_moved_bytes_writer_t*>(x); }
 static inline z_moved_closure_hello_t* z_closure_hello_move(z_owned_closure_hello_t* x) { return reinterpret_cast<z_moved_closure_hello_t*>(x); }
 static inline z_moved_closure_query_t* z_closure_query_move(z_owned_closure_query_t* x) { return reinterpret_cast<z_moved_closure_query_t*>(x); }
 static inline z_moved_closure_reply_t* z_closure_reply_move(z_owned_closure_reply_t* x) { return reinterpret_cast<z_moved_closure_reply_t*>(x); }
@@ -365,6 +375,7 @@ static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t
 
 
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
+inline const z_loaned_bytes_writer_t* z_loan(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan(&this_); };
 inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t& closure) { return z_closure_hello_loan(&closure); };
 inline const z_loaned_closure_query_t* z_loan(const z_owned_closure_query_t& closure) { return z_closure_query_loan(&closure); };
 inline const z_loaned_closure_reply_t* z_loan(const z_owned_closure_reply_t& closure) { return z_closure_reply_loan(&closure); };
@@ -398,6 +409,7 @@ inline const zc_loaned_closure_log_t* z_loan(const zc_owned_closure_log_t& closu
 
 
 inline z_loaned_bytes_t* z_loan_mut(z_owned_bytes_t& this_) { return z_bytes_loan_mut(&this_); };
+inline z_loaned_bytes_writer_t* z_loan_mut(z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan_mut(&this_); };
 inline z_loaned_condvar_t* z_loan_mut(z_owned_condvar_t& this_) { return z_condvar_loan_mut(&this_); };
 inline z_loaned_config_t* z_loan_mut(z_owned_config_t& this_) { return z_config_loan_mut(&this_); };
 inline z_loaned_encoding_t* z_loan_mut(z_owned_encoding_t& this_) { return z_encoding_loan_mut(&this_); };
@@ -407,6 +419,7 @@ inline z_loaned_string_array_t* z_loan_mut(z_owned_string_array_t& this_) { retu
 
 
 inline void z_drop(z_moved_bytes_t* this_) { z_bytes_drop(this_); };
+inline void z_drop(z_moved_bytes_writer_t* this_) { z_bytes_writer_drop(this_); };
 inline void z_drop(z_moved_closure_hello_t* this_) { z_closure_hello_drop(this_); };
 inline void z_drop(z_moved_closure_query_t* closure_) { z_closure_query_drop(closure_); };
 inline void z_drop(z_moved_closure_reply_t* closure_) { z_closure_reply_drop(closure_); };
@@ -439,6 +452,7 @@ inline void z_drop(zc_moved_closure_log_t* closure_) { zc_closure_log_drop(closu
 
 
 inline z_moved_bytes_t* z_move(z_owned_bytes_t& this_) { return z_bytes_move(&this_); };
+inline z_moved_bytes_writer_t* z_move(z_owned_bytes_writer_t& this_) { return z_bytes_writer_move(&this_); };
 inline z_moved_closure_hello_t* z_move(z_owned_closure_hello_t& this_) { return z_closure_hello_move(&this_); };
 inline z_moved_closure_query_t* z_move(z_owned_closure_query_t& closure_) { return z_closure_query_move(&closure_); };
 inline z_moved_closure_reply_t* z_move(z_owned_closure_reply_t& closure_) { return z_closure_reply_move(&closure_); };
@@ -471,6 +485,7 @@ inline zc_moved_closure_log_t* z_move(zc_owned_closure_log_t& closure_) { return
 
 
 inline void z_internal_null(z_owned_bytes_t* this_) { z_internal_bytes_null(this_); };
+inline void z_internal_null(z_owned_bytes_writer_t* this_) { z_internal_bytes_writer_null(this_); };
 inline void z_internal_null(z_owned_closure_hello_t* this_) { z_internal_closure_hello_null(this_); };
 inline void z_internal_null(z_owned_closure_query_t* this_) { z_internal_closure_query_null(this_); };
 inline void z_internal_null(z_owned_closure_reply_t* this_) { z_internal_closure_reply_null(this_); };
@@ -502,6 +517,7 @@ inline void z_internal_null(z_owned_task_t* this_) { z_internal_task_null(this_)
 inline void z_internal_null(zc_owned_closure_log_t* this_) { zc_internal_closure_log_null(this_); };
 
 static inline void z_bytes_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) { *this_ = x->_this; z_internal_bytes_null(&x->_this); }
+static inline void z_bytes_writer_take(z_owned_bytes_writer_t* this_, z_moved_bytes_writer_t* x) { *this_ = x->_this; z_internal_bytes_writer_null(&x->_this); }
 static inline void z_closure_hello_take(z_owned_closure_hello_t* this_, z_moved_closure_hello_t* x) { *this_ = x->_this; z_internal_closure_hello_null(&x->_this); }
 static inline void z_closure_query_take(z_owned_closure_query_t* closure_, z_moved_closure_query_t* x) { *closure_ = x->_this; z_internal_closure_query_null(&x->_this); }
 static inline void z_closure_reply_take(z_owned_closure_reply_t* closure_, z_moved_closure_reply_t* x) { *closure_ = x->_this; z_internal_closure_reply_null(&x->_this); }
@@ -536,6 +552,9 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
 
 inline void z_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) {
     z_bytes_take(this_, x);
+};
+inline void z_take(z_owned_bytes_writer_t* this_, z_moved_bytes_writer_t* x) {
+    z_bytes_writer_take(this_, x);
 };
 inline void z_take(z_owned_closure_hello_t* this_, z_moved_closure_hello_t* x) {
     z_closure_hello_take(this_, x);
@@ -627,6 +646,7 @@ inline void z_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) 
 
 
 inline bool z_internal_check(const z_owned_bytes_t& this_) { return z_internal_bytes_check(&this_); };
+inline bool z_internal_check(const z_owned_bytes_writer_t& this_) { return z_internal_bytes_writer_check(&this_); };
 inline bool z_internal_check(const z_owned_closure_hello_t& this_) { return z_internal_closure_hello_check(&this_); };
 inline bool z_internal_check(const z_owned_closure_query_t& this_) { return z_internal_closure_query_check(&this_); };
 inline bool z_internal_check(const z_owned_closure_reply_t& this_) { return z_internal_closure_reply_check(&this_); };
@@ -790,6 +810,8 @@ template<class T> struct z_loaned_to_owned_type_t {};
 template<class T> struct z_owned_to_loaned_type_t {};
 template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_t> { typedef z_owned_bytes_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_bytes_t> { typedef z_loaned_bytes_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_writer_t> { typedef z_owned_bytes_writer_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_bytes_writer_t> { typedef z_loaned_bytes_writer_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_hello_t> { typedef z_owned_closure_hello_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_hello_t> { typedef z_loaned_closure_hello_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_query_t> { typedef z_owned_closure_query_t type; };

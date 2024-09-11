@@ -83,14 +83,15 @@ void test_writer() {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_empty(&payload);
 
-    z_bytes_writer_t writer = z_bytes_get_writer(z_loan_mut(payload));
+    z_owned_bytes_writer_t writer;
+    z_bytes_writer_new(&writer);
 
-    assert(z_bytes_writer_write_all(&writer, data, 3) == 0);
-    assert(z_bytes_writer_write_all(&writer, data + 3, 5) == 0);
-    assert(z_bytes_writer_write_all(&writer, data + 8, 2) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data, 3) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data + 3, 5) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data + 8, 2) == 0);
 
+    z_bytes_writer_get_bytes(z_move(writer), &payload);
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
 
     assert(10 == z_bytes_reader_read(&reader, data_out, 10));
@@ -104,19 +105,20 @@ void test_bounded(void) {
     uint32_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_empty(&payload);
+    z_owned_bytes_writer_t writer;
+    z_bytes_writer_new(&writer);
 
-    z_bytes_writer_t writer = z_bytes_get_writer(z_loan_mut(payload));
     for (size_t i = 0; i < 10; ++i) {
         z_owned_bytes_t b;
         z_bytes_serialize_from_uint32(&b, data[i]);
-        assert(z_bytes_writer_append_bounded(&writer, z_move(b)) == 0);
+        assert(z_bytes_writer_append_bounded(z_loan_mut(writer), z_move(b)) == 0);
     }
     {
         z_owned_bytes_t b;
         z_bytes_serialize_from_str(&b, "test");
-        assert(z_bytes_writer_append_bounded(&writer, z_move(b)) == 0);
+        assert(z_bytes_writer_append_bounded(z_loan_mut(writer), z_move(b)) == 0);
     }
+    z_bytes_writer_get_bytes(z_move(writer), &payload);
 
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
 
@@ -147,16 +149,17 @@ void test_append(void) {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_empty(&payload);
+    z_owned_bytes_writer_t writer;
+    z_bytes_writer_new(&writer);
 
-    z_bytes_writer_t writer = z_bytes_get_writer(z_loan_mut(payload));
-    z_bytes_writer_write_all(&writer, data, 5);
+    z_bytes_writer_write_all(z_loan_mut(writer), data, 5);
     {
         z_owned_bytes_t b;
         z_bytes_serialize_from_buf(&b, data + 5, 5);
-        assert(z_bytes_writer_append(&writer, z_move(b)) == 0);
+        assert(z_bytes_writer_append(z_loan_mut(writer), z_move(b)) == 0);
     }
 
+    z_bytes_writer_get_bytes(z_move(writer), &payload);
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
     z_bytes_reader_read(&reader, data_out, 10);
 
@@ -319,24 +322,26 @@ bool check_slice(const z_loaned_bytes_t *b, const uint8_t *data, size_t len) {
 void test_slices(void) {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     z_owned_bytes_t payload;
-    z_bytes_empty(&payload);
 
-    z_bytes_writer_t writer = z_bytes_get_writer(z_loan_mut(payload));
-    z_bytes_writer_write_all(&writer, data, 10);
+    z_owned_bytes_writer_t writer;
+    z_bytes_writer_new(&writer);
 
+    z_bytes_writer_write_all(z_loan_mut(writer), data, 10);
+    z_bytes_writer_get_bytes(z_move(writer), &payload);
     assert(check_slice(z_loan(payload), data, 10));
 
     z_drop(z_move(payload));
     z_bytes_empty(&payload);
 
     // possible multiple slices
-    writer = z_bytes_get_writer(z_loan_mut(payload));
+    z_bytes_writer_new(&writer);
 
     for (size_t i = 0; i < 10; i++) {
         z_owned_bytes_t b;
         z_bytes_serialize_from_buf(&b, data + i, 1);
-        z_bytes_writer_append(&writer, z_move(b));
+        z_bytes_writer_append(z_loan_mut(writer), z_move(b));
     }
+    z_bytes_writer_get_bytes(z_move(writer), &payload);
 
     assert(check_slice(z_loan(payload), data, 10));
     z_drop(z_move(payload));

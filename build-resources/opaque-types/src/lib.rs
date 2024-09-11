@@ -93,8 +93,16 @@ get_opaque_type_data!(Sample, z_loaned_sample_t);
 /// A reader for serialized data.
 get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
 
-/// A writer for serialized data.
-get_opaque_type_data!(ZBytesWriter<'static>, z_bytes_writer_t);
+#[derive(Default)]
+struct DummyWriter {
+    _b: Box<ZBytes>,
+    _w: Option<ZBytesWriter<'static>>,
+}
+
+/// An owned writer for serialized data.
+get_opaque_type_data!(DummyWriter, z_owned_bytes_writer_t);
+/// A loaned writer for serialized data.
+get_opaque_type_data!(DummyWriter, z_loaned_bytes_writer_t);
 
 /// An iterator over multi-element serialized data.
 get_opaque_type_data!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);

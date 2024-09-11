@@ -391,6 +391,9 @@ typedef struct z_moved_string_t {
 typedef struct ALIGN(8) z_bytes_slice_iterator_t {
   uint8_t _0[24];
 } z_bytes_slice_iterator_t;
+typedef struct z_moved_bytes_writer_t {
+  struct z_owned_bytes_writer_t _this;
+} z_moved_bytes_writer_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Unique segment identifier.
@@ -1603,8 +1606,12 @@ ZENOHC_API
 struct z_bytes_slice_iterator_t z_bytes_get_slice_iterator(const struct z_loaned_bytes_t *this_);
 /**
  * Gets writer for `this_`.
+ * @param this_ Data to write to. Consumed by writer. Can be extracted after all writes are done using `z_bytes_writer_get_bytes`.
+ * @param writer An uninitialized memory location where writer will be constructed.
  */
-ZENOHC_API struct z_bytes_writer_t z_bytes_get_writer(struct z_loaned_bytes_t *this_);
+ZENOHC_API
+void z_bytes_get_writer(struct z_moved_bytes_t *this_,
+                        struct z_owned_bytes_writer_t *writer);
 /**
  * Returns ``true`` if `this_` is empty, ``false`` otherwise.
  */
@@ -1770,7 +1777,7 @@ bool z_bytes_slice_iterator_next(struct z_bytes_slice_iterator_t *this_,
  * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
+z_result_t z_bytes_writer_append(struct z_loaned_bytes_writer_t *this_,
                                  struct z_moved_bytes_t *bytes);
 /**
  * Appends bytes, with boundaries information. It would allow to read the same piece of data using `z_bytes_reader_read_bounded()`.
@@ -1778,15 +1785,42 @@ z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
  * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_append_bounded(struct z_bytes_writer_t *this_,
+z_result_t z_bytes_writer_append_bounded(struct z_loaned_bytes_writer_t *this_,
                                          struct z_moved_bytes_t *bytes);
+/**
+ * Drops `this_`, resetting it to gravestone value.
+ */
+ZENOHC_API void z_bytes_writer_drop(struct z_moved_bytes_writer_t *this_);
+/**
+ * Extracts data from writer. After the function return, writer is invalidated.
+ *
+ * @param this_ Writer to extract data from.
+ * @param bytes Uninitialized memory location where z_bytes оbject containing extracted data will be constructed.
+ */
+ZENOHC_API
+void z_bytes_writer_get_bytes(struct z_moved_bytes_writer_t *this_,
+                              struct z_owned_bytes_t *bytes);
+/**
+ * Borrows writer.
+ */
+ZENOHC_API
+const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Muatably borrows writer.
+ */
+ZENOHC_API
+struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
+/**
+ * Constructs a writer from empty data.
+ */
+ZENOHC_API void z_bytes_writer_new(struct z_owned_bytes_writer_t *this_);
 /**
  * Writes `len` bytes from `src` into underlying data.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_result_t z_bytes_writer_write_all(struct z_bytes_writer_t *this_,
+z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
                                     const uint8_t *src,
                                     size_t len);
 /**
@@ -2789,6 +2823,14 @@ ZENOHC_API bool z_internal_bytes_check(const struct z_owned_bytes_t *this_);
  * The gravestone value for `z_owned_bytes_t`.
  */
 ZENOHC_API void z_internal_bytes_null(struct z_owned_bytes_t *this_);
+/**
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_internal_bytes_writer_check(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Constructs a serialized data writer in a gravestone state.
+ */
+ZENOHC_API void z_internal_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @return ``true`` if `this` is valid.

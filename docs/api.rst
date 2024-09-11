@@ -96,7 +96,8 @@ Types
 .. doxygenstruct:: z_loaned_bytes_t
 .. doxygenstruct:: z_bytes_iterator_t
 .. doxygenstruct:: z_bytes_reader_t
-.. doxygenstruct:: z_bytes_writer_t
+.. doxygenstruct:: z_owned_bytes_writer_t
+.. doxygenstruct:: z_loaned_bytes_writer_t
 
 Functions
 ^^^^^^^^^
@@ -157,9 +158,14 @@ Functions
 
 .. doxygenfunction:: z_bytes_get_writer
 
+.. doxygenfunction:: z_bytes_new
 .. doxygenfunction:: z_bytes_writer_write_all
 .. doxygenfunction:: z_bytes_writer_append
 .. doxygenfunction:: z_bytes_writer_append_bounded
+.. doxygenfunction:: z_bytes_writer_get_bytes
+.. doxygenfunction:: z_bytes_writer_loan
+.. doxygenfunction:: z_bytes_writer_loan_mut
+.. doxygenfunction:: z_bytes_writer_drop
 
 
 
