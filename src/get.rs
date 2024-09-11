@@ -12,21 +12,16 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{
-    ffi::CStr,
-    mem::MaybeUninit,
-    ops::{Deref, DerefMut},
-    ptr::null,
-};
+use std::{ffi::CStr, mem::MaybeUninit, ptr::null};
 
 use libc::c_char;
 use zenoh::{
-    bytes::{Encoding, ZBytes},
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
     Wait,
 };
 
+pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -40,45 +35,15 @@ use crate::{
     transmute::IntoCType, z_id_t, z_moved_source_info_t, zc_locality_default, zc_locality_t,
     zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
-
-// we need to add Default to ReplyError
-#[repr(transparent)]
-pub(crate) struct ReplyErrorNewtype(ReplyError);
-impl Default for ReplyErrorNewtype {
-    fn default() -> Self {
-        Self(zenoh::internal::Value::new(ZBytes::empty(), Encoding::default()).into())
-    }
-}
-impl Deref for ReplyErrorNewtype {
-    type Target = ReplyError;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl DerefMut for ReplyErrorNewtype {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-impl From<&ReplyError> for &ReplyErrorNewtype {
-    fn from(value: &ReplyError) -> Self {
-        // SAFETY: ReplyErrorNewtype is repr(transparent) to ReplyError
-        unsafe { core::mem::transmute::<&ReplyError, Self>(value) }
-    }
-}
-
-pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 decl_c_type!(
-    owned(z_owned_reply_err_t, ReplyErrorNewtype),
-    loaned(z_loaned_reply_err_t, ReplyErrorNewtype),
+    owned(z_owned_reply_err_t, ReplyError),
+    loaned(z_loaned_reply_err_t, ReplyError),
 );
 
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
 pub extern "C" fn z_internal_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
-    this_
-        .as_rust_type_mut_uninit()
-        .write(ReplyErrorNewtype::default());
+    this_.as_rust_type_mut_uninit().write(ReplyError::default());
 }
 
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
@@ -145,7 +110,7 @@ pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned
 pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
     match this_.as_rust_type_ref().result() {
         Ok(_) => null(),
-        Err(v) => std::convert::Into::<&ReplyErrorNewtype>::into(v).as_loaned_c_type_ref(),
+        Err(v) => v.as_loaned_c_type_ref(),
     }
 }
 
@@ -403,4 +368,14 @@ pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
 #[no_mangle]
 pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::None).into()
+}
+
+/// Constructs a copy of the reply error message.
+#[no_mangle]
+extern "C" fn z_reply_err_clone(
+    dst: &mut MaybeUninit<z_owned_reply_err_t>,
+    this: &z_loaned_reply_err_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(this.as_rust_type_ref().clone());
 }

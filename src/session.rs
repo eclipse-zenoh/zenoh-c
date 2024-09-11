@@ -147,20 +147,7 @@ pub extern "C" fn z_close(session: &mut z_moved_session_t) -> result::z_result_t
 }
 
 /// Frees memory and invalidates the session.
-///
-/// This will also close the session if it does not have any clones left.
 #[no_mangle]
 pub extern "C" fn z_session_drop(this_: &mut z_moved_session_t) {
     let _ = this_.take_rust_type();
-}
-
-/// Constructs an owned shallow copy of the session in provided uninitialized memory location.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_session_clone(
-    dst: &mut MaybeUninit<z_owned_session_t>,
-    this: &z_loaned_session_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(Some(this.as_rust_type_ref().clone()));
 }
