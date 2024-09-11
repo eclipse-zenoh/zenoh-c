@@ -1446,7 +1446,7 @@ pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_clone_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_clone", true)
+    generate_generic_c(macro_func, "z_clone", false)
 }
 
 pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
@@ -1640,7 +1640,7 @@ pub fn generate_generic_call_cpp(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_clone_cpp(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_cpp(macro_func, "z_clone", true)
+    generate_generic_cpp(macro_func, "z_clone", false)
 }
 
 pub fn generate_generic_recv_cpp(macro_func: &[FunctionSignature]) -> String {
