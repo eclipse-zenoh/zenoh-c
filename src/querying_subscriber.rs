@@ -14,7 +14,7 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{prelude::SessionDeclarations, pubsub::Reliability, session::Session, Wait};
+use zenoh::{prelude::SessionDeclarations, session::Session, Wait};
 use zenoh_ext::*;
 
 use crate::{
@@ -23,7 +23,7 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
-    z_query_consolidation_t, z_query_target_default, z_query_target_t, z_reliability_t,
+    z_query_consolidation_t, z_query_target_default, z_query_target_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -54,8 +54,6 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
-    /// The subscription reliability.
-    reliability: z_reliability_t,
     /// The restriction for the matching publications that will be receive by this subscriber.
     #[cfg(feature = "unstable")]
     allowed_origin: zc_locality_t,
@@ -79,7 +77,6 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
 ) {
     this.write(ze_querying_subscriber_options_t {
-        reliability: Reliability::DEFAULT.into(),
         #[cfg(feature = "unstable")]
         allowed_origin: zc_locality_default(),
         query_selector: None,
@@ -118,7 +115,6 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
         .querying();
     if let Some(options) = options {
         sub = sub
-            .reliability(options.reliability.into())
             .query_target(options.query_target.into())
             .query_consolidation(options.query_consolidation);
         #[cfg(feature = "unstable")]

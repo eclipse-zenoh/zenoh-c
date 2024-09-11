@@ -15,9 +15,12 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
-use zenoh::shm::{
-    BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc, ShmProvider,
-    ShmProviderBuilder,
+use zenoh::{
+    shm::{
+        BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc, ShmProvider,
+        ShmProviderBuilder,
+    },
+    Wait,
 };
 
 use super::{
@@ -67,7 +70,7 @@ pub extern "C" fn z_shm_provider_new(
     let provider = ShmProviderBuilder::builder()
         .dynamic_protocol_id(id)
         .backend(backend)
-        .res();
+        .wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::Dynamic(provider)));
@@ -86,7 +89,7 @@ pub extern "C" fn z_shm_provider_threadsafe_new(
     let provider = ShmProviderBuilder::builder()
         .dynamic_protocol_id(id)
         .backend(backend)
-        .res();
+        .wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::DynamicThreadsafe(provider)));

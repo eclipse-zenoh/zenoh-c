@@ -1253,10 +1253,6 @@ typedef struct ze_publication_cache_options_t {
  */
 #if defined(UNSTABLE)
 typedef struct ze_querying_subscriber_options_t {
-  /**
-   * The subscription reliability.
-   */
-  enum z_reliability_t reliability;
 #if defined(UNSTABLE)
   /**
    * The restriction for the matching publications that will be receive by this subscriber.
