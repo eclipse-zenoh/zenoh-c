@@ -105,7 +105,7 @@ pub unsafe extern "C" fn z_internal_closure_zid_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
+pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &mut z_id_t) {
     let closure = closure.as_owned_c_type_ref();
     match closure.call {
         Some(call) => call(z_id, closure.context),
@@ -122,10 +122,10 @@ pub extern "C" fn z_closure_zid_drop(closure_: &mut z_moved_closure_zid_t) {
     let _ = closure_.take_rust_type();
 }
 
-impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
+impl<F: Fn(&mut z_id_t)> From<F> for z_owned_closure_zid_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_id_t)>(response: &z_id_t, this: *mut c_void) {
+        extern "C" fn call<F: Fn(&mut z_id_t)>(response: &mut z_id_t, this: *mut c_void) {
             let this = unsafe { &*(this as *const F) };
             this(response)
         }

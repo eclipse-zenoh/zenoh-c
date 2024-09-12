@@ -174,8 +174,8 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .liveliness()
         .declare_subscriber(key_expr)
         .history(options.is_some_and(|o| o.history))
-        .callback(move |sample| {
-            let sample = sample.as_loaned_c_type_ref();
+        .callback(move |mut sample| {
+            let sample = sample.as_loaned_c_type_mut();
             z_closure_sample_call(z_closure_sample_loan(&callback), sample)
         })
         .wait()
@@ -226,10 +226,10 @@ pub extern "C" fn zc_liveliness_get(
     let key_expr = key_expr.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let liveliness: Liveliness<'static> = session.liveliness();
-    let mut builder = liveliness.get(key_expr).callback(move |response| {
+    let mut builder = liveliness.get(key_expr).callback(move |mut response| {
         z_closure_reply_call(
             z_closure_reply_loan(&callback),
-            response.as_loaned_c_type_ref(),
+            response.as_loaned_c_type_mut(),
         )
     });
     if let Some(options) = options {

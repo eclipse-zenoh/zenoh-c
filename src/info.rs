@@ -66,8 +66,8 @@ pub unsafe extern "C" fn z_info_peers_zid(
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
-    for id in session.info().peers_zid().wait() {
-        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
+    for mut id in session.info().peers_zid().wait() {
+        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_mut());
     }
     result::Z_OK
 }
@@ -87,8 +87,8 @@ pub unsafe extern "C" fn z_info_routers_zid(
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
-    for id in session.info().routers_zid().wait() {
-        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_ref());
+    for mut id in session.info().routers_zid().wait() {
+        z_closure_zid_call(z_closure_zid_loan(&callback), id.as_ctype_mut());
     }
     result::Z_OK
 }

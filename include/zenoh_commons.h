@@ -1928,7 +1928,7 @@ const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_own
 #if defined(UNSTABLE)
 ZENOHC_API
 void z_closure_zid_call(const struct z_loaned_closure_zid_t *closure,
-                        const z_id_t *z_id);
+                        z_id_t *z_id);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4797,7 +4797,7 @@ const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_
 #if defined(UNSTABLE)
 ZENOHC_API
 void zc_closure_matching_status_call(const struct zc_loaned_closure_matching_status_t *closure,
-                                     const struct zc_matching_status_t *mathing_status);
+                                     struct zc_matching_status_t *mathing_status);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
