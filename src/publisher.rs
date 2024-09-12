@@ -17,9 +17,9 @@ use std::mem::MaybeUninit;
 #[cfg(feature = "unstable")]
 use zenoh::pubsub::MatchingListener;
 use zenoh::{
-    prelude::*,
     pubsub::Publisher,
     qos::{CongestionControl, Priority},
+    Wait,
 };
 
 #[cfg(feature = "unstable")]
@@ -307,7 +307,7 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_owned_matching_listener_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
-    owned(zc_owned_matching_listener_t, option MatchingListener<'static, ()>),
+    owned(zc_owned_matching_listener_t, option MatchingListener<()>),
 );
 
 #[no_mangle]

@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::Arc};
+use std::mem::MaybeUninit;
 
 use zenoh::{Session, Wait};
 
@@ -25,7 +25,7 @@ use crate::{
     z_moved_config_t, z_moved_session_t, zc_init_logging,
 };
 decl_c_type!(
-    owned(z_owned_session_t, option Arc<Session>),
+    owned(z_owned_session_t, option Session),
     loaned(z_loaned_session_t),
 );
 
@@ -80,7 +80,7 @@ pub extern "C" fn z_open(
     };
     match zenoh::open(config).wait() {
         Ok(s) => {
-            this.write(Some(Arc::new(s)));
+            this.write(Some(s));
             result::Z_OK
         }
         Err(e) => {
@@ -117,7 +117,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
         .wait()
     {
         Ok(s) => {
-            this.write(Some(Arc::new(s)));
+            this.write(Some(s));
             result::Z_OK
         }
         Err(e) => {
@@ -147,10 +147,9 @@ pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_option
     this_.write(z_close_options_t { _dummy: 0 });
 }
 
-/// Closes a zenoh session. This alos drops and invalidates `session`.
+/// Closes and drops a zenoh session. This also drops all the closure callbacks remaining from dropped (but not undeclared subscribers).
 ///
-/// @return 0 in  case of success, a negative value if an error occured while closing the session,
-/// the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
+/// @return 0 in  case of success, a negative value if an error occured while closing the session.
 #[no_mangle]
 pub extern "C" fn z_close(
     session: &mut z_moved_session_t,
@@ -158,12 +157,6 @@ pub extern "C" fn z_close(
 ) -> result::z_result_t {
     let Some(s) = session.take_rust_type() else {
         return result::Z_EINVAL;
-    };
-    let s = match Arc::try_unwrap(s) {
-        Ok(s) => s,
-        Err(s) => {
-            return (Arc::strong_count(&s) - 1).min(i8::MAX as usize) as i8;
-        }
     };
     match s.close().wait() {
         Err(e) => {

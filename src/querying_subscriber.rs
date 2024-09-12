@@ -14,7 +14,7 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{prelude::SessionDeclarations, session::Session, Wait};
+use zenoh::{session::Session, Wait};
 use zenoh_ext::*;
 
 use crate::{
@@ -33,7 +33,7 @@ use crate::{
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
-        option(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
+        option(zenoh_ext::FetchingSubscriber<()>, &'static Session),
     ),
     loaned(ze_loaned_querying_subscriber_t),
 );
@@ -232,6 +232,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops querying subscriber.
+/// The callback closure is not dropped, and thus the queries continue to be served until the corresponding session is closed.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
     std::mem::drop(this_.take_rust_type())

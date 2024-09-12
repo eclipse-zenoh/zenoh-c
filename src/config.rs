@@ -14,7 +14,7 @@
 use std::{ffi::CStr, mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
 
 use libc::{c_char, c_uint};
-use zenoh::config::{Config, ValidatedMap, WhatAmI};
+use zenoh::config::{Config, WhatAmI};
 
 use crate::{
     result::{self, Z_OK},
