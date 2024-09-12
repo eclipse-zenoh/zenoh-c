@@ -13,7 +13,7 @@
 //
 use std::mem::MaybeUninit;
 
-use zenoh::{prelude::*, session::ZenohId};
+use zenoh::{session::ZenohId, Wait};
 
 pub use crate::opaque_types::z_id_t;
 use crate::{

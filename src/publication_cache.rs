@@ -64,7 +64,7 @@ pub use crate::opaque_types::{
 decl_c_type!(
     owned(
         ze_owned_publication_cache_t,
-        option zenoh_ext::PublicationCache<'static>,
+        option zenoh_ext::PublicationCache,
     ),
     loaned(ze_loaned_publication_cache_t),
 );
@@ -173,7 +173,7 @@ pub extern "C" fn ze_publication_cache_keyexpr(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Borrows querying subscriber.
+/// @brief Borrows publication cache.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_publication_cache_loan(

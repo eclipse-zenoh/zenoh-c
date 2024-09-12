@@ -14,10 +14,7 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{
-    liveliness::{Liveliness, LivelinessToken},
-    prelude::*,
-};
+use zenoh::{liveliness::LivelinessToken, Wait};
 
 use crate::{
     opaque_types::{zc_loaned_liveliness_token_t, zc_owned_liveliness_token_t},
@@ -28,7 +25,7 @@ use crate::{
     z_owned_subscriber_t, zc_moved_liveliness_token_t,
 };
 decl_c_type!(
-    owned(zc_owned_liveliness_token_t, option LivelinessToken<'static>),
+    owned(zc_owned_liveliness_token_t, option LivelinessToken),
     loaned(zc_loaned_liveliness_token_t),
 );
 
@@ -225,7 +222,7 @@ pub extern "C" fn zc_liveliness_get(
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let callback = callback.take_rust_type();
-    let liveliness: Liveliness<'static> = session.liveliness();
+    let liveliness = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {
         z_closure_reply_call(
             z_closure_reply_loan(&callback),

@@ -18,7 +18,7 @@ use libc::c_char;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::{
     key_expr::{keyexpr, Canonize, KeyExpr},
-    prelude::*,
+    Wait,
 };
 
 pub use crate::opaque_types::{

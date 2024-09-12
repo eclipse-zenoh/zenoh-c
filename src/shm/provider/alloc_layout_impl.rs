@@ -16,11 +16,11 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::{
-    prelude::*,
     shm::{
         AllocLayout, AllocPolicy, AsyncAllocPolicy, DynamicProtocolID, PosixShmProviderBackend,
         ProtocolIDSource, ShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
     },
+    Wait,
 };
 
 use super::{

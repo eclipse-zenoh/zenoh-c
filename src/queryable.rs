@@ -15,7 +15,6 @@ use std::mem::MaybeUninit;
 
 use zenoh::{
     bytes::Encoding,
-    prelude::SessionDeclarations,
     qos::{CongestionControl, Priority},
     query::{Query, Queryable},
     Wait,
@@ -35,7 +34,7 @@ use crate::{
 #[cfg(feature = "unstable")]
 use crate::{z_entity_global_id_t, z_moved_source_info_t};
 decl_c_type!(
-    owned(z_owned_queryable_t, option Queryable<'static, ()>),
+    owned(z_owned_queryable_t, option Queryable<()>),
     loaned(z_loaned_queryable_t),
 );
 
@@ -270,6 +269,7 @@ pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> resu
 }
 
 /// Frees memory and resets queryable to its gravestone state.
+/// The callback closure is not dropped, and thus the queries continue to be served until the corresponding session is closed.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
