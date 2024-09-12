@@ -20,7 +20,7 @@ const char *keyexpr = "demo/example/zenoh-c-queryable";
 const char *value = "Queryable from C SHM!";
 z_view_keyexpr_t ke;
 
-void query_handler(const z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t *query, void *context) {
     z_loaned_shm_provider_t *provider = (z_loaned_shm_provider_t *)context;
 
     z_view_string_t key_string;

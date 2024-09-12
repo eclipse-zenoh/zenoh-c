@@ -233,10 +233,10 @@ pub extern "C" fn z_declare_queryable(
         builder = builder.complete(options.complete);
     }
     let queryable = builder
-        .callback(move |query| {
+        .callback(move |mut query| {
             z_closure_query_call(
                 z_closure_query_loan(&callback),
-                query.as_loaned_c_type_ref(),
+                query.as_loaned_c_type_mut(),
             )
         })
         .wait();

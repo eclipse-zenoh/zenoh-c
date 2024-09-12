@@ -86,7 +86,7 @@ z_result_t check_attachment(const z_loaned_bytes_t *attachment, kv_it *it) {
     return 0;
 };
 
-void query_handler(const z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
     z_view_string_t params;

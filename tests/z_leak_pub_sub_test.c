@@ -24,7 +24,7 @@
 const char *PUB_KEY_EXPR = "test/valgrind/data";
 const char *SUB_KEY_EXPR = "test/valgrind/**";
 
-void data_handler(const z_loaned_sample_t *sample, void *context) {
+void data_handler(z_loaned_sample_t *sample, void *context) {
     (void)context;
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);

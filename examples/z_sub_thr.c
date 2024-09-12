@@ -36,7 +36,7 @@ z_stats_t *z_stats_make() {
     return stats;
 }
 
-void on_sample(const z_loaned_sample_t *sample, void *context) {
+void on_sample(z_loaned_sample_t *sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
         stats->start = z_clock_now();

@@ -30,7 +30,7 @@ typedef struct context_t {
 const char* token1_expr = "zenoh/liveliness/test/1";
 const char* token2_expr = "zenoh/liveliness/test/2";
 
-void on_receive(const z_loaned_sample_t* s, void* context) {
+void on_receive(z_loaned_sample_t* s, void* context) {
     context_t* c = (context_t*)context;
     const z_loaned_keyexpr_t* k = z_sample_keyexpr(s);
     z_view_string_t ks;

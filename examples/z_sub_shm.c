@@ -17,7 +17,7 @@
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-void data_handler(const z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t *sample, void *arg) {
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 

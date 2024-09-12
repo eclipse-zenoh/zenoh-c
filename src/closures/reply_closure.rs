@@ -33,7 +33,7 @@ pub struct z_owned_closure_reply_t {
     /// An optional pointer to a context representing a closure state.
     pub context: *mut c_void,
     /// A closure body.
-    pub(crate) call: Option<extern "C" fn(reply: &z_loaned_reply_t, context: *mut c_void)>,
+    pub(crate) call: Option<extern "C" fn(reply: &mut z_loaned_reply_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     pub drop: Option<extern "C" fn(context: *mut c_void)>,
 }
@@ -100,7 +100,7 @@ pub extern "C" fn z_internal_closure_reply_check(this_: &z_owned_closure_reply_t
 #[no_mangle]
 pub extern "C" fn z_closure_reply_call(
     closure: &z_loaned_closure_reply_t,
-    reply: &z_loaned_reply_t,
+    reply: &mut z_loaned_reply_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
     match closure.call {
@@ -116,11 +116,11 @@ pub extern "C" fn z_closure_reply_drop(closure_: &mut z_moved_closure_reply_t) {
     let _ = closure_.take_rust_type();
 }
 
-impl<F: Fn(&z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
+impl<F: Fn(&mut z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_loaned_reply_t)>(
-            response: &z_loaned_reply_t,
+        extern "C" fn call<F: Fn(&mut z_loaned_reply_t)>(
+            response: &mut z_loaned_reply_t,
             this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };

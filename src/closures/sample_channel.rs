@@ -55,7 +55,7 @@ pub extern "C" fn z_internal_fifo_handler_sample_check(
     this_.as_rust_type_ref().is_some()
 }
 
-extern "C" fn __z_handler_sample_send(sample: &z_loaned_sample_t, context: *mut c_void) {
+extern "C" fn __z_handler_sample_send(sample: &mut z_loaned_sample_t, context: *mut c_void) {
     unsafe {
         let f = (context as *mut std::sync::Arc<dyn Fn(Sample) + Send + Sync>)
             .as_mut()

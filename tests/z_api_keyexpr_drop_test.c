@@ -43,7 +43,7 @@ void test_publisher() {
     z_close(z_move(s), NULL);
 }
 
-void data_handler(const z_loaned_sample_t *sample, void *arg) {}
+void data_handler(z_loaned_sample_t *sample, void *arg) {}
 
 void test_subscriber() {
     z_owned_config_t config;

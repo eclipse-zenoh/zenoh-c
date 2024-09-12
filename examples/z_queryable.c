@@ -30,7 +30,7 @@ char *value;
 
 struct args_t parse_args(int argc, char **argv, z_owned_config_t *config);
 
-void query_handler(const z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t *query, void *context) {
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
 

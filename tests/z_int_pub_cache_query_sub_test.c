@@ -91,7 +91,7 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(const z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
     z_view_string_t keystr;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &keystr);

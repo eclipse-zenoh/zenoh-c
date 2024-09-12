@@ -184,8 +184,8 @@ pub extern "C" fn z_scout(
 
     task::block_on(async move {
         let scout = zenoh::scout(what, config)
-            .callback(move |h| {
-                z_closure_hello_call(z_closure_hello_loan(&callback), h.as_loaned_c_type_ref())
+            .callback(move |mut h| {
+                z_closure_hello_call(z_closure_hello_loan(&callback), h.as_loaned_c_type_mut())
             })
             .await
             .unwrap();

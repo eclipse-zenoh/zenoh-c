@@ -30,7 +30,7 @@ const uint64_t TEST_SN = 24;
 const uint64_t TEST_TS = 401706000;
 const uint8_t TEST_ID = 123;
 
-void query_handler(const z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
     z_view_string_t params;
