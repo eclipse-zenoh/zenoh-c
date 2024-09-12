@@ -34,7 +34,7 @@ pub struct z_owned_closure_zid_t {
     /// An optional pointer to a closure state.
     context: *mut c_void,
     /// A callback function.
-    call: Option<extern "C" fn(z_id: &z_id_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(z_id: &mut z_id_t, context: *mut c_void)>,
     /// An optional function that will be called upon closure drop.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }

@@ -461,7 +461,7 @@ typedef struct z_owned_closure_hello_t {
   /**
    * A closure body.
    */
-  void (*call)(const struct z_loaned_hello_t *hello, void *context);
+  void (*call)(struct z_loaned_hello_t *hello, void *context);
   /**
    * An optional drop function that will be called when the closure is dropped.
    */
@@ -491,7 +491,7 @@ typedef struct z_owned_closure_query_t {
   /**
    * A closure body.
    */
-  void (*call)(const struct z_loaned_query_t *reply, void *context);
+  void (*call)(struct z_loaned_query_t *reply, void *context);
   /**
    * An optional drop function that will be called when the closure is dropped.
    */
@@ -521,7 +521,7 @@ typedef struct z_owned_closure_reply_t {
   /**
    * A closure body.
    */
-  void (*call)(const struct z_loaned_reply_t *reply, void *context);
+  void (*call)(struct z_loaned_reply_t *reply, void *context);
   /**
    * An optional drop function that will be called when the closure is dropped.
    */
@@ -551,7 +551,7 @@ typedef struct z_owned_closure_sample_t {
   /**
    * A closure body.
    */
-  void (*call)(const struct z_loaned_sample_t *sample, void *context);
+  void (*call)(struct z_loaned_sample_t *sample, void *context);
   /**
    * An optional drop function that will be called when the closure is dropped.
    */
@@ -583,7 +583,7 @@ typedef struct z_owned_closure_zid_t {
   /**
    * A callback function.
    */
-  void (*call)(const z_id_t *z_id, void *context);
+  void (*call)(z_id_t *z_id, void *context);
   /**
    * An optional function that will be called upon closure drop.
    */
@@ -1184,7 +1184,7 @@ typedef struct zc_owned_closure_matching_status_t {
   /**
    * A closure body.
    */
-  void (*call)(const struct zc_matching_status_t *matching_status, void *context);
+  void (*call)(struct zc_matching_status_t *matching_status, void *context);
   /**
    * An optional drop function that will be called when the closure is dropped.
    */
@@ -1865,7 +1865,7 @@ ZENOHC_API void z_close_options_default(struct z_close_options_t *this_);
  */
 ZENOHC_API
 void z_closure_hello_call(const struct z_loaned_closure_hello_t *closure,
-                          const struct z_loaned_hello_t *hello);
+                          struct z_loaned_hello_t *hello);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */
@@ -1880,7 +1880,7 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  */
 ZENOHC_API
 void z_closure_query_call(const struct z_loaned_closure_query_t *closure,
-                          const struct z_loaned_query_t *query);
+                          struct z_loaned_query_t *query);
 /**
  * Drops the closure, resetting it to its gravestone state.
  */
@@ -1895,7 +1895,7 @@ const struct z_loaned_closure_query_t *z_closure_query_loan(const struct z_owned
  */
 ZENOHC_API
 void z_closure_reply_call(const struct z_loaned_closure_reply_t *closure,
-                          const struct z_loaned_reply_t *reply);
+                          struct z_loaned_reply_t *reply);
 /**
  * Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
  */
@@ -1911,7 +1911,7 @@ const struct z_loaned_closure_reply_t *z_closure_reply_loan(const struct z_owned
  */
 ZENOHC_API
 void z_closure_sample_call(const struct z_loaned_closure_sample_t *closure,
-                           const struct z_loaned_sample_t *sample);
+                           struct z_loaned_sample_t *sample);
 /**
  * Drops the closure. Droping an uninitialized closure is a no-op.
  */

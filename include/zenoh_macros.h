@@ -658,22 +658,22 @@ inline bool z_internal_check(const z_owned_task_t& this_) { return z_internal_ta
 inline bool z_internal_check(const zc_owned_closure_log_t& this_) { return zc_internal_closure_log_check(&this_); };
 
 
-inline void z_call(const z_loaned_closure_hello_t* closure, const z_loaned_hello_t* hello) {
+inline void z_call(const z_loaned_closure_hello_t* closure, z_loaned_hello_t* hello) {
     z_closure_hello_call(closure, hello);
 };
-inline void z_call(const z_loaned_closure_query_t* closure, const z_loaned_query_t* query) {
+inline void z_call(const z_loaned_closure_query_t* closure, z_loaned_query_t* query) {
     z_closure_query_call(closure, query);
 };
-inline void z_call(const z_loaned_closure_reply_t* closure, const z_loaned_reply_t* reply) {
+inline void z_call(const z_loaned_closure_reply_t* closure, z_loaned_reply_t* reply) {
     z_closure_reply_call(closure, reply);
 };
-inline void z_call(const z_loaned_closure_sample_t* closure, const z_loaned_sample_t* sample) {
+inline void z_call(const z_loaned_closure_sample_t* closure, z_loaned_sample_t* sample) {
     z_closure_sample_call(closure, sample);
 };
 
 extern "C" using z_closure_drop_callback_t = void(void*);
 
-extern "C" using z_closure_hello_callback_t = void(const z_loaned_hello_t*, void*);
+extern "C" using z_closure_hello_callback_t = void(z_loaned_hello_t*, void*);
 inline void z_closure(
     z_owned_closure_hello_t* closure,
     z_closure_hello_callback_t* call,
@@ -683,7 +683,7 @@ inline void z_closure(
     closure->drop = drop;
     closure->call = call;
 };
-extern "C" using z_closure_query_callback_t = void(const z_loaned_query_t*, void*);
+extern "C" using z_closure_query_callback_t = void(z_loaned_query_t*, void*);
 inline void z_closure(
     z_owned_closure_query_t* closure,
     z_closure_query_callback_t* call,
@@ -693,7 +693,7 @@ inline void z_closure(
     closure->drop = drop;
     closure->call = call;
 };
-extern "C" using z_closure_reply_callback_t = void(const z_loaned_reply_t*, void*);
+extern "C" using z_closure_reply_callback_t = void(z_loaned_reply_t*, void*);
 inline void z_closure(
     z_owned_closure_reply_t* closure,
     z_closure_reply_callback_t* call,
@@ -703,7 +703,7 @@ inline void z_closure(
     closure->drop = drop;
     closure->call = call;
 };
-extern "C" using z_closure_sample_callback_t = void(const z_loaned_sample_t*, void*);
+extern "C" using z_closure_sample_callback_t = void(z_loaned_sample_t*, void*);
 inline void z_closure(
     z_owned_closure_sample_t* closure,
     z_closure_sample_callback_t* call,

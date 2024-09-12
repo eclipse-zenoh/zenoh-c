@@ -34,7 +34,7 @@ pub struct z_owned_closure_hello_t {
     /// An optional pointer to a closure state.
     context: *mut c_void,
     /// A closure body.
-    call: Option<extern "C" fn(hello: *const z_loaned_hello_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(hello: &mut z_loaned_hello_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
@@ -92,7 +92,7 @@ pub unsafe extern "C" fn z_internal_closure_hello_null(
 #[no_mangle]
 pub extern "C" fn z_closure_hello_call(
     closure: &z_loaned_closure_hello_t,
-    hello: &z_loaned_hello_t,
+    hello: &mut z_loaned_hello_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
     match closure.call {
@@ -108,15 +108,15 @@ pub extern "C" fn z_closure_hello_drop(this_: &mut z_moved_closure_hello_t) {
     let _ = this_.take_rust_type();
 }
 
-impl<F: Fn(&z_loaned_hello_t)> From<F> for z_owned_closure_hello_t {
+impl<F: Fn(&mut z_loaned_hello_t)> From<F> for z_owned_closure_hello_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_loaned_hello_t)>(
-            response: *const z_loaned_hello_t,
+        extern "C" fn call<F: Fn(&mut z_loaned_hello_t)>(
+            response: &mut z_loaned_hello_t,
             this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };
-            unsafe { this(response.as_ref().unwrap()) }
+            this(response)
         }
         extern "C" fn drop<F>(this: *mut c_void) {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })

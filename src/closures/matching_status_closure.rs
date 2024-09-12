@@ -33,7 +33,7 @@ pub struct zc_owned_closure_matching_status_t {
     /// An optional pointer to a closure state.
     context: *mut c_void,
     /// A closure body.
-    call: Option<extern "C" fn(matching_status: &zc_matching_status_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(matching_status: &mut zc_matching_status_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }

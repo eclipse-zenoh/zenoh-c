@@ -55,7 +55,7 @@ pub extern "C" fn z_internal_fifo_handler_reply_check(
     this_.as_rust_type_ref().is_some()
 }
 
-extern "C" fn __z_handler_reply_send(reply: &z_loaned_reply_t, context: *mut c_void) {
+extern "C" fn __z_handler_reply_send(reply: &mut z_loaned_reply_t, context: *mut c_void) {
     unsafe {
         let f = (context as *mut std::sync::Arc<dyn Fn(Reply) + Send + Sync>)
             .as_mut()
