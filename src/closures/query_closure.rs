@@ -116,7 +116,10 @@ pub extern "C" fn z_closure_query_drop(closure_: &mut z_moved_closure_query_t) {
 impl<F: Fn(&mut z_loaned_query_t)> From<F> for z_owned_closure_query_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&mut z_loaned_query_t)>(query: &mut z_loaned_query_t, this: *mut c_void) {
+        extern "C" fn call<F: Fn(&mut z_loaned_query_t)>(
+            query: &mut z_loaned_query_t,
+            this: *mut c_void,
+        ) {
             let this = unsafe { &*(this as *const F) };
             this(query)
         }

@@ -365,7 +365,10 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
             let mut status = zc_matching_status_t {
                 matching: matching_status.matching_subscribers(),
             };
-            zc_closure_matching_status_call(zc_closure_matching_status_loan(&callback), &mut status);
+            zc_closure_matching_status_call(
+                zc_closure_matching_status_loan(&callback),
+                &mut status,
+            );
         })
         .wait();
     match listener {
