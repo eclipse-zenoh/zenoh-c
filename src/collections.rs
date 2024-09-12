@@ -756,7 +756,7 @@ pub extern "C" fn z_internal_string_array_null(this_: &mut MaybeUninit<z_owned_s
 /// @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_string_array_check(this_: &z_owned_string_array_t) -> bool {
-    this_.as_rust_type_ref().is_empty()
+    !this_.as_rust_type_ref().is_empty()
 }
 
 /// Destroys the string array, resetting it to its gravestone value.
