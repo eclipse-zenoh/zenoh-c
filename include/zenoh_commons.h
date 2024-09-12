@@ -1848,10 +1848,9 @@ ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
  */
 ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
- * Closes a zenoh session. This alos drops and invalidates `session`.
+ * Closes and drops a zenoh session. This also drops all the closure callbacks remaining from dropped (but not undeclared subscribers).
  *
- * @return 0 in  case of success, a negative value if an error occured while closing the session,
- * the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
+ * @return 0 in  case of success, a negative value if an error occured while closing the session.
  */
 ZENOHC_API
 z_result_t z_close(struct z_moved_session_t *session,
@@ -3659,8 +3658,10 @@ ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *th
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
 /**
  * Frees memory and resets queryable to its gravestone state.
+ * The callback closure is not dropped, and thus the queries continue to be served until the corresponding session is closed.
  */
-ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
+ZENOHC_API
+void z_queryable_drop(struct z_moved_queryable_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the ID of the queryable.
@@ -4513,8 +4514,10 @@ ZENOHC_API size_t z_string_len(const struct z_loaned_string_t *this_);
 ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_string_t *this_);
 /**
  * Drops subscriber and resets it to its gravestone state.
+ * The callback closure is not dropped and still keeps receiving and processing samples until the corresponding session is closed.
  */
-ZENOHC_API void z_subscriber_drop(struct z_moved_subscriber_t *this_);
+ZENOHC_API
+void z_subscriber_drop(struct z_moved_subscriber_t *this_);
 /**
  * Returns the key expression of the subscriber.
  */
@@ -4619,7 +4622,7 @@ ZENOHC_API z_result_t z_undeclare_publisher(struct z_moved_publisher_t *this_);
  */
 ZENOHC_API z_result_t z_undeclare_queryable(struct z_moved_queryable_t *this_);
 /**
- * Undeclares subscriber and drops subscriber.
+ * Undeclares and drops subscriber.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -5268,7 +5271,7 @@ const struct z_loaned_keyexpr_t *ze_publication_cache_keyexpr(const ze_loaned_pu
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows querying subscriber.
+ * @brief Borrows publication cache.
  */
 #if defined(UNSTABLE)
 ZENOHC_API
@@ -5285,6 +5288,7 @@ void ze_publication_cache_options_default(struct ze_publication_cache_options_t 
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops querying subscriber.
+ * The callback closure is not dropped, and thus the queries continue to be served until the corresponding session is closed.
  */
 #if defined(UNSTABLE)
 ZENOHC_API

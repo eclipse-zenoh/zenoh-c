@@ -14,7 +14,7 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{prelude::SessionDeclarations, pubsub::Subscriber, Wait};
+use zenoh::{pubsub::Subscriber, Wait};
 
 pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
 use crate::{
@@ -24,7 +24,7 @@ use crate::{
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 decl_c_type!(
-    owned(z_owned_subscriber_t, option Subscriber<'static, ()>),
+    owned(z_owned_subscriber_t, option Subscriber<()>),
     loaned(z_loaned_subscriber_t),
 );
 
@@ -110,7 +110,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
         .as_loaned_c_type_ref()
 }
 
-/// Undeclares subscriber and drops subscriber.
+/// Undeclares and drops subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
@@ -126,6 +126,7 @@ pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> re
 }
 
 /// Drops subscriber and resets it to its gravestone state.
+/// The callback closure is not dropped and still keeps receiving and processing samples until the corresponding session is closed.
 #[no_mangle]
 pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
     std::mem::drop(this_.take_rust_type())

@@ -1,7 +1,10 @@
 #![allow(unused_doc_comments)]
+#![allow(dead_code)]
 use core::ffi::c_void;
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use std::sync::Arc;
 use std::{
-    sync::{Arc, Condvar, Mutex, MutexGuard},
+    sync::{Condvar, Mutex, MutexGuard},
     thread::JoinHandle,
 };
 
@@ -26,11 +29,10 @@ use zenoh::{
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
-    shm::zshm, shm::zshmmut, shm::AllocLayout, shm::BufAllocResult, shm::ChunkAllocResult,
-    shm::ChunkDescriptor, shm::DynamicProtocolID, shm::MemoryLayout, shm::PosixShmProviderBackend,
-    shm::ProtocolID, shm::ShmClient, shm::ShmClientStorage, shm::ShmProvider,
-    shm::ShmProviderBackend, shm::StaticProtocolID, shm::ZLayoutError, shm::ZShm, shm::ZShmMut,
-    shm::POSIX_PROTOCOL_ID,
+    shm::zshm, shm::zshmmut, shm::AllocLayout, shm::ChunkAllocResult, shm::ChunkDescriptor,
+    shm::DynamicProtocolID, shm::MemoryLayout, shm::PosixShmProviderBackend, shm::ProtocolID,
+    shm::ShmClient, shm::ShmClientStorage, shm::ShmProvider, shm::ShmProviderBackend,
+    shm::StaticProtocolID, shm::ZLayoutError, shm::ZShm, shm::ZShmMut, shm::POSIX_PROTOCOL_ID,
 };
 
 #[macro_export]
@@ -127,9 +129,9 @@ get_opaque_type_data!(Query, z_loaned_query_t);
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#queryable"> queryable </a>.
 ///
 /// Responds to queries sent via `z_get()` with intersecting key expression.
-get_opaque_type_data!(Option<Queryable<'static, ()>>, z_owned_queryable_t);
+get_opaque_type_data!(Option<Queryable<()>>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
-get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
+get_opaque_type_data!(Queryable<()>, z_loaned_queryable_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh querying subscriber.
@@ -137,14 +139,14 @@ get_opaque_type_data!(Queryable<'static, ()>, z_loaned_queryable_t);
 /// In addition to receiving the data it is subscribed to,
 /// it also will fetch data from a Queryable at startup and peridodically (using  `ze_querying_subscriber_get()`).
 get_opaque_type_data!(
-    Option<(zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session)>,
+    Option<(zenoh_ext::FetchingSubscriber<()>, &'static Session)>,
     ze_owned_querying_subscriber_t
 );
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned Zenoh querying subscriber.
 get_opaque_type_data!(
-    (zenoh_ext::FetchingSubscriber<'static, ()>, &'static Session),
+    (zenoh_ext::FetchingSubscriber<()>, &'static Session),
     ze_loaned_querying_subscriber_t
 );
 
@@ -180,9 +182,9 @@ get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
 get_opaque_type_data!(KeyExpr<'static>, z_loaned_keyexpr_t);
 
 /// An owned Zenoh session.
-get_opaque_type_data!(Option<Arc<Session>>, z_owned_session_t);
+get_opaque_type_data!(Option<Session>, z_owned_session_t);
 /// A loaned Zenoh session.
-get_opaque_type_data!(Arc<Session>, z_loaned_session_t);
+get_opaque_type_data!(Session, z_loaned_session_t);
 
 /// An owned Zenoh configuration.
 get_opaque_type_data!(Option<Config>, z_owned_config_t);
@@ -212,18 +214,15 @@ get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
 /// Dropping the corresponding publisher, also drops matching listener.
-get_opaque_type_data!(
-    Option<MatchingListener<'static, ()>>,
-    zc_owned_matching_listener_t
-);
+get_opaque_type_data!(Option<MatchingListener<()>>, zc_owned_matching_listener_t);
 
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
 ///
 /// Receives data from publication on intersecting key expressions.
 /// Destroying the subscriber cancels the subscription.
-get_opaque_type_data!(Option<Subscriber<'static, ()>>, z_owned_subscriber_t);
+get_opaque_type_data!(Option<Subscriber<()>>, z_owned_subscriber_t);
 /// A loaned Zenoh subscriber.
-get_opaque_type_data!(Subscriber<'static, ()>, z_loaned_subscriber_t);
+get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -232,13 +231,10 @@ get_opaque_type_data!(Subscriber<'static, ()>, z_loaned_subscriber_t);
 /// expressions.
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
-get_opaque_type_data!(
-    Option<LivelinessToken<'static>>,
-    zc_owned_liveliness_token_t
-);
+get_opaque_type_data!(Option<LivelinessToken>, zc_owned_liveliness_token_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
+get_opaque_type_data!(LivelinessToken, zc_loaned_liveliness_token_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh publication cache.
@@ -246,16 +242,13 @@ get_opaque_type_data!(LivelinessToken<'static>, zc_loaned_liveliness_token_t);
 /// Used to store publications on intersecting key expressions. Can be queried later via `z_get()` to retrieve this data
 /// (for example by `ze_owned_querying_subscriber_t`).
 get_opaque_type_data!(
-    Option<zenoh_ext::PublicationCache<'static>>,
+    Option<zenoh_ext::PublicationCache>,
     ze_owned_publication_cache_t
 );
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned Zenoh publication cache.
-get_opaque_type_data!(
-    zenoh_ext::PublicationCache<'static>,
-    ze_loaned_publication_cache_t
-);
+get_opaque_type_data!(zenoh_ext::PublicationCache, ze_loaned_publication_cache_t);
 
 /// An owned mutex.
 get_opaque_type_data!(
@@ -374,11 +367,11 @@ struct DummySHMProviderBackend {
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 impl ShmProviderBackend for DummySHMProviderBackend {
-    fn alloc(&self, layout: &MemoryLayout) -> ChunkAllocResult {
+    fn alloc(&self, _layout: &MemoryLayout) -> ChunkAllocResult {
         todo!()
     }
 
-    fn free(&self, chunk: &ChunkDescriptor) {
+    fn free(&self, _chunk: &ChunkDescriptor) {
         todo!()
     }
 
@@ -390,7 +383,7 @@ impl ShmProviderBackend for DummySHMProviderBackend {
         todo!()
     }
 
-    fn layout_for(&self, layout: MemoryLayout) -> Result<MemoryLayout, ZLayoutError> {
+    fn layout_for(&self, _layout: MemoryLayout) -> Result<MemoryLayout, ZLayoutError> {
         todo!()
     }
 }
