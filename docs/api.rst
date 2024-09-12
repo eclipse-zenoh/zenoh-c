@@ -80,6 +80,7 @@ Functions
 .. doxygenfunction:: z_string_array_drop
 .. doxygenfunction:: z_string_array_loan
 .. doxygenfunction:: z_string_array_loan_mut
+.. doxygenfunction:: z_string_array_clone
 
 .. doxygenfunction:: z_string_array_new
 .. doxygenfunction:: z_string_array_get
@@ -730,6 +731,7 @@ Functions
 .. doxygenfunction:: z_hello_locators
 .. doxygenfunction:: z_hello_zid
 .. doxygenfunction:: z_hello_loan
+.. doxygenfunction:: z_hello_clone
 .. doxygenfunction:: z_hello_drop
 
 .. doxygenfunction:: z_whatami_to_view_string

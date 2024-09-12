@@ -80,7 +80,7 @@ get_opaque_type_data!(CSlice, z_loaned_string_t);
 
 /// An array of maybe-owned non-null terminated strings.
 ///
-get_opaque_type_data!(Option<Vec<CSlice>>, z_owned_string_array_t);
+get_opaque_type_data!(Vec<CSlice>, z_owned_string_array_t);
 /// A loaned string array.
 get_opaque_type_data!(Vec<CSlice>, z_loaned_string_array_t);
 

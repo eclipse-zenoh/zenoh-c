@@ -427,7 +427,7 @@ pub use crate::opaque_types::{
     z_loaned_string_t, z_moved_string_t, z_owned_string_t, z_view_string_t,
 };
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct CString(CSlice);
 #[derive(Default)]
 pub struct CStringOwned(CString);
@@ -737,26 +737,26 @@ pub use crate::opaque_types::{
 };
 pub type ZVector = Vec<CString>;
 decl_c_type!(
-    owned(z_owned_string_array_t, option ZVector),
+    owned(z_owned_string_array_t, ZVector),
     loaned(z_loaned_string_array_t),
 );
 
 /// Constructs a new empty string array.
 #[no_mangle]
 pub extern "C" fn z_string_array_new(this_: &mut MaybeUninit<z_owned_string_array_t>) {
-    this_.as_rust_type_mut_uninit().write(Some(ZVector::new()));
+    this_.as_rust_type_mut_uninit().write(ZVector::new());
 }
 
 /// Constructs string array in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_string_array_null(this_: &mut MaybeUninit<z_owned_string_array_t>) {
-    this_.as_rust_type_mut_uninit().write(None);
+    z_string_array_new(this_)
 }
 
 /// @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_string_array_check(this_: &z_owned_string_array_t) -> bool {
-    this_.as_rust_type_ref().is_some()
+    this_.as_rust_type_ref().is_empty()
 }
 
 /// Destroys the string array, resetting it to its gravestone value.
@@ -771,10 +771,7 @@ pub extern "C" fn z_string_array_drop(this_: &mut z_moved_string_array_t) {
 pub unsafe extern "C" fn z_string_array_loan(
     this: &z_owned_string_array_t,
 ) -> &z_loaned_string_array_t {
-    this.as_rust_type_ref()
-        .as_ref()
-        .unwrap_unchecked()
-        .as_loaned_c_type_ref()
+    this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Mutably borrows string array.
@@ -783,10 +780,7 @@ pub unsafe extern "C" fn z_string_array_loan(
 pub unsafe extern "C" fn z_string_array_loan_mut(
     this: &mut z_owned_string_array_t,
 ) -> &mut z_loaned_string_array_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// @return number of elements in the array.
@@ -845,4 +839,14 @@ pub extern "C" fn z_string_array_push_by_alias(
     this.push(CString(v.clone_to_borrowed()));
 
     this.len()
+}
+
+/// Constructs an owned copy of a string array.
+#[no_mangle]
+pub extern "C" fn z_string_array_clone(
+    dst: &mut MaybeUninit<z_owned_string_array_t>,
+    this_: &z_loaned_string_array_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(this_.as_rust_type_ref().clone());
 }
