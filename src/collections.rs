@@ -783,10 +783,7 @@ pub unsafe extern "C" fn z_string_array_loan(
 pub unsafe extern "C" fn z_string_array_loan_mut(
     this: &mut z_owned_string_array_t,
 ) -> &mut z_loaned_string_array_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_loaned_c_type_mut()
 }
 
 /// @return number of elements in the array.
