@@ -83,9 +83,14 @@ pub extern "C" fn z_declare_subscriber(
     let callback = callback.take_rust_type();
     let subscriber = session
         .declare_subscriber(key_expr)
-        .callback(move |mut sample| {
-            let sample = sample.as_loaned_c_type_mut();
-            z_closure_sample_call(z_closure_sample_loan(&callback), sample)
+        .callback(move |sample| {
+            let mut owned_sample = Some(sample);
+            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
+                owned_sample
+                    .as_mut()
+                    .unwrap_unchecked()
+                    .as_loaned_c_type_mut()
+            })
         });
     match subscriber.wait() {
         Ok(sub) => {

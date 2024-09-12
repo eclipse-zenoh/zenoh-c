@@ -131,9 +131,15 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
             sub = sub.query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
         }
     }
-    let sub = sub.callback(move |mut sample| {
-        let sample = sample.as_loaned_c_type_mut();
-        z_closure_sample_call(z_closure_sample_loan(&callback), sample);
+    let sub = sub.callback(move |sample| {
+        let mut owned_sample = Some(sample);
+        z_closure_sample_call(
+            z_closure_sample_loan(&callback),
+            owned_sample
+                .as_mut()
+                .unwrap_unchecked()
+                .as_loaned_c_type_mut(),
+        );
     });
     match sub.wait() {
         Ok(sub) => {

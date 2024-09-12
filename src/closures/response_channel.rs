@@ -60,7 +60,8 @@ extern "C" fn __z_handler_reply_send(reply: &mut z_loaned_reply_t, context: *mut
         let f = (context as *mut std::sync::Arc<dyn Fn(Reply) + Send + Sync>)
             .as_mut()
             .unwrap_unchecked();
-        (f)(reply.as_rust_type_ref().clone());
+        let owned_ref: &mut Option<Reply> = std::mem::transmute(reply);
+        (f)(std::mem::take(owned_ref).unwrap_unchecked());
     }
 }
 
