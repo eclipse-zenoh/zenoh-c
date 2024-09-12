@@ -2705,6 +2705,10 @@ z_result_t z_get(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
 /**
+ * Constructs an owned copy of hello message.
+ */
+ZENOHC_API void z_hello_clone(struct z_owned_hello_t *dst, const struct z_loaned_hello_t *this_);
+/**
  * Frees memory and resets hello message to its gravestone state.
  */
 ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
@@ -4403,6 +4407,12 @@ z_result_t z_source_info_new(z_owned_source_info_t *this_,
 ZENOHC_API
 uint64_t z_source_info_sn(const z_loaned_source_info_t *this_);
 #endif
+/**
+ * Constructs an owned copy of a string array.
+ */
+ZENOHC_API
+void z_string_array_clone(struct z_owned_string_array_t *dst,
+                          const struct z_loaned_string_array_t *this_);
 /**
  * Destroys the string array, resetting it to its gravestone value.
  */

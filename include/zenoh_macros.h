@@ -320,12 +320,14 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         z_owned_bytes_t* : z_bytes_clone, \
         z_owned_config_t* : z_config_clone, \
         z_owned_encoding_t* : z_encoding_clone, \
+        z_owned_hello_t* : z_hello_clone, \
         z_owned_keyexpr_t* : z_keyexpr_clone, \
         z_owned_query_t* : z_query_clone, \
         z_owned_reply_t* : z_reply_clone, \
         z_owned_reply_err_t* : z_reply_err_clone, \
         z_owned_sample_t* : z_sample_clone, \
         z_owned_slice_t* : z_slice_clone, \
+        z_owned_string_array_t* : z_string_array_clone, \
         z_owned_string_t* : z_string_clone \
     )(dst, this_)
 #else  // #ifndef __cplusplus
@@ -764,6 +766,9 @@ inline void z_clone(z_owned_config_t* dst, z_loaned_config_t* this_) {
 inline void z_clone(z_owned_encoding_t* dst, z_loaned_encoding_t* this_) {
     z_encoding_clone(dst, this_);
 };
+inline void z_clone(z_owned_hello_t* dst, z_loaned_hello_t* this_) {
+    z_hello_clone(dst, this_);
+};
 inline void z_clone(z_owned_keyexpr_t* dst, z_loaned_keyexpr_t* this_) {
     z_keyexpr_clone(dst, this_);
 };
@@ -781,6 +786,9 @@ inline void z_clone(z_owned_sample_t* dst, z_loaned_sample_t* this_) {
 };
 inline void z_clone(z_owned_slice_t* dst, z_loaned_slice_t* this_) {
     z_slice_clone(dst, this_);
+};
+inline void z_clone(z_owned_string_array_t* dst, z_loaned_string_array_t* this_) {
+    z_string_array_clone(dst, this_);
 };
 inline void z_clone(z_owned_string_t* dst, z_loaned_string_t* this_) {
     z_string_clone(dst, this_);

@@ -63,6 +63,13 @@ pub extern "C" fn z_internal_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>
     this_.as_rust_type_mut_uninit().write(None);
 }
 
+/// Constructs an owned copy of hello message.
+#[no_mangle]
+pub extern "C" fn z_hello_clone(dst: &mut MaybeUninit<z_owned_hello_t>, this_: &z_loaned_hello_t) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this_.as_rust_type_ref().clone()));
+}
+
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns id of Zenoh entity that transmitted hello message.
@@ -94,7 +101,7 @@ pub extern "C" fn z_hello_locators(
     for l in this.locators().iter() {
         locators.push(CString::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
-    locators_out.as_rust_type_mut_uninit().write(Some(locators));
+    locators_out.as_rust_type_mut_uninit().write(locators);
 }
 
 /// Options to pass to `z_scout()`.
