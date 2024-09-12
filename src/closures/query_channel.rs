@@ -60,7 +60,8 @@ extern "C" fn __z_handler_query_send(query: &mut z_loaned_query_t, context: *mut
         let f = (context as *mut std::sync::Arc<dyn Fn(Query) + Send + Sync>)
             .as_mut()
             .unwrap_unchecked();
-        (f)(query.as_rust_type_ref().clone());
+        let owned_ref: &mut Option<Query> = std::mem::transmute(query);
+        (f)(std::mem::take(owned_ref).unwrap_unchecked());
     }
 }
 

@@ -60,7 +60,8 @@ extern "C" fn __z_handler_sample_send(sample: &mut z_loaned_sample_t, context: *
         let f = (context as *mut std::sync::Arc<dyn Fn(Sample) + Send + Sync>)
             .as_mut()
             .unwrap_unchecked();
-        (f)(sample.as_rust_type_ref().clone());
+        let owned_ref: &mut Option<Sample> = std::mem::transmute(sample);
+        (f)(std::mem::take(owned_ref).unwrap_unchecked());
     }
 }
 
