@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     z_config_default(&queryable_config);
 
     z_owned_session_t queryable_session;
-    z_open(&queryable_session, z_move(queryable_config));
+    z_open(&queryable_session, z_move(queryable_config), NULL);
 
     z_owned_closure_query_t callback;
     z_closure(&callback, query_handler, NULL, NULL);
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     z_config_default(&get_config);
 
     z_owned_session_t get_session;
-    z_open(&get_session, z_move(get_config));
+    z_open(&get_session, z_move(get_config), NULL);
 
     z_sleep_s(1);
 
@@ -121,8 +121,8 @@ int main(int argc, char **argv) {
     assert(received_replies == 5);
 
     z_undeclare_queryable(z_move(queryable));
-    z_close(z_move(get_session));
-    z_close(z_move(queryable_session));
+    z_close(z_move(get_session), NULL);
+    z_close(z_move(queryable_session), NULL);
     z_drop(z_move(queryable_keyexpr));
 
     zc_stop_z_runtime();

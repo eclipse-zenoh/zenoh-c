@@ -27,11 +27,11 @@ void test_session() {
     z_config_default(&config);
     assert(z_internal_check(config));
     z_owned_session_t session;
-    z_open(&session, z_move(config));
+    z_open(&session, z_move(config), NULL);
     assert(z_internal_check(session));
-    z_close(z_move(session));
+    z_close(z_move(session), NULL);
     assert(!z_internal_check(session));
-    z_close(z_move(session));
+    z_close(z_move(session), NULL);
     assert(!z_internal_check(session));
 }
 
@@ -39,7 +39,7 @@ void test_publisher() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    z_open(&s, z_move(config));
+    z_open(&s, z_move(config), NULL);
 
     z_owned_keyexpr_t keyexpr;
     z_keyexpr_from_str(&keyexpr, URL);
@@ -51,7 +51,7 @@ void test_publisher() {
     assert(!z_internal_check(pub));
     z_undeclare_publisher(z_move(pub));
     assert(!z_internal_check(pub));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 }
 
 void test_keyexpr() {
@@ -81,7 +81,7 @@ void test_subscriber() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    z_open(&s, z_move(config));
+    z_open(&s, z_move(config), NULL);
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
 
@@ -94,7 +94,7 @@ void test_subscriber() {
     assert(!z_internal_check(sub));
     z_undeclare_subscriber(z_move(sub));
     assert(!z_internal_check(sub));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 }
 
 void query_handler(const z_loaned_query_t *query, void *context) {}
@@ -103,7 +103,7 @@ void test_queryable() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    z_open(&s, z_move(config));
+    z_open(&s, z_move(config), NULL);
     z_owned_closure_query_t callback;
     z_closure(&callback, query_handler, NULL, NULL);
 
@@ -116,7 +116,7 @@ void test_queryable() {
     assert(!z_internal_check(queryable));
     z_undeclare_queryable(z_move(queryable));
     assert(!z_internal_check(queryable));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 }
 
 int main(int argc, char **argv) {

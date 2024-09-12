@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     z_sleep_s(SLEEP);
 
     z_owned_session_t s1;
-    assert(0 == z_open(&s1, z_move(_ret_config)));
+    assert(0 == z_open(&s1, z_move(_ret_config), NULL));
     assert(z_internal_check(s1));
 
 #ifdef UNSTABLE
@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
 #endif
 
     z_owned_session_t s2;
-    assert(0 == z_open(&s2, z_move(_ret_config)));
+    assert(0 == z_open(&s2, z_move(_ret_config), NULL));
     assert(z_internal_check(s2));
 
 #ifdef UNSTABLE
@@ -346,14 +346,14 @@ int main(int argc, char **argv) {
     zp_stop_lease_task(z_loan(s1));
 #endif
 
-    _ret_int8 = z_close(z_move(s1));
+    _ret_int8 = z_close(z_move(s1), NULL);
     assert(_ret_int8 == 0);
 
 #ifdef ZENOH_PICO
     zp_stop_read_task(z_loan(s2));
     zp_stop_lease_task(z_loan(s2));
 #endif
-    _ret_int8 = z_close(z_move(s2));
+    _ret_int8 = z_close(z_move(s2), NULL);
     assert(_ret_int8 == 0);
 
     z_sleep_s(SLEEP * 5);

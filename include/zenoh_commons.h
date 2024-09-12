@@ -437,6 +437,12 @@ typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
 /**
+ * Options passed to the `z_close()` function.
+ */
+typedef struct z_close_options_t {
+  uint8_t _dummy;
+} z_close_options_t;
+/**
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -783,6 +789,12 @@ typedef struct z_moved_keyexpr_t {
 typedef struct z_moved_mutex_t {
   struct z_owned_mutex_t _this;
 } z_moved_mutex_t;
+/**
+ * Options passed to the `z_open()` function.
+ */
+typedef struct z_open_options_t {
+  uint8_t _dummy;
+} z_open_options_t;
 /**
  * Represents the set of options that can be applied to the delete operation by a previously declared publisher,
  * whenever issued via `z_publisher_delete()`.
@@ -1842,7 +1854,12 @@ ZENOHC_API struct z_clock_t z_clock_now(void);
  * the remaining reference count (number of shallow copies) of the session otherwise, saturating at i8::MAX.
  */
 ZENOHC_API
-z_result_t z_close(struct z_moved_session_t *session);
+z_result_t z_close(struct z_moved_session_t *session,
+                   const struct z_close_options_t *_options);
+/**
+ * Constructs the default value for `z_close_options_t`.
+ */
+ZENOHC_API void z_close_options_default(struct z_close_options_t *this_);
 /**
  * Calls the closure. Calling an uninitialized closure is a no-op.
  */
@@ -3368,7 +3385,12 @@ z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
  */
 ZENOHC_API
 z_result_t z_open(struct z_owned_session_t *this_,
-                  struct z_moved_config_t *config);
+                  struct z_moved_config_t *config,
+                  const struct z_open_options_t *_options);
+/**
+ * Constructs the default value for `z_open_options_t`.
+ */
+ZENOHC_API void z_open_options_default(struct z_open_options_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs and opens a new Zenoh session with specified client storage.

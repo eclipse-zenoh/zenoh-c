@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     z_config_default(&pub_config);
 
     z_owned_session_t pub_session;
-    z_open(&pub_session, z_move(pub_config));
+    z_open(&pub_session, z_move(pub_config), NULL);
 
     z_owned_publisher_t publisher;
     z_declare_publisher(&publisher, z_loan(pub_session), z_loan(pub_keyexpr), NULL);
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     z_config_default(&sub_config);
 
     z_owned_session_t sub_session;
-    z_open(&sub_session, z_move(sub_config));
+    z_open(&sub_session, z_move(sub_config), NULL);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
@@ -88,8 +88,8 @@ int main(int argc, char **argv) {
 
     z_undeclare_publisher(z_move(publisher));
     z_undeclare_subscriber(z_move(subscriber));
-    z_close(z_move(pub_session));
-    z_close(z_move(sub_session));
+    z_close(z_move(pub_session), NULL);
+    z_close(z_move(sub_session), NULL);
     z_drop(z_move(pub_keyexpr));
 
     zc_stop_z_runtime();

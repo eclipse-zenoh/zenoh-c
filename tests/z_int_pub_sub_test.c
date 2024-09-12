@@ -37,7 +37,7 @@ int run_publisher() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         return -1;
     }
@@ -76,7 +76,7 @@ int run_publisher() {
     }
 
     z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
     return 0;
 }
 
@@ -145,7 +145,7 @@ int run_subscriber() {
     z_config_default(&config);
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         return -1;
     }
@@ -165,7 +165,7 @@ int run_subscriber() {
     sleep(10);
 
     z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 
     return -1;
 }

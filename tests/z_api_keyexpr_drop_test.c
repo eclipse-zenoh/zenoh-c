@@ -24,7 +24,7 @@ void test_publisher() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    z_open(&s, z_move(config));
+    z_open(&s, z_move(config), NULL);
     assert(z_internal_check(s));
     char keyexpr[256];
     strncpy(keyexpr, "foo/bar", 256);
@@ -40,7 +40,7 @@ void test_publisher() {
     assert(strncmp(z_string_data(z_loan(pub_keyexpr)), "foo/bar", z_string_len(z_loan(pub_keyexpr))) ==
            0);  // Check that publisher keeps the correct keyexpr
     z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 }
 
 void data_handler(const z_loaned_sample_t *sample, void *arg) {}
@@ -49,7 +49,7 @@ void test_subscriber() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    z_open(&s, z_move(config));
+    z_open(&s, z_move(config), NULL);
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
     char keyexpr[256];
@@ -66,7 +66,7 @@ void test_subscriber() {
     assert(strncmp(z_string_data(z_loan(sub_keyexpr)), "foo/bar", z_string_len(z_loan(sub_keyexpr))) ==
            0);  // Check that subscriber keeps the correct keyexpr
     z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(s));
+    z_close(z_move(s), NULL);
 }
 
 int main(int argc, char **argv) {
