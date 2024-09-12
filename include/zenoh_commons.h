@@ -583,7 +583,7 @@ typedef struct z_owned_closure_zid_t {
   /**
    * A callback function.
    */
-  void (*call)(z_id_t *z_id, void *context);
+  void (*call)(const z_id_t *z_id, void *context);
   /**
    * An optional function that will be called upon closure drop.
    */
@@ -1927,7 +1927,7 @@ const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_own
 #if defined(UNSTABLE)
 ZENOHC_API
 void z_closure_zid_call(const struct z_loaned_closure_zid_t *closure,
-                        z_id_t *z_id);
+                        const z_id_t *z_id);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
