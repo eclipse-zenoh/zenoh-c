@@ -6,7 +6,7 @@
 
 void parse_args(int argc, char** argv, z_owned_config_t* config);
 
-void callback(const z_loaned_sample_t* sample, void* context) {
+void callback(z_loaned_sample_t* sample, void* context) {
     const z_loaned_publisher_t* pub = z_loan(*(z_owned_publisher_t*)context);
     z_owned_bytes_t payload;
     z_bytes_clone(&payload, z_sample_payload(sample));

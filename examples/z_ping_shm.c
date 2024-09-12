@@ -20,7 +20,7 @@
 z_owned_condvar_t cond;
 z_owned_mutex_t mutex;
 
-void callback(const z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loan(cond)); }
+void callback(z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loan(cond)); }
 void drop(void* context) { z_drop(z_move(cond)); }
 
 struct args_t {

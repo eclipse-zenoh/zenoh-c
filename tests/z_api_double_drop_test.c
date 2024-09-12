@@ -75,7 +75,7 @@ void test_config() {
     assert(!z_internal_check(config));
 }
 
-void data_handler(const z_loaned_sample_t *sample, void *arg) {}
+void data_handler(z_loaned_sample_t *sample, void *arg) {}
 
 void test_subscriber() {
     z_owned_config_t config;
@@ -97,7 +97,7 @@ void test_subscriber() {
     z_close(z_move(s), NULL);
 }
 
-void query_handler(const z_loaned_query_t *query, void *context) {}
+void query_handler(z_loaned_query_t *query, void *context) {}
 
 void test_queryable() {
     z_owned_config_t config;

@@ -33,7 +33,7 @@ pub struct zc_owned_closure_matching_status_t {
     /// An optional pointer to a closure state.
     context: *mut c_void,
     /// A closure body.
-    call: Option<extern "C" fn(matching_status: &mut zc_matching_status_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(matching_status: &zc_matching_status_t, context: *mut c_void)>,
     /// An optional drop function that will be called when the closure is dropped.
     drop: Option<extern "C" fn(context: *mut c_void)>,
 }
@@ -106,7 +106,7 @@ pub extern "C" fn zc_internal_closure_matching_status_check(
 #[no_mangle]
 pub extern "C" fn zc_closure_matching_status_call(
     closure: &zc_loaned_closure_matching_status_t,
-    mathing_status: &mut zc_matching_status_t,
+    mathing_status: &zc_matching_status_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
     match closure.call {
@@ -126,11 +126,11 @@ pub extern "C" fn zc_closure_matching_status_drop(
     let _ = closure_.take_rust_type();
 }
 
-impl<F: Fn(&mut zc_matching_status_t)> From<F> for zc_owned_closure_matching_status_t {
+impl<F: Fn(&zc_matching_status_t)> From<F> for zc_owned_closure_matching_status_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&mut zc_matching_status_t)>(
-            response: &mut zc_matching_status_t,
+        extern "C" fn call<F: Fn(&zc_matching_status_t)>(
+            response: &zc_matching_status_t,
             this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };

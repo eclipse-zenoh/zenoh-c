@@ -18,7 +18,7 @@
 #undef NDEBUG
 #include <assert.h>
 
-void cb(const struct z_loaned_reply_t *reply, void *context) {}
+void cb(struct z_loaned_reply_t *reply, void *context) {}
 void drop(void *context) {}
 
 void put() {

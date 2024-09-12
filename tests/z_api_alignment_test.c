@@ -36,14 +36,14 @@ void zid_handler(const z_id_t *id, void *arg) {
 #endif
 
 volatile unsigned int hellos = 0;
-void hello_handler(const z_loaned_hello_t *hello, void *arg) {
+void hello_handler(z_loaned_hello_t *hello, void *arg) {
     (void)(arg);
     (void)(hello);
     hellos++;
 }
 
 volatile unsigned int queries = 0;
-void query_handler(const z_loaned_query_t *query, void *arg) {
+void query_handler(z_loaned_query_t *query, void *arg) {
     queries++;
 
     const z_loaned_keyexpr_t *query_ke = z_query_keyexpr(query);
@@ -71,7 +71,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
 }
 
 volatile unsigned int replies = 0;
-void reply_handler(const z_loaned_reply_t *reply, void *arg) {
+void reply_handler(z_loaned_reply_t *reply, void *arg) {
     replies++;
 
     if (z_reply_is_ok(reply)) {
@@ -91,7 +91,7 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
 }
 
 volatile unsigned int datas = 0;
-void data_handler(const z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t *sample, void *arg) {
     datas++;
 
     z_view_string_t k_str;

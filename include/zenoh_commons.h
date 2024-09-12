@@ -1184,7 +1184,7 @@ typedef struct zc_owned_closure_matching_status_t {
   /**
    * A closure body.
    */
-  void (*call)(struct zc_matching_status_t *matching_status, void *context);
+  void (*call)(const struct zc_matching_status_t *matching_status, void *context);
   /**
    * An optional drop function that will be called when the closure is dropped.
    */
@@ -4800,7 +4800,7 @@ const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_
 #if defined(UNSTABLE)
 ZENOHC_API
 void zc_closure_matching_status_call(const struct zc_loaned_closure_matching_status_t *closure,
-                                     struct zc_matching_status_t *mathing_status);
+                                     const struct zc_matching_status_t *mathing_status);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
