@@ -63,6 +63,8 @@ void data_handler(z_loaned_sample_t* sample, void* arg) {
 }
 
 int main(int argc, char** argv) {
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
     z_view_keyexpr_t ke;

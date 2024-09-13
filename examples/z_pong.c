@@ -22,6 +22,8 @@ void drop(void* context) {
 }
 
 int main(int argc, char** argv) {
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     parse_args(argc, argv, &config);
 

@@ -32,11 +32,14 @@ int main(int argc, char** argv) {
     }
     size_t value_len = value ? strlen(value) : 0;
 
+    zc_init_log_from_env_or("error");
+
     z_view_keyexpr_t keyexpr;
     if (z_view_keyexpr_from_str(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
     }
+
     z_owned_config_t config;
     z_config_default(&config);
 
