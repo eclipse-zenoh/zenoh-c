@@ -828,7 +828,7 @@ Functions
 ---------
 
 .. doxygenfunction:: zc_init_logging
-.. doxygenfunction:: zc_init_logging_with_callback
+.. doxygenfunction:: zc_init_log_with_callback
 
 
 Other

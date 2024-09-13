@@ -4894,22 +4894,22 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
- * Initializes the zenoh runtime logger, using rust environment settings.
- *
- * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
- * this will be performed automatically by `z_open` and `z_scout`.
- */
-ZENOHC_API void zc_init_logging(void);
-/**
- * Initializes the zenoh runtime logger with custom callback.
+ * Initializes the Zenoh runtime logger with custom callback.
  *
  * @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
  * Messages with lower severity levels will be ignored.
  * @param callback: A closure that will be called with each log message severity level and content.
  */
 ZENOHC_API
-void zc_init_logging_with_callback(enum zc_log_severity_t min_severity,
-                                   struct zc_owned_closure_log_t *callback);
+void zc_init_log_with_callback(enum zc_log_severity_t min_severity,
+                               struct zc_moved_closure_log_t *callback);
+/**
+ * Initializes the zenoh runtime logger, using rust environment settings.
+ *
+ * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
+ * this will be performed automatically by `z_open` and `z_scout`.
+ */
+ZENOHC_API void zc_init_logging(void);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
