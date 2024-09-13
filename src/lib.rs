@@ -18,7 +18,7 @@ use std::{cmp::min, slice};
 
 use libc::c_void;
 
-use crate::transmute::LoanedCTypeRef;
+use crate::transmute::{LoanedCTypeRef, TakeRustType};
 #[macro_use]
 mod transmute;
 pub mod opaque_types;
@@ -77,34 +77,35 @@ pub mod context;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
 
-/// Initializes the zenoh runtime logger, using rust environment settings.
+/// @brief Initializes the zenoh runtime logger redirecting Zenoh logs to stdout according to `RUST_LOG` env variable.
+/// For example, `RUST_LOG=debug` will set the log severity level to DEBUG.
+/// If `RUST_LOG` env varaibel is not set, then logging is not enabled.
 ///
-/// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
+/// @note unless you built zenoh-c with the `logger-autoinit` feature disabled,
 /// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
-pub extern "C" fn zc_init_logging() {
+pub extern "C" fn zc_try_init_log_from_env() {
     zenoh::try_init_log_from_env();
 }
 
-/// Initializes the zenoh runtime logger with custom callback.
+/// Initializes the Zenoh runtime logger with custom callback.
 ///
 /// @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
 /// Messages with lower severity levels will be ignored.
 /// @param callback: A closure that will be called with each log message severity level and content.
 #[no_mangle]
-pub extern "C" fn zc_init_logging_with_callback(
+pub extern "C" fn zc_init_log_with_callback(
     min_severity: zc_log_severity_t,
-    callback: &mut zc_owned_closure_log_t,
+    callback: &mut zc_moved_closure_log_t,
 ) {
-    let mut closure = zc_owned_closure_log_t::empty();
-    std::mem::swap(callback, &mut closure);
+    let callback = callback.take_rust_type();
     zenoh_util::log::init_log_with_callback(
         move |meta| min_severity <= (*meta.level()).into(),
         move |record| {
             if let Some(s) = record.message.as_ref() {
                 let c = CStringView::new_borrowed_from_slice(s.as_bytes());
                 zc_closure_log_call(
-                    zc_closure_log_loan(&closure),
+                    zc_closure_log_loan(&callback),
                     record.level.into(),
                     c.as_loaned_c_type_ref(),
                 );

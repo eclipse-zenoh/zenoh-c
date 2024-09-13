@@ -4894,22 +4894,15 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
- * Initializes the zenoh runtime logger, using rust environment settings.
- *
- * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
- * this will be performed automatically by `z_open` and `z_scout`.
- */
-ZENOHC_API void zc_init_logging(void);
-/**
- * Initializes the zenoh runtime logger with custom callback.
+ * Initializes the Zenoh runtime logger with custom callback.
  *
  * @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
  * Messages with lower severity levels will be ignored.
  * @param callback: A closure that will be called with each log message severity level and content.
  */
 ZENOHC_API
-void zc_init_logging_with_callback(enum zc_log_severity_t min_severity,
-                                   struct zc_owned_closure_log_t *callback);
+void zc_init_log_with_callback(enum zc_log_severity_t min_severity,
+                               struct zc_moved_closure_log_t *callback);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
@@ -5195,6 +5188,16 @@ void zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
  */
 ZENOHC_API
 void zc_stop_z_runtime(void);
+/**
+ * @brief Initializes the zenoh runtime logger redirecting Zenoh logs to stdout according to `RUST_LOG` env variable.
+ * For example, `RUST_LOG=debug` will set the log severity level to DEBUG.
+ * If `RUST_LOG` env varaibel is not set, then logging is not enabled.
+ *
+ * @note unless you built zenoh-c with the `logger-autoinit` feature disabled,
+ * this will be performed automatically by `z_open` and `z_scout`.
+ */
+ZENOHC_API
+void zc_try_init_log_from_env(void);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs and declares a publication cache.
