@@ -93,7 +93,7 @@ pub extern "C" fn zc_try_init_log_from_env() {
 /// Note that if the environment variable is not set, then fallback filter will be used instead.
 /// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
 ///
-/// @param level: The fallback filter if the `RUST_LOG` environment variable is not set. The format
+/// @param level: The fallback filter if the `RUST_LOG` environment variable is not set.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_init_log_from_env_or(
