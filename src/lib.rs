@@ -18,7 +18,7 @@ use std::{cmp::min, slice};
 
 use libc::c_void;
 
-use crate::transmute::LoanedCTypeRef;
+use crate::transmute::{LoanedCTypeRef, TakeRustType};
 #[macro_use]
 mod transmute;
 pub mod opaque_types;
@@ -93,13 +93,13 @@ pub extern "C" fn zc_try_init_log_from_env() {
 /// Note that if the environment variable is not set, then fallback filter will be used instead.
 /// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
 ///
-/// @param level: The fallback filter if the `RUST_LOG` environment variable is not set.
+/// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_init_log_from_env_or(
-    fallback: *const libc::c_char,
+    fallback_filter: *const libc::c_char,
 ) -> result::z_result_t {
-    match std::ffi::CStr::from_ptr(fallback).to_str() {
+    match std::ffi::CStr::from_ptr(fallback_filter).to_str() {
         Ok(s) => {
             zenoh::init_log_from_env_or(s);
             result::Z_OK
@@ -114,19 +114,18 @@ pub unsafe extern "C" fn zc_init_log_from_env_or(
 /// Messages with lower severity levels will be ignored.
 /// @param callback: A closure that will be called with each log message severity level and content.
 #[no_mangle]
-pub extern "C" fn zc_init_logging_with_callback(
+pub extern "C" fn zc_init_log_with_callback(
     min_severity: zc_log_severity_t,
-    callback: &mut zc_owned_closure_log_t,
+    callback: &mut zc_moved_closure_log_t,
 ) {
-    let mut closure = zc_owned_closure_log_t::empty();
-    std::mem::swap(callback, &mut closure);
+    let callback = callback.take_rust_type();
     zenoh_util::log::init_log_with_callback(
         move |meta| min_severity <= (*meta.level()).into(),
         move |record| {
             if let Some(s) = record.message.as_ref() {
                 let c = CStringView::new_borrowed_from_slice(s.as_bytes());
                 zc_closure_log_call(
-                    zc_closure_log_loan(&closure),
+                    zc_closure_log_loan(&callback),
                     record.level.into(),
                     c.as_loaned_c_type_ref(),
                 );
