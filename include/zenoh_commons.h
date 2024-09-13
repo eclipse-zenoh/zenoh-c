@@ -4684,12 +4684,13 @@ z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
  * Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
  *
- * Note that if the environment variable is not set, then fallback level will be used instead.
+ * Note that if the environment variable is not set, then fallback filter will be used instead.
+ * See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
  *
- * @param level: The fallback level for logging if the environment variable is not set.
+ * @param level: The fallback filter if the `RUST_LOG` environment variable is not set. The format
  */
 ZENOHC_API
-z_result_t zc_init_log_from_env_or(const char *level);
+z_result_t zc_init_log_from_env_or(const char *fallback);
 /**
  * Initializes the zenoh runtime logger with custom callback.
  *
@@ -4990,6 +4991,7 @@ void zc_stop_z_runtime(void);
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
  *
  * Note that if the environment variable is not set, then logging will not be enabled.
+ * See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
  */
 ZENOHC_API
 void zc_try_init_log_from_env(void);
