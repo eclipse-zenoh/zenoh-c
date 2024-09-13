@@ -4681,6 +4681,16 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
+ * Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
+ * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
+ *
+ * Note that if the environment variable is not set, then fallback level will be used instead.
+ *
+ * @param level: The fallback level for logging.
+ */
+ZENOHC_API
+z_result_t zc_init_log_from_env_or(const char *level);
+/**
  * Initializes the zenoh runtime logger with custom callback.
  *
  * @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
@@ -4979,8 +4989,7 @@ void zc_stop_z_runtime(void);
  * Initializes the zenoh runtime logger, using rust environment settings.
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
  *
- * Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
- * this will be performed automatically by `z_open` and `z_scout`.
+ * Note that if the environment variable is not set, then logging will not be enabled.
  */
 ZENOHC_API
 void zc_try_init_log_from_env(void);

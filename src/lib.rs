@@ -80,11 +80,28 @@ pub mod shm;
 /// Initializes the zenoh runtime logger, using rust environment settings.
 /// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
-/// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
-/// this will be performed automatically by `z_open` and `z_scout`.
+/// Note that if the environment variable is not set, then logging will not be enabled.
 #[no_mangle]
 pub extern "C" fn zc_try_init_log_from_env() {
     zenoh::try_init_log_from_env();
+}
+
+/// Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
+/// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
+///
+/// Note that if the environment variable is not set, then fallback level will be used instead.
+///
+/// @param level: The fallback level for logging.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_init_log_from_env_or(level: *const libc::c_char) -> result::z_result_t {
+    match std::ffi::CStr::from_ptr(level).to_str() {
+        Ok(s) => {
+            zenoh::init_log_from_env_or(s);
+            result::Z_OK
+        }
+        Err(_) => result::Z_EINVAL,
+    }
 }
 
 /// Initializes the zenoh runtime logger with custom callback.
