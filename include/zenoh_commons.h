@@ -1610,7 +1610,8 @@ ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_byte
 ZENOHC_API
 struct z_bytes_slice_iterator_t z_bytes_get_slice_iterator(const struct z_loaned_bytes_t *this_);
 /**
- * Gets writer for `this_`.
+ * @brief Gets writer for`this_`.
+ * @note Creating another writer while previous one is still in use is undefined behaviour.
  */
 ZENOHC_API struct z_bytes_writer_t z_bytes_get_writer(struct z_loaned_bytes_t *this_);
 /**

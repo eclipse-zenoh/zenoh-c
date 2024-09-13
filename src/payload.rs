@@ -945,7 +945,8 @@ pub use crate::opaque_types::z_bytes_writer_t;
 
 decl_c_type! {loaned(z_bytes_writer_t, ZBytesWriter<'static>)}
 
-/// Gets writer for `this_`.
+/// @brief Gets writer for`this_`.
+/// @note Creating another writer while previous one is still in use is undefined behaviour.
 #[no_mangle]
 extern "C" fn z_bytes_get_writer(this: &'static mut z_loaned_bytes_t) -> z_bytes_writer_t {
     *this.as_rust_type_mut().writer().as_loaned_c_type_ref()
