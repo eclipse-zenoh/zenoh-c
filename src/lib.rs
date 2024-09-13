@@ -91,7 +91,7 @@ pub extern "C" fn zc_try_init_log_from_env() {
 ///
 /// Note that if the environment variable is not set, then fallback level will be used instead.
 ///
-/// @param level: The fallback level for logging.
+/// @param level: The fallback level for logging if the environment variable is not set.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_init_log_from_env_or(level: *const libc::c_char) -> result::z_result_t {

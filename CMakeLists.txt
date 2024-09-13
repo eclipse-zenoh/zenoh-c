@@ -27,7 +27,6 @@ enable_testing()
 # Configuration options
 #
 declare_cache_var_true_if_vscode(ZENOHC_BUILD_IN_SOURCE_TREE "Do build inside source tree")
-declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
 declare_cache_var(ZENOHC_BUILD_WITH_SHARED_MEMORY FALSE BOOL "Enable shared-memory zenoh-c feature")
 declare_cache_var(ZENOHC_BUILD_WITH_UNSTABLE_API FALSE BOOL "Enable unstable API feature")
 declare_cache_var(ZENOHC_BUILD_TESTS_WITH_CXX FALSE BOOL "Use C++ compiler for building tests to check API's C++ compatibility")
@@ -199,10 +198,6 @@ set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
-
-if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
-	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
-endif()
 
 if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
 	set(cargo_flags ${cargo_flags} --features=shared-memory)

@@ -105,7 +105,7 @@ jobs:
           cd .. && rm -rf build_examples
 
       - name: Run rust tests
-        run: cargo test --verbose --release --features=logger-autoinit
+        run: cargo test --verbose --release
 
       - name: Upload artifact
         if: ${{ matrix.unstable == 'false' && matrix.shm == 'false' }}
