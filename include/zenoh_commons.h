@@ -4901,10 +4901,10 @@ z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
  * Note that if the environment variable is not set, then fallback filter will be used instead.
  * See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
  *
- * @param level: The fallback filter if the `RUST_LOG` environment variable is not set.
+ * @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
  */
 ZENOHC_API
-z_result_t zc_init_log_from_env_or(const char *fallback);
+z_result_t zc_init_log_from_env_or(const char *fallback_filter);
 /**
  * Initializes the zenoh runtime logger with custom callback.
  *

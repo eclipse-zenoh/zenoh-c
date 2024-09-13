@@ -93,13 +93,13 @@ pub extern "C" fn zc_try_init_log_from_env() {
 /// Note that if the environment variable is not set, then fallback filter will be used instead.
 /// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
 ///
-/// @param level: The fallback filter if the `RUST_LOG` environment variable is not set.
+/// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_init_log_from_env_or(
-    fallback: *const libc::c_char,
+    fallback_filter: *const libc::c_char,
 ) -> result::z_result_t {
-    match std::ffi::CStr::from_ptr(fallback).to_str() {
+    match std::ffi::CStr::from_ptr(fallback_filter).to_str() {
         Ok(s) => {
             zenoh::init_log_from_env_or(s);
             result::Z_OK
