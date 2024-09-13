@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
     setbuf(stdout, NULL);
 
 #ifdef ZENOH_C
-    zc_init_logging();
+    zc_try_init_log_from_env();
 #endif
 
     z_view_keyexpr_t key_demo_example, key_demo_example_a, key_demo_example_starstar;

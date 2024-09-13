@@ -120,7 +120,7 @@ void test_queryable() {
 }
 
 int main(int argc, char **argv) {
-    zc_init_logging();
+    zc_try_init_log_from_env();
     test_session();
     test_publisher();
     test_keyexpr();

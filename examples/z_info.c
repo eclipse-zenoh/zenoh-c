@@ -26,6 +26,8 @@ void print_zid(const z_id_t* id, void* ctx) {
 void parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     parse_args(argc, argv, &config);
 

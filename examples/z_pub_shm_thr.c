@@ -25,6 +25,8 @@ int main(int argc, char **argv) {
     char *keyexpr = "test/thr";
     size_t len = atoi(argv[1]);
 
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     z_config_default(&config);
 
