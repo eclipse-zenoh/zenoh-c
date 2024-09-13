@@ -78,11 +78,12 @@ pub mod context;
 pub mod shm;
 
 /// Initializes the zenoh runtime logger, using rust environment settings.
+/// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
 /// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
 /// this will be performed automatically by `z_open` and `z_scout`.
 #[no_mangle]
-pub extern "C" fn zc_init_logging() {
+pub extern "C" fn zc_try_init_log_from_env() {
     zenoh::try_init_log_from_env();
 }
 

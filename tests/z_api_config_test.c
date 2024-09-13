@@ -37,6 +37,6 @@ void insert_get() {
 }
 
 int main(int argc, char **argv) {
-    zc_init_logging();
+    zc_try_init_log_from_env();
     insert_get();
 }
