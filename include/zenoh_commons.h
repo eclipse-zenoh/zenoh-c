@@ -4701,7 +4701,7 @@ z_result_t zc_init_log_from_env_or(const char *fallback);
  */
 ZENOHC_API
 void zc_init_logging_with_callback(enum zc_log_severity_t min_severity,
-                                   struct zc_owned_closure_log_t *callback);
+                                   struct zc_moved_closure_log_t *callback);
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */

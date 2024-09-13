@@ -17,6 +17,7 @@
 use std::{cmp::min, slice};
 
 use libc::c_void;
+use transmute::TakeRustType;
 
 use crate::transmute::LoanedCTypeRef;
 #[macro_use]
@@ -116,10 +117,9 @@ pub unsafe extern "C" fn zc_init_log_from_env_or(
 #[no_mangle]
 pub extern "C" fn zc_init_logging_with_callback(
     min_severity: zc_log_severity_t,
-    callback: &mut zc_owned_closure_log_t,
+    callback: &mut zc_moved_closure_log_t,
 ) {
-    let mut closure = zc_owned_closure_log_t::empty();
-    std::mem::swap(callback, &mut closure);
+    let closure = callback.take_rust_type();
     zenoh_util::log::init_log_with_callback(
         move |meta| min_severity <= (*meta.level()).into(),
         move |record| {
