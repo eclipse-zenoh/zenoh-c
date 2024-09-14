@@ -153,7 +153,7 @@ Examples of these types are `z_timestamp_t`, `z_priority_t`, etc.
 
 
 Name prefixes `z_`, `zc_`, `ze_`
-===============================
+=======================================
 
 Most of funcitons and types in the C API have names prefixed with `z_`. This prefix is used for 
 the part of API which is common for all zenoh C API implementations (currently Rust based zenoh-c and 
