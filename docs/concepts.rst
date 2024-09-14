@@ -16,28 +16,26 @@
 Concepts
 ********
 
-Types classification
+Types Classification
 ====================
 
-There are following categories of types in the zenoh-c library:
+Zenoh-C types fall into these categories:
 
-- owned types `z_owned_xxx_t`
-- loaned types `z_loaned_xxx_t`
-- moved types `z_moved_xxx_t`
-- view types `z_view_xxx_t`
-- options structures `z_xxx_options_t`
-- enums, plain data structures `z_xxx_t`
+- Owned types: `z_owned_xxx_t`
+- Loaned types: `z_loaned_xxx_t`
+- Moved types: `z_moved_xxx_t`
+- View types: `z_view_xxx_t`
+- Option structures: `z_xxx_options_t`
+- Enums and plain data structures: `z_xxx_t`
 
-Owned types `z_owned_xxx_t`
+Owned Types `z_owned_xxx_t`
 ---------------------------
 
-Zenoh-c library uses in it's API some principles of Rust language, which the library is based on.
-This includes the concept of ownership, moving and borrowing (loaning).
+The Zenoh-C library incorporates concepts like ownership, moving, and borrowing.
 
-There are types in the zenoh-c which are named in format `z_owned_xxx_t`. Theese "owned" types once being
-constructed may contain ("own") some external resources (like memory, file descriptors, etc.). On the end
-of lifecycle of such type it should be destroyed by corresponding `z_xxx_drop` function or by generic
-macro `z_drop`. Example:
+Types prefixed with `z_owned_xxx_t` "own" external resources (e.g., memory, file descriptors). 
+These types must be destroyed at the end of their lifecycle using the `z_xxx_drop` function or 
+the `z_drop` macro. Example:
 
 .. code-block:: c
 
@@ -46,18 +44,17 @@ macro `z_drop`. Example:
     //...
     z_drop(z_move(s));
 
-There are two variants how the owned object may be passed to a function: by moving and by loaning. This is achieved
-by types `z_loaned_xxx_t` and `z_moved_xxx_t`. 
+Owned objects can be passed to functions in two ways: by moving (`z_moved_xxx_t`) or 
+loaning (`z_loaned_xxx_t`).
 
-Loaned types `z_loaned_xxx_t`
+Loaned Types `z_loaned_xxx_t`
 -----------------------------
 
-When we need to temporarily pass the owned object to a function, we can do it by loaning it. This is done by
-`z_xxx_loan` functions which accepts the owned object and returns the pointer to corresponding `z_loaned_xxx_t` type.
-The generic macro `z_loan` is also provided for the purpose of code readability. 
-The functions accepting a loaned object can either 
-only read it (`const z_loaned_xxx_t*`) or read and modify (`z_loaned_xxx_t*`), but in any case caller keeps ownership
-on the passed object. Example:
+To temporarily pass an owned object, it can be loaned using `z_xxx_loan` functions, which return 
+a pointer to the corresponding `z_loaned_xxx_t`. For readability, the generic macro `z_loan` is also available.
+
+Functions accepting a loaned object can either read (`const z_loaned_xxx_t*`) or read and 
+modify (`z_loaned_xxx_t*`) the object. In both cases, ownership remains with the caller. Example:
 
 .. code-block:: c
 
@@ -74,12 +71,11 @@ on the passed object. Example:
 Moved types `z_moved_xxx_t`
 ---------------------------
 
-When the function accepts the `z_moved_xxx_t*` parameter, this means that it takes the ownership of the passed object. 
-To pass the owned object to such function the caller should use `z_xxx_move` function or generic macro `z_move`.
+When a function accepts a `z_moved_xxx_t*` parameter, it takes ownership of the passed object. 
+To pass the object, use the `z_xxx_move` function or the `z_move` macro.
 
-If the owned object is passed to some function by moving the caller should not use it anymore. It's still safe to call `z_drop` on it, 
-but it's not necessary.  Notice also that the `z_drop` itself finally accepts ownership of owned structure, so it's 
-also requizes `z_move` conversion. Example:
+Once the object is moved, the caller should no longer use it. While calling `z_drop` is safe, 
+it's not required. Note that `z_drop` itself takes ownership, so `z_move` is also needed in this case. Example:
 
 .. code-block:: c
     
@@ -93,13 +89,14 @@ also requizes `z_move` conversion. Example:
     }
     // z_drop(z_move(cfg)); // this is safe but useless
 
-View types `z_view_xxx_t`
+View Types `z_view_xxx_t`
 -------------------------
 
-`z_view_xxx_t` types are the types which only references some extra data. Values of these types need not to
-be dropped and they are valid only while the data they reference is valid. Another important property of the view
-types is that they are loaned to the same `z_loaned_xxx_t` type as their owned counterparts. This allows to use
-both owned and view types in the same way. Example:
+`z_view_xxx_t` types are reference types that point to external data. These values do not need to be dropped and 
+remain valid only as long as the data they reference is valid. 
+
+A key feature is that `z_view_xxx_t` types are loaned as `z_loaned_xxx_t`, just like their owned counterparts, 
+allowing consistent use of both owned and view types. Example:
 
 .. code-block:: c
 
@@ -113,15 +110,14 @@ both owned and view types in the same way. Example:
     z_string_clone(&dst, z_loan(view));
     z_drop(z_move(dst));
 
-Options structures `z_xxx_options_t`
+Options Structures `z_xxx_options_t`
 ------------------------------------
 
-The structures with `z_xxx_options_t` names are POD (Plain Old Data) structures which are used to pass multiple
-parameters to the functions and achieve exencability of the API. These structures are nothing more than just a way to pass
-multiple parameters to the function in a single argument. 
-It's important to keep this logic in mind when "options" structure contains `z_moved_xxx_t*` fields. 
-Assigning the `z_moved_xxx_t*` field with `z_move` optation itself doesn't do anything with the owned object. 
-But passing this "options" structure to the function means ownership transfer of the owned object. Example:
+`z_xxx_options_t` are Plain Old Data (POD) structures used to pass multiple parameters to functions. This makes API 
+compact and allows to extend the API keeping backward compatibility.
+
+Notice, that when an "options" structure contains `z_moved_xxx_t*` fields, assigning `z_move` to this field does not 
+affect the owned object. However, passing the structure to a function transfers ownership of the object. Example:
 
 .. code-block:: c
 
@@ -139,11 +135,11 @@ But passing this "options" structure to the function means ownership transfer of
     // the `payload` and `attachment` are consumed by the `z_publisher_put` function
 
 
-Enums, plain data structures `z_xxx_t`
---------------------------------------
+Enums and Plain Data Structures `z_xxx_t`
+-----------------------------------------
 
-There are also types named `z_xxx_t` which are copyable and can be passed by value. There is nothing special about them.
-Examples of these types are `z_timestamp_t`, `z_priority_t`, etc.
+Types named `z_xxx_t` are simple, copyable, and can be passed by value. They do not have special handling. 
+Examples include `z_timestamp_t`, `z_priority_t`, etc.
 
 .. code-block:: c
 
@@ -151,16 +147,13 @@ Examples of these types are `z_timestamp_t`, `z_priority_t`, etc.
     z_timestamp_new(&ts, z_loan(session))
     z_timestamp_t ts1 = ts;
 
+Name Prefixes `z_`, `zc_`, `ze_`
+================================
 
-Name prefixes `z_`, `zc_`, `ze_`
-=======================================
+Most functions and types in the C API use the `z_` prefix, which applies to the common zenoh C API
+(currently Rust-based zenoh-c and pure C zenoh-pico).
 
-Most of funcitons and types in the C API have names prefixed with `z_`. This prefix is used for 
-the part of API which is common for all zenoh C API implementations (currently Rust based zenoh-c and 
-pure C zenoh-pico).
+The `zc_` prefix is specific to zenoh-c. zenoh-pico uses the `zp_` prefix for the same purpose.
 
-There is also `zc_` prefix which is used for the functions and types which are specific for the zenoh-c. In zenoh-pico
-there is similar `zp_` prefix is used for the same purpose.
-
-`ze_` prefix marks the functions and types which wraps `zenoh-ext` Rust library. They are not a part of the core 
-zenoh API so they are spearated into different namespace.
+The `ze_` prefix identifies functions and types from the `zenoh-ext` Rust library, which are not 
+part of the core Zenoh API and therefore are placed in a separate namespace.
