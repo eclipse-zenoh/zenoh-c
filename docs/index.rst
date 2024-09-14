@@ -23,5 +23,6 @@ An introduction to zenoh and its concepts is available on `zenoh.io <https://zen
 .. toctree::
     :maxdepth: 10
 
+    concepts
     examples
     api
