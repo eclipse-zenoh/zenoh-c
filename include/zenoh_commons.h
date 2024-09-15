@@ -4059,6 +4059,21 @@ ZENOHC_API
 void z_shm_drop(z_moved_shm_t *this_);
 #endif
 /**
+ * Make forced cleanup
+ * NOTE: this is a part of ugly on-exit-cleanup workaround and will be removed
+ * In order to properly cleanup some SHM internals upon process exit, Zenoh installs exit handlers (see atexit() API).
+ * The bad thing is that atexit handler is executed only on process exit(), the terminating signal handlers (like SIGINT)
+ * bypass it and terminate the process without cleanup. To eliminate this effect, Zenoh overrides SIGHUP, SIGTERM, SIGINT
+ * and SIGQUIT handlers and calls exit() inside to make graceful shutdown. If user is going to override these Zenoh's handlers,
+ * the workaround will break, and there are two ways to keep this workaround working:
+ * - execute overriden Zenoh handlers in overriding handler code
+ * - call forced_cleanup() anywhere at any time before terminating the process
+ */
+#if (defined(SHARED_MEMORY) && defined(UNSTABLE))
+ZENOHC_API
+void z_shm_forced_cleanup(void);
+#endif
+/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs ZShm slice from ZShmMut slice.
  */
