@@ -19,7 +19,7 @@ use libc::c_ulong;
 use zenoh::{
     pubsub::Reliability,
     query::ReplyKeyExpr,
-    sample::{Locality, SourceInfo},
+    sample::{Locality, SourceInfo, SourceSn},
     session::EntityGlobalId,
 };
 use zenoh::{
@@ -556,7 +556,7 @@ decl_c_type!(
 pub extern "C" fn z_source_info_new(
     this: &mut MaybeUninit<z_owned_source_info_t>,
     source_id: &z_entity_global_id_t,
-    source_sn: u64,
+    source_sn: SourceSn,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let source_info = SourceInfo {
@@ -583,7 +583,7 @@ pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_g
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the source_sn of the source info.
 #[no_mangle]
-pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u64 {
+pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> SourceSn {
     this_.as_rust_type_ref().source_sn.unwrap_or(0)
 }
 
