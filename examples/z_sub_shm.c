@@ -58,6 +58,8 @@ int main(int argc, char **argv) {
         keyexpr = argv[1];
     }
 
+    zc_init_log_from_env_or("error");
+
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
 

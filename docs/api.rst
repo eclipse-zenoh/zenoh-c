@@ -827,8 +827,9 @@ Types
 Functions
 ---------
 
-.. doxygenfunction:: zc_init_logging
-.. doxygenfunction:: zc_init_logging_with_callback
+.. doxygenfunction:: zc_try_init_log_from_env
+.. doxygenfunction:: zc_init_log_from_env_or
+.. doxygenfunction:: zc_init_log_with_callback
 
 
 Other

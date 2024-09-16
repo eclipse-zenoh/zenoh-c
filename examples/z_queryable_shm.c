@@ -79,6 +79,9 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         keyexpr = argv[1];
     }
+
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     z_config_default(&config);
     if (argc > 2) {

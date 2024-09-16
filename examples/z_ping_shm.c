@@ -47,6 +47,9 @@ int main(int argc, char** argv) {
     }
     z_mutex_init(&mutex);
     z_condvar_init(&cond);
+
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     if (args.config_path) {
         zc_config_from_file(&config, args.config_path);
