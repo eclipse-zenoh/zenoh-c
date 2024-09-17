@@ -4460,7 +4460,7 @@ const z_loaned_source_info_t *z_source_info_loan(const z_owned_source_info_t *th
 ZENOHC_API
 z_result_t z_source_info_new(z_owned_source_info_t *this_,
                              const z_entity_global_id_t *source_id,
-                             uint64_t source_sn);
+                             uint32_t source_sn);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4468,7 +4468,7 @@ z_result_t z_source_info_new(z_owned_source_info_t *this_,
  */
 #if defined(UNSTABLE)
 ZENOHC_API
-uint64_t z_source_info_sn(const z_loaned_source_info_t *this_);
+uint32_t z_source_info_sn(const z_loaned_source_info_t *this_);
 #endif
 /**
  * Constructs an owned copy of a string array.
