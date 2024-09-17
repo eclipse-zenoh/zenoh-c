@@ -1,5 +1,5 @@
 ..
-.. Copyright (c) 2022 ZettaScale Technology
+.. Copyright (c) 2024 ZettaScale Technology
 ..
 .. This program and the accompanying materials are made available under the
 .. terms of the Eclipse Public License 2.0 which is available at
@@ -58,7 +58,7 @@ modify (`z_loaned_xxx_t*`) the object. In both cases, ownership remains with the
 
 .. code-block:: c
 
-    z_owned_string_t s, s1
+    z_owned_string_t s, s1;
     z_string_copy_from_str(&s, "Hello, world!");
     // notice that the prototype of z_string_clone is
     // void z_string_clone(z_owned_string_t* dst, const z_loaned_string_t* src);
@@ -116,7 +116,7 @@ Options Structures `z_xxx_options_t`
 `z_xxx_options_t` are Plain Old Data (POD) structures used to pass multiple parameters to functions. This makes API 
 compact and allows to extend the API keeping backward compatibility.
 
-Notice, that when an "options" structure contains `z_moved_xxx_t*` fields, assigning `z_move` to this field does not 
+Note that when an "options" structure contains `z_moved_xxx_t*` fields, assigning `z_move` to this field does not 
 affect the owned object. However, passing the structure to a function transfers ownership of the object. Example:
 
 .. code-block:: c
@@ -144,7 +144,7 @@ Examples include `z_timestamp_t`, `z_priority_t`, etc.
 .. code-block:: c
 
     z_timestamp_t ts;
-    z_timestamp_new(&ts, z_loan(session))
+    z_timestamp_new(&ts, z_loan(session));
     z_timestamp_t ts1 = ts;
 
 Name Prefixes `z_`, `zc_`, `ze_`
@@ -155,5 +155,5 @@ Most functions and types in the C API use the `z_` prefix, which applies to the 
 
 The `zc_` prefix is specific to zenoh-c. zenoh-pico uses the `zp_` prefix for the same purpose.
 
-The `ze_` prefix identifies functions and types from the `zenoh-ext` Rust library, which are not 
+The `ze_` prefix identifies functions and types from the `zenoh-ext` Rust library that are not
 part of the core Zenoh API and therefore are placed in a separate namespace.
