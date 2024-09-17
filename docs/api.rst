@@ -482,7 +482,9 @@ Functions
 .. doxygenfunction:: z_id_to_string
 
 .. doxygenfunction:: z_closure_zid_drop
+.. doxygenfunction:: z_closure_zid_loan
 .. doxygenfunction:: z_closure_zid_call
+.. doxygenfunction:: z_closure_zid
 
 Publication
 ===========
@@ -536,7 +538,9 @@ Functions
 .. doxygenfunction:: z_reliability_default
 
 .. doxygenfunction:: zc_closure_matching_status_drop
+.. doxygenfunction:: zc_closure_matching_status_loan
 .. doxygenfunction:: zc_closure_matching_status_call
+.. doxygenfunction:: zc_closure_matching_status
 
 .. doxygenfunction:: zc_publisher_get_matching_status
 .. doxygenfunction:: zc_publisher_matching_listener_declare
@@ -570,7 +574,9 @@ Functions
 .. doxygenfunction:: z_subscriber_drop
 
 .. doxygenfunction:: z_closure_sample_call
+.. doxygenfunction:: z_closure_sample_loan
 .. doxygenfunction:: z_closure_sample_drop
+.. doxygenfunction:: z_closure_sample
 
 .. doxygenfunction:: z_subscriber_options_default
 
@@ -639,7 +645,9 @@ Functions
 .. doxygenfunction:: z_query_reply_err
 
 .. doxygenfunction:: z_closure_query_call
+.. doxygenfunction:: z_closure_query_loan
 .. doxygenfunction:: z_closure_query_drop
+.. doxygenfunction:: z_closure_query
 
 .. doxygenfunction:: z_fifo_channel_query_new
 .. doxygenfunction:: z_ring_channel_query_new
@@ -696,7 +704,9 @@ Functions
 .. doxygenfunction:: z_reply_err
 
 .. doxygenfunction:: z_closure_reply_call
+.. doxygenfunction:: z_closure_reply_loan
 .. doxygenfunction:: z_closure_reply_drop
+.. doxygenfunction:: z_closure_reply
 
 .. doxygenfunction:: z_fifo_channel_reply_new
 .. doxygenfunction:: z_ring_channel_reply_new
@@ -739,7 +749,9 @@ Functions
 .. doxygenfunction:: z_scout_options_default
 
 .. doxygenfunction:: z_closure_hello_call
+.. doxygenfunction:: z_closure_hello_loan
 .. doxygenfunction:: z_closure_hello_drop
+.. doxygenfunction:: z_closure_hello
 
 Liveliness
 ==========
@@ -830,6 +842,11 @@ Functions
 .. doxygenfunction:: zc_try_init_log_from_env
 .. doxygenfunction:: zc_init_log_from_env_or
 .. doxygenfunction:: zc_init_log_with_callback
+
+.. doxygenfunction:: zc_closure_log_call
+.. doxygenfunction:: zc_closure_log_loan
+.. doxygenfunction:: zc_closure_log_drop
+.. doxygenfunction:: zc_closure_log
 
 
 Other
