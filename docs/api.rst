@@ -838,4 +838,4 @@ Other
 Functions
 ---------
 .. doxygenfunction:: zc_stop_z_runtime
-.. doxygenfunction:: z_force_cleanup_before_exit
+.. doxygenfunction:: zc_force_cleanup_before_exit

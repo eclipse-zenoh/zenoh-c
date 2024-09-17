@@ -28,8 +28,8 @@ use zenoh::shm::force_cleanup_before_exit;
 /// SIGHUP, SIGTERM, SIGINT and SIGQUIT handlers and calls exit() inside to make graceful shutdown. If user is going to
 /// override these Zenoh's handlers, the workaround will break, and there are two ways to keep this workaround working:
 /// - execute overridden Zenoh handlers in overriding handler code
-/// - call z_force_cleanup_before_exit() anywhere at any time before terminating the process
+/// - call zc_force_cleanup_before_exit() anywhere at any time before terminating the process
 #[no_mangle]
-pub extern "C" fn z_force_cleanup_before_exit() {
+pub extern "C" fn zc_force_cleanup_before_exit() {
     force_cleanup_before_exit();
 }
