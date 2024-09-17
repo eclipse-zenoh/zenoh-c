@@ -143,3 +143,22 @@ pub extern "C" fn z_closure_sample_loan(
 ) -> &z_loaned_closure_sample_t {
     closure.as_loaned_c_type_ref()
 }
+
+/// @brief Constructs closure.
+/// @param this_: uninitialized memory location where new closure will be constructed.
+/// @param call: a closure body.
+/// @param drop: an optional function to be called once on closure drop.
+/// @param void: closure context.
+#[no_mangle]
+pub extern "C" fn z_closure_sample(
+    this: &mut MaybeUninit<z_owned_closure_sample_t>,
+    call: Option<extern "C" fn(sample: &mut z_loaned_sample_t, context: *mut c_void)>,
+    drop: Option<extern "C" fn(context: *mut c_void)>,
+    context: *mut c_void,
+) {
+    this.write(z_owned_closure_sample_t {
+        context,
+        call,
+        drop,
+    });
+}
