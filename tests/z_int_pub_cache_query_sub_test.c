@@ -33,7 +33,7 @@ const size_t values_count = sizeof(values) / sizeof(values[0]);
 int run_publisher() {
     z_owned_config_t config;
     z_config_default(&config);
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
+    if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
         perror("Unable to configure timestamps!");
         return -1;
     }

@@ -4964,20 +4964,20 @@ z_result_t zc_config_get_from_substr(const struct z_loaned_config_t *this_,
  * Returns 0 if successful, a negative error code otherwise.
  */
 ZENOHC_API
-z_result_t zc_config_insert_json(struct z_loaned_config_t *this_,
-                                 const char *key,
-                                 const char *value);
+z_result_t zc_config_insert_json5(struct z_loaned_config_t *this_,
+                                  const char *key,
+                                  const char *value);
 /**
  * Inserts a JSON-serialized `value` at the `key` position of the configuration.
  *
  * Returns 0 if successful, a negative error code otherwise.
  */
 ZENOHC_API
-z_result_t zc_config_insert_json_from_substr(struct z_loaned_config_t *this_,
-                                             const char *key,
-                                             size_t key_len,
-                                             const char *value,
-                                             size_t value_len);
+z_result_t zc_config_insert_json5_from_substr(struct z_loaned_config_t *this_,
+                                              const char *key,
+                                              size_t key_len,
+                                              const char *value,
+                                              size_t value_len);
 /**
  * Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
  *
