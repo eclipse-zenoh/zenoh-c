@@ -14,6 +14,7 @@
 
 use zenoh::shm::force_cleanup_before_exit;
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Make forced cleanup
 /// NOTE: this is a part of a temporary on-exit-cleanup workaround and it will be very likely removed in the future.
 /// WARN: The improper usage can break the application logic, impacting SHM-utilizing Sessions in other processes.

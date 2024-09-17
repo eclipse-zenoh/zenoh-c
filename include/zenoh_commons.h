@@ -4895,6 +4895,7 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Make forced cleanup
  * NOTE: this is a part of a temporary on-exit-cleanup workaround and it will be very likely removed in the future.
  * WARN: The improper usage can break the application logic, impacting SHM-utilizing Sessions in other processes.
