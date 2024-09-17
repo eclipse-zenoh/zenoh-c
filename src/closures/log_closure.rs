@@ -14,6 +14,8 @@
 
 use std::mem::MaybeUninit;
 
+use libc::c_void;
+
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_string_t,
@@ -184,4 +186,29 @@ pub extern "C" fn zc_closure_log_loan(
     closure: &zc_owned_closure_log_t,
 ) -> &zc_loaned_closure_log_t {
     closure.as_loaned_c_type_ref()
+}
+
+/// @brief Constructs closure.
+/// @param this_: uninitialized memory location where new closure will be constructed.
+/// @param call: a closure body.
+/// @param drop: an optional function to be called once on closure drop.
+/// @param context: closure context.
+#[no_mangle]
+pub extern "C" fn zc_closure_log(
+    this: &mut MaybeUninit<zc_owned_closure_log_t>,
+    call: Option<
+        extern "C" fn(
+            severity: zc_log_severity_t,
+            msg: &z_loaned_string_t,
+            context: *mut libc::c_void,
+        ),
+    >,
+    drop: Option<extern "C" fn(context: *mut c_void)>,
+    context: *mut c_void,
+) {
+    this.write(zc_owned_closure_log_t {
+        context,
+        call,
+        drop,
+    });
 }

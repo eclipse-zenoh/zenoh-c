@@ -963,6 +963,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     let null_funcs = find_null_functions(path_in);
     let check_funcs = find_check_functions(path_in);
     let call_funcs = find_call_functions(path_in);
+    let closure_constructors = find_closure_constructors(path_in);
     let recv_funcs = find_recv_functions(path_in);
     let clone_funcs = find_clone_functions(path_in);
 
@@ -1067,7 +1068,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_closure_c(&call_funcs);
+    let out = generate_generic_closure_c(&closure_constructors);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1126,7 +1127,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_closure_cpp(&call_funcs);
+    let out = generate_generic_closure_cpp(&closure_constructors);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1323,6 +1324,42 @@ pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
+pub fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(
+        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
+    )
+    .unwrap();
+    let mut res = Vec::<FunctionSignature>::new();
+
+    for (
+        _,
+        [return_type, prefix, suffix, closure_type, closure_name, call_signature_raw, drop_signature],
+    ) in re.captures_iter(&bindings).map(|c| c.extract())
+    {
+        let mut call_signature: String = call_signature_raw.to_string().replace("struct ", "");
+        call_signature = call_signature.replace("enum ", "");
+        let multiple_spaces = Regex::new(r"\s\s+").unwrap();
+        call_signature = multiple_spaces
+            .replace_all(&call_signature, " ")
+            .to_string();
+        let (_, _, semantic, _) = split_type_name(closure_type);
+        let f = FunctionSignature::new(
+            semantic,
+            return_type,
+            prefix.to_string() + "_closure_" + suffix,
+            vec![
+                FuncArg::new(&(closure_type.to_string() + "*"), closure_name),
+                FuncArg::new(&("void (*call)".to_string() + &call_signature), "call"),
+                FuncArg::new(&("void (*drop)".to_string() + drop_signature), "drop"),
+                FuncArg::new("void*", "context"),
+            ],
+        );
+        res.push(f);
+    }
+    res
+}
+
 pub fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"(\w+)\s+z_(\w+)_handler_(\w+)_recv\(const\s+struct\s+(\w+)\s+\*(\w+),\s+struct\s+(\w+)\s+\*(\w+)\);").unwrap();
@@ -1510,6 +1547,10 @@ pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_call", false)
 }
 
+pub fn generate_generic_closure_c(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_c(macro_func, "z_closure", false)
+}
+
 pub fn generate_generic_recv_c(macro_func: &[FunctionSignature]) -> String {
     let try_recv_funcs: Vec<FunctionSignature> = macro_func
         .iter()
@@ -1524,12 +1565,6 @@ pub fn generate_generic_recv_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(&try_recv_funcs, "z_try_recv", false)
         + "\n\n"
         + generate_generic_c(&recv_funcs, "z_recv", false).as_str()
-}
-
-pub fn generate_generic_closure_c(_macro_func: &[FunctionSignature]) -> String {
-    "#define z_closure(x, callback, dropper, ctx) \\
-    {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}"
-        .to_owned()
 }
 
 pub fn generate_generic_cpp(
@@ -1562,7 +1597,13 @@ pub fn generate_generic_cpp(
         out += "\n";
         out += &format!("inline {return_type} {generic_name}({arg_type} {arg_name}");
         for i in 1..func.args.len() {
-            out += &format!(", {} {}", func.args[i].typename.typename, func.args[i].name);
+            if (i % 2) == 0 {
+                out += ",\n    "
+            } else {
+                out += ", ";
+            }
+
+            out += &format!("{} {}", func.args[i].typename.typename, func.args[i].name);
         }
         out += &format!(") {{{body_start}");
         if return_type != "void" {
@@ -1660,40 +1701,27 @@ pub fn generate_generic_recv_cpp(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
-    let mut out = "".to_owned();
-
-    out += "extern \"C\" using z_closure_drop_callback_t = void(void*);\n";
-    for func in macro_func {
-        let return_type = &func.return_type.typename;
-        let closure_name = &func.args[0].name;
-        let closure_type = func.args[0]
+    // replace function pointer types with using typedefs defined with extern "C" linkage
+    let mut out =
+        "extern \"C\" using z_closure_drop_callback_t = void(void* context);\n".to_string();
+    let mut processed = Vec::<FunctionSignature>::with_capacity(macro_func.len());
+    for f in macro_func {
+        let mut processed_f = f.clone();
+        let prototype = processed_f.args[1]
             .typename
-            .clone()
-            .without_cv()
             .typename
-            .replace("loaned", "owned");
-        let arg_type = &func.args[1].typename.typename;
-        let callback_type = func.args[0]
-            .typename
-            .clone()
-            .decay()
-            .typename
-            .replace("_t", "_callback_t")
-            .replace("_loaned", "");
-        out += "\n";
+            .replace(&format!(" (*{})", &processed_f.args[1].name), "");
+        let callback_typename = f.func_name.clone() + "_callabck_t";
         out += &format!(
-            "extern \"C\" using {callback_type} = {return_type}({arg_type}, void*);
-inline void z_closure(
-    {closure_type} {closure_name},
-    {callback_type}* call,
-    z_closure_drop_callback_t* drop,
-    void *context) {{
-    {closure_name}->context = context;
-    {closure_name}->drop = drop;
-    {closure_name}->call = call;
-}};"
+            "extern \"C\" using {} = {};\n",
+            callback_typename, prototype
         );
+        processed_f.args[1].typename.typename = callback_typename + "*";
+        processed_f.args[2].typename.typename = "z_closure_drop_callback_t*".to_string();
+        processed.push(processed_f);
     }
+
+    out += &generate_generic_cpp(&processed, "z_closure", false);
     out
 }
 
