@@ -1865,7 +1865,7 @@ ZENOHC_API void z_close_options_default(struct z_close_options_t *this_);
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
- * @param void: closure context.
+ * @param context: closure context.
  */
 ZENOHC_API
 void z_closure_hello(struct z_owned_closure_hello_t *this_,
@@ -1892,7 +1892,7 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
- * @param void: closure context.
+ * @param context: closure context.
  */
 ZENOHC_API
 void z_closure_query(struct z_owned_closure_query_t *this_,
@@ -1919,7 +1919,7 @@ const struct z_loaned_closure_query_t *z_closure_query_loan(const struct z_owned
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
- * @param void: closure context.
+ * @param context: closure context.
  */
 ZENOHC_API
 void z_closure_reply(struct z_owned_closure_reply_t *this_,
@@ -1947,7 +1947,7 @@ const struct z_loaned_closure_reply_t *z_closure_reply_loan(const struct z_owned
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
- * @param void: closure context.
+ * @param context: closure context.
  */
 ZENOHC_API
 void z_closure_sample(struct z_owned_closure_sample_t *this_,
@@ -1974,7 +1974,7 @@ const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_own
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
- * @param void: closure context.
+ * @param context: closure context.
  */
 #if defined(UNSTABLE)
 ZENOHC_API
@@ -4855,7 +4855,7 @@ z_result_t z_whatami_to_view_string(enum z_whatami_t whatami,
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
- * @param void: closure context.
+ * @param context: closure context.
  */
 ZENOHC_API
 void zc_closure_log(struct zc_owned_closure_log_t *this_,
@@ -4886,7 +4886,7 @@ const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
- * @param void: closure context.
+ * @param context: closure context.
  */
 #if defined(UNSTABLE)
 ZENOHC_API

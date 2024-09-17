@@ -161,7 +161,7 @@ pub extern "C" fn zc_closure_matching_status_loan(
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
-/// @param void: closure context.
+/// @param context: closure context.
 #[no_mangle]
 pub extern "C" fn zc_closure_matching_status(
     this: &mut MaybeUninit<zc_owned_closure_matching_status_t>,

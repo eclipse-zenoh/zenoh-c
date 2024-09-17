@@ -149,7 +149,7 @@ pub extern "C" fn z_closure_reply_loan(
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
-/// @param void: closure context.
+/// @param context: closure context.
 #[no_mangle]
 pub extern "C" fn z_closure_reply(
     this: &mut MaybeUninit<z_owned_closure_reply_t>,
