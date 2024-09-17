@@ -453,7 +453,7 @@ Functions
 .. doxygenfunction:: zc_config_from_env
 .. doxygenfunction:: zc_config_from_file
 .. doxygenfunction:: zc_config_from_str
-.. doxygenfunction:: zc_config_insert_json
+.. doxygenfunction:: zc_config_insert_json5
 .. doxygenfunction:: zc_config_to_string
 
 Session management
