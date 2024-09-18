@@ -551,6 +551,21 @@ decl_c_type!(
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Creates source info.
+#[no_mangle]
+pub extern "C" fn z_source_info_new(
+    this: &mut MaybeUninit<z_owned_source_info_t>,
+    source_id: &z_entity_global_id_t,
+    source_sn: u32,
+) -> result::z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    let source_info = SourceInfo::new(Some(*source_id.as_rust_type_ref()), Some(source_sn));
+    this.write(source_info);
+    result::Z_OK
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the source_id of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
