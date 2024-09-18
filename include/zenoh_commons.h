@@ -2306,6 +2306,12 @@ void z_encoding_clone(struct z_owned_encoding_t *dst,
  */
 ZENOHC_API void z_encoding_drop(struct z_moved_encoding_t *this_);
 /**
+ * Returns ``true`` if `this_` equals to `other`, ``false`` otherwise.
+ */
+ZENOHC_API
+bool z_encoding_equals(const struct z_loaned_encoding_t *this_,
+                       const struct z_loaned_encoding_t *other);
+/**
  * Constructs a `z_owned_encoding_t` from a specified string.
  */
 ZENOHC_API z_result_t z_encoding_from_str(struct z_owned_encoding_t *this_, const char *s);

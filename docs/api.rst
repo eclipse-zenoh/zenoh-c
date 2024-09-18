@@ -225,6 +225,7 @@ Functions
 .. doxygenfunction:: z_encoding_set_schema_from_str
 .. doxygenfunction:: z_encoding_set_schema_from_substr
 .. doxygenfunction:: z_encoding_to_string
+.. doxygenfunction:: z_encoding_equals
 
 Predefined Encodings
 ^^^^^^^^^^^^^^^^^^^^

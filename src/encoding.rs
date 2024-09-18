@@ -176,6 +176,15 @@ pub extern "C" fn z_encoding_clone(
         .write(this.as_rust_type_ref().clone());
 }
 
+/// Returns ``true`` if `this_` equals to `other`, ``false`` otherwise.
+#[no_mangle]
+pub extern "C" fn z_encoding_equals(
+    this_: &z_loaned_encoding_t,
+    other: &z_loaned_encoding_t,
+) -> bool {
+    this_.as_rust_type_ref() == other.as_rust_type_ref()
+}
+
 /// Just some bytes.
 ///
 /// Constant alias for string: `"zenoh/bytes"`.
