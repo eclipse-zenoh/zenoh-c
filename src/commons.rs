@@ -551,29 +551,11 @@ decl_c_type!(
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Creates source info.
-#[no_mangle]
-pub extern "C" fn z_source_info_new(
-    this: &mut MaybeUninit<z_owned_source_info_t>,
-    source_id: &z_entity_global_id_t,
-    source_sn: u32,
-) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
-    let source_info = SourceInfo {
-        source_id: Some(*source_id.as_rust_type_ref()),
-        source_sn: Some(source_sn),
-    };
-    this.write(source_info);
-    result::Z_OK
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the source_id of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
-    match this_.as_rust_type_ref().source_id {
-        Some(source_id) => source_id,
+    match this_.as_rust_type_ref().source_id() {
+        Some(source_id) => source_id.clone(),
         None => EntityGlobalId::default(),
     }
     .into_c_type()
@@ -584,7 +566,7 @@ pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_g
 /// @brief Returns the source_sn of the source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u32 {
-    this_.as_rust_type_ref().source_sn.unwrap_or_default()
+    this_.as_rust_type_ref().source_sn().unwrap_or_default()
 }
 
 #[cfg(feature = "unstable")]
@@ -592,7 +574,7 @@ pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u32 {
 /// @brief Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
-    this_.as_rust_type_ref().source_id.is_some() || this_.as_rust_type_ref().source_sn.is_some()
+    this_.as_rust_type_ref().source_id().is_some() || this_.as_rust_type_ref().source_sn().is_some()
 }
 
 #[cfg(feature = "unstable")]

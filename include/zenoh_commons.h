@@ -4454,16 +4454,6 @@ const z_loaned_source_info_t *z_source_info_loan(const z_owned_source_info_t *th
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates source info.
- */
-#if defined(UNSTABLE)
-ZENOHC_API
-z_result_t z_source_info_new(z_owned_source_info_t *this_,
-                             const z_entity_global_id_t *source_id,
-                             uint32_t source_sn);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the source_sn of the source info.
  */
 #if defined(UNSTABLE)
