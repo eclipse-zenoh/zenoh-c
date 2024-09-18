@@ -555,7 +555,7 @@ decl_c_type!(
 #[no_mangle]
 pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
     match this_.as_rust_type_ref().source_id() {
-        Some(source_id) => source_id.clone(),
+        Some(source_id) => *source_id,
         None => EntityGlobalId::default(),
     }
     .into_c_type()
