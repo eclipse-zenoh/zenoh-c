@@ -97,7 +97,7 @@ void undeclare() {
     assert(!z_internal_keyexpr_check(&ke));
 }
 
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
 void relation_to() {
     z_view_keyexpr_t foobar, foostar, barstar;
     z_view_keyexpr_from_str(&foobar, "foo/bar");
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
     includes();
     intersects();
     undeclare();
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
     relation_to();
 #endif
 }

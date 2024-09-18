@@ -28,7 +28,7 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
 void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Subscriber matched\n");
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
     zc_owned_matching_listener_t listener;
     if (args.add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
         }
     }
 
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
     if (args.add_matching_listener) {
         zc_publisher_matching_listener_undeclare(z_move(listener));
     }

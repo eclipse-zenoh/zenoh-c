@@ -15,7 +15,7 @@
 
 #include "zenoh.h"
 
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
 void fprintpid(FILE *stream, z_id_t pid) {
     int len = 0;
     for (int i = 0; i < 16; i++) {
@@ -57,7 +57,7 @@ void fprintlocators(FILE *stream, const z_loaned_string_array_t *locs) {
 
 void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
     fprintf(stream, "Hello { pid: ");
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
     fprintpid(stream, z_hello_zid(hello));
 #endif
     fprintf(stream, ", whatami: ");

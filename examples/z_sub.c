@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, args.keyexpr);
 
-#ifdef SHARED_MEMORY
+#if defined(Z_FEATURE_SHARED_MEMORY)
     // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
     // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
     // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
