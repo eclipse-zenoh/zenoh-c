@@ -2838,9 +2838,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite"
-version = "0.23.1"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6989540ced10490aaf14e6bad2e3d33728a2813310a0c71d1574304c49631cd"
+checksum = "edc5f74e248dc973e0dbb7b74c7e0d6fcc301c694ff50049504004ef4d0cdcd9"
 dependencies = [
  "futures-util",
  "log",
@@ -2966,9 +2966,9 @@ dependencies = [
 
 [[package]]
 name = "tungstenite"
-version = "0.23.0"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e2e2ce1e47ed2994fd43b04c8f618008d4cabdd5ee34027cf14f9d918edd9c8"
+checksum = "18e5b8366ee7a95b16d32197d0b2604b43a0be89dc5fac9f8e96ccafbaedda8a"
 dependencies = [
  "byteorder",
  "bytes",
@@ -3525,7 +3525,7 @@ dependencies = [
 [[package]]
 name = "zenoh"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "ahash",
  "async-trait",
@@ -3534,6 +3534,7 @@ dependencies = [
  "futures",
  "git-version",
  "itertools",
+ "json5",
  "lazy_static",
  "once_cell",
  "paste",
@@ -3575,7 +3576,7 @@ dependencies = [
 [[package]]
 name = "zenoh-buffers"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "zenoh-collections",
 ]
@@ -3613,7 +3614,7 @@ dependencies = [
 [[package]]
 name = "zenoh-codec"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "tracing",
  "uhlc",
@@ -3625,14 +3626,13 @@ dependencies = [
 [[package]]
 name = "zenoh-collections"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 
 [[package]]
 name = "zenoh-config"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
- "flume",
  "json5",
  "num_cpus",
  "secrecy",
@@ -3652,7 +3652,7 @@ dependencies = [
 [[package]]
 name = "zenoh-core"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "lazy_static",
  "tokio",
@@ -3663,7 +3663,7 @@ dependencies = [
 [[package]]
 name = "zenoh-crypto"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "aes",
  "hmac",
@@ -3676,7 +3676,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ext"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "bincode",
  "flume",
@@ -3692,7 +3692,7 @@ dependencies = [
 [[package]]
 name = "zenoh-keyexpr"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "hashbrown 0.14.5",
  "keyed-set",
@@ -3706,7 +3706,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "zenoh-config",
  "zenoh-link-commons",
@@ -3723,7 +3723,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-commons"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "flume",
@@ -3746,7 +3746,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-quic"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3771,7 +3771,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-tcp"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "socket2 0.5.7",
@@ -3788,7 +3788,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-tls"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3815,7 +3815,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-udp"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "socket2 0.5.7",
@@ -3834,7 +3834,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-unixsock_stream"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "nix 0.29.0",
@@ -3852,7 +3852,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-ws"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "futures-util",
@@ -3872,7 +3872,7 @@ dependencies = [
 [[package]]
 name = "zenoh-macros"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3883,12 +3883,13 @@ dependencies = [
 [[package]]
 name = "zenoh-plugin-trait"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "git-version",
  "libloading",
  "serde",
  "tracing",
+ "zenoh-config",
  "zenoh-keyexpr",
  "zenoh-macros",
  "zenoh-result",
@@ -3898,7 +3899,7 @@ dependencies = [
 [[package]]
 name = "zenoh-protocol"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "const_format",
  "rand",
@@ -3912,7 +3913,7 @@ dependencies = [
 [[package]]
 name = "zenoh-result"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "anyhow",
 ]
@@ -3920,7 +3921,7 @@ dependencies = [
 [[package]]
 name = "zenoh-runtime"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "lazy_static",
  "ron",
@@ -3933,7 +3934,7 @@ dependencies = [
 [[package]]
 name = "zenoh-shm"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "crc",
@@ -3956,7 +3957,7 @@ dependencies = [
 [[package]]
 name = "zenoh-sync"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "event-listener 5.3.1",
  "futures",
@@ -3969,7 +3970,7 @@ dependencies = [
 [[package]]
 name = "zenoh-task"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "futures",
  "tokio",
@@ -3982,7 +3983,7 @@ dependencies = [
 [[package]]
 name = "zenoh-transport"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "crossbeam-utils",
@@ -4016,7 +4017,7 @@ dependencies = [
 [[package]]
 name = "zenoh-util"
 version = "1.0.0-dev"
-source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#ff534884064bed3f4f2b6f1985d7c58c1313ab77"
+source = "git+https://github.com/ZettaScaleLabs/zenoh.git?branch=fix_memory_leak#1d58a042bfb6791a36d4082ca596e054cbb44ebe"
 dependencies = [
  "async-trait",
  "const_format",
