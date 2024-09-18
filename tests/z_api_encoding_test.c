@@ -106,10 +106,19 @@ void test_constants() {
     z_string_drop(z_move(s));
 }
 
+void test_equals() {
+    z_owned_encoding_t e;
+    z_encoding_from_str(&e, "zenoh/string");
+    assert(z_encoding_equals(z_loan(e), z_encoding_zenoh_string()));
+    assert(!z_encoding_equals(z_loan(e), z_encoding_zenoh_int16()));
+    z_drop(z_move(e));
+}
+
 int main(int argc, char **argv) {
     test_null_encoding();
     test_encoding_without_id();
     test_encoding_with_id();
     test_constants();
     test_with_schema();
+    test_equals();
 }
