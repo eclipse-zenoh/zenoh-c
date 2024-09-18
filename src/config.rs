@@ -172,12 +172,12 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
 /// Returns 0 if successful, a negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn zc_config_insert_json(
+pub unsafe extern "C" fn zc_config_insert_json5(
     this: &mut z_loaned_config_t,
     key: *const c_char,
     value: *const c_char,
 ) -> result::z_result_t {
-    zc_config_insert_json_from_substr(this, key, libc::strlen(key), value, libc::strlen(value))
+    zc_config_insert_json5_from_substr(this, key, libc::strlen(key), value, libc::strlen(value))
 }
 
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
@@ -185,7 +185,7 @@ pub unsafe extern "C" fn zc_config_insert_json(
 /// Returns 0 if successful, a negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn zc_config_insert_json_from_substr(
+pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
     this: &mut z_loaned_config_t,
     key: *const c_char,
     key_len: usize,

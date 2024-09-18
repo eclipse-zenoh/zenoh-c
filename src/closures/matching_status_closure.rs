@@ -155,3 +155,23 @@ pub extern "C" fn zc_closure_matching_status_loan(
 ) -> &zc_loaned_closure_matching_status_t {
     closure.as_loaned_c_type_ref()
 }
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs closure.
+/// @param this_: uninitialized memory location where new closure will be constructed.
+/// @param call: a closure body.
+/// @param drop: an optional function to be called once on closure drop.
+/// @param context: closure context.
+#[no_mangle]
+pub extern "C" fn zc_closure_matching_status(
+    this: &mut MaybeUninit<zc_owned_closure_matching_status_t>,
+    call: Option<extern "C" fn(matching_status: &zc_matching_status_t, context: *mut c_void)>,
+    drop: Option<extern "C" fn(context: *mut c_void)>,
+    context: *mut c_void,
+) {
+    this.write(zc_owned_closure_matching_status_t {
+        context,
+        call,
+        drop,
+    });
+}

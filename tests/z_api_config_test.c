@@ -21,9 +21,9 @@
 void insert_get() {
     z_owned_config_t config;
     z_config_default(&config);
-    zc_config_insert_json(z_loan_mut(config), "mode", "\"client\"");
-    zc_config_insert_json(z_loan_mut(config), "connect/endpoints",
-                          "[\"tcp/127.0.0.1\", \"tcp/192.168.0.1\", \"tcp/10.0.0.1\"]");
+    zc_config_insert_json5(z_loan_mut(config), "mode", "\"client\"");
+    zc_config_insert_json5(z_loan_mut(config), "connect/endpoints",
+                           "[\"tcp/127.0.0.1\", \"tcp/192.168.0.1\", \"tcp/10.0.0.1\"]");
     z_owned_string_t endpoints;
     zc_config_get_from_str(z_loan(config), "connect/endpoints", &endpoints);
     assert(strncmp(z_string_data(z_loan(endpoints)), "[\"tcp/127.0.0.1\",\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]",

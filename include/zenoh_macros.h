@@ -292,8 +292,14 @@ static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_move
         const z_loaned_closure_sample_t* : z_closure_sample_call \
     )(closure, hello)
 
-#define z_closure(x, callback, dropper, ctx) \
-    {{(x)->context = (void*)(ctx); (x)->call = (callback); (x)->drop = (dropper);}}
+#define z_closure(this_, call, drop, context) \
+    _Generic((this_), \
+        z_owned_closure_hello_t* : z_closure_hello, \
+        z_owned_closure_query_t* : z_closure_query, \
+        z_owned_closure_reply_t* : z_closure_reply, \
+        z_owned_closure_sample_t* : z_closure_sample, \
+        zc_owned_closure_log_t* : zc_closure_log \
+    )(this_, call, drop, context)
 
 #define z_try_recv(this_, query) \
     _Generic((this_), \
@@ -673,47 +679,32 @@ inline void z_call(const z_loaned_closure_sample_t* closure, z_loaned_sample_t* 
     z_closure_sample_call(closure, sample);
 };
 
-extern "C" using z_closure_drop_callback_t = void(void*);
+extern "C" using z_closure_drop_callback_t = void(void* context);
+extern "C" using z_closure_hello_callabck_t = void(z_loaned_hello_t *hello, void *context);
+extern "C" using z_closure_query_callabck_t = void(z_loaned_query_t *query, void *context);
+extern "C" using z_closure_reply_callabck_t = void(z_loaned_reply_t *reply, void *context);
+extern "C" using z_closure_sample_callabck_t = void(z_loaned_sample_t *sample, void *context);
+extern "C" using zc_closure_log_callabck_t = void(zc_log_severity_t severity, const z_loaned_string_t *msg, void *context);
 
-extern "C" using z_closure_hello_callback_t = void(z_loaned_hello_t*, void*);
-inline void z_closure(
-    z_owned_closure_hello_t* closure,
-    z_closure_hello_callback_t* call,
-    z_closure_drop_callback_t* drop,
-    void *context) {
-    closure->context = context;
-    closure->drop = drop;
-    closure->call = call;
+inline void z_closure(z_owned_closure_hello_t* this_, z_closure_hello_callabck_t* call,
+    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_hello(this_, call, drop, context);
 };
-extern "C" using z_closure_query_callback_t = void(z_loaned_query_t*, void*);
-inline void z_closure(
-    z_owned_closure_query_t* closure,
-    z_closure_query_callback_t* call,
-    z_closure_drop_callback_t* drop,
-    void *context) {
-    closure->context = context;
-    closure->drop = drop;
-    closure->call = call;
+inline void z_closure(z_owned_closure_query_t* this_, z_closure_query_callabck_t* call,
+    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_query(this_, call, drop, context);
 };
-extern "C" using z_closure_reply_callback_t = void(z_loaned_reply_t*, void*);
-inline void z_closure(
-    z_owned_closure_reply_t* closure,
-    z_closure_reply_callback_t* call,
-    z_closure_drop_callback_t* drop,
-    void *context) {
-    closure->context = context;
-    closure->drop = drop;
-    closure->call = call;
+inline void z_closure(z_owned_closure_reply_t* this_, z_closure_reply_callabck_t* call,
+    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_reply(this_, call, drop, context);
 };
-extern "C" using z_closure_sample_callback_t = void(z_loaned_sample_t*, void*);
-inline void z_closure(
-    z_owned_closure_sample_t* closure,
-    z_closure_sample_callback_t* call,
-    z_closure_drop_callback_t* drop,
-    void *context) {
-    closure->context = context;
-    closure->drop = drop;
-    closure->call = call;
+inline void z_closure(z_owned_closure_sample_t* this_, z_closure_sample_callabck_t* call,
+    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_sample(this_, call, drop, context);
+};
+inline void z_closure(zc_owned_closure_log_t* this_, zc_closure_log_callabck_t* call,
+    z_closure_drop_callback_t* drop, void* context) {
+    zc_closure_log(this_, call, drop, context);
 };
 
 

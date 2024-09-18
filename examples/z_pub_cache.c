@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
+    if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
         printf("Unable to configure timestamps!\n");
         exit(-1);
     }
