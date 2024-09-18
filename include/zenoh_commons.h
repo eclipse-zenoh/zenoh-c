@@ -4366,15 +4366,15 @@ z_loaned_shm_mut_t *z_shm_try_reloan_mut(z_loaned_shm_t *this_);
 /**
  * Puts current thread to sleep for specified amount of milliseconds.
  */
-ZENOHC_API int8_t z_sleep_ms(size_t time);
+ZENOHC_API z_result_t z_sleep_ms(size_t time);
 /**
  * Puts current thread to sleep for specified amount of seconds.
  */
-ZENOHC_API int8_t z_sleep_s(size_t time);
+ZENOHC_API z_result_t z_sleep_s(size_t time);
 /**
  * Puts current thread to sleep for specified amount of microseconds.
  */
-ZENOHC_API int8_t z_sleep_us(size_t time);
+ZENOHC_API z_result_t z_sleep_us(size_t time);
 /**
  * Constructs an owned copy of a slice.
  */
