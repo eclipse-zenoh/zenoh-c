@@ -103,7 +103,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected QoS values");
         exit(-1);
     }
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
     const z_loaned_source_info_t *source_info = z_sample_source_info(sample);
     if (source_info == NULL) {
         perror("Unexpected null source_info");

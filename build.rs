@@ -38,8 +38,8 @@ const HEADER: &str = r"//
 ";
 
 static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
-    "unstable" => "UNSTABLE",
-    "shared-memory" => "SHARED_MEMORY",
+    "unstable" => "Z_FEATURE_UNSTABLE_API",
+    "shared-memory" => "Z_FEATURE_SHARED_MEMORY",
 };
 
 fn fix_cbindgen(input: &str, output: &str) {
