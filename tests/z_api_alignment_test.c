@@ -26,7 +26,7 @@
 
 const char *value = "Test value";
 
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
 volatile unsigned int zids = 0;
 void zid_handler(const z_id_t *id, void *arg) {
     (void)(arg);
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
     assert(0 == z_open(&s1, z_move(_ret_config), NULL));
     assert(z_internal_check(s1));
 
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
     z_id_t _ret_zid = z_info_zid(z_loan(s1));
     z_owned_string_t str;
     z_id_to_string(&_ret_zid, &str);
@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
     assert(0 == z_open(&s2, z_move(_ret_config), NULL));
     assert(z_internal_check(s2));
 
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
     _ret_zid = z_info_zid(z_loan(s2));
     z_id_to_string(&_ret_zid, &str);
     printf("Session 2 with PID: 0x%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));

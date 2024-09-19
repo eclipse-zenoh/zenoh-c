@@ -54,7 +54,7 @@ int main(void) {
     TEST(closure_query)
     TEST(closure_reply)
     TEST(closure_hello)
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
     TEST(closure_zid)
 #endif
     TEST(string)
