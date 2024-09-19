@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     z_owned_config_t config;
     parse_args(argc, argv, &config);
 
-#ifdef SHARED_MEMORY
+#if defined(Z_FEATURE_SHARED_MEMORY)
     // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
     // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
     if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {

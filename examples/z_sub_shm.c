@@ -22,18 +22,18 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
 // if Zenoh is built without SHM support, the only buffer type it can receive is RAW
-#if !defined(SHARED_MEMORY)
+#if !defined(Z_FEATURE_SHARED_MEMORY)
     char *payload_type = "RAW";
 #endif
 
 // if Zenoh is built with SHM support but without SHM API (that is unstable), it can
 // receive buffers of any type, but there is no way to detect the buffer type
-#if defined(SHARED_MEMORY) && !defined(UNSTABLE)
+#if defined(Z_FEATURE_SHARED_MEMORY) && !defined(Z_FEATURE_UNSTABLE_API)
     char *payload_type = "UNKNOWN";
 #endif
 
 // if Zenoh is built with SHM support and with SHM API, we can detect the exact buffer type
-#if defined(SHARED_MEMORY) && defined(UNSTABLE)
+#if defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     char *payload_type = "RAW";
     {
         const z_loaned_shm_t *shm = NULL;
