@@ -17,7 +17,7 @@ use std::{mem::MaybeUninit, ptr::null};
 use libc::c_ulong;
 #[cfg(feature = "unstable")]
 use zenoh::{
-    pubsub::Reliability,
+    qos::Reliability,
     query::ReplyKeyExpr,
     sample::{Locality, SourceInfo},
     session::EntityGlobalId,
