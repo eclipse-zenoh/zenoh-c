@@ -83,6 +83,8 @@ Functions
 .. doxygenfunction:: z_string_array_clone
 
 .. doxygenfunction:: z_string_array_new
+.. doxygenfunction:: z_string_array_push_by_alias
+.. doxygenfunction:: z_string_array_push_by_copy
 .. doxygenfunction:: z_string_array_get
 .. doxygenfunction:: z_string_array_len
 .. doxygenfunction:: z_string_array_is_empty
