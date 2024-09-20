@@ -254,7 +254,7 @@ Predefined Encodings
 .. doxygenfunction:: z_encoding_application_yaml
 .. doxygenfunction:: z_encoding_text_yaml
 .. doxygenfunction:: z_encoding_text_json5
-.. doxygenfunction:: z_encoding_application_python_serialized_objects
+.. doxygenfunction:: z_encoding_application_python_serialized_object
 .. doxygenfunction:: z_encoding_application_protobuf
 .. doxygenfunction:: z_encoding_application_java_serialized_object
 .. doxygenfunction:: z_encoding_application_openmetrics_text

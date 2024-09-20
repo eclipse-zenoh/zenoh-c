@@ -2014,7 +2014,7 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_protobuf(voi
  *
  * Constant alias for string: `"application/python-serialized-object"`.
  */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_python_serialized_objects(void);
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_application_python_serialized_object(void);
 /**
  * A SOAP 1.2 message serialized as XML 1.0.
  *

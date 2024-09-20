@@ -398,7 +398,7 @@ pub extern "C" fn z_encoding_text_json5() -> &'static z_loaned_encoding_t {
 ///
 /// Constant alias for string: `"application/python-serialized-object"`.
 #[no_mangle]
-pub extern "C" fn z_encoding_application_python_serialized_objects() -> &'static z_loaned_encoding_t
+pub extern "C" fn z_encoding_application_python_serialized_object() -> &'static z_loaned_encoding_t
 {
     Encoding::APPLICATION_PYTHON_SERIALIZED_OBJECT.as_loaned_c_type_ref()
 }
