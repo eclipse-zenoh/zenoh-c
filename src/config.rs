@@ -18,7 +18,7 @@ use zenoh::config::{Config, WhatAmI};
 
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
 };
 

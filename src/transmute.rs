@@ -30,6 +30,10 @@ pub(crate) trait OwnedCTypeRef: Sized {
 pub(crate) trait LoanedCTypeRef: Sized {
     type LoanedCType;
     fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType;
+}
+#[allow(dead_code)]
+pub(crate) trait LoanedCTypeMut: Sized {
+    type LoanedCType;
     fn as_loaned_c_type_mut(&mut self) -> &mut Self::LoanedCType;
 }
 #[allow(dead_code)]
@@ -145,13 +149,17 @@ macro_rules! impl_transmute {
             }
         }
     };
-
     (as_c_loaned ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::LoanedCTypeRef for $rust_type {
             type LoanedCType = $c_type;
             fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType {
                 unsafe { &*(self as *const Self as *const Self::LoanedCType) }
             }
+        }
+    };
+    (as_c_loaned_mut ($rust_type:ty, $c_type:ty)) => {
+        impl $crate::transmute::LoanedCTypeMut for $rust_type {
+            type LoanedCType = $c_type;
             fn as_loaned_c_type_mut(&mut self) -> &mut Self::LoanedCType {
                 unsafe { &mut *(self as *mut Self as *mut Self::LoanedCType) }
             }
@@ -244,6 +252,7 @@ macro_rules! impl_owned {
     (owned rust $c_owned_type:ty, loaned $c_loaned_type:ty) => {
         impl_transmute!(as_c_owned($c_loaned_type, $c_owned_type));
         impl_transmute!(as_c_loaned($c_owned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut($c_owned_type, $c_loaned_type));
         impl_transmute!(into_rust(itself $c_owned_type));
     };
 }
@@ -297,6 +306,7 @@ macro_rules! decl_c_type_inequal {
         );
         validate_equivalence!($c_loaned_type, $rust_loaned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
@@ -307,6 +317,7 @@ macro_rules! decl_c_type_inequal {
         );
         validate_equivalence!($c_loaned_type, $rust_loaned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
     };
 
@@ -507,6 +518,7 @@ macro_rules! decl_c_type {
     (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         validate_equivalence!($c_loaned_type, $rust_loaned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
     };
 }
