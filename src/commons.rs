@@ -214,6 +214,17 @@ pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sa
         .as_loaned_c_type_ref()
 }
 
+/// Mutably borrows sample.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_sample_drop(this_: &mut z_moved_sample_t) {
@@ -600,6 +611,13 @@ pub extern "C" fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Borrows source info.
+#[no_mangle]
+pub extern "C" fn z_source_info_loan_mut(this_: &z_owned_source_info_t) -> &z_loaned_source_info_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Frees the memory and invalidates the source info, resetting it to a gravestone state.

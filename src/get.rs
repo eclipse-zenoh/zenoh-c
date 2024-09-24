@@ -71,6 +71,12 @@ pub extern "C" fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_rep
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Mutably borrows reply error.
+#[no_mangle]
+pub extern "C" fn z_reply_err_loan_mut(this_: &mut z_owned_reply_err_t) -> &mut z_loaned_reply_err_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
 /// Frees the memory and resets the reply error it to its default value.
 #[no_mangle]
 pub extern "C" fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
@@ -307,6 +313,17 @@ pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_repl
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// Mutably borrows reply.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// The replies consolidation strategy to apply on replies to a `z_get()`.

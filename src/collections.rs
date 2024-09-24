@@ -339,6 +339,12 @@ pub extern "C" fn z_slice_loan(this_: &z_owned_slice_t) -> &z_loaned_slice_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Mutably borrows slice.
+#[no_mangle]
+pub extern "C" fn z_slice_loan_mut(this_: &mut z_owned_slice_t) -> &mut z_loaned_slice_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
 /// Constructs an owned copy of a slice.
 #[no_mangle]
 pub extern "C" fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this_: &z_loaned_slice_t) {
@@ -483,6 +489,12 @@ impl Deref for CStringOwned {
     }
 }
 
+impl DerefMut for CStringOwned {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 impl Deref for CStringView {
     type Target = CString;
     fn deref(&self) -> &Self::Target {
@@ -582,6 +594,12 @@ pub unsafe extern "C" fn z_view_string_empty(this_: &mut MaybeUninit<z_view_stri
 #[no_mangle]
 pub extern "C" fn z_string_loan(this_: &z_owned_string_t) -> &z_loaned_string_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
+}
+
+/// Mutably borrows string.
+#[no_mangle]
+pub extern "C" fn z_string_loan_mut(this_: &mut z_owned_string_t) -> &mut z_loaned_string_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Borrows view string.
