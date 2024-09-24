@@ -26,7 +26,9 @@ use zenoh::bytes::Encoding;
 pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_moved_encoding_t, z_owned_string_t, z_string_copy_from_substr,
 };
 

@@ -31,7 +31,7 @@ use crate::{
     context::{Context, DroppableContext, ThreadsafeContext},
     result::{z_result_t, Z_EINVAL, Z_OK},
     shm::provider::types::z_buf_layout_alloc_result_t,
-    transmute::{IntoRustType, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, RustTypeMutUninit, RustTypeRef},
     z_loaned_shm_provider_t, z_owned_shm_mut_t,
 };
 

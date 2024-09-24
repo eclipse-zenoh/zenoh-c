@@ -21,7 +21,7 @@ use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_loaned_shm_mut_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 

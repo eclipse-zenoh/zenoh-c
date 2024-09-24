@@ -46,10 +46,14 @@ pub(crate) trait ViewCTypeRef: Sized {
 pub(crate) trait RustTypeRef: Sized {
     type RustType;
     fn as_rust_type_ref(&self) -> &Self::RustType;
+}
+#[allow(dead_code)]
+pub(crate) trait RustTypeMut: Sized {
+    type RustType;
     fn as_rust_type_mut(&mut self) -> &mut Self::RustType;
 }
 #[allow(dead_code)]
-pub(crate) trait RustTypeRefUninit: Sized {
+pub(crate) trait RustTypeMutUninit: Sized {
     type RustType;
     fn as_rust_type_mut_uninit(&mut self) -> &mut MaybeUninit<Self::RustType>;
 }
@@ -188,11 +192,17 @@ macro_rules! impl_transmute {
             fn as_rust_type_ref(&self) -> &Self::RustType {
                 unsafe { &*(self as *const Self as *const Self::RustType) }
             }
+        }
+    };
+    (as_rust_mut ($c_type:ty, $rust_type:ty)) => {
+        validate_equivalence!($rust_type, $c_type);
+        impl $crate::transmute::RustTypeMut for $c_type {
+            type RustType = $rust_type;
             fn as_rust_type_mut(&mut self) -> &mut Self::RustType {
                 unsafe { &mut *(self as *mut Self as *mut Self::RustType) }
             }
         }
-        impl $crate::transmute::RustTypeRefUninit for std::mem::MaybeUninit<$c_type> {
+        impl $crate::transmute::RustTypeMutUninit for std::mem::MaybeUninit<$c_type> {
             type RustType = $rust_type;
             fn as_rust_type_mut_uninit(&mut self) -> &mut std::mem::MaybeUninit<Self::RustType> {
                 unsafe {
@@ -239,22 +249,25 @@ macro_rules! impl_transmute {
 }
 
 macro_rules! impl_owned {
-    (owned $c_owned_type:ty, inner rust option $rust_inner_type:ty) => {
+    (owned $c_owned_type:ty, rust option $rust_inner_type:ty) => {
         impl_transmute!(as_c_owned(Option<$rust_inner_type>, $c_owned_type));
         impl_transmute!(as_rust($c_owned_type, Option<$rust_inner_type>));
+        impl_transmute!(as_rust_mut($c_owned_type, Option<$rust_inner_type>));
         impl_transmute!(into_rust($c_owned_type, Option<$rust_inner_type>));
         impl_transmute!(into_c(Option<$rust_inner_type>, $c_owned_type));
         impl_transmute!(take_rust($c_owned_type, Option<$rust_inner_type>));
     };
-    (owned $c_owned_type:ty, inner rust option $rust_inner_type:ty) => {
+    (owned $c_owned_type:ty, rust option $rust_inner_type:ty) => {
         impl_transmute!(as_c_owned(Option<$rust_inner_type>, $c_owned_type));
         impl_transmute!(as_rust($c_owned_type, Option<$rust_inner_type>));
+        impl_transmute!(as_rust_mut($c_owned_type, Option<$rust_inner_type>));
         impl_transmute!(into_rust($c_owned_type, Option<$rust_inner_type>));
         impl_transmute!(take_rust($c_owned_type, Option<$rust_inner_type>));
     };
-    (owned $c_owned_type:ty, inner rust $rust_owned_type:ty) => {
+    (owned $c_owned_type:ty, rust $rust_owned_type:ty) => {
         impl_transmute!(as_c_owned($rust_owned_type, $c_owned_type));
         impl_transmute!(as_rust($c_owned_type, $rust_owned_type));
+        impl_transmute!(as_rust_mut($c_owned_type, $rust_owned_type));
         impl_transmute!(into_rust($c_owned_type, $rust_owned_type));
         impl_transmute!(take_rust($c_owned_type, $rust_owned_type));
     };
@@ -310,22 +323,20 @@ macro_rules! decl_c_type_inequal {
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?)
      $(,)?) => {
-        decl_c_type!(
-            owned($c_owned_type, option $rust_inner_type),
-        );
+        impl_owned!(owned $c_owned_type, rust option $rust_inner_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_c_loaned_mut($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+        impl_transmute!(as_rust_mut($c_loaned_type, $rust_loaned_type));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?)
      $(,)?) => {
-        decl_c_type!(
-            owned($c_owned_type, $rust_owned_type),
-        );
+        impl_owned!(owned $c_owned_type, rust $rust_owned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_c_loaned_mut($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+        impl_transmute!(as_rust_mut($c_loaned_type, $rust_loaned_type));
     };
 
     //
@@ -392,16 +403,11 @@ macro_rules! decl_c_type {
     //
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?)
      $(,)?) => {
-        impl_owned!(owned $c_owned_type, inner rust option $rust_inner_type);
+        impl_owned!(owned $c_owned_type, rust option $rust_inner_type);
     };
-    (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?)
-     $(,)?) => {
-        impl_owned!(owned $c_owned_type, inner rust option $rust_inner_type);
-    };
-
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?)
      $(,)?) => {
-        impl_owned!(owned $c_owned_type, inner rust $rust_owned_type);
+        impl_owned!(owned $c_owned_type, rust $rust_owned_type);
     };
     //
     // Owned with with explicit rust loaned type - rarely used
@@ -409,20 +415,20 @@ macro_rules! decl_c_type {
     (owned ($c_owned_type:ty, option $rust_inner_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?)
      $(,)?) => {
-        decl_c_type_inequal!(
-            owned($c_owned_type, option $rust_inner_type),
-            loaned($c_loaned_type, $rust_loaned_type),
-        );
-        validate_equivalence!($c_loaned_type, $c_owned_type);
+        impl_owned!(owned $c_owned_type, rust option $rust_inner_type);
+        impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut(Option<$rust_inner_type>, $c_loaned_type));
+        impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+        impl_transmute!(as_rust_mut($c_loaned_type, Option<$rust_inner_type>));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?)
      $(,)?) => {
-        decl_c_type_inequal!(
-            owned($c_owned_type, $rust_owned_type),
-            loaned($c_loaned_type, $rust_loaned_type),
-        );
-        validate_equivalence!($c_loaned_type, $c_owned_type);
+        impl_owned!(owned $c_owned_type, rust $rust_owned_type);
+        impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut($rust_owned_type, $c_loaned_type));
+        impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+        impl_transmute!(as_rust_mut($c_loaned_type, $rust_owned_type));
     };
     //
     // Owned with loaned type same as inner type - typical case
@@ -450,31 +456,37 @@ macro_rules! decl_c_type {
      loaned ($c_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?)
      $(,)?) => {
-        decl_c_type_inequal!(
+        decl_c_type!(
             owned($c_owned_type, option $rust_inner_type),
             loaned($c_loaned_type),
-            view($c_view_type, $rust_view_type),
         );
+        impl_transmute!(as_c_view($rust_view_type, $c_view_type));
+        impl_transmute!(as_rust($c_view_type, $rust_view_type));
+        impl_transmute!(as_rust_mut($c_view_type, $rust_view_type));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?)
      $(,)?) => {
-        decl_c_type_inequal!(
+        decl_c_type!(
             owned($c_owned_type, $rust_owned_type),
             loaned($c_loaned_type, $rust_owned_type),
-            view($c_view_type, $rust_view_type),
         );
+        impl_transmute!(as_c_view($rust_view_type, $c_view_type));
+        impl_transmute!(as_rust($c_view_type, $rust_view_type));
+        impl_transmute!(as_rust_mut($c_view_type, $rust_view_type));
     };
     (owned ($c_owned_type:ty, $rust_owned_type:ty $(,)?),
      loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?),
      view ($c_view_type:ty, $rust_view_type:ty $(,)?)
      $(,)?) => {
-        decl_c_type_inequal!(
+        decl_c_type!(
             owned($c_owned_type, $rust_owned_type),
             loaned($c_loaned_type, $rust_loaned_type),
-            view($c_view_type, $rust_view_type),
         );
+        impl_transmute!(as_c_view($rust_view_type, $c_view_type));
+        impl_transmute!(as_rust($c_view_type, $rust_view_type));
+        impl_transmute!(as_rust_mut($c_view_type, $rust_view_type));
     };
 
     //
@@ -501,6 +513,7 @@ macro_rules! decl_c_type {
     (copy ($c_type:ty, $rust_type:ty $(,)?) $(,)?) => {
         impl_transmute!(as_c($rust_type, $c_type));
         impl_transmute!(as_rust($c_type, $rust_type));
+        impl_transmute!(as_rust_mut($c_type, $rust_type));
         impl_transmute!(into_c($rust_type, $c_type));
         impl_transmute!(into_rust($c_type, $rust_type));
     };
@@ -512,5 +525,6 @@ macro_rules! decl_c_type {
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_c_loaned_mut($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
+        impl_transmute!(as_rust_mut($c_loaned_type, $rust_loaned_type));
     };
 }

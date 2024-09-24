@@ -192,7 +192,7 @@ impl crate::transmute::TakeCType for {moved_type_name} {{
 
 impl Drop for {type_name} {{
     fn drop(&mut self) {{
-        use crate::transmute::RustTypeRef;
+        use crate::transmute::RustTypeMut;
         std::mem::take(self.as_rust_type_mut());
     }}
 }}

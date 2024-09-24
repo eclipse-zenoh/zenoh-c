@@ -25,7 +25,7 @@ pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     shm::common::types::z_segment_id_t,
-    transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{RustTypeMutUninit, RustTypeRef, TakeRustType},
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

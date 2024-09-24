@@ -9,7 +9,9 @@ use libc::c_void;
 pub use crate::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
 use crate::{
     result,
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
 };
 
 decl_c_type!(
@@ -50,18 +52,16 @@ pub extern "C" fn z_internal_mutex_null(this_: &mut MaybeUninit<z_owned_mutex_t>
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
-    this_
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
 /// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
 pub extern "C" fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::z_result_t {
-    let this = this_.as_rust_type_mut();
+    let Some(this) = this_.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
 
     match this.0.lock() {
         Ok(new_lock) => {
@@ -79,7 +79,9 @@ pub extern "C" fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_result_t {
-    let this = this_.as_rust_type_mut();
+    let Some(this) = this_.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
     if this.1.is_none() {
         return result::Z_EINVAL_MUTEX;
     } else {
@@ -95,7 +97,9 @@ pub extern "C" fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_resu
 pub unsafe extern "C" fn z_mutex_try_lock(
     this: &'static mut z_loaned_mutex_t,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut();
+    let Some(this) = this.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
     match this.0.try_lock() {
         Ok(new_lock) => {
             let old_lock = this.1.replace(new_lock);
@@ -182,7 +186,9 @@ pub unsafe extern "C" fn z_condvar_wait(
     m: &mut z_loaned_mutex_t,
 ) -> result::z_result_t {
     let this = this.as_rust_type_ref();
-    let m = m.as_rust_type_mut();
+    let Some(m) = m.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
     if m.1.is_none() {
         return result::Z_EINVAL_MUTEX; // lock was not aquired prior to wait call
     }

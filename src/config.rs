@@ -18,7 +18,9 @@ use zenoh::config::{Config, WhatAmI};
 
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
 };
 
@@ -83,7 +85,6 @@ pub extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &z_loaned_c
 #[no_mangle]
 pub extern "C" fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t {
     let this = this_.as_rust_type_mut();
-    let this = unsafe { this.as_mut().unwrap_unchecked() };
     this.as_loaned_c_type_mut()
 }
 
@@ -192,7 +193,9 @@ pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
     value: *const c_char,
     value_len: usize,
 ) -> result::z_result_t {
-    let config = this.as_rust_type_mut();
+    let Some(config) = this.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(e) => {

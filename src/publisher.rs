@@ -28,7 +28,9 @@ use crate::z_moved_source_info_t;
 use crate::zc_moved_closure_matching_status_t;
 use crate::{
     result::{self},
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_encoding_t, z_priority_t, z_timestamp_t,
 };
@@ -165,10 +167,7 @@ pub unsafe extern "C" fn z_publisher_loan(this_: &z_owned_publisher_t) -> &z_loa
 pub unsafe extern "C" fn z_publisher_loan_mut(
     this: &mut z_owned_publisher_t,
 ) -> &mut z_loaned_publisher_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Options passed to the `z_publisher_put()` function.

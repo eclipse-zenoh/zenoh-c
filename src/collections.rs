@@ -25,7 +25,9 @@ use libc::strlen;
 
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
 };
 
 pub struct CSlice {

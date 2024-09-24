@@ -26,7 +26,7 @@ use crate::transmute::IntoCType;
 use crate::{
     result,
     transmute::{
-        IntoRustType, LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
+        IntoRustType, LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType,
     },
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
@@ -237,12 +237,10 @@ pub extern "C" fn z_declare_queryable(
     let queryable = builder
         .callback(move |query| {
             let mut owned_query = Some(query);
-            z_closure_query_call(z_closure_query_loan(&callback), unsafe {
-                owned_query
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
+            z_closure_query_call(
+                z_closure_query_loan(&callback),
+                owned_query.as_loaned_c_type_mut(),
+            )
         })
         .wait();
     match queryable {

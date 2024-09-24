@@ -18,7 +18,7 @@ use zenoh::{session::ZenohId, Wait};
 pub use crate::opaque_types::z_id_t;
 use crate::{
     result,
-    transmute::{CTypeRef, IntoCType, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{CTypeRef, IntoCType, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
     z_owned_string_t,
 };

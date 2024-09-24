@@ -22,7 +22,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, CString, CStringView, ZVector,
 };
@@ -183,9 +183,10 @@ pub extern "C" fn z_scout(
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
                 let mut owned_h = Some(h);
-                z_closure_hello_call(z_closure_hello_loan(&callback), unsafe {
-                    owned_h.as_mut().unwrap_unchecked().as_loaned_c_type_mut()
-                })
+                z_closure_hello_call(
+                    z_closure_hello_loan(&callback),
+                    owned_h.as_loaned_c_type_mut(),
+                )
             })
             .await
             .unwrap();

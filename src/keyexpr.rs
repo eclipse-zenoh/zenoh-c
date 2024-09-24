@@ -26,7 +26,7 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
 };
 

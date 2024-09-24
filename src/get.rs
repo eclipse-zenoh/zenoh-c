@@ -24,7 +24,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
     result,
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
@@ -270,10 +270,7 @@ pub unsafe extern "C" fn z_get(
             let mut owned_response = Some(response);
             z_closure_reply_call(
                 z_closure_reply_loan(&callback),
-                owned_response
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut(),
+                owned_response.as_loaned_c_type_mut(),
             )
         })
         .wait()
