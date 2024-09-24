@@ -147,6 +147,79 @@ Examples include `z_timestamp_t`, `z_priority_t`, etc.
     z_timestamp_new(&ts, z_loan(session));
     z_timestamp_t ts1 = ts;
 
+Common operations
+=================
+
+The transition between "owned", "loaned" and "moved" structures above is performed by corresponding functions.
+The following operations are available: move, loan, mutable loan, take, check, and drop. They are performed for 
+"xxx" entity  by functions `z_xxx_move`, `z_xxx_loan`, `z_xxx_loan_mut`, `z_xxx_take_moved`, `z_xxx_take_loaned`,
+`z_xxx_check`, and `z_xxx_drop`.
+The generic macros `z_move`, `z_loan`, `z_loan_mut`, `z_take`, `z_check`, and `z_drop` are also provided.
+
+Loan operation
+--------------
+
+Function `z_xxx_loan` accepts `const z_owned_xxx_t*` and returns pointer `const z_loaned_xxx_t*` which gives read only 
+access to `z_owned_xxx_t` entity.
+
+`z_loan` macro accepts variable of `z_owned_xxx_t` type and calls corresponding `z_xxx_loan` function.
+
+Mutable loan operation
+----------------------
+
+Function `z_xxx_loan_mut` accepts `z_owned_xxx_t*` and
+returns pointer `z_xxx_loaned_t*` which allows to
+read and modify `z_owned_xxx_t` entity and if supported by the type take ownership on it (see "take" operation)
+
+`z_loan_mut` macro accepts variable of `z_owned_xxx_t` type and calls corresponding `z_xxx_loan_mut` function.
+
+Move operation
+--------------
+
+Function `z_xxx_move` accepts `z_owned_xxx_t*` and
+returns pointer `z_moved_xxx_t*` which only allows to take
+ownership of `z_owned_xxx_t`. The agreement is that the function which accepts `z_moved_xxx_t*` parameter
+is obliged to take ownership on it (see "take" operation)
+
+`z_move` macro accepts varible of `z_owned_xxx_t` type anc calls corresponding `z_move_xxx` function
+
+Take operation
+--------------
+
+Functions `z_xxx_take_moved` and `z_xxx_take_loaned` accepts pointer
+to unitialized `z_owned_xxx_t` destination structure and
+ `z_moved_xxx_t*` and `z_loaned_xxx_t*` source pointers correspondingly.
+
+These functions moves data from source `z_owned_xxx_t` structure into destination one. The source
+structure is set to empty "gravestone" state (see "check" operation)
+
+`z_take` macro accepts `z_moved_xxx_t*` and `z_loaned_xxx_t*` pointers and calls corresponding
+`z_xxx_take_moved` and `z_xxx_take_loaned` functions.
+
+Check operation
+---------------
+
+When owned object is dropped or taken it's set to so-called "gravestone" state which is safe to 
+double drop. No operations except "check" and "drop" are normally allowed on dropped/taken object.
+
+Function `z_xxx_check` returns true if object is in valid state, e.g. if all operations
+on the object are allowed.
+
+There is small catch: for some objects the gravestone state is still valid state.
+Examples are `z_owned_bytes_t` which is set to "empty" state by the drop and `z_owned_encoding_t`
+which becomes `ZENOH_BYTES`. For such objects the `z_check` always returns true, even after "drop" or "take"
+operation.
+
+`z_check` macro accepts `const z_owned_xxx_t*` and calls corresponding `z_xxx_check` function
+
+Drop operation
+--------------
+
+Function `z_xxx_drop` accepts `z_moved_xxx_t*` pointer. It frees all resources hold by corresponding
+`z_owned_xxx_t` object and sets this object to gravestone state, safe to double drop.
+
+`z_drop` macro accepts `z_moved_xxx_t*` and calls corresponding `z_xxx_drop` function
+
 Name Prefixes `z_`, `zc_`, `ze_`
 ================================
 
