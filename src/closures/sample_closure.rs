@@ -144,6 +144,14 @@ pub extern "C" fn z_closure_sample_loan(
     closure.as_loaned_c_type_ref()
 }
 
+/// Borrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_sample_loan_mut(
+    closure: &mut z_owned_closure_sample_t,
+) -> &mut z_loaned_closure_sample_t {
+    closure.as_loaned_c_type_mut()
+}
+
 /// @brief Constructs closure.
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.

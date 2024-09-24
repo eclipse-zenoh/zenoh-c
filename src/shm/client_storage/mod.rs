@@ -198,3 +198,16 @@ pub unsafe extern "C" fn z_shm_client_storage_loan(
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Mutably borrows SHM Client Storage.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_shm_client_storage_loan_mut(
+    this: &mut z_owned_shm_client_storage_t,
+) -> &mut z_loaned_shm_client_storage_t {
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}

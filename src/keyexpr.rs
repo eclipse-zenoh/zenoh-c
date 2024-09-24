@@ -134,6 +134,17 @@ pub unsafe extern "C" fn z_keyexpr_loan(this_: &z_owned_keyexpr_t) -> &z_loaned_
         .as_loaned_c_type_ref()
 }
 
+/// Mutably borrows `z_owned_keyexpr_t`.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_keyexpr_loan_mut(this_: &mut z_owned_keyexpr_t) -> &mut z_loaned_keyexpr_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
 /// Borrows `z_view_keyexpr_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
