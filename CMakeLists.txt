@@ -199,18 +199,18 @@ set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
 
-if (("${cargo_flags}" MATCHES ^.*shared-memory.*$) AND NOT(ZENOHC_BUILD_WITH_SHARED_MEMORY))
+if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
+	set(cargo_flags ${cargo_flags} --features=shared-memory)
+elseif("${cargo_flags}" MATCHES ^.*shared-memory.*$)
 	set(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE)
 	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_SHARED_MEMORY = TRUE")
-elseif(ZENOHC_BUILD_WITH_SHARED_MEMORY)
-	set(cargo_flags ${cargo_flags} --features=shared-memory)
 endif()
 
-if (("${cargo_flags}" MATCHES ^.*unstable.*$) AND NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+if(ZENOHC_BUILD_WITH_UNSTABLE_API)
+	set(cargo_flags ${cargo_flags} --features=unstable)
+elseif("${cargo_flags}" MATCHES ^.*unstable.*$)
 	set(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE)
 	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_UNSTABLE_API = TRUE")
-elseif(ZENOHC_BUILD_WITH_UNSTABLE_API)
-	set(cargo_flags ${cargo_flags} --features=unstable)
 endif()
 
 
