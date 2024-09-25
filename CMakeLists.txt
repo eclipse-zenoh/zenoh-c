@@ -201,10 +201,16 @@ set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
 
 if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
 	set(cargo_flags ${cargo_flags} --features=shared-memory)
+elseif("${cargo_flags}" MATCHES ^.*shared-memory.*$)
+	set(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE)
+	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_SHARED_MEMORY = TRUE")
 endif()
 
 if(ZENOHC_BUILD_WITH_UNSTABLE_API)
 	set(cargo_flags ${cargo_flags} --features=unstable)
+elseif("${cargo_flags}" MATCHES ^.*unstable.*$)
+	set(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE)
+	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_UNSTABLE_API = TRUE")
 endif()
 
 
