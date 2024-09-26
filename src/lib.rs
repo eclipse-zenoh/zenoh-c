@@ -33,8 +33,8 @@ pub mod encoding;
 pub use crate::encoding::*;
 mod commons;
 pub use crate::commons::*;
-mod payload;
-pub use crate::payload::*;
+mod zbytes;
+pub use crate::zbytes::*;
 mod keyexpr;
 pub use crate::keyexpr::*;
 #[cfg(feature = "unstable")]
@@ -76,6 +76,9 @@ pub mod context;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
+
+#[cfg(feature = "unstable")]
+mod serialization;
 
 /// Initializes the zenoh runtime logger, using rust environment settings.
 /// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.

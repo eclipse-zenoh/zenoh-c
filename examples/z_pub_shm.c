@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
             z_publisher_put_options_default(&options);
 
             z_owned_bytes_t payload;
-            z_bytes_serialize_from_shm_mut(&payload, z_move(alloc.buf));
+            z_bytes_from_shm_mut(&payload, z_move(alloc.buf));
 
             z_publisher_put(z_loan(pub), z_move(payload), &options);
         } else {

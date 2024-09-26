@@ -21,7 +21,8 @@ zenoh_opaque.h:
   - z_loaned_sample_t!
   - z_bytes_reader_t!
   - z_bytes_writer_t!
-  - z_bytes_iterator_t!
+  - ze_serializer_t!#unstable
+  - ze_deserializer_t!#unstable
   - z_owned_encoding_t!
   - z_loaned_encoding_t!
   - z_owned_reply_t!

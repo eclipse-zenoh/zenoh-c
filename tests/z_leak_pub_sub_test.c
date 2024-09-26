@@ -30,7 +30,7 @@ void data_handler(z_loaned_sample_t *sample, void *context) {
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
     z_owned_string_t payload_string;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+    z_bytes_to_string(z_sample_payload(sample), &payload_string);
 
     printf(">> [Subscriber] Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_string)),
            z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(payload_string)),
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
         z_publisher_put_options_default(&options);
 
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, buf);
+        z_bytes_copy_from_str(&payload, buf);
 
         z_publisher_put(z_loan(publisher), z_move(payload), &options);
         z_sleep_s(1);

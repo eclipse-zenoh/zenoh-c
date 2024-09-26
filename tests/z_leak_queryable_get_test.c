@@ -35,7 +35,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
     const z_loaned_bytes_t *payload = z_query_payload(query);
 
     z_owned_string_t payload_string;
-    z_bytes_deserialize_into_string(payload, &payload_string);
+    z_bytes_to_string(payload, &payload_string);
 
     printf(">> [Queryable ] Received Query '%.*s' with value '%.*s'\n", (int)z_string_len(z_loan(key_string)),
            z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(payload_string)),
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         z_get_options_default(&options);
 
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, buf);
+        z_bytes_copy_from_str(&payload, buf);
 
         options.payload = z_move(payload);
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
             z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
 
             z_owned_string_t reply_str;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &reply_str);
+            z_bytes_to_string(z_sample_payload(sample), &reply_str);
 
             printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
                    (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));

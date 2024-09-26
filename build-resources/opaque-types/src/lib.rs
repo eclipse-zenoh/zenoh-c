@@ -9,7 +9,7 @@ use std::{
 };
 
 use zenoh::{
-    bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
+    bytes::{Encoding, ZBytes, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
     config::Config,
     handlers::RingChannelHandler,
     key_expr::KeyExpr,
@@ -97,9 +97,6 @@ get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
 
 /// A writer for serialized data.
 get_opaque_type_data!(ZBytesWriter<'static>, z_bytes_writer_t);
-
-/// An iterator over multi-element serialized data.
-get_opaque_type_data!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
 
 /// An iterator over slices of serialized data.
 get_opaque_type_data!(ZBytesSliceIterator<'static>, z_bytes_slice_iterator_t);
@@ -485,3 +482,12 @@ get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An entity gloabal id.
 get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A Zenoh serializer.
+get_opaque_type_data!(zenoh_ext::ZSerializer<'static>, ze_serializer_t);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A Zenoh serializer.
+get_opaque_type_data!(zenoh_ext::ZDeserializer<'static>, ze_deserializer_t);

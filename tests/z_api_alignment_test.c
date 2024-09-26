@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
     // TODO: set encoding option
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, value);
+    z_bytes_copy_from_str(&payload, value);
     _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 

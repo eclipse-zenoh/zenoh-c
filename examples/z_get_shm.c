@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     if (value != NULL) {
-        if (!z_bytes_serialize_from_shm(&payload, z_move(shm))) {
+        if (!z_bytes_from_shm(&payload, z_move(shm))) {
             printf("Unexpected failure during SHM buffer serialization...\n");
             return -1;
         }
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
             z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
 
             z_owned_string_t reply_str;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &reply_str);
+            z_bytes_to_string(z_sample_payload(sample), &reply_str);
 
             printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
                    (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));
