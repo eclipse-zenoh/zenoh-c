@@ -46,6 +46,8 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, args.value);
+    z_put_options_t options;
+    z_put_options_default(&options);
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     z_owned_bytes_t attachment;
@@ -56,8 +58,6 @@ int main(int argc, char** argv) {
     ze_serializer_serialize_str(&serializer, "there");
     ze_serializer_serialize_sequence_end(&serializer);
 
-    z_put_options_t options;
-    z_put_options_default(&options);
     options.attachment =
         z_move(attachment);  // attachement is going to be consumed by z_put, so no need to drop it manually
 #endif
