@@ -266,14 +266,10 @@ pub unsafe extern "C" fn z_get(
         }
     }
     match get
-        .callback(move |response| {
-            let mut owned_response = Some(response);
+        .callback(move |mut response| {
             z_closure_reply_call(
                 z_closure_reply_loan(&callback),
-                owned_response
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut(),
+                response.as_loaned_c_type_mut(),
             )
         })
         .wait()

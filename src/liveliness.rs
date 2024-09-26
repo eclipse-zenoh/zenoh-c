@@ -171,14 +171,11 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         .liveliness()
         .declare_subscriber(key_expr)
         .history(options.is_some_and(|o| o.history))
-        .callback(move |sample| {
-            let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
-                owned_sample
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
+        .callback(move |mut sample| {
+            z_closure_sample_call(
+                z_closure_sample_loan(&callback),
+                sample.as_loaned_c_type_mut(),
+            )
         })
         .wait()
     {
