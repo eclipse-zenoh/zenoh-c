@@ -2539,9 +2539,9 @@ dependencies = [
 
 [[package]]
 name = "serialport"
-version = "4.5.1"
+version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ba776acc8c373b9175829206229366273225436845c04f9c20aab8099960e2e"
+checksum = "241ebb629ed9bf598b2b392ba42aa429f9ef2a0099001246a36ac4c084ee183f"
 dependencies = [
  "bitflags 2.6.0",
  "cfg-if",
@@ -3983,7 +3983,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-serial"
 version = "1.0.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#3b6d773ea76a961f8b5fb2a1b72cc1b2c13d0028"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#965e9050ac2d1cae83ad0919c91f2ac9cd56f648"
 dependencies = [
  "async-trait",
  "tokio",
@@ -4064,7 +4064,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-unixpipe"
 version = "1.0.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#3b6d773ea76a961f8b5fb2a1b72cc1b2c13d0028"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#965e9050ac2d1cae83ad0919c91f2ac9cd56f648"
 dependencies = [
  "advisory-lock",
  "async-trait",
@@ -4104,7 +4104,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-vsock"
 version = "1.0.0-dev"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#3b6d773ea76a961f8b5fb2a1b72cc1b2c13d0028"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#965e9050ac2d1cae83ad0919c91f2ac9cd56f648"
 dependencies = [
  "async-trait",
  "libc",
