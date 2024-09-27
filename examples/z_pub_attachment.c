@@ -73,14 +73,15 @@ int main(int argc, char** argv) {
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
         kvs[1] = (kv_pair_t){.key = "index", .value = buf_ind};
-        z_bytes_empty(&attachment);
-        ze_serializer_t serializer = ze_serializer(z_loan_mut(attachment));
-        ze_serializer_serialize_sequence_begin(&serializer, 2);
+        ze_owned_serializer_t serializer;
+        ze_serializer_empty(&serializer);
+        ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 2);
         for (size_t i = 0; i < 2; ++i) {
-            ze_serializer_serialize_str(&serializer, kvs[i].key);
-            ze_serializer_serialize_str(&serializer, kvs[i].value);
+            ze_serializer_serialize_str(z_loan_mut(serializer), kvs[i].key);
+            ze_serializer_serialize_str(z_loan_mut(serializer), kvs[i].value);
         }
-        ze_serializer_serialize_sequence_end(&serializer);
+        ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
+        ze_serializer_finish(z_move(serializer), &attachment);
         options.attachment = z_move(attachment);
 #endif
         sprintf(buf, "[%4d] %s", idx, args.value);

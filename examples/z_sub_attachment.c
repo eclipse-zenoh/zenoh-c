@@ -41,7 +41,7 @@ void data_handler(z_loaned_sample_t* sample, void* arg) {
     // checks if attachment exists
     if (attachment != NULL) {
         z_owned_string_t key, value;
-        ze_deserializer_t deserializer = ze_deserializer(attachment);
+        ze_deserializer_t deserializer = ze_deserializer_from_bytes(attachment);
         size_t len = 0;
         ze_deserializer_deserialize_sequence_begin(&deserializer, &len);
         for (size_t i = 0; i < len; ++i) {

@@ -51,12 +51,13 @@ int main(int argc, char** argv) {
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     z_owned_bytes_t attachment;
-    z_bytes_empty(&attachment);
-    ze_serializer_t serializer = ze_serializer(z_loan_mut(attachment));
-    ze_serializer_serialize_sequence_begin(&serializer, 1);  // 1 key-value pair
-    ze_serializer_serialize_str(&serializer, "hello");
-    ze_serializer_serialize_str(&serializer, "there");
-    ze_serializer_serialize_sequence_end(&serializer);
+    ze_owned_serializer_t serializer;
+    ze_serializer_empty(&serializer);
+    ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 1);  // 1 key-value pair
+    ze_serializer_serialize_str(z_loan_mut(serializer), "hello");
+    ze_serializer_serialize_str(z_loan_mut(serializer), "there");
+    ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
+    ze_serializer_finish(z_move(serializer), &attachment);
 
     options.attachment =
         z_move(attachment);  // attachement is going to be consumed by z_put, so no need to drop it manually

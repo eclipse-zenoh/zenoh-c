@@ -48,7 +48,7 @@ z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *
         return -1;
     }
 
-    ze_deserializer_t deserializer = ze_deserializer(attachment);
+    ze_deserializer_t deserializer = ze_deserializer_from_bytes(attachment);
     size_t received_len = 0;
     ze_deserializer_deserialize_sequence_begin(&deserializer, &received_len);
     if (received_len != len) {
@@ -106,14 +106,15 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_string_copy_from_str(&kvs[0].value, V_CONST);
 
     z_owned_bytes_t reply_attachment;
-    z_bytes_empty(&reply_attachment);
-    ze_serializer_t serializer = ze_serializer(z_loan_mut(reply_attachment));
-    ze_serializer_serialize_sequence_begin(&serializer, 1);
+    ze_owned_serializer_t serializer;
+    ze_serializer_empty(&serializer);
+    ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 1);
     for (size_t i = 0; i < 1; i++) {
-        ze_serializer_serialize_string(&serializer, z_loan(kvs[i].key));
-        ze_serializer_serialize_string(&serializer, z_loan(kvs[i].value));
+        ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].key));
+        ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].value));
     }
-    ze_serializer_serialize_sequence_end(&serializer);
+    ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
+    ze_serializer_finish(z_move(serializer), &reply_attachment);
 
     options.attachment = z_move(reply_attachment);
     drop_attachment(kvs, 1);
@@ -190,14 +191,15 @@ int run_get() {
         z_string_copy_from_str(&kvs[1].value, values[val_num]);
 
         z_owned_bytes_t attachment;
-        z_bytes_empty(&attachment);
-        ze_serializer_t serializer = ze_serializer(z_loan_mut(attachment));
-        ze_serializer_serialize_sequence_begin(&serializer, 2);
+        ze_owned_serializer_t serializer;
+        ze_serializer_empty(&serializer);
+        ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 2);
         for (size_t i = 0; i < 2; i++) {
-            ze_serializer_serialize_string(&serializer, z_loan(kvs[i].key));
-            ze_serializer_serialize_string(&serializer, z_loan(kvs[i].value));
+            ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].key));
+            ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].value));
         }
-        ze_serializer_serialize_sequence_end(&serializer);
+        ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
+        ze_serializer_finish(z_move(serializer), &attachment);
 
         opts.attachment = z_move(attachment);
         drop_attachment(kvs, 2);

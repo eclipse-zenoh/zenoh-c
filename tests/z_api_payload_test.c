@@ -82,13 +82,14 @@ void test_writer(void) {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_empty(&payload);
 
-    z_bytes_writer_t writer = z_bytes_get_writer(z_loan_mut(payload));
+    z_owned_bytes_writer_t writer;
+    z_bytes_writer_empty(&writer);
 
-    assert(z_bytes_writer_write_all(&writer, data, 3) == 0);
-    assert(z_bytes_writer_write_all(&writer, data + 3, 5) == 0);
-    assert(z_bytes_writer_write_all(&writer, data + 8, 2) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data, 3) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data + 3, 5) == 0);
+    assert(z_bytes_writer_write_all(z_loan_mut(writer), data + 8, 2) == 0);
+    z_bytes_writer_finish(z_move(writer), &payload);
 
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
 
@@ -103,15 +104,15 @@ void test_append(void) {
     uint8_t data_out[10] = {0};
 
     z_owned_bytes_t payload;
-    z_bytes_empty(&payload);
-
-    z_bytes_writer_t writer = z_bytes_get_writer(z_loan_mut(payload));
-    z_bytes_writer_write_all(&writer, data, 5);
+    z_bytes_copy_from_buf(&payload, data, 5);
+    z_owned_bytes_writer_t writer;
+    z_bytes_writer_from_bytes(&writer, z_move(payload));
     {
         z_owned_bytes_t b;
         z_bytes_copy_from_buf(&b, data + 5, 5);
-        assert(z_bytes_writer_append(&writer, z_bytes_move(&b)) == 0);
+        assert(z_bytes_writer_append(z_loan_mut(writer), z_bytes_move(&b)) == 0);
     }
+    z_bytes_writer_finish(z_move(writer), &payload);
 
     z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
     z_bytes_reader_read(&reader, data_out, 10);
@@ -227,25 +228,23 @@ bool check_slice(const z_loaned_bytes_t *b, const uint8_t *data, size_t len) {
 void test_slices(void) {
     uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     z_owned_bytes_t payload;
-    z_bytes_empty(&payload);
-
-    z_bytes_writer_t writer = z_bytes_get_writer(z_loan_mut(payload));
-    z_bytes_writer_write_all(&writer, data, 10);
-
+    z_owned_bytes_writer_t writer;
+    z_bytes_writer_empty(&writer);
+    z_bytes_writer_write_all(z_loan_mut(writer), data, 10);
+    z_bytes_writer_finish(z_move(writer), &payload);
     assert(check_slice(z_loan(payload), data, 10));
 
     z_drop(z_move(payload));
-    z_bytes_empty(&payload);
 
     // possible multiple slices
-    writer = z_bytes_get_writer(z_loan_mut(payload));
+    z_bytes_writer_empty(&writer);
 
     for (size_t i = 0; i < 10; i++) {
         z_owned_bytes_t b;
         z_bytes_copy_from_buf(&b, data + i, 1);
-        z_bytes_writer_append(&writer, z_bytes_move(&b));
+        z_bytes_writer_append(z_loan_mut(writer), z_bytes_move(&b));
     }
-
+    z_bytes_writer_finish(z_move(writer), &payload);
     assert(check_slice(z_loan(payload), data, 10));
     z_drop(z_move(payload));
 }
@@ -253,19 +252,19 @@ void test_slices(void) {
 void test_serialize_simple(void) {
 #if defined(Z_FEATURE_UNSTABLE_API)
     z_owned_bytes_t b;
-    z_bytes_empty(&b);
+    ze_owned_serializer_t serializer;
+    ze_serializer_empty(&serializer);
 
-    ze_serializer_t serializer = ze_serializer(z_loan_mut(b));
-
-    ze_serializer_serialize_double(&serializer, 0.5);
-    ze_serializer_serialize_int32(&serializer, -1111);
-    ze_serializer_serialize_str(&serializer, "abc");
+    ze_serializer_serialize_double(z_loan_mut(serializer), 0.5);
+    ze_serializer_serialize_int32(z_loan_mut(serializer), -1111);
+    ze_serializer_serialize_str(z_loan_mut(serializer), "abc");
+    ze_serializer_finish(z_move(serializer), &b);
 
     double d;
     int32_t i;
     z_owned_string_t s;
 
-    ze_deserializer_t deserializer = ze_deserializer(z_loan(b));
+    ze_deserializer_t deserializer = ze_deserializer_from_bytes(z_loan(b));
     assert(ze_deserializer_deserialize_double(&deserializer, &d) == 0);
     assert(ze_deserializer_deserialize_int32(&deserializer, &i) == 0);
     assert(ze_deserializer_deserialize_string(&deserializer, &s) == 0);
@@ -283,16 +282,17 @@ void test_serialize_sequence(void) {
 #if defined(Z_FEATURE_UNSTABLE_API)
     uint32_t input[6] = {1, 2, 3, 100, 10000, 100000};
     z_owned_bytes_t b;
-    z_bytes_empty(&b);
+    ze_owned_serializer_t serializer;
+    ze_serializer_empty(&serializer);
 
-    ze_serializer_t serializer = ze_serializer(z_loan_mut(b));
-    ze_serializer_serialize_sequence_begin(&serializer, 6);
+    ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 6);
     for (size_t i = 0; i < 6; ++i) {
-        ze_serializer_serialize_uint32(&serializer, input[i]);
+        ze_serializer_serialize_uint32(z_loan_mut(serializer), input[i]);
     }
-    ze_serializer_serialize_sequence_end(&serializer);
+    ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
+    ze_serializer_finish(z_move(serializer), &b);
 
-    ze_deserializer_t deserializer = ze_deserializer(z_loan(b));
+    ze_deserializer_t deserializer = ze_deserializer_from_bytes(z_loan(b));
     size_t len = 0;
     assert(ze_deserializer_deserialize_sequence_begin(&deserializer, &len) == 0);
     assert(len == 6);

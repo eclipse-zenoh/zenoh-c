@@ -157,11 +157,15 @@ Functions
 .. doxygenfunction:: z_bytes_reader_seek
 .. doxygenfunction:: z_bytes_reader_tell
 
-.. doxygenfunction:: z_bytes_get_writer
+.. doxygenfunction:: z_writer_empty
+.. doxygenfunction:: z_writer_from_bytes
+.. doxygenfunction:: z_writer_finish
 .. doxygenfunction:: z_bytes_writer_write_all
 .. doxygenfunction:: z_bytes_writer_append
 
-.. doxygenfunction:: ze_serializer
+.. doxygenfunction:: ze_serializer_empty
+.. doxygenfunction:: ze_serializer_from_bytes
+.. doxygenfunction:: ze_serializer_finish
 .. doxygenfunction:: ze_serializer_serialize_slice
 .. doxygenfunction:: ze_serializer_serialize_buf
 .. doxygenfunction:: ze_serializer_serialize_string
@@ -179,7 +183,7 @@ Functions
 .. doxygenfunction:: ze_serializer_serialize_sequence_begin
 .. doxygenfunction:: ze_serializer_serialize_sequence_end
 
-.. doxygenfunction:: ze_deserializer
+.. doxygenfunction:: ze_deserializer_from_bytes
 .. doxygenfunction:: ze_deserializer_deserialize_slice
 .. doxygenfunction:: ze_deserializer_deserialize_string
 .. doxygenfunction:: ze_deserializer_deserialize_uint8

@@ -262,6 +262,9 @@ typedef struct z_moved_string_t {
 typedef struct ALIGN(8) z_bytes_slice_iterator_t {
   uint8_t _0[24];
 } z_bytes_slice_iterator_t;
+typedef struct z_moved_bytes_writer_t {
+  struct z_owned_bytes_writer_t _this;
+} z_moved_bytes_writer_t;
 typedef struct z_moved_chunk_alloc_result_t {
   struct z_owned_chunk_alloc_result_t _this;
 } z_moved_chunk_alloc_result_t;
@@ -1081,6 +1084,9 @@ typedef struct ALIGN(8) ze_loaned_publication_cache_t {
 typedef struct ze_moved_querying_subscriber_t {
   struct ze_owned_querying_subscriber_t _this;
 } ze_moved_querying_subscriber_t;
+typedef struct ze_moved_serializer_t {
+  struct ze_owned_serializer_t _this;
+} ze_moved_serializer_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
@@ -1290,11 +1296,6 @@ ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_byte
 ZENOHC_API
 struct z_bytes_slice_iterator_t z_bytes_get_slice_iterator(const struct z_loaned_bytes_t *this_);
 /**
- * @brief Gets writer for`this_`.
- * @note Creating another writer while previous one is still in use is undefined behaviour.
- */
-ZENOHC_API struct z_bytes_writer_t z_bytes_get_writer(struct z_loaned_bytes_t *this_);
-/**
  * Returns ``true`` if `this_` is empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_bytes_is_empty(const struct z_loaned_bytes_t *this_);
@@ -1408,15 +1409,52 @@ z_result_t z_bytes_to_string(const struct z_loaned_bytes_t *this_,
  * @return 0 in case of success, negative error code otherwise
  */
 ZENOHC_API
-z_result_t z_bytes_writer_append(struct z_bytes_writer_t *this_,
+z_result_t z_bytes_writer_append(struct z_loaned_bytes_writer_t *this_,
                                  struct z_moved_bytes_t *bytes);
+/**
+ * Drops `this_`, resetting it to gravestone value.
+ */
+ZENOHC_API void z_bytes_writer_drop(struct z_moved_bytes_writer_t *this_);
+/**
+ * @brief Constructs a data writer with empty payload.
+ * @param this_: An uninitialized memory location where writer is to be constructed.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_bytes_writer_empty(struct z_owned_bytes_writer_t *this_);
+/**
+ * @brief Drop writer and extract underlying `bytes` object it was writing to.
+ * @param this_: A writer instance.
+ * @param bytes: An uninitialized memory location where `bytes` object` will be written to.
+ */
+ZENOHC_API
+void z_bytes_writer_finish(struct z_moved_bytes_writer_t *this_,
+                           struct z_owned_bytes_t *bytes);
+/**
+ * @brief Constructs a data writer initializing it with `bytes`.
+ * @param this_: An uninitialized memory location where writer is to be constructed.
+ * @param bytes: Data to initialize writer with.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t z_bytes_writer_from_bytes(struct z_owned_bytes_writer_t *this_,
+                                     struct z_moved_bytes_t *bytes);
+/**
+ * Borrows writer.
+ */
+ZENOHC_API
+const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Muatably borrows writer.
+ */
+ZENOHC_API
+struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
 /**
  * Writes `len` bytes from `src` into underlying data.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_result_t z_bytes_writer_write_all(struct z_bytes_writer_t *this_,
+z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
                                     const uint8_t *src,
                                     size_t len);
 /**
@@ -2495,6 +2533,14 @@ ZENOHC_API bool z_internal_bytes_check(const struct z_owned_bytes_t *this_);
  * The gravestone value for `z_owned_bytes_t`.
  */
 ZENOHC_API void z_internal_bytes_null(struct z_owned_bytes_t *this_);
+/**
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+ */
+ZENOHC_API bool z_internal_bytes_writer_check(const struct z_owned_bytes_writer_t *this_);
+/**
+ * Constructs a writer in a gravestone state.
+ */
+ZENOHC_API void z_internal_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @return ``true`` if `this` is valid.
@@ -5053,12 +5099,6 @@ ZENOHC_API z_result_t ze_deserialize_uint64(const struct z_loaned_bytes_t *this_
 ZENOHC_API z_result_t ze_deserialize_uint8(const struct z_loaned_bytes_t *this_, uint8_t *dst);
 #endif
 /**
- * @brief Gets deserializer for`this_`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API struct ze_deserializer_t ze_deserializer(const struct z_loaned_bytes_t *this_);
-#endif
-/**
  * Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -5182,6 +5222,13 @@ z_result_t ze_deserializer_deserialize_uint8(struct ze_deserializer_t *this_,
                                              uint8_t *dst);
 #endif
 /**
+ * @brief Gets deserializer for`this_`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct ze_deserializer_t ze_deserializer_from_bytes(const struct z_loaned_bytes_t *this_);
+#endif
+/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
  */
@@ -5210,6 +5257,18 @@ bool ze_internal_querying_subscriber_check(const struct ze_owned_querying_subscr
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API void ze_internal_querying_subscriber_null(struct ze_owned_querying_subscriber_t *this_);
+#endif
+/**
+ * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API bool ze_internal_serializer_check(const struct ze_owned_serializer_t *this_);
+#endif
+/**
+ * Constructs a serializer in a gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void ze_internal_serializer_null(struct ze_owned_serializer_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5376,12 +5435,53 @@ ZENOHC_API void ze_serialize_uint64(struct z_owned_bytes_t *this_, uint64_t val)
 ZENOHC_API void ze_serialize_uint8(struct z_owned_bytes_t *this_, uint8_t val);
 #endif
 /**
- * @brief Gets serializer for`this_`.
- * @note Creating another writer or serializer while previous one is still in use is undefined behaviour.
+ * Drops `this_`, resetting it to gravestone value.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void ze_serializer_drop(struct ze_moved_serializer_t *this_);
+#endif
+/**
+ * @brief Constructs a serializer with empty payload.
+ * @param this_: An uninitialized memory location where serializer is to be constructed.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API z_result_t ze_serializer_empty(struct ze_owned_serializer_t *this_);
+#endif
+/**
+ * @brief Drop serializer and extract underlying `bytes` object it was writing to.
+ * @param this_: A serializer instance.
+ * @param bytes: An uninitialized memory location where `bytes` object` will be written to.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-struct ze_serializer_t ze_serializer(struct z_loaned_bytes_t *this_);
+void ze_serializer_finish(struct ze_moved_serializer_t *this_,
+                          struct z_owned_bytes_t *bytes);
+#endif
+/**
+ * @brief Constructs a serializer initializing it with `bytes`.
+ * @param this_: An uninitialized memory location where serializer is to be constructed.
+ * @param bytes: Data to initialize writer with.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t ze_serializer_from_bytes(struct ze_owned_serializer_t *this_,
+                                    struct z_moved_bytes_t *bytes);
+#endif
+/**
+ * Borrows serializer.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct ze_loaned_serializer_t *ze_serializer_loan(const struct ze_owned_serializer_t *this_);
+#endif
+/**
+ * Muatably borrows serializer.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct ze_loaned_serializer_t *ze_serializer_loan_mut(struct ze_owned_serializer_t *this_);
 #endif
 /**
  * Serializes a data from buffer.
@@ -5392,7 +5492,7 @@ struct ze_serializer_t ze_serializer(struct z_loaned_bytes_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_buf(struct ze_serializer_t *this_,
+void ze_serializer_serialize_buf(struct ze_loaned_serializer_t *this_,
                                  const uint8_t *data,
                                  size_t len);
 #endif
@@ -5400,37 +5500,37 @@ void ze_serializer_serialize_buf(struct ze_serializer_t *this_,
  * Serializes a double.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_double(struct ze_serializer_t *this_, double val);
+ZENOHC_API void ze_serializer_serialize_double(struct ze_loaned_serializer_t *this_, double val);
 #endif
 /**
  * Serializes a float.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_float(struct ze_serializer_t *this_, float val);
+ZENOHC_API void ze_serializer_serialize_float(struct ze_loaned_serializer_t *this_, float val);
 #endif
 /**
  * Serializes a signed integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_int16(struct ze_serializer_t *this_, int16_t val);
+ZENOHC_API void ze_serializer_serialize_int16(struct ze_loaned_serializer_t *this_, int16_t val);
 #endif
 /**
  * Serializes a signed integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_int32(struct ze_serializer_t *this_, int32_t val);
+ZENOHC_API void ze_serializer_serialize_int32(struct ze_loaned_serializer_t *this_, int32_t val);
 #endif
 /**
  * Serializes a signed integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_int64(struct ze_serializer_t *this_, int64_t val);
+ZENOHC_API void ze_serializer_serialize_int64(struct ze_loaned_serializer_t *this_, int64_t val);
 #endif
 /**
  * Serializes a signed integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_int8(struct ze_serializer_t *this_, int8_t val);
+ZENOHC_API void ze_serializer_serialize_int8(struct ze_loaned_serializer_t *this_, int8_t val);
 #endif
 /**
  * Initiates serialization of a sequence of multiple elements.
@@ -5439,60 +5539,60 @@ ZENOHC_API void ze_serializer_serialize_int8(struct ze_serializer_t *this_, int8
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_sequence_begin(struct ze_serializer_t *this_,
+void ze_serializer_serialize_sequence_begin(struct ze_loaned_serializer_t *this_,
                                             size_t len);
 #endif
 /**
  * Finalizes serialization of a sequence of multiple elements.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_sequence_end(struct ze_serializer_t *this_);
+ZENOHC_API void ze_serializer_serialize_sequence_end(struct ze_loaned_serializer_t *this_);
 #endif
 /**
  * Serializes a slice.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_slice(struct ze_serializer_t *this_,
+void ze_serializer_serialize_slice(struct ze_loaned_serializer_t *this_,
                                    const struct z_loaned_slice_t *slice);
 #endif
 /**
  * Serializes a null-terminated string.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_str(struct ze_serializer_t *this_, const char *str);
+ZENOHC_API void ze_serializer_serialize_str(struct ze_loaned_serializer_t *this_, const char *str);
 #endif
 /**
  * Serializes a string.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_string(struct ze_serializer_t *this_,
+void ze_serializer_serialize_string(struct ze_loaned_serializer_t *this_,
                                     const struct z_loaned_string_t *str);
 #endif
 /**
  * Serializes an unsigned integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_uint16(struct ze_serializer_t *this_, uint16_t val);
+ZENOHC_API void ze_serializer_serialize_uint16(struct ze_loaned_serializer_t *this_, uint16_t val);
 #endif
 /**
  * Serializes an unsigned integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_uint32(struct ze_serializer_t *this_, uint32_t val);
+ZENOHC_API void ze_serializer_serialize_uint32(struct ze_loaned_serializer_t *this_, uint32_t val);
 #endif
 /**
  * Serializes an unsigned integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_uint64(struct ze_serializer_t *this_, uint64_t val);
+ZENOHC_API void ze_serializer_serialize_uint64(struct ze_loaned_serializer_t *this_, uint64_t val);
 #endif
 /**
  * Serializes an unsigned integer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_serializer_serialize_uint8(struct ze_serializer_t *this_, uint8_t val);
+ZENOHC_API void ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_, uint8_t val);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

@@ -15,19 +15,108 @@
 use std::{mem::MaybeUninit, slice::from_raw_parts};
 
 use libc::strlen;
+use zenoh::bytes::ZBytesWriter;
 use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
 };
 
-pub use crate::opaque_types::{ze_deserializer_t, ze_serializer_t};
+pub use crate::opaque_types::{
+    z_moved_bytes_t, ze_deserializer_t, ze_loaned_serializer_t, ze_moved_serializer_t,
+    ze_owned_serializer_t,
+};
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
 };
 
-decl_c_type! {loaned(ze_serializer_t, ZSerializer<'static>)}
+decl_c_type! {
+    owned(ze_owned_serializer_t, option ZSerializer),
+    loaned(ze_loaned_serializer_t),
+}
+
+/// @brief Constructs a serializer initializing it with `bytes`.
+/// @param this_: An uninitialized memory location where serializer is to be constructed.
+/// @param bytes: Data to initialize writer with.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+extern "C" fn ze_serializer_from_bytes(
+    this: &mut MaybeUninit<ze_owned_serializer_t>,
+    bytes: &mut z_moved_bytes_t,
+) -> z_result_t {
+    let w: ZBytesWriter = bytes.take_rust_type().into();
+    let s: ZSerializer = w.into();
+    this.as_rust_type_mut_uninit().write(Some(s));
+    result::Z_OK
+}
+
+/// @brief Constructs a serializer with empty payload.
+/// @param this_: An uninitialized memory location where serializer is to be constructed.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+extern "C" fn ze_serializer_empty(this: &mut MaybeUninit<ze_owned_serializer_t>) -> z_result_t {
+    this.as_rust_type_mut_uninit()
+        .write(Some(ZSerializer::new()));
+    result::Z_OK
+}
+
+/// Drops `this_`, resetting it to gravestone value.
+#[no_mangle]
+extern "C" fn ze_serializer_drop(this_: &mut ze_moved_serializer_t) {
+    let _ = this_.take_rust_type();
+}
+
+/// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
+#[no_mangle]
+extern "C" fn ze_internal_serializer_check(this: &ze_owned_serializer_t) -> bool {
+    this.as_rust_type_ref().is_some()
+}
+
+/// Borrows serializer.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_serializer_loan(
+    this: &ze_owned_serializer_t,
+) -> &ze_loaned_serializer_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
+}
+
+/// Muatably borrows serializer.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_serializer_loan_mut(
+    this: &mut ze_owned_serializer_t,
+) -> &mut ze_loaned_serializer_t {
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
+/// Constructs a serializer in a gravestone state.
+#[no_mangle]
+pub extern "C" fn ze_internal_serializer_null(this_: &mut MaybeUninit<ze_owned_serializer_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// @brief Drop serializer and extract underlying `bytes` object it was writing to.
+/// @param this_: A serializer instance.
+/// @param bytes: An uninitialized memory location where `bytes` object` will be written to.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn ze_serializer_finish(
+    this: &mut ze_moved_serializer_t,
+    bytes: &mut MaybeUninit<z_owned_bytes_t>,
+) {
+    bytes
+        .as_rust_type_mut_uninit()
+        .write(this.take_rust_type().unwrap_unchecked().finish());
+}
+
 decl_c_type! {loaned(ze_deserializer_t, ZDeserializer<'static>)}
 
 fn ze_serialize_arithmetic<T>(this: &mut MaybeUninit<z_owned_bytes_t>, val: &T)
@@ -279,20 +368,13 @@ pub unsafe extern "C" fn ze_deserialize_string(
     }
 }
 
-/// @brief Gets serializer for`this_`.
-/// @note Creating another writer or serializer while previous one is still in use is undefined behaviour.
-#[no_mangle]
-extern "C" fn ze_serializer(this: &'static mut z_loaned_bytes_t) -> ze_serializer_t {
-    *ZSerializer::new(this.as_rust_type_mut()).as_loaned_c_type_ref()
-}
-
 /// @brief Gets deserializer for`this_`.
 #[no_mangle]
-extern "C" fn ze_deserializer(this: &'static z_loaned_bytes_t) -> ze_deserializer_t {
+extern "C" fn ze_deserializer_from_bytes(this: &'static z_loaned_bytes_t) -> ze_deserializer_t {
     *ZDeserializer::new(this.as_rust_type_ref()).as_loaned_c_type_ref()
 }
 
-fn ze_serializer_serialize_arithmetic<T>(this: &mut ze_serializer_t, val: &T)
+fn ze_serializer_serialize_arithmetic<T>(this: &mut ze_loaned_serializer_t, val: &T)
 where
     T: Serialize,
 {
@@ -320,61 +402,61 @@ where
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint8(this_: &mut ze_serializer_t, val: u8) {
+pub extern "C" fn ze_serializer_serialize_uint8(this_: &mut ze_loaned_serializer_t, val: u8) {
     ze_serializer_serialize_arithmetic::<u8>(this_, &val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint16(this_: &mut ze_serializer_t, val: u16) {
+pub extern "C" fn ze_serializer_serialize_uint16(this_: &mut ze_loaned_serializer_t, val: u16) {
     ze_serializer_serialize_arithmetic::<u16>(this_, &val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint32(this_: &mut ze_serializer_t, val: u32) {
+pub extern "C" fn ze_serializer_serialize_uint32(this_: &mut ze_loaned_serializer_t, val: u32) {
     ze_serializer_serialize_arithmetic::<u32>(this_, &val);
 }
 
 /// Serializes an unsigned integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint64(this_: &mut ze_serializer_t, val: u64) {
+pub extern "C" fn ze_serializer_serialize_uint64(this_: &mut ze_loaned_serializer_t, val: u64) {
     ze_serializer_serialize_arithmetic::<u64>(this_, &val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int8(this_: &mut ze_serializer_t, val: i8) {
+pub extern "C" fn ze_serializer_serialize_int8(this_: &mut ze_loaned_serializer_t, val: i8) {
     ze_serializer_serialize_arithmetic::<i8>(this_, &val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int16(this_: &mut ze_serializer_t, val: i16) {
+pub extern "C" fn ze_serializer_serialize_int16(this_: &mut ze_loaned_serializer_t, val: i16) {
     ze_serializer_serialize_arithmetic::<i16>(this_, &val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int32(this_: &mut ze_serializer_t, val: i32) {
+pub extern "C" fn ze_serializer_serialize_int32(this_: &mut ze_loaned_serializer_t, val: i32) {
     ze_serializer_serialize_arithmetic::<i32>(this_, &val);
 }
 
 /// Serializes a signed integer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int64(this_: &mut ze_serializer_t, val: i64) {
+pub extern "C" fn ze_serializer_serialize_int64(this_: &mut ze_loaned_serializer_t, val: i64) {
     ze_serializer_serialize_arithmetic::<i64>(this_, &val);
 }
 
 /// Serializes a float.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_float(this_: &mut ze_serializer_t, val: f32) {
+pub extern "C" fn ze_serializer_serialize_float(this_: &mut ze_loaned_serializer_t, val: f32) {
     ze_serializer_serialize_arithmetic::<f32>(this_, &val);
 }
 
 /// Serializes a double.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_double(this_: &mut ze_serializer_t, val: f64) {
+pub extern "C" fn ze_serializer_serialize_double(this_: &mut ze_loaned_serializer_t, val: f64) {
     ze_serializer_serialize_arithmetic::<f64>(this_, &val);
 }
 
@@ -481,7 +563,7 @@ pub extern "C" fn ze_deserializer_deserialize_double(
 /// Serializes a slice.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_slice(
-    this: &mut ze_serializer_t,
+    this: &mut ze_loaned_serializer_t,
     slice: &z_loaned_slice_t,
 ) {
     let cslice = slice.as_rust_type_ref().slice();
@@ -495,7 +577,7 @@ pub extern "C" fn ze_serializer_serialize_slice(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_buf(
-    this: &mut ze_serializer_t,
+    this: &mut ze_loaned_serializer_t,
     data: *const u8,
     len: usize,
 ) {
@@ -527,7 +609,7 @@ pub extern "C" fn ze_deserializer_deserialize_slice(
 /// Serializes a string.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_string(
-    this: &mut ze_serializer_t,
+    this: &mut ze_loaned_serializer_t,
     str: &z_loaned_string_t,
 ) {
     let cslice = str.as_rust_type_ref().slice();
@@ -537,7 +619,7 @@ pub extern "C" fn ze_serializer_serialize_string(
 /// Serializes a null-terminated string.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_str(
-    this: &mut ze_serializer_t,
+    this: &mut ze_loaned_serializer_t,
     str: *const libc::c_char,
 ) {
     let slice = unsafe { from_raw_parts(str as *const u8, strlen(str)) };
@@ -567,14 +649,17 @@ pub extern "C" fn ze_deserializer_deserialize_string(
 /// @param this_: A serializer instance.
 /// @param len: Length of the sequence. Could be read during deserialization using `ze_deserializer_deserialize_sequence_begin`.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_sequence_begin(this: &mut ze_serializer_t, len: usize) {
-    this.as_rust_type_mut().serialize(VarInt::<usize>::new(len));
+pub extern "C" fn ze_serializer_serialize_sequence_begin(
+    this: &mut ze_loaned_serializer_t,
+    len: usize,
+) {
+    this.as_rust_type_mut().serialize(VarInt::<usize>(len));
 }
 
 /// Finalizes serialization of a sequence of multiple elements.
 #[no_mangle]
 #[allow(unused_variables)]
-pub extern "C" fn ze_serializer_serialize_sequence_end(this: &mut ze_serializer_t) {}
+pub extern "C" fn ze_serializer_serialize_sequence_end(this: &mut ze_loaned_serializer_t) {}
 
 /// Initiates deserialization of a sequence of multiple elements.
 /// @param this_: A serializer instance.
@@ -587,7 +672,7 @@ pub extern "C" fn ze_deserializer_deserialize_sequence_begin(
 ) -> z_result_t {
     match this.as_rust_type_mut().deserialize::<VarInt<usize>>() {
         Ok(l) => {
-            *len = *l.as_inner();
+            *len = l.0;
             result::Z_OK
         }
         Err(e) => {
