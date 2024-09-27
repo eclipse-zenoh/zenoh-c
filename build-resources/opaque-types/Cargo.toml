@@ -13,6 +13,20 @@ shared-memory = [
     "zenoh-protocol/shared-memory",
 ]
 unstable = ["zenoh/unstable", "zenoh-ext/unstable", "dep:zenoh-ext"]
+auth_pubkey = ["zenoh/auth_pubkey"]
+auth_usrpwd = ["zenoh/auth_usrpwd"]
+transport_multilink = ["zenoh/transport_multilink"]
+transport_compression = ["zenoh/transport_compression"]
+transport_quic = ["zenoh/transport_quic"]
+transport_serial = ["zenoh/transport_serial"]
+transport_unixpipe = ["zenoh/transport_unixpipe"]
+transport_tcp = ["zenoh/transport_tcp"]
+transport_tls = ["zenoh/transport_tls"]
+transport_udp = ["zenoh/transport_udp"]
+transport_unixsock-stream = ["zenoh/transport_unixsock-stream"]
+transport_ws = ["zenoh/transport_ws"]
+transport_vsock = ["zenoh/transport_vsock"]
+
 panic = [
 ] # The whole purpose of this project is to generate set of compilation panic messages with calculated structure sizes. To do it the "panic" feature should be set. By default we just want to check if build is successful.
 default = ["zenoh/default"]

@@ -258,10 +258,9 @@ cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.72.0"
 
 It's necessary sometimes to build zenoh-c library with set of features different from default. For example: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake peculiarities)
 
-Available features can be found in Zenoh [Cargo.toml](https://github.com/eclipse-zenoh/zenoh/blob/main/zenoh/Cargo.toml)
-
+Available features can be found in [Cargo.toml](./Cargo.toml)
 ```bash
-cmake ../zenoh-c -DZENOHC_CARGO_FLAGS="--no-default-features;--features=zenoh/transport_tcp,zenoh/transport_udp"
+cmake ../zenoh-c -DZENOHC_CARGO_FLAGS="--no-default-features;--features=transport_tcp,transport_udp"
 ```
 
 ## Versioning

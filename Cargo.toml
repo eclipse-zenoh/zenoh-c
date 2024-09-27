@@ -31,13 +31,32 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-shared-memory = [
-    "zenoh/shared-memory",
-    "dep:zenoh-ext",
-    "zenoh-ext/shared-memory",
-]
+shared-memory = ["zenoh/shared-memory", "dep:zenoh-ext", "zenoh-ext/shared-memory"]
 unstable = ["zenoh/unstable", "zenoh-ext/unstable", "dep:zenoh-ext"]
-default = ["zenoh/default"]
+auth_pubkey = ["zenoh/auth_pubkey"]
+auth_usrpwd = ["zenoh/auth_usrpwd"]
+transport_multilink = ["zenoh/transport_multilink"]
+transport_compression = ["zenoh/transport_compression"]
+transport_quic = ["zenoh/transport_quic"]
+transport_serial = ["zenoh/transport_serial"]
+transport_unixpipe = ["zenoh/transport_unixpipe"]
+transport_tcp = ["zenoh/transport_tcp"]
+transport_tls = ["zenoh/transport_tls"]
+transport_udp = ["zenoh/transport_udp"]
+transport_unixsock-stream = ["zenoh/transport_unixsock-stream"]
+transport_ws = ["zenoh/transport_ws"]
+transport_vsock = ["zenoh/transport_vsock"]
+default = [
+    "auth_pubkey",
+    "auth_usrpwd",
+    "transport_multilink",
+    "transport_compression",
+    "transport_quic",
+    "transport_tcp",
+    "transport_tls",
+    "transport_udp",
+    "transport_ws",
+]
 
 [badges]
 maintenance = { status = "actively-developed" }
@@ -55,12 +74,10 @@ rand = "0.8.5"
 spin = "0.9.5"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_memory_leak", default-features = false, features = [
-    "internal",
-] }
-zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_memory_leak", optional = true }
+zenoh = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_memory_leak", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_memory_leak" , optional = true }
 zenoh-runtime = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_memory_leak" }
-zenoh-util = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_memory_leak" }
+zenoh-util = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "fix_memory_leak"  }
 flume = "*"
 
 [build-dependencies]

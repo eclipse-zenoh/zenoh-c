@@ -83,6 +83,8 @@ Functions
 .. doxygenfunction:: z_string_array_clone
 
 .. doxygenfunction:: z_string_array_new
+.. doxygenfunction:: z_string_array_push_by_alias
+.. doxygenfunction:: z_string_array_push_by_copy
 .. doxygenfunction:: z_string_array_get
 .. doxygenfunction:: z_string_array_len
 .. doxygenfunction:: z_string_array_is_empty
@@ -225,6 +227,7 @@ Functions
 .. doxygenfunction:: z_encoding_set_schema_from_str
 .. doxygenfunction:: z_encoding_set_schema_from_substr
 .. doxygenfunction:: z_encoding_to_string
+.. doxygenfunction:: z_encoding_equals
 
 Predefined Encodings
 ^^^^^^^^^^^^^^^^^^^^
@@ -253,7 +256,7 @@ Predefined Encodings
 .. doxygenfunction:: z_encoding_application_yaml
 .. doxygenfunction:: z_encoding_text_yaml
 .. doxygenfunction:: z_encoding_text_json5
-.. doxygenfunction:: z_encoding_application_python_serialized_objects
+.. doxygenfunction:: z_encoding_application_python_serialized_object
 .. doxygenfunction:: z_encoding_application_protobuf
 .. doxygenfunction:: z_encoding_application_java_serialized_object
 .. doxygenfunction:: z_encoding_application_openmetrics_text

@@ -30,7 +30,10 @@ int main(int argc, char** argv) {
     z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
     uint8_t* value = (uint8_t*)z_malloc(args.size);
-    memset(value, 1, args.size);
+    memset(value, 0, args.size);
+    for (size_t i = 0; i < args.size; ++i) {
+        value[i] = i % 10;
+    }
 
     z_owned_session_t s;
     if (z_open(&s, z_move(config), NULL) < 0) {
@@ -52,9 +55,11 @@ int main(int argc, char** argv) {
 
     printf("Press CTRL-C to quit...\n");
     z_owned_bytes_t payload;
+    z_bytes_from_buf(&payload, value, args.size, NULL, NULL);
     while (1) {
-        z_bytes_from_buf(&payload, value, args.size, NULL, NULL);
-        z_publisher_put(z_loan(pub), z_move(payload), NULL);
+        z_owned_bytes_t to_send;
+        z_bytes_clone(&to_send, z_loan(payload));
+        z_publisher_put(z_loan(pub), z_move(to_send), NULL);
     }
 
     z_undeclare_publisher(z_move(pub));
