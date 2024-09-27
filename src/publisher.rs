@@ -170,6 +170,15 @@ pub unsafe extern "C" fn z_publisher_loan_mut(
     this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed publisher
+#[no_mangle]
+pub extern "C" fn z_publisher_take_loaned(
+    dst: &mut MaybeUninit<z_owned_publisher_t>,
+    src: &mut z_loaned_publisher_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Options passed to the `z_publisher_put()` function.
 #[repr(C)]
 pub struct z_publisher_put_options_t {

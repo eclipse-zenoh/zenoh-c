@@ -168,6 +168,15 @@ pub extern "C" fn z_encoding_loan_mut(this_: &mut z_owned_encoding_t) -> &mut z_
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed encoding
+#[no_mangle]
+pub extern "C" fn z_encoding_take_loaned(
+    dst: &mut MaybeUninit<z_owned_encoding_t>,
+    src: &mut z_loaned_encoding_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Constructs an owned copy of the encoding in provided uninitilized memory location.
 #[no_mangle]
 pub extern "C" fn z_encoding_clone(

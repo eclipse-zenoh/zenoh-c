@@ -135,6 +135,15 @@ pub unsafe extern "C" fn z_shm_provider_loan_mut(
         .as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed SHM Provider
+#[no_mangle]
+pub extern "C" fn z_shm_provider_take_loaned(
+    dst: &mut MaybeUninit<z_owned_shm_provider_t>,
+    src: &mut z_loaned_shm_provider_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes SHM Provider.
 #[no_mangle]

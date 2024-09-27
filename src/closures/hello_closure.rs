@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_hello_t,
 };
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -149,6 +149,15 @@ pub extern "C" fn z_closure_hello_loan_mut(
     closure: &mut z_owned_closure_hello_t,
 ) -> &mut z_loaned_closure_hello_t {
     closure.as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed closure
+#[no_mangle]
+pub extern "C" fn z_closure_hello_take_loaned(
+    dst: &mut MaybeUninit<z_owned_closure_hello_t>,
+    src: &mut z_loaned_closure_hello_t,
+) {
+    dst.write(std::mem::take(src.as_owned_c_type_mut()));
 }
 
 /// @brief Constructs closure.

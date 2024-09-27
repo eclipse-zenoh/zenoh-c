@@ -20,7 +20,7 @@ pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_own
 use crate::{
     keyexpr::*,
     result,
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 decl_c_type!(
@@ -51,9 +51,16 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 pub unsafe extern "C" fn z_subscriber_loan_mut(this_: &mut z_owned_subscriber_t) -> &mut z_loaned_subscriber_t {
     this_
         .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
         .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed subscriber
+#[no_mangle]
+pub extern "C" fn z_subscriber_take_loaned(
+    dst: &mut MaybeUninit<z_owned_subscriber_t>,
+    src: &mut z_loaned_subscriber_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Options passed to the `z_declare_subscriber()` function.

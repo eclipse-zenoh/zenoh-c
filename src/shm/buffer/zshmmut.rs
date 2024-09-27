@@ -101,6 +101,15 @@ pub unsafe extern "C" fn z_shm_mut_loan_mut(
     shmmut.as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed shm_mut
+#[no_mangle]
+pub extern "C" fn z_shm_mut_take_loaned(
+    dst: &mut MaybeUninit<z_owned_shm_mut_t>,
+    src: &mut z_loaned_shm_mut_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes ZShmMut slice.
 #[no_mangle]

@@ -26,7 +26,7 @@ use crate::transmute::IntoCType;
 use crate::{
     result,
     transmute::{
-        IntoRustType, LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType,
+        IntoRustType, LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType
     },
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
@@ -63,9 +63,16 @@ pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loa
 pub unsafe extern "C" fn z_queryable_loan_mut(this_: &mut z_owned_queryable_t) -> &mut z_loaned_queryable_t {
     this_
         .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
         .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed queryable
+#[no_mangle]
+pub extern "C" fn z_queryable_take_loaned(
+    dst: &mut MaybeUninit<z_owned_queryable_t>,
+    src: &mut z_loaned_queryable_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
@@ -101,9 +108,16 @@ pub unsafe extern "C" fn z_query_loan(this_: &z_owned_query_t) -> &z_loaned_quer
 pub unsafe extern "C" fn z_query_loan_mut(this_: &mut z_owned_query_t) -> &mut z_loaned_query_t {
     this_
         .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
         .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed query
+#[no_mangle]
+pub extern "C" fn z_query_take_loaned(
+    dst: &mut MaybeUninit<z_owned_query_t>,
+    src: &mut z_loaned_query_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Destroys the query resetting it to its gravestone value.

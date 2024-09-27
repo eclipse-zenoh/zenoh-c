@@ -88,6 +88,15 @@ pub extern "C" fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loan
     this.as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed config.
+#[no_mangle]
+pub extern "C" fn z_config_take_loaned(
+    dst: &mut MaybeUninit<z_owned_config_t>,
+    src: &mut z_loaned_config_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Constructs a new empty configuration.
 #[no_mangle]
 pub extern "C" fn z_config_default(

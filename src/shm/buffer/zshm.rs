@@ -20,7 +20,7 @@ use std::{
 use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{
-    transmute::{LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_loaned_shm_mut_t, z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t,
 };
 
@@ -80,26 +80,31 @@ pub unsafe extern "C" fn z_shm_loan(this_: &z_owned_shm_t) -> &z_loaned_shm_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_loan_mut(this_: &mut z_owned_shm_t) -> &mut z_loaned_shm_t {
-    let this: &mut zshm = this_
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .borrow_mut();
-    this.as_loaned_c_type_mut()
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed shm
+#[no_mangle]
+pub extern "C" fn z_shm_take_loaned(
+    dst: &mut MaybeUninit<z_owned_shm_t>,
+    src: &mut z_loaned_shm_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Mutably borrows ZShm slice as borrowed ZShmMut slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_try_mut(this_: &mut z_owned_shm_t) -> *mut z_loaned_shm_mut_t {
+pub unsafe extern "C" fn z_shm_try_mut(this_: &mut z_owned_shm_t) -> &mut z_loaned_shm_mut_t {
     let this = this_.as_rust_type_mut();
     let this: &mut ZShm = this.as_mut().unwrap_unchecked();
     let shm: &mut zshm = this.borrow_mut();
     match shm.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as_loaned_c_type_mut()
+            v.as
+            // v.as_loaned_c_type_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }

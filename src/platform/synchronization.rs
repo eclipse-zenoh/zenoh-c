@@ -55,6 +55,15 @@ pub unsafe extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed mutex
+#[no_mangle]
+pub extern "C" fn z_mutex_take_loaned(
+    dst: &mut MaybeUninit<z_owned_mutex_t>,
+    src: &mut z_loaned_mutex_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
 /// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]

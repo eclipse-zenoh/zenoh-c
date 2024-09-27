@@ -211,3 +211,14 @@ pub unsafe extern "C" fn z_shm_client_storage_loan_mut(
         .unwrap_unchecked()
         .as_loaned_c_type_mut()
 }
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Takes ownership of the mutably borrowed SHM Client Storage.
+#[no_mangle]
+pub extern "C" fn z_shm_client_storage_take_loaned(
+    dst: &mut MaybeUninit<z_owned_shm_client_storage_t>,
+    src: &mut z_loaned_shm_client_storage_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+

@@ -347,6 +347,12 @@ pub extern "C" fn z_slice_loan_mut(this_: &mut z_owned_slice_t) -> &mut z_loaned
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
+/// Takes ownership of mutably borrowed slice
+#[no_mangle]
+pub extern "C" fn z_slice_take_loaned(dst: &mut MaybeUninit<z_owned_slice_t>, src: &mut z_loaned_slice_t) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Constructs an owned copy of a slice.
 #[no_mangle]
 pub extern "C" fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this_: &z_loaned_slice_t) {
@@ -604,6 +610,12 @@ pub extern "C" fn z_string_loan_mut(this_: &mut z_owned_string_t) -> &mut z_loan
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
+/// Takes ownership of mutably borrowed string.
+#[no_mangle]
+pub extern "C" fn z_string_take_loaned(dst: &mut MaybeUninit<z_owned_string_t>, src: &mut z_loaned_string_t) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Borrows view string.
 #[no_mangle]
 pub extern "C" fn z_view_string_loan(this_: &z_view_string_t) -> &z_loaned_string_t {
@@ -801,6 +813,15 @@ pub unsafe extern "C" fn z_string_array_loan_mut(
     this: &mut z_owned_string_array_t,
 ) -> &mut z_loaned_string_array_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of mutably borrowed string array.
+#[no_mangle]
+pub extern "C" fn z_string_array_take_loaned(
+    dst: &mut MaybeUninit<z_owned_string_array_t>,
+    src: &mut z_loaned_string_array_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// @return number of elements in the array.

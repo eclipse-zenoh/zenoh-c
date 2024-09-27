@@ -153,6 +153,15 @@ pub extern "C" fn z_closure_zid_loan_mut(closure: &mut z_owned_closure_zid_t) ->
     closure.as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed closure
+#[no_mangle]
+pub extern "C" fn z_closure_zid_take_loaned(
+    dst: &mut MaybeUninit<z_owned_closure_zid_t>,
+    src: &mut z_loaned_closure_zid_t,
+) {
+    dst.write(std::mem::take(src.as_owned_c_type_mut()));
+}
+
 /// @brief Constructs closure.
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.
