@@ -22,7 +22,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, CString, CStringView, ZVector,
 };
@@ -49,6 +49,24 @@ pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hell
         .as_ref()
         .unwrap()
         .as_loaned_c_type_ref()
+}
+
+/// Borrows hello message.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_loan_mut(this_: &mut z_owned_hello_t) -> &mut z_loaned_hello_t {
+    this_
+        .as_rust_type_mut()
+        .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed hello
+#[no_mangle]
+pub extern "C" fn z_hello_take_loaned(
+    dst: &mut MaybeUninit<z_owned_hello_t>,
+    src: &mut z_loaned_hello_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
@@ -183,9 +201,10 @@ pub extern "C" fn z_scout(
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
                 let mut owned_h = Some(h);
-                z_closure_hello_call(z_closure_hello_loan(&callback), unsafe {
-                    owned_h.as_mut().unwrap_unchecked().as_loaned_c_type_mut()
-                })
+                z_closure_hello_call(
+                    z_closure_hello_loan(&callback),
+                    owned_h.as_loaned_c_type_mut(),
+                )
             })
             .await
             .unwrap();

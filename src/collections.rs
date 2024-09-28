@@ -25,7 +25,9 @@ use libc::strlen;
 
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
 };
 
 pub struct CSlice {
@@ -339,6 +341,18 @@ pub extern "C" fn z_slice_loan(this_: &z_owned_slice_t) -> &z_loaned_slice_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Mutably borrows slice.
+#[no_mangle]
+pub extern "C" fn z_slice_loan_mut(this_: &mut z_owned_slice_t) -> &mut z_loaned_slice_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of mutably borrowed slice
+#[no_mangle]
+pub extern "C" fn z_slice_take_loaned(dst: &mut MaybeUninit<z_owned_slice_t>, src: &mut z_loaned_slice_t) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Constructs an owned copy of a slice.
 #[no_mangle]
 pub extern "C" fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this_: &z_loaned_slice_t) {
@@ -483,6 +497,12 @@ impl Deref for CStringOwned {
     }
 }
 
+impl DerefMut for CStringOwned {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 impl Deref for CStringView {
     type Target = CString;
     fn deref(&self) -> &Self::Target {
@@ -582,6 +602,18 @@ pub unsafe extern "C" fn z_view_string_empty(this_: &mut MaybeUninit<z_view_stri
 #[no_mangle]
 pub extern "C" fn z_string_loan(this_: &z_owned_string_t) -> &z_loaned_string_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
+}
+
+/// Mutably borrows string.
+#[no_mangle]
+pub extern "C" fn z_string_loan_mut(this_: &mut z_owned_string_t) -> &mut z_loaned_string_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of mutably borrowed string.
+#[no_mangle]
+pub extern "C" fn z_string_take_loaned(dst: &mut MaybeUninit<z_owned_string_t>, src: &mut z_loaned_string_t) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Borrows view string.
@@ -781,6 +813,15 @@ pub unsafe extern "C" fn z_string_array_loan_mut(
     this: &mut z_owned_string_array_t,
 ) -> &mut z_loaned_string_array_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of mutably borrowed string array.
+#[no_mangle]
+pub extern "C" fn z_string_array_take_loaned(
+    dst: &mut MaybeUninit<z_owned_string_array_t>,
+    src: &mut z_loaned_string_array_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// @return number of elements in the array.

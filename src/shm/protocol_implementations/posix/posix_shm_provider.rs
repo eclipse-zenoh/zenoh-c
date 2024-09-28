@@ -25,7 +25,7 @@ use zenoh::{
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
     shm::provider::shm_provider::CSHMProvider,
-    transmute::{RustTypeRef, RustTypeRefUninit},
+    transmute::{RustTypeMutUninit, RustTypeRef},
     z_loaned_memory_layout_t, z_owned_shm_provider_t,
 };
 

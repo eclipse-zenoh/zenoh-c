@@ -26,7 +26,7 @@ use super::chunk::z_allocated_chunk_t;
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
     shm::buffer::zshmmut::z_internal_shm_mut_null,
-    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t,
     z_moved_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
     z_owned_shm_mut_t,
@@ -173,6 +173,28 @@ pub unsafe extern "C" fn z_memory_layout_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Mutably borrows Memory Layout.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_memory_layout_loan_mut(
+    this: &mut z_owned_memory_layout_t,
+) -> &mut z_loaned_memory_layout_t {
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed Memory Layout.
+#[no_mangle]
+pub extern "C" fn z_memory_layout_take_loaned(
+    dst: &mut MaybeUninit<z_owned_memory_layout_t>,
+    src: &mut z_loaned_memory_layout_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Memory Layout.
 #[no_mangle]
 pub extern "C" fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
@@ -253,6 +275,28 @@ pub unsafe extern "C" fn z_chunk_alloc_result_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Mutably borrows Chunk Alloc Result.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_chunk_alloc_result_loan_mut(
+    this: &mut z_owned_chunk_alloc_result_t,
+) -> &mut z_loaned_chunk_alloc_result_t {
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed Chunk Alloc Result.
+#[no_mangle]
+pub extern "C" fn z_chunk_alloc_result_take_loaned(
+    dst: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
+    src: &mut z_loaned_chunk_alloc_result_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

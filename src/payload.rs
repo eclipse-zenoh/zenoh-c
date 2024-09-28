@@ -35,7 +35,9 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_EPARSE, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CString,
     CStringOwned,
@@ -82,6 +84,15 @@ unsafe extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
 #[no_mangle]
 extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed bytes
+#[no_mangle]
+pub extern "C" fn z_bytes_take_loaned(
+    dst: &mut MaybeUninit<z_owned_bytes_t>,
+    src: &mut z_loaned_bytes_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Returns ``true`` if `this_` is empty, ``false`` otherwise.

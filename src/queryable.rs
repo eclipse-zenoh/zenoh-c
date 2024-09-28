@@ -25,7 +25,9 @@ pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 use crate::transmute::IntoCType;
 use crate::{
     result,
-    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        IntoRustType, LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType
+    },
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
@@ -55,6 +57,24 @@ pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loa
         .as_loaned_c_type_ref()
 }
 
+// Mutably borrows Queryable
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_queryable_loan_mut(this_: &mut z_owned_queryable_t) -> &mut z_loaned_queryable_t {
+    this_
+        .as_rust_type_mut()
+        .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed queryable
+#[no_mangle]
+pub extern "C" fn z_queryable_take_loaned(
+    dst: &mut MaybeUninit<z_owned_queryable_t>,
+    src: &mut z_loaned_queryable_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
     owned(z_owned_query_t, option Query),
@@ -74,13 +94,32 @@ pub extern "C" fn z_internal_query_check(query: &z_owned_query_t) -> bool {
 /// Borrows the query.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loaned_query_t {
+pub unsafe extern "C" fn z_query_loan(this_: &z_owned_query_t) -> &z_loaned_query_t {
     this_
         .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
+
+/// Mutably borrows the query.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_query_loan_mut(this_: &mut z_owned_query_t) -> &mut z_loaned_query_t {
+    this_
+        .as_rust_type_mut()
+        .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed query
+#[no_mangle]
+pub extern "C" fn z_query_take_loaned(
+    dst: &mut MaybeUninit<z_owned_query_t>,
+    src: &mut z_loaned_query_t,
+) {
+    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+}
+
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this_: &mut z_moved_query_t) {
@@ -235,12 +274,10 @@ pub extern "C" fn z_declare_queryable(
     let queryable = builder
         .callback(move |query| {
             let mut owned_query = Some(query);
-            z_closure_query_call(z_closure_query_loan(&callback), unsafe {
-                owned_query
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
+            z_closure_query_call(
+                z_closure_query_loan(&callback),
+                owned_query.as_loaned_c_type_mut(),
+            )
         })
         .wait();
     match queryable {
