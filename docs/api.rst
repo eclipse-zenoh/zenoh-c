@@ -164,7 +164,8 @@ Functions
 .. doxygenfunction:: z_bytes_writer_append
 
 .. doxygenfunction:: ze_serializer_empty
-.. doxygenfunction:: ze_serializer_from_bytes
+.. doxygenfunction:: ze_serializer_from_bytes_writer
+.. doxygenfunction:: ze_serializer_to_bytes_writer
 .. doxygenfunction:: ze_serializer_finish
 .. doxygenfunction:: ze_serializer_serialize_slice
 .. doxygenfunction:: ze_serializer_serialize_buf
@@ -183,7 +184,8 @@ Functions
 .. doxygenfunction:: ze_serializer_serialize_sequence_begin
 .. doxygenfunction:: ze_serializer_serialize_sequence_end
 
-.. doxygenfunction:: ze_deserializer_from_bytes
+.. doxygenfunction:: ze_deserializer_from_reader
+.. doxygenfunction:: ze_deserializer_to_reader
 .. doxygenfunction:: ze_deserializer_deserialize_slice
 .. doxygenfunction:: ze_deserializer_deserialize_string
 .. doxygenfunction:: ze_deserializer_deserialize_uint8
