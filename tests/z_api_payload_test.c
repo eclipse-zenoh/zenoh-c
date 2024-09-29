@@ -106,7 +106,8 @@ void test_append(void) {
     z_owned_bytes_t payload;
     z_bytes_copy_from_buf(&payload, data, 5);
     z_owned_bytes_writer_t writer;
-    z_bytes_writer_from_bytes(&writer, z_move(payload));
+    z_bytes_writer_empty(&writer);
+    z_bytes_writer_append(z_loan_mut(writer), z_move(payload));
     {
         z_owned_bytes_t b;
         z_bytes_copy_from_buf(&b, data + 5, 5);

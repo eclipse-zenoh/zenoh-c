@@ -1430,15 +1430,6 @@ ZENOHC_API
 void z_bytes_writer_finish(struct z_moved_bytes_writer_t *this_,
                            struct z_owned_bytes_t *bytes);
 /**
- * @brief Constructs a data writer initializing it with `bytes`.
- * @param this_: An uninitialized memory location where writer is to be constructed.
- * @param bytes: Data to initialize writer with.
- * @return 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_result_t z_bytes_writer_from_bytes(struct z_owned_bytes_writer_t *this_,
-                                     struct z_moved_bytes_t *bytes);
-/**
  * Borrows writer.
  */
 ZENOHC_API
@@ -5229,20 +5220,6 @@ ZENOHC_API
 struct ze_deserializer_t ze_deserializer_from_bytes(const struct z_loaned_bytes_t *this_);
 #endif
 /**
- * @brief Constructs deserializer from a `z_bytes_reader_t`.. The state of deserializer (i.e. underlying data and read position) will be initiated with the reader's state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct ze_deserializer_t ze_deserializer_from_bytes_reader(const struct z_bytes_reader_t *reader);
-#endif
-/**
- * @brief Converts deserializer into a `z_bytes_reader_t`. The state of reader (i.e. underlying data and read position) will be initiated with the serializer's state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_bytes_reader_t ze_deserializer_to_bytes_reader(const struct ze_deserializer_t *deserializer);
-#endif
-/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
  */
@@ -5473,17 +5450,6 @@ void ze_serializer_finish(struct ze_moved_serializer_t *this_,
                           struct z_owned_bytes_t *bytes);
 #endif
 /**
- * @brief Constructs a serializer initializing it with a `bytes writer`.
- * @param this_: An uninitialized memory location where serializer is to be constructed.
- * @param writer: Writer to initialize with. All uderlying writers'data will be moved into deserializer.
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_serializer_from_bytes_writer(struct ze_owned_serializer_t *this_,
-                                           struct z_moved_bytes_writer_t *writer);
-#endif
-/**
  * Borrows serializer.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5607,17 +5573,6 @@ ZENOHC_API void ze_serializer_serialize_uint64(struct ze_loaned_serializer_t *th
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API void ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_, uint8_t val);
-#endif
-/**
- * @brief Converts serializer into 'z_owned_bytes_writer_t'. This corresponds to initializing writer with serializer data.
- * @param this_: A serializer instance.
- * @param writer: An uninitialized memory location where 'z_owned_bytes_writer_t' is to be constructed.
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_serializer_to_bytes_writer(struct ze_moved_serializer_t *this_,
-                                         struct z_owned_bytes_writer_t *writer);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

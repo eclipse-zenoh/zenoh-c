@@ -592,20 +592,6 @@ decl_c_type! {
     loaned(z_loaned_bytes_writer_t),
 }
 
-/// @brief Constructs a data writer initializing it with `bytes`.
-/// @param this_: An uninitialized memory location where writer is to be constructed.
-/// @param bytes: Data to initialize writer with.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-extern "C" fn z_bytes_writer_from_bytes(
-    this: &mut MaybeUninit<z_owned_bytes_writer_t>,
-    bytes: &mut z_moved_bytes_t,
-) -> z_result_t {
-    let w: ZBytesWriter = bytes.take_rust_type().into();
-    this.as_rust_type_mut_uninit().write(Some(w));
-    result::Z_OK
-}
-
 /// @brief Constructs a data writer with empty payload.
 /// @param this_: An uninitialized memory location where writer is to be constructed.
 /// @return 0 in case of success, negative error code otherwise.

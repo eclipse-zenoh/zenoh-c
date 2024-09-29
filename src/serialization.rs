@@ -15,7 +15,6 @@
 use std::{mem::MaybeUninit, slice::from_raw_parts};
 
 use libc::strlen;
-use zenoh::bytes::{ZBytesReader, ZBytesWriter};
 use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
 };
@@ -26,42 +25,13 @@ pub use crate::opaque_types::{
 use crate::{
     result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_bytes_reader_t, z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t,
-    z_moved_bytes_writer_t, z_owned_bytes_t, z_owned_bytes_writer_t, z_owned_slice_t,
+    z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
 };
 
 decl_c_type! {
     owned(ze_owned_serializer_t, option ZSerializer),
     loaned(ze_loaned_serializer_t),
-}
-
-/// @brief Constructs a serializer initializing it with a `bytes writer`.
-/// @param this_: An uninitialized memory location where serializer is to be constructed.
-/// @param writer: Writer to initialize with. All uderlying writers'data will be moved into deserializer.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-extern "C" fn ze_serializer_from_bytes_writer(
-    this: &mut MaybeUninit<ze_owned_serializer_t>,
-    writer: &mut z_moved_bytes_writer_t,
-) -> z_result_t {
-    let s: ZSerializer = unsafe { writer.take_rust_type().unwrap_unchecked().into() };
-    this.as_rust_type_mut_uninit().write(Some(s));
-    result::Z_OK
-}
-
-/// @brief Converts serializer into 'z_owned_bytes_writer_t'. This corresponds to initializing writer with serializer data.
-/// @param this_: A serializer instance.
-/// @param writer: An uninitialized memory location where 'z_owned_bytes_writer_t' is to be constructed.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-extern "C" fn ze_serializer_to_bytes_writer(
-    this: &mut ze_moved_serializer_t,
-    writer: &mut MaybeUninit<z_owned_bytes_writer_t>,
-) -> z_result_t {
-    let w: ZBytesWriter = unsafe { std::mem::transmute(this.take_rust_type().unwrap_unchecked()) };
-    writer.as_rust_type_mut_uninit().write(Some(w));
-    result::Z_OK
 }
 
 /// @brief Constructs a serializer with empty payload.
@@ -385,25 +355,6 @@ pub unsafe extern "C" fn ze_deserialize_string(
 #[no_mangle]
 extern "C" fn ze_deserializer_from_bytes(this: &'static z_loaned_bytes_t) -> ze_deserializer_t {
     *ZDeserializer::new(this.as_rust_type_ref()).as_loaned_c_type_ref()
-}
-
-/// @brief Constructs deserializer from a `z_bytes_reader_t`.. The state of deserializer (i.e. underlying data and read position) will be initiated with the reader's state.
-#[no_mangle]
-extern "C" fn ze_deserializer_from_bytes_reader(
-    reader: *const z_bytes_reader_t,
-) -> ze_deserializer_t {
-    let r: ZBytesReader = unsafe { std::mem::transmute(reader.read()) };
-    let d: ZDeserializer = r.into();
-    *d.as_loaned_c_type_ref()
-}
-
-/// @brief Converts deserializer into a `z_bytes_reader_t`. The state of reader (i.e. underlying data and read position) will be initiated with the serializer's state.
-#[no_mangle]
-extern "C" fn ze_deserializer_to_bytes_reader(
-    deserializer: *const ze_deserializer_t,
-) -> z_bytes_reader_t {
-    let r: ZBytesReader = unsafe { std::mem::transmute(deserializer.read()) };
-    *r.as_loaned_c_type_ref()
 }
 
 fn ze_serializer_serialize_arithmetic<T>(this: &mut ze_loaned_serializer_t, val: &T)
