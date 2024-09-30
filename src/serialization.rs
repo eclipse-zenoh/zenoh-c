@@ -330,7 +330,7 @@ pub extern "C" fn ze_deserialize_slice(
             slice
                 .as_rust_type_mut_uninit()
                 .write(CSliceOwned::default());
-            result::Z_EIO
+            result::Z_EDESERIALIZE
         }
     }
 }
@@ -379,7 +379,7 @@ pub unsafe extern "C" fn ze_deserialize_string(
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {}", e);
             str.as_rust_type_mut_uninit().write(CStringOwned::default());
-            result::Z_EIO
+            result::Z_EDESERIALIZE
         }
     }
 }
@@ -422,7 +422,7 @@ where
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {:?}", e);
-            result::Z_EPARSE
+            result::Z_EDESERIALIZE
         }
     }
 }
@@ -651,7 +651,7 @@ pub extern "C" fn ze_deserializer_deserialize_slice(
             slice
                 .as_rust_type_mut_uninit()
                 .write(CSliceOwned::default());
-            result::Z_EIO
+            result::Z_EDESERIALIZE
         }
     }
 }
@@ -693,7 +693,7 @@ pub extern "C" fn ze_deserializer_deserialize_string(
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {}", e);
             str.as_rust_type_mut_uninit().write(CStringOwned::default());
-            result::Z_EIO
+            result::Z_EDESERIALIZE
         }
     }
 }
@@ -734,7 +734,7 @@ pub extern "C" fn ze_deserializer_deserialize_sequence_begin(
         Err(e) => {
             tracing::error!("Failed to read the sequence length: {}", e);
             *len = 0;
-            result::Z_EIO
+            result::Z_EDESERIALIZE
         }
     }
 }
