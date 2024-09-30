@@ -50,7 +50,7 @@ z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *
 
     ze_deserializer_t deserializer = ze_deserializer_from_bytes(attachment);
     size_t received_len = 0;
-    ze_deserializer_deserialize_sequence_begin(&deserializer, &received_len);
+    ze_deserializer_deserialize_sequence_length(&deserializer, &received_len);
     if (received_len != len) {
         perror("Incorrect attachment size!");
         return -1;
@@ -74,7 +74,6 @@ z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *
         }
         z_drop(z_move(value));
     }
-    ze_deserializer_deserialize_sequence_end(&deserializer);
 
     drop_attachment(kvs, len);
 #endif
@@ -108,12 +107,11 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_owned_bytes_t reply_attachment;
     ze_owned_serializer_t serializer;
     ze_serializer_empty(&serializer);
-    ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 1);
+    ze_serializer_serialize_sequence_length(z_loan_mut(serializer), 1);
     for (size_t i = 0; i < 1; i++) {
         ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].key));
         ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].value));
     }
-    ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
     ze_serializer_finish(z_move(serializer), &reply_attachment);
 
     options.attachment = z_move(reply_attachment);
@@ -193,12 +191,11 @@ int run_get() {
         z_owned_bytes_t attachment;
         ze_owned_serializer_t serializer;
         ze_serializer_empty(&serializer);
-        ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 2);
+        ze_serializer_serialize_sequence_length(z_loan_mut(serializer), 2);
         for (size_t i = 0; i < 2; i++) {
             ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].key));
             ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[i].value));
         }
-        ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
         ze_serializer_finish(z_move(serializer), &attachment);
 
         opts.attachment = z_move(attachment);

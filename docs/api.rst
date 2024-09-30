@@ -179,8 +179,7 @@ Functions
 .. doxygenfunction:: ze_serializer_serialize_int64
 .. doxygenfunction:: ze_serializer_serialize_float
 .. doxygenfunction:: ze_serializer_serialize_double
-.. doxygenfunction:: ze_serializer_serialize_sequence_begin
-.. doxygenfunction:: ze_serializer_serialize_sequence_end
+.. doxygenfunction:: ze_serializer_serialize_sequence_length
 
 .. doxygenfunction:: ze_deserializer_from_bytes
 .. doxygenfunction:: ze_deserializer_is_done
@@ -196,8 +195,7 @@ Functions
 .. doxygenfunction:: ze_deserializer_deserialize_int64
 .. doxygenfunction:: ze_deserializer_deserialize_float
 .. doxygenfunction:: ze_deserializer_deserialize_double
-.. doxygenfunction:: ze_deserializer_deserialize_sequence_begin
-.. doxygenfunction:: ze_deserializer_deserialize_sequence_end
+.. doxygenfunction:: ze_deserializer_deserialize_sequence_length
 
 
 

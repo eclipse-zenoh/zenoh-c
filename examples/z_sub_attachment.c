@@ -43,7 +43,7 @@ void data_handler(z_loaned_sample_t* sample, void* arg) {
         z_owned_string_t key, value;
         ze_deserializer_t deserializer = ze_deserializer_from_bytes(attachment);
         size_t len = 0;
-        ze_deserializer_deserialize_sequence_begin(&deserializer, &len);
+        ze_deserializer_deserialize_sequence_length(&deserializer, &len);
         for (size_t i = 0; i < len; ++i) {
             ze_deserializer_deserialize_string(&deserializer, &key);
             ze_deserializer_deserialize_string(&deserializer, &value);
@@ -52,7 +52,6 @@ void data_handler(z_loaned_sample_t* sample, void* arg) {
             z_drop(z_move(key));
             z_drop(z_move(value));
         }
-        ze_deserializer_deserialize_sequence_end(&deserializer);
     }
 #endif
     z_drop(z_move(payload_string));

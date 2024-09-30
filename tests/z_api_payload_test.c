@@ -292,24 +292,22 @@ void test_serialize_sequence(void) {
     ze_owned_serializer_t serializer;
     ze_serializer_empty(&serializer);
 
-    ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 6);
+    ze_serializer_serialize_sequence_length(z_loan_mut(serializer), 6);
     for (size_t i = 0; i < 6; ++i) {
         ze_serializer_serialize_uint32(z_loan_mut(serializer), input[i]);
     }
-    ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
     ze_serializer_finish(z_move(serializer), &b);
 
     ze_deserializer_t deserializer = ze_deserializer_from_bytes(z_loan(b));
     assert(!ze_deserializer_is_done(&deserializer));
     size_t len = 0;
-    assert(ze_deserializer_deserialize_sequence_begin(&deserializer, &len) == 0);
+    assert(ze_deserializer_deserialize_sequence_length(&deserializer, &len) == 0);
     assert(len == 6);
     for (size_t i = 0; i < 6; i++) {
         uint32_t u = 0;
         assert(ze_deserializer_deserialize_uint32(&deserializer, &u) == 0);
         assert(u == input[i]);
     }
-    assert(ze_deserializer_deserialize_sequence_end(&deserializer) == 0);
     assert(ze_deserializer_is_done(&deserializer));
     z_drop(z_move(b));
 #endif

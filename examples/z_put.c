@@ -53,10 +53,9 @@ int main(int argc, char** argv) {
     z_owned_bytes_t attachment;
     ze_owned_serializer_t serializer;
     ze_serializer_empty(&serializer);
-    ze_serializer_serialize_sequence_begin(z_loan_mut(serializer), 1);  // 1 key-value pair
+    ze_serializer_serialize_sequence_length(z_loan_mut(serializer), 1);  // 1 key-value pair
     ze_serializer_serialize_str(z_loan_mut(serializer), "hello");
     ze_serializer_serialize_str(z_loan_mut(serializer), "there");
-    ze_serializer_serialize_sequence_end(z_loan_mut(serializer));
     ze_serializer_finish(z_move(serializer), &attachment);
 
     options.attachment =

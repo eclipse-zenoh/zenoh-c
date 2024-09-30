@@ -701,9 +701,9 @@ pub extern "C" fn ze_deserializer_deserialize_string(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Initiates serialization of a sequence of multiple elements.
 /// @param this_: A serializer instance.
-/// @param len: Length of the sequence. Could be read during deserialization using `ze_deserializer_deserialize_sequence_begin`.
+/// @param len: Length of the sequence. Could be read during deserialization using `ze_deserializer_deserialize_sequence_length`.
 #[no_mangle]
-pub extern "C" fn ze_serializer_serialize_sequence_begin(
+pub extern "C" fn ze_serializer_serialize_sequence_length(
     this: &mut ze_loaned_serializer_t,
     len: usize,
 ) {
@@ -711,18 +711,12 @@ pub extern "C" fn ze_serializer_serialize_sequence_begin(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Finalizes serialization of a sequence of multiple elements.
-#[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn ze_serializer_serialize_sequence_end(this: &mut ze_loaned_serializer_t) {}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Initiates deserialization of a sequence of multiple elements.
 /// @param this_: A serializer instance.
 /// @param len:  pointer where the length of the sequence (previously passed via `z_bytes_writer_serialize_sequence_begin`) will be written.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_sequence_begin(
+pub extern "C" fn ze_deserializer_deserialize_sequence_length(
     this: &mut ze_deserializer_t,
     len: &mut usize,
 ) -> z_result_t {
@@ -737,14 +731,4 @@ pub extern "C" fn ze_deserializer_deserialize_sequence_begin(
             result::Z_EDESERIALIZE
         }
     }
-}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Finalizes deserialization of a sequence of multiple elements.
-#[no_mangle]
-#[allow(unused_variables)]
-pub extern "C" fn ze_deserializer_deserialize_sequence_end(
-    this: &mut ze_deserializer_t,
-) -> z_result_t {
-    result::Z_OK
 }
