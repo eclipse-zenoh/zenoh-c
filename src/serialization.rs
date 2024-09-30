@@ -357,6 +357,15 @@ extern "C" fn ze_deserializer_from_bytes(this: &'static z_loaned_bytes_t) -> ze_
     *ZDeserializer::new(this.as_rust_type_ref()).as_loaned_c_type_ref()
 }
 
+/// @brief Checks if deserializer parsed all of its data.
+/// @return `true` if there is no more data to parse, `false` otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_deserializer_is_done(this_: &ze_deserializer_t) -> bool {
+    let deserializer = this_.as_rust_type_ref();
+    deserializer.done()
+}
+
 fn ze_serializer_serialize_arithmetic<T>(this: &mut ze_loaned_serializer_t, val: &T)
 where
     T: Serialize,

@@ -583,6 +583,14 @@ pub unsafe extern "C" fn z_bytes_reader_tell(this_: &mut z_bytes_reader_t) -> i6
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
 
+/// Gets the number of bytes that can still be read.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_bytes_reader_remaining(this_: &z_bytes_reader_t) -> usize {
+    let reader = this_.as_rust_type_ref();
+    reader.remaining()
+}
+
 pub use crate::opaque_types::{
     z_loaned_bytes_writer_t, z_moved_bytes_writer_t, z_owned_bytes_writer_t,
 };
