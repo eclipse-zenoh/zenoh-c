@@ -25,7 +25,7 @@ pub const Z_ENETWORK: z_result_t = -4;
 pub const Z_ENULL: z_result_t = -5;
 pub const Z_EUNAVAILABLE: z_result_t = -6;
 pub const Z_EDESERIALIZE: z_result_t = -7;
-pub const Z_SESSION_CLOSED: z_result_t = -8;
+pub const Z_ESESSION_CLOSED: z_result_t = -8;
 // negative pthread error codes (due to convention to return negative values on error)
 pub const Z_EBUSY_MUTEX: z_result_t = -16;
 pub const Z_EINVAL_MUTEX: z_result_t = -22;

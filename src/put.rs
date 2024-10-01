@@ -127,7 +127,7 @@ pub extern "C" fn z_put(
     }
     match put.wait() {
         Ok(_) => result::Z_OK,
-        Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_SESSION_CLOSED,
+        Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
             tracing::error!("{}", e);
             result::Z_EGENERIC
