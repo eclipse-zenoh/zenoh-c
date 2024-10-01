@@ -37,14 +37,14 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     char *payload_type = "RAW";
     {
         const z_loaned_shm_t *shm = NULL;
-        if (z_bytes_deserialize_into_loaned_shm(z_sample_payload(sample), &shm) == Z_OK) {
+        if (z_bytes_to_loaned_shm(z_sample_payload(sample), &shm) == Z_OK) {
             payload_type = "SHM";
         }
     }
 #endif
 
     z_owned_string_t payload_string;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+    z_bytes_to_string(z_sample_payload(sample), &payload_string);
 
     printf(">> [Subscriber] Received %s ('%.*s': '%.*s') [%s]\n", kind_to_str(z_sample_kind(sample)),
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),

@@ -114,7 +114,7 @@ int run_get() {
 
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
             z_owned_string_t payload_string;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+            z_bytes_to_string(z_sample_payload(sample), &payload_string);
             if (strncmp(values[val_num], z_string_data(z_loan(payload_string)), z_string_len(z_loan(payload_string)))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_string));

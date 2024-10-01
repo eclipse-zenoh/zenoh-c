@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     z_shm_from_mut(&shm, z_move(alloc.buf));
 
     z_owned_bytes_t shmbs;
-    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+    if (z_bytes_from_shm(&shmbs, z_move(shm)) != Z_OK) {
         printf("Unexpected failure during SHM buffer serialization...\n");
         return -1;
     }

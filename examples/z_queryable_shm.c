@@ -32,10 +32,10 @@ void query_handler(z_loaned_query_t *query, void *context) {
     const z_loaned_bytes_t *payload = z_query_payload(query);
     if (payload != NULL && z_bytes_len(payload) > 0) {
         const z_loaned_shm_t *shm = NULL;
-        char *payload_type = z_bytes_deserialize_into_loaned_shm(payload, &shm) == Z_OK ? "SHM" : "RAW";
+        char *payload_type = z_bytes_to_loaned_shm(payload, &shm) == Z_OK ? "SHM" : "RAW";
 
         z_owned_string_t payload_string;
-        z_bytes_deserialize_into_string(payload, &payload_string);
+        z_bytes_to_string(payload, &payload_string);
 
         printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s' [%s]\n",
                (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
@@ -62,7 +62,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
         z_query_reply_options_default(&options);
 
         z_owned_bytes_t reply_payload;
-        z_bytes_serialize_from_shm_mut(&reply_payload, z_move(alloc.buf));
+        z_bytes_from_shm_mut(&reply_payload, z_move(alloc.buf));
 
         z_view_keyexpr_t reply_keyexpr;
         z_view_keyexpr_from_str(&reply_keyexpr, (const char *)context);

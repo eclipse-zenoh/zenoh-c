@@ -90,7 +90,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     }
 
     z_owned_string_t payload_str;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_str);
+    z_bytes_to_string(z_sample_payload(sample), &payload_str);
     if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));

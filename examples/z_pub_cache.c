@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
         sprintf(buf, "[%4d] %s", idx, args.value);
         printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, buf);
+        z_bytes_copy_from_str(&payload, buf);
 
         z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }

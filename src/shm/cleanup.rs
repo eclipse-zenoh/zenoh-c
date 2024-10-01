@@ -15,7 +15,7 @@
 use zenoh::shm::cleanup_orphaned_shm_segments;
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// Linux: Trigger cleanup for orphaned SHM segments
+/// @brief Linux: Trigger cleanup for orphaned SHM segments
 /// If process that created named SHM segment crashes or exits by a signal, the segment persists in the system
 /// disregarding if it is used by other Zenoh processes or not. This is the detail of POSIX specification for
 /// shared memory that is hard to bypass. To deal with this we developed a cleanup routine that enumerates all

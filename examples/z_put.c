@@ -46,17 +46,21 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, args.value);
-
-    z_owned_bytes_t attachment, key, val;
-    z_bytes_from_static_str(&key, (char*)"hello");
-    z_bytes_from_static_str(&val, (char*)"there");
-    z_bytes_from_pair(&attachment, z_move(key), z_move(val));
-
     z_put_options_t options;
     z_put_options_default(&options);
+
+#if defined(Z_FEATURE_UNSTABLE_API)
+    z_owned_bytes_t attachment;
+    ze_owned_serializer_t serializer;
+    ze_serializer_empty(&serializer);
+    ze_serializer_serialize_sequence_length(z_loan_mut(serializer), 1);  // 1 key-value pair
+    ze_serializer_serialize_str(z_loan_mut(serializer), "hello");
+    ze_serializer_serialize_str(z_loan_mut(serializer), "there");
+    ze_serializer_finish(z_move(serializer), &attachment);
+
     options.attachment =
         z_move(attachment);  // attachement is going to be consumed by z_put, so no need to drop it manually
-
+#endif
     int res = z_put(z_loan(s), z_loan(ke), z_move(payload), &options);
     if (res < 0) {
         printf("Put failed...\n");

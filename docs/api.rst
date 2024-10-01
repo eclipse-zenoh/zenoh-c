@@ -97,51 +97,54 @@ Types
 ^^^^^
 .. doxygenstruct:: z_owned_bytes_t
 .. doxygenstruct:: z_loaned_bytes_t
-.. doxygenstruct:: z_bytes_iterator_t
 .. doxygenstruct:: z_bytes_reader_t
 .. doxygenstruct:: z_bytes_writer_t
+.. doxygenstruct:: ze_serializer_t
+.. doxygenstruct:: ze_deserializer_t
 
 Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_bytes_len
-.. doxygenfunction:: z_bytes_serialize_from_slice
+.. doxygenfunction:: z_bytes_copy_from_slice
 .. doxygenfunction:: z_bytes_from_slice
-.. doxygenfunction:: z_bytes_serialize_from_buf
+.. doxygenfunction:: z_bytes_copy_from_buf
 .. doxygenfunction:: z_bytes_from_buf
 .. doxygenfunction:: z_bytes_from_static_buf
-.. doxygenfunction:: z_bytes_serialize_from_string
+.. doxygenfunction:: z_bytes_copy_from_string
 .. doxygenfunction:: z_bytes_from_string
-.. doxygenfunction:: z_bytes_serialize_from_str
+.. doxygenfunction:: z_bytes_copy_from_str
 .. doxygenfunction:: z_bytes_from_str
 .. doxygenfunction:: z_bytes_from_static_str
-.. doxygenfunction:: z_bytes_from_iter
-.. doxygenfunction:: z_bytes_from_pair
+.. doxygenfunction:: z_bytes_to_slice
+.. doxygenfunction:: z_bytes_to_string
 
-.. doxygenfunction:: z_bytes_serialize_from_uint8
-.. doxygenfunction:: z_bytes_serialize_from_uint16
-.. doxygenfunction:: z_bytes_serialize_from_uint32
-.. doxygenfunction:: z_bytes_serialize_from_uint64
-.. doxygenfunction:: z_bytes_serialize_from_int8
-.. doxygenfunction:: z_bytes_serialize_from_int16
-.. doxygenfunction:: z_bytes_serialize_from_int32
-.. doxygenfunction:: z_bytes_serialize_from_int64
-.. doxygenfunction:: z_bytes_serialize_from_float
-.. doxygenfunction:: z_bytes_serialize_from_double
+.. doxygenfunction:: ze_serialize_slice
+.. doxygenfunction:: ze_serialize_buf
+.. doxygenfunction:: ze_serialize_string
+.. doxygenfunction:: ze_serialize_str
+.. doxygenfunction:: ze_serialize_uint8
+.. doxygenfunction:: ze_serialize_uint16
+.. doxygenfunction:: ze_serialize_uint32
+.. doxygenfunction:: ze_serialize_uint64
+.. doxygenfunction:: ze_serialize_int8
+.. doxygenfunction:: ze_serialize_int16
+.. doxygenfunction:: ze_serialize_int32
+.. doxygenfunction:: ze_serialize_int64
+.. doxygenfunction:: ze_serialize_float
+.. doxygenfunction:: ze_serialize_double
 
-.. doxygenfunction:: z_bytes_deserialize_into_slice
-.. doxygenfunction:: z_bytes_deserialize_into_string
-.. doxygenfunction:: z_bytes_deserialize_into_pair
-
-.. doxygenfunction:: z_bytes_deserialize_into_uint8
-.. doxygenfunction:: z_bytes_deserialize_into_uint16
-.. doxygenfunction:: z_bytes_deserialize_into_uint32
-.. doxygenfunction:: z_bytes_deserialize_into_uint64
-.. doxygenfunction:: z_bytes_deserialize_into_int8
-.. doxygenfunction:: z_bytes_deserialize_into_int16
-.. doxygenfunction:: z_bytes_deserialize_into_int32
-.. doxygenfunction:: z_bytes_deserialize_into_int64
-.. doxygenfunction:: z_bytes_deserialize_into_float
-.. doxygenfunction:: z_bytes_deserialize_into_double
+.. doxygenfunction:: ze_deserialize_slice
+.. doxygenfunction:: ze_deserialize_string
+.. doxygenfunction:: ze_deserialize_uint8
+.. doxygenfunction:: ze_deserialize_uint16
+.. doxygenfunction:: ze_deserialize_uint32
+.. doxygenfunction:: ze_deserialize_uint64
+.. doxygenfunction:: ze_deserialize_int8
+.. doxygenfunction:: ze_deserialize_int16
+.. doxygenfunction:: ze_deserialize_int32
+.. doxygenfunction:: ze_deserialize_int64
+.. doxygenfunction:: ze_deserialize_float
+.. doxygenfunction:: ze_deserialize_double
 
 .. doxygenfunction:: z_bytes_empty
 .. doxygenfunction:: z_bytes_clone
@@ -151,18 +154,48 @@ Functions
 
 .. doxygenfunction:: z_bytes_get_reader
 .. doxygenfunction:: z_bytes_reader_read
-.. doxygenfunction:: z_bytes_reader_read_bounded
 .. doxygenfunction:: z_bytes_reader_seek
 .. doxygenfunction:: z_bytes_reader_tell
+.. doxygenfunction:: z_bytes_reader_remaining
 
-.. doxygenfunction:: z_bytes_get_iterator
-.. doxygenfunction:: z_bytes_iterator_next
-
-.. doxygenfunction:: z_bytes_get_writer
-
+.. doxygenfunction:: z_writer_empty
+.. doxygenfunction:: z_writer_finish
 .. doxygenfunction:: z_bytes_writer_write_all
 .. doxygenfunction:: z_bytes_writer_append
-.. doxygenfunction:: z_bytes_writer_append_bounded
+
+.. doxygenfunction:: ze_serializer_empty
+.. doxygenfunction:: ze_serializer_finish
+.. doxygenfunction:: ze_serializer_serialize_slice
+.. doxygenfunction:: ze_serializer_serialize_buf
+.. doxygenfunction:: ze_serializer_serialize_string
+.. doxygenfunction:: ze_serializer_serialize_str
+.. doxygenfunction:: ze_serializer_serialize_uint8
+.. doxygenfunction:: ze_serializer_serialize_uint16
+.. doxygenfunction:: ze_serializer_serialize_uint32
+.. doxygenfunction:: ze_serializer_serialize_uint64
+.. doxygenfunction:: ze_serializer_serialize_int8
+.. doxygenfunction:: ze_serializer_serialize_int16
+.. doxygenfunction:: ze_serializer_serialize_int32
+.. doxygenfunction:: ze_serializer_serialize_int64
+.. doxygenfunction:: ze_serializer_serialize_float
+.. doxygenfunction:: ze_serializer_serialize_double
+.. doxygenfunction:: ze_serializer_serialize_sequence_length
+
+.. doxygenfunction:: ze_deserializer_from_bytes
+.. doxygenfunction:: ze_deserializer_is_done
+.. doxygenfunction:: ze_deserializer_deserialize_slice
+.. doxygenfunction:: ze_deserializer_deserialize_string
+.. doxygenfunction:: ze_deserializer_deserialize_uint8
+.. doxygenfunction:: ze_deserializer_deserialize_uint16
+.. doxygenfunction:: ze_deserializer_deserialize_uint32
+.. doxygenfunction:: ze_deserializer_deserialize_uint64
+.. doxygenfunction:: ze_deserializer_deserialize_int8
+.. doxygenfunction:: ze_deserializer_deserialize_int16
+.. doxygenfunction:: ze_deserializer_deserialize_int32
+.. doxygenfunction:: ze_deserializer_deserialize_int64
+.. doxygenfunction:: ze_deserializer_deserialize_float
+.. doxygenfunction:: ze_deserializer_deserialize_double
+.. doxygenfunction:: ze_deserializer_deserialize_sequence_length
 
 
 

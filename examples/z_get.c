@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
             z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
 
             z_owned_string_t reply_str;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &reply_str);
+            z_bytes_to_string(z_sample_payload(sample), &reply_str);
 
             printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
                    (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));

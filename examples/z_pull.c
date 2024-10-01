@@ -29,7 +29,7 @@ void handle_sample(const z_loaned_sample_t* sample) {
     z_view_string_t keystr;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &keystr);
     z_owned_string_t payload_value;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_value);
+    z_bytes_to_string(z_sample_payload(sample), &payload_value);
     printf(">> [Subscriber] Received %s ('%.*s': '%.*s')\n", kind_to_str(z_sample_kind(sample)),
            (int)z_string_len(z_loan(keystr)), z_string_data(z_loan(keystr)), (int)z_string_len(z_loan(payload_value)),
            z_string_data(z_loan(payload_value)));
