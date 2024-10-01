@@ -36,7 +36,6 @@ void data_handler(z_loaned_sample_t* sample, void* arg) {
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
            (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
 
-#if defined(Z_FEATURE_UNSTABLE_API)
     const z_loaned_bytes_t* attachment = z_sample_attachment(sample);
     // checks if attachment exists
     if (attachment != NULL) {
@@ -53,7 +52,6 @@ void data_handler(z_loaned_sample_t* sample, void* arg) {
             z_drop(z_move(value));
         }
     }
-#endif
     z_drop(z_move(payload_string));
 }
 

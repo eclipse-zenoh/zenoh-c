@@ -44,7 +44,6 @@ void drop_attachment(kv_pair_t *kvp, size_t len) {
 }
 
 z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *attachment) {
-#if defined(Z_FEATURE_UNSTABLE_API)
     if (attachment == NULL) {
         perror("Missing attachment!");
         return -1;
@@ -78,7 +77,6 @@ z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *
     }
 
     drop_attachment(kvs, len);
-#endif
     return 0;
 }
 
@@ -105,7 +103,6 @@ int run_publisher() {
     z_publisher_put_options_default(&options);
 
     for (int i = 0; i < values_count; ++i) {
-#if defined(Z_FEATURE_UNSTABLE_API)
         kv_pair_t kvs[2];
         z_string_copy_from_str(&kvs[0].key, K_CONST);
         z_string_copy_from_str(&kvs[0].value, V_CONST);
@@ -124,7 +121,6 @@ int run_publisher() {
 
         options.attachment = z_move(attachment);
         drop_attachment(kvs, 2);
-#endif
         z_owned_bytes_t payload;
         z_bytes_from_static_str(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);

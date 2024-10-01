@@ -57,7 +57,6 @@ int main(void) {
         z_drop(z_move(output_string));
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
     // Serialization
     {
         // Arithmetic types: uint8, uint16, uint32, uint64, int8, int16, int32, int64, float, double
@@ -70,7 +69,6 @@ int main(void) {
         // Corresponding encoding to be used in operations options like `z_put()`, `z_get()`, etc.
         // const z_loaned_encoding* encoding = z_encoding_zenoh_uint32();
     }
-#endif
 
     // Writer/reader for raw bytes
     {
@@ -87,7 +85,6 @@ int main(void) {
         z_drop(z_move(payload));
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
     // Using serializer/deserializer for composite types
     {
         // A sequence of primitive types
@@ -195,7 +192,6 @@ int main(void) {
         z_drop(z_move(payload));
     }
 
-#endif
     // Slice iterator
     {
         /// fill z_bytes with some data

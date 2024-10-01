@@ -42,7 +42,6 @@ void drop_attachment(kv_pair_t *kvp, size_t len) {
 }
 
 z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *attachment) {
-#if defined(Z_FEATURE_UNSTABLE_API)
     if (attachment == NULL) {
         perror("Missing attachment!");
         return -1;
@@ -76,7 +75,6 @@ z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *
     }
 
     drop_attachment(kvs, len);
-#endif
     return 0;
 }
 
@@ -99,7 +97,6 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_query_reply_options_t options;
     z_query_reply_options_default(&options);
 
-#if defined(Z_FEATURE_UNSTABLE_API)
     kv_pair_t kvs[1];
     z_string_copy_from_str(&kvs[0].key, K_CONST);
     z_string_copy_from_str(&kvs[0].value, V_CONST);
@@ -116,7 +113,6 @@ void query_handler(z_loaned_query_t *query, void *context) {
 
     options.attachment = z_move(reply_attachment);
     drop_attachment(kvs, 1);
-#endif
 
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, values[value_num]);
@@ -181,7 +177,6 @@ int run_get() {
         z_owned_closure_reply_t closure;
         z_fifo_channel_reply_new(&closure, &handler, 16);
 
-#if defined(Z_FEATURE_UNSTABLE_API)
         kv_pair_t kvs[2];
         z_string_copy_from_str(&kvs[0].key, K_CONST);
         z_string_copy_from_str(&kvs[0].value, V_CONST);
@@ -200,7 +195,7 @@ int run_get() {
 
         opts.attachment = z_move(attachment);
         drop_attachment(kvs, 2);
-#endif
+
         z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
         z_owned_reply_t reply;
         for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {

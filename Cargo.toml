@@ -31,8 +31,8 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-shared-memory = ["zenoh/shared-memory", "dep:zenoh-ext", "zenoh-ext/shared-memory"]
-unstable = ["zenoh/unstable", "zenoh-ext/unstable", "dep:zenoh-ext"]
+shared-memory = ["zenoh/shared-memory", "zenoh-ext/shared-memory"]
+unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
 auth_pubkey = ["zenoh/auth_pubkey"]
 auth_usrpwd = ["zenoh/auth_usrpwd"]
 transport_multilink = ["zenoh/transport_multilink"]
@@ -75,7 +75,7 @@ spin = "0.9.5"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 zenoh = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" , optional = true }
+zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-runtime = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main"  }
 flume = "*"
@@ -91,7 +91,7 @@ phf = { version = "0.11.2", features = ["macros"] }
 
 [lib]
 path = "src/lib.rs"
-name = "zenohcd"
+name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 

@@ -485,15 +485,9 @@ get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
 /// @brief An entity gloabal id.
 get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh serializer.
 get_opaque_type_data!(Option<zenoh_ext::ZSerializer>, ze_owned_serializer_t);
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned Zenoh serializer.
 get_opaque_type_data!(zenoh_ext::ZSerializer, ze_loaned_serializer_t);
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A Zenoh serializer.
 get_opaque_type_data!(zenoh_ext::ZDeserializer<'static>, ze_deserializer_t);

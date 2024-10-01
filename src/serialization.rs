@@ -34,7 +34,6 @@ decl_c_type! {
     loaned(ze_loaned_serializer_t),
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a serializer with empty payload.
 /// @param this_: An uninitialized memory location where serializer is to be constructed.
 /// @return 0 in case of success, negative error code otherwise.
@@ -45,21 +44,18 @@ extern "C" fn ze_serializer_empty(this: &mut MaybeUninit<ze_owned_serializer_t>)
     result::Z_OK
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops `this_`, resetting it to gravestone value.
 #[no_mangle]
 extern "C" fn ze_serializer_drop(this_: &mut ze_moved_serializer_t) {
     let _ = this_.take_rust_type();
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
 extern "C" fn ze_internal_serializer_check(this: &ze_owned_serializer_t) -> bool {
     this.as_rust_type_ref().is_some()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows serializer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -72,7 +68,6 @@ pub unsafe extern "C" fn ze_serializer_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Muatably borrows serializer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -85,14 +80,12 @@ pub unsafe extern "C" fn ze_serializer_loan_mut(
         .as_loaned_c_type_mut()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a serializer in a gravestone state.
 #[no_mangle]
 pub extern "C" fn ze_internal_serializer_null(this_: &mut MaybeUninit<ze_owned_serializer_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drop serializer and extract underlying `bytes` object it was writing to.
 /// @param this_: A serializer instance.
 /// @param bytes: An uninitialized memory location where `bytes` object` will be written to.
@@ -132,77 +125,66 @@ where
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_uint8(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u8) {
     ze_serialize_arithmetic::<u8>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_uint16(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u16) {
     ze_serialize_arithmetic::<u16>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_uint32(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u32) {
     ze_serialize_arithmetic::<u32>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_uint64(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u64) {
     ze_serialize_arithmetic::<u64>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_int8(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i8) {
     ze_serialize_arithmetic::<i8>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_int16(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i16) {
     ze_serialize_arithmetic::<i16>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_int32(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i32) {
     ze_serialize_arithmetic::<i32>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serialize_int64(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i64) {
     ze_serialize_arithmetic::<i64>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a float.
 #[no_mangle]
 pub extern "C" fn ze_serialize_float(this_: &mut MaybeUninit<z_owned_bytes_t>, val: f32) {
     ze_serialize_arithmetic::<f32>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a double.
 #[no_mangle]
 pub extern "C" fn ze_serialize_double(this_: &mut MaybeUninit<z_owned_bytes_t>, val: f64) {
     ze_serialize_arithmetic::<f64>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -210,7 +192,6 @@ pub extern "C" fn ze_deserialize_uint8(this: &z_loaned_bytes_t, dst: &mut u8) ->
     ze_deserialize_arithmetic::<u8>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -218,7 +199,6 @@ pub extern "C" fn ze_deserialize_uint16(this: &z_loaned_bytes_t, dst: &mut u16) 
     ze_deserialize_arithmetic::<u16>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -226,7 +206,6 @@ pub extern "C" fn ze_deserialize_uint32(this: &z_loaned_bytes_t, dst: &mut u32) 
     ze_deserialize_arithmetic::<u32>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -234,7 +213,6 @@ pub extern "C" fn ze_deserialize_uint64(this: &z_loaned_bytes_t, dst: &mut u64) 
     ze_deserialize_arithmetic::<u64>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -242,7 +220,6 @@ pub extern "C" fn ze_deserialize_int8(this: &z_loaned_bytes_t, dst: &mut i8) -> 
     ze_deserialize_arithmetic::<i8>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -250,7 +227,6 @@ pub extern "C" fn ze_deserialize_int16(this: &z_loaned_bytes_t, dst: &mut i16) -
     ze_deserialize_arithmetic::<i16>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -258,7 +234,6 @@ pub extern "C" fn ze_deserialize_int32(this: &z_loaned_bytes_t, dst: &mut i32) -
     ze_deserialize_arithmetic::<i32>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -266,7 +241,6 @@ pub extern "C" fn ze_deserialize_int64(this: &z_loaned_bytes_t, dst: &mut i64) -
     ze_deserialize_arithmetic::<i64>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a float.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -274,7 +248,6 @@ pub extern "C" fn ze_deserialize_float(this: &z_loaned_bytes_t, dst: &mut f32) -
     ze_deserialize_arithmetic::<f32>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -282,7 +255,6 @@ pub extern "C" fn ze_deserialize_double(this: &z_loaned_bytes_t, dst: &mut f64) 
     ze_deserialize_arithmetic::<f64>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -294,7 +266,6 @@ pub extern "C" fn ze_serialize_slice(
     this.as_rust_type_mut_uninit().write(z_serialize(cslice));
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a data from buffer by.
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param data: A pointer to the buffer containing data.
@@ -311,7 +282,6 @@ pub extern "C" fn ze_serialize_buf(
     this.as_rust_type_mut_uninit().write(z_serialize(slice));
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -335,7 +305,6 @@ pub extern "C" fn ze_deserialize_slice(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -347,7 +316,6 @@ pub extern "C" fn ze_serialize_string(
     this.as_rust_type_mut_uninit().write(z_serialize(cslice));
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a null-terminated string.
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param str: a pointer to the null-terminated string.
@@ -362,7 +330,6 @@ pub unsafe extern "C" fn ze_serialize_str(
     this.as_rust_type_mut_uninit().write(z_serialize(slice));
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a string.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -384,14 +351,12 @@ pub unsafe extern "C" fn ze_deserialize_string(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets deserializer for`this_`.
 #[no_mangle]
 extern "C" fn ze_deserializer_from_bytes(this: &'static z_loaned_bytes_t) -> ze_deserializer_t {
     *ZDeserializer::new(this.as_rust_type_ref()).as_loaned_c_type_ref()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Checks if deserializer parsed all of its data.
 /// @return `true` if there is no more data to parse, `false` otherwise.
 #[no_mangle]
@@ -427,77 +392,66 @@ where
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_uint8(this_: &mut ze_loaned_serializer_t, val: u8) {
     ze_serializer_serialize_arithmetic::<u8>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_uint16(this_: &mut ze_loaned_serializer_t, val: u16) {
     ze_serializer_serialize_arithmetic::<u16>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_uint32(this_: &mut ze_loaned_serializer_t, val: u32) {
     ze_serializer_serialize_arithmetic::<u32>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes an unsigned integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_uint64(this_: &mut ze_loaned_serializer_t, val: u64) {
     ze_serializer_serialize_arithmetic::<u64>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_int8(this_: &mut ze_loaned_serializer_t, val: i8) {
     ze_serializer_serialize_arithmetic::<i8>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_int16(this_: &mut ze_loaned_serializer_t, val: i16) {
     ze_serializer_serialize_arithmetic::<i16>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_int32(this_: &mut ze_loaned_serializer_t, val: i32) {
     ze_serializer_serialize_arithmetic::<i32>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a signed integer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_int64(this_: &mut ze_loaned_serializer_t, val: i64) {
     ze_serializer_serialize_arithmetic::<i64>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a float.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_float(this_: &mut ze_loaned_serializer_t, val: f32) {
     ze_serializer_serialize_arithmetic::<f32>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a double.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_double(this_: &mut ze_loaned_serializer_t, val: f64) {
     ze_serializer_serialize_arithmetic::<f64>(this_, &val);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -508,7 +462,6 @@ pub extern "C" fn ze_deserializer_deserialize_uint8(
     ze_deserializer_deserialize_arithmetic::<u8>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -519,7 +472,6 @@ pub extern "C" fn ze_deserializer_deserialize_uint16(
     ze_deserializer_deserialize_arithmetic::<u16>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -530,7 +482,6 @@ pub extern "C" fn ze_deserializer_deserialize_uint32(
     ze_deserializer_deserialize_arithmetic::<u32>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -541,7 +492,6 @@ pub extern "C" fn ze_deserializer_deserialize_uint64(
     ze_deserializer_deserialize_arithmetic::<u64>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -552,7 +502,6 @@ pub extern "C" fn ze_deserializer_deserialize_int8(
     ze_deserializer_deserialize_arithmetic::<i8>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -563,7 +512,6 @@ pub extern "C" fn ze_deserializer_deserialize_int16(
     ze_deserializer_deserialize_arithmetic::<i16>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -574,7 +522,6 @@ pub extern "C" fn ze_deserializer_deserialize_int32(
     ze_deserializer_deserialize_arithmetic::<i32>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -585,7 +532,6 @@ pub extern "C" fn ze_deserializer_deserialize_int64(
     ze_deserializer_deserialize_arithmetic::<i64>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a float.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -596,7 +542,6 @@ pub extern "C" fn ze_deserializer_deserialize_float(
     ze_deserializer_deserialize_arithmetic::<f32>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -607,7 +552,6 @@ pub extern "C" fn ze_deserializer_deserialize_double(
     ze_deserializer_deserialize_arithmetic::<f64>(this, dst)
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a slice.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_slice(
@@ -618,7 +562,6 @@ pub extern "C" fn ze_serializer_serialize_slice(
     this.as_rust_type_mut().serialize(cslice);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a data from buffer.
 /// @param this_: A serializer instance.
 /// @param data: A pointer to the buffer containing data.
@@ -634,7 +577,6 @@ pub extern "C" fn ze_serializer_serialize_buf(
     this.as_rust_type_mut().serialize(slice);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a slice.
 #[no_mangle]
 pub extern "C" fn ze_deserializer_deserialize_slice(
@@ -656,7 +598,6 @@ pub extern "C" fn ze_deserializer_deserialize_slice(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a string.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_string(
@@ -667,7 +608,6 @@ pub extern "C" fn ze_serializer_serialize_string(
     this.as_rust_type_mut().serialize(cslice);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Serializes a null-terminated string.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_str(
@@ -678,7 +618,6 @@ pub extern "C" fn ze_serializer_serialize_str(
     this.as_rust_type_mut().serialize(slice);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deserializes into a string.
 #[no_mangle]
 pub extern "C" fn ze_deserializer_deserialize_string(
@@ -698,7 +637,6 @@ pub extern "C" fn ze_deserializer_deserialize_string(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Initiates serialization of a sequence of multiple elements.
 /// @param this_: A serializer instance.
 /// @param len: Length of the sequence. Could be read during deserialization using `ze_deserializer_deserialize_sequence_length`.
@@ -710,7 +648,6 @@ pub extern "C" fn ze_serializer_serialize_sequence_length(
     this.as_rust_type_mut().serialize(VarInt::<usize>(len));
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Initiates deserialization of a sequence of multiple elements.
 /// @param this_: A serializer instance.
 /// @param len:  pointer where the length of the sequence (previously passed via `z_bytes_writer_serialize_sequence_begin`) will be written.

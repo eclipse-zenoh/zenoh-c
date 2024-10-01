@@ -32,13 +32,13 @@
 // make sure that v is null now
 #define TEST(name)                    \
     {                                 \
-        z_owned_##name##_t v;         \
+        name v;                       \
         memset(&v, -1, sizeof(v));    \
         z_internal_null(&v);          \
         assert(!z_internal_check(v)); \
         z_drop(z_move(v));            \
         z_drop(z_move(v));            \
-        z_owned_##name##_t v1;        \
+        name v1;                      \
         z_internal_null(&v1);         \
         memset(&v, -1, sizeof(v));    \
         z_take(&v1, z_move(v));       \
@@ -46,40 +46,35 @@
     }
 
 int main(void) {
-    TEST(session)
-    TEST(keyexpr)
-    TEST(config)
-    TEST(hello)
-    TEST(closure_sample)
-    TEST(closure_query)
-    TEST(closure_reply)
-    TEST(closure_hello)
-#if defined(Z_FEATURE_UNSTABLE_API)
-    TEST(closure_zid)
+    TEST(z_owned_session_t)
+    TEST(z_owned_keyexpr_t)
+    TEST(z_owned_config_t)
+    TEST(z_owned_hello_t)
+    TEST(z_owned_closure_sample_t)
+    TEST(z_owned_closure_query_t)
+    TEST(z_owned_closure_reply_t)
+    TEST(z_owned_closure_hello_t)
+#if defined(Z_FEATURE_UNSTABLE_API_t)
+    TEST(z_owned_closure_zid_t)
 #endif
-    TEST(string)
-    TEST(string_array)
-    TEST(sample)
-    TEST(query)
-    TEST(slice)
-    TEST(bytes)
-    TEST(encoding)
-#if Z_FEATURE_PUBLICATION == 1
-    TEST(publisher)
-#endif
-#if Z_FEATURE_SUBSCRIPTION == 1
-    TEST(subscriber)
-#endif
-#if Z_FEATURE_QUERYABLE == 1
-    TEST(queryable)
-#endif
-#if Z_FEATURE_QUERY == 1
-    TEST(reply)
-#endif
+    TEST(z_owned_string_t)
+    TEST(z_owned_string_array_t)
+    TEST(z_owned_sample_t)
+    TEST(z_owned_query_t)
+    TEST(z_owned_slice_t)
+    TEST(z_owned_bytes_t)
+    TEST(z_owned_bytes_writer_t)
+    TEST(z_owned_encoding_t)
+    TEST(z_owned_publisher_t)
+    TEST(z_owned_subscriber_t)
+    TEST(z_owned_queryable_t)
+    TEST(z_owned_reply_t)
+
+    TEST(ze_owned_serializer_t)
     // Double drop not supported for these types
-    // TEST(task)
-    // TEST(mutex)
-    // TEST(condvar)
+    // TEST(z_owned_task_t)
+    // TEST(z_owned_mutex_t)
+    // TEST(z_owned_condvar_t)
 
     return 0;
 }
