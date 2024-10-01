@@ -68,8 +68,6 @@ int main(int argc, char** argv) {
     char buf_ind[16];
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
-
-#if defined(Z_FEATURE_UNSTABLE_API)
         // add some other attachment value
         sprintf(buf_ind, "%d", idx);
         kvs[1] = (kv_pair_t){.key = "index", .value = buf_ind};
@@ -82,7 +80,7 @@ int main(int argc, char** argv) {
         }
         ze_serializer_finish(z_move(serializer), &attachment);
         options.attachment = z_move(attachment);
-#endif
+
         sprintf(buf, "[%4d] %s", idx, args.value);
         printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
 

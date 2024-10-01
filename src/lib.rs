@@ -77,7 +77,6 @@ pub mod context;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
 
-#[cfg(feature = "unstable")]
 mod serialization;
 
 /// Initializes the zenoh runtime logger, using rust environment settings.

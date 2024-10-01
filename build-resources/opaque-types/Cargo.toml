@@ -8,11 +8,9 @@ edition = "2021"
 [features]
 shared-memory = [
     "zenoh/shared-memory",
-    "dep:zenoh-ext",
-    "zenoh-ext/shared-memory",
     "zenoh-protocol/shared-memory",
 ]
-unstable = ["zenoh/unstable", "zenoh-ext/unstable", "dep:zenoh-ext"]
+unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
 auth_pubkey = ["zenoh/auth_pubkey"]
 auth_usrpwd = ["zenoh/auth_usrpwd"]
 transport_multilink = ["zenoh/transport_multilink"]
@@ -33,7 +31,7 @@ default = ["zenoh/default"]
 
 [dependencies]
 zenoh = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" , optional = true }
+zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-protocol = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 const_format = "0.2.32"
 flume = "*"

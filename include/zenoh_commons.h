@@ -1298,6 +1298,9 @@ typedef struct ze_querying_subscriber_options_t {
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
 #endif
+typedef struct ze_moved_serializer_t {
+  struct ze_owned_serializer_t _this;
+} ze_moved_serializer_t;
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
@@ -5236,270 +5239,168 @@ z_result_t ze_declare_querying_subscriber(ze_owned_querying_subscriber_t *this_,
                                           struct ze_querying_subscriber_options_t *options);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_double(const struct z_loaned_bytes_t *this_,
-                                 double *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_double(const struct z_loaned_bytes_t *this_, double *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a float.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_float(const struct z_loaned_bytes_t *this_,
-                                float *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_float(const struct z_loaned_bytes_t *this_, float *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_int16(const struct z_loaned_bytes_t *this_,
-                                int16_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_int16(const struct z_loaned_bytes_t *this_, int16_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_int32(const struct z_loaned_bytes_t *this_,
-                                int32_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_int32(const struct z_loaned_bytes_t *this_, int32_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_int64(const struct z_loaned_bytes_t *this_,
-                                int64_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_int64(const struct z_loaned_bytes_t *this_, int64_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_int8(const struct z_loaned_bytes_t *this_,
-                               int8_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_int8(const struct z_loaned_bytes_t *this_, int8_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a slice.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t ze_deserialize_slice(const struct z_loaned_bytes_t *this_,
                                 struct z_owned_slice_t *slice);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a string.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t ze_deserialize_string(const struct z_loaned_bytes_t *this_,
                                  struct z_owned_string_t *str);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_uint16(const struct z_loaned_bytes_t *this_,
-                                 uint16_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_uint16(const struct z_loaned_bytes_t *this_, uint16_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_uint32(const struct z_loaned_bytes_t *this_,
-                                 uint32_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_uint32(const struct z_loaned_bytes_t *this_, uint32_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_uint64(const struct z_loaned_bytes_t *this_,
-                                 uint64_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_uint64(const struct z_loaned_bytes_t *this_, uint64_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_deserialize_uint8(const struct z_loaned_bytes_t *this_,
-                                uint8_t *dst);
-#endif
+ZENOHC_API z_result_t ze_deserialize_uint8(const struct z_loaned_bytes_t *this_, uint8_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_double(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_double(struct ze_deserializer_t *this_,
                                               double *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a float.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_float(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_float(struct ze_deserializer_t *this_,
                                              float *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_int16(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_int16(struct ze_deserializer_t *this_,
                                              int16_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_int32(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_int32(struct ze_deserializer_t *this_,
                                              int32_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_int64(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_int64(struct ze_deserializer_t *this_,
                                              int64_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_int8(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_int8(struct ze_deserializer_t *this_,
                                             int8_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Initiates deserialization of a sequence of multiple elements.
  * @param this_: A serializer instance.
  * @param len:  pointer where the length of the sequence (previously passed via `z_bytes_writer_serialize_sequence_begin`) will be written.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_sequence_length(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_sequence_length(struct ze_deserializer_t *this_,
                                                        size_t *len);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a slice.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_slice(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_slice(struct ze_deserializer_t *this_,
                                              struct z_owned_slice_t *slice);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into a string.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_string(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_string(struct ze_deserializer_t *this_,
                                               struct z_owned_string_t *str);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_uint16(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_uint16(struct ze_deserializer_t *this_,
                                               uint16_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_uint32(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_uint32(struct ze_deserializer_t *this_,
                                               uint32_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_uint64(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_uint64(struct ze_deserializer_t *this_,
                                               uint64_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deserializes into an unsigned integer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_deserializer_deserialize_uint8(ze_deserializer_t *this_,
+z_result_t ze_deserializer_deserialize_uint8(struct ze_deserializer_t *this_,
                                              uint8_t *dst);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets deserializer for`this_`.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-ze_deserializer_t ze_deserializer_from_bytes(const struct z_loaned_bytes_t *this_);
-#endif
+struct ze_deserializer_t ze_deserializer_from_bytes(const struct z_loaned_bytes_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Checks if deserializer parsed all of its data.
  * @return `true` if there is no more data to parse, `false` otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_deserializer_is_done(const ze_deserializer_t *this_);
-#endif
+ZENOHC_API bool ze_deserializer_is_done(const struct ze_deserializer_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
@@ -5531,21 +5432,13 @@ bool ze_internal_querying_subscriber_check(const ze_owned_querying_subscriber_t 
 ZENOHC_API void ze_internal_querying_subscriber_null(ze_owned_querying_subscriber_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_internal_serializer_check(const ze_owned_serializer_t *this_);
-#endif
+ZENOHC_API bool ze_internal_serializer_check(const struct ze_owned_serializer_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs a serializer in a gravestone state.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_internal_serializer_null(ze_owned_serializer_t *this_);
-#endif
+ZENOHC_API void ze_internal_serializer_null(struct ze_owned_serializer_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops publication cache and resets it to its gravestone state.
@@ -5616,326 +5509,175 @@ ZENOHC_API
 void ze_querying_subscriber_options_default(struct ze_querying_subscriber_options_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a data from buffer by.
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param data: A pointer to the buffer containing data.
  * @param len: Length of the buffer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_buf(struct z_owned_bytes_t *this_,
-                      const uint8_t *data,
-                      size_t len);
-#endif
+ZENOHC_API void ze_serialize_buf(struct z_owned_bytes_t *this_, const uint8_t *data, size_t len);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a double.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_double(struct z_owned_bytes_t *this_,
-                         double val);
-#endif
+ZENOHC_API void ze_serialize_double(struct z_owned_bytes_t *this_, double val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a float.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_float(struct z_owned_bytes_t *this_,
-                        float val);
-#endif
+ZENOHC_API void ze_serialize_float(struct z_owned_bytes_t *this_, float val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_int16(struct z_owned_bytes_t *this_,
-                        int16_t val);
-#endif
+ZENOHC_API void ze_serialize_int16(struct z_owned_bytes_t *this_, int16_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_int32(struct z_owned_bytes_t *this_,
-                        int32_t val);
-#endif
+ZENOHC_API void ze_serialize_int32(struct z_owned_bytes_t *this_, int32_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_int64(struct z_owned_bytes_t *this_,
-                        int64_t val);
-#endif
+ZENOHC_API void ze_serialize_int64(struct z_owned_bytes_t *this_, int64_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_int8(struct z_owned_bytes_t *this_,
-                       int8_t val);
-#endif
+ZENOHC_API void ze_serialize_int8(struct z_owned_bytes_t *this_, int8_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a slice.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void ze_serialize_slice(struct z_owned_bytes_t *this_,
                         const struct z_loaned_slice_t *slice);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a null-terminated string.
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param str: a pointer to the null-terminated string.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_str(struct z_owned_bytes_t *this_,
-                      const char *str);
-#endif
+ZENOHC_API void ze_serialize_str(struct z_owned_bytes_t *this_, const char *str);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a string.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void ze_serialize_string(struct z_owned_bytes_t *this_,
                          const struct z_loaned_string_t *str);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_uint16(struct z_owned_bytes_t *this_,
-                         uint16_t val);
-#endif
+ZENOHC_API void ze_serialize_uint16(struct z_owned_bytes_t *this_, uint16_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_uint32(struct z_owned_bytes_t *this_,
-                         uint32_t val);
-#endif
+ZENOHC_API void ze_serialize_uint32(struct z_owned_bytes_t *this_, uint32_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_uint64(struct z_owned_bytes_t *this_,
-                         uint64_t val);
-#endif
+ZENOHC_API void ze_serialize_uint64(struct z_owned_bytes_t *this_, uint64_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serialize_uint8(struct z_owned_bytes_t *this_,
-                        uint8_t val);
-#endif
+ZENOHC_API void ze_serialize_uint8(struct z_owned_bytes_t *this_, uint8_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops `this_`, resetting it to gravestone value.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_drop(ze_moved_serializer_t *this_);
-#endif
+ZENOHC_API void ze_serializer_drop(struct ze_moved_serializer_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs a serializer with empty payload.
  * @param this_: An uninitialized memory location where serializer is to be constructed.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_serializer_empty(ze_owned_serializer_t *this_);
-#endif
+ZENOHC_API z_result_t ze_serializer_empty(struct ze_owned_serializer_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drop serializer and extract underlying `bytes` object it was writing to.
  * @param this_: A serializer instance.
  * @param bytes: An uninitialized memory location where `bytes` object` will be written to.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_finish(ze_moved_serializer_t *this_,
+void ze_serializer_finish(struct ze_moved_serializer_t *this_,
                           struct z_owned_bytes_t *bytes);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Borrows serializer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const ze_loaned_serializer_t *ze_serializer_loan(const ze_owned_serializer_t *this_);
-#endif
+const struct ze_loaned_serializer_t *ze_serializer_loan(const struct ze_owned_serializer_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Muatably borrows serializer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-ze_loaned_serializer_t *ze_serializer_loan_mut(ze_owned_serializer_t *this_);
-#endif
+struct ze_loaned_serializer_t *ze_serializer_loan_mut(struct ze_owned_serializer_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a data from buffer.
  * @param this_: A serializer instance.
  * @param data: A pointer to the buffer containing data.
  * @param len: Length of the buffer.
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_buf(ze_loaned_serializer_t *this_,
+void ze_serializer_serialize_buf(struct ze_loaned_serializer_t *this_,
                                  const uint8_t *data,
                                  size_t len);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a double.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_double(ze_loaned_serializer_t *this_,
-                                    double val);
-#endif
+ZENOHC_API void ze_serializer_serialize_double(struct ze_loaned_serializer_t *this_, double val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a float.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_float(ze_loaned_serializer_t *this_,
-                                   float val);
-#endif
+ZENOHC_API void ze_serializer_serialize_float(struct ze_loaned_serializer_t *this_, float val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_int16(ze_loaned_serializer_t *this_,
-                                   int16_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_int16(struct ze_loaned_serializer_t *this_, int16_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_int32(ze_loaned_serializer_t *this_,
-                                   int32_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_int32(struct ze_loaned_serializer_t *this_, int32_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_int64(ze_loaned_serializer_t *this_,
-                                   int64_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_int64(struct ze_loaned_serializer_t *this_, int64_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a signed integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_int8(ze_loaned_serializer_t *this_,
-                                  int8_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_int8(struct ze_loaned_serializer_t *this_, int8_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Initiates serialization of a sequence of multiple elements.
  * @param this_: A serializer instance.
  * @param len: Length of the sequence. Could be read during deserialization using `ze_deserializer_deserialize_sequence_length`.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_sequence_length(ze_loaned_serializer_t *this_,
+void ze_serializer_serialize_sequence_length(struct ze_loaned_serializer_t *this_,
                                              size_t len);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a slice.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_slice(ze_loaned_serializer_t *this_,
+void ze_serializer_serialize_slice(struct ze_loaned_serializer_t *this_,
                                    const struct z_loaned_slice_t *slice);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a null-terminated string.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_str(ze_loaned_serializer_t *this_,
-                                 const char *str);
-#endif
+ZENOHC_API void ze_serializer_serialize_str(struct ze_loaned_serializer_t *this_, const char *str);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes a string.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_serializer_serialize_string(ze_loaned_serializer_t *this_,
+void ze_serializer_serialize_string(struct ze_loaned_serializer_t *this_,
                                     const struct z_loaned_string_t *str);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_uint16(ze_loaned_serializer_t *this_,
-                                    uint16_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_uint16(struct ze_loaned_serializer_t *this_, uint16_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_uint32(ze_loaned_serializer_t *this_,
-                                    uint32_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_uint32(struct ze_loaned_serializer_t *this_, uint32_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_uint64(ze_loaned_serializer_t *this_,
-                                    uint64_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_uint64(struct ze_loaned_serializer_t *this_, uint64_t val);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Serializes an unsigned integer.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_serializer_serialize_uint8(ze_loaned_serializer_t *this_,
-                                   uint8_t val);
-#endif
+ZENOHC_API void ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_, uint8_t val);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares and drops publication cache.
