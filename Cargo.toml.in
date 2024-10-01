@@ -31,7 +31,7 @@ build = "@CARGO_PROJECT_DIR@build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-shared-memory = ["zenoh/shared-memory", "zenoh-ext/shared-memory"]
+shared-memory = ["zenoh/shared-memory"]
 unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
 auth_pubkey = ["zenoh/auth_pubkey"]
 auth_usrpwd = ["zenoh/auth_usrpwd"]

@@ -8,7 +8,6 @@ edition = "2021"
 [features]
 shared-memory = [
     "zenoh/shared-memory",
-    "zenoh-ext/shared-memory",
     "zenoh-protocol/shared-memory",
 ]
 unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
