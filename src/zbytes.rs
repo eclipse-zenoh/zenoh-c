@@ -605,8 +605,7 @@ decl_c_type! {
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 extern "C" fn z_bytes_writer_empty(this: &mut MaybeUninit<z_owned_bytes_writer_t>) -> z_result_t {
-    this.as_rust_type_mut_uninit()
-        .write(Some(ZBytesWriter::from(ZBytes::new())));
+    this.as_rust_type_mut_uninit().write(Some(ZBytes::writer()));
     result::Z_OK
 }
 
