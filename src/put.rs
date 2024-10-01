@@ -15,6 +15,7 @@ use std::mem::MaybeUninit;
 
 use zenoh::{
     qos::{CongestionControl, Priority},
+    session::SessionClosedError,
     Wait,
 };
 
@@ -124,12 +125,13 @@ pub extern "C" fn z_put(
             };
         }
     }
-
-    if let Err(e) = put.wait() {
-        tracing::error!("{}", e);
-        result::Z_EGENERIC
-    } else {
-        result::Z_OK
+    match put.wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_SESSION_CLOSED,
+        Err(e) => {
+            tracing::error!("{}", e);
+            result::Z_EGENERIC
+        }
     }
 }
 
