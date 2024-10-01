@@ -367,6 +367,8 @@ Functions
 .. doxygenfunction:: z_sample_congestion_control
 .. doxygenfunction:: z_sample_express
 .. doxygenfunction:: z_sample_reliability
+.. doxygenfunction:: z_sample_keyexpr
+.. doxygenfunction:: z_sample_kind
 
 
 Timestamp
@@ -606,6 +608,7 @@ Functions
 
 .. doxygenfunction:: z_declare_subscriber
 .. doxygenfunction:: z_undeclare_subscriber
+.. doxygenfunction:: z_subscriber_keyexpr
 
 .. doxygenfunction:: z_subscriber_drop
 
@@ -649,6 +652,8 @@ Types
     :members:
 .. doxygenstruct:: z_query_reply_err_options_t
     :members:
+.. doxygenstruct:: z_query_reply_del_options_t
+    :members:
 
 .. doxygenstruct:: z_owned_fifo_handler_query_t
 .. doxygenstruct:: z_loaned_fifo_handler_query_t
@@ -664,6 +669,7 @@ Functions
 .. doxygenfunction:: z_queryable_options_default
 .. doxygenfunction:: z_query_reply_options_default
 .. doxygenfunction:: z_query_reply_err_options_default
+.. doxygenfunction:: z_query_reply_del_options_default
 
 .. doxygenfunction:: z_queryable_loan
 .. doxygenfunction:: z_queryable_drop
@@ -679,6 +685,7 @@ Functions
 .. doxygenfunction:: z_query_attachment
 .. doxygenfunction:: z_query_reply
 .. doxygenfunction:: z_query_reply_err
+.. doxygenfunction:: z_query_reply_del
 
 .. doxygenfunction:: z_closure_query_call
 .. doxygenfunction:: z_closure_query_loan
@@ -891,3 +898,4 @@ Other
 Functions
 ---------
 .. doxygenfunction:: zc_stop_z_runtime
+.. doxygenfunction:: zc_force_cleanup_before_exit
