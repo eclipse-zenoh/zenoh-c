@@ -121,8 +121,8 @@ int main(int argc, char **argv) {
     assert(received_replies == 5);
 
     z_undeclare_queryable(z_move(queryable));
-    z_close(z_move(get_session), NULL);
-    z_close(z_move(queryable_session), NULL);
+    z_drop(z_move(get_session));
+    z_drop(z_move(queryable_session));
     z_drop(z_move(queryable_keyexpr));
 
     zc_stop_z_runtime();

@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     z_closure(&callback2, print_zid, NULL, NULL);
     z_info_peers_zid(z_loan(s), z_move(callback2));
 
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 void print_help() {

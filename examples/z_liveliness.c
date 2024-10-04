@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     printf("Undeclaring liveliness token...\n");
     z_drop(z_move(token));
 
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
     return 0;
 }
 

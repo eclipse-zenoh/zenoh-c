@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
         z_sleep_s(1);
     }
     z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(session), NULL);
+    z_drop(z_move(session));
 }
 
 void print_help() {

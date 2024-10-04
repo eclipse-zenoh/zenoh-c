@@ -42,7 +42,7 @@ void put() {
     z_put(z_loan(s), z_loan(ke), z_move(payload), &opts);
     assert(!z_internal_check(payload));
     assert(!z_internal_check(attachment));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 void get() {
@@ -70,7 +70,7 @@ void get() {
     z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
     assert(!z_internal_check(payload));
     assert(!z_internal_check(attachment));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 int main(int argc, char **argv) {

@@ -86,7 +86,7 @@ int run_publisher() {
 
     ze_undeclare_publication_cache(z_move(pub_cache));
     z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 
     return 0;
 }
@@ -144,7 +144,7 @@ int run_subscriber() {
     z_sleep_s(10);
 
     ze_undeclare_querying_subscriber(z_move(sub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 
     return -1;
 }

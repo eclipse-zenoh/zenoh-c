@@ -29,9 +29,9 @@ void test_session() {
     z_owned_session_t session;
     z_open(&session, z_move(config), NULL);
     assert(z_internal_check(session));
-    z_close(z_move(session), NULL);
+    z_drop(z_move(session));
     assert(!z_internal_check(session));
-    z_close(z_move(session), NULL);
+    z_drop(z_move(session));
     assert(!z_internal_check(session));
 }
 
@@ -51,7 +51,7 @@ void test_publisher() {
     assert(!z_internal_check(pub));
     z_undeclare_publisher(z_move(pub));
     assert(!z_internal_check(pub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 void test_keyexpr() {
@@ -94,7 +94,7 @@ void test_subscriber() {
     assert(!z_internal_check(sub));
     z_undeclare_subscriber(z_move(sub));
     assert(!z_internal_check(sub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 void query_handler(z_loaned_query_t *query, void *context) {}
@@ -116,7 +116,7 @@ void test_queryable() {
     assert(!z_internal_check(queryable));
     z_undeclare_queryable(z_move(queryable));
     assert(!z_internal_check(queryable));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 int main(int argc, char **argv) {

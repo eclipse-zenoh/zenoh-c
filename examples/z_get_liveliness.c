@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 
     z_drop(z_move(reply));
     z_drop(z_move(handler));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
     return 0;
 }
 
