@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
         printf("Delete failed...\n");
     }
 
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
     return 0;
 }
 

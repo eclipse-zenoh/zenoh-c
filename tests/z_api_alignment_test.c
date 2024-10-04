@@ -346,15 +346,17 @@ int main(int argc, char **argv) {
     zp_stop_lease_task(z_loan(s1));
 #endif
 
-    _ret_int8 = z_close(z_move(s1), NULL);
+    _ret_int8 = z_close(z_loan_mut(s1), NULL);
     assert(_ret_int8 == 0);
+    z_drop(z_move(s1));
 
 #ifdef ZENOH_PICO
     zp_stop_read_task(z_loan(s2));
     zp_stop_lease_task(z_loan(s2));
 #endif
-    _ret_int8 = z_close(z_move(s2), NULL);
+    _ret_int8 = z_close(z_loan_mut(s2), NULL);
     assert(_ret_int8 == 0);
+    z_drop(z_move(s2));
 
     z_sleep_s(SLEEP * 5);
 

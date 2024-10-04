@@ -40,7 +40,7 @@ Publish
 
       z_put(z_loan(s), z_loan(key_expr), z_move(payload), NULL);
 
-      z_close(z_move(s));
+      z_drop(z_move(s));
       return 0;
   }
 
@@ -83,7 +83,7 @@ Subscribe
       z_owned_subscriber_t sub;
       if (z_declare_subscriber(&sub, z_loan(s), z_loan(key_expr) z_move(callback), NULL) != 0) {
           printf("Unable to create Zenoh subscriber.\n");
-          z_close(z_move(s));
+          z_drop(z_move(s));
           exit(-1);
       }
 
@@ -93,7 +93,7 @@ Subscribe
       }
 
       z_undeclare_subscriber(z_move(sub));
-      z_close(z_move(s));
+      z_drop(z_move(s));
       return 0;
   }
 
@@ -140,7 +140,7 @@ Query
 
       z_drop(reply);
       z_drop(channel);
-      z_close(z_move(s));
+      z_drop(z_move(s));
       return 0;
   }
 
@@ -206,6 +206,6 @@ Queryable
       }
 
       z_undeclare_queryable(z_move(qable));
-      z_close(z_move(s));
+      z_drop(z_move(s));
       return 0;
   }

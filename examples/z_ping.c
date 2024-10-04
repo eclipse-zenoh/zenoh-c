@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     z_undeclare_subscriber(z_move(sub));
     z_undeclare_publisher(z_move(pub));
     z_drop(z_move(mutex));
-    z_close(z_move(session), NULL);
+    z_drop(z_move(session));
 }
 
 void print_help() {

@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     }
 
     ze_undeclare_publication_cache(z_move(pub_cache));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 
     return 0;
 }

@@ -510,8 +510,10 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_open
 .. doxygenfunction:: z_close
+.. doxygenfunction:: z_session_is_closed
 
 .. doxygenfunction:: z_session_loan
+.. doxygenfunction:: z_session_loan_mut
 .. doxygenfunction:: z_session_drop
 
 .. doxygenfunction:: z_info_zid

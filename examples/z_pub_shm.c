@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
 #endif
 
     z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 
     z_drop(z_move(provider));
     z_drop(z_move(layout));
