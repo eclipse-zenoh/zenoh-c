@@ -5246,6 +5246,11 @@ z_result_t ze_declare_querying_subscriber(ze_owned_querying_subscriber_t *this_,
                                           struct ze_querying_subscriber_options_t *options);
 #endif
 /**
+ * @brief Deserializes into a bool.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t ze_deserialize_bool(const struct z_loaned_bytes_t *this_, bool *dst);
+/**
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -5307,6 +5312,11 @@ ZENOHC_API z_result_t ze_deserialize_uint64(const struct z_loaned_bytes_t *this_
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API z_result_t ze_deserialize_uint8(const struct z_loaned_bytes_t *this_, uint8_t *dst);
+/**
+ * @brief Deserializes into a bool.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t ze_deserializer_deserialize_bool(struct ze_deserializer_t *this_, bool *dst);
 /**
  * @brief Deserializes into a signed integer.
  * @return 0 in case of success, negative error code otherwise.
@@ -5516,6 +5526,10 @@ ZENOHC_API
 void ze_querying_subscriber_options_default(struct ze_querying_subscriber_options_t *this_);
 #endif
 /**
+ * @brief Serializes a bool.
+ */
+ZENOHC_API void ze_serialize_bool(struct z_owned_bytes_t *this_, bool val);
+/**
  * @brief Serializes a data from buffer by.
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param data: A pointer to the buffer containing data.
@@ -5610,6 +5624,10 @@ const struct ze_loaned_serializer_t *ze_serializer_loan(const struct ze_owned_se
  */
 ZENOHC_API
 struct ze_loaned_serializer_t *ze_serializer_loan_mut(struct ze_owned_serializer_t *this_);
+/**
+ * @brief Serializes a bool.
+ */
+ZENOHC_API void ze_serializer_serialize_bool(struct ze_loaned_serializer_t *this_, bool val);
 /**
  * @brief Serializes a data from buffer.
  * @param this_: A serializer instance.
