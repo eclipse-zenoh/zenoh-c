@@ -185,6 +185,12 @@ pub extern "C" fn ze_serialize_double(this_: &mut MaybeUninit<z_owned_bytes_t>, 
     ze_serialize_arithmetic::<f64>(this_, &val);
 }
 
+/// @brief Serializes a bool.
+#[no_mangle]
+pub extern "C" fn ze_serialize_bool(this_: &mut MaybeUninit<z_owned_bytes_t>, val: bool) {
+    ze_serialize_arithmetic::<bool>(this_, &val);
+}
+
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -253,6 +259,13 @@ pub extern "C" fn ze_deserialize_float(this: &z_loaned_bytes_t, dst: &mut f32) -
 #[no_mangle]
 pub extern "C" fn ze_deserialize_double(this: &z_loaned_bytes_t, dst: &mut f64) -> z_result_t {
     ze_deserialize_arithmetic::<f64>(this, dst)
+}
+
+/// @brief Deserializes into a bool.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn ze_deserialize_bool(this: &z_loaned_bytes_t, dst: &mut bool) -> z_result_t {
+    ze_deserialize_arithmetic::<bool>(this, dst)
 }
 
 /// @brief Serializes a slice.
@@ -452,6 +465,12 @@ pub extern "C" fn ze_serializer_serialize_double(this_: &mut ze_loaned_serialize
     ze_serializer_serialize_arithmetic::<f64>(this_, &val);
 }
 
+/// @brief Serializes a bool.
+#[no_mangle]
+pub extern "C" fn ze_serializer_serialize_bool(this_: &mut ze_loaned_serializer_t, val: bool) {
+    ze_serializer_serialize_arithmetic::<bool>(this_, &val);
+}
+
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -550,6 +569,16 @@ pub extern "C" fn ze_deserializer_deserialize_double(
     dst: &mut f64,
 ) -> z_result_t {
     ze_deserializer_deserialize_arithmetic::<f64>(this, dst)
+}
+
+/// @brief Deserializes into a bool.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn ze_deserializer_deserialize_bool(
+    this: &mut ze_deserializer_t,
+    dst: &mut bool,
+) -> z_result_t {
+    ze_deserializer_deserialize_arithmetic::<bool>(this, dst)
 }
 
 /// @brief Serializes a slice.

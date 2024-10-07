@@ -132,6 +132,7 @@ Functions
 .. doxygenfunction:: ze_serialize_int64
 .. doxygenfunction:: ze_serialize_float
 .. doxygenfunction:: ze_serialize_double
+.. doxygenfunction:: ze_serialize_bool
 
 .. doxygenfunction:: ze_deserialize_slice
 .. doxygenfunction:: ze_deserialize_string
@@ -145,6 +146,7 @@ Functions
 .. doxygenfunction:: ze_deserialize_int64
 .. doxygenfunction:: ze_deserialize_float
 .. doxygenfunction:: ze_deserialize_double
+.. doxygenfunction:: ze_deserialize_bool
 
 .. doxygenfunction:: z_bytes_empty
 .. doxygenfunction:: z_bytes_clone
@@ -179,6 +181,7 @@ Functions
 .. doxygenfunction:: ze_serializer_serialize_int64
 .. doxygenfunction:: ze_serializer_serialize_float
 .. doxygenfunction:: ze_serializer_serialize_double
+.. doxygenfunction:: ze_serializer_serialize_bool
 .. doxygenfunction:: ze_serializer_serialize_sequence_length
 
 .. doxygenfunction:: ze_deserializer_from_bytes
@@ -195,6 +198,7 @@ Functions
 .. doxygenfunction:: ze_deserializer_deserialize_int64
 .. doxygenfunction:: ze_deserializer_deserialize_float
 .. doxygenfunction:: ze_deserializer_deserialize_double
+.. doxygenfunction:: ze_deserializer_deserialize_bool
 .. doxygenfunction:: ze_deserializer_deserialize_sequence_length
 
 
