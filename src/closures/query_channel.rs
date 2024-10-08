@@ -16,7 +16,7 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
-    handlers::{self, IntoHandler, RingChannelHandler},
+    handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
     query::Query,
 };
 
@@ -29,7 +29,7 @@ use crate::{
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_query_t, option flume::Receiver<Query> ),
+    owned(z_owned_fifo_handler_query_t, option FifoChannelHandler<Query> ),
     loaned(z_loaned_fifo_handler_query_t),
 );
 
@@ -133,16 +133,17 @@ pub extern "C" fn z_fifo_handler_query_try_recv(
     query: &mut MaybeUninit<z_owned_query_t>,
 ) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
-        Ok(q) => {
+        Ok(Some(q)) => {
             query.as_rust_type_mut_uninit().write(Some(q));
             result::Z_OK
         }
-        Err(e) => {
+        Ok(None) => {
             query.as_rust_type_mut_uninit().write(None);
-            match e {
-                flume::TryRecvError::Empty => result::Z_CHANNEL_NODATA,
-                flume::TryRecvError::Disconnected => result::Z_CHANNEL_DISCONNECTED,
-            }
+            result::Z_CHANNEL_NODATA
+        }
+        Err(_) => {
+            query.as_rust_type_mut_uninit().write(None);
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
