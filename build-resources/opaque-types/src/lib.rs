@@ -11,7 +11,7 @@ use std::{
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
     config::Config,
-    handlers::RingChannelHandler,
+    handlers::{FifoChannelHandler, RingChannelHandler},
     key_expr::KeyExpr,
     pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
@@ -432,11 +432,11 @@ get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
 
 /// An owned Zenoh fifo sample handler.
 get_opaque_type_data!(
-    Option<flume::Receiver<Sample>>,
+    Option<FifoChannelHandler<Sample>>,
     z_owned_fifo_handler_sample_t
 );
 /// An loaned Zenoh fifo sample handler.
-get_opaque_type_data!(flume::Receiver<Sample>, z_loaned_fifo_handler_sample_t);
+get_opaque_type_data!(FifoChannelHandler<Sample>, z_loaned_fifo_handler_sample_t);
 
 /// An owned Zenoh ring sample handler.
 get_opaque_type_data!(
@@ -447,9 +447,12 @@ get_opaque_type_data!(
 get_opaque_type_data!(RingChannelHandler<Sample>, z_loaned_ring_handler_sample_t);
 
 /// An owned Zenoh fifo query handler.
-get_opaque_type_data!(Option<flume::Receiver<Query>>, z_owned_fifo_handler_query_t);
+get_opaque_type_data!(
+    Option<FifoChannelHandler<Query>>,
+    z_owned_fifo_handler_query_t
+);
 /// An loaned Zenoh fifo query handler.
-get_opaque_type_data!(flume::Receiver<Query>, z_loaned_fifo_handler_query_t);
+get_opaque_type_data!(FifoChannelHandler<Query>, z_loaned_fifo_handler_query_t);
 
 /// An owned Zenoh ring query handler.
 get_opaque_type_data!(
@@ -460,9 +463,12 @@ get_opaque_type_data!(
 get_opaque_type_data!(RingChannelHandler<Query>, z_loaned_ring_handler_query_t);
 
 /// An owned Zenoh fifo reply handler.
-get_opaque_type_data!(Option<flume::Receiver<Reply>>, z_owned_fifo_handler_reply_t);
+get_opaque_type_data!(
+    Option<FifoChannelHandler<Reply>>,
+    z_owned_fifo_handler_reply_t
+);
 /// An loaned Zenoh fifo reply handler.
-get_opaque_type_data!(flume::Receiver<Reply>, z_loaned_fifo_handler_reply_t);
+get_opaque_type_data!(FifoChannelHandler<Reply>, z_loaned_fifo_handler_reply_t);
 
 /// An owned Zenoh ring reply handler.
 get_opaque_type_data!(
