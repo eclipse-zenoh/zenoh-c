@@ -209,8 +209,7 @@ pub extern "C" fn z_publisher_put_options_default(
 /// The payload and all owned options fields are consumed upon function return.
 ///
 /// @param this_: The publisher.
-/// @param session: The Zenoh session.
-/// @param payload: The dat to publish. WIll be consumed.
+/// @param payload: The data to publish. Will be consumed.
 /// @param options: The publisher put options. All owned fields will be consumed.
 ///
 /// @return 0 in case of success, negative error values in case of failure.

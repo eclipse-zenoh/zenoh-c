@@ -1768,7 +1768,7 @@ z_result_t z_declare_queryable(struct z_owned_queryable_t *this_,
  * @param session: The zenoh session.
  * @param key_expr: The key expression to subscribe.
  * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
- * @param options: The options to be passed to the subscriber declaration.
+ * @param _options: The options to be passed to the subscriber declaration.
  *
  * @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
  */
@@ -2997,7 +2997,7 @@ z_result_t z_keyexpr_from_substr(struct z_owned_keyexpr_t *this_,
  * Constructs a `z_keyexpr_t` by copying a substring.
  *
  * @param this_: An uninitialized location in memory where key expression will be constructed.
- * @param expr: A buffer of with length >= `len`.
+ * @param start: A buffer of with length >= `len`.
  * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -3207,8 +3207,7 @@ ZENOHC_API void z_publisher_options_default(struct z_publisher_options_t *this_)
  * The payload and all owned options fields are consumed upon function return.
  *
  * @param this_: The publisher.
- * @param session: The Zenoh session.
- * @param payload: The dat to publish. WIll be consumed.
+ * @param payload: The data to publish. Will be consumed.
  * @param options: The publisher put options. All owned fields will be consumed.
  *
  * @return 0 in case of success, negative error values in case of failure.
@@ -3347,7 +3346,7 @@ z_result_t z_query_reply(const struct z_loaned_query_t *this_,
  * be called multiple times to send multiple replies to a query. The reply
  * will be considered complete when the Queryable callback returns.
  *
- * @param this: The query to reply to.
+ * @param this_: The query to reply to.
  * @param key_expr: The key of this delete reply.
  * @param options: The options of this delete reply. All owned fields will be consumed.
  *
@@ -3877,7 +3876,7 @@ struct z_loaned_shm_mut_t *z_shm_mut_loan_mut(struct z_owned_shm_mut_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Tries to obtain mutable SHM buffer instead of immutable one.
- * @param this: mutable SHM buffer to be initialized upon success
+ * @param this_: mutable SHM buffer to be initialized upon success
  * @param that: immutable SHM buffer
  * @param immut: immutable SHM buffer returned back to caller's side
  * ONLY in case of Z_EUNAVAILABLE failure
@@ -4080,7 +4079,7 @@ ZENOHC_API void z_slice_empty(struct z_owned_slice_t *this_);
  * @param this_: Pointer to an uninitialized memoery location where slice will be constructed.
  * @param data: Pointer to the data to be owned by `this_`.
  * @param len: Number of bytes in `data`.
- * @param deleter: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
+ * @param drop: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
  * @param context: An optional context to be passed to the `deleter`.
  *
  * @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
@@ -4238,8 +4237,8 @@ ZENOHC_API void z_string_empty(struct z_owned_string_t *this_);
 /**
  * Constructs an owned string by transferring ownership of a null-terminated string `str` to it.
  * @param this_: Pointer to an uninitialized memory location where an owned string will be constructed.
- * @param value: Pointer to a null terminated string to be owned by `this_`.
- * @param deleter: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
+ * @param str: Pointer to a null terminated string to be owned by `this_`.
+ * @param drop: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
  * @param context: An optional context to be passed to the `deleter`.
  * @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
  */
@@ -4430,7 +4429,7 @@ z_result_t z_view_keyexpr_from_substr(struct z_view_keyexpr_t *this_,
  * `expr` must outlive the constucted key expression.
  *
  * @param this_: An uninitialized location in memory where key expression will be constructed
- * @param expr: A buffer of with length >= `len`.
+ * @param start: A buffer of with length >= `len`.
  * @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
  * @return 0 in case of success, negative error code otherwise.
  */
@@ -4518,7 +4517,6 @@ ZENOHC_API const struct z_loaned_string_t *z_view_string_loan(const struct z_vie
  * The string has static storage (i.e. valid until the end of the program).
  * @param whatami: A whatami bitmask of zenoh entity kind.
  * @param str_out: An uninitialized memory location where strring will be constructed.
- * @param len: Maximum number of bytes that can be written to the `buf`.
  *
  * @return 0 if successful, negative error values if whatami contains an invalid bitmask.
  */
@@ -4788,7 +4786,7 @@ void zc_liveliness_declaration_options_default(struct zc_liveliness_declaration_
  * @param session: The Zenoh session.
  * @param key_expr: The key expression to subscribe to.
  * @param callback: The callback function that will be called each time a liveliness token status is changed.
- * @param _options: The options to be passed to the liveliness subscriber declaration.
+ * @param options: The options to be passed to the liveliness subscriber declaration.
  *
  * @return 0 in case of success, negative error values otherwise.
  */
@@ -5321,7 +5319,6 @@ ZENOHC_API void ze_serialize_bool(struct z_owned_bytes_t *this_, bool val);
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param data: A pointer to the buffer containing data.
  * @param len: Length of the buffer.
- * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API void ze_serialize_buf(struct z_owned_bytes_t *this_, const uint8_t *data, size_t len);
 /**
@@ -5358,7 +5355,6 @@ void ze_serialize_slice(struct z_owned_bytes_t *this_,
  * @brief Serializes a null-terminated string.
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param str: a pointer to the null-terminated string.
- * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API void ze_serialize_str(struct z_owned_bytes_t *this_, const char *str);
 /**
@@ -5420,7 +5416,6 @@ ZENOHC_API void ze_serializer_serialize_bool(struct ze_loaned_serializer_t *this
  * @param this_: A serializer instance.
  * @param data: A pointer to the buffer containing data.
  * @param len: Length of the buffer.
- * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 void ze_serializer_serialize_buf(struct ze_loaned_serializer_t *this_,

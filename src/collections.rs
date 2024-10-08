@@ -397,7 +397,7 @@ pub unsafe extern "C" fn z_slice_copy_from_buf(
 /// @param this_: Pointer to an uninitialized memoery location where slice will be constructed.
 /// @param data: Pointer to the data to be owned by `this_`.
 /// @param len: Number of bytes in `data`.
-/// @param deleter: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
+/// @param drop: A thread-safe delete function to free the `data`. Will be called once when `this_` is dropped. Can be NULL, in case if `data` is allocated in static memory.
 /// @param context: An optional context to be passed to the `deleter`.
 ///
 /// @return -1 if `start == NULL` and `len > 0` (creating an empty slice), 0 otherwise.
@@ -627,8 +627,8 @@ pub unsafe extern "C" fn z_string_copy_from_substr(
 
 /// Constructs an owned string by transferring ownership of a null-terminated string `str` to it.
 /// @param this_: Pointer to an uninitialized memory location where an owned string will be constructed.
-/// @param value: Pointer to a null terminated string to be owned by `this_`.
-/// @param deleter: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
+/// @param str: Pointer to a null terminated string to be owned by `this_`.
+/// @param drop: A thread-safe delete function to free the `str`. Will be called once when `str` is dropped. Can be NULL, in case if `str` is allocated in static memory.
 /// @param context: An optional context to be passed to the `deleter`.
 /// @return -1 if `str == NULL` and `len > 0` (and creates a string in a gravestone state), 0 otherwise.
 #[no_mangle]

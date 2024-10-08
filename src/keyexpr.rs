@@ -286,7 +286,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substr(
 /// `expr` must outlive the constucted key expression.
 ///
 /// @param this_: An uninitialized location in memory where key expression will be constructed
-/// @param expr: A buffer of with length >= `len`.
+/// @param start: A buffer of with length >= `len`.
 /// @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
@@ -319,7 +319,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
 /// Constructs a `z_keyexpr_t` by copying a substring.
 ///
 /// @param this_: An uninitialized location in memory where key expression will be constructed.
-/// @param expr: A buffer of with length >= `len`.
+/// @param start: A buffer of with length >= `len`.
 /// @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]

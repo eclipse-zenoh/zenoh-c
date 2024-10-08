@@ -152,7 +152,7 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
 /// @param session: The Zenoh session.
 /// @param key_expr: The key expression to subscribe to.
 /// @param callback: The callback function that will be called each time a liveliness token status is changed.
-/// @param _options: The options to be passed to the liveliness subscriber declaration.
+/// @param options: The options to be passed to the liveliness subscriber declaration.
 ///
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
