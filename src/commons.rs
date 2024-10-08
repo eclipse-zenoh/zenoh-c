@@ -100,6 +100,12 @@ pub extern "C" fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
     this_.as_rust_type_ref().get_id().to_le_bytes().into()
 }
 
+/// Checks validity of a timestamp.
+#[no_mangle]
+pub extern "C" fn z_timestamp_check(this_: &z_timestamp_t) -> bool {
+    this_.as_rust_type_ref().get_id().size() != 0
+}
+
 use crate::opaque_types::z_loaned_sample_t;
 pub use crate::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(

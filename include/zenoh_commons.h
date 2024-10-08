@@ -4332,6 +4332,10 @@ ZENOHC_API
 const char *z_time_now_as_str(const char *buf,
                               size_t len);
 /**
+ * Checks validity of a timestamp.
+ */
+ZENOHC_API bool z_timestamp_check(const struct z_timestamp_t *this_);
+/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns id associated with this timestamp.
  */

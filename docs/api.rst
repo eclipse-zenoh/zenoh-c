@@ -385,6 +385,7 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_timestamp_id
 .. doxygenfunction:: z_timestamp_ntp64_time
+.. doxygenfunction:: z_timestamp_check
 
 System
 ======
