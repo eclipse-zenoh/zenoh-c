@@ -283,7 +283,6 @@ pub extern "C" fn ze_serialize_slice(
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param data: A pointer to the buffer containing data.
 /// @param len: Length of the buffer.
-/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_serialize_buf(
@@ -332,7 +331,6 @@ pub extern "C" fn ze_serialize_string(
 /// @brief Serializes a null-terminated string.
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param str: a pointer to the null-terminated string.
-/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_serialize_str(
@@ -595,7 +593,6 @@ pub extern "C" fn ze_serializer_serialize_slice(
 /// @param this_: A serializer instance.
 /// @param data: A pointer to the buffer containing data.
 /// @param len: Length of the buffer.
-/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_serializer_serialize_buf(
     this: &mut ze_loaned_serializer_t,

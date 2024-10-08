@@ -65,7 +65,7 @@ pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscri
 /// @param session: The zenoh session.
 /// @param key_expr: The key expression to subscribe.
 /// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
-/// @param options: The options to be passed to the subscriber declaration.
+/// @param _options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
 #[no_mangle]

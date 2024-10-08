@@ -386,7 +386,7 @@ pub unsafe extern "C" fn z_query_reply_err(
 /// be called multiple times to send multiple replies to a query. The reply
 /// will be considered complete when the Queryable callback returns.
 ///
-/// @param this: The query to reply to.
+/// @param this_: The query to reply to.
 /// @param key_expr: The key of this delete reply.
 /// @param options: The options of this delete reply. All owned fields will be consumed.
 ///
