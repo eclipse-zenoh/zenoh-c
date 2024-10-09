@@ -96,7 +96,7 @@ pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &
         .write(Some(this_.as_rust_type_ref().clone()));
 }
 
-/// Options passed to the `z_declare_queryable()` function.
+/// Options passed to the `z_queryable_declare()` function.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_queryable_options_t {
@@ -242,7 +242,7 @@ fn _declare_queryable_inner<'a, 'b>(
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
 #[no_mangle]
-pub extern "C" fn z_declare_queryable(
+pub extern "C" fn z_queryable_declare(
     this: &mut MaybeUninit<z_owned_queryable_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,

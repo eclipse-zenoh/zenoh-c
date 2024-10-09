@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     z_owned_closure_query_t callback;
     z_closure(&callback, query_handler, NULL, NULL);
     z_owned_queryable_t queryable;
-    z_declare_queryable(&queryable, z_loan(queryable_session), z_loan(queryable_keyexpr), z_move(callback), NULL);
+    z_queryable_declare(&queryable, z_loan(queryable_session), z_loan(queryable_keyexpr), z_move(callback), NULL);
 
     z_view_keyexpr_t get_keyexpr;
     z_view_keyexpr_from_str(&get_keyexpr, GET_KEY_EXPR);

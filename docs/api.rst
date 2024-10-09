@@ -686,7 +686,7 @@ Types
 
 Functions
 ---------
-.. doxygenfunction:: z_declare_queryable
+.. doxygenfunction:: z_queryable_declare
 .. doxygenfunction:: z_queryable_declare_background
 .. doxygenfunction:: z_queryable_id
 
@@ -865,6 +865,7 @@ Functions
 ---------
 
 .. doxygenfunction:: ze_publication_cache_declare
+.. doxygenfunction:: ze_publication_cache_declare_background
 
 .. doxygenfunction:: ze_publication_cache_drop
 .. doxygenfunction:: ze_publication_cache_loan

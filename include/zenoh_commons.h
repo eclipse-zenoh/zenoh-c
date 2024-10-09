@@ -606,15 +606,6 @@ typedef struct z_moved_config_t {
   struct z_owned_config_t _this;
 } z_moved_config_t;
 /**
- * Options passed to the `z_declare_queryable()` function.
- */
-typedef struct z_queryable_options_t {
-  /**
-   * The completeness of the Queryable.
-   */
-  bool complete;
-} z_queryable_options_t;
-/**
  * Options passed to the `z_delete()` function.
  */
 typedef struct z_delete_options_t {
@@ -962,6 +953,15 @@ typedef struct z_query_reply_err_options_t {
    */
   struct z_moved_encoding_t *encoding;
 } z_query_reply_err_options_t;
+/**
+ * Options passed to the `z_queryable_declare()` function.
+ */
+typedef struct z_queryable_options_t {
+  /**
+   * The completeness of the Queryable.
+   */
+  bool complete;
+} z_queryable_options_t;
 typedef struct z_moved_queryable_t {
   struct z_owned_queryable_t _this;
 } z_moved_queryable_t;
@@ -1939,23 +1939,6 @@ ZENOHC_API
 z_result_t z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
                              const struct z_loaned_session_t *session,
                              const struct z_loaned_keyexpr_t *key_expr);
-/**
- * Constructs a Queryable for the given key expression.
- *
- * @param this_: An uninitialized memory location where queryable will be constructed.
- * @param session: The zenoh session.
- * @param key_expr: The key expression the Queryable will reply to.
- * @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
- * @param options: Options for the queryable.
- *
- * @return 0 in case of success, negative error code otherwise (in this case )
- */
-ZENOHC_API
-z_result_t z_declare_queryable(struct z_owned_queryable_t *this_,
-                               const struct z_loaned_session_t *session,
-                               const struct z_loaned_keyexpr_t *key_expr,
-                               struct z_moved_closure_query_t *callback,
-                               struct z_queryable_options_t *options);
 /**
  * Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).
  *
@@ -3586,6 +3569,23 @@ ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *th
  * Create a default `z_query_target_t`.
  */
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
+/**
+ * Constructs a Queryable for the given key expression.
+ *
+ * @param this_: An uninitialized memory location where queryable will be constructed.
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression the Queryable will reply to.
+ * @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
+ * @param options: Options for the queryable.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case )
+ */
+ZENOHC_API
+z_result_t z_queryable_declare(struct z_owned_queryable_t *this_,
+                               const struct z_loaned_session_t *session,
+                               const struct z_loaned_keyexpr_t *key_expr,
+                               struct z_moved_closure_query_t *callback,
+                               struct z_queryable_options_t *options);
 /**
  * Declares a background queryable for a given keyexpr. The queryable callback will be be called
  * to proccess incoming queries until the corresponding session is closed or dropped.
@@ -5466,6 +5466,22 @@ z_result_t ze_publication_cache_declare(ze_owned_publication_cache_t *this_,
                                         const struct z_loaned_session_t *session,
                                         const struct z_loaned_keyexpr_t *key_expr,
                                         struct ze_publication_cache_options_t *options);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a background publication cache. It will function in background until the corresponding session is closed or dropped.
+ *
+ * @param session: A Zenoh session.
+ * @param key_expr: The key expression to publish to.
+ * @param options: Additional options for the publication cache.
+ *
+ * @returns 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t ze_publication_cache_declare_background(const struct z_loaned_session_t *session,
+                                                   const struct z_loaned_keyexpr_t *key_expr,
+                                                   struct ze_publication_cache_options_t *options);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
