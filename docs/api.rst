@@ -32,6 +32,7 @@ Functions
 .. doxygenfunction:: z_slice_loan
 .. doxygenfunction:: z_view_slice_loan
 .. doxygenfunction:: z_slice_drop
+.. doxygenfunction:: z_slice_clone
 
 .. doxygenfunction:: z_slice_empty
 .. doxygenfunction:: z_slice_copy_from_buf
@@ -56,6 +57,7 @@ Functions
 .. doxygenfunction:: z_string_loan
 .. doxygenfunction:: z_view_string_loan
 .. doxygenfunction:: z_string_drop
+.. doxygenfunction:: z_string_clone
 
 .. doxygenfunction:: z_string_empty
 .. doxygenfunction:: z_view_string_empty
@@ -63,10 +65,12 @@ Functions
 .. doxygenfunction:: z_string_copy_from_str
 .. doxygenfunction:: z_view_string_from_str
 .. doxygenfunction:: z_string_copy_from_substr
+.. doxygenfunction:: z_view_string_from_substr 
 .. doxygenfunction:: z_string_from_str
 .. doxygenfunction:: z_string_data
 .. doxygenfunction:: z_string_len
 .. doxygenfunction:: z_string_is_empty
+.. doxygenfunction:: z_string_as_slice
 
 String Array
 ------------
@@ -98,8 +102,10 @@ Types
 .. doxygenstruct:: z_owned_bytes_t
 .. doxygenstruct:: z_loaned_bytes_t
 .. doxygenstruct:: z_bytes_reader_t
-.. doxygenstruct:: z_bytes_writer_t
-.. doxygenstruct:: ze_serializer_t
+.. doxygenstruct:: z_owned_bytes_writer_t
+.. doxygenstruct:: z_loaned_bytes_writer_t
+.. doxygenstruct:: ze_owned_serializer_t
+.. doxygenstruct:: ze_loaned_serializer_t
 .. doxygenstruct:: ze_deserializer_t
 
 Functions
@@ -160,8 +166,8 @@ Functions
 .. doxygenfunction:: z_bytes_reader_tell
 .. doxygenfunction:: z_bytes_reader_remaining
 
-.. doxygenfunction:: z_writer_empty
-.. doxygenfunction:: z_writer_finish
+.. doxygenfunction:: z_bytes_writer_empty
+.. doxygenfunction:: z_bytes_writer_finish
 .. doxygenfunction:: z_bytes_writer_write_all
 .. doxygenfunction:: z_bytes_writer_append
 
@@ -242,6 +248,7 @@ Functions
 .. doxygenfunction:: z_keyexpr_equals
 .. doxygenfunction:: z_keyexpr_includes
 .. doxygenfunction:: z_keyexpr_intersects
+.. doxygenfunction:: z_keyexpr_relation_to
 
 .. doxygenfunction:: z_declare_keyexpr
 .. doxygenfunction:: z_undeclare_keyexpr
@@ -265,6 +272,7 @@ Functions
 .. doxygenfunction:: z_encoding_set_schema_from_substr
 .. doxygenfunction:: z_encoding_to_string
 .. doxygenfunction:: z_encoding_equals
+.. doxygenfunction:: z_encoding_clone
 
 Predefined Encodings
 ^^^^^^^^^^^^^^^^^^^^
@@ -339,6 +347,7 @@ Reply Error
 -----------
 Types
 ^^^^^
+.. doxygenstruct:: z_owned_reply_err_t
 .. doxygenstruct:: z_loaned_reply_err_t
 
 Functions
@@ -362,6 +371,7 @@ Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_sample_loan
 .. doxygenfunction:: z_sample_drop
+.. doxygenfunction:: z_sample_clone
 
 .. doxygenfunction:: z_sample_timestamp
 .. doxygenfunction:: z_sample_attachment
@@ -472,6 +482,8 @@ Types
 
 Functions
 ^^^^^^^^^
+.. doxygenfunction:: z_task_init
+.. doxygenfunction:: z_task_drop
 .. doxygenfunction:: z_task_join
 .. doxygenfunction:: z_task_detach
 
@@ -490,6 +502,7 @@ Functions
 .. doxygenfunction:: z_config_loan
 .. doxygenfunction:: z_config_loan_mut
 .. doxygenfunction:: z_config_drop
+.. doxygenfunction:: z_config_clone
 
 .. doxygenfunction:: z_config_default
 .. doxygenfunction:: zc_config_from_env
@@ -507,6 +520,7 @@ Types
 .. doxygenstruct:: z_loaned_session_t
 .. doxygenstruct:: z_id_t
 
+.. doxygenstruct:: z_loaned_closure_zid_t
 .. doxygenstruct:: z_owned_closure_zid_t
     :members:
 
@@ -598,6 +612,7 @@ Types
 .. doxygenstruct:: z_owned_subscriber_t
 .. doxygenstruct:: z_loaned_subscriber_t
 
+.. doxygenstruct:: z_loaned_closure_sample_t
 .. doxygenstruct:: z_owned_closure_sample_t
     :members:
 
@@ -645,10 +660,12 @@ Types
 -----
 
 .. doxygenstruct:: z_owned_queryable_t
+.. doxygenstruct:: z_loaned_queryable_t
 
 .. doxygenstruct:: z_owned_query_t
 .. doxygenstruct:: z_loaned_query_t
 
+.. doxygenstruct:: z_loaned_closure_query_t
 .. doxygenstruct:: z_owned_closure_query_t
     :members:
 
@@ -718,6 +735,7 @@ Types
 .. doxygenstruct:: z_owned_reply_t
 .. doxygenstruct:: z_loaned_reply_t
 
+.. doxygenstruct:: z_loaned_closure_reply_t
 .. doxygenstruct:: z_owned_closure_reply_t
     :members:
 
@@ -748,6 +766,7 @@ Functions
 
 .. doxygenfunction:: z_reply_drop
 .. doxygenfunction:: z_reply_clone
+.. doxygenfunction:: z_reply_loan
 .. doxygenfunction:: z_reply_is_ok
 .. doxygenfunction:: z_reply_ok
 .. doxygenfunction:: z_reply_err
@@ -779,6 +798,7 @@ Types
 .. doxygenstruct:: z_loaned_hello_t
 .. doxygenstruct:: z_scout_options_t
     :members:
+.. doxygenstruct:: z_loaned_closure_hello_t
 .. doxygenstruct:: z_owned_closure_hello_t
     :members:
 
@@ -904,4 +924,4 @@ Other
 Functions
 ---------
 .. doxygenfunction:: zc_stop_z_runtime
-.. doxygenfunction:: zc_force_cleanup_before_exit
+.. doxygenfunction:: zc_cleanup_orphaned_shm_segments 
