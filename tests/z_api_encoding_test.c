@@ -110,7 +110,7 @@ void test_equals() {
     z_owned_encoding_t e;
     z_encoding_from_str(&e, "zenoh/string");
     assert(z_encoding_equals(z_loan(e), z_encoding_zenoh_string()));
-    assert(!z_encoding_equals(z_loan(e), z_encoding_zenoh_int16()));
+    assert(!z_encoding_equals(z_loan(e), z_encoding_zenoh_serialized()));
     z_drop(z_move(e));
 }
 

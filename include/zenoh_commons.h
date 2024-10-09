@@ -2325,133 +2325,34 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_vp8(void);
  */
 ZENOHC_API const struct z_loaned_encoding_t *z_encoding_video_vp9(void);
 /**
- * A boolean. `0` is `false`, `1` is `true`. Other values are invalid.
- *
- * Constant alias for string: `"zenoh/bool"`.
- *
- * Usually used for types: `bool`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_bool(void);
-/**
  * Just some bytes.
  *
  * Constant alias for string: `"zenoh/bytes"`.
  *
- * Usually used for types: `uint8_t[]`.
+ * This encoding supposes that the payload was created with `z_bytes_from_buf()`, `z_bytes_from_slice()` or
+ * similar functions and its data can be accessed via `z_bytes_to_slice()`.
  */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_bytes(void);
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_zenoh_bytes(void);
 /**
- * A zenoh error.
+ * Zenoh serialized data.
  *
- * Constant alias for string: `"zenoh/error"`.
+ * Constant alias for string: `"zenoh/serialized"`.
  *
- * Usually used for types: `z_reply_error_t`.
+ * This encoding supposes that the payload was created with serialization functions.
+ * The `schema` field may contain the details of serialziation format.
  */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_error(void);
-/**
- * A VLE-encoded 32bit float. Binary representation uses *IEEE 754-2008* *binary32* .
- *
- * Constant alias for string: `"zenoh/float32"`.
- *
- * Usually used for types: `float`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_float32(void);
-/**
- * A VLE-encoded 64bit float. Binary representation uses *IEEE 754-2008* *binary64*.
- *
- * Constant alias for string: `"zenoh/float64"`.
- *
- * Usually used for types: `double`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_float64(void);
-/**
- * A VLE-encoded signed little-endian 128bit integer. Binary representation uses two's complement.
- *
- * Constant alias for string: `"zenoh/int128"`.
- *
- * Usually used for types: `int128_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int128(void);
-/**
- * A VLE-encoded signed little-endian 16bit integer. Binary representation uses two's complement.
- *
- * Constant alias for string: `"zenoh/int16"`.
- *
- * Usually used for types: `int16_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int16(void);
-/**
- * A VLE-encoded signed little-endian 32bit integer. Binary representation uses two's complement.
- *
- * Constant alias for string: `"zenoh/int32"`.
- *
- * Usually used for types: `int32_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int32(void);
-/**
- * A VLE-encoded signed little-endian 64bit integer. Binary representation uses two's complement.
- *
- * Constant alias for string: `"zenoh/int64"`.
- *
- * Usually used for types: `int64_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int64(void);
-/**
- * A VLE-encoded signed little-endian 8bit integer. Binary representation uses two's complement.
- *
- * Constant alias for string: `"zenoh/int8"`.
- *
- * Usually used for types: `int8_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_int8(void);
+ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_serialized(void);
 /**
  * A UTF-8 string.
  *
  * Constant alias for string: `"zenoh/string"`.
  *
- * Usually used for types: `const char*`.
+ * This encoding supposes that the payload was created with `z_bytes_from_str()`, `z_bytes_from_string()` or
+ * similar functions and its data can be accessed via `z_bytes_to_string()`.
  */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_string(void);
-/**
- * A VLE-encoded unsigned little-endian 128bit integer.
- *
- * Constant alias for string: `"zenoh/uint128"`.
- *
- * Usually used for types: `uint128_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint128(void);
-/**
- * A VLE-encoded unsigned little-endian 16bit integer.
- *
- * Constant alias for string: `"zenoh/uint16"`.
- *
- * Usually used for types: `uint16_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint16(void);
-/**
- * A VLE-encoded unsigned little-endian 32bit integer.
- *
- * Constant alias for string: `"zenoh/uint32"`.
- *
- * Usually used for types: `uint32_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint32(void);
-/**
- * A VLE-encoded unsigned little-endian 64bit integer.
- *
- * Constant alias for string: `"zenoh/uint64"`.
- *
- * Usually used for types: `uint64_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint64(void);
-/**
- * A VLE-encoded unsigned little-endian 8bit integer.
- *
- * Constant alias for string: `"zenoh/uint8"`.
- *
- * Usually used for types: `uint8_t`.
- */
-ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_uint8(void);
+ZENOHC_API
+const struct z_loaned_encoding_t *z_encoding_zenoh_string(void);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the entity id of the entity global id.
