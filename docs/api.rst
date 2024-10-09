@@ -277,21 +277,8 @@ Functions
 Predefined Encodings
 ^^^^^^^^^^^^^^^^^^^^
 .. doxygenfunction:: z_encoding_zenoh_bytes
-.. doxygenfunction:: z_encoding_zenoh_int8
-.. doxygenfunction:: z_encoding_zenoh_int16
-.. doxygenfunction:: z_encoding_zenoh_int32
-.. doxygenfunction:: z_encoding_zenoh_int64
-.. doxygenfunction:: z_encoding_zenoh_int128
-.. doxygenfunction:: z_encoding_zenoh_uint8
-.. doxygenfunction:: z_encoding_zenoh_uint16
-.. doxygenfunction:: z_encoding_zenoh_uint32
-.. doxygenfunction:: z_encoding_zenoh_uint64
-.. doxygenfunction:: z_encoding_zenoh_uint128
-.. doxygenfunction:: z_encoding_zenoh_float32
-.. doxygenfunction:: z_encoding_zenoh_float64
-.. doxygenfunction:: z_encoding_zenoh_bool
 .. doxygenfunction:: z_encoding_zenoh_string
-.. doxygenfunction:: z_encoding_zenoh_error
+.. doxygenfunction:: z_encoding_zenoh_serialized
 .. doxygenfunction:: z_encoding_application_octet_stream
 .. doxygenfunction:: z_encoding_text_plain
 .. doxygenfunction:: z_encoding_application_json
