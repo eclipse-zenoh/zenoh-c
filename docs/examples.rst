@@ -195,7 +195,7 @@ Queryable
       z_closure(&callback, query_handler, NULL, (void*)keyexpr);
       z_owned_queryable_t qable;
 
-      if (z_declare_queryable(&qable, z_loan(s), z_loan(key_expr), z_move(callback), NULL) < 0) {
+      if (z_queryable_declare(&qable, z_loan(s), z_loan(key_expr), z_move(callback), NULL) < 0) {
           printf("Unable to create Zenoh queryable.\n");
           exit(-1);
       }

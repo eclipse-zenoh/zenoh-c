@@ -110,7 +110,7 @@ void test_queryable() {
     z_view_keyexpr_t keyexpr;
     z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_queryable_t queryable;
-    z_declare_queryable(&queryable, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
+    z_queryable_declare(&queryable, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
     assert(z_internal_check(queryable));
     z_drop(z_move(queryable));
     assert(!z_internal_check(queryable));
