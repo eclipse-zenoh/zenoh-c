@@ -50,7 +50,7 @@ int run_publisher() {
     publisher_options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
     z_owned_publisher_t pub;
 
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &publisher_options) != Z_OK) {
+    if (z_publisher_declare(&pub, z_loan(s), z_loan(ke), &publisher_options) != Z_OK) {
         perror("Unable to declare Publisher for key expression!");
         return -1;
     }
@@ -156,7 +156,7 @@ int run_subscriber() {
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
     z_owned_subscriber_t sub;
-    if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_subscriber_declare(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
         perror("Unable to declare subscriber!");
         return -1;
     }

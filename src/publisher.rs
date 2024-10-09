@@ -43,7 +43,7 @@ use crate::{
     zc_locality_t,
 };
 
-/// Options passed to the `z_declare_publisher()` function.
+/// Options passed to the `z_publisher_declare()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
     /// Default encoding for messages put by this publisher.
@@ -100,7 +100,7 @@ decl_c_type!(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_declare_publisher(
+pub extern "C" fn z_publisher_declare(
     this: &mut MaybeUninit<z_owned_publisher_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,

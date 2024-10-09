@@ -50,7 +50,7 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
         .as_loaned_c_type_ref()
 }
 
-/// Options passed to the `z_declare_subscriber()` function.
+/// Options passed to the `z_subscriber_declare()` function.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
@@ -97,7 +97,7 @@ fn _declare_subscriber_inner<'a, 'b>(
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
 #[no_mangle]
-pub extern "C" fn z_declare_subscriber(
+pub extern "C" fn z_subscriber_declare(
     this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
@@ -129,7 +129,7 @@ pub extern "C" fn z_declare_subscriber(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_declare_background_subscriber(
+pub extern "C" fn z_subscriber_declare_background(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,

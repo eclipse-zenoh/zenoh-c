@@ -45,7 +45,7 @@ void test_publisher() {
     z_keyexpr_from_str(&keyexpr, URL);
 
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(s), z_loan(keyexpr), NULL);
+    z_publisher_declare(&pub, z_loan(s), z_loan(keyexpr), NULL);
     assert(z_internal_check(pub));
     z_drop(z_move(pub));
     assert(!z_internal_check(pub));
@@ -88,7 +88,7 @@ void test_subscriber() {
     z_view_keyexpr_t keyexpr;
     z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
+    z_subscriber_declare(&sub, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
     assert(z_internal_check(sub));
     z_drop(z_move(sub));
     assert(!z_internal_check(sub));

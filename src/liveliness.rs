@@ -135,14 +135,14 @@ pub extern "C" fn zc_liveliness_undeclare_token(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief The options for `zc_liveliness_declare_subscriber()`
+/// @brief The options for `zc_liveliness_subscriber_declare()`
 #[repr(C)]
 pub struct zc_liveliness_subscriber_options_t {
     history: bool,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
+/// @brief Constucts default value for `zc_liveliness_subscriber_declare_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_default(
     this: &mut MaybeUninit<zc_liveliness_subscriber_options_t>,
@@ -185,7 +185,7 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
 ///
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_declare_subscriber(
+pub extern "C" fn zc_liveliness_subscriber_declare(
     this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
@@ -217,7 +217,7 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
 ///
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_declare_background_subscriber(
+pub extern "C" fn zc_liveliness_subscriber_declare_background(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,

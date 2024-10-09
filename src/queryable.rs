@@ -274,7 +274,7 @@ pub extern "C" fn z_declare_queryable(
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
 #[no_mangle]
-pub extern "C" fn z_declare_background_queryable(
+pub extern "C" fn z_queryable_declare_background(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_query_t,

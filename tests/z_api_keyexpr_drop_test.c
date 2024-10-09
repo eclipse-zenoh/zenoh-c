@@ -31,7 +31,7 @@ void test_publisher() {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL);
+    z_publisher_declare(&pub, z_loan(s), z_loan(ke), NULL);
     strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the keyexpr is copied into publisher
     z_view_keyexpr_from_str(&ke, keyexpr);
     const z_loaned_keyexpr_t *pub_ke = z_publisher_keyexpr(z_loan(pub));
@@ -57,7 +57,7 @@ void test_subscriber() {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL);
+    z_subscriber_declare(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL);
     strncpy(keyexpr, "baz/quax", 256);  // Update source string to ensure that the keyexpr is copied into the subscriber
     z_view_keyexpr_from_str(&ke, keyexpr);
     const z_loaned_keyexpr_t *sub_ke = z_subscriber_keyexpr(z_loan(sub));
