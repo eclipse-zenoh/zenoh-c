@@ -84,7 +84,7 @@ int run_publisher() {
     printf("wait: sem_sub\n");
     SEM_WAIT(sem_sub);
 
-    ze_undeclare_publication_cache(z_move(pub_cache));
+    z_drop(z_move(pub_cache));
     z_drop(z_move(pub));
     z_drop(z_move(s));
 
@@ -143,7 +143,7 @@ int run_subscriber() {
     SEM_POST(sem_sub);
     z_sleep_s(10);
 
-    ze_undeclare_querying_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     z_drop(z_move(s));
 
     return -1;

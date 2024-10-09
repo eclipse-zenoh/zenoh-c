@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
         z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 
-    ze_undeclare_publication_cache(z_move(pub_cache));
+    z_drop(z_move(pub_cache));
     z_drop(z_move(s));
 
     return 0;
