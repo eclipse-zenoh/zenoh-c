@@ -88,7 +88,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     });
 }
 
-pub unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
+unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
     session: &'a z_loaned_session_t,
     key_expr: &'b z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
