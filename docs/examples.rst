@@ -92,7 +92,7 @@ Subscribe
           c = fgetc(stdin);
       }
 
-      z_undeclare_subscriber(z_move(sub));
+      z_drop(z_move(sub));
       z_drop(z_move(s));
       return 0;
   }
@@ -205,7 +205,7 @@ Queryable
           c = fgetc(stdin);
       }
 
-      z_undeclare_queryable(z_move(qable));
+      z_drop(z_move(qable));
       z_drop(z_move(s));
       return 0;
   }

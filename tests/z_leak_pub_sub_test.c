@@ -86,8 +86,8 @@ int main(int argc, char **argv) {
         z_sleep_s(1);
     }
 
-    z_undeclare_publisher(z_move(publisher));
-    z_undeclare_subscriber(z_move(subscriber));
+    z_drop(z_move(publisher));
+    z_drop(z_move(subscriber));
     z_drop(z_move(pub_session));
     z_drop(z_move(sub_session));
     z_drop(z_move(pub_keyexpr));

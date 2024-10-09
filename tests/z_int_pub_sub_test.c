@@ -75,7 +75,7 @@ int run_publisher() {
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     z_drop(z_move(s));
     return 0;
 }
@@ -164,7 +164,7 @@ int run_subscriber() {
     SEM_POST(sem);
     sleep(10);
 
-    z_undeclare_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     z_drop(z_move(s));
 
     return -1;

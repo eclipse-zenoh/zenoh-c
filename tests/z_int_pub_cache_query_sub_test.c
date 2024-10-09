@@ -85,7 +85,7 @@ int run_publisher() {
     SEM_WAIT(sem_sub);
 
     ze_undeclare_publication_cache(z_move(pub_cache));
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     z_drop(z_move(s));
 
     return 0;

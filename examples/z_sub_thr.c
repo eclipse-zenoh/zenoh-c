@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
         z_sleep_s(1);
     }
 
-    z_undeclare_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     z_undeclare_keyexpr(z_move(declared_ke), z_loan(s));
     z_drop(z_move(s));
     return 0;

@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
         z_drop(z_move(oquery));
     }
 
-    z_undeclare_queryable(z_move(qable));
+    z_drop(z_move(qable));
     z_drop(z_move(handler));
     z_drop(z_move(s));
     return 0;

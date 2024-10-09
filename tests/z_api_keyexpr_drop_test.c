@@ -39,7 +39,7 @@ void test_publisher() {
     z_keyexpr_as_view_string(pub_ke, &pub_keyexpr);
     assert(strncmp(z_string_data(z_loan(pub_keyexpr)), "foo/bar", z_string_len(z_loan(pub_keyexpr))) ==
            0);  // Check that publisher keeps the correct keyexpr
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     z_drop(z_move(s));
 }
 
@@ -65,7 +65,7 @@ void test_subscriber() {
     z_keyexpr_as_view_string(sub_ke, &sub_keyexpr);
     assert(strncmp(z_string_data(z_loan(sub_keyexpr)), "foo/bar", z_string_len(z_loan(sub_keyexpr))) ==
            0);  // Check that subscriber keeps the correct keyexpr
-    z_undeclare_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     z_drop(z_move(s));
 }
 

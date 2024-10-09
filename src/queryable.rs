@@ -15,8 +15,9 @@ use std::mem::MaybeUninit;
 
 use zenoh::{
     bytes::Encoding,
+    handlers::Callback,
     qos::{CongestionControl, Priority},
-    query::{Query, Queryable},
+    query::{Query, Queryable, QueryableBuilder},
     Wait,
 };
 
@@ -206,6 +207,31 @@ pub extern "C" fn z_query_reply_del_options_default(
     });
 }
 
+fn _declare_queryable_inner<'a, 'b>(
+    session: &'a z_loaned_session_t,
+    key_expr: &'b z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_query_t,
+    options: Option<&mut z_queryable_options_t>,
+) -> QueryableBuilder<'a, 'b, Callback<Query>> {
+    let session = session.as_rust_type_ref();
+    let keyexpr = key_expr.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    let mut builder = session.declare_queryable(keyexpr);
+    if let Some(options) = options {
+        builder = builder.complete(options.complete);
+    }
+    let queryable = builder.callback(move |query| {
+        let mut owned_query = Some(query);
+        z_closure_query_call(z_closure_query_loan(&callback), unsafe {
+            owned_query
+                .as_mut()
+                .unwrap_unchecked()
+                .as_loaned_c_type_mut()
+        })
+    });
+    queryable
+}
+
 /// Constructs a Queryable for the given key expression.
 ///
 /// @param this_: An uninitialized memory location where queryable will be constructed.
@@ -215,7 +241,6 @@ pub extern "C" fn z_query_reply_del_options_default(
 /// @param options: Options for the queryable.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
     this: &mut MaybeUninit<z_owned_queryable_t>,
@@ -225,25 +250,8 @@ pub extern "C" fn z_declare_queryable(
     options: Option<&mut z_queryable_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    let session = session.as_rust_type_ref();
-    let keyexpr = key_expr.as_rust_type_ref();
-    let callback = callback.take_rust_type();
-    let mut builder = session.declare_queryable(keyexpr);
-    if let Some(options) = options {
-        builder = builder.complete(options.complete);
-    }
-    let queryable = builder
-        .callback(move |query| {
-            let mut owned_query = Some(query);
-            z_closure_query_call(z_closure_query_loan(&callback), unsafe {
-                owned_query
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
-        })
-        .wait();
-    match queryable {
+    let queryable = _declare_queryable_inner(session, key_expr, callback, options);
+    match queryable.wait() {
         Ok(q) => {
             this.write(Some(q));
             result::Z_OK
@@ -256,23 +264,33 @@ pub extern "C" fn z_declare_queryable(
     }
 }
 
-/// Undeclares a `z_owned_queryable_t` and drops it.
+/// Declares a background queryable for a given keyexpr. The queryable callback will be be called
+/// to proccess incoming queries until the corresponding session is closed or dropped.
 ///
-/// Returns 0 in case of success, negative error code otherwise.
-#[allow(clippy::missing_safety_doc)]
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression the Queryable will reply to.
+/// @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
+/// @param options: Options for the queryable.
+///
+/// @return 0 in case of success, negative error code otherwise (in this case )
 #[no_mangle]
-pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
-    if let Some(qable) = this_.take_rust_type() {
-        if let Err(e) = qable.undeclare().wait() {
+pub extern "C" fn z_declare_background_queryable(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_query_t,
+    options: Option<&mut z_queryable_options_t>,
+) -> result::z_result_t {
+    let queryable = _declare_queryable_inner(session, key_expr, callback, options);
+    match queryable.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
             tracing::error!("{}", e);
-            return result::Z_EGENERIC;
+            result::Z_EGENERIC
         }
     }
-    result::Z_OK
 }
 
-/// Frees memory and resets queryable to its gravestone state.
-/// The callback closure is not dropped, and thus the queries continue to be served until the corresponding session is closed.
+/// Undeclares queryable callback and resets it to its gravestone state.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {

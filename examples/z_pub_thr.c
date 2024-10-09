@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
         z_publisher_put(z_loan(pub), z_move(to_send), NULL);
     }
 
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     z_drop(z_move(s));
 }
 

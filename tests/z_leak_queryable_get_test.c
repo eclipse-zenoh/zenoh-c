@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     }
     assert(received_replies == 5);
 
-    z_undeclare_queryable(z_move(queryable));
+    z_drop(z_move(queryable));
     z_drop(z_move(get_session));
     z_drop(z_move(queryable_session));
     z_drop(z_move(queryable_keyexpr));

@@ -139,23 +139,6 @@ pub extern "C" fn ze_internal_publication_cache_check(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares and drops publication cache.
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_undeclare_publication_cache(
-    this: &mut ze_moved_publication_cache_t,
-) -> result::z_result_t {
-    if let Some(p) = this.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
-            tracing::error!("{}", e);
-            return result::Z_EGENERIC;
-        }
-    }
-    result::Z_OK
-}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops publication cache and resets it to its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]

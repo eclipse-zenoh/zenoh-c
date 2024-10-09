@@ -14,7 +14,12 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{liveliness::LivelinessToken, Wait};
+use zenoh::{
+    handlers::Callback,
+    liveliness::{LivelinessSubscriberBuilder, LivelinessToken},
+    sample::Sample,
+    Wait,
+};
 
 use crate::{
     opaque_types::{zc_loaned_liveliness_token_t, zc_owned_liveliness_token_t},
@@ -145,6 +150,30 @@ pub extern "C" fn zc_liveliness_subscriber_options_default(
     this.write(zc_liveliness_subscriber_options_t { history: false });
 }
 
+fn _liveliness_declare_subscriber_inner<'a, 'b>(
+    session: &'a z_loaned_session_t,
+    key_expr: &'b z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut zc_liveliness_subscriber_options_t>,
+) -> LivelinessSubscriberBuilder<'a, 'b, Callback<Sample>> {
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    let sub = session
+        .liveliness()
+        .declare_subscriber(key_expr)
+        .history(options.is_some_and(|o| o.history))
+        .callback(move |sample| {
+            let mut owned_sample = Some(sample);
+            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
+                owned_sample
+                    .as_mut()
+                    .unwrap_unchecked()
+                    .as_loaned_c_type_mut()
+            })
+        });
+    sub
+}
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
 ///
@@ -164,24 +193,8 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
     options: Option<&mut zc_liveliness_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    let session = session.as_rust_type_ref();
-    let key_expr = key_expr.as_rust_type_ref();
-    let callback = callback.take_rust_type();
-    match session
-        .liveliness()
-        .declare_subscriber(key_expr)
-        .history(options.is_some_and(|o| o.history))
-        .callback(move |sample| {
-            let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
-                owned_sample
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
-        })
-        .wait()
-    {
+    let subscriber = _liveliness_declare_subscriber_inner(session, key_expr, callback, options);
+    match subscriber.wait() {
         Ok(subscriber) => {
             this.write(Some(subscriber));
             result::Z_OK
@@ -189,6 +202,32 @@ pub extern "C" fn zc_liveliness_declare_subscriber(
         Err(e) => {
             tracing::error!("Failed to subscribe to liveliness: {e}");
             this.write(None);
+            result::Z_EGENERIC
+        }
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
+/// until the corresponding session is closed or dropped.
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a liveliness token status is changed.
+/// @param options: The options to be passed to the liveliness subscriber declaration.
+///
+/// @return 0 in case of success, negative error values otherwise.
+#[no_mangle]
+pub extern "C" fn zc_liveliness_declare_background_subscriber(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut zc_liveliness_subscriber_options_t>,
+) -> result::z_result_t {
+    let subscriber = _liveliness_declare_subscriber_inner(session, key_expr, callback, options);
+    match subscriber.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            tracing::error!("Failed to subscribe to liveliness: {e}");
             result::Z_EGENERIC
         }
     }

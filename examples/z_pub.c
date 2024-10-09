@@ -89,11 +89,11 @@ int main(int argc, char** argv) {
     }
 #if defined(Z_FEATURE_UNSTABLE_API)
     if (args.add_matching_listener) {
-        zc_publisher_matching_listener_undeclare(z_move(listener));
+        z_drop(z_move(listener));
     }
 #endif
 
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     z_drop(z_move(s));
     return 0;
 }
