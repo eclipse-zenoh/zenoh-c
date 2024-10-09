@@ -268,7 +268,7 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr_str);
     z_owned_subscriber_t _ret_sub;
-    z_declare_subscriber(&_ret_sub, z_loan(s2), z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
+    z_subscriber_declare(&_ret_sub, z_loan(s2), z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
     assert(z_internal_check(_ret_sub));
 
     z_sleep_s(SLEEP);
@@ -305,8 +305,7 @@ int main(int argc, char **argv) {
     assert(_ret_int8 == 0);
     assert(!z_internal_check(_ret_expr));
 
-    _ret_int8 = z_undeclare_subscriber(z_move(_ret_sub));
-    assert(_ret_int8 == 0);
+    z_drop(z_move(_ret_sub));
 
     // TODO: test for pull subscriber
 
@@ -338,7 +337,7 @@ int main(int argc, char **argv) {
     assert(queries == 1);
     assert(replies == 1);
 
-    _ret_int8 = z_undeclare_queryable(z_move(qle));
+    z_drop(z_move(qle));
     assert(_ret_int8 == 0);
 
 #ifdef ZENOH_PICO

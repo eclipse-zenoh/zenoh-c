@@ -15,7 +15,10 @@
 use std::mem::MaybeUninit;
 
 #[cfg(feature = "unstable")]
-use zenoh::pubsub::MatchingListener;
+use zenoh::{
+    handlers::Callback,
+    pubsub::{MatchingListener, MatchingStatus},
+};
 use zenoh::{
     pubsub::Publisher,
     qos::{CongestionControl, Priority},
@@ -40,7 +43,7 @@ use crate::{
     zc_locality_t,
 };
 
-/// Options passed to the `z_declare_publisher()` function.
+/// Options passed to the `z_publisher_declare()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
     /// Default encoding for messages put by this publisher.
@@ -97,7 +100,7 @@ decl_c_type!(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_declare_publisher(
+pub extern "C" fn z_publisher_declare(
     this: &mut MaybeUninit<z_owned_publisher_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
@@ -343,22 +346,10 @@ pub struct zc_matching_status_t {
 }
 
 #[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
-///
-/// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
-/// @param publisher: A publisher to associate with matching listener.
-/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
-///
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_matching_listener_declare(
-    this: &mut MaybeUninit<zc_owned_matching_listener_t>,
-    publisher: &'static z_loaned_publisher_t,
+fn _publisher_matching_listener_declare_inner<'a, 'b>(
+    publisher: &'a z_loaned_publisher_t,
     callback: &mut zc_moved_closure_matching_status_t,
-) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+) -> zenoh::pubsub::MatchingListenerBuilder<'a, 'b, Callback<MatchingStatus>> {
     let publisher = publisher.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let listener = publisher
@@ -368,14 +359,34 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
                 matching: matching_status.matching_subscribers(),
             };
             zc_closure_matching_status_call(zc_closure_matching_status_loan(&callback), &status);
-        })
-        .wait();
-    match listener {
+        });
+    listener
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
+///
+/// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
+/// @param publisher: A publisher to associate with matching listener.
+/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn zc_publisher_matching_listener_declare(
+    this: &mut MaybeUninit<zc_owned_matching_listener_t>,
+    publisher: &'static z_loaned_publisher_t,
+    callback: &mut zc_moved_closure_matching_status_t,
+) -> result::z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    let listener = _publisher_matching_listener_declare_inner(publisher, callback);
+    match listener.wait() {
         Ok(listener) => {
             this.write(Some(listener));
             result::Z_OK
         }
         Err(e) => {
+            this.write(None);
             tracing::error!("{}", e);
             result::Z_EGENERIC
         }
@@ -384,21 +395,26 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given matching listener, droping and invalidating it.
+/// @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given publisher.
+/// The callback will be run in the background until the corresponding publisher is dropped.
+///
+/// @param publisher: A publisher to associate with matching listener.
+/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_matching_listener_undeclare(
-    this: &mut zc_moved_matching_listener_t,
+pub extern "C" fn zc_publisher_matching_listener_declare_background(
+    publisher: &'static z_loaned_publisher_t,
+    callback: &mut zc_moved_closure_matching_status_t,
 ) -> result::z_result_t {
-    if let Some(p) = this.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
+    let listener = _publisher_matching_listener_declare_inner(publisher, callback);
+    match listener.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
             tracing::error!("{}", e);
-            return result::Z_EGENERIC;
+            result::Z_EGENERIC
         }
     }
-    result::Z_OK
 }
 
 #[cfg(feature = "unstable")]
@@ -433,21 +449,6 @@ pub extern "C" fn zc_publisher_get_matching_status(
             result::Z_ENETWORK
         }
     }
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-/// @brief Undeclares the given publisher, droping and invalidating it.
-///
-/// @return 0 in case of success, negative error code otherwise.
-pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
-    if let Some(p) = this_.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
-            tracing::error!("{}", e);
-            return result::Z_ENETWORK;
-        }
-    }
-    result::Z_OK
 }
 
 /// Frees memory and resets publisher to its gravestone state.

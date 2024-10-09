@@ -46,11 +46,11 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(session), z_loan(ping), NULL);
+    z_publisher_declare(&pub, z_loan(session), z_loan(ping), NULL);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(session), z_loan(pong), z_move(respond), NULL);
+    z_subscriber_declare(&sub, z_loan(session), z_loan(pong), z_move(respond), NULL);
     uint8_t* data = z_malloc(args.size);
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
@@ -90,8 +90,8 @@ int main(int argc, char** argv) {
     z_mutex_unlock(z_loan_mut(mutex));
     z_free(results);
     z_free(data);
-    z_undeclare_subscriber(z_move(sub));
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(sub));
+    z_drop(z_move(pub));
     z_drop(z_move(mutex));
     z_drop(z_move(session));
 }

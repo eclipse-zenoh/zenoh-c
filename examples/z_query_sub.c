@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     z_closure(&callback, data_handler, NULL, NULL);
     printf("Declaring querying subscriber on '%s'...\n", args.keyexpr);
     ze_owned_querying_subscriber_t sub;
-    if (ze_declare_querying_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), &sub_opts) < 0) {
+    if (ze_querying_subscriber_declare(&sub, z_loan(s), z_loan(ke), z_move(callback), &sub_opts) < 0) {
         printf("Unable to declare querying subscriber.\n");
         exit(-1);
     }
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
         z_sleep_s(1);
     }
 
-    ze_undeclare_querying_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     z_drop(z_move(s));
 
     return 0;

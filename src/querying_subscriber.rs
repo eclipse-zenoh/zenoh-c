@@ -14,7 +14,7 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{session::Session, Wait};
+use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;
 
 use crate::{
@@ -49,7 +49,7 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A set of options that can be applied to a querying subscriber,
-/// upon its declaration via `ze_declare_querying_subscriber()`.
+/// upon its declaration via `ze_querying_subscriber_declare()`.
 ///
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -88,26 +88,12 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     });
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs and declares a querying subscriber for a given key expression.
-///
-/// @param this_: An uninitialized memory location where querying subscriber will be constructed.
-/// @param session: A Zenoh session.
-/// @param key_expr: A key expression to subscribe to.
-/// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
-/// @param options: Additional options for the querying subscriber.
-///
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_declare_querying_subscriber(
-    this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
-    session: &'static z_loaned_session_t,
-    key_expr: &z_loaned_keyexpr_t,
+unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
+    session: &'a z_loaned_session_t,
+    key_expr: &'b z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
-) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+) -> QueryingSubscriberBuilder<'a, 'b, UserSpace, Callback<Sample>> {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let mut sub = session
@@ -141,14 +127,66 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
                 .as_loaned_c_type_mut(),
         );
     });
+    sub
+}
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs and declares a querying subscriber for a given key expression.
+///
+/// @param this_: An uninitialized memory location where querying subscriber will be constructed.
+/// @param session: A Zenoh session.
+/// @param key_expr: A key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+/// @param options: Additional options for the querying subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_querying_subscriber_declare(
+    this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
+    session: &'static z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut ze_querying_subscriber_options_t>,
+) -> result::z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    let sub = _declare_querying_subscriber_inner(session, key_expr, callback, options);
     match sub.wait() {
         Ok(sub) => {
+            let session = session.as_rust_type_ref();
             this.write(Some((sub, session)));
             result::Z_OK
         }
         Err(e) => {
             tracing::debug!("{}", e);
             this.write(None);
+            result::Z_EGENERIC
+        }
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a background querying subscriber for a given key expression. Subscriber callback will be called to process the messages,
+/// until the corresponding session is closed or dropped.
+///
+/// @param session: A Zenoh session.
+/// @param key_expr: A key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+/// @param options: Additional options for the querying subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_querying_subscriber_declare_background(
+    session: &'static z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut ze_querying_subscriber_options_t>,
+) -> result::z_result_t {
+    let sub = _declare_querying_subscriber_inner(session, key_expr, callback, options);
+    match sub.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            tracing::debug!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -220,25 +258,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given querying subscriber, drops it and resets to a gravestone state.
-///
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_undeclare_querying_subscriber(
-    this_: &mut ze_moved_querying_subscriber_t,
-) -> result::z_result_t {
-    if let Some(s) = this_.take_rust_type() {
-        if let Err(e) = s.0.undeclare().wait() {
-            tracing::error!("{}", e);
-            return result::Z_EGENERIC;
-        }
-    }
-    result::Z_OK
-}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Drops querying subscriber.
-/// The callback closure is not dropped, and thus the queries continue to be served until the corresponding session is closed.
+/// @brief Undeclares querying subscriber callback and resets it to its gravestone state.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
     std::mem::drop(this_.take_rust_type())

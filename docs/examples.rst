@@ -81,7 +81,7 @@ Subscribe
       z_view_keyexpr_from_string(&key_expr, "key/expression");
 
       z_owned_subscriber_t sub;
-      if (z_declare_subscriber(&sub, z_loan(s), z_loan(key_expr) z_move(callback), NULL) != 0) {
+      if (z_subscriber_declare(&sub, z_loan(s), z_loan(key_expr) z_move(callback), NULL) != 0) {
           printf("Unable to create Zenoh subscriber.\n");
           z_drop(z_move(s));
           exit(-1);
@@ -92,7 +92,7 @@ Subscribe
           c = fgetc(stdin);
       }
 
-      z_undeclare_subscriber(z_move(sub));
+      z_drop(z_move(sub));
       z_drop(z_move(s));
       return 0;
   }
@@ -205,7 +205,7 @@ Queryable
           c = fgetc(stdin);
       }
 
-      z_undeclare_queryable(z_move(qable));
+      z_drop(z_move(qable));
       z_drop(z_move(s));
       return 0;
   }

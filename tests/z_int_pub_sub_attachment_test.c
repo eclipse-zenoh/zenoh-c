@@ -94,7 +94,7 @@ int run_publisher() {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_publisher_t pub;
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
+    if (z_publisher_declare(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
         perror("Unable to declare Publisher for key expression!");
         return -1;
     }
@@ -126,7 +126,7 @@ int run_publisher() {
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     z_drop(z_move(s));
     return 0;
 }
@@ -182,7 +182,7 @@ int run_subscriber() {
     z_closure(&callback, data_handler, NULL, NULL);
     z_owned_subscriber_t sub;
 
-    if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_subscriber_declare(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
         perror("Unable to declare subscriber!");
         return -1;
     }
@@ -190,7 +190,7 @@ int run_subscriber() {
     SEM_POST(sem);
     z_sleep_s(10);
 
-    z_undeclare_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     z_drop(z_move(s));
 
     return -1;

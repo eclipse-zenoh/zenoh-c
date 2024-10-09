@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &options)) {
+    if (z_publisher_declare(&pub, z_loan(s), z_loan(ke), &options)) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     z_drop(z_move(s));
 
     z_drop(z_move(shm));

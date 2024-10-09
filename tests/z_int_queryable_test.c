@@ -82,7 +82,7 @@ int run_queryable() {
     SEM_POST(sem);
     z_sleep_s(10);
 
-    z_undeclare_queryable(z_move(qable));
+    z_drop(z_move(qable));
     z_drop(z_move(s));
     return 0;
 }

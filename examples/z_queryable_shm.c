@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    z_undeclare_queryable(z_move(qable));
+    z_drop(z_move(qable));
     z_drop(z_move(s));
     z_drop(z_move(layout));
     z_drop(z_move(provider));
