@@ -81,7 +81,7 @@ Subscribe
       z_view_keyexpr_from_string(&key_expr, "key/expression");
 
       z_owned_subscriber_t sub;
-      if (z_declare_subscriber(&sub, z_loan(s), z_loan(key_expr) z_move(callback), NULL) != 0) {
+      if (z_declare_subscriber(z_loan(s), &sub, z_loan(key_expr) z_move(callback), NULL) != 0) {
           printf("Unable to create Zenoh subscriber.\n");
           z_drop(z_move(s));
           exit(-1);
@@ -195,7 +195,7 @@ Queryable
       z_closure(&callback, query_handler, NULL, (void*)keyexpr);
       z_owned_queryable_t qable;
 
-      if (z_declare_queryable(&qable, z_loan(s), z_loan(key_expr), z_move(callback), NULL) < 0) {
+      if (z_declare_queryable(z_loan(s), &qable, z_loan(key_expr), z_move(callback), NULL) < 0) {
           printf("Unable to create Zenoh queryable.\n");
           exit(-1);
       }

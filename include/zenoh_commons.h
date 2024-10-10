@@ -1962,14 +1962,14 @@ z_result_t z_declare_background_subscriber(const struct z_loaned_session_t *sess
  * Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
  * which allows to save the bandwith, when passing key expression between Zenoh entities.
  *
- * @param this_: An uninitialized location in memory where key expression will be constructed.
  * @param session: Session on which to declare key expression.
+ * @param declared_key_expr: An uninitialized location in memory where key expression will be constructed.
  * @param key_expr: Key expression to declare on network.
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_result_t z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
-                             const struct z_loaned_session_t *session,
+z_result_t z_declare_keyexpr(const struct z_loaned_session_t *session,
+                             struct z_owned_keyexpr_t *declared_key_expr,
                              const struct z_loaned_keyexpr_t *key_expr);
 /**
  * Constructs and declares a publisher for the given key expression.
@@ -1977,23 +1977,23 @@ z_result_t z_declare_keyexpr(struct z_owned_keyexpr_t *this_,
  * Data can be put and deleted with this publisher with the help of the
  * `z_publisher_put()` and `z_publisher_delete()` functions.
  *
- * @param this_: An unitilized location in memory where publisher will be constructed.
  * @param session: The Zenoh session.
+ * @param publisher: An unitilized location in memory where publisher will be constructed.
  * @param key_expr: The key expression to publish.
  * @param options: Additional options for the publisher.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_result_t z_declare_publisher(struct z_owned_publisher_t *this_,
-                               const struct z_loaned_session_t *session,
+z_result_t z_declare_publisher(const struct z_loaned_session_t *session,
+                               struct z_owned_publisher_t *publisher,
                                const struct z_loaned_keyexpr_t *key_expr,
                                struct z_publisher_options_t *options);
 /**
  * Constructs a Queryable for the given key expression.
  *
- * @param this_: An uninitialized memory location where queryable will be constructed.
- * @param session: The zenoh session.
+ * @param session: A Zenoh session.
+ * @param queryable: An uninitialized memory location where queryable will be constructed.
  * @param key_expr: The key expression the Queryable will reply to.
  * @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
  * @param options: Options for the queryable.
@@ -2001,16 +2001,16 @@ z_result_t z_declare_publisher(struct z_owned_publisher_t *this_,
  * @return 0 in case of success, negative error code otherwise (in this case )
  */
 ZENOHC_API
-z_result_t z_declare_queryable(struct z_owned_queryable_t *this_,
-                               const struct z_loaned_session_t *session,
+z_result_t z_declare_queryable(const struct z_loaned_session_t *session,
+                               struct z_owned_queryable_t *queryable,
                                const struct z_loaned_keyexpr_t *key_expr,
                                struct z_moved_closure_query_t *callback,
                                struct z_queryable_options_t *options);
 /**
  * Constructs and declares a subscriber for a given key expression. Dropping subscriber undeclares its callback.
  *
- * @param this_: An uninitialized location in memory, where subscriber will be constructed.
  * @param session: The zenoh session.
+ * @param subscriber: An uninitialized location in memory, where subscriber will be constructed.
  * @param key_expr: The key expression to subscribe.
  * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
  * @param _options: The options to be passed to the subscriber declaration.
@@ -2018,8 +2018,8 @@ z_result_t z_declare_queryable(struct z_owned_queryable_t *this_,
  * @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
  */
 ZENOHC_API
-z_result_t z_declare_subscriber(struct z_owned_subscriber_t *this_,
-                                const struct z_loaned_session_t *session,
+z_result_t z_declare_subscriber(const struct z_loaned_session_t *session,
+                                struct z_owned_subscriber_t *subscriber,
                                 const struct z_loaned_keyexpr_t *key_expr,
                                 struct z_moved_closure_sample_t *callback,
                                 struct z_subscriber_options_t *_options);
@@ -4496,8 +4496,8 @@ ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-z_result_t z_undeclare_keyexpr(struct z_moved_keyexpr_t *this_,
-                               const struct z_loaned_session_t *session);
+z_result_t z_undeclare_keyexpr(const struct z_loaned_session_t *session,
+                               struct z_moved_keyexpr_t *key_expr);
 /**
  * Constructs a view key expression in empty state
  */
@@ -4924,8 +4924,8 @@ z_result_t zc_liveliness_declare_background_subscriber(const struct z_loaned_ses
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
  *
- * @param this_: An uninitialized memory location where subscriber will be constructed.
- * @param session: The Zenoh session.
+ * @param session: A Zenoh session.
+ * @param subscriber: An uninitialized memory location where subscriber will be constructed.
  * @param key_expr: The key expression to subscribe to.
  * @param callback: The callback function that will be called each time a liveliness token status is changed.
  * @param options: The options to be passed to the liveliness subscriber declaration.
@@ -4934,8 +4934,8 @@ z_result_t zc_liveliness_declare_background_subscriber(const struct z_loaned_ses
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
-                                            const struct z_loaned_session_t *session,
+z_result_t zc_liveliness_declare_subscriber(const struct z_loaned_session_t *session,
+                                            struct z_owned_subscriber_t *subscriber,
                                             const struct z_loaned_keyexpr_t *key_expr,
                                             struct z_moved_closure_sample_t *callback,
                                             struct zc_liveliness_subscriber_options_t *options);
@@ -4947,15 +4947,15 @@ z_result_t zc_liveliness_declare_subscriber(struct z_owned_subscriber_t *this_,
  * Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
  * is achieved, and a DELETE sample if it's lost.
  *
- * @param this_: An uninitialized memory location where liveliness token will be constructed.
  * @param session: A Zenos session to declare the liveliness token.
+ * @param token: An uninitialized memory location where liveliness token will be constructed.
  * @param key_expr: A keyexpr to declare a liveliess token for.
  * @param _options: Liveliness token declaration properties.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_liveliness_declare_token(zc_owned_liveliness_token_t *this_,
-                                       const struct z_loaned_session_t *session,
+z_result_t zc_liveliness_declare_token(const struct z_loaned_session_t *session,
+                                       zc_owned_liveliness_token_t *token,
                                        const struct z_loaned_keyexpr_t *key_expr,
                                        const struct zc_liveliness_declaration_options_t *_options);
 #endif
@@ -5178,8 +5178,8 @@ z_result_t ze_declare_background_querying_subscriber(const struct z_loaned_sessi
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs and declares a publication cache.
  *
- * @param this_: An uninitialized location in memory where publication cache will be constructed.
  * @param session: A Zenoh session.
+ * @param pub_cache: An uninitialized location in memory where publication cache will be constructed.
  * @param key_expr: The key expression to publish to.
  * @param options: Additional options for the publication cache.
  *
@@ -5187,8 +5187,8 @@ z_result_t ze_declare_background_querying_subscriber(const struct z_loaned_sessi
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_declare_publication_cache(ze_owned_publication_cache_t *this_,
-                                        const struct z_loaned_session_t *session,
+z_result_t ze_declare_publication_cache(const struct z_loaned_session_t *session,
+                                        ze_owned_publication_cache_t *pub_cache,
                                         const struct z_loaned_keyexpr_t *key_expr,
                                         struct ze_publication_cache_options_t *options);
 #endif
@@ -5196,8 +5196,8 @@ z_result_t ze_declare_publication_cache(ze_owned_publication_cache_t *this_,
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs and declares a querying subscriber for a given key expression.
  *
- * @param this_: An uninitialized memory location where querying subscriber will be constructed.
  * @param session: A Zenoh session.
+ * @param querying_subscriber: An uninitialized memory location where querying subscriber will be constructed.
  * @param key_expr: A key expression to subscribe to.
  * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
  * @param options: Additional options for the querying subscriber.
@@ -5206,8 +5206,8 @@ z_result_t ze_declare_publication_cache(ze_owned_publication_cache_t *this_,
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_declare_querying_subscriber(ze_owned_querying_subscriber_t *this_,
-                                          const struct z_loaned_session_t *session,
+z_result_t ze_declare_querying_subscriber(const struct z_loaned_session_t *session,
+                                          ze_owned_querying_subscriber_t *querying_subscriber,
                                           const struct z_loaned_keyexpr_t *key_expr,
                                           struct z_moved_closure_sample_t *callback,
                                           struct ze_querying_subscriber_options_t *options);

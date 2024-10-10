@@ -52,13 +52,13 @@ int run_publisher() {
     z_view_keyexpr_from_str(&ke, keyexpr);
     ze_owned_publication_cache_t pub_cache;
     ;
-    if (ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts) < 0) {
+    if (ze_declare_publication_cache(z_loan(s), &pub_cache, z_loan(ke), &pub_cache_opts) < 0) {
         perror("Unable to declare publication cache for key expression!\n");
         return -1;
     }
 
     z_owned_publisher_t pub;
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), NULL) < 0) {
         perror("Unable to declare Publisher for key expression!");
         return -1;
     }
@@ -135,7 +135,7 @@ int run_subscriber() {
     z_closure(&callback, data_handler, NULL, NULL);
     ze_owned_querying_subscriber_t sub;
     ;
-    if (ze_declare_querying_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) != Z_OK) {
+    if (ze_declare_querying_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), NULL) != Z_OK) {
         perror("Unable to declare subscriber!");
         return -1;
     }

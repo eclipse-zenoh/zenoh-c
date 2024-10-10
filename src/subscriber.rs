@@ -89,8 +89,8 @@ fn _declare_subscriber_inner<'a, 'b>(
 
 /// Constructs and declares a subscriber for a given key expression. Dropping subscriber undeclares its callback.
 ///
-/// @param this_: An uninitialized location in memory, where subscriber will be constructed.
 /// @param session: The zenoh session.
+/// @param subscriber: An uninitialized location in memory, where subscriber will be constructed.
 /// @param key_expr: The key expression to subscribe.
 /// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
 /// @param _options: The options to be passed to the subscriber declaration.
@@ -98,15 +98,15 @@ fn _declare_subscriber_inner<'a, 'b>(
 /// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
 #[no_mangle]
 pub extern "C" fn z_declare_subscriber(
-    this: &mut MaybeUninit<z_owned_subscriber_t>,
     session: &z_loaned_session_t,
+    subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
     _options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
-    let subscriber = _declare_subscriber_inner(session, key_expr, callback, _options);
-    match subscriber.wait() {
+    let this = subscriber.as_rust_type_mut_uninit();
+    let s = _declare_subscriber_inner(session, key_expr, callback, _options);
+    match s.wait() {
         Ok(sub) => {
             this.write(Some(sub));
             result::Z_OK

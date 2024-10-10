@@ -234,8 +234,8 @@ fn _declare_queryable_inner<'a, 'b>(
 
 /// Constructs a Queryable for the given key expression.
 ///
-/// @param this_: An uninitialized memory location where queryable will be constructed.
-/// @param session: The zenoh session.
+/// @param session: A Zenoh session.
+/// @param queryable: An uninitialized memory location where queryable will be constructed.
 /// @param key_expr: The key expression the Queryable will reply to.
 /// @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
 /// @param options: Options for the queryable.
@@ -243,13 +243,13 @@ fn _declare_queryable_inner<'a, 'b>(
 /// @return 0 in case of success, negative error code otherwise (in this case )
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
-    this: &mut MaybeUninit<z_owned_queryable_t>,
     session: &z_loaned_session_t,
+    queryable: &mut MaybeUninit<z_owned_queryable_t>,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = queryable.as_rust_type_mut_uninit();
     let queryable = _declare_queryable_inner(session, key_expr, callback, options);
     match queryable.wait() {
         Ok(q) => {

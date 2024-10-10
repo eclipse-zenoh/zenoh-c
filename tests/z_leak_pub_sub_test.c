@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     z_open(&pub_session, z_move(pub_config), NULL);
 
     z_owned_publisher_t publisher;
-    z_declare_publisher(&publisher, z_loan(pub_session), z_loan(pub_keyexpr), NULL);
+    z_declare_publisher(z_loan(pub_session), &publisher, z_loan(pub_keyexpr), NULL);
 
     printf("Declaring Subscriber on %s\n", SUB_KEY_EXPR);
 
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     z_closure(&callback, data_handler, NULL, NULL);
 
     z_owned_subscriber_t subscriber;
-    z_declare_subscriber(&subscriber, z_loan(sub_session), z_loan(sub_keyexpr), z_move(callback), NULL);
+    z_declare_subscriber(z_loan(sub_session), &subscriber, z_loan(sub_keyexpr), z_move(callback), NULL);
 
     z_sleep_s(1);
 

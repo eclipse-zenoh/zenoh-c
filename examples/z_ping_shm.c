@@ -64,11 +64,11 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(session), z_loan(ping), NULL);
+    z_declare_publisher(z_loan(session), &pub, z_loan(ping), NULL);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(session), z_loan(pong), z_move(respond), NULL);
+    z_declare_subscriber(z_loan(session), &sub, z_loan(pong), z_move(respond), NULL);
 
     // Create SHM Provider
     z_alloc_alignment_t alignment = {0};

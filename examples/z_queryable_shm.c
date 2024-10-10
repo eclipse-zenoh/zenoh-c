@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
     z_closure(&callback, query_handler, (void *)z_loan(provider), (void *)keyexpr);
     z_owned_queryable_t qable;
 
-    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(callback), NULL) < 0) {
         printf("Unable to create queryable.\n");
         exit(-1);
     }

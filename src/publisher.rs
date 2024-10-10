@@ -92,8 +92,8 @@ decl_c_type!(
 /// Data can be put and deleted with this publisher with the help of the
 /// `z_publisher_put()` and `z_publisher_delete()` functions.
 ///
-/// @param this_: An unitilized location in memory where publisher will be constructed.
 /// @param session: The Zenoh session.
+/// @param publisher: An unitilized location in memory where publisher will be constructed.
 /// @param key_expr: The key expression to publish.
 /// @param options: Additional options for the publisher.
 ///
@@ -101,12 +101,12 @@ decl_c_type!(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_declare_publisher(
-    this: &mut MaybeUninit<z_owned_publisher_t>,
     session: &z_loaned_session_t,
+    publisher: &mut MaybeUninit<z_owned_publisher_t>,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_publisher_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = publisher.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
     let mut p = session.declare_publisher(key_expr);

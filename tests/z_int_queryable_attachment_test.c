@@ -142,7 +142,7 @@ int run_queryable() {
     z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_queryable_t qable;
-    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(callback), NULL) < 0) {
         printf("Unable to create queryable.\n");
         return -1;
     }

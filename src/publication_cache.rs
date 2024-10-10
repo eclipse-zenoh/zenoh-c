@@ -98,20 +98,20 @@ fn _declare_publication_cache_inner<'a, 'b, 'c>(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs and declares a publication cache.
 ///
-/// @param this_: An uninitialized location in memory where publication cache will be constructed.
 /// @param session: A Zenoh session.
+/// @param pub_cache: An uninitialized location in memory where publication cache will be constructed.
 /// @param key_expr: The key expression to publish to.
 /// @param options: Additional options for the publication cache.
 ///
 /// @returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn ze_declare_publication_cache(
-    this: &mut MaybeUninit<ze_owned_publication_cache_t>,
     session: &z_loaned_session_t,
+    pub_cache: &mut MaybeUninit<ze_owned_publication_cache_t>,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = pub_cache.as_rust_type_mut_uninit();
     let p = _declare_publication_cache_inner(session, key_expr, options);
     match p.wait() {
         Ok(publication_cache) => {
