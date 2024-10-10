@@ -49,7 +49,7 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A set of options that can be applied to a querying subscriber,
-/// upon its declaration via `ze_querying_subscriber_declare()`.
+/// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -141,7 +141,7 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_querying_subscriber_declare(
+pub unsafe extern "C" fn ze_declare_querying_subscriber(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
@@ -176,7 +176,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_declare(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_querying_subscriber_declare_background(
+pub unsafe extern "C" fn ze_declare_background_querying_subscriber(
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,

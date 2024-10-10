@@ -564,7 +564,7 @@ Functions
 .. doxygenfunction:: z_put
 .. doxygenfunction:: z_delete
 
-.. doxygenfunction:: z_publisher_declare
+.. doxygenfunction:: z_declare_publisher
 .. doxygenfunction:: z_publisher_put
 .. doxygenfunction:: z_publisher_delete
 .. doxygenfunction:: z_publisher_keyexpr
@@ -587,8 +587,8 @@ Functions
 .. doxygenfunction:: zc_closure_matching_status
 
 .. doxygenfunction:: zc_publisher_get_matching_status
-.. doxygenfunction:: zc_publisher_matching_listener_declare
-.. doxygenfunction:: zc_publisher_matching_listener_declare_background
+.. doxygenfunction:: zc_publisher_declare_matching_listener
+.. doxygenfunction:: zc_publisher_declare_background_matching_listener
 
 .. doxygenfunction:: zc_publisher_matching_listener_drop
 
@@ -615,8 +615,8 @@ Types
 Functions
 ---------
 
-.. doxygenfunction:: z_subscriber_declare
-.. doxygenfunction:: z_subscriber_declare_background
+.. doxygenfunction:: z_declare_subscriber
+.. doxygenfunction:: z_declare_background_subscriber
 .. doxygenfunction:: z_subscriber_keyexpr
 
 .. doxygenfunction:: z_subscriber_drop
@@ -673,8 +673,8 @@ Types
 
 Functions
 ---------
-.. doxygenfunction:: z_queryable_declare
-.. doxygenfunction:: z_queryable_declare_background
+.. doxygenfunction:: z_declare_queryable
+.. doxygenfunction:: z_declare_background_queryable
 .. doxygenfunction:: z_queryable_id
 
 .. doxygenfunction:: z_queryable_options_default
@@ -823,12 +823,12 @@ Types
 
 Functions
 ---------
-.. doxygenfunction:: zc_liveliness_subscriber_declare
-.. doxygenfunction:: zc_liveliness_subscriber_declare_background
+.. doxygenfunction:: zc_liveliness_declare_subscriber
+.. doxygenfunction:: zc_liveliness_declare_background_subscriber
 .. doxygenfunction:: zc_liveliness_get
 
 .. doxygenfunction:: zc_liveliness_declare_token
-.. doxygenfunction:: zc_liveliness_undeclare_token
+.. doxygenfunction:: zc_liveliness_token_undeclare
 .. doxygenfunction:: zc_liveliness_token_loan
 .. doxygenfunction:: zc_liveliness_token_drop
 
@@ -851,8 +851,8 @@ Types
 Functions
 ---------
 
-.. doxygenfunction:: ze_publication_cache_declare
-.. doxygenfunction:: ze_publication_cache_declare_background
+.. doxygenfunction:: ze_declare_publication_cache
+.. doxygenfunction:: ze_declare_background_publication_cache
 
 .. doxygenfunction:: ze_publication_cache_drop
 .. doxygenfunction:: ze_publication_cache_loan
@@ -875,8 +875,8 @@ Types
 Functions
 ---------
 
-.. doxygenfunction:: ze_querying_subscriber_declare
-.. doxygenfunction:: ze_querying_subscriber_declare_background
+.. doxygenfunction:: ze_declare_querying_subscriber
+.. doxygenfunction:: ze_declare_background_querying_subscriber
 .. doxygenfunction:: ze_querying_subscriber_get
 
 .. doxygenfunction:: ze_querying_subscriber_drop

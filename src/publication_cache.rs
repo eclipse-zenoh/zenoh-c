@@ -26,7 +26,7 @@ use crate::{
 use crate::{zc_locality_default, zc_locality_t};
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Options passed to the `ze_publication_cache_declare()` function.
+/// @brief Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     /// The prefix used for queryable.
@@ -105,7 +105,7 @@ fn _declare_publication_cache_inner<'a, 'b, 'c>(
 ///
 /// @returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn ze_publication_cache_declare(
+pub extern "C" fn ze_declare_publication_cache(
     this: &mut MaybeUninit<ze_owned_publication_cache_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
@@ -135,7 +135,7 @@ pub extern "C" fn ze_publication_cache_declare(
 ///
 /// @returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn ze_publication_cache_declare_background(
+pub extern "C" fn ze_declare_background_publication_cache(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,

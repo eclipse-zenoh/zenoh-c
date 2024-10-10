@@ -43,7 +43,7 @@ use crate::{
     zc_locality_t,
 };
 
-/// Options passed to the `z_publisher_declare()` function.
+/// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
     /// Default encoding for messages put by this publisher.
@@ -100,7 +100,7 @@ decl_c_type!(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_declare(
+pub extern "C" fn z_declare_publisher(
     this: &mut MaybeUninit<z_owned_publisher_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
@@ -373,7 +373,7 @@ fn _publisher_matching_listener_declare_inner<'a, 'b>(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_publisher_matching_listener_declare(
+pub extern "C" fn zc_publisher_declare_matching_listener(
     this: &mut MaybeUninit<zc_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
     callback: &mut zc_moved_closure_matching_status_t,
@@ -403,7 +403,7 @@ pub extern "C" fn zc_publisher_matching_listener_declare(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_publisher_matching_listener_declare_background(
+pub extern "C" fn zc_publisher_declare_background_matching_listener(
     publisher: &'static z_loaned_publisher_t,
     callback: &mut zc_moved_closure_matching_status_t,
 ) -> result::z_result_t {

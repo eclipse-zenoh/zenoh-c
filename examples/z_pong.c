@@ -34,10 +34,10 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_publisher_declare(&pub, z_loan(session), z_loan(pong), NULL);
+    z_declare_publisher(&pub, z_loan(session), z_loan(pong), NULL);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)&pub);
-    z_subscriber_declare_background(z_loan(session), z_loan(ping), z_move(respond), NULL);
+    z_declare_background_subscriber(z_loan(session), z_loan(ping), z_move(respond), NULL);
 
     while (1) {
         z_sleep_s(1);

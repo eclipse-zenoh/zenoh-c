@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
     z_owned_subscriber_t sub;
-    if (zc_liveliness_subscriber_declare(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (zc_liveliness_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
         printf("Unable to declare liveliness subscriber.\n");
         exit(-1);
     }
