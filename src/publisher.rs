@@ -367,18 +367,18 @@ fn _publisher_matching_listener_declare_inner<'a, 'b>(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
-/// @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
 /// @param publisher: A publisher to associate with matching listener.
+/// @param matching_listener: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
 /// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn zc_publisher_declare_matching_listener(
-    this: &mut MaybeUninit<zc_owned_matching_listener_t>,
     publisher: &'static z_loaned_publisher_t,
+    matching_listener: &mut MaybeUninit<zc_owned_matching_listener_t>,
     callback: &mut zc_moved_closure_matching_status_t,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = matching_listener.as_rust_type_mut_uninit();
     let listener = _publisher_matching_listener_declare_inner(publisher, callback);
     match listener.wait() {
         Ok(listener) => {

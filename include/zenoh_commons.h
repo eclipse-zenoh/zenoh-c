@@ -5062,16 +5062,16 @@ z_result_t zc_publisher_declare_background_matching_listener(const struct z_loan
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
  *
- * @param this_: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
  * @param publisher: A publisher to associate with matching listener.
+ * @param matching_listener: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
  * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_publisher_declare_matching_listener(zc_owned_matching_listener_t *this_,
-                                                  const struct z_loaned_publisher_t *publisher,
+z_result_t zc_publisher_declare_matching_listener(const struct z_loaned_publisher_t *publisher,
+                                                  zc_owned_matching_listener_t *matching_listener,
                                                   struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
