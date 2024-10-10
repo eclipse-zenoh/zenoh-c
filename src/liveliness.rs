@@ -122,7 +122,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_token_undeclare(
+pub extern "C" fn zc_liveliness_undeclare_token(
     this: &mut zc_moved_liveliness_token_t,
 ) -> result::z_result_t {
     if let Some(token) = this.take_rust_type() {

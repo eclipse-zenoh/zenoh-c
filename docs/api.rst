@@ -831,7 +831,7 @@ Functions
 .. doxygenfunction:: zc_liveliness_get
 
 .. doxygenfunction:: zc_liveliness_declare_token
-.. doxygenfunction:: zc_liveliness_token_undeclare
+.. doxygenfunction:: zc_liveliness_undeclare_token
 .. doxygenfunction:: zc_liveliness_token_loan
 .. doxygenfunction:: zc_liveliness_token_drop
 

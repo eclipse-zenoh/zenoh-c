@@ -5033,7 +5033,7 @@ const zc_loaned_liveliness_token_t *zc_liveliness_token_loan(const zc_owned_live
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_liveliness_token_undeclare(zc_moved_liveliness_token_t *this_);
+z_result_t zc_liveliness_undeclare_token(zc_moved_liveliness_token_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

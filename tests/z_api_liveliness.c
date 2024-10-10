@@ -83,13 +83,13 @@ void test_liveliness_sub() {
     assert(context.token1_put);
     assert(context.token2_put);
 
-    zc_liveliness_token_undeclare(z_move(t1));
+    zc_liveliness_undeclare_token(z_move(t1));
     z_sleep_s(1);
 
     assert(context.token1_drop);
     assert(!context.token2_drop);
 
-    zc_liveliness_token_undeclare(z_move(t2));
+    zc_liveliness_undeclare_token(z_move(t2));
     z_sleep_s(1);
     assert(context.token2_drop);
 }
