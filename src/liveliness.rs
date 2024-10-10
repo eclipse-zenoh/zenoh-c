@@ -92,18 +92,18 @@ pub unsafe extern "C" fn zc_liveliness_token_loan(
 /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
 /// is achieved, and a DELETE sample if it's lost.
 ///
-/// @param this_: An uninitialized memory location where liveliness token will be constructed.
 /// @param session: A Zenos session to declare the liveliness token.
+/// @param token: An uninitialized memory location where liveliness token will be constructed.
 /// @param key_expr: A keyexpr to declare a liveliess token for.
 /// @param _options: Liveliness token declaration properties.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_declare_token(
-    this: &mut MaybeUninit<zc_owned_liveliness_token_t>,
     session: &z_loaned_session_t,
+    token: &mut MaybeUninit<zc_owned_liveliness_token_t>,
     key_expr: &z_loaned_keyexpr_t,
     _options: Option<&zc_liveliness_declaration_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = token.as_rust_type_mut_uninit();
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     match session.liveliness().declare_token(key_expr).wait() {
@@ -135,14 +135,14 @@ pub extern "C" fn zc_liveliness_undeclare_token(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief The options for `zc_liveliness_subscriber_declare()`
+/// @brief The options for `zc_liveliness_declare_subscriber()`
 #[repr(C)]
 pub struct zc_liveliness_subscriber_options_t {
     history: bool,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constucts default value for `zc_liveliness_subscriber_declare_options_t`.
+/// @brief Constucts default value for `zc_liveliness_declare_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn zc_liveliness_subscriber_options_default(
     this: &mut MaybeUninit<zc_liveliness_subscriber_options_t>,
@@ -177,22 +177,22 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
 ///
-/// @param this_: An uninitialized memory location where subscriber will be constructed.
-/// @param session: The Zenoh session.
+/// @param session: A Zenoh session.
+/// @param subscriber: An uninitialized memory location where subscriber will be constructed.
 /// @param key_expr: The key expression to subscribe to.
 /// @param callback: The callback function that will be called each time a liveliness token status is changed.
 /// @param options: The options to be passed to the liveliness subscriber declaration.
 ///
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_subscriber_declare(
-    this: &mut MaybeUninit<z_owned_subscriber_t>,
+pub extern "C" fn zc_liveliness_declare_subscriber(
     session: &z_loaned_session_t,
+    subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
     options: Option<&mut zc_liveliness_subscriber_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = subscriber.as_rust_type_mut_uninit();
     let subscriber = _liveliness_declare_subscriber_inner(session, key_expr, callback, options);
     match subscriber.wait() {
         Ok(subscriber) => {
@@ -217,7 +217,7 @@ pub extern "C" fn zc_liveliness_subscriber_declare(
 ///
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_subscriber_declare_background(
+pub extern "C" fn zc_liveliness_declare_background_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,

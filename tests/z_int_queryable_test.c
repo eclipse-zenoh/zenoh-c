@@ -74,7 +74,7 @@ int run_queryable() {
     z_closure(&callback, query_handler, NULL, (void *)keyexpr);
     z_owned_queryable_t qable;
     ;
-    if (z_queryable_declare(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) != Z_OK) {
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(callback), NULL) != Z_OK) {
         printf("Unable to create queryable.\n");
         return -1;
     }

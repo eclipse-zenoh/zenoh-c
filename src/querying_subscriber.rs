@@ -49,7 +49,7 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A set of options that can be applied to a querying subscriber,
-/// upon its declaration via `ze_querying_subscriber_declare()`.
+/// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
 #[repr(C)]
 #[allow(non_camel_case_types)]
@@ -132,8 +132,8 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs and declares a querying subscriber for a given key expression.
 ///
-/// @param this_: An uninitialized memory location where querying subscriber will be constructed.
 /// @param session: A Zenoh session.
+/// @param querying_subscriber: An uninitialized memory location where querying subscriber will be constructed.
 /// @param key_expr: A key expression to subscribe to.
 /// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
 /// @param options: Additional options for the querying subscriber.
@@ -141,14 +141,14 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_querying_subscriber_declare(
-    this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
+pub unsafe extern "C" fn ze_declare_querying_subscriber(
     session: &'static z_loaned_session_t,
+    querying_subscriber: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
     options: Option<&mut ze_querying_subscriber_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = querying_subscriber.as_rust_type_mut_uninit();
     let sub = _declare_querying_subscriber_inner(session, key_expr, callback, options);
     match sub.wait() {
         Ok(sub) => {
@@ -176,7 +176,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_declare(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_querying_subscriber_declare_background(
+pub unsafe extern "C" fn ze_declare_background_querying_subscriber(
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
@@ -259,6 +259,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares querying subscriber callback and resets it to its gravestone state.
+/// This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
@@ -284,4 +285,21 @@ pub unsafe extern "C" fn ze_querying_subscriber_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Undeclares the given querying subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn ze_undeclare_querying_subscriber(
+    this_: &mut ze_moved_querying_subscriber_t,
+) -> result::z_result_t {
+    if let Some(s) = this_.take_rust_type() {
+        if let Err(e) = s.0.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
+        }
+    }
+    result::Z_OK
 }

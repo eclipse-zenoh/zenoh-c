@@ -96,7 +96,7 @@ pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &
         .write(Some(this_.as_rust_type_ref().clone()));
 }
 
-/// Options passed to the `z_queryable_declare()` function.
+/// Options passed to the `z_declare_queryable()` function.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_queryable_options_t {
@@ -234,22 +234,22 @@ fn _declare_queryable_inner<'a, 'b>(
 
 /// Constructs a Queryable for the given key expression.
 ///
-/// @param this_: An uninitialized memory location where queryable will be constructed.
-/// @param session: The zenoh session.
+/// @param session: A Zenoh session.
+/// @param queryable: An uninitialized memory location where queryable will be constructed.
 /// @param key_expr: The key expression the Queryable will reply to.
 /// @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
 /// @param options: Options for the queryable.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
 #[no_mangle]
-pub extern "C" fn z_queryable_declare(
-    this: &mut MaybeUninit<z_owned_queryable_t>,
+pub extern "C" fn z_declare_queryable(
     session: &z_loaned_session_t,
+    queryable: &mut MaybeUninit<z_owned_queryable_t>,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = queryable.as_rust_type_mut_uninit();
     let queryable = _declare_queryable_inner(session, key_expr, callback, options);
     match queryable.wait() {
         Ok(q) => {
@@ -274,7 +274,7 @@ pub extern "C" fn z_queryable_declare(
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
 #[no_mangle]
-pub extern "C" fn z_queryable_declare_background(
+pub extern "C" fn z_declare_background_queryable(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_query_t,
@@ -291,6 +291,7 @@ pub extern "C" fn z_queryable_declare_background(
 }
 
 /// Undeclares queryable callback and resets it to its gravestone state.
+/// This is equivalent to calling `z_undeclare_queryable()` and discarding its return value.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
@@ -493,4 +494,17 @@ pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loan
         .as_rust_type_ref()
         .attachment()
         .map(|a| a.as_loaned_c_type_ref())
+}
+
+/// Undeclares a `z_owned_queryable_t`.
+/// Returns 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
+    if let Some(qable) = this_.take_rust_type() {
+        if let Err(e) = qable.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
+        }
+    }
+    result::Z_OK
 }

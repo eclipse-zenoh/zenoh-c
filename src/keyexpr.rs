@@ -460,17 +460,17 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
 /// Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
 /// which allows to save the bandwith, when passing key expression between Zenoh entities.
 ///
-/// @param this_: An uninitialized location in memory where key expression will be constructed.
 /// @param session: Session on which to declare key expression.
+/// @param declared_key_expr: An uninitialized location in memory where key expression will be constructed.
 /// @param key_expr: Key expression to declare on network.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_declare_keyexpr(
-    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     session: &z_loaned_session_t,
+    declared_key_expr: &mut MaybeUninit<z_owned_keyexpr_t>,
     key_expr: &z_loaned_keyexpr_t,
 ) -> z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = declared_key_expr.as_rust_type_mut_uninit();
     let key_expr = key_expr.as_rust_type_ref();
     let session = session.as_rust_type_ref();
     match session.declare_keyexpr(key_expr).wait() {
@@ -491,10 +491,10 @@ pub extern "C" fn z_declare_keyexpr(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(
-    this: &mut z_moved_keyexpr_t,
     session: &z_loaned_session_t,
+    key_expr: &mut z_moved_keyexpr_t,
 ) -> result::z_result_t {
-    let Some(kexpr) = this.take_rust_type() else {
+    let Some(kexpr) = key_expr.take_rust_type() else {
         tracing::debug!("Attempted to undeclare dropped keyexpr");
         return result::Z_EINVAL;
     };

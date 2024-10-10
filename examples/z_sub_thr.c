@@ -90,12 +90,12 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/thr");
     z_owned_keyexpr_t declared_ke;
-    z_declare_keyexpr(&declared_ke, z_loan(s), z_loan(ke));
+    z_declare_keyexpr(z_loan(s), &declared_ke, z_loan(ke));
 
     z_stats_t *context = z_stats_make();
     z_owned_closure_sample_t callback;
     z_closure(&callback, on_sample, drop_stats, context);
-    if (z_subscriber_declare_background(z_loan(s), z_loan(declared_ke), z_move(callback), NULL)) {
+    if (z_declare_background_subscriber(z_loan(s), z_loan(declared_ke), z_move(callback), NULL)) {
         printf("Unable to create subscriber.\n");
         exit(-1);
     }
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
         z_sleep_s(1);
     }
 
-    z_undeclare_keyexpr(z_move(declared_ke), z_loan(s));
+    z_undeclare_keyexpr(z_loan(s), z_move(declared_ke));
     z_drop(z_move(s));
     return 0;
 }

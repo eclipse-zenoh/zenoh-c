@@ -50,7 +50,7 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
         .as_loaned_c_type_ref()
 }
 
-/// Options passed to the `z_subscriber_declare()` function.
+/// Options passed to the `z_declare_subscriber()` function.
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
@@ -89,24 +89,24 @@ fn _declare_subscriber_inner<'a, 'b>(
 
 /// Constructs and declares a subscriber for a given key expression. Dropping subscriber undeclares its callback.
 ///
-/// @param this_: An uninitialized location in memory, where subscriber will be constructed.
 /// @param session: The zenoh session.
+/// @param subscriber: An uninitialized location in memory, where subscriber will be constructed.
 /// @param key_expr: The key expression to subscribe.
 /// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
 /// @param _options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
 #[no_mangle]
-pub extern "C" fn z_subscriber_declare(
-    this: &mut MaybeUninit<z_owned_subscriber_t>,
+pub extern "C" fn z_declare_subscriber(
     session: &z_loaned_session_t,
+    subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
     _options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
-    let subscriber = _declare_subscriber_inner(session, key_expr, callback, _options);
-    match subscriber.wait() {
+    let this = subscriber.as_rust_type_mut_uninit();
+    let s = _declare_subscriber_inner(session, key_expr, callback, _options);
+    match s.wait() {
         Ok(sub) => {
             this.write(Some(sub));
             result::Z_OK
@@ -129,7 +129,7 @@ pub extern "C" fn z_subscriber_declare(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn z_subscriber_declare_background(
+pub extern "C" fn z_declare_background_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
@@ -156,6 +156,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 }
 
 /// Undeclares subscriber callback and resets it to its gravestone state.
+/// This is equivalent to calling `z_undeclare_subscriber()` and discarding its return value.
 #[no_mangle]
 pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
@@ -165,4 +166,18 @@ pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
 #[no_mangle]
 pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
+}
+
+/// Undeclares the subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
+    if let Some(s) = this_.take_rust_type() {
+        if let Err(e) = s.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
+        }
+    }
+    result::Z_OK
 }

@@ -268,7 +268,7 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr_str);
     z_owned_subscriber_t _ret_sub;
-    z_subscriber_declare(&_ret_sub, z_loan(s2), z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
+    z_declare_subscriber(z_loan(s2), &_ret_sub, z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
     assert(z_internal_check(_ret_sub));
 
     z_sleep_s(SLEEP);
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t s1_key;
     z_view_keyexpr_from_str(&s1_key, s1_res);
     z_owned_keyexpr_t _ret_expr;
-    z_declare_keyexpr(&_ret_expr, z_loan(s1), z_loan(s1_key));
+    z_declare_keyexpr(z_loan(s1), &_ret_expr, z_loan(s1_key));
     assert(z_internal_check(_ret_expr));
     z_put_options_t _ret_put_opt;
     z_put_options_default(&_ret_put_opt);
@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
     z_sleep_s(SLEEP);
     assert(datas == 2);
 
-    _ret_int8 = z_undeclare_keyexpr(z_move(_ret_expr), z_loan(s1));
+    _ret_int8 = z_undeclare_keyexpr(z_loan(s1), z_move(_ret_expr));
     assert(_ret_int8 == 0);
     assert(!z_internal_check(_ret_expr));
 
@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
     z_queryable_options_t _ret_qle_opt;
     z_queryable_options_default(&_ret_qle_opt);
     z_owned_queryable_t qle;
-    z_queryable_declare(&qle, z_loan(s1), z_loan(s1_key), z_move(_ret_closure_query), &_ret_qle_opt);
+    z_declare_queryable(z_loan(s1), &qle, z_loan(s1_key), z_move(_ret_closure_query), &_ret_qle_opt);
     assert(z_internal_check(qle));
 
     z_sleep_s(SLEEP);
