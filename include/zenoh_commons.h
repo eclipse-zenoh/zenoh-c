@@ -969,7 +969,7 @@ typedef struct zc_moved_closure_matching_status_t {
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief The options for `zc_liveliness_declare_token()`.
+ * @brief The options for `zc_liveliness_token_declare()`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct zc_liveliness_declaration_options_t {
@@ -4691,25 +4691,6 @@ void zc_liveliness_declaration_options_default(struct zc_liveliness_declaration_
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs and declares a liveliness token on the network.
- *
- * Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
- * is achieved, and a DELETE sample if it's lost.
- *
- * @param this_: An uninitialized memory location where liveliness token will be constructed.
- * @param session: A Zenos session to declare the liveliness token.
- * @param key_expr: A keyexpr to declare a liveliess token for.
- * @param _options: Liveliness token declaration properties.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t zc_liveliness_declare_token(struct zc_owned_liveliness_token_t *this_,
-                                       const struct z_loaned_session_t *session,
-                                       const struct z_loaned_keyexpr_t *key_expr,
-                                       const struct zc_liveliness_declaration_options_t *_options);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
  *
  * @param session: The Zenoh session.
@@ -4780,6 +4761,25 @@ void zc_liveliness_subscriber_options_default(struct zc_liveliness_subscriber_op
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs and declares a liveliness token on the network.
+ *
+ * Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
+ * is achieved, and a DELETE sample if it's lost.
+ *
+ * @param this_: An uninitialized memory location where liveliness token will be constructed.
+ * @param session: A Zenos session to declare the liveliness token.
+ * @param key_expr: A keyexpr to declare a liveliess token for.
+ * @param _options: Liveliness token declaration properties.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t zc_liveliness_token_declare(struct zc_owned_liveliness_token_t *this_,
+                                       const struct z_loaned_session_t *session,
+                                       const struct z_loaned_keyexpr_t *key_expr,
+                                       const struct zc_liveliness_declaration_options_t *_options);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares liveliness token, frees memory and resets it to a gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -4800,7 +4800,7 @@ const struct zc_loaned_liveliness_token_t *zc_liveliness_token_loan(const struct
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_liveliness_undeclare_token(struct zc_moved_liveliness_token_t *this_);
+z_result_t zc_liveliness_token_undeclare(struct zc_moved_liveliness_token_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

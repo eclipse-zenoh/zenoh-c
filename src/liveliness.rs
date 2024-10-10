@@ -58,7 +58,7 @@ pub extern "C" fn zc_liveliness_token_drop(this_: &mut zc_moved_liveliness_token
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief The options for `zc_liveliness_declare_token()`.
+/// @brief The options for `zc_liveliness_token_declare()`.
 #[repr(C)]
 pub struct zc_liveliness_declaration_options_t {
     _dummy: u8,
@@ -97,7 +97,7 @@ pub unsafe extern "C" fn zc_liveliness_token_loan(
 /// @param key_expr: A keyexpr to declare a liveliess token for.
 /// @param _options: Liveliness token declaration properties.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_declare_token(
+pub extern "C" fn zc_liveliness_token_declare(
     this: &mut MaybeUninit<zc_owned_liveliness_token_t>,
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
@@ -122,7 +122,7 @@ pub extern "C" fn zc_liveliness_declare_token(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_undeclare_token(
+pub extern "C" fn zc_liveliness_token_undeclare(
     this: &mut zc_moved_liveliness_token_t,
 ) -> result::z_result_t {
     if let Some(token) = this.take_rust_type() {

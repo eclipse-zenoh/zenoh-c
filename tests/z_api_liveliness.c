@@ -75,21 +75,21 @@ void test_liveliness_sub() {
 
     z_sleep_s(1);
     zc_owned_liveliness_token_t t1, t2;
-    zc_liveliness_declare_token(&t1, z_loan(s1), z_loan(k1), NULL);
-    zc_liveliness_declare_token(&t2, z_loan(s1), z_loan(k2), NULL);
+    zc_liveliness_token_declare(&t1, z_loan(s1), z_loan(k1), NULL);
+    zc_liveliness_token_declare(&t2, z_loan(s1), z_loan(k2), NULL);
 
     z_sleep_s(1);
 
     assert(context.token1_put);
     assert(context.token2_put);
 
-    zc_liveliness_undeclare_token(z_move(t1));
+    zc_liveliness_token_undeclare(z_move(t1));
     z_sleep_s(1);
 
     assert(context.token1_drop);
     assert(!context.token2_drop);
 
-    zc_liveliness_undeclare_token(z_move(t2));
+    zc_liveliness_token_undeclare(z_move(t2));
     z_sleep_s(1);
     assert(context.token2_drop);
 }
@@ -110,7 +110,7 @@ void test_liveliness_get() {
 
     z_sleep_s(1);
     zc_owned_liveliness_token_t t1;
-    zc_liveliness_declare_token(&t1, z_loan(s1), z_loan(k1), NULL);
+    zc_liveliness_token_declare(&t1, z_loan(s1), z_loan(k1), NULL);
     z_sleep_s(1);
 
     z_owned_fifo_handler_reply_t handler;

@@ -827,8 +827,8 @@ Functions
 .. doxygenfunction:: zc_liveliness_subscriber_declare_background
 .. doxygenfunction:: zc_liveliness_get
 
-.. doxygenfunction:: zc_liveliness_declare_token
-.. doxygenfunction:: zc_liveliness_undeclare_token
+.. doxygenfunction:: zc_liveliness_token_declare
+.. doxygenfunction:: zc_liveliness_token_undeclare
 .. doxygenfunction:: zc_liveliness_token_loan
 .. doxygenfunction:: zc_liveliness_token_drop
 
