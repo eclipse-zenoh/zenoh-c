@@ -156,6 +156,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 }
 
 /// Undeclares subscriber callback and resets it to its gravestone state.
+/// This is equivalent to calling `z_undeclare_subscriber()` and discarding its return value.
 #[no_mangle]
 pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
@@ -165,4 +166,18 @@ pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
 #[no_mangle]
 pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
+}
+
+/// Undeclares the subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
+    if let Some(s) = this_.take_rust_type() {
+        if let Err(e) = s.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
+        }
+    }
+    result::Z_OK
 }

@@ -3318,6 +3318,7 @@ z_result_t z_publisher_delete(const struct z_loaned_publisher_t *publisher,
 ZENOHC_API void z_publisher_delete_options_default(struct z_publisher_delete_options_t *this_);
 /**
  * Frees memory and resets publisher to its gravestone state.
+ * This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
  */
 ZENOHC_API void z_publisher_drop(struct z_moved_publisher_t *this_);
 /**
@@ -3538,6 +3539,7 @@ ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *th
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
 /**
  * Undeclares queryable callback and resets it to its gravestone state.
+ * This is equivalent to calling `z_undeclare_queryable()` and discarding its return value.
  */
 ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
 /**
@@ -4405,6 +4407,7 @@ ZENOHC_API size_t z_string_len(const struct z_loaned_string_t *this_);
 ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_string_t *this_);
 /**
  * Undeclares subscriber callback and resets it to its gravestone state.
+ * This is equivalent to calling `z_undeclare_subscriber()` and discarding its return value.
  */
 ZENOHC_API void z_subscriber_drop(struct z_moved_subscriber_t *this_);
 /**
@@ -4498,6 +4501,23 @@ ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
 ZENOHC_API
 z_result_t z_undeclare_keyexpr(const struct z_loaned_session_t *session,
                                struct z_moved_keyexpr_t *key_expr);
+/**
+ * @brief Undeclares the given publisher.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_undeclare_publisher(struct z_moved_publisher_t *this_);
+/**
+ * Undeclares a `z_owned_queryable_t`.
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_undeclare_queryable(struct z_moved_queryable_t *this_);
+/**
+ * Undeclares the subscriber.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API z_result_t z_undeclare_subscriber(struct z_moved_subscriber_t *this_);
 /**
  * Constructs a view key expression in empty state
  */
@@ -5426,6 +5446,7 @@ ZENOHC_API void ze_internal_serializer_null(struct ze_owned_serializer_t *this_)
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops publication cache and resets it to its gravestone state.
+ * This is equivalent to calling `ze_undeclare_publication_cache()` and discarding its return value.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -5458,6 +5479,7 @@ void ze_publication_cache_options_default(struct ze_publication_cache_options_t 
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares querying subscriber callback and resets it to its gravestone state.
+ * This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -5666,3 +5688,22 @@ ZENOHC_API void ze_serializer_serialize_uint64(struct ze_loaned_serializer_t *th
  * @brief Serializes an unsigned integer.
  */
 ZENOHC_API void ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_, uint8_t val);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Undeclares publication cache.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t ze_undeclare_publication_cache(ze_moved_publication_cache_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Undeclares the given querying subscriber.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t ze_undeclare_querying_subscriber(ze_moved_querying_subscriber_t *this_);
+#endif

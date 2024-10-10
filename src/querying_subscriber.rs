@@ -259,6 +259,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares querying subscriber callback and resets it to its gravestone state.
+/// This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
@@ -284,4 +285,21 @@ pub unsafe extern "C" fn ze_querying_subscriber_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Undeclares the given querying subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn ze_undeclare_querying_subscriber(
+    this_: &mut ze_moved_querying_subscriber_t,
+) -> result::z_result_t {
+    if let Some(s) = this_.take_rust_type() {
+        if let Err(e) = s.0.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
+        }
+    }
+    result::Z_OK
 }

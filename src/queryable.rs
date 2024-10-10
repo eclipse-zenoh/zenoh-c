@@ -291,6 +291,7 @@ pub extern "C" fn z_declare_background_queryable(
 }
 
 /// Undeclares queryable callback and resets it to its gravestone state.
+/// This is equivalent to calling `z_undeclare_queryable()` and discarding its return value.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
@@ -493,4 +494,17 @@ pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loan
         .as_rust_type_ref()
         .attachment()
         .map(|a| a.as_loaned_c_type_ref())
+}
+
+/// Undeclares a `z_owned_queryable_t`.
+/// Returns 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
+    if let Some(qable) = this_.take_rust_type() {
+        if let Err(e) = qable.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
+        }
+    }
+    result::Z_OK
 }

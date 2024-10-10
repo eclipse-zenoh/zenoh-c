@@ -452,8 +452,23 @@ pub extern "C" fn zc_publisher_get_matching_status(
 }
 
 /// Frees memory and resets publisher to its gravestone state.
+/// This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
     std::mem::drop(this.take_rust_type())
+}
+
+#[no_mangle]
+/// @brief Undeclares the given publisher.
+///
+/// @return 0 in case of success, negative error code otherwise.
+pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
+    if let Some(p) = this_.take_rust_type() {
+        if let Err(e) = p.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_ENETWORK;
+        }
+    }
+    result::Z_OK
 }
