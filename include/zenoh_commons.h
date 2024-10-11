@@ -282,29 +282,14 @@ typedef struct z_close_options_t {
   uint8_t _dummy;
 } z_close_options_t;
 /**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * @brief A hello message-processing closure.
  *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
  */
 typedef struct z_owned_closure_hello_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(struct z_loaned_hello_t *hello, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
+  void *_context;
+  void (*_call)(struct z_loaned_hello_t *hello, void *context);
+  void (*_drop)(void *context);
 } z_owned_closure_hello_t;
 /**
  * Moved closure.
@@ -313,28 +298,14 @@ typedef struct z_moved_closure_hello_t {
   struct z_owned_closure_hello_t _this;
 } z_moved_closure_hello_t;
 /**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * @brief A query-processing closure.
  *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
  */
 typedef struct z_owned_closure_query_t {
-  /**
-   * An optional pointer to a context representing a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(struct z_loaned_query_t *reply, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
+  void *_context;
+  void (*_call)(struct z_loaned_query_t *reply, void *context);
+  void (*_drop)(void *context);
 } z_owned_closure_query_t;
 /**
  * Moved closure.
@@ -343,28 +314,14 @@ typedef struct z_moved_closure_query_t {
   struct z_owned_closure_query_t _this;
 } z_moved_closure_query_t;
 /**
- * A structure that contains all the elements for stateful, memory-leak-free callbacks.
+ * @brief A reply-processing closure.
  *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
  */
 typedef struct z_owned_closure_reply_t {
-  /**
-   * An optional pointer to a context representing a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(struct z_loaned_reply_t *reply, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
+  void *_context;
+  void (*_call)(struct z_loaned_reply_t *reply, void *context);
+  void (*_drop)(void *context);
 } z_owned_closure_reply_t;
 /**
  * Moved closure.
@@ -373,28 +330,14 @@ typedef struct z_moved_closure_reply_t {
   struct z_owned_closure_reply_t _this;
 } z_moved_closure_reply_t;
 /**
+ * @brief A sample-processing closure.
+ *
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  */
 typedef struct z_owned_closure_sample_t {
-  /**
-   * An optional pointer to a context representing a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(struct z_loaned_sample_t *sample, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
+  void *_context;
+  void (*_call)(struct z_loaned_sample_t *sample, void *context);
+  void (*_drop)(void *context);
 } z_owned_closure_sample_t;
 /**
  * Moved closure.
@@ -404,29 +347,15 @@ typedef struct z_moved_closure_sample_t {
 } z_moved_closure_sample_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * @brief A zenoh id-processing closure.
  *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_owned_closure_zid_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A callback function.
-   */
-  void (*call)(const struct z_id_t *z_id, void *context);
-  /**
-   * An optional function that will be called upon closure drop.
-   */
-  void (*drop)(void *context);
+  void *_context;
+  void (*_call)(const struct z_id_t *z_id, void *context);
+  void (*_drop)(void *context);
 } z_owned_closure_zid_t;
 #endif
 /**
@@ -890,28 +819,14 @@ typedef struct z_time_t {
   uint64_t t;
 } z_time_t;
 /**
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * @brief A log-processing closure.
  *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
  */
 typedef struct zc_owned_closure_log_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(enum zc_log_severity_t severity, const struct z_loaned_string_t *msg, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
+  void *_context;
+  void (*_call)(enum zc_log_severity_t severity, const struct z_loaned_string_t *msg, void *context);
+  void (*_drop)(void *context);
 } zc_owned_closure_log_t;
 /**
  * Moved closure.
@@ -933,29 +848,15 @@ typedef struct zc_matching_status_t {
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ * @brief A matching status-processing closure.
  *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct zc_owned_closure_matching_status_t {
-  /**
-   * An optional pointer to a closure state.
-   */
-  void *context;
-  /**
-   * A closure body.
-   */
-  void (*call)(const struct zc_matching_status_t *matching_status, void *context);
-  /**
-   * An optional drop function that will be called when the closure is dropped.
-   */
-  void (*drop)(void *context);
+  void *_context;
+  void (*_call)(const struct zc_matching_status_t *matching_status, void *context);
+  void (*_drop)(void *context);
 } zc_owned_closure_matching_status_t;
 #endif
 /**
@@ -1516,6 +1417,15 @@ z_result_t z_close(struct z_loaned_session_t *session,
 ZENOHC_API void z_close_options_default(struct z_close_options_t *this_);
 /**
  * @brief Constructs closure.
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1543,6 +1453,13 @@ ZENOHC_API
 const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned_closure_hello_t *closure);
 /**
  * @brief Constructs closure.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1570,6 +1487,13 @@ ZENOHC_API
 const struct z_loaned_closure_query_t *z_closure_query_loan(const struct z_owned_closure_query_t *closure);
 /**
  * @brief Constructs closure.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1598,6 +1522,13 @@ ZENOHC_API
 const struct z_loaned_closure_reply_t *z_closure_reply_loan(const struct z_owned_closure_reply_t *closure);
 /**
  * @brief Constructs closure.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1625,6 +1556,13 @@ ZENOHC_API
 const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_owned_closure_sample_t *closure);
 /**
  * @brief Constructs closure.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -4454,6 +4392,13 @@ void zc_cleanup_orphaned_shm_segments(void);
 #endif
 /**
  * @brief Constructs closure.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -4484,6 +4429,13 @@ ZENOHC_API
 const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_closure_log_t *closure);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
  * @brief Constructs closure.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.

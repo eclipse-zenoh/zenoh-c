@@ -1722,7 +1722,7 @@ pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String 
             .typename
             .typename
             .replace(&format!(" (*{})", &processed_f.args[1].name), "");
-        let callback_typename = f.func_name.clone() + "_callabck_t";
+        let callback_typename = f.func_name.clone() + "_callback_t";
         out += &format!(
             "extern \"C\" using {} = {};\n",
             callback_typename, prototype

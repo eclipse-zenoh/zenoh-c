@@ -20,22 +20,14 @@ use crate::{
     zc_matching_status_t,
 };
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+/// @brief A matching status-processing closure.
 ///
-/// Closures are not guaranteed not to be called concurrently.
-///
-/// It is guaranteed that:
-///   - `call` will never be called once `drop` has started.
-///   - `drop` will only be called **once**, and **after every** `call` has ended.
-///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+/// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
 #[repr(C)]
 pub struct zc_owned_closure_matching_status_t {
-    /// An optional pointer to a closure state.
-    context: *mut c_void,
-    /// A closure body.
-    call: Option<extern "C" fn(matching_status: &zc_matching_status_t, context: *mut c_void)>,
-    /// An optional drop function that will be called when the closure is dropped.
-    drop: Option<extern "C" fn(context: *mut c_void)>,
+    _context: *mut c_void,
+    _call: Option<extern "C" fn(matching_status: &zc_matching_status_t, context: *mut c_void)>,
+    _drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -61,24 +53,24 @@ decl_c_type!(
 impl Default for zc_owned_closure_matching_status_t {
     fn default() -> Self {
         zc_owned_closure_matching_status_t {
-            context: std::ptr::null_mut(),
-            call: None,
-            drop: None,
+            _context: std::ptr::null_mut(),
+            _call: None,
+            _drop: None,
         }
     }
 }
 
 impl zc_owned_closure_matching_status_t {
     pub fn is_empty(&self) -> bool {
-        self.call.is_none() && self.drop.is_none() && self.context.is_null()
+        self._call.is_none() && self._drop.is_none() && self._context.is_null()
     }
 }
 unsafe impl Send for zc_owned_closure_matching_status_t {}
 unsafe impl Sync for zc_owned_closure_matching_status_t {}
 impl Drop for zc_owned_closure_matching_status_t {
     fn drop(&mut self) {
-        if let Some(drop) = self.drop {
-            drop(self.context)
+        if let Some(drop) = self._drop {
+            drop(self._context)
         }
     }
 }
@@ -109,8 +101,8 @@ pub extern "C" fn zc_closure_matching_status_call(
     mathing_status: &zc_matching_status_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
-    match closure.call {
-        Some(call) => call(mathing_status, closure.context),
+    match closure._call {
+        Some(call) => call(mathing_status, closure._context),
         None => {
             tracing::error!("Attempted to call an uninitialized closure!");
         }
@@ -140,9 +132,9 @@ impl<F: Fn(&zc_matching_status_t)> From<F> for zc_owned_closure_matching_status_
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })
         }
         zc_owned_closure_matching_status_t {
-            context: this,
-            call: Some(call::<F>),
-            drop: Some(drop::<F>),
+            _context: this,
+            _call: Some(call::<F>),
+            _drop: Some(drop::<F>),
         }
     }
 }
@@ -157,6 +149,13 @@ pub extern "C" fn zc_closure_matching_status_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+///
+/// Closures are not guaranteed not to be called concurrently.
+///
+/// It is guaranteed that:
+///   - `call` will never be called once `drop` has started.
+///   - `drop` will only be called **once**, and **after every** `call` has ended.
+///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 /// @brief Constructs closure.
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.
@@ -170,8 +169,8 @@ pub extern "C" fn zc_closure_matching_status(
     context: *mut c_void,
 ) {
     this.write(zc_owned_closure_matching_status_t {
-        context,
-        call,
-        drop,
+        _context: context,
+        _call: call,
+        _drop: drop,
     });
 }
