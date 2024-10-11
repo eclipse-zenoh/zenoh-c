@@ -85,9 +85,9 @@ pub unsafe extern "C" fn z_fifo_channel_reply_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_reply_t {
-        call: Some(__z_handler_reply_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_reply_drop),
+        _call: Some(__z_handler_reply_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_reply_drop),
     });
 }
 
@@ -190,9 +190,9 @@ pub unsafe extern "C" fn z_ring_channel_reply_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_reply_t {
-        call: Some(__z_handler_reply_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_reply_drop),
+        _call: Some(__z_handler_reply_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_reply_drop),
     });
 }
 

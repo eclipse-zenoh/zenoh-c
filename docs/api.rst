@@ -509,7 +509,6 @@ Types
 
 .. doxygenstruct:: z_loaned_closure_zid_t
 .. doxygenstruct:: z_owned_closure_zid_t
-    :members:
 
 Functions
 ^^^^^^^^^
@@ -557,7 +556,6 @@ Types
 
 .. doxygenstruct:: zc_owned_matching_listener_t
 .. doxygenstruct:: zc_owned_closure_matching_status_t
-    :members:
 
 Functions
 ---------
@@ -603,7 +601,6 @@ Types
 
 .. doxygenstruct:: z_loaned_closure_sample_t
 .. doxygenstruct:: z_owned_closure_sample_t
-    :members:
 
 .. doxygenstruct:: z_subscriber_options_t
     :members:
@@ -657,7 +654,6 @@ Types
 
 .. doxygenstruct:: z_loaned_closure_query_t
 .. doxygenstruct:: z_owned_closure_query_t
-    :members:
 
 .. doxygenstruct:: z_queryable_options_t
     :members:
@@ -728,7 +724,6 @@ Types
 
 .. doxygenstruct:: z_loaned_closure_reply_t
 .. doxygenstruct:: z_owned_closure_reply_t
-    :members:
 
 .. doxygenstruct:: z_get_options_t
     :members:
@@ -791,7 +786,6 @@ Types
     :members:
 .. doxygenstruct:: z_loaned_closure_hello_t
 .. doxygenstruct:: z_owned_closure_hello_t
-    :members:
 
 Functions
 ---------
