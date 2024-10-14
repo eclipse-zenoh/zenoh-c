@@ -151,8 +151,11 @@ Name Prefixes `z_`, `zc_`, `ze_`
 
 Most functions and types in the C API use the `z_` prefix, which applies to the common zenoh C API
 (currently Rust-based zenoh-c and pure C zenoh-pico).
+We try to maintain a common API between `zenoh-c` and `zenoh-pico`, such that porting code from one to the other is, ideally, trivial.
+However, due design limitations some functionality might be represented differently (or simply be not available) in either library.
+The `zc_` prefix is used for functions/structs specific to `zenoh-c`. `zenoh-pico` uses the `zp_` prefix for the same purpose.
 
-The `zc_` prefix is specific to zenoh-c. zenoh-pico uses the `zp_` prefix for the same purpose.
 
 The `ze_` prefix identifies functions and types from the `zenoh-ext` Rust library that are not
-part of the core Zenoh API and therefore are placed in a separate namespace.
+part of the core Zenoh API and therefore are placed in a separate namespace. Note, that this functionality might not
+be fully available in `zenoh-pico`.
