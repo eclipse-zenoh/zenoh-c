@@ -149,6 +149,11 @@ Types named `z_xxx_t` are copyable, and can be passed by value. Some of them are
 Name Prefixes `z_`, `zc_`, `ze_`
 ================================
 
+We try to maintain a common API between `zenoh-c` and `zenoh-pico`, such that porting code from one to the other is, ideally, trivial.
+However, due to design limitations some functionality might be represented differently (or simply be not available) in either library.
+
+The namespace prefixes are used to distinguish between different parts of the API.
+
 Most functions and types in the C API use the `z_` prefix, which applies to the core Zenoh API.
 These functions and types are guaranteed to be available in all Zenoh implementations on C 
 (currently, Rust-based zenoh-c and pure C zenoh-pico).
@@ -159,5 +164,6 @@ have the same prototype and behavior across all implementations. Typically, thes
 provided by the `zenoh-ext` Rust library for zenoh-c and are not available in zenoh-pico. However, the data 
 serialization API is implemented in zenoh-pico with the same `ze_` prefix.
 
-The `zc_` prefix is specific to zenoh-c, while zenoh-pico uses the `zp_` prefix for the same purpose. Usually,
-these functions are specific to a particular implementation.
+The `zc_` prefix identifies API specific to zenoh-c, while zenoh-pico uses the `zp_` prefix for the same purpose.
+E.g. zenoh-c and zenoh-pico have different approaches to configuration and therefore each have it's own set 
+of `zc_config_...` and `zp_config_...` functions.
