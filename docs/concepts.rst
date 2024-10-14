@@ -159,11 +159,11 @@ These functions and types are guaranteed to be available in all Zenoh implementa
 (currently, Rust-based zenoh-c and pure C zenoh-pico).
 
 The `zc_` prefix identifies API specific to zenoh-c, while zenoh-pico uses the `zp_` prefix for the same purpose.
-E.g. zenoh-c and zenoh-pico have different approaches to configuration and therefore each have it's own set 
+E.g. zenoh-c and zenoh-pico have different approaches to configuration and therefore each have their own set 
 of `zc_config_...` and `zp_config_...` functions.
 
 The `ze_` prefix is used for the API that is not part of the core zenoh API. There is no guarantee that
-these functions and types are available everywhere. However, when they are provided, they should
-have the same prototype and behavior across all implementations. Typically, these are functions and types
-provided by the `zenoh-ext` Rust library for zenoh-c and are not available in zenoh-pico. However, the data 
-serialization API is implemented in zenoh-pico with the same `ze_` prefix.
+these functions and types are available for both implementations. However, when they are provided for both, they should
+have the same prototype and behavior. Typically, these are functions and types provided by the `zenoh-ext` Rust library 
+for zenoh-c and are not available in zenoh-pico. However, the data serialization API is implemented in zenoh-pico with 
+the same `ze_` prefix.
