@@ -149,13 +149,21 @@ Types named `z_xxx_t` are copyable, and can be passed by value. Some of them are
 Name Prefixes `z_`, `zc_`, `ze_`
 ================================
 
-Most functions and types in the C API use the `z_` prefix, which applies to the common zenoh C API
-(currently Rust-based zenoh-c and pure C zenoh-pico).
 We try to maintain a common API between `zenoh-c` and `zenoh-pico`, such that porting code from one to the other is, ideally, trivial.
-However, due design limitations some functionality might be represented differently (or simply be not available) in either library.
-The `zc_` prefix is used for functions/structs specific to `zenoh-c`. `zenoh-pico` uses the `zp_` prefix for the same purpose.
+However, due to design limitations some functionality might be represented differently (or simply be not available) in either library.
 
+The namespace prefixes are used to distinguish between different parts of the API.
 
-The `ze_` prefix identifies functions and types from the `zenoh-ext` Rust library that are not
-part of the core Zenoh API and therefore are placed in a separate namespace. Note, that this functionality might not
-be fully available in `zenoh-pico`.
+Most functions and types in the C API use the `z_` prefix, which applies to the core Zenoh API.
+These functions and types are guaranteed to be available in all Zenoh implementations on C 
+(currently, Rust-based zenoh-c and pure C zenoh-pico).
+
+The `zc_` prefix identifies API specific to zenoh-c, while zenoh-pico uses the `zp_` prefix for the same purpose.
+E.g. zenoh-c and zenoh-pico have different approaches to configuration and therefore each have their own set 
+of `zc_config_...` and `zp_config_...` functions.
+
+The `ze_` prefix is used for the API that is not part of the core zenoh API. There is no guarantee that
+these functions and types are available for both implementations. However, when they are provided for both, they should
+have the same prototype and behavior. Typically, these are functions and types provided by the `zenoh-ext` Rust library 
+for zenoh-c and are not available in zenoh-pico. However, the data serialization API is implemented in zenoh-pico with 
+the same `ze_` prefix.
