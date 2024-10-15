@@ -1559,7 +1559,20 @@ pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_closure_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_closure", false)
+    let mut out = "typedef void(*z_closure_drop_callback_t)(void* context);\n".to_string();
+    for f in macro_func {
+        let callback_typename = f.func_name.clone() + "_callback_t";
+        let prototype = f.args[1]
+            .clone()
+            .typename
+            .typename
+            .replace(" (*call)", &format!("(*{})", &callback_typename));
+
+        out += &format!("typedef {};\n", prototype);
+    }
+    out += "\n";
+    out += &generate_generic_c(macro_func, "z_closure", false);
+    out
 }
 
 pub fn generate_generic_recv_c(macro_func: &[FunctionSignature]) -> String {
