@@ -20,9 +20,7 @@ mod query_closure;
 pub use reply_closure::*;
 mod reply_closure;
 
-#[cfg(feature = "unstable")]
 pub use zenohid_closure::*;
-#[cfg(feature = "unstable")]
 mod zenohid_closure;
 
 pub use response_channel::*;

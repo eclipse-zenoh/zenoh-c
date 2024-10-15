@@ -17,7 +17,7 @@ use zenoh::{
     query::{Query, Queryable, Reply, ReplyError},
     sample::Sample,
     scouting::Hello,
-    session::Session,
+    session::{Session, ZenohId},
     time::Timestamp,
 };
 #[cfg(feature = "unstable")]
@@ -25,7 +25,7 @@ use zenoh::{
     liveliness::LivelinessToken,
     pubsub::MatchingListener,
     sample::SourceInfo,
-    session::{EntityGlobalId, ZenohId},
+    session::EntityGlobalId
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
@@ -190,8 +190,6 @@ get_opaque_type_data!(Option<Config>, z_owned_config_t);
 /// A loaned Zenoh configuration.
 get_opaque_type_data!(Config, z_loaned_config_t);
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
