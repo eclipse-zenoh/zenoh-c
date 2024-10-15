@@ -138,6 +138,14 @@ pub extern "C" fn z_closure_reply_loan(
     closure.as_loaned_c_type_ref()
 }
 
+/// Mutably borrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_reply_loan_mut(
+    closure: &mut z_owned_closure_reply_t,
+) -> &mut z_loaned_closure_reply_t {
+    closure.as_loaned_c_type_mut()
+}
+
 /// @brief Constructs closure.
 ///
 /// Closures are not guaranteed not to be called concurrently.
