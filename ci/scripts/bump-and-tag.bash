@@ -54,11 +54,23 @@ if [[ "$bump_deps_pattern" != '' ]]; then
       toml_set_in_place Cargo.toml.in "dependencies.$dep.branch" "$bump_deps_branch"
     fi
   done
+  opaque_types_deps=$(toml get build-resources/opaque-types/Cargo.toml dependencies | jq -r "keys[] | select(test(\"$bump_deps_pattern\"))")
+  for dep in $opaque_types_deps; do
+    if [[ -n $bump_deps_version ]]; then
+      toml_set_in_place build-resources/opaque-types/Cargo.toml "dependencies.$dep.version" "$bump_deps_version"
+    fi
+
+    if [[ -n $bump_deps_branch ]]; then
+      toml_set_in_place build-resources/opaque-types/Cargo.toml "dependencies.$dep.branch" "$bump_deps_branch"
+    fi
+  done
+
   # Update lockfile
   cargo check
+  cargo check --manifest-path build-resources/opaque-types/Cargo.toml
 
   if [[ -n $bump_deps_version || -n $bump_deps_branch ]]; then
-    git commit Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump $bump_deps_pattern version to $bump_deps_version"
+    git commit Cargo.toml Cargo.toml.in Cargo.lock build-resources/opaque-types/Cargo.toml build-resources/opaque-types/Cargo.lock -m "chore: Bump $bump_deps_pattern version to $bump_deps_version"
   else
     echo "warn: no changes have been made to any dependencies matching $bump_deps_pattern"
   fi
