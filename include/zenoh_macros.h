@@ -442,7 +442,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         const zc_loaned_closure_matching_status_t* : zc_closure_matching_status_call \
     )(closure, hello)
 
-typedef void(*z_closure_drop_callback_t)(void* context);
+typedef void(*z_closure_drop_callback_t)(void *context);
 typedef void(*z_closure_hello_callback_t)(z_loaned_hello_t *hello, void *context);
 typedef void(*z_closure_query_callback_t)(z_loaned_query_t *query, void *context);
 typedef void(*z_closure_reply_callback_t)(z_loaned_reply_t *reply, void *context);
