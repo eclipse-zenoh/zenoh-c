@@ -20,7 +20,6 @@ use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_id_t,
 };
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A zenoh id-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -31,14 +30,12 @@ pub struct z_owned_closure_zid_t {
     _drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Loaned closure.
 #[repr(C)]
 pub struct z_loaned_closure_zid_t {
     _0: [usize; 3],
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moved closure.
 #[repr(C)]
 pub struct z_moved_closure_zid_t {
@@ -76,7 +73,6 @@ impl Drop for z_owned_closure_zid_t {
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -84,7 +80,6 @@ pub unsafe extern "C" fn z_internal_closure_zid_check(this_: &z_owned_closure_zi
     !this_.is_empty()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a null closure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -94,7 +89,6 @@ pub unsafe extern "C" fn z_internal_closure_zid_null(
     this_.write(z_owned_closure_zid_t::default());
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
@@ -107,7 +101,6 @@ pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_drop(closure_: &mut z_moved_closure_zid_t) {
@@ -132,7 +125,6 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
