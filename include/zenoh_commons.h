@@ -346,27 +346,21 @@ typedef struct z_moved_closure_sample_t {
   struct z_owned_closure_sample_t _this;
 } z_moved_closure_sample_t;
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief A zenoh id-processing closure.
  *
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_owned_closure_zid_t {
   void *_context;
   void (*_call)(const struct z_id_t *z_id, void *context);
   void (*_drop)(void *context);
 } z_owned_closure_zid_t;
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Moved closure.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_moved_closure_zid_t {
   struct z_owned_closure_zid_t _this;
 } z_moved_closure_zid_t;
-#endif
 typedef struct z_moved_condvar_t {
   struct z_owned_condvar_t _this;
 } z_moved_condvar_t;
@@ -1568,38 +1562,27 @@ const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_own
  * @param drop: an optional function to be called once on closure drop.
  * @param context: closure context.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_zid(struct z_owned_closure_zid_t *this_,
                    void (*call)(const struct z_id_t *z_id, void *context),
                    void (*drop)(void *context),
                    void *context);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Calls the closure. Calling an uninitialized closure is a no-op.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_zid_call(const struct z_loaned_closure_zid_t *closure,
                         const struct z_id_t *z_id);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_zid_drop(struct z_moved_closure_zid_t *closure_);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Borrows closure.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 const struct z_loaned_closure_zid_t *z_closure_zid_loan(const struct z_owned_closure_zid_t *closure);
-#endif
 /**
  * Drops conditional variable.
  */
@@ -2323,24 +2306,14 @@ void z_hello_locators(const struct z_loaned_hello_t *this_,
  */
 ZENOHC_API enum z_whatami_t z_hello_whatami(const struct z_loaned_hello_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns id of Zenoh entity that transmitted hello message.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
-#endif
+ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_id_to_string(const struct z_id_t *zid,
-                    struct z_owned_string_t *dst);
-#endif
+ZENOHC_API void z_id_to_string(const struct z_id_t *zid, struct z_owned_string_t *dst);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Fetches the Zenoh IDs of all connected peers.
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
@@ -2348,13 +2321,10 @@ void z_id_to_string(const struct z_id_t *zid,
  *
  * Retuns 0 on success, negative values on failure
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_info_peers_zid(const struct z_loaned_session_t *session,
                             struct z_moved_closure_zid_t *callback);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Fetches the Zenoh IDs of all connected routers.
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
@@ -2362,23 +2332,17 @@ z_result_t z_info_peers_zid(const struct z_loaned_session_t *session,
  *
  * Retuns 0 on success, negative values on failure.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
                               struct z_moved_closure_zid_t *callback);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the session's Zenoh ID.
  *
  * Unless the `session` is invalid, that ID is guaranteed to be non-zero.
  * In other words, this function returning an array of 16 zeros means you failed
  * to pass it a valid session.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
-#endif
+ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
  * Returns ``true`` if `this` is valid.
  */
@@ -2456,21 +2420,15 @@ ZENOHC_API bool z_internal_closure_sample_check(const struct z_owned_closure_sam
  */
 ZENOHC_API void z_internal_closure_sample_null(struct z_owned_closure_sample_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool z_internal_closure_zid_check(const struct z_owned_closure_zid_t *this_);
-#endif
+ZENOHC_API bool z_internal_closure_zid_check(const struct z_owned_closure_zid_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs a null closure.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_internal_closure_zid_null(struct z_owned_closure_zid_t *this_);
-#endif
 /**
  * Returns ``true`` if conditional variable is valid, ``false`` otherwise.
  */
@@ -4201,13 +4159,9 @@ ZENOHC_API
 const char *z_time_now_as_str(const char *buf,
                               size_t len);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns id associated with this timestamp.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
-#endif
+ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
 /**
  * Create uhlc timestamp from session id.
  */

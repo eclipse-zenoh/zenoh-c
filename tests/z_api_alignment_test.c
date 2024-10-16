@@ -201,7 +201,6 @@ int main(int argc, char **argv) {
     assert(0 == z_open(&s1, z_move(_ret_config), NULL));
     assert(z_internal_check(s1));
 
-#if defined(Z_FEATURE_UNSTABLE_API)
     z_id_t _ret_zid = z_info_zid(z_loan(s1));
     z_owned_string_t str;
     z_id_to_string(&_ret_zid, &str);
@@ -221,7 +220,6 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
     assert(zids == 1);
-#endif
 
 #ifdef ZENOH_PICO
     zp_task_read_options_t _ret_read_opt = zp_task_read_options_default();
