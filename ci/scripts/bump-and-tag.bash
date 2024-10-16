@@ -25,6 +25,23 @@ function toml_set_in_place() {
   mv "$tmp" "$1"
 }
 
+# Converts cmake version into a debian package version
+function to_debian_version() {
+  v="${1}"
+  deb_rev="${2:-1}"
+  # check if version has tweak component
+  if [ $(echo ${v//[^.]} | wc -c) == 4 ]; then
+    if [ ${v:0-2} == ".0" ]; then
+      deb_v=$(echo "${v}" | sed 's/\(.*\)\.0/\1~dev/')
+    else
+      deb_v=$(echo "${v}" | sed 's/\(.*\)\./\1~/')
+    fi
+    echo "${deb_v}-${deb_rev}"
+  else
+    echo "${v}"
+  fi
+}
+
 export GIT_AUTHOR_NAME=$git_user_name
 export GIT_AUTHOR_EMAIL=$git_user_email
 export GIT_COMMITTER_NAME=$git_user_name
@@ -35,8 +52,9 @@ printf '%s' "$version" > version.txt
 # Propagate version change to Cargo.toml and Cargo.toml.in
 cmake . -DZENOHC_BUILD_IN_SOURCE_TREE=TRUE -DCMAKE_BUILD_TYPE=Release
 # Update Debian dependency of libzenohc-dev
-toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$version)"
-toml_set_in_place Cargo.toml.in "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$version)"
+debian_version=$(to_debian_version $version)
+toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$debian_version)"
+toml_set_in_place Cargo.toml.in "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$debian_version)"
 
 git commit version.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump version to $version"
 
