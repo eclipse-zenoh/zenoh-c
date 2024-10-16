@@ -128,6 +128,7 @@ Functions
 .. doxygenfunction:: ze_serialize_buf
 .. doxygenfunction:: ze_serialize_string
 .. doxygenfunction:: ze_serialize_str
+.. doxygenfunction:: ze_serialize_substr
 .. doxygenfunction:: ze_serialize_uint8
 .. doxygenfunction:: ze_serialize_uint16
 .. doxygenfunction:: ze_serialize_uint32
@@ -177,6 +178,7 @@ Functions
 .. doxygenfunction:: ze_serializer_serialize_buf
 .. doxygenfunction:: ze_serializer_serialize_string
 .. doxygenfunction:: ze_serializer_serialize_str
+.. doxygenfunction:: ze_serializer_serialize_substr
 .. doxygenfunction:: ze_serializer_serialize_uint8
 .. doxygenfunction:: ze_serializer_serialize_uint16
 .. doxygenfunction:: ze_serializer_serialize_uint32

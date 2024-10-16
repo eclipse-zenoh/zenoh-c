@@ -1311,7 +1311,7 @@ z_result_t z_bytes_to_string(const struct z_loaned_bytes_t *this_,
  * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
  * Said in other terms, it allows to create a linear view on different memory regions without copy.
  *
- * @return 0 in case of success, negative error code otherwise
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_result_t z_bytes_writer_append(struct z_loaned_bytes_writer_t *this_,
@@ -5013,7 +5013,7 @@ ZENOHC_API
 z_result_t ze_deserialize_slice(const struct z_loaned_bytes_t *this_,
                                 struct z_owned_slice_t *slice);
 /**
- * @brief Deserializes into a string.
+ * @brief Deserializes into a UTF-8 string.
  */
 ZENOHC_API
 z_result_t ze_deserialize_string(const struct z_loaned_bytes_t *this_,
@@ -5255,72 +5255,90 @@ void ze_querying_subscriber_options_default(struct ze_querying_subscriber_option
 /**
  * @brief Serializes a bool.
  */
-ZENOHC_API void ze_serialize_bool(struct z_owned_bytes_t *this_, bool val);
+ZENOHC_API z_result_t ze_serialize_bool(struct z_owned_bytes_t *this_, bool val);
 /**
  * @brief Serializes a data from buffer by.
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param data: A pointer to the buffer containing data.
  * @param len: Length of the buffer.
  */
-ZENOHC_API void ze_serialize_buf(struct z_owned_bytes_t *this_, const uint8_t *data, size_t len);
+ZENOHC_API
+z_result_t ze_serialize_buf(struct z_owned_bytes_t *this_,
+                            const uint8_t *data,
+                            size_t len);
 /**
  * @brief Serializes a double.
  */
-ZENOHC_API void ze_serialize_double(struct z_owned_bytes_t *this_, double val);
+ZENOHC_API z_result_t ze_serialize_double(struct z_owned_bytes_t *this_, double val);
 /**
  * @brief Serializes a float.
  */
-ZENOHC_API void ze_serialize_float(struct z_owned_bytes_t *this_, float val);
+ZENOHC_API z_result_t ze_serialize_float(struct z_owned_bytes_t *this_, float val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serialize_int16(struct z_owned_bytes_t *this_, int16_t val);
+ZENOHC_API z_result_t ze_serialize_int16(struct z_owned_bytes_t *this_, int16_t val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serialize_int32(struct z_owned_bytes_t *this_, int32_t val);
+ZENOHC_API z_result_t ze_serialize_int32(struct z_owned_bytes_t *this_, int32_t val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serialize_int64(struct z_owned_bytes_t *this_, int64_t val);
+ZENOHC_API z_result_t ze_serialize_int64(struct z_owned_bytes_t *this_, int64_t val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serialize_int8(struct z_owned_bytes_t *this_, int8_t val);
+ZENOHC_API z_result_t ze_serialize_int8(struct z_owned_bytes_t *this_, int8_t val);
 /**
  * @brief Serializes a slice.
  */
 ZENOHC_API
-void ze_serialize_slice(struct z_owned_bytes_t *this_,
-                        const struct z_loaned_slice_t *slice);
+z_result_t ze_serialize_slice(struct z_owned_bytes_t *this_,
+                              const struct z_loaned_slice_t *slice);
 /**
  * @brief Serializes a null-terminated string.
+ * The string should be a valid UTF-8.
  * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
  * @param str: a pointer to the null-terminated string.
  */
-ZENOHC_API void ze_serialize_str(struct z_owned_bytes_t *this_, const char *str);
+ZENOHC_API z_result_t ze_serialize_str(struct z_owned_bytes_t *this_, const char *str);
 /**
  * @brief Serializes a string.
+ * The string should be a valid UTF-8.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param str: a string to serialize.
  */
 ZENOHC_API
-void ze_serialize_string(struct z_owned_bytes_t *this_,
-                         const struct z_loaned_string_t *str);
+z_result_t ze_serialize_string(struct z_owned_bytes_t *this_,
+                               const struct z_loaned_string_t *str);
+/**
+ * @brief Serializes a substring.
+ * The substring should be a valid UTF-8.
+ * @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
+ * @param start: a pointer to the the start of the substring.
+ * @param len: the length of the substring.
+ */
+ZENOHC_API
+z_result_t ze_serialize_substr(struct z_owned_bytes_t *this_,
+                               const char *start,
+                               size_t len);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serialize_uint16(struct z_owned_bytes_t *this_, uint16_t val);
+ZENOHC_API z_result_t ze_serialize_uint16(struct z_owned_bytes_t *this_, uint16_t val);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serialize_uint32(struct z_owned_bytes_t *this_, uint32_t val);
+ZENOHC_API z_result_t ze_serialize_uint32(struct z_owned_bytes_t *this_, uint32_t val);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serialize_uint64(struct z_owned_bytes_t *this_, uint64_t val);
+ZENOHC_API z_result_t ze_serialize_uint64(struct z_owned_bytes_t *this_, uint64_t val);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serialize_uint8(struct z_owned_bytes_t *this_, uint8_t val);
+ZENOHC_API z_result_t ze_serialize_uint8(struct z_owned_bytes_t *this_, uint8_t val);
 /**
  * @brief Drops `this_`, resetting it to gravestone value.
  */
@@ -5352,7 +5370,7 @@ struct ze_loaned_serializer_t *ze_serializer_loan_mut(struct ze_owned_serializer
 /**
  * @brief Serializes a bool.
  */
-ZENOHC_API void ze_serializer_serialize_bool(struct ze_loaned_serializer_t *this_, bool val);
+ZENOHC_API z_result_t ze_serializer_serialize_bool(struct ze_loaned_serializer_t *this_, bool val);
 /**
  * @brief Serializes a data from buffer.
  * @param this_: A serializer instance.
@@ -5360,73 +5378,108 @@ ZENOHC_API void ze_serializer_serialize_bool(struct ze_loaned_serializer_t *this
  * @param len: Length of the buffer.
  */
 ZENOHC_API
-void ze_serializer_serialize_buf(struct ze_loaned_serializer_t *this_,
-                                 const uint8_t *data,
-                                 size_t len);
+z_result_t ze_serializer_serialize_buf(struct ze_loaned_serializer_t *this_,
+                                       const uint8_t *data,
+                                       size_t len);
 /**
  * @brief Serializes a double.
  */
-ZENOHC_API void ze_serializer_serialize_double(struct ze_loaned_serializer_t *this_, double val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_double(struct ze_loaned_serializer_t *this_,
+                                          double val);
 /**
  * @brief Serializes a float.
  */
-ZENOHC_API void ze_serializer_serialize_float(struct ze_loaned_serializer_t *this_, float val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_float(struct ze_loaned_serializer_t *this_,
+                                         float val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serializer_serialize_int16(struct ze_loaned_serializer_t *this_, int16_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_int16(struct ze_loaned_serializer_t *this_,
+                                         int16_t val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serializer_serialize_int32(struct ze_loaned_serializer_t *this_, int32_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_int32(struct ze_loaned_serializer_t *this_,
+                                         int32_t val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serializer_serialize_int64(struct ze_loaned_serializer_t *this_, int64_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_int64(struct ze_loaned_serializer_t *this_,
+                                         int64_t val);
 /**
  * @brief Serializes a signed integer.
  */
-ZENOHC_API void ze_serializer_serialize_int8(struct ze_loaned_serializer_t *this_, int8_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_int8(struct ze_loaned_serializer_t *this_,
+                                        int8_t val);
 /**
  * @brief Initiates serialization of a sequence of multiple elements.
  * @param this_: A serializer instance.
  * @param len: Length of the sequence. Could be read during deserialization using `ze_deserializer_deserialize_sequence_length`.
  */
 ZENOHC_API
-void ze_serializer_serialize_sequence_length(struct ze_loaned_serializer_t *this_,
-                                             size_t len);
+z_result_t ze_serializer_serialize_sequence_length(struct ze_loaned_serializer_t *this_,
+                                                   size_t len);
 /**
  * @brief Serializes a slice.
  */
 ZENOHC_API
-void ze_serializer_serialize_slice(struct ze_loaned_serializer_t *this_,
-                                   const struct z_loaned_slice_t *slice);
+z_result_t ze_serializer_serialize_slice(struct ze_loaned_serializer_t *this_,
+                                         const struct z_loaned_slice_t *slice);
 /**
  * @brief Serializes a null-terminated string.
- */
-ZENOHC_API void ze_serializer_serialize_str(struct ze_loaned_serializer_t *this_, const char *str);
-/**
- * @brief Serializes a string.
+ * The string should be a valid UTF-8.
+ * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
-void ze_serializer_serialize_string(struct ze_loaned_serializer_t *this_,
-                                    const struct z_loaned_string_t *str);
+z_result_t ze_serializer_serialize_str(struct ze_loaned_serializer_t *this_,
+                                       const char *str);
+/**
+ * @brief Serializes a string.
+ * The string should be a valid UTF-8.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t ze_serializer_serialize_string(struct ze_loaned_serializer_t *this_,
+                                          const struct z_loaned_string_t *str);
+/**
+ * @brief Serializes a substring of specified length.
+ * The subsstring should be a valid UTF-8.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t ze_serializer_serialize_substr(struct ze_loaned_serializer_t *this_,
+                                          const char *start,
+                                          size_t len);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serializer_serialize_uint16(struct ze_loaned_serializer_t *this_, uint16_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_uint16(struct ze_loaned_serializer_t *this_,
+                                          uint16_t val);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serializer_serialize_uint32(struct ze_loaned_serializer_t *this_, uint32_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_uint32(struct ze_loaned_serializer_t *this_,
+                                          uint32_t val);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serializer_serialize_uint64(struct ze_loaned_serializer_t *this_, uint64_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_uint64(struct ze_loaned_serializer_t *this_,
+                                          uint64_t val);
 /**
  * @brief Serializes an unsigned integer.
  */
-ZENOHC_API void ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_, uint8_t val);
+ZENOHC_API
+z_result_t ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_,
+                                         uint8_t val);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares publication cache.
