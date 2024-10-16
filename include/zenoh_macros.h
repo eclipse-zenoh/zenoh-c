@@ -320,6 +320,15 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         const z_loaned_closure_zid_t* : z_closure_zid_call \
     )(closure, hello)
 
+typedef void(*z_closure_drop_callback_t)(void *context);
+typedef void(*z_closure_hello_callback_t)(z_loaned_hello_t *hello, void *context);
+typedef void(*z_closure_query_callback_t)(z_loaned_query_t *query, void *context);
+typedef void(*z_closure_reply_callback_t)(z_loaned_reply_t *reply, void *context);
+typedef void(*z_closure_sample_callback_t)(z_loaned_sample_t *sample, void *context);
+typedef void(*z_closure_zid_callback_t)(const z_id_t *z_id, void *context);
+typedef void(*zc_closure_log_callback_t)(zc_log_severity_t severity, const z_loaned_string_t *msg, void *context);
+typedef void(*zc_closure_matching_status_callback_t)(const zc_matching_status_t *matching_status, void *context);
+
 #define z_closure(this_, call, drop, context) \
     _Generic((this_), \
         z_owned_closure_hello_t* : z_closure_hello, \
