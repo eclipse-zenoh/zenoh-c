@@ -685,7 +685,7 @@ unsafe extern "C" fn z_bytes_writer_write_all(
 /// This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
 /// Said in other terms, it allows to create a linear view on different memory regions without copy.
 ///
-/// @return 0 in case of success, negative error code otherwise
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 extern "C" fn z_bytes_writer_append(
     this: &mut z_loaned_bytes_writer_t,

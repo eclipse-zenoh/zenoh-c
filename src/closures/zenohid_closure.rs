@@ -80,7 +80,6 @@ pub unsafe extern "C" fn z_internal_closure_zid_check(this_: &z_owned_closure_zi
     !this_.is_empty()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a null closure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
