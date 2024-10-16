@@ -507,14 +507,6 @@ typedef struct z_moved_closure_sample_t {
   struct z_owned_closure_sample_t _this;
 } z_moved_closure_sample_t;
 /**
- * @brief A Zenoh ID.
- *
- * In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
- */
-typedef struct ALIGN(1) z_id_t {
-  uint8_t id[16];
-} z_id_t;
-/**
  * @brief A zenoh id-processing closure.
  *
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
@@ -2527,13 +2519,9 @@ void z_hello_locators(const struct z_loaned_hello_t *this_,
  */
 ZENOHC_API enum z_whatami_t z_hello_whatami(const struct z_loaned_hello_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns id of Zenoh entity that transmitted hello message.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
-#endif
+ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
 /**
  * @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)
  */
@@ -2651,7 +2639,8 @@ ZENOHC_API bool z_internal_closure_zid_check(const struct z_owned_closure_zid_t 
 /**
  * @brief Constructs a null closure.
  */
-ZENOHC_API void z_internal_closure_zid_null(struct z_owned_closure_zid_t *this_);
+ZENOHC_API
+void z_internal_closure_zid_null(struct z_owned_closure_zid_t *this_);
 /**
  * Returns ``true`` if conditional variable is valid, ``false`` otherwise.
  */
@@ -4382,13 +4371,9 @@ ZENOHC_API
 const char *z_time_now_as_str(const char *buf,
                               size_t len);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns id associated with this timestamp.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
-#endif
+ZENOHC_API struct z_id_t z_timestamp_id(const struct z_timestamp_t *this_);
 /**
  * Create uhlc timestamp from session id.
  */
