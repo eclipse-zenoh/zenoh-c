@@ -26,14 +26,12 @@
 
 const char *value = "Test value";
 
-#if defined(Z_FEATURE_UNSTABLE_API)
 volatile unsigned int zids = 0;
 void zid_handler(const z_id_t *id, void *arg) {
     (void)(arg);
     (void)(id);
     zids++;
 }
-#endif
 
 volatile unsigned int hellos = 0;
 void hello_handler(z_loaned_hello_t *hello, void *arg) {
