@@ -1446,6 +1446,11 @@ ZENOHC_API void z_closure_hello_drop(struct z_moved_closure_hello_t *this_);
 ZENOHC_API
 const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned_closure_hello_t *closure);
 /**
+ * Mutably norrows closure.
+ */
+ZENOHC_API
+struct z_loaned_closure_hello_t *z_closure_hello_loan_mut(struct z_owned_closure_hello_t *closure);
+/**
  * @brief Constructs closure.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -1479,6 +1484,11 @@ ZENOHC_API void z_closure_query_drop(struct z_moved_closure_query_t *closure_);
  */
 ZENOHC_API
 const struct z_loaned_closure_query_t *z_closure_query_loan(const struct z_owned_closure_query_t *closure);
+/**
+ * Mutably borrows closure.
+ */
+ZENOHC_API
+struct z_loaned_closure_query_t *z_closure_query_loan_mut(struct z_owned_closure_query_t *closure);
 /**
  * @brief Constructs closure.
  *
@@ -1515,6 +1525,11 @@ void z_closure_reply_drop(struct z_moved_closure_reply_t *closure_);
 ZENOHC_API
 const struct z_loaned_closure_reply_t *z_closure_reply_loan(const struct z_owned_closure_reply_t *closure);
 /**
+ * Mutably borrows closure.
+ */
+ZENOHC_API
+struct z_loaned_closure_reply_t *z_closure_reply_loan_mut(struct z_owned_closure_reply_t *closure);
+/**
  * @brief Constructs closure.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -1548,6 +1563,11 @@ ZENOHC_API void z_closure_sample_drop(struct z_moved_closure_sample_t *closure_)
  */
 ZENOHC_API
 const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_owned_closure_sample_t *closure);
+/**
+ * Mutably borrows closure.
+ */
+ZENOHC_API
+struct z_loaned_closure_sample_t *z_closure_sample_loan_mut(struct z_owned_closure_sample_t *closure);
 /**
  * @brief Constructs closure.
  *
@@ -1583,6 +1603,11 @@ void z_closure_zid_drop(struct z_moved_closure_zid_t *closure_);
  */
 ZENOHC_API
 const struct z_loaned_closure_zid_t *z_closure_zid_loan(const struct z_owned_closure_zid_t *closure);
+/**
+ * @brief Mutably borrows closure.
+ */
+ZENOHC_API
+const struct z_loaned_closure_zid_t *z_closure_zid_loan_mut(const struct z_owned_closure_zid_t *closure);
 /**
  * Drops conditional variable.
  */
