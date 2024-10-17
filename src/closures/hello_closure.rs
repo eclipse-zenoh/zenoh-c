@@ -134,6 +134,14 @@ pub extern "C" fn z_closure_hello_loan(
     closure.as_loaned_c_type_ref()
 }
 
+/// Mutably norrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_hello_loan_mut(
+    closure: &mut z_owned_closure_hello_t,
+) -> &mut z_loaned_closure_hello_t {
+    closure.as_loaned_c_type_mut()
+}
+
 /// @brief Constructs closure.
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
 ///
