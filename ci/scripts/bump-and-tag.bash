@@ -34,7 +34,7 @@ function to_debian_version() {
     if [ ${v:0-2} == ".0" ]; then
       deb_v=$(echo "${v}" | sed 's/\(.*\)\.0/\1~dev/')
     else
-      deb_v=$(echo "${v}" | sed 's/\(.*\)\./\1~/')
+      deb_v=$(echo "${v}" | sed 's/\(.*\)\./\1~pre\./')
     fi
     echo "${deb_v}-${deb_rev}"
   else
