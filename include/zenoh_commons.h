@@ -1266,6 +1266,60 @@ bool z_bytes_slice_iterator_next(struct z_bytes_slice_iterator_t *this_,
  */
 ZENOHC_API void z_bytes_take_loaned(struct z_owned_bytes_t *dst, struct z_loaned_bytes_t *src);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Converts data into a loaned SHM buffer.
+ *
+ * @param this_: Data to convert.
+ * @param dst: An uninitialized memory location where to construct an SHM buffer.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_bytes_to_loaned_shm(const struct z_loaned_bytes_t *this_,
+                                 const struct z_loaned_shm_t **dst);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Converts data into a mutably loaned SHM buffer.
+ *
+ * @param this_: Data to convert.
+ * @param dst: An uninitialized memory location where to construct an SHM buffer.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_bytes_to_mut_loaned_shm(struct z_loaned_bytes_t *this_,
+                                     struct z_loaned_shm_t **dst);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Converts data into an owned SHM buffer by copying it's shared reference.
+ *
+ * @param this_: Data to convert.
+ * @param dst: An uninitialized memory location where to construct an SHM buffer.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_bytes_to_owned_shm(const struct z_loaned_bytes_t *this_,
+                                struct z_owned_shm_t *dst);
+#endif
+/**
+ * Converts data into an owned slice.
+ *
+ * @param this_: Data to convert.
+ * @param dst: An uninitialized memory location where to construct a slice.
+ */
+ZENOHC_API
+z_result_t z_bytes_to_slice(const struct z_loaned_bytes_t *this_,
+                            struct z_owned_slice_t *dst);
+/**
+ * Converts data into an owned non-null-terminated string.
+ *
+ * @param this_: Data to convert.
+ * @param dst: An uninitialized memory location where to construct a string.
+ */
+ZENOHC_API
+z_result_t z_bytes_to_string(const struct z_loaned_bytes_t *this_,
+                             struct z_owned_string_t *dst);
+/**
  * Appends bytes.
  * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
  * Said in other terms, it allows to create a linear view on different memory regions without copy.
@@ -1563,7 +1617,7 @@ ZENOHC_API void z_closure_sample_drop(struct z_moved_closure_sample_t *closure_)
 ZENOHC_API
 const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_owned_closure_sample_t *closure);
 /**
- * Borrows closure.
+ * Mutably borrows closure.
  */
 ZENOHC_API
 struct z_loaned_closure_sample_t *z_closure_sample_loan_mut(struct z_owned_closure_sample_t *closure);
@@ -1609,26 +1663,22 @@ void z_closure_zid_drop(struct z_moved_closure_zid_t *closure_);
 ZENOHC_API
 const struct z_loaned_closure_zid_t *z_closure_zid_loan(const struct z_owned_closure_zid_t *closure);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows closure.
+ */
+ZENOHC_API
+struct z_loaned_closure_zid_t *z_closure_zid_loan_mut(struct z_owned_closure_zid_t *closure);
+/**
  * @brief Mutably borrows closure.
  */
 ZENOHC_API
 const struct z_loaned_closure_zid_t *z_closure_zid_loan_mut(const struct z_owned_closure_zid_t *closure);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows closure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_loaned_closure_zid_t *z_closure_zid_loan_mut(struct z_owned_closure_zid_t *closure);
-#endif
-/**
  * Takes ownership of the mutably borrowed closure
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_zid_take_loaned(struct z_owned_closure_zid_t *dst,
                                struct z_loaned_closure_zid_t *src);
-#endif
 /**
  * Drops conditional variable.
  */
@@ -1685,8 +1735,8 @@ ZENOHC_API struct z_loaned_config_t *z_config_loan_mut(struct z_owned_config_t *
  */
 ZENOHC_API void z_config_take_loaned(struct z_owned_config_t *dst, struct z_loaned_config_t *src);
 /**
- * Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
- * which allows to save the bandwith, when passing key expression between Zenoh entities.
+ * Declares a background queryable for a given keyexpr. The queryable callback will be be called
+ * to proccess incoming queries until the corresponding session is closed or dropped.
  *
  * @param session: The zenoh session.
  * @param key_expr: The key expression the Queryable will reply to.
@@ -3743,7 +3793,6 @@ ZENOHC_API bool z_session_is_closed(const struct z_loaned_session_t *session);
  * Borrows session.
  */
 ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_session_t *this_);
-ZENOHC_API struct z_loaned_session_t *z_session_loan_mut(struct z_owned_session_t *this_);
 /**
  * Mutably borrows session.
  */
@@ -4390,8 +4439,8 @@ ZENOHC_API struct z_loaned_string_t *z_string_loan_mut(struct z_owned_string_t *
  */
 ZENOHC_API void z_string_take_loaned(struct z_owned_string_t *dst, struct z_loaned_string_t *src);
 /**
- * Drops subscriber and resets it to its gravestone state.
- * The callback closure is not dropped and still keeps receiving and processing samples until the corresponding session is closed.
+ * Undeclares subscriber callback and resets it to its gravestone state.
+ * This is equivalent to calling `z_undeclare_subscriber()` and discarding its return value.
  */
 ZENOHC_API void z_subscriber_drop(struct z_moved_subscriber_t *this_);
 /**

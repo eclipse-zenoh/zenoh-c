@@ -266,8 +266,7 @@ fn _declare_queryable_inner<'a, 'b>(
                 z_closure_query_loan(&callback),
                 owned_query.as_loaned_c_type_mut(),
             )
-        })
-    });
+        });
     queryable
 }
 

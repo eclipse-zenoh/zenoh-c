@@ -103,8 +103,7 @@ pub unsafe extern "C" fn z_shm_try_mut(this_: &mut z_owned_shm_t) -> &mut z_loan
     match shm.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as
-            // v.as_loaned_c_type_mut()
+            v.as_loaned_c_type_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }

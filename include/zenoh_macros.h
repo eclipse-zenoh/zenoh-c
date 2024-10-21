@@ -109,6 +109,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
     _Generic((this_), \
         z_owned_alloc_layout_t : z_alloc_layout_loan_mut, \
         z_owned_bytes_t : z_bytes_loan_mut, \
+        z_owned_bytes_writer_t : z_bytes_writer_loan_mut, \
         z_owned_chunk_alloc_result_t : z_chunk_alloc_result_loan_mut, \
         z_owned_closure_hello_t : z_closure_hello_loan_mut, \
         z_owned_closure_query_t : z_closure_query_loan_mut, \
@@ -143,7 +144,8 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_string_array_t : z_string_array_loan_mut, \
         z_owned_string_t : z_string_loan_mut, \
         z_owned_subscriber_t : z_subscriber_loan_mut, \
-        zc_owned_shm_client_list_t : zc_shm_client_list_loan_mut \
+        zc_owned_shm_client_list_t : zc_shm_client_list_loan_mut, \
+        ze_owned_serializer_t : ze_serializer_loan_mut \
     )(&this_)
 
 #define z_drop(this_) \
@@ -628,6 +630,7 @@ inline const ze_loaned_serializer_t* z_loan(const ze_owned_serializer_t& this_) 
 
 inline z_loaned_alloc_layout_t* z_loan_mut(z_owned_alloc_layout_t& this_) { return z_alloc_layout_loan_mut(&this_); };
 inline z_loaned_bytes_t* z_loan_mut(z_owned_bytes_t& this_) { return z_bytes_loan_mut(&this_); };
+inline z_loaned_bytes_writer_t* z_loan_mut(z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan_mut(&this_); };
 inline z_loaned_chunk_alloc_result_t* z_loan_mut(z_owned_chunk_alloc_result_t& this_) { return z_chunk_alloc_result_loan_mut(&this_); };
 inline z_loaned_closure_hello_t* z_loan_mut(z_owned_closure_hello_t& closure) { return z_closure_hello_loan_mut(&closure); };
 inline z_loaned_closure_query_t* z_loan_mut(z_owned_closure_query_t& closure) { return z_closure_query_loan_mut(&closure); };
