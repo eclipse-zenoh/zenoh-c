@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, args.keyexpr);
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), NULL) < 0) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     if (args.add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zc_publisher_matching_listener_declare(&listener, z_loan(pub), z_move(callback));
+        zc_publisher_declare_matching_listener(z_loan(pub), &listener, z_move(callback));
     }
 #else
     if (add_matching_listener) {
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
             z_publisher_put_options_default(&options);
 
             z_owned_bytes_t payload;
-            z_bytes_serialize_from_shm_mut(&payload, z_move(alloc.buf));
+            z_bytes_from_shm_mut(&payload, z_move(alloc.buf));
 
             z_publisher_put(z_loan(pub), z_move(payload), &options);
         } else {
@@ -111,12 +111,12 @@ int main(int argc, char** argv) {
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     if (args.add_matching_listener) {
-        zc_publisher_matching_listener_undeclare(z_move(listener));
+        z_drop(z_move(listener));
     }
 #endif
 
-    z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(pub));
+    z_drop(z_move(s));
 
     z_drop(z_move(provider));
     z_drop(z_move(layout));

@@ -64,11 +64,11 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(session), z_loan(ping), NULL);
+    z_declare_publisher(z_loan(session), &pub, z_loan(ping), NULL);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(session), z_loan(pong), z_move(respond), NULL);
+    z_declare_subscriber(z_loan(session), &sub, z_loan(pong), z_move(respond), NULL);
 
     // Create SHM Provider
     z_alloc_alignment_t alignment = {0};
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     z_shm_from_mut(&shm, z_move(alloc.buf));
 
     z_owned_bytes_t shmbs;
-    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+    if (z_bytes_from_shm(&shmbs, z_move(shm)) != Z_OK) {
         printf("Unexpected failure during SHM buffer serialization...\n");
         return -1;
     }
@@ -133,10 +133,10 @@ int main(int argc, char** argv) {
     }
     z_mutex_unlock(z_loan_mut(mutex));
     z_free(results);
-    z_undeclare_subscriber(z_move(sub));
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(sub));
+    z_drop(z_move(pub));
     z_drop(z_move(mutex));
-    z_close(z_move(session), NULL);
+    z_drop(z_move(session));
 
     z_drop(z_move(shm));
     z_drop(z_move(provider));

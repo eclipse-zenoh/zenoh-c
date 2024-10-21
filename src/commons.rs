@@ -32,13 +32,11 @@ use zenoh::{
 #[cfg(feature = "unstable")]
 use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
-use crate::z_id_t;
-#[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
 use crate::{
     result,
-    transmute::{CTypeRef, LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType},
-    z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 
 /// A zenoh unsigned integer
@@ -92,8 +90,6 @@ pub extern "C" fn z_timestamp_ntp64_time(this_: &z_timestamp_t) -> u64 {
     this_.as_rust_type_ref().get_time().0
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns id associated with this timestamp.
 #[no_mangle]
 pub extern "C" fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {

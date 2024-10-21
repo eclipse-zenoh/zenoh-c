@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &options)) {
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), &options)) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     z_shm_from_mut(&shm, z_move(alloc.buf));
 
     z_owned_bytes_t shmbs;
-    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+    if (z_bytes_from_shm(&shmbs, z_move(shm)) != Z_OK) {
         printf("Unexpected failure during SHM buffer serialization...\n");
         return -1;
     }
@@ -88,8 +88,8 @@ int main(int argc, char **argv) {
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
-    z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(pub));
+    z_drop(z_move(s));
 
     z_drop(z_move(shm));
     z_drop(z_move(provider));

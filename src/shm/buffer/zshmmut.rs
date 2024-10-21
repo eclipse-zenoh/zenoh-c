@@ -32,7 +32,7 @@ decl_c_type!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Tries to obtain mutable SHM buffer instead of immutable one.
-/// @param this: mutable SHM buffer to be initialized upon success
+/// @param this_: mutable SHM buffer to be initialized upon success
 /// @param that: immutable SHM buffer
 /// @param immut: immutable SHM buffer returned back to caller's side
 /// ONLY in case of Z_EUNAVAILABLE failure

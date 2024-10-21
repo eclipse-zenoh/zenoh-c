@@ -200,145 +200,32 @@ pub extern "C" fn z_encoding_equals(
 ///
 /// Constant alias for string: `"zenoh/bytes"`.
 ///
-/// Usually used for types: `uint8_t[]`.
+/// This encoding supposes that the payload was created with `z_bytes_from_buf()`, `z_bytes_from_slice()` or
+/// similar functions and its data can be accessed via `z_bytes_to_slice()`.
 #[no_mangle]
 pub extern "C" fn z_encoding_zenoh_bytes() -> &'static z_loaned_encoding_t {
     Encoding::ZENOH_BYTES.as_loaned_c_type_ref()
-}
-/// A VLE-encoded signed little-endian 8bit integer. Binary representation uses two's complement.
-///
-/// Constant alias for string: `"zenoh/int8"`.
-///
-/// Usually used for types: `int8_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_int8() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_INT8.as_loaned_c_type_ref()
-}
-/// A VLE-encoded signed little-endian 16bit integer. Binary representation uses two's complement.
-///
-/// Constant alias for string: `"zenoh/int16"`.
-///
-/// Usually used for types: `int16_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_int16() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_INT16.as_loaned_c_type_ref()
-}
-/// A VLE-encoded signed little-endian 32bit integer. Binary representation uses two's complement.
-///
-/// Constant alias for string: `"zenoh/int32"`.
-///
-/// Usually used for types: `int32_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_int32() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_INT32.as_loaned_c_type_ref()
-}
-/// A VLE-encoded signed little-endian 64bit integer. Binary representation uses two's complement.
-///
-/// Constant alias for string: `"zenoh/int64"`.
-///
-/// Usually used for types: `int64_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_int64() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_INT64.as_loaned_c_type_ref()
-}
-/// A VLE-encoded signed little-endian 128bit integer. Binary representation uses two's complement.
-///
-/// Constant alias for string: `"zenoh/int128"`.
-///
-/// Usually used for types: `int128_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_int128() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_INT128.as_loaned_c_type_ref()
-}
-/// A VLE-encoded unsigned little-endian 8bit integer.
-///
-/// Constant alias for string: `"zenoh/uint8"`.
-///
-/// Usually used for types: `uint8_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_uint8() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_UINT8.as_loaned_c_type_ref()
-}
-/// A VLE-encoded unsigned little-endian 16bit integer.
-///
-/// Constant alias for string: `"zenoh/uint16"`.
-///
-/// Usually used for types: `uint16_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_uint16() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_UINT16.as_loaned_c_type_ref()
-}
-/// A VLE-encoded unsigned little-endian 32bit integer.
-///
-/// Constant alias for string: `"zenoh/uint32"`.
-///
-/// Usually used for types: `uint32_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_uint32() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_UINT32.as_loaned_c_type_ref()
-}
-/// A VLE-encoded unsigned little-endian 64bit integer.
-///
-/// Constant alias for string: `"zenoh/uint64"`.
-///
-/// Usually used for types: `uint64_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_uint64() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_UINT64.as_loaned_c_type_ref()
-}
-/// A VLE-encoded unsigned little-endian 128bit integer.
-///
-/// Constant alias for string: `"zenoh/uint128"`.
-///
-/// Usually used for types: `uint128_t`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_uint128() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_UINT128.as_loaned_c_type_ref()
-}
-/// A VLE-encoded 32bit float. Binary representation uses *IEEE 754-2008* *binary32* .
-///
-/// Constant alias for string: `"zenoh/float32"`.
-///
-/// Usually used for types: `float`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_float32() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_FLOAT32.as_loaned_c_type_ref()
-}
-/// A VLE-encoded 64bit float. Binary representation uses *IEEE 754-2008* *binary64*.
-///
-/// Constant alias for string: `"zenoh/float64"`.
-///
-/// Usually used for types: `double`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_float64() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_FLOAT64.as_loaned_c_type_ref()
-}
-/// A boolean. `0` is `false`, `1` is `true`. Other values are invalid.
-///
-/// Constant alias for string: `"zenoh/bool"`.
-///
-/// Usually used for types: `bool`.
-#[no_mangle]
-pub extern "C" fn z_encoding_zenoh_bool() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_BOOL.as_loaned_c_type_ref()
 }
 /// A UTF-8 string.
 ///
 /// Constant alias for string: `"zenoh/string"`.
 ///
-/// Usually used for types: `const char*`.
+/// This encoding supposes that the payload was created with `z_bytes_from_str()`, `z_bytes_from_string()` or
+/// similar functions and its data can be accessed via `z_bytes_to_string()`.
 #[no_mangle]
 pub extern "C" fn z_encoding_zenoh_string() -> &'static z_loaned_encoding_t {
     Encoding::ZENOH_STRING.as_loaned_c_type_ref()
 }
-/// A zenoh error.
+
+/// Zenoh serialized data.
 ///
-/// Constant alias for string: `"zenoh/error"`.
+/// Constant alias for string: `"zenoh/serialized"`.
 ///
-/// Usually used for types: `z_reply_error_t`.
+/// This encoding supposes that the payload was created with serialization functions.
+/// The `schema` field may contain the details of serialziation format.
 #[no_mangle]
-pub extern "C" fn z_encoding_zenoh_error() -> &'static z_loaned_encoding_t {
-    Encoding::ZENOH_ERROR.as_loaned_c_type_ref()
+pub extern "C" fn z_encoding_zenoh_serialized() -> &'static z_loaned_encoding_t {
+    Encoding::ZENOH_SERIALIZED.as_loaned_c_type_ref()
 }
 
 // - Advanced types may be supported in some of the Zenoh bindings.

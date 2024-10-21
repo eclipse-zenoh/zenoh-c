@@ -30,7 +30,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
     z_owned_string_t payload_string;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+    z_bytes_to_string(z_sample_payload(sample), &payload_string);
 
     printf(">> [Subscriber] Received %s ('%.*s': '%.*s')\n", kind_to_str(z_sample_kind(sample)),
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     z_closure(&callback, data_handler, NULL, NULL);
     printf("Declaring Subscriber on '%s'...\n", args.keyexpr);
     z_owned_subscriber_t sub;
-    if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), NULL) < 0) {
         printf("Unable to declare subscriber.\n");
         exit(-1);
     }
@@ -80,8 +80,8 @@ int main(int argc, char **argv) {
         z_sleep_s(1);
     }
 
-    z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(sub));
+    z_drop(z_move(s));
     return 0;
 }
 

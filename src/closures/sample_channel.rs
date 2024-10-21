@@ -16,7 +16,7 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
-    handlers::{self, IntoHandler, RingChannelHandler},
+    handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
     sample::Sample,
 };
 
@@ -29,7 +29,7 @@ use crate::{
     z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_sample_t, option flume::Receiver<Sample>),
+    owned(z_owned_fifo_handler_sample_t, option FifoChannelHandler<Sample>),
     loaned(z_loaned_fifo_handler_sample_t),
 );
 
@@ -85,9 +85,9 @@ pub unsafe extern "C" fn z_fifo_channel_sample_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_sample_t {
-        call: Some(__z_handler_sample_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_sample_drop),
+        _call: Some(__z_handler_sample_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_sample_drop),
     });
 }
 
@@ -152,16 +152,17 @@ pub extern "C" fn z_fifo_handler_sample_try_recv(
     sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
-        Ok(q) => {
+        Ok(Some(q)) => {
             sample.as_rust_type_mut_uninit().write(Some(q));
             result::Z_OK
         }
-        Err(e) => {
+        Ok(None) => {
             sample.as_rust_type_mut_uninit().write(None);
-            match e {
-                flume::TryRecvError::Empty => result::Z_CHANNEL_NODATA,
-                flume::TryRecvError::Disconnected => result::Z_CHANNEL_DISCONNECTED,
-            }
+            result::Z_CHANNEL_NODATA
+        }
+        Err(_) => {
+            sample.as_rust_type_mut_uninit().write(None);
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
@@ -212,9 +213,9 @@ pub unsafe extern "C" fn z_ring_channel_sample_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_sample_t {
-        call: Some(__z_handler_sample_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_sample_drop),
+        _call: Some(__z_handler_sample_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_sample_drop),
     });
 }
 

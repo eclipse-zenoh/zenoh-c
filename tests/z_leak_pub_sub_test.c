@@ -30,7 +30,7 @@ void data_handler(z_loaned_sample_t *sample, void *context) {
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
     z_owned_string_t payload_string;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+    z_bytes_to_string(z_sample_payload(sample), &payload_string);
 
     printf(">> [Subscriber] Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_string)),
            z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(payload_string)),
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     z_open(&pub_session, z_move(pub_config), NULL);
 
     z_owned_publisher_t publisher;
-    z_declare_publisher(&publisher, z_loan(pub_session), z_loan(pub_keyexpr), NULL);
+    z_declare_publisher(z_loan(pub_session), &publisher, z_loan(pub_keyexpr), NULL);
 
     printf("Declaring Subscriber on %s\n", SUB_KEY_EXPR);
 
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     z_closure(&callback, data_handler, NULL, NULL);
 
     z_owned_subscriber_t subscriber;
-    z_declare_subscriber(&subscriber, z_loan(sub_session), z_loan(sub_keyexpr), z_move(callback), NULL);
+    z_declare_subscriber(z_loan(sub_session), &subscriber, z_loan(sub_keyexpr), z_move(callback), NULL);
 
     z_sleep_s(1);
 
@@ -80,16 +80,16 @@ int main(int argc, char **argv) {
         z_publisher_put_options_default(&options);
 
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, buf);
+        z_bytes_copy_from_str(&payload, buf);
 
         z_publisher_put(z_loan(publisher), z_move(payload), &options);
         z_sleep_s(1);
     }
 
-    z_undeclare_publisher(z_move(publisher));
-    z_undeclare_subscriber(z_move(subscriber));
-    z_close(z_move(pub_session), NULL);
-    z_close(z_move(sub_session), NULL);
+    z_drop(z_move(publisher));
+    z_drop(z_move(subscriber));
+    z_drop(z_move(pub_session));
+    z_drop(z_move(sub_session));
     z_drop(z_move(pub_keyexpr));
 
     zc_stop_z_runtime();

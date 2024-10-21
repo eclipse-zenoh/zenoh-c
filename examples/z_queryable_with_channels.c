@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     z_fifo_channel_query_new(&closure, &handler, 16);
     z_owned_queryable_t qable;
 
-    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(closure), NULL) < 0) {
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(closure), NULL) < 0) {
         printf("Unable to create queryable.\n");
         exit(-1);
     }
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
         const z_loaned_bytes_t* payload = z_query_payload(query);
         if (payload != NULL && z_bytes_len(payload) > 0) {
             z_owned_string_t payload_string;
-            z_bytes_deserialize_into_string(payload, &payload_string);
+            z_bytes_to_string(payload, &payload_string);
 
             printf(">> [Queryable ] Received Query '%.*s?%.*s' with value '%.*s'\n",
                    (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
@@ -90,9 +90,9 @@ int main(int argc, char** argv) {
         z_drop(z_move(oquery));
     }
 
-    z_undeclare_queryable(z_move(qable));
+    z_drop(z_move(qable));
     z_drop(z_move(handler));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
     return 0;
 }
 

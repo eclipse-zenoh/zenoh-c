@@ -93,10 +93,8 @@ View Types `z_view_xxx_t`
 -------------------------
 
 `z_view_xxx_t` types are reference types that point to external data. These values do not need to be dropped and 
-remain valid only as long as the data they reference is valid. 
-
-A key feature is that `z_view_xxx_t` types are loaned as `z_loaned_xxx_t`, just like their owned counterparts, 
-allowing consistent use of both owned and view types. Example:
+remain valid only as long as the data they reference is valid. Typically the view types are the variants of
+owned types that do not own the data. This allows to use view and owned types interchangeably.
 
 .. code-block:: c
 
@@ -109,6 +107,7 @@ allowing consistent use of both owned and view types. Example:
     z_drop(z_move(dst));
     z_string_clone(&dst, z_loan(view));
     z_drop(z_move(dst));
+    z_drop(z_move(owned)); // but no need to drop view
 
 Options Structures `z_xxx_options_t`
 ------------------------------------
@@ -126,20 +125,20 @@ affect the owned object. However, passing the structure to a function transfers 
     z_publisher_put_options_default(&options);
     int64_t metadata = 42;
     z_owned_bytes_t attachment;
-    z_bytes_serialize_from_int64(&attachment, metadata);
+    ze_serialize_int64(&attachment, metadata);
     options.attachment = z_move(attachment); // the data itself is still in the `attachment`
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, "Don't panic!");
+    z_bytes_copy_from_str(&payload, "Don't panic!");
     z_publisher_put(z_loan(pub), z_move(payload), &options);
     // the `payload` and `attachment` are consumed by the `z_publisher_put` function
 
 
-Enums and Plain Data Structures `z_xxx_t`
+Other Structures and Enums `z_xxx_t`
 -----------------------------------------
 
-Types named `z_xxx_t` are simple, copyable, and can be passed by value. They do not have special handling. 
-Examples include `z_timestamp_t`, `z_priority_t`, etc.
+Types named `z_xxx_t` are copyable, and can be passed by value. Some of them are just plain data structures or enums, like 
+`z_timestamp_t`, `z_priority_t`. Some are temporary data access structures, like `z_bytes_slice_iterator_t`, `z_bytes_reader_t`, etc.
 
 .. code-block:: c
 
@@ -223,10 +222,21 @@ Function `z_xxx_drop` accepts `z_moved_xxx_t*` pointer. It frees all resources h
 Name Prefixes `z_`, `zc_`, `ze_`
 ================================
 
-Most functions and types in the C API use the `z_` prefix, which applies to the common zenoh C API
-(currently Rust-based zenoh-c and pure C zenoh-pico).
+We try to maintain a common API between `zenoh-c` and `zenoh-pico`, such that porting code from one to the other is, ideally, trivial.
+However, due to design limitations some functionality might be represented differently (or simply be not available) in either library.
 
-The `zc_` prefix is specific to zenoh-c. zenoh-pico uses the `zp_` prefix for the same purpose.
+The namespace prefixes are used to distinguish between different parts of the API.
 
-The `ze_` prefix identifies functions and types from the `zenoh-ext` Rust library that are not
-part of the core Zenoh API and therefore are placed in a separate namespace.
+Most functions and types in the C API use the `z_` prefix, which applies to the core Zenoh API.
+These functions and types are guaranteed to be available in all Zenoh implementations on C 
+(currently, Rust-based zenoh-c and pure C zenoh-pico).
+
+The `zc_` prefix identifies API specific to zenoh-c, while zenoh-pico uses the `zp_` prefix for the same purpose.
+E.g. zenoh-c and zenoh-pico have different approaches to configuration and therefore each have their own set 
+of `zc_config_...` and `zp_config_...` functions.
+
+The `ze_` prefix is used for the API that is not part of the core zenoh API. There is no guarantee that
+these functions and types are available for both implementations. However, when they are provided for both, they should
+have the same prototype and behavior. Typically, these are functions and types provided by the `zenoh-ext` Rust library 
+for zenoh-c and are not available in zenoh-pico. However, the data serialization API is implemented in zenoh-pico with 
+the same `ze_` prefix.

@@ -35,7 +35,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
     const z_loaned_bytes_t *payload = z_query_payload(query);
 
     z_owned_string_t payload_string;
-    z_bytes_deserialize_into_string(payload, &payload_string);
+    z_bytes_to_string(payload, &payload_string);
 
     printf(">> [Queryable ] Received Query '%.*s' with value '%.*s'\n", (int)z_string_len(z_loan(key_string)),
            z_string_data(z_loan(key_string)), (int)z_string_len(z_loan(payload_string)),
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     z_owned_closure_query_t callback;
     z_closure(&callback, query_handler, NULL, NULL);
     z_owned_queryable_t queryable;
-    z_declare_queryable(&queryable, z_loan(queryable_session), z_loan(queryable_keyexpr), z_move(callback), NULL);
+    z_declare_queryable(z_loan(queryable_session), &queryable, z_loan(queryable_keyexpr), z_move(callback), NULL);
 
     z_view_keyexpr_t get_keyexpr;
     z_view_keyexpr_from_str(&get_keyexpr, GET_KEY_EXPR);
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         z_get_options_default(&options);
 
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, buf);
+        z_bytes_copy_from_str(&payload, buf);
 
         options.payload = z_move(payload);
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
             z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
 
             z_owned_string_t reply_str;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &reply_str);
+            z_bytes_to_string(z_sample_payload(sample), &reply_str);
 
             printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
                    (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));
@@ -120,9 +120,9 @@ int main(int argc, char **argv) {
     }
     assert(received_replies == 5);
 
-    z_undeclare_queryable(z_move(queryable));
-    z_close(z_move(get_session), NULL);
-    z_close(z_move(queryable_session), NULL);
+    z_drop(z_move(queryable));
+    z_drop(z_move(get_session));
+    z_drop(z_move(queryable_session));
     z_drop(z_move(queryable_keyexpr));
 
     zc_stop_z_runtime();

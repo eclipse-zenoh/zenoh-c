@@ -16,7 +16,7 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
-    handlers::{self, IntoHandler, RingChannelHandler},
+    handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
     query::Reply,
 };
 
@@ -29,7 +29,7 @@ use crate::{
     z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_reply_t, option flume::Receiver<Reply>),
+    owned(z_owned_fifo_handler_reply_t, option FifoChannelHandler<Reply>),
     loaned(z_loaned_fifo_handler_reply_t),
 );
 
@@ -85,9 +85,9 @@ pub unsafe extern "C" fn z_fifo_channel_reply_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_reply_t {
-        call: Some(__z_handler_reply_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_reply_drop),
+        _call: Some(__z_handler_reply_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_reply_drop),
     });
 }
 
@@ -151,16 +151,17 @@ pub extern "C" fn z_fifo_handler_reply_try_recv(
     reply: &mut MaybeUninit<z_owned_reply_t>,
 ) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
-        Ok(q) => {
+        Ok(Some(q)) => {
             reply.as_rust_type_mut_uninit().write(Some(q));
             result::Z_OK
         }
-        Err(e) => {
+        Ok(None) => {
             reply.as_rust_type_mut_uninit().write(None);
-            match e {
-                flume::TryRecvError::Empty => result::Z_CHANNEL_NODATA,
-                flume::TryRecvError::Disconnected => result::Z_CHANNEL_DISCONNECTED,
-            }
+            result::Z_CHANNEL_NODATA
+        }
+        Err(_) => {
+            reply.as_rust_type_mut_uninit().write(None);
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
@@ -208,9 +209,9 @@ pub unsafe extern "C" fn z_ring_channel_reply_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_reply_t {
-        call: Some(__z_handler_reply_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_reply_drop),
+        _call: Some(__z_handler_reply_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_reply_drop),
     });
 }
 

@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, args.keyexpr);
 
-    if (ze_declare_publication_cache(&pub_cache, z_loan(s), z_loan(ke), &pub_cache_opts) != Z_OK) {
+    if (ze_declare_publication_cache(z_loan(s), &pub_cache, z_loan(ke), &pub_cache_opts) != Z_OK) {
         printf("Unable to declare publication cache for key expression!\n");
         exit(-1);
     }
@@ -68,13 +68,13 @@ int main(int argc, char** argv) {
         sprintf(buf, "[%4d] %s", idx, args.value);
         printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
         z_owned_bytes_t payload;
-        z_bytes_serialize_from_str(&payload, buf);
+        z_bytes_copy_from_str(&payload, buf);
 
         z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     }
 
-    ze_undeclare_publication_cache(z_move(pub_cache));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(pub_cache));
+    z_drop(z_move(s));
 
     return 0;
 }

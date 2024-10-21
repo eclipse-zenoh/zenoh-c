@@ -18,6 +18,7 @@ use libc::c_char;
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
+    session::SessionClosedError,
     Wait,
 };
 
@@ -292,6 +293,7 @@ pub unsafe extern "C" fn z_get(
         .wait()
     {
         Ok(()) => result::Z_OK,
+        Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
             tracing::error!("{}", e);
             result::Z_EGENERIC

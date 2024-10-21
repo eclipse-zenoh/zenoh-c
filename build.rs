@@ -40,6 +40,17 @@ const HEADER: &str = r"//
 static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
     "unstable" => "Z_FEATURE_UNSTABLE_API",
     "shared-memory" => "Z_FEATURE_SHARED_MEMORY",
+    "auth_pubkey" => "Z_FEATURE_AUTH_PUBKEY",
+    "auth_usrpwd" => "Z_FEATURE_AUTH_USRPWD",
+    "transport_multilink" => "Z_FEATURE_TRANSPORT_MULTILINK",
+    "transport_compression" => "Z_FEATURE_TRANSPORT_COMPRESSION",
+    "transport_quic"  => "Z_FEATURE_TRANSPORT_QUIC",
+    "transport_tcp" =>  "Z_FEATURE_TRANSPORT_TCP",
+    "transport_tls" =>  "Z_FEATURE_TRANSPORT_TLS",
+    "transport_udp" =>  "Z_FEATURE_TRANSPORT_UDP",
+    "transport_unixsock-stream" =>  "Z_FEATURE_TRANSPORT_UNIXSOCK_STREAM",
+    "transport_ws" =>  "Z_FEATURE_TRANSPORT_WS",
+    "transport_vsock" => "Z_FEATURE_VSOCK"
 };
 
 fn fix_cbindgen(input: &str, output: &str) {
@@ -1548,7 +1559,20 @@ pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_closure_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_closure", false)
+    let mut out = "typedef void(*z_closure_drop_callback_t)(void *context);\n".to_string();
+    for f in macro_func {
+        let callback_typename = f.func_name.clone() + "_callback_t";
+        let prototype = f.args[1]
+            .clone()
+            .typename
+            .typename
+            .replace(" (*call)", &format!("(*{})", &callback_typename));
+
+        out += &format!("typedef {};\n", prototype);
+    }
+    out += "\n";
+    out += &generate_generic_c(macro_func, "z_closure", false);
+    out
 }
 
 pub fn generate_generic_recv_c(macro_func: &[FunctionSignature]) -> String {
@@ -1711,7 +1735,7 @@ pub fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String 
             .typename
             .typename
             .replace(&format!(" (*{})", &processed_f.args[1].name), "");
-        let callback_typename = f.func_name.clone() + "_callabck_t";
+        let callback_typename = f.func_name.clone() + "_callback_t";
         out += &format!(
             "extern \"C\" using {} = {};\n",
             callback_typename, prototype
@@ -1731,6 +1755,28 @@ fn test_feature(feature: &str) -> bool {
         "shared-memory" => true,
         #[cfg(feature = "unstable")]
         "unstable" => true,
+        #[cfg(feature = "auth_pubkey")]
+        "auth_pubkey" => true,
+        #[cfg(feature = "auth_usrpwd")]
+        "auth_usrpwd" => true,
+        #[cfg(feature = "transport_multilink")]
+        "transport_multilink" => true,
+        #[cfg(feature = "transport_compression")]
+        "transport_compression" => true,
+        #[cfg(feature = "transport_quic")]
+        "transport_quic" => true,
+        #[cfg(feature = "transport_tcp")]
+        "transport_tcp" => true,
+        #[cfg(feature = "transport_tls")]
+        "transport_tls" => true,
+        #[cfg(feature = "transport_udp")]
+        "transport_udp" => true,
+        #[cfg(feature = "transport_unixsock-stream")]
+        "transport_unixsock-stream" => true,
+        #[cfg(feature = "transport_ws")]
+        "transport_ws" => true,
+        #[cfg(feature = "transport_vsock")]
+        "transport_vsock" => true,
         _ => false,
     }
 }

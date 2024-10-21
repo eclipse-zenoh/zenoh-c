@@ -9,15 +9,15 @@ use std::{
 };
 
 use zenoh::{
-    bytes::{Encoding, ZBytes, ZBytesIterator, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
+    bytes::{Encoding, ZBytes, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
     config::Config,
-    handlers::RingChannelHandler,
+    handlers::{FifoChannelHandler, RingChannelHandler},
     key_expr::KeyExpr,
     pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
     sample::Sample,
     scouting::Hello,
-    session::Session,
+    session::{Session, ZenohId},
     time::Timestamp,
 };
 #[cfg(feature = "unstable")]
@@ -25,7 +25,7 @@ use zenoh::{
     liveliness::LivelinessToken,
     pubsub::MatchingListener,
     sample::SourceInfo,
-    session::{EntityGlobalId, ZenohId},
+    session::EntityGlobalId
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
@@ -92,14 +92,13 @@ get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
 /// A loaned Zenoh sample.
 get_opaque_type_data!(Sample, z_loaned_sample_t);
 
-/// A reader for serialized data.
+/// A reader for payload.
 get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
 
-/// A writer for serialized data.
-get_opaque_type_data!(ZBytesWriter<'static>, z_bytes_writer_t);
-
-/// An iterator over multi-element serialized data.
-get_opaque_type_data!(ZBytesIterator<'static, ZBytes>, z_bytes_iterator_t);
+/// An owned writer for payload.
+get_opaque_type_data!(Option<ZBytesWriter>, z_owned_bytes_writer_t);
+/// An loaned writer for payload.
+get_opaque_type_data!(ZBytesWriter, z_loaned_bytes_writer_t);
 
 /// An iterator over slices of serialized data.
 get_opaque_type_data!(ZBytesSliceIterator<'static>, z_bytes_slice_iterator_t);
@@ -191,8 +190,6 @@ get_opaque_type_data!(Option<Config>, z_owned_config_t);
 /// A loaned Zenoh configuration.
 get_opaque_type_data!(Config, z_loaned_config_t);
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A Zenoh ID.
 ///
 /// In general, valid Zenoh IDs are LSB-first 128bit unsigned and non-zero integers.
@@ -433,11 +430,11 @@ get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
 
 /// An owned Zenoh fifo sample handler.
 get_opaque_type_data!(
-    Option<flume::Receiver<Sample>>,
+    Option<FifoChannelHandler<Sample>>,
     z_owned_fifo_handler_sample_t
 );
 /// An loaned Zenoh fifo sample handler.
-get_opaque_type_data!(flume::Receiver<Sample>, z_loaned_fifo_handler_sample_t);
+get_opaque_type_data!(FifoChannelHandler<Sample>, z_loaned_fifo_handler_sample_t);
 
 /// An owned Zenoh ring sample handler.
 get_opaque_type_data!(
@@ -448,9 +445,12 @@ get_opaque_type_data!(
 get_opaque_type_data!(RingChannelHandler<Sample>, z_loaned_ring_handler_sample_t);
 
 /// An owned Zenoh fifo query handler.
-get_opaque_type_data!(Option<flume::Receiver<Query>>, z_owned_fifo_handler_query_t);
+get_opaque_type_data!(
+    Option<FifoChannelHandler<Query>>,
+    z_owned_fifo_handler_query_t
+);
 /// An loaned Zenoh fifo query handler.
-get_opaque_type_data!(flume::Receiver<Query>, z_loaned_fifo_handler_query_t);
+get_opaque_type_data!(FifoChannelHandler<Query>, z_loaned_fifo_handler_query_t);
 
 /// An owned Zenoh ring query handler.
 get_opaque_type_data!(
@@ -461,9 +461,12 @@ get_opaque_type_data!(
 get_opaque_type_data!(RingChannelHandler<Query>, z_loaned_ring_handler_query_t);
 
 /// An owned Zenoh fifo reply handler.
-get_opaque_type_data!(Option<flume::Receiver<Reply>>, z_owned_fifo_handler_reply_t);
+get_opaque_type_data!(
+    Option<FifoChannelHandler<Reply>>,
+    z_owned_fifo_handler_reply_t
+);
 /// An loaned Zenoh fifo reply handler.
-get_opaque_type_data!(flume::Receiver<Reply>, z_loaned_fifo_handler_reply_t);
+get_opaque_type_data!(FifoChannelHandler<Reply>, z_loaned_fifo_handler_reply_t);
 
 /// An owned Zenoh ring reply handler.
 get_opaque_type_data!(
@@ -485,3 +488,10 @@ get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An entity gloabal id.
 get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);
+
+/// @brief An owned Zenoh serializer.
+get_opaque_type_data!(Option<zenoh_ext::ZSerializer>, ze_owned_serializer_t);
+/// @brief A loaned Zenoh serializer.
+get_opaque_type_data!(zenoh_ext::ZSerializer, ze_loaned_serializer_t);
+/// @brief A Zenoh serializer.
+get_opaque_type_data!(zenoh_ext::ZDeserializer<'static>, ze_deserializer_t);

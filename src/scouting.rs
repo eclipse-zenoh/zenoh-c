@@ -22,12 +22,10 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType},
-    z_closure_hello_call, z_closure_hello_loan, z_moved_closure_hello_t, z_moved_config_t,
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, CString, CStringView, ZVector,
 };
-#[cfg(feature = "unstable")]
-use crate::{transmute::IntoCType, z_id_t};
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
     loaned(z_loaned_hello_t),
@@ -88,8 +86,6 @@ pub extern "C" fn z_hello_clone(dst: &mut MaybeUninit<z_owned_hello_t>, this_: &
         .write(Some(this_.as_rust_type_ref().clone()));
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns id of Zenoh entity that transmitted hello message.
 #[no_mangle]
 pub extern "C" fn z_hello_zid(this_: &z_loaned_hello_t) -> z_id_t {
@@ -219,7 +215,6 @@ pub extern "C" fn z_scout(
 /// The string has static storage (i.e. valid until the end of the program).
 /// @param whatami: A whatami bitmask of zenoh entity kind.
 /// @param str_out: An uninitialized memory location where strring will be constructed.
-/// @param len: Maximum number of bytes that can be written to the `buf`.
 ///
 /// @return 0 if successful, negative error values if whatami contains an invalid bitmask.
 #[no_mangle]

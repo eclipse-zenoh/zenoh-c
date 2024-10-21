@@ -31,6 +31,9 @@
 #define Z_ENETWORK -4
 #define Z_ENULL -5
 #define Z_EUNAVAILABLE -6
+#define Z_EDESERIALIZE -7
+#define Z_ESESSION_CLOSED -8
+#define Z_EUTF8 -9
 #define Z_EBUSY_MUTEX -16
 #define Z_EINVAL_MUTEX -22
 #define Z_EAGAIN_MUTEX -11

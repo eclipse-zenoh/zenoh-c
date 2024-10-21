@@ -32,61 +32,53 @@ const char *const K_CONST = "k_const";
 const char *const V_CONST = "v const";
 
 typedef struct kv_pair_t {
-    const char *key;
-    const char *value;
+    z_owned_string_t key;
+    z_owned_string_t value;
 } kv_pair_t;
 
-typedef struct kv_it {
-    kv_pair_t *current;
-    kv_pair_t *end;
-} kv_it;
-
-bool create_attachment_iter(z_owned_bytes_t *kv_pair, void *context) {
-    kv_it *it = (kv_it *)(context);
-    if (it->current == it->end) {
-        return false;
+void drop_attachment(kv_pair_t *kvp, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        z_drop(z_move(kvp[i].key));
+        z_drop(z_move(kvp[i].value));
     }
-    z_owned_bytes_t k, v;
-    z_bytes_serialize_from_str(&k, it->current->key);
-    z_bytes_serialize_from_str(&v, it->current->value);
-    z_bytes_from_pair(kv_pair, z_move(k), z_move(v));
-    it->current++;
-    return true;
-};
+}
 
-z_result_t check_attachment(const z_loaned_bytes_t *attachment, kv_it *it) {
-    z_bytes_iterator_t iter = z_bytes_get_iterator(attachment);
-    while (it->current != it->end) {
-        z_owned_bytes_t kv, k, v;
-        if (!z_bytes_iterator_next(&iter, &kv)) {
-            perror("Not enough elements in the attachment\n");
-            return -1;
-        }
-        if (z_bytes_deserialize_into_pair(z_loan(kv), &k, &v) != 0) {
-            perror("Can not deserialize attachment elemnt into kv-pair\n");
-            return -1;
-        }
-        z_owned_string_t k_str, v_str;
-        z_bytes_deserialize_into_string(z_loan(k), &k_str);
-        z_bytes_deserialize_into_string(z_loan(v), &v_str);
-
-        if (strncmp(it->current->key, z_string_data(z_loan(k_str)), z_string_len(z_loan(k_str))) != 0) {
-            perror("Incorrect attachment key\n");
-            return -1;
-        }
-        if (strncmp(it->current->value, z_string_data(z_loan(v_str)), z_string_len(z_loan(v_str))) != 0) {
-            perror("Incorrect attachment value\n");
-            return -1;
-        }
-        z_drop(z_move(k_str));
-        z_drop(z_move(v_str));
-        z_drop(z_move(k));
-        z_drop(z_move(v));
-        z_drop(z_move(kv));
-        it->current++;
+z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *attachment) {
+    if (attachment == NULL) {
+        perror("Missing attachment!");
+        return -1;
     }
+
+    ze_deserializer_t deserializer = ze_deserializer_from_bytes(attachment);
+    size_t received_len = 0;
+    ze_deserializer_deserialize_sequence_length(&deserializer, &received_len);
+    if (received_len != len) {
+        perror("Incorrect attachment size!");
+        return -1;
+    }
+    z_owned_string_t key, value;
+    for (size_t i = 0; i < len; i++) {
+        ze_deserializer_deserialize_string(&deserializer, &key);
+        ze_deserializer_deserialize_string(&deserializer, &value);
+        if (strncmp(z_string_data(z_loan(key)), z_string_data(z_loan(kvs[i].key)), z_string_len(z_loan(kvs[i].key))) !=
+            0) {
+            perror("Incorrect attachment key");
+            z_drop(z_move(key));
+            return -1;
+        }
+        z_drop(z_move(key));
+        if (strncmp(z_string_data(z_loan(value)), z_string_data(z_loan(kvs[i].value)),
+                    z_string_len(z_loan(kvs[i].value))) != 0) {
+            perror("Incorrect attachment value");
+            z_drop(z_move(value));
+            return -1;
+        }
+        z_drop(z_move(value));
+    }
+
+    drop_attachment(kvs, len);
     return 0;
-};
+}
 
 int run_publisher() {
     SEM_WAIT(sem);
@@ -102,7 +94,7 @@ int run_publisher() {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_publisher_t pub;
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), NULL) < 0) {
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), NULL) < 0) {
         perror("Unable to declare Publisher for key expression!");
         return -1;
     }
@@ -110,24 +102,32 @@ int run_publisher() {
     z_publisher_put_options_t options;
     z_publisher_put_options_default(&options);
 
-    kv_pair_t kvs[2];
-    kvs[0] = (kv_pair_t){.key = K_CONST, .value = V_CONST};
     for (int i = 0; i < values_count; ++i) {
-        kvs[1] = (kv_pair_t){.key = K_VAR, .value = values[i]};
+        kv_pair_t kvs[2];
+        z_string_copy_from_str(&kvs[0].key, K_CONST);
+        z_string_copy_from_str(&kvs[0].value, V_CONST);
+        z_string_copy_from_str(&kvs[1].key, K_VAR);
+        z_string_copy_from_str(&kvs[1].value, values[i]);
 
         z_owned_bytes_t attachment;
-        kv_it it = {kvs, kvs + 2};
-        z_bytes_from_iter(&attachment, create_attachment_iter, (void *)&it);
+        ze_owned_serializer_t serializer;
+        ze_serializer_empty(&serializer);
+        ze_serializer_serialize_sequence_length(z_loan_mut(serializer), 2);
+        for (size_t j = 0; j < 2; j++) {
+            ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[j].key));
+            ze_serializer_serialize_string(z_loan_mut(serializer), z_loan(kvs[j].value));
+        }
+        ze_serializer_finish(z_move(serializer), &attachment);
 
         options.attachment = z_move(attachment);
-
+        drop_attachment(kvs, 2);
         z_owned_bytes_t payload;
         z_bytes_from_static_str(&payload, values[i]);
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
-    z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(pub));
+    z_drop(z_move(s));
     return 0;
 }
 
@@ -141,24 +141,22 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     }
 
     z_owned_string_t payload_str;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_str);
+    z_bytes_to_string(z_sample_payload(sample), &payload_str);
     if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));
         exit(-1);
     }
     z_drop(z_move(payload_str));
-    const z_loaned_bytes_t *attachment = z_sample_attachment(sample);
-    if (attachment == NULL) {
-        perror("Missing attachment!");
-        exit(-1);
-    }
 
-    kv_pair_t kvs[2] = {(kv_pair_t){K_CONST, V_CONST}, (kv_pair_t){K_VAR, values[val_num]}};
-    kv_it it = {kvs, kvs + 2};
+    kv_pair_t kvs[2];
+    z_string_copy_from_str(&kvs[0].key, K_CONST);
+    z_string_copy_from_str(&kvs[0].value, V_CONST);
+    z_string_copy_from_str(&kvs[1].key, K_VAR);
+    z_string_copy_from_str(&kvs[1].value, values[val_num]);
 
-    if (check_attachment(attachment, &it) != 0) {
-        perror("Failed to validate attachment");
+    if (check_attachment(kvs, 2, z_sample_attachment(sample)) != 0) {
+        perror("Failed to validate attachment!");
         exit(-1);
     }
 
@@ -184,7 +182,7 @@ int run_subscriber() {
     z_closure(&callback, data_handler, NULL, NULL);
     z_owned_subscriber_t sub;
 
-    if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), NULL) < 0) {
         perror("Unable to declare subscriber!");
         return -1;
     }
@@ -192,8 +190,8 @@ int run_subscriber() {
     SEM_POST(sem);
     z_sleep_s(10);
 
-    z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(sub));
+    z_drop(z_move(s));
 
     return -1;
 }

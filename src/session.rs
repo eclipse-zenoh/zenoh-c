@@ -159,17 +159,15 @@ pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_option
     this_.write(z_close_options_t { _dummy: 0 });
 }
 
-/// Closes and drops a zenoh session. This also drops all the closure callbacks remaining from dropped (but not undeclared subscribers).
+/// Closes zenoh session. This also drops all the closure callbacks remaining from dropped, but not undeclared subscribers.
 ///
-/// @return 0 in  case of success, a negative value if an error occured while closing the session.
+/// @return `0` in case of success, a negative value if an error occured while closing the session.
 #[no_mangle]
 pub extern "C" fn z_close(
-    session: &mut z_moved_session_t,
+    session: &mut z_loaned_session_t,
     _options: Option<&z_close_options_t>,
 ) -> result::z_result_t {
-    let Some(s) = session.take_rust_type() else {
-        return result::Z_EINVAL;
-    };
+    let s = session.as_rust_type_mut();
     match s.close().wait() {
         Err(e) => {
             tracing::error!("Error closing session: {}", e);
@@ -179,7 +177,16 @@ pub extern "C" fn z_close(
     }
 }
 
-/// Frees memory and invalidates the session.
+/// Checks if zenoh session is closed.
+///
+/// @return `true` if session is closed, `false` otherwise.
+#[no_mangle]
+pub extern "C" fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
+    let s = session.as_rust_type_ref();
+    s.is_closed()
+}
+
+/// Closes and invalidates the session.
 #[no_mangle]
 pub extern "C" fn z_session_drop(this_: &mut z_moved_session_t) {
     let _ = this_.take_rust_type();

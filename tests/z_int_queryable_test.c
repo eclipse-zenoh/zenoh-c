@@ -74,7 +74,7 @@ int run_queryable() {
     z_closure(&callback, query_handler, NULL, (void *)keyexpr);
     z_owned_queryable_t qable;
     ;
-    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) != Z_OK) {
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(callback), NULL) != Z_OK) {
         printf("Unable to create queryable.\n");
         return -1;
     }
@@ -82,8 +82,8 @@ int run_queryable() {
     SEM_POST(sem);
     z_sleep_s(10);
 
-    z_undeclare_queryable(z_move(qable));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(qable));
+    z_drop(z_move(s));
     return 0;
 }
 
@@ -114,7 +114,7 @@ int run_get() {
 
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
             z_owned_string_t payload_string;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+            z_bytes_to_string(z_sample_payload(sample), &payload_string);
             if (strncmp(values[val_num], z_string_data(z_loan(payload_string)), z_string_len(z_loan(payload_string)))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_string));
@@ -163,7 +163,7 @@ int run_get() {
         }
         z_drop(z_move(handler));
     }
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 
     return 0;
 }

@@ -36,13 +36,13 @@ void put() {
     z_put_options_t opts;
     z_put_options_default(&opts);
     z_owned_bytes_t payload, attachment;
-    z_bytes_serialize_from_int32(&attachment, 16);
+    z_bytes_copy_from_str(&attachment, "abc");
     opts.attachment = z_move(attachment);
-    z_bytes_serialize_from_int32(&payload, 16);
+    z_bytes_copy_from_str(&payload, "cde");
     z_put(z_loan(s), z_loan(ke), z_move(payload), &opts);
     assert(!z_internal_check(payload));
     assert(!z_internal_check(attachment));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 void get() {
@@ -60,9 +60,9 @@ void get() {
     z_get_options_t opts;
     z_get_options_default(&opts);
     z_owned_bytes_t payload, attachment;
-    z_bytes_serialize_from_int32(&attachment, 16);
+    z_bytes_copy_from_str(&attachment, "abc");
     opts.payload = z_move(payload);
-    z_bytes_serialize_from_int32(&payload, 16);
+    z_bytes_copy_from_str(&payload, "cde");
     opts.attachment = z_move(attachment);
     z_owned_closure_reply_t closure;
     z_closure(&closure, cb, drop, NULL);
@@ -70,7 +70,7 @@ void get() {
     z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
     assert(!z_internal_check(payload));
     assert(!z_internal_check(attachment));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 int main(int argc, char **argv) {

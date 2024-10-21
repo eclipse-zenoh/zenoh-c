@@ -29,9 +29,9 @@ void test_session() {
     z_owned_session_t session;
     z_open(&session, z_move(config), NULL);
     assert(z_internal_check(session));
-    z_close(z_move(session), NULL);
+    z_drop(z_move(session));
     assert(!z_internal_check(session));
-    z_close(z_move(session), NULL);
+    z_drop(z_move(session));
     assert(!z_internal_check(session));
 }
 
@@ -45,13 +45,13 @@ void test_publisher() {
     z_keyexpr_from_str(&keyexpr, URL);
 
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(s), z_loan(keyexpr), NULL);
+    z_declare_publisher(z_loan(s), &pub, z_loan(keyexpr), NULL);
     assert(z_internal_check(pub));
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     assert(!z_internal_check(pub));
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(pub));
     assert(!z_internal_check(pub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 void test_keyexpr() {
@@ -88,13 +88,13 @@ void test_subscriber() {
     z_view_keyexpr_t keyexpr;
     z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
+    z_declare_subscriber(z_loan(s), &sub, z_loan(keyexpr), z_move(callback), NULL);
     assert(z_internal_check(sub));
-    z_undeclare_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     assert(!z_internal_check(sub));
-    z_undeclare_subscriber(z_move(sub));
+    z_drop(z_move(sub));
     assert(!z_internal_check(sub));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 void query_handler(z_loaned_query_t *query, void *context) {}
@@ -110,13 +110,13 @@ void test_queryable() {
     z_view_keyexpr_t keyexpr;
     z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_queryable_t queryable;
-    z_declare_queryable(&queryable, z_loan(s), z_loan(keyexpr), z_move(callback), NULL);
+    z_declare_queryable(z_loan(s), &queryable, z_loan(keyexpr), z_move(callback), NULL);
     assert(z_internal_check(queryable));
-    z_undeclare_queryable(z_move(queryable));
+    z_drop(z_move(queryable));
     assert(!z_internal_check(queryable));
-    z_undeclare_queryable(z_move(queryable));
+    z_drop(z_move(queryable));
     assert(!z_internal_check(queryable));
-    z_close(z_move(s), NULL);
+    z_drop(z_move(s));
 }
 
 int main(int argc, char **argv) {

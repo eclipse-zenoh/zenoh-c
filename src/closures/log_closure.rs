@@ -70,29 +70,20 @@ impl From<tracing::Level> for zc_log_severity_t {
         }
     }
 }
-
-/// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+/// @brief A log-processing closure.
 ///
-/// Closures are not guaranteed not to be called concurrently.
-///
-/// It is guaranteed that:
-///   - `call` will never be called once `drop` has started.
-///   - `drop` will only be called **once**, and **after every** `call` has ended.
-///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+/// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
 #[repr(C)]
 pub struct zc_owned_closure_log_t {
-    /// An optional pointer to a closure state.
-    context: *mut libc::c_void,
-    /// A closure body.
-    call: Option<
+    _context: *mut libc::c_void,
+    _call: Option<
         extern "C" fn(
             severity: zc_log_severity_t,
             msg: &z_loaned_string_t,
             context: *mut libc::c_void,
         ),
     >,
-    /// An optional drop function that will be called when the closure is dropped.
-    drop: Option<extern "C" fn(context: *mut libc::c_void)>,
+    _drop: Option<extern "C" fn(context: *mut libc::c_void)>,
 }
 
 /// Loaned closure.
@@ -116,9 +107,9 @@ decl_c_type!(
 impl Default for zc_owned_closure_log_t {
     fn default() -> Self {
         zc_owned_closure_log_t {
-            context: std::ptr::null_mut(),
-            call: None,
-            drop: None,
+            _context: std::ptr::null_mut(),
+            _call: None,
+            _drop: None,
         }
     }
 }
@@ -126,22 +117,22 @@ impl Default for zc_owned_closure_log_t {
 impl zc_owned_closure_log_t {
     pub fn empty() -> Self {
         zc_owned_closure_log_t {
-            context: std::ptr::null_mut(),
-            call: None,
-            drop: None,
+            _context: std::ptr::null_mut(),
+            _call: None,
+            _drop: None,
         }
     }
 
     pub fn is_empty(&self) -> bool {
-        self.call.is_none() && self.drop.is_none() && self.context.is_null()
+        self._call.is_none() && self._drop.is_none() && self._context.is_null()
     }
 }
 unsafe impl Send for zc_owned_closure_log_t {}
 unsafe impl Sync for zc_owned_closure_log_t {}
 impl Drop for zc_owned_closure_log_t {
     fn drop(&mut self) {
-        if let Some(drop) = self.drop {
-            drop(self.context)
+        if let Some(drop) = self._drop {
+            drop(self._context)
         }
     }
 }
@@ -161,8 +152,8 @@ pub extern "C" fn zc_closure_log_call(
     msg: &z_loaned_string_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
-    match closure.call {
-        Some(call) => call(severity, msg, closure.context),
+    match closure._call {
+        Some(call) => call(severity, msg, closure._context),
         None => {
             tracing::error!("Attempted to call an uninitialized closure!");
         }
@@ -189,6 +180,13 @@ pub extern "C" fn zc_closure_log_loan(
 }
 
 /// @brief Constructs closure.
+///
+/// Closures are not guaranteed not to be called concurrently.
+///
+/// It is guaranteed that:
+///   - `call` will never be called once `drop` has started.
+///   - `drop` will only be called **once**, and **after every** `call` has ended.
+///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
@@ -207,8 +205,8 @@ pub extern "C" fn zc_closure_log(
     context: *mut c_void,
 ) {
     this.write(zc_owned_closure_log_t {
-        context,
-        call,
-        drop,
+        _context: context,
+        _call: call,
+        _drop: drop,
     });
 }
