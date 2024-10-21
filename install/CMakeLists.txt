@@ -111,9 +111,18 @@ set(CPACK_GENERATOR ZIP)
 # set package name to format <name>-<version>.<extension>
 # platform name doesn't matter for header-only library
 set(CPACK_PACKAGE_NAME zenohc)
+
 if(NOT CPACK_PACKAGE_VERSION)
-  set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION}) 
+    set(SEM_VER "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+    if(NOT DEFINED PROJECT_VERSION_TWEAK)
+        set(CPACK_PACKAGE_VERSION ${SEM_VER})
+    elseif(PROJECT_VERSION_TWEAK EQUAL 0)
+        set(CPACK_PACKAGE_VERSION "${SEM_VER}~dev-1")
+    elseif(PROJECT_VERSION_TWEAK GREATER 1)
+        set(CPACK_PACKAGE_VERSION "${SEM_VER}~pre.${PROJECT_VERSION_TWEAK}-1")
+    endif()
 endif()
+
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
 set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cpack_project_config.cmake")
 
