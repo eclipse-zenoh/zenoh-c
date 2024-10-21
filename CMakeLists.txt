@@ -39,7 +39,7 @@ declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenoh
 # Setup project version
 #
 set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-if(NOT DEFINED PROJECT_VERSION_TWEAK)
+if(PROJECT_VERSION_TWEAK STREQUAL "")
 	set(project_version "${project_version}")
 elseif(PROJECT_VERSION_TWEAK EQUAL 0)
 	set(project_version "${project_version}-dev")
