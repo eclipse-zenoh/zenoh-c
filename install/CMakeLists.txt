@@ -110,7 +110,7 @@ set(CPACK_COMPONENT_DEV_DEPENDS lib)
 set(CPACK_GENERATOR ZIP)
 # set package name to format <name>-<version>.<extension>
 # platform name doesn't matter for header-only library
-set(CPACK_PACKAGE_NAME zenoh-c)
+set(CPACK_PACKAGE_NAME zenohc)
 if(NOT CPACK_PACKAGE_VERSION)
   set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION}) 
 endif()
