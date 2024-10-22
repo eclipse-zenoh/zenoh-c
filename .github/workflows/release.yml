@@ -107,6 +107,10 @@ jobs:
           cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
           make
           cpack -G ZIP
+
+      - id: build-distro-packages
+        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
+        run: !
           cpack -G DEB
           cpack -G RPM
 
@@ -117,12 +121,14 @@ jobs:
           path: ./build/packages/*.zip
 
       - name: Upload DEB archive
+        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
         uses: actions/upload-artifact@v4
         with:
           name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-debian.zip
           path: ./build/packages/*.deb
 
       - name: Upload RPM archive
+        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
         uses: actions/upload-artifact@v4
         with:
           name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-rpm.zip
