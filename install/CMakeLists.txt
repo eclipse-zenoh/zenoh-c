@@ -92,6 +92,7 @@ install_zenohc_lib("Debug" "DEBUG" zenohc)
 #
 # Configure CPack
 #
+set(CPACK_BUILD_CONFIG ${CMAKE_BUILD_TYPE})
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
 set(CPACK_PACKAGE_CHECKSUM MD5)
 set(CPACK_PACKAGE_VENDOR "The Eclipse Foundation")
