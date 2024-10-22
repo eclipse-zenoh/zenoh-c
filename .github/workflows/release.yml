@@ -137,6 +137,7 @@ jobs:
         run: |
           mkdir -p build  && cd build
           cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
+          cmake --build . --config Release
           cpack -C Release -G ZIP
 
       - id: build-distro-packages
