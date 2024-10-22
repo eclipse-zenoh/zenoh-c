@@ -4149,7 +4149,7 @@ ZENOHC_API void z_task_drop(struct z_moved_task_t *this_);
 ZENOHC_API
 z_result_t z_task_init(struct z_owned_task_t *this_,
                        const struct z_task_attr_t *_attr,
-                       void (*fun)(void *arg),
+                       void *(*fun)(void *arg),
                        void *arg);
 /**
  * Joins the task and releases all allocated resources
