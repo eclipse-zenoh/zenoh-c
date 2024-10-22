@@ -116,13 +116,13 @@ jobs:
       - name: Upload DEB archive
         uses: actions/upload-artifact@v4
         with:
-          name: libzenohc-${{ inputs.version }}
+          name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-debian.zip
           path: ./build/packages/*.deb
 
       - name: Upload RPM archive
         uses: actions/upload-artifact@v4
         with:
-          name: libzenohc-${{ inputs.version }}
+          name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-rpm.zip
           path: ./build/packages/*.rpm
 
   debian:
