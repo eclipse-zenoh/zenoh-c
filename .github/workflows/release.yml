@@ -98,6 +98,9 @@ jobs:
           ref: ${{ needs.tag.outputs.branch }}
           token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
+      - name: Add rust toolchain
+        run: rustup target add ${{ matrix.build.target }}
+
       - id: build
         run: |
           mkdir -p build  && cd build
