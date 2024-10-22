@@ -110,7 +110,7 @@ jobs:
 
       - id: build-distro-packages
         if: ${{ matrix.build.os == 'ubuntu-20.04' }}
-        run: !
+        run: |
           cpack -G DEB
           cpack -G RPM
 
