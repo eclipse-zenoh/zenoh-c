@@ -101,7 +101,7 @@ jobs:
       - id: build
         run: |
           mkdir -p build  && cd build
-          cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -D -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
+          cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
           make
           cpack -G ZIP
           cpack -G DEB
@@ -110,7 +110,7 @@ jobs:
       - name: Upload library archive
         uses: actions/upload-artifact@v4
         with:
-          name: zenohc-${{ inputs.version }}-${{ matrix.build.target }}
+          name: zenohc-${{ inputs.version }}-${{ matrix.build.target }}-standalone.zip
           path: ./build/packages/*.zip
 
       - name: Upload DEB archive
