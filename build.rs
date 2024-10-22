@@ -899,6 +899,7 @@ impl Ctype {
 pub struct FuncArg {
     typename: Ctype,
     name: String,
+    default_value: Option<String>,
 }
 
 impl FuncArg {
@@ -906,6 +907,14 @@ impl FuncArg {
         FuncArg {
             typename: Ctype::new(typename),
             name: name.to_owned(),
+            default_value: None,
+        }
+    }
+    pub fn new_with_default(typename: &str, name: &str, default_value: &str) -> Self {
+        FuncArg {
+            typename: Ctype::new(typename),
+            name: name.to_owned(),
+            default_value: Some(default_value.to_owned()),
         }
     }
 }
@@ -924,12 +933,29 @@ impl FunctionSignature {
         func_name: String,
         args: Vec<FuncArg>,
     ) -> Self {
+        for i in 1..args.len() {
+            if args[i - 1].default_value.is_some() && args[i].default_value.is_none() {
+                panic!(
+                    "Argument {} of function {} is optional, while next one is not",
+                    i - 1,
+                    &func_name
+                );
+            }
+        }
         FunctionSignature {
             entity_name: entity_name.to_owned(),
             return_type: Ctype::new(return_type),
             func_name,
             args,
         }
+    }
+
+    pub fn num_opt_args(&self) -> usize {
+        return self
+            .args
+            .iter()
+            .filter(|&a| a.default_value.is_some())
+            .count();
     }
 }
 
@@ -1362,8 +1388,12 @@ pub fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
             vec![
                 FuncArg::new(&(closure_type.to_string() + "*"), closure_name),
                 FuncArg::new(&("void (*call)".to_string() + &call_signature), "call"),
-                FuncArg::new(&("void (*drop)".to_string() + drop_signature), "drop"),
-                FuncArg::new("void*", "context"),
+                FuncArg::new_with_default(
+                    &("void (*drop)".to_string() + drop_signature),
+                    "drop",
+                    "NULL",
+                ),
+                FuncArg::new_with_default("void*", "context", "NULL"),
             ],
         );
         res.push(f);
@@ -1435,21 +1465,32 @@ pub fn generate_generic_c(
         .iter()
         .map(|a| a.name.to_string())
         .collect::<Vec<_>>();
+    let num_opt_args = macro_func[0].num_opt_args();
+    if va_args && num_opt_args > 0 {
+        panic!("Variable number of arguments with default values is not supported");
+    }
+    let generic_macro_name = if num_opt_args > 0 {
+        format!("__{generic_name}_inner")
+    } else {
+        generic_name.to_owned()
+    };
+
     let mut out = if va_args {
         format!(
-            "#define {generic_name}({}, ...) \\
+            "#define {generic_macro_name}({}, ...) \\
         _Generic(({})",
             args.join(", "),
             args[0],
         )
     } else {
         format!(
-            "#define {generic_name}({}) \\
+            "#define {generic_macro_name}({}) \\
     _Generic(({})",
             args.join(", "),
             args[0],
         )
     };
+
     if decay {
         args[0] = format!("&{}", args[0]);
     }
@@ -1469,6 +1510,37 @@ pub fn generate_generic_c(
         out += &format!("    )({}, __VA_ARGS__)", args.join(", "));
     } else {
         out += &format!("    )({})", args.join(", "));
+    }
+
+    if num_opt_args > 0 {
+        let num_args = args.len();
+        out += "\n";
+        for i in 0..num_opt_args + 1 {
+            let num_required_args = num_args - num_opt_args + i;
+            let passed_args: Vec<String> = args[0..num_required_args].to_vec();
+            out += &format!(
+                "#define __{generic_name}{num_required_args}({})",
+                passed_args.join(", ")
+            );
+            let default_args = macro_func[0].args[num_required_args..]
+                .iter()
+                .map(|a| a.default_value.as_ref().unwrap().to_owned());
+            let values = passed_args
+                .into_iter()
+                .chain(default_args)
+                .collect::<Vec<String>>()
+                .join(", ");
+            out += &format!(" {generic_macro_name}({values})\n");
+        }
+        out += &format!(
+            "#define __{generic_name}_invoke({}, CALL, ...) CALL\n",
+            args.join(", ")
+        );
+        out += &format!("#define {generic_name}(...) __{generic_name}_invoke(__VA_ARGS__",);
+        for i in 0..num_opt_args + 1 {
+            out += &format!(", __{generic_name}{}", num_args - i);
+        }
+        out += ")(__VA_ARGS__)"
     }
     out
 }
@@ -1626,8 +1698,17 @@ pub fn generate_generic_cpp(
             } else {
                 out += ", ";
             }
-
-            out += &format!("{} {}", func.args[i].typename.typename, func.args[i].name);
+            match &func.args[i].default_value {
+                Some(v) => {
+                    out += &format!(
+                        "{} {} = {}",
+                        func.args[i].typename.typename, func.args[i].name, v
+                    );
+                }
+                None => {
+                    out += &format!("{} {}", func.args[i].typename.typename, func.args[i].name);
+                }
+            }
         }
         out += &format!(") {{{body_start}");
         if return_type != "void" {

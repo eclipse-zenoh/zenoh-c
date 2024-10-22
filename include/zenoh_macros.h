@@ -455,7 +455,7 @@ typedef void(*z_closure_zid_callback_t)(const z_id_t *z_id, void *context);
 typedef void(*zc_closure_log_callback_t)(zc_log_severity_t severity, const z_loaned_string_t *msg, void *context);
 typedef void(*zc_closure_matching_status_callback_t)(const zc_matching_status_t *matching_status, void *context);
 
-#define z_closure(this_, call, drop, context) \
+#define __z_closure_inner(this_, call, drop, context) \
     _Generic((this_), \
         z_owned_closure_hello_t* : z_closure_hello, \
         z_owned_closure_query_t* : z_closure_query, \
@@ -465,6 +465,11 @@ typedef void(*zc_closure_matching_status_callback_t)(const zc_matching_status_t 
         zc_owned_closure_log_t* : zc_closure_log, \
         zc_owned_closure_matching_status_t* : zc_closure_matching_status \
     )(this_, call, drop, context)
+#define __z_closure2(this_, call) __z_closure_inner(this_, call, NULL, NULL)
+#define __z_closure3(this_, call, drop) __z_closure_inner(this_, call, drop, NULL)
+#define __z_closure4(this_, call, drop, context) __z_closure_inner(this_, call, drop, context)
+#define __z_closure_invoke(this_, call, drop, context, CALL, ...) CALL
+#define z_closure(...) __z_closure_invoke(__VA_ARGS__, __z_closure4, __z_closure3, __z_closure2)(__VA_ARGS__)
 
 #define z_try_recv(this_, query) \
     _Generic((this_), \
@@ -1050,31 +1055,31 @@ extern "C" using zc_closure_log_callback_t = void(zc_log_severity_t severity, co
 extern "C" using zc_closure_matching_status_callback_t = void(const zc_matching_status_t *matching_status, void *context);
 
 inline void z_closure(z_owned_closure_hello_t* this_, z_closure_hello_callback_t* call,
-    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_drop_callback_t* drop = NULL, void* context = NULL) {
     z_closure_hello(this_, call, drop, context);
 };
 inline void z_closure(z_owned_closure_query_t* this_, z_closure_query_callback_t* call,
-    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_drop_callback_t* drop = NULL, void* context = NULL) {
     z_closure_query(this_, call, drop, context);
 };
 inline void z_closure(z_owned_closure_reply_t* this_, z_closure_reply_callback_t* call,
-    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_drop_callback_t* drop = NULL, void* context = NULL) {
     z_closure_reply(this_, call, drop, context);
 };
 inline void z_closure(z_owned_closure_sample_t* this_, z_closure_sample_callback_t* call,
-    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_drop_callback_t* drop = NULL, void* context = NULL) {
     z_closure_sample(this_, call, drop, context);
 };
 inline void z_closure(z_owned_closure_zid_t* this_, z_closure_zid_callback_t* call,
-    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_drop_callback_t* drop = NULL, void* context = NULL) {
     z_closure_zid(this_, call, drop, context);
 };
 inline void z_closure(zc_owned_closure_log_t* this_, zc_closure_log_callback_t* call,
-    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_drop_callback_t* drop = NULL, void* context = NULL) {
     zc_closure_log(this_, call, drop, context);
 };
 inline void z_closure(zc_owned_closure_matching_status_t* this_, zc_closure_matching_status_callback_t* call,
-    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_drop_callback_t* drop = NULL, void* context = NULL) {
     zc_closure_matching_status(this_, call, drop, context);
 };
 
