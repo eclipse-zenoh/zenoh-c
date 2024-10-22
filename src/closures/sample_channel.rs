@@ -25,7 +25,9 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
 };
 decl_c_type!(
@@ -109,8 +111,7 @@ pub unsafe extern "C" fn z_fifo_handler_sample_loan(
 pub unsafe extern "C" fn z_fifo_handler_sample_loan_mut(
     this: &mut z_owned_fifo_handler_sample_t,
 ) -> &mut z_loaned_fifo_handler_sample_t {
-    this.as_rust_type_mut()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Takes ownership of the mutably borrowed fifo_handler_sample
@@ -119,7 +120,8 @@ pub extern "C" fn z_fifo_handler_sample_take_loaned(
     dst: &mut MaybeUninit<z_owned_fifo_handler_sample_t>,
     src: &mut z_loaned_fifo_handler_sample_t,
 ) {
-    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
@@ -237,8 +239,7 @@ pub unsafe extern "C" fn z_ring_handler_sample_loan(
 pub unsafe extern "C" fn z_ring_handler_sample_loan_mut(
     this: &mut z_owned_ring_handler_sample_t,
 ) -> &mut z_loaned_ring_handler_sample_t {
-    this.as_rust_type_mut()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Takes ownership of the mutably borrowed handler
@@ -247,7 +248,8 @@ pub extern "C" fn z_ring_handler_sample_take_loaned(
     dst: &mut MaybeUninit<z_owned_ring_handler_sample_t>,
     src: &mut z_loaned_ring_handler_sample_t,
 ) {
-    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until

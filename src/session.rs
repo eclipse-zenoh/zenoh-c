@@ -21,7 +21,9 @@ use crate::z_loaned_shm_client_storage_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
-    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_moved_config_t, z_moved_session_t,
 };
 decl_c_type!(
@@ -43,10 +45,10 @@ pub unsafe extern "C" fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_
 /// Mutably borrows session.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_session_loan_mut(this_: &mut z_owned_session_t) -> &mut z_loaned_session_t {
-    this_
-        .as_rust_type_mut()
-        .as_loaned_c_type_mut()
+pub unsafe extern "C" fn z_session_loan_mut(
+    this_: &mut z_owned_session_t,
+) -> &mut z_loaned_session_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Takes ownership of the mutably borrowed session
@@ -55,7 +57,8 @@ pub extern "C" fn z_session_take_loaned(
     dst: &mut MaybeUninit<z_owned_session_t>,
     src: &mut z_loaned_session_t,
 ) {
-    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Constructs a Zenoh session in its gravestone state.
@@ -167,7 +170,9 @@ pub extern "C" fn z_close(
     session: &mut z_loaned_session_t,
     _options: Option<&z_close_options_t>,
 ) -> result::z_result_t {
-    let s = session.as_rust_type_mut();
+    let Some(s) = session.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
     match s.close().wait() {
         Err(e) => {
             tracing::error!("Error closing session: {}", e);

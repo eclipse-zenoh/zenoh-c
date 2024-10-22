@@ -174,7 +174,8 @@ pub extern "C" fn z_encoding_take_loaned(
     dst: &mut MaybeUninit<z_owned_encoding_t>,
     src: &mut z_loaned_encoding_t,
 ) {
-    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Constructs an owned copy of the encoding in provided uninitilized memory location.

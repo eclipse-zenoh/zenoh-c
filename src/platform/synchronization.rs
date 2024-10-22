@@ -61,7 +61,8 @@ pub extern "C" fn z_mutex_take_loaned(
     dst: &mut MaybeUninit<z_owned_mutex_t>,
     src: &mut z_loaned_mutex_t,
 ) {
-    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.

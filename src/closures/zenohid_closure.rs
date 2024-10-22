@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_id_t,
 };
 /// @brief A zenoh id-processing closure.
@@ -130,12 +130,6 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
 pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
     closure.as_loaned_c_type_ref()
 }
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Borrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_zid_loan_mut(closure: &mut z_owned_closure_zid_t) -> &mut z_loaned_closure_zid_t {
-    closure.as_loaned_c_type_mut()
-}
 
 /// Takes ownership of the mutably borrowed closure
 #[no_mangle]
@@ -149,9 +143,9 @@ pub extern "C" fn z_closure_zid_take_loaned(
 /// @brief Mutably borrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_loan_mut(
-    closure: &z_owned_closure_zid_t,
-) -> &z_loaned_closure_zid_t {
-    closure.as_loaned_c_type_ref()
+    closure: &mut z_owned_closure_zid_t,
+) -> &mut z_loaned_closure_zid_t {
+    closure.as_loaned_c_type_mut()
 }
 
 /// @brief Constructs closure.

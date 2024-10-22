@@ -32,7 +32,9 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CString,
     CStringOwned,
@@ -87,7 +89,8 @@ pub extern "C" fn z_bytes_take_loaned(
     dst: &mut MaybeUninit<z_owned_bytes_t>,
     src: &mut z_loaned_bytes_t,
 ) {
-    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Returns ``true`` if `this_` is empty, ``false`` otherwise.
@@ -648,10 +651,7 @@ pub unsafe extern "C" fn z_bytes_writer_loan(
 pub unsafe extern "C" fn z_bytes_writer_loan_mut(
     this: &mut z_owned_bytes_writer_t,
 ) -> &mut z_loaned_bytes_writer_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Constructs a writer in a gravestone state.
@@ -684,7 +684,10 @@ unsafe extern "C" fn z_bytes_writer_write_all(
     src: *const u8,
     len: usize,
 ) -> z_result_t {
-    match this.as_rust_type_mut().write_all(from_raw_parts(src, len)) {
+    let Some(writer) = this.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
+    match writer.write_all(from_raw_parts(src, len)) {
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,
     }
@@ -700,6 +703,9 @@ extern "C" fn z_bytes_writer_append(
     this: &mut z_loaned_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    this.as_rust_type_mut().append(bytes.take_rust_type());
+    let Some(writer) = this.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
+    writer.append(bytes.take_rust_type());
     result::Z_OK
 }

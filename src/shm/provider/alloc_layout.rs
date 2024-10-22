@@ -104,7 +104,8 @@ pub extern "C" fn z_alloc_layout_take_loaned(
     dst: &mut MaybeUninit<z_owned_alloc_layout_t>,
     src: &mut z_loaned_alloc_layout_t,
 ) {
-    dst.as_rust_type_mut_uninit().write(std::mem::take(src.as_rust_type_mut()));
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Deletes Alloc Layout
