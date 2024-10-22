@@ -86,9 +86,11 @@ jobs:
       - id: build
         run: |
           mkdir -p build  && cd build
-          cmake ..
-          BUILD_TYPE=RELEASE make
-          cpack
+          cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
+          make
+          cpack -G ZIP
+          cpack -G DEB
+          cpack -G RPM
 
       - name: Upload library archive
         uses: actions/upload-artifact@v4
