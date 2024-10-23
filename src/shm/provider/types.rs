@@ -24,9 +24,8 @@ use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
     shm::buffer::zshmmut::z_internal_shm_mut_null,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
-    z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t,
-    z_moved_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
-    z_owned_shm_mut_t,
+    z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t, z_moved_memory_layout_t,
+    z_owned_chunk_alloc_result_t, z_owned_memory_layout_t, z_owned_shm_mut_t,
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
