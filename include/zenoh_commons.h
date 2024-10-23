@@ -1596,14 +1596,6 @@ const z_loaned_chunk_alloc_result_t *z_chunk_alloc_result_loan(const z_owned_chu
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Mutably borrows Chunk Alloc Result.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_loaned_chunk_alloc_result_t *z_chunk_alloc_result_loan_mut(z_owned_chunk_alloc_result_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Creates a new Chunk Alloc Result with Error value.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -1619,14 +1611,6 @@ void z_chunk_alloc_result_new_error(z_owned_chunk_alloc_result_t *this_,
 ZENOHC_API
 z_result_t z_chunk_alloc_result_new_ok(z_owned_chunk_alloc_result_t *this_,
                                        struct z_allocated_chunk_t allocated_chunk);
-#endif
-/**
- * Takes ownership of the mutably borrowed Chunk Alloc Result.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_chunk_alloc_result_take_loaned(z_owned_chunk_alloc_result_t *dst,
-                                      z_loaned_chunk_alloc_result_t *src);
 #endif
 /**
  * Get number of milliseconds passed since creation of `time`.
@@ -3265,14 +3249,6 @@ const z_loaned_memory_layout_t *z_memory_layout_loan(const z_owned_memory_layout
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Mutably borrows Memory Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_loaned_memory_layout_t *z_memory_layout_loan_mut(z_owned_memory_layout_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Creates a new Memory Layout.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -3280,14 +3256,6 @@ ZENOHC_API
 z_result_t z_memory_layout_new(z_owned_memory_layout_t *this_,
                                size_t size,
                                struct z_alloc_alignment_t alignment);
-#endif
-/**
- * Takes ownership of the mutably borrowed Memory Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_memory_layout_take_loaned(z_owned_memory_layout_t *dst,
-                                 z_loaned_memory_layout_t *src);
 #endif
 /**
  * Drops mutex and resets it to its gravestone state.
@@ -4484,7 +4452,7 @@ const z_loaned_source_info_t *z_source_info_loan(const z_owned_source_info_t *th
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const z_loaned_source_info_t *z_source_info_loan_mut(const z_owned_source_info_t *this_);
+z_loaned_source_info_t *z_source_info_loan_mut(z_owned_source_info_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

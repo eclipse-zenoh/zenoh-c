@@ -37,7 +37,9 @@ use crate::{
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
         provider::types::z_buf_layout_alloc_result_t,
     },
-    transmute::{LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
@@ -129,10 +131,7 @@ pub unsafe extern "C" fn z_shm_provider_loan(
 pub unsafe extern "C" fn z_shm_provider_loan_mut(
     this: &mut z_owned_shm_provider_t,
 ) -> &mut z_loaned_shm_provider_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Takes ownership of the mutably borrowed SHM Provider

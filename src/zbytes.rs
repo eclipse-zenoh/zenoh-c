@@ -215,10 +215,12 @@ pub unsafe extern "C" fn z_bytes_to_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_result_t {
+    use crate::transmute::LoanedCTypeMutUnsafe;
+
     let payload = this.as_rust_type_mut();
     match payload.as_shm_mut() {
         Some(s) => {
-            dst.write(s.as_loaned_c_type_mut());
+            dst.write(s.as_loaned_c_type_mut_unsafe());
             result::Z_OK
         }
         None => {

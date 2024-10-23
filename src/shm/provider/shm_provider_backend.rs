@@ -22,7 +22,7 @@ use zenoh::shm::{
 use super::chunk::z_chunk_descriptor_t;
 use crate::{
     context::DroppableContext,
-    transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeMut},
     z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
 };
 

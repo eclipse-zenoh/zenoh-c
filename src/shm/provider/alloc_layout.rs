@@ -28,7 +28,9 @@ use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute::{LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
     z_owned_alloc_layout_t,
 };
@@ -92,10 +94,7 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 pub unsafe extern "C" fn z_alloc_layout_loan_mut(
     this: &mut z_owned_alloc_layout_t,
 ) -> &mut z_loaned_alloc_layout_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Takes ownership of the mutably borrowed Alloc Layout

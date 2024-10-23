@@ -21,7 +21,8 @@ use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{
     transmute::{
-        LoanedCTypeMut, LoanedCTypeMutUnsafe, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType
+        LoanedCTypeMut, LoanedCTypeMutUnsafe, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit,
+        RustTypeRef, TakeRustType,
     },
     z_loaned_shm_mut_t, z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t,
 };
@@ -122,7 +123,9 @@ pub extern "C" fn z_shm_drop(this_: &mut z_moved_shm_t) {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice.
 #[no_mangle]
-pub unsafe extern "C" fn z_shm_try_reloan_mut(this_: &mut z_loaned_shm_t) -> *mut z_loaned_shm_mut_t {
+pub unsafe extern "C" fn z_shm_try_reloan_mut(
+    this_: &mut z_loaned_shm_t,
+) -> *mut z_loaned_shm_mut_t {
     let Some(this) = this_.as_rust_type_mut() else {
         return std::ptr::null_mut();
     };

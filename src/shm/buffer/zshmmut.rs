@@ -12,16 +12,15 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{
-    borrow::{Borrow, BorrowMut},
-    mem::MaybeUninit,
-};
+use std::{borrow::Borrow, mem::MaybeUninit};
 
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_shm_mut_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 
@@ -93,12 +92,7 @@ pub unsafe extern "C" fn z_shm_mut_loan(this_: &z_owned_shm_mut_t) -> &z_loaned_
 pub unsafe extern "C" fn z_shm_mut_loan_mut(
     this: &mut z_owned_shm_mut_t,
 ) -> &mut z_loaned_shm_mut_t {
-    let shmmut: &mut zshmmut = this
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .borrow_mut();
-    shmmut.as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Takes ownership of the mutably borrowed shm_mut
@@ -136,6 +130,10 @@ pub extern "C" fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_u
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the mutable pointer to the underlying data.
 #[no_mangle]
-pub extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
-    this_.as_rust_type_mut().as_mut().as_mut_ptr()
+pub unsafe extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_mut_ptr()
 }

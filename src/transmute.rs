@@ -36,11 +36,11 @@ pub(crate) trait LoanedCTypeMutUnsafe: Sized {
     type LoanedCType;
     // Sometimes it's known that the value of type `&mut Foo` is actually
     // points to the `Foo` inside the `&mut Option<Foo>`.
-    // Therefore it's safe to convert this `&mut Foo` to 
+    // Therefore it's safe to convert this `&mut Foo` to
     // `z_foo_loaned_mut_t*` (which is converted back to
     // Rust type as `&mut Option<Foo>`).
-    // 
-    // Obviously this trait should be implemented only if 
+    //
+    // Obviously this trait should be implemented only if
     // `validate_equivalence!(Foo, Option<Foo>)` is satisfied.
     unsafe fn as_loaned_c_type_mut_unsafe(&mut self) -> &mut Self::LoanedCType;
 }
