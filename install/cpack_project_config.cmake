@@ -1,5 +1,19 @@
 if(CPACK_GENERATOR MATCHES "DEB")
     # DEB package
+<<<<<<< HEAD
+||||||| parent of e85200e2 (fix: set debarch according to target not host)
+    if(NOT DEBARCH)
+        execute_process(
+        COMMAND dpkg --print-architecture
+        OUTPUT_VARIABLE DEBARCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    endif()
+=======
+    if(NOT DEBARCH)
+        set(DEBARCH ${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR})
+    endif()
+>>>>>>> e85200e2 (fix: set debarch according to target not host)
     message(STATUS "Configure DEB packaging for Linux ${DEBARCH}")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "ZettaScale Zenoh Team, <zenoh@zettascale.tech>")
     set(CPACK_DEB_COMPONENT_INSTALL ON)
