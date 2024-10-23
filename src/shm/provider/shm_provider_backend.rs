@@ -74,9 +74,7 @@ where
             );
             match result.assume_init().as_rust_type_mut().take() {
                 Some(val) => val,
-                None => Err(zenoh::shm::ZAllocError::Other(
-                    "Callback returned empty result".into(),
-                )),
+                None => Err(zenoh::shm::ZAllocError::Other),
             }
         }
     }

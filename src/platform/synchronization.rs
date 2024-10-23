@@ -258,7 +258,7 @@ pub extern "C" fn z_internal_task_check(this_: &z_owned_task_t) -> bool {
 }
 
 struct FunArgPair {
-    fun: unsafe extern "C" fn(arg: *mut c_void),
+    fun: unsafe extern "C" fn(arg: *mut c_void) -> *mut c_void,
     arg: *mut c_void,
 }
 
@@ -281,7 +281,7 @@ unsafe impl Send for FunArgPair {}
 pub unsafe extern "C" fn z_task_init(
     this: &mut MaybeUninit<z_owned_task_t>,
     _attr: *const z_task_attr_t,
-    fun: unsafe extern "C" fn(arg: *mut c_void),
+    fun: unsafe extern "C" fn(arg: *mut c_void) -> *mut c_void,
     arg: *mut c_void,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();

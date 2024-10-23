@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build && cd build 
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
+          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target install --config Release
 
       - name: Install valgrind
@@ -63,7 +63,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
+          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_static)"
 
@@ -71,14 +71,14 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_TESTS_WITH_CXX=TRUE -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
+          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_TESTS_WITH_CXX=TRUE -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Debug
 
       - name: Run cmake tests with zenoh-c as static library
         shell: bash
         run: |
           cd build
-          cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
+          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DZENOHC_BUILD_TESTS_WITH_CXX=FALSE -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_shared)"
 
@@ -92,7 +92,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p ../build_examples
-          cmake -S examples -B ../build_examples -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=OFF
+          cmake -S examples -B ../build_examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=OFF
           cmake --build ../build_examples --config Debug
           rm -rf ../build_examples
 
@@ -100,7 +100,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build_examples && cd build_examples
-          cmake ../examples -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE=PACKAGE
+          cmake ../examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE=PACKAGE
           cmake --build . --config Release
           cd .. && rm -rf build_examples
 

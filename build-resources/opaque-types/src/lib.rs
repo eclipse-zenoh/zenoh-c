@@ -314,9 +314,6 @@ get_opaque_type_data!(MemoryLayout, z_loaned_memory_layout_t);
 /// @brief An owned ChunkAllocResult.
 get_opaque_type_data!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A loaned ChunkAllocResult.
-get_opaque_type_data!(ChunkAllocResult, z_loaned_chunk_alloc_result_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

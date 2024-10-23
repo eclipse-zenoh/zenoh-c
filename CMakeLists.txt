@@ -34,16 +34,15 @@ declare_cache_var(ZENOHC_CUSTOM_TARGET "" STRING "Rust target for cross compilat
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")
+declare_cache_var(ZENOHC_TREAT_WARNING_AS_ERROR OFF BOOL "Whether to treat compilation warnings as errors")
+set(CMAKE_COMPILE_WARNING_AS_ERROR ${ZENOHC_TREAT_WARNING_AS_ERROR})
 
-#
-# Setup project version
-#
 set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-if(NOT DEFINED PROJECT_VERSION_TWEAK)
+if(PROJECT_VERSION_TWEAK STREQUAL "")
 	set(project_version "${project_version}")
 elseif(PROJECT_VERSION_TWEAK EQUAL 0)
 	set(project_version "${project_version}-dev")
-elseif(PROJECT_VERSION_TWEAK GREATER 1)
+elseif(PROJECT_VERSION_TWEAK GREATER 0)
 	set(project_version "${project_version}-pre.${PROJECT_VERSION_TWEAK}")
 endif()
 status_print(project_version)

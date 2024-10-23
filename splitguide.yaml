@@ -79,7 +79,6 @@ zenoh_opaque.h:
   - z_owned_memory_layout_t!#shared-memory#unstable
   - z_loaned_memory_layout_t!#shared-memory#unstable
   - z_owned_chunk_alloc_result_t!#shared-memory#unstable
-  - z_loaned_chunk_alloc_result_t!#shared-memory#unstable
   - z_owned_shm_t!#shared-memory#unstable
   - z_loaned_shm_t!#shared-memory#unstable
   - z_owned_shm_mut_t!#shared-memory#unstable
