@@ -114,7 +114,7 @@ jobs:
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'armv7-unknown-linux-gnueabihf'}}
-        run: sudo apt-get install -y gcc-arm-linux-gnueabihf
+        run: sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-armhf-cross libc6-dev-armhf-cross
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'aarch64-unknown-linux-gnu'}}
