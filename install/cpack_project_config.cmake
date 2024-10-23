@@ -1,11 +1,7 @@
 if(CPACK_GENERATOR MATCHES "DEB")
     # DEB package
     if(NOT DEBARCH)
-        execute_process(
-        COMMAND dpkg --print-architecture
-        OUTPUT_VARIABLE DEBARCH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
+        set(DEBARCH ${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR})
     endif()
     message(STATUS "Configure DEB packaging for Linux ${DEBARCH}")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "ZettaScale Zenoh Team, <zenoh@zettascale.tech>")
