@@ -123,6 +123,7 @@ pub extern "C" fn z_shm_drop(this_: &mut z_moved_shm_t) {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_try_reloan_mut(
     this_: &mut z_loaned_shm_t,
 ) -> *mut z_loaned_shm_mut_t {
