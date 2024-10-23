@@ -130,6 +130,7 @@ pub extern "C" fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_u
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the mutable pointer to the underlying data.
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
     this_
         .as_rust_type_mut()
