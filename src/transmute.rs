@@ -32,6 +32,20 @@ pub(crate) trait LoanedCTypeRef: Sized {
     fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType;
 }
 #[allow(dead_code)]
+pub(crate) trait LoanedCTypeMutUnsafe: Sized {
+    type LoanedCType;
+    // Sometimes it's known that the value of type `&mut Foo` is actually
+    // points to the `Foo` inside the `&mut Option<Foo>`.
+    // Therefore it's safe to convert this `&mut Foo` to 
+    // `z_foo_loaned_mut_t*` (which is converted back to
+    // Rust type as `&mut Option<Foo>`).
+    // 
+    // Obviously this trait should be implemented only if 
+    // `validate_equivalence!(Foo, Option<Foo>)` is satisfied.
+    unsafe fn as_loaned_c_type_mut_unsafe(&mut self) -> &mut Self::LoanedCType;
+}
+
+#[allow(dead_code)]
 pub(crate) trait LoanedCTypeMut: Sized {
     type LoanedCType;
     fn as_loaned_c_type_mut(&mut self) -> &mut Self::LoanedCType;
@@ -161,6 +175,15 @@ macro_rules! impl_transmute {
             type LoanedCType = $c_type;
             fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType {
                 unsafe { &*(self as *const Self as *const Self::LoanedCType) }
+            }
+        }
+    };
+    (as_c_loaned_mut_unsafe ($rust_type:ty, $c_type:ty)) => {
+        validate_equivalence!($rust_type, $c_type);
+        impl $crate::transmute::LoanedCTypeMutUnsafe for $rust_type {
+            type LoanedCType = $c_type;
+            unsafe fn as_loaned_c_type_mut_unsafe(&mut self) -> &mut Self::LoanedCType {
+                unsafe { &mut *(self as *mut Self as *mut Self::LoanedCType) }
             }
         }
     };
@@ -417,6 +440,7 @@ macro_rules! decl_c_type {
      $(,)?) => {
         impl_owned!(owned $c_owned_type, rust option $rust_inner_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut_unsafe($rust_inner_type, $c_loaned_type));
         impl_transmute!(as_c_loaned_mut(Option<$rust_inner_type>, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
         impl_transmute!(as_rust_mut($c_loaned_type, Option<$rust_inner_type>));
@@ -426,6 +450,7 @@ macro_rules! decl_c_type {
      $(,)?) => {
         impl_owned!(owned $c_owned_type, rust $rust_owned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut_unsafe($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_c_loaned_mut($rust_owned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
         impl_transmute!(as_rust_mut($c_loaned_type, $rust_owned_type));

@@ -21,13 +21,13 @@ use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{
     transmute::{
-        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+        LoanedCTypeMut, LoanedCTypeMutUnsafe, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType
     },
     z_loaned_shm_mut_t, z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t,
 };
 
 decl_c_type!(
-    owned(z_owned_shm_t, option ZShm),
+    owned(z_owned_shm_t, Option<ZShm>),
     loaned(z_loaned_shm_t, zshm),
 );
 
@@ -99,14 +99,14 @@ pub extern "C" fn z_shm_take_loaned(
 /// @brief Mutably borrows ZShm slice as borrowed ZShmMut slice.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_try_mut(this_: &mut z_owned_shm_t) -> &mut z_loaned_shm_mut_t {
+pub unsafe extern "C" fn z_shm_try_mut(this_: &mut z_owned_shm_t) -> *mut z_loaned_shm_mut_t {
     let this = this_.as_rust_type_mut();
     let this: &mut ZShm = this.as_mut().unwrap_unchecked();
     let shm: &mut zshm = this.borrow_mut();
     match shm.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as_loaned_c_type_mut()
+            v.as_loaned_c_type_mut_unsafe()
         }
         Err(_) => std::ptr::null_mut(),
     }
@@ -122,12 +122,14 @@ pub extern "C" fn z_shm_drop(this_: &mut z_moved_shm_t) {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice.
 #[no_mangle]
-pub extern "C" fn z_shm_try_reloan_mut(this_: &mut z_loaned_shm_t) -> *mut z_loaned_shm_mut_t {
-    let this = this_.as_rust_type_mut();
+pub unsafe extern "C" fn z_shm_try_reloan_mut(this_: &mut z_loaned_shm_t) -> *mut z_loaned_shm_mut_t {
+    let Some(this) = this_.as_rust_type_mut() else {
+        return std::ptr::null_mut();
+    };
     match this.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as_loaned_c_type_mut()
+            v.as_loaned_c_type_mut_unsafe()
         }
         Err(_) => std::ptr::null_mut(),
     }
