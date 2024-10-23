@@ -59,7 +59,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_alloc_layout_t : z_alloc_layout_loan, \
         z_owned_bytes_t : z_bytes_loan, \
         z_owned_bytes_writer_t : z_bytes_writer_loan, \
-        z_owned_chunk_alloc_result_t : z_chunk_alloc_result_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
         z_owned_closure_query_t : z_closure_query_loan, \
         z_owned_closure_reply_t : z_closure_reply_loan, \
@@ -560,7 +559,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
 inline const z_loaned_alloc_layout_t* z_loan(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_loan(&this_); };
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
 inline const z_loaned_bytes_writer_t* z_loan(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan(&this_); };
-inline const z_loaned_chunk_alloc_result_t* z_loan(const z_owned_chunk_alloc_result_t& this_) { return z_chunk_alloc_result_loan(&this_); };
 inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t& closure) { return z_closure_hello_loan(&closure); };
 inline const z_loaned_closure_query_t* z_loan(const z_owned_closure_query_t& closure) { return z_closure_query_loan(&closure); };
 inline const z_loaned_closure_reply_t* z_loan(const z_owned_closure_reply_t& closure) { return z_closure_reply_loan(&closure); };
@@ -1170,8 +1168,6 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_t> { typedef z_owned_b
 template<> struct z_owned_to_loaned_type_t<z_owned_bytes_t> { typedef z_loaned_bytes_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_writer_t> { typedef z_owned_bytes_writer_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_bytes_writer_t> { typedef z_loaned_bytes_writer_t type; };
-template<> struct z_loaned_to_owned_type_t<z_loaned_chunk_alloc_result_t> { typedef z_owned_chunk_alloc_result_t type; };
-template<> struct z_owned_to_loaned_type_t<z_owned_chunk_alloc_result_t> { typedef z_loaned_chunk_alloc_result_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_hello_t> { typedef z_owned_closure_hello_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_hello_t> { typedef z_loaned_closure_hello_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_query_t> { typedef z_owned_closure_query_t type; };

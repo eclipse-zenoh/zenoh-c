@@ -14,12 +14,9 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::{
-    internal::zerror,
-    shm::{
-        AllocAlignment, BufAllocResult, BufLayoutAllocResult, ChunkAllocResult, MemoryLayout,
-        ZAllocError, ZLayoutError,
-    },
+use zenoh::shm::{
+    AllocAlignment, BufAllocResult, BufLayoutAllocResult, ChunkAllocResult, MemoryLayout,
+    ZAllocError, ZLayoutError,
 };
 
 use super::chunk::z_allocated_chunk_t;
@@ -27,9 +24,8 @@ use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
     shm::buffer::zshmmut::z_internal_shm_mut_null,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_loaned_chunk_alloc_result_t, z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t,
-    z_moved_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
-    z_owned_shm_mut_t,
+    z_loaned_memory_layout_t, z_moved_chunk_alloc_result_t, z_moved_memory_layout_t,
+    z_owned_chunk_alloc_result_t, z_owned_memory_layout_t, z_owned_shm_mut_t,
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -51,7 +47,7 @@ impl From<ZAllocError> for z_alloc_error_t {
         match value {
             ZAllocError::NeedDefragment => z_alloc_error_t::NEED_DEFRAGMENT,
             ZAllocError::OutOfMemory => z_alloc_error_t::OUT_OF_MEMORY,
-            ZAllocError::Other(_) => z_alloc_error_t::OTHER,
+            ZAllocError::Other => z_alloc_error_t::OTHER,
         }
     }
 }
@@ -62,7 +58,7 @@ impl From<z_alloc_error_t> for ZAllocError {
         match value {
             z_alloc_error_t::NEED_DEFRAGMENT => ZAllocError::NeedDefragment,
             z_alloc_error_t::OUT_OF_MEMORY => ZAllocError::OutOfMemory,
-            z_alloc_error_t::OTHER => ZAllocError::Other(zerror!("other error").into()),
+            z_alloc_error_t::OTHER => ZAllocError::Other,
         }
     }
 }
@@ -194,7 +190,6 @@ pub extern "C" fn z_memory_layout_get_data(
 
 decl_c_type!(
     owned(z_owned_chunk_alloc_result_t, option ChunkAllocResult),
-    loaned(z_loaned_chunk_alloc_result_t),
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -240,19 +235,6 @@ pub extern "C" fn z_internal_chunk_alloc_result_check(
     this_: &z_owned_chunk_alloc_result_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
-}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Borrows Chunk Alloc Result.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_chunk_alloc_result_loan(
-    this: &z_owned_chunk_alloc_result_t,
-) -> &z_loaned_chunk_alloc_result_t {
-    this.as_rust_type_ref()
-        .as_ref()
-        .unwrap_unchecked()
-        .as_loaned_c_type_ref()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
