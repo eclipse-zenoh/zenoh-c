@@ -1,11 +1,7 @@
 if(CPACK_GENERATOR MATCHES "DEB")
     # DEB package
-    if(NOT DEBARCH)
-        set(DEBARCH ${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR})
-    endif()
     message(STATUS "Configure DEB packaging for Linux ${DEBARCH}")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "ZettaScale Zenoh Team, <zenoh@zettascale.tech>")
-    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${DEBARCH})
     set(CPACK_DEB_COMPONENT_INSTALL ON)
     set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     set(CPACK_DEBIAN_LIB_PACKAGE_NAME lib${CPACK_PACKAGE_NAME})
