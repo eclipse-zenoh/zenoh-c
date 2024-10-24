@@ -99,7 +99,9 @@ jobs:
           token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
       - name: Add rust toolchain
-        run: rustup target add ${{ matrix.build.target }}
+        run: |
+          rustup target add ${{ matrix.build.target }}
+          rustup set default-host ${{ matrix.build.target }}
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'x86_64-unknown-linux-musl'}}
@@ -123,15 +125,6 @@ jobs:
       - name: Install build deps
         if: ${{ matrix.build.target == 'aarch64-unknown-linux-musl'}}
         run: sudo apt-get install -y musl-tools
-
-      # FIXME: not sure what deps are missing on windows
-      #- name: Install build deps
-      #  if: ${{ matrix.build.target == 'x86_64-pc-windows-msvc'}}
-      #  run: apt install -y
-
-      #- name: Install build deps
-      #  if: ${{ matrix.build.target == 'x86_64-pc-windows-gnu'}}
-      #  run: apt install -y
 
       - id: build
         run: |
