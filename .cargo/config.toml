@@ -4,6 +4,7 @@ linker = "x86_64-linux-musl-gcc"
 
 [target.aarch64-unknown-linux-musl]
 rustflags = "-Ctarget-feature=-crt-static"
+<<<<<<< HEAD
 linker = "aarch64-linux-musl-gcc"
 
 [target.arm-unknown-linux-gnueabihf]
@@ -26,3 +27,9 @@ linker = "x86_64-w64-mingw32-gcc"
 
 
 
+||||||| parent of d9032ef3 (add sample toolchains and fix library names)
+=======
+
+[target.armv7-unknown-linux-gnueabihf]
+linker = "armv7-linux-gnueabihf-gcc"
+>>>>>>> d9032ef3 (add sample toolchains and fix library names)
