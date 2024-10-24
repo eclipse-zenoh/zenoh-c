@@ -18,7 +18,9 @@ use zenoh::config::{Config, WhatAmI};
 
 use crate::{
     result::{self, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
 };
 
@@ -73,18 +75,29 @@ decl_c_type!(
 
 /// Borrows config.
 #[no_mangle]
-pub extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &z_loaned_config_t {
-    let this = this_.as_rust_type_ref();
-    let this = unsafe { this.as_ref().unwrap_unchecked() };
-    this.as_loaned_c_type_ref()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &z_loaned_config_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// Mutably borrows config.
 #[no_mangle]
 pub extern "C" fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t {
-    let this = this_.as_rust_type_mut();
-    let this = unsafe { this.as_mut().unwrap_unchecked() };
-    this.as_loaned_c_type_mut()
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed config.
+#[no_mangle]
+pub extern "C" fn z_config_take_loaned(
+    dst: &mut MaybeUninit<z_owned_config_t>,
+    src: &mut z_loaned_config_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Constructs a new empty configuration.
@@ -192,7 +205,9 @@ pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
     value: *const c_char,
     value_len: usize,
 ) -> result::z_result_t {
-    let config = this.as_rust_type_mut();
+    let Some(config) = this.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(e) => {
@@ -230,7 +245,7 @@ pub extern "C" fn z_config_drop(this_: &mut z_moved_config_t) {
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_internal_config_check(this_: &z_owned_config_t) -> bool {
+pub extern "C" fn z_config_check(this_: &z_owned_config_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

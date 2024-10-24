@@ -35,7 +35,10 @@ use crate::transmute::IntoCType;
 use crate::z_moved_source_info_t;
 use crate::{
     result,
-    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        CTypeRef, LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef,
+        TakeRustType,
+    },
     z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 
@@ -195,7 +198,7 @@ pub extern "C" fn z_sample_reliability(this_: &z_loaned_sample_t) -> z_reliabili
 
 /// Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_sample_check(this_: &z_owned_sample_t) -> bool {
+pub extern "C" fn z_sample_check(this_: &z_owned_sample_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -208,6 +211,22 @@ pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sa
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// Mutably borrows sample.
+#[no_mangle]
+pub extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed sample.
+#[no_mangle]
+pub extern "C" fn z_sample_take_loaned(
+    dst: &mut MaybeUninit<z_owned_sample_t>,
+    src: &mut z_loaned_sample_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
@@ -584,7 +603,7 @@ pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u32 {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
+pub extern "C" fn z_source_info_check(this_: &z_owned_source_info_t) -> bool {
     this_.as_rust_type_ref().source_id().is_some() || this_.as_rust_type_ref().source_sn().is_some()
 }
 
@@ -594,6 +613,28 @@ pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) ->
 #[no_mangle]
 pub extern "C" fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_info_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Borrows source info.
+#[no_mangle]
+pub extern "C" fn z_source_info_loan_mut(
+    this_: &mut z_owned_source_info_t,
+) -> &mut z_loaned_source_info_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Takes ownership of the mutably borrowed source info.
+#[no_mangle]
+pub extern "C" fn z_source_info_take_loaned(
+    dst: &mut MaybeUninit<z_owned_source_info_t>,
+    src: &mut z_loaned_source_info_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 #[cfg(feature = "unstable")]

@@ -40,8 +40,8 @@ void put() {
     opts.attachment = z_move(attachment);
     z_bytes_copy_from_str(&payload, "cde");
     z_put(z_loan(s), z_loan(ke), z_move(payload), &opts);
-    assert(!z_internal_check(payload));
-    assert(!z_internal_check(attachment));
+    assert(!z_check(payload));
+    assert(!z_check(attachment));
     z_drop(z_move(s));
 }
 
@@ -68,8 +68,8 @@ void get() {
     z_closure(&closure, cb, drop, NULL);
 
     z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
-    assert(!z_internal_check(payload));
-    assert(!z_internal_check(attachment));
+    assert(!z_check(payload));
+    assert(!z_check(attachment));
     z_drop(z_move(s));
 }
 

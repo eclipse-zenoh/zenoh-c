@@ -25,14 +25,14 @@
 void test_session() {
     z_owned_config_t config;
     z_config_default(&config);
-    assert(z_internal_check(config));
+    assert(z_check(config));
     z_owned_session_t session;
     z_open(&session, z_move(config), NULL);
-    assert(z_internal_check(session));
+    assert(z_check(session));
     z_drop(z_move(session));
-    assert(!z_internal_check(session));
+    assert(!z_check(session));
     z_drop(z_move(session));
-    assert(!z_internal_check(session));
+    assert(!z_check(session));
 }
 
 void test_publisher() {
@@ -46,11 +46,11 @@ void test_publisher() {
 
     z_owned_publisher_t pub;
     z_declare_publisher(z_loan(s), &pub, z_loan(keyexpr), NULL);
-    assert(z_internal_check(pub));
+    assert(z_check(pub));
     z_drop(z_move(pub));
-    assert(!z_internal_check(pub));
+    assert(!z_check(pub));
     z_drop(z_move(pub));
-    assert(!z_internal_check(pub));
+    assert(!z_check(pub));
     z_drop(z_move(s));
 }
 
@@ -58,21 +58,21 @@ void test_keyexpr() {
     z_owned_keyexpr_t keyexpr;
     z_keyexpr_from_str(&keyexpr, URL);
 
-    assert(z_internal_check(keyexpr));
+    assert(z_check(keyexpr));
     z_drop(z_move(keyexpr));
-    assert(!z_internal_check(keyexpr));
+    assert(!z_check(keyexpr));
     z_drop(z_move(keyexpr));
-    assert(!z_internal_check(keyexpr));
+    assert(!z_check(keyexpr));
 }
 
 void test_config() {
     z_owned_config_t config;
     z_config_default(&config);
-    assert(z_internal_check(config));
+    assert(z_check(config));
     z_drop(z_move(config));
-    assert(!z_internal_check(config));
+    assert(!z_check(config));
     z_drop(z_move(config));
-    assert(!z_internal_check(config));
+    assert(!z_check(config));
 }
 
 void data_handler(z_loaned_sample_t *sample, void *arg) {}
@@ -89,11 +89,11 @@ void test_subscriber() {
     z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_subscriber_t sub;
     z_declare_subscriber(z_loan(s), &sub, z_loan(keyexpr), z_move(callback), NULL);
-    assert(z_internal_check(sub));
+    assert(z_check(sub));
     z_drop(z_move(sub));
-    assert(!z_internal_check(sub));
+    assert(!z_check(sub));
     z_drop(z_move(sub));
-    assert(!z_internal_check(sub));
+    assert(!z_check(sub));
     z_drop(z_move(s));
 }
 
@@ -111,11 +111,11 @@ void test_queryable() {
     z_view_keyexpr_from_str(&keyexpr, URL);
     z_owned_queryable_t queryable;
     z_declare_queryable(z_loan(s), &queryable, z_loan(keyexpr), z_move(callback), NULL);
-    assert(z_internal_check(queryable));
+    assert(z_check(queryable));
     z_drop(z_move(queryable));
-    assert(!z_internal_check(queryable));
+    assert(!z_check(queryable));
     z_drop(z_move(queryable));
-    assert(!z_internal_check(queryable));
+    assert(!z_check(queryable));
     z_drop(z_move(s));
 }
 

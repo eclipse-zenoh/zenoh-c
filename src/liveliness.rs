@@ -24,7 +24,7 @@ use zenoh::{
 use crate::{
     opaque_types::{zc_loaned_liveliness_token_t, zc_owned_liveliness_token_t},
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
     z_owned_subscriber_t, zc_moved_liveliness_token_t,
@@ -46,7 +46,7 @@ pub extern "C" fn zc_internal_liveliness_token_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn zc_internal_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
+pub extern "C" fn zc_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -165,12 +165,10 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
         .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
-                owned_sample
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
+            z_closure_sample_call(
+                z_closure_sample_loan(&callback),
+                owned_sample.as_loaned_c_type_mut(),
+            )
         });
     sub
 }
@@ -269,12 +267,10 @@ pub extern "C" fn zc_liveliness_get(
     let liveliness = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {
         let mut owned_response = Some(response);
-        z_closure_reply_call(z_closure_reply_loan(&callback), unsafe {
-            owned_response
-                .as_mut()
-                .unwrap_unchecked()
-                .as_loaned_c_type_mut()
-        })
+        z_closure_reply_call(
+            z_closure_reply_loan(&callback),
+            owned_response.as_loaned_c_type_mut(),
+        )
     });
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));

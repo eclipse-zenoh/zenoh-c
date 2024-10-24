@@ -19,7 +19,9 @@ use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE}
 use super::common::types::z_protocol_id_t;
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_shm_client_storage_t, z_moved_shm_client_storage_t, z_moved_shm_client_t,
     z_owned_shm_client_storage_t, zc_loaned_shm_client_list_t, zc_moved_shm_client_list_t,
     zc_owned_shm_client_list_t,
@@ -50,7 +52,7 @@ pub extern "C" fn zc_internal_shm_client_list_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn zc_internal_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
+pub extern "C" fn zc_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -81,10 +83,7 @@ pub unsafe extern "C" fn zc_shm_client_list_loan(
 pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
     this: &mut zc_owned_shm_client_list_t,
 ) -> &mut zc_loaned_shm_client_list_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -94,10 +93,13 @@ pub extern "C" fn zc_shm_client_list_add_client(
     id: z_protocol_id_t,
     client: &mut z_moved_shm_client_t,
 ) -> z_result_t {
+    let Some(this) = this.as_rust_type_mut() else {
+        return Z_EINVAL;
+    };
     let Some(client) = client.take_rust_type() else {
         return Z_EINVAL;
     };
-    this.as_rust_type_mut().push((id, client));
+    this.push((id, client));
     Z_OK
 }
 
@@ -173,9 +175,7 @@ pub extern "C" fn z_internal_shm_client_storage_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_internal_shm_client_storage_check(
-    this_: &z_owned_shm_client_storage_t,
-) -> bool {
+pub extern "C" fn z_shm_client_storage_check(this_: &z_owned_shm_client_storage_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -197,4 +197,24 @@ pub unsafe extern "C" fn z_shm_client_storage_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Mutably borrows SHM Client Storage.
+#[no_mangle]
+pub extern "C" fn z_shm_client_storage_loan_mut(
+    this: &mut z_owned_shm_client_storage_t,
+) -> &mut z_loaned_shm_client_storage_t {
+    this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Takes ownership of the mutably borrowed SHM Client Storage.
+#[no_mangle]
+pub extern "C" fn z_shm_client_storage_take_loaned(
+    dst: &mut MaybeUninit<z_owned_shm_client_storage_t>,
+    src: &mut z_loaned_shm_client_storage_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }

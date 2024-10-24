@@ -28,7 +28,9 @@ use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
     z_owned_alloc_layout_t,
 };
@@ -70,7 +72,7 @@ pub extern "C" fn z_internal_alloc_layout_null(this_: &mut MaybeUninit<z_owned_a
 
 /// Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
+pub extern "C" fn z_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -84,6 +86,24 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// Mutably borrows Alloc Layout
+#[no_mangle]
+pub extern "C" fn z_alloc_layout_loan_mut(
+    this: &mut z_owned_alloc_layout_t,
+) -> &mut z_loaned_alloc_layout_t {
+    this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed Alloc Layout
+#[no_mangle]
+pub extern "C" fn z_alloc_layout_take_loaned(
+    dst: &mut MaybeUninit<z_owned_alloc_layout_t>,
+    src: &mut z_loaned_alloc_layout_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Deletes Alloc Layout

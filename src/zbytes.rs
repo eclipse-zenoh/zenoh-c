@@ -32,7 +32,9 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CString,
     CStringOwned,
@@ -65,7 +67,7 @@ extern "C" fn z_bytes_drop(this_: &mut z_moved_bytes_t) {
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
-extern "C" fn z_internal_bytes_check(this: &z_owned_bytes_t) -> bool {
+extern "C" fn z_bytes_check(this: &z_owned_bytes_t) -> bool {
     !this.as_rust_type_ref().is_empty()
 }
 
@@ -79,6 +81,16 @@ unsafe extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
 #[no_mangle]
 extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed bytes
+#[no_mangle]
+pub extern "C" fn z_bytes_take_loaned(
+    dst: &mut MaybeUninit<z_owned_bytes_t>,
+    src: &mut z_loaned_bytes_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Returns ``true`` if `this_` is empty, ``false`` otherwise.
@@ -203,10 +215,12 @@ pub unsafe extern "C" fn z_bytes_to_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_result_t {
+    use crate::transmute::LoanedCTypeMutUnsafe;
+
     let payload = this.as_rust_type_mut();
     match payload.as_shm_mut() {
         Some(s) => {
-            dst.write(s.as_loaned_c_type_mut());
+            dst.write(s.as_loaned_c_type_mut_unsafe());
             result::Z_OK
         }
         None => {
@@ -617,7 +631,7 @@ extern "C" fn z_bytes_writer_drop(this_: &mut z_moved_bytes_writer_t) {
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
-extern "C" fn z_internal_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
+extern "C" fn z_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
     this.as_rust_type_ref().is_some()
 }
 
@@ -635,14 +649,20 @@ pub unsafe extern "C" fn z_bytes_writer_loan(
 
 /// Muatably borrows writer.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_writer_loan_mut(
+pub extern "C" fn z_bytes_writer_loan_mut(
     this: &mut z_owned_bytes_writer_t,
 ) -> &mut z_loaned_bytes_writer_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+    this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed writer
+#[no_mangle]
+pub extern "C" fn z_bytes_writer_take_loaned(
+    dst: &mut MaybeUninit<z_owned_bytes_writer_t>,
+    src: &mut z_loaned_bytes_writer_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Constructs a writer in a gravestone state.
@@ -675,7 +695,10 @@ unsafe extern "C" fn z_bytes_writer_write_all(
     src: *const u8,
     len: usize,
 ) -> z_result_t {
-    match this.as_rust_type_mut().write_all(from_raw_parts(src, len)) {
+    let Some(writer) = this.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
+    match writer.write_all(from_raw_parts(src, len)) {
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,
     }
@@ -691,6 +714,9 @@ extern "C" fn z_bytes_writer_append(
     this: &mut z_loaned_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    this.as_rust_type_mut().append(bytes.take_rust_type());
+    let Some(writer) = this.as_rust_type_mut() else {
+        return result::Z_ENULL;
+    };
+    writer.append(bytes.take_rust_type());
     result::Z_OK
 }

@@ -12,21 +12,20 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{
-    borrow::{Borrow, BorrowMut},
-    mem::MaybeUninit,
-};
+use std::{borrow::Borrow, mem::MaybeUninit};
 
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_shm_mut_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_mut_t, z_owned_shm_t,
 };
 
 decl_c_type!(
-    owned(z_owned_shm_mut_t, option ZShmMut),
+    owned(z_owned_shm_mut_t, Option<ZShmMut>),
     loaned(z_loaned_shm_mut_t, zshmmut),
 );
 
@@ -69,7 +68,7 @@ pub extern "C" fn z_internal_shm_mut_null(this_: &mut MaybeUninit<z_owned_shm_mu
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_internal_shm_mut_check(this_: &z_owned_shm_mut_t) -> bool {
+pub extern "C" fn z_shm_mut_check(this_: &z_owned_shm_mut_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -89,16 +88,18 @@ pub unsafe extern "C" fn z_shm_mut_loan(this_: &z_owned_shm_mut_t) -> &z_loaned_
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Mutably borrows ZShmMut slice.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_mut_loan_mut(
-    this: &mut z_owned_shm_mut_t,
-) -> &mut z_loaned_shm_mut_t {
-    let shmmut: &mut zshmmut = this
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .borrow_mut();
-    shmmut.as_loaned_c_type_mut()
+pub extern "C" fn z_shm_mut_loan_mut(this: &mut z_owned_shm_mut_t) -> &mut z_loaned_shm_mut_t {
+    this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed shm_mut
+#[no_mangle]
+pub extern "C" fn z_shm_mut_take_loaned(
+    dst: &mut MaybeUninit<z_owned_shm_mut_t>,
+    src: &mut z_loaned_shm_mut_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -126,6 +127,11 @@ pub extern "C" fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_u
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the mutable pointer to the underlying data.
 #[no_mangle]
-pub extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
-    this_.as_rust_type_mut().as_mut().as_mut_ptr()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_mut_ptr()
 }

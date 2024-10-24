@@ -20,7 +20,7 @@ use zenoh_ext::*;
 use crate::{
     opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
     z_query_consolidation_t, z_query_target_default, z_query_target_t,
@@ -121,10 +121,7 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
         let mut owned_sample = Some(sample);
         z_closure_sample_call(
             z_closure_sample_loan(&callback),
-            owned_sample
-                .as_mut()
-                .unwrap_unchecked()
-                .as_loaned_c_type_mut(),
+            owned_sample.as_loaned_c_type_mut(),
         );
     });
     sub
@@ -268,9 +265,7 @@ pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subs
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn ze_internal_querying_subscriber_check(
-    this_: &ze_owned_querying_subscriber_t,
-) -> bool {
+pub extern "C" fn ze_querying_subscriber_check(this_: &ze_owned_querying_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

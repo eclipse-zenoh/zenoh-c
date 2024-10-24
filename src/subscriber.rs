@@ -25,7 +25,9 @@ pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_own
 use crate::{
     keyexpr::*,
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 decl_c_type!(
@@ -48,6 +50,24 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// Mutably borrows subscriber.
+#[no_mangle]
+pub extern "C" fn z_subscriber_loan_mut(
+    this_: &mut z_owned_subscriber_t,
+) -> &mut z_loaned_subscriber_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed subscriber
+#[no_mangle]
+pub extern "C" fn z_subscriber_take_loaned(
+    dst: &mut MaybeUninit<z_owned_subscriber_t>,
+    src: &mut z_loaned_subscriber_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Options passed to the `z_declare_subscriber()` function.
@@ -77,12 +97,10 @@ fn _declare_subscriber_inner<'a, 'b>(
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
-                owned_sample
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
+            z_closure_sample_call(
+                z_closure_sample_loan(&callback),
+                owned_sample.as_loaned_c_type_mut(),
+            )
         });
     subscriber
 }
@@ -164,7 +182,7 @@ pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
+pub extern "C" fn z_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

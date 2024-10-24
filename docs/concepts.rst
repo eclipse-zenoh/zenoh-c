@@ -146,6 +146,88 @@ Types named `z_xxx_t` are copyable, and can be passed by value. Some of them are
     z_timestamp_new(&ts, z_loan(session));
     z_timestamp_t ts1 = ts;
 
+Common operations
+=================
+
+The transition between "owned", "loaned" and "moved" structures above is performed by corresponding functions.
+The following operations are available: move, loan, mutable loan, take, check, and drop. They are performed for 
+"xxx" entities by functions `z_xxx_move`, `z_xxx_loan`, `z_xxx_loan_mut`, `z_xxx_take_moved`, `z_xxx_take_loaned`,
+`z_xxx_check`, and `z_xxx_drop`.
+The generic macros `z_move`, `z_loan`, `z_loan_mut`, `z_take`, `z_check`, and `z_drop` are also provided.
+
+Loan operation
+--------------
+
+Function `z_xxx_loan` accepts `const z_owned_xxx_t*` and returns a pointer `const z_loaned_xxx_t*` which gives read-only 
+access to the `z_owned_xxx_t` entity.
+
+The `z_loan` macro accepts a variable of `z_owned_xxx_t` type and calls the corresponding `z_xxx_loan` function.
+
+Mutable loan operation
+----------------------
+
+The function `z_xxx_loan_mut` accepts `z_owned_xxx_t*` and
+returns a pointer `z_xxx_loaned_t*` which allows reading and modifying the `z_owned_xxx_t` entity. 
+
+There is also API for taking ownership of the mutably loaned object: `z_xxx_take_loaned` functions. This
+is useful when user's code accepts a mutable loaned object. In this case the user's code is free to take
+the passed object for further processing or to process it on place without taking ownership. This was done 
+primarily for the callback functions: the callback handler is not obliged to take ownership of the passed object but
+can do it if needed.
+
+Though it's important to note that the zenoh API itself **never** takes ownership of the mutably loaned object. Otherwise,
+the user would be obliged to call `z_check` on the object each time after mutably passing it to the zenoh API.
+
+The `z_loan_mut` macro accepts a variable of `z_owned_xxx_t` type and calls the corresponding `z_xxx_loan_mut` function.
+
+Move operation
+--------------
+
+The function `z_xxx_move` accepts `z_owned_xxx_t*` and
+returns a pointer `z_moved_xxx_t*` which only allows taking
+ownership of the `z_owned_xxx_t`. The agreement is that the function which accepts a `z_moved_xxx_t*` parameter
+is obliged to take ownership of it (see "take" operation).
+
+The `z_move` macro accepts a variable of `z_owned_xxx_t` type and calls the corresponding `z_xxx_move` function.
+
+Take operation
+--------------
+
+Functions `z_xxx_take_moved` and `z_xxx_take_loaned` accept pointers
+to uninitialized `z_owned_xxx_t` destination structures and
+`z_moved_xxx_t*` and `z_loaned_xxx_t*` source pointers, respectively.
+
+These functions move data from the source `z_owned_xxx_t` structure into the destination one. The source
+structure is set to an empty "gravestone" state (see "check" operation).
+
+The `z_take` macro accepts `z_moved_xxx_t*` or `z_loaned_xxx_t*` pointer and calls the corresponding
+`z_xxx_take_moved` and `z_xxx_take_loaned` functions.
+
+Check operation
+---------------
+
+When an owned object is dropped or taken, it's set to a so-called **gravestone** state, which is safe to 
+double drop. No operations except "check" and "drop" are usually allowed on a dropped/taken object.
+
+The function `z_xxx_check` returns true if the object is in a **valid** state, e.g., if the loan operation
+on the object is allowed.
+
+There is a catch: **gravestone** and **valid** states are not always opposite.
+For some objects, the gravestone state is still a valid state.
+Examples are `z_owned_bytes_t` in the "empty" state or `z_owned_encoding_t`
+with `ZENOH_BYTES` encoding set. For such objects, the `z_check` always returns true, 
+even after a "drop" or "take" operation.
+
+The `z_check` macro accepts `const z_owned_xxx_t*` and calls corresponding `z_xxx_check` function.
+
+Drop operation
+--------------
+
+Function `z_xxx_drop` accepts `z_moved_xxx_t*` pointer. It frees all resources hold by corresponding
+`z_owned_xxx_t` object and sets this object to gravestone state, safe to double drop.
+
+`z_drop` macro accepts `z_moved_xxx_t*` and calls corresponding `z_xxx_drop` function
+
 Name Prefixes `z_`, `zc_`, `ze_`
 ================================
 
