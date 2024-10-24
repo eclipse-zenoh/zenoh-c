@@ -72,33 +72,103 @@ jobs:
           GIT_USER_NAME: eclipse-zenoh-bot
           GIT_USER_EMAIL: eclipse-zenoh-bot@users.noreply.github.com
 
-  build-debian:
-    name: Build Debian packages
+  build:
+    name: Build packages
+    runs-on: ${{ matrix.build.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-20.04 }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-20.04 }
+          - { target: arm-unknown-linux-gnueabi, os: ubuntu-20.04 }
+          - { target: arm-unknown-linux-gnueabihf, os: ubuntu-20.04 }
+          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-20.04 }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-20.04 }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-20.04 }
+          - { target: x86_64-apple-darwin, os: macos-12 }
+          - { target: aarch64-apple-darwin, os: macos-12 }
+          - { target: x86_64-pc-windows-msvc, os: windows-2019 }
+          - { target: x86_64-pc-windows-gnu, os: windows-2019 }
     needs: tag
-    uses: eclipse-zenoh/ci/.github/workflows/build-crates-debian.yml@main
-    with:
-      repo: ${{ github.repository }}
-      version: ${{ needs.tag.outputs.version }}
-      branch: ${{ needs.tag.outputs.branch }}
-    secrets: inherit
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag.outputs.branch }}
+          token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
-  build-standalone:
-    name: Build executables and libraries
-    needs: tag
-    uses: eclipse-zenoh/ci/.github/workflows/build-crates-standalone.yml@main
-    with:
-      repo: ${{ github.repository }}
-      version: ${{ needs.tag.outputs.version }}
-      branch: ${{ needs.tag.outputs.branch }}
-      artifact-patterns: |
-        ^libzenohc\.(dylib|so)$
-        ^zenohc\.dll$
-        ^include$
-    secrets: inherit
+      - name: Add rust toolchain
+        run: |
+          rustup target add ${{ matrix.build.target }}
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'x86_64-unknown-linux-musl'}}
+        run: sudo apt-get install -y musl-tools
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'arm-unknown-linux-gnueabi'}}
+        run: sudo apt-get install -y gcc-arm-linux-gnueabi
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'arm-unknown-linux-gnueabihf'}}
+        run: sudo apt-get install -y gcc-arm-linux-gnueabihf
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'armv7-unknown-linux-gnueabihf'}}
+        run: sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-armhf-cross libc6-dev-armhf-cross
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'aarch64-unknown-linux-gnu'}}
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'aarch64-unknown-linux-musl'}}
+        run: |
+          wget https://musl.cc/aarch64-linux-musl-cross.tgz
+          tar xvfz aarch64-linux-musl-cross.tgz
+
+      - id: build
+        shell: bash
+        run: |
+          toolchain_file=$(readlink -f TC-${{ matrix.build.target }}.cmake)
+          if [[ "${{ matrix.build.target }}" == "aarch64-unknown-linux-musl" ]]; then
+            export PATH=$PATH:$(readlink -f aarch64-linux-musl-cross)/bin
+          fi
+          mkdir -p build  && cd build
+          cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
+          cmake --build . --config Release
+          cpack -C Release -G ZIP
+
+      - id: build-distro-packages
+        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
+        run: |
+          cd build
+          cpack -G DEB
+          cpack -G RPM
+
+      - name: Upload library archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: zenohc-${{ inputs.version }}-${{ matrix.build.target }}-standalone.zip
+          path: ./build/packages/*.zip
+
+      - name: Upload DEB archive
+        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-debian.zip
+          path: ./build/packages/*.deb
+
+      - name: Upload RPM archive
+        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-rpm.zip
+          path: ./build/packages/*.rpm
 
   debian:
     name: Publish Debian packages
-    needs: [tag, build-debian]
+    needs: [tag, build]
     uses: eclipse-zenoh/ci/.github/workflows/release-crates-debian.yml@main
     with:
       no-build: true
@@ -111,7 +181,7 @@ jobs:
 
   homebrew:
     name: Publish Homebrew formulae
-    needs: [tag, build-standalone]
+    needs: [tag, build]
     uses: eclipse-zenoh/ci/.github/workflows/release-crates-homebrew.yml@main
     with:
       no-build: true
@@ -128,7 +198,7 @@ jobs:
 
   eclipse:
     name: Publish artifacts to Eclipse downloads
-    needs: [tag, build-standalone]
+    needs: [tag, build]
     uses: eclipse-zenoh/ci/.github/workflows/release-crates-eclipse.yml@main
     with:
       no-build: true
@@ -145,7 +215,7 @@ jobs:
 
   github:
     name: Publish artifacts to GitHub Releases
-    needs: [tag, build-standalone]
+    needs: [tag, build]
     uses: eclipse-zenoh/ci/.github/workflows/release-crates-github.yml@main
     with:
       no-build: true
