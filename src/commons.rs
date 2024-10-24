@@ -215,8 +215,7 @@ pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sa
 
 /// Mutably borrows sample.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
+pub extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 

@@ -1313,10 +1313,8 @@ pub fn find_take_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
-    for (
-        _,
-        [func_name, dst_type, dst_name, src_type, src_name],
-    ) in re.captures_iter(&bindings).map(|c| c.extract())
+    for (_, [func_name, dst_type, dst_name, src_type, src_name]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
     {
         let (_, _, semantic, _) = split_type_name(dst_type);
         let f = FunctionSignature::new(
@@ -1332,7 +1330,6 @@ pub fn find_take_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
     }
     res
 }
-
 
 pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
@@ -1490,7 +1487,11 @@ pub fn generate_generic_c_impl(
 
     for func in macro_func {
         let owned_type = if decay {
-            func.args[generic_param_idx].typename.clone().decay().typename
+            func.args[generic_param_idx]
+                .typename
+                .clone()
+                .decay()
+                .typename
         } else {
             func.args[generic_param_idx].typename.typename.clone()
         };
@@ -1518,7 +1519,7 @@ pub fn generate_generic_c(
 pub fn generate_generic_c_by_arg(
     macro_func: &[FunctionSignature],
     generic_name: &str,
-    generic_param_idx: usize
+    generic_param_idx: usize,
 ) -> String {
     generate_generic_c_impl(macro_func, generic_name, false, generic_param_idx)
 }

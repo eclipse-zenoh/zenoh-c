@@ -75,17 +75,19 @@ decl_c_type!(
 
 /// Borrows config.
 #[no_mangle]
-pub extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &z_loaned_config_t {
-    let this = this_.as_rust_type_ref();
-    let this = unsafe { this.as_ref().unwrap_unchecked() };
-    this.as_loaned_c_type_ref()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &z_loaned_config_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// Mutably borrows config.
 #[no_mangle]
 pub extern "C" fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t {
-    let this = this_.as_rust_type_mut();
-    this.as_loaned_c_type_mut()
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Takes ownership of the mutably borrowed config.

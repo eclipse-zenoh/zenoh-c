@@ -30,6 +30,11 @@
 // set v1 to null
 // move v to v1
 // make sure that v is null now
+//
+// set v2 to null
+// move v1 to v2 using z_take from mutable loaned
+// make sure that v1 is null now
+//
 #define TEST(name)                    \
     {                                 \
         name v;                       \
@@ -43,6 +48,11 @@
         memset(&v, -1, sizeof(v));    \
         z_take(&v1, z_move(v));       \
         assert(!z_internal_check(v)); \
+        name v2;                      \
+        z_internal_null(&v2);         \
+        memset(&v1, -1, sizeof(v1));  \
+        z_take(&v2, z_loan_mut(v1));  \
+        assert(!z_internal_check(v1));\
     }
 
 int main(void) {

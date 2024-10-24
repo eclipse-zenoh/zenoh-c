@@ -294,6 +294,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         zc_moved_closure_log_t* : zc_closure_log_take, \
         ze_moved_serializer_t* : ze_serializer_take, \
         z_loaned_bytes_t* : z_bytes_take_loaned, \
+        z_loaned_bytes_writer_t* : z_bytes_writer_take_loaned, \
         z_loaned_closure_hello_t* : z_closure_hello_take_loaned, \
         z_loaned_closure_query_t* : z_closure_query_take_loaned, \
         z_loaned_closure_reply_t* : z_closure_reply_take_loaned, \
@@ -320,7 +321,8 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_loaned_slice_t* : z_slice_take_loaned, \
         z_loaned_string_array_t* : z_string_array_take_loaned, \
         z_loaned_string_t* : z_string_take_loaned, \
-        z_loaned_subscriber_t* : z_subscriber_take_loaned \
+        z_loaned_subscriber_t* : z_subscriber_take_loaned, \
+        ze_loaned_serializer_t* : ze_serializer_take_loaned \
     )(this_, x)
 
 #define z_internal_check(this_) \
@@ -772,6 +774,9 @@ inline void z_take(ze_owned_serializer_t* this_, ze_moved_serializer_t* x) {
 inline void z_take(z_owned_bytes_t* dst, z_loaned_bytes_t* src) {
     z_bytes_take_loaned(dst, src);
 };
+inline void z_take(z_owned_bytes_writer_t* dst, z_loaned_bytes_writer_t* src) {
+    z_bytes_writer_take_loaned(dst, src);
+};
 inline void z_take(z_owned_closure_hello_t* dst, z_loaned_closure_hello_t* src) {
     z_closure_hello_take_loaned(dst, src);
 };
@@ -852,6 +857,9 @@ inline void z_take(z_owned_string_t* dst, z_loaned_string_t* src) {
 };
 inline void z_take(z_owned_subscriber_t* dst, z_loaned_subscriber_t* src) {
     z_subscriber_take_loaned(dst, src);
+};
+inline void z_take(ze_owned_serializer_t* dst, ze_loaned_serializer_t* src) {
+    ze_serializer_take_loaned(dst, src);
 };
 
 

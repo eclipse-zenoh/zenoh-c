@@ -90,8 +90,7 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 
 /// Mutably borrows Alloc Layout
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_alloc_layout_loan_mut(
+pub extern "C" fn z_alloc_layout_loan_mut(
     this: &mut z_owned_alloc_layout_t,
 ) -> &mut z_loaned_alloc_layout_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()

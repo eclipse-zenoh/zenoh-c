@@ -807,17 +807,13 @@ pub extern "C" fn z_string_array_drop(this_: &mut z_moved_string_array_t) {
 
 /// Borrows string array.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_array_loan(
-    this: &z_owned_string_array_t,
-) -> &z_loaned_string_array_t {
+pub extern "C" fn z_string_array_loan(this: &z_owned_string_array_t) -> &z_loaned_string_array_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Mutably borrows string array.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_array_loan_mut(
+pub extern "C" fn z_string_array_loan_mut(
     this: &mut z_owned_string_array_t,
 ) -> &mut z_loaned_string_array_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()

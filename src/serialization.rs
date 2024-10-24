@@ -74,11 +74,20 @@ pub unsafe extern "C" fn ze_serializer_loan(
 
 /// @brief Muatably borrows serializer.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_serializer_loan_mut(
+pub extern "C" fn ze_serializer_loan_mut(
     this: &mut ze_owned_serializer_t,
 ) -> &mut ze_loaned_serializer_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// @brief Takes ownership of the mutably borrowed serializer.
+#[no_mangle]
+pub extern "C" fn ze_serializer_take_loaned(
+    dst: &mut MaybeUninit<ze_owned_serializer_t>,
+    src: &mut ze_loaned_serializer_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// @brief Constructs a serializer in a gravestone state.

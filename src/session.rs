@@ -44,10 +44,7 @@ pub unsafe extern "C" fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_
 
 /// Mutably borrows session.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_session_loan_mut(
-    this_: &mut z_owned_session_t,
-) -> &mut z_loaned_session_t {
+pub extern "C" fn z_session_loan_mut(this_: &mut z_owned_session_t) -> &mut z_loaned_session_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 

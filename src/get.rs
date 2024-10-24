@@ -330,8 +330,7 @@ pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_repl
 
 /// Mutably borrows reply.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
+pub extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
