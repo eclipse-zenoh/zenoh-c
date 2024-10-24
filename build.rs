@@ -966,10 +966,11 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         )
         .unwrap();
 
-    // Collect all function signatures to be wrappeb by macros and verify that all necessary functions are present for each entity
+    // Collect all function signatures to be wrapped by macros and verify that all necessary functions are present for each entity
     let (move_funcs, take_funcs) = make_move_take_signatures(path_in);
     let loan_funcs = find_loan_functions(path_in);
     let loan_mut_funcs = find_loan_mut_functions(path_in);
+    let take_loaned_funcs = find_take_loaned_functions(path_in);
     let drop_funcs = find_drop_functions(path_in);
     let null_funcs = find_null_functions(path_in);
     let check_funcs = find_check_functions(path_in);
@@ -977,6 +978,8 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     let closure_constructors = find_closure_constructors(path_in);
     let recv_funcs = find_recv_functions(path_in);
     let clone_funcs = find_clone_functions(path_in);
+    let mut take_funcs_generic = take_funcs.clone();
+    take_funcs_generic.extend(take_loaned_funcs);
 
     let drops = drop_funcs
         .iter()
@@ -1067,7 +1070,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_take_c(&take_funcs);
+    let out = generate_generic_take_c(&take_funcs_generic);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1126,7 +1129,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_take_cpp(&take_funcs);
+    let out = generate_generic_take_cpp(&take_funcs_generic);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1302,6 +1305,35 @@ pub fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
+pub fn find_take_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(
+        r"void (\w+)_take_loaned\(struct\s+(\w+)\s*\*\s*(\w+),\s*struct\s+(\w+)\s*\*\s*(\w+)\);",
+    )
+    .unwrap();
+    let mut res = Vec::<FunctionSignature>::new();
+
+    for (
+        _,
+        [func_name, dst_type, dst_name, src_type, src_name],
+    ) in re.captures_iter(&bindings).map(|c| c.extract())
+    {
+        let (_, _, semantic, _) = split_type_name(dst_type);
+        let f = FunctionSignature::new(
+            semantic,
+            "void",
+            func_name.to_string() + "_take_loaned",
+            vec![
+                FuncArg::new(&(dst_type.to_string() + "*"), dst_name),
+                FuncArg::new(&(src_type.to_string() + "*"), src_name),
+            ],
+        );
+        res.push(f);
+    }
+    res
+}
+
+
 pub fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
@@ -1420,11 +1452,13 @@ pub fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
-pub fn generate_generic_c(
+pub fn generate_generic_c_impl(
     macro_func: &[FunctionSignature],
     generic_name: &str,
     decay: bool,
+    generic_param_idx: usize,
 ) -> String {
+    assert!(!decay || generic_param_idx == 0);
     let va_args = macro_func
         .iter()
         .any(|f| f.args.len() != macro_func[0].args.len());
@@ -1440,25 +1474,25 @@ pub fn generate_generic_c(
             "#define {generic_name}({}, ...) \\
         _Generic(({})",
             args.join(", "),
-            args[0],
+            args[generic_param_idx],
         )
     } else {
         format!(
             "#define {generic_name}({}) \\
     _Generic(({})",
             args.join(", "),
-            args[0],
+            args[generic_param_idx],
         )
     };
     if decay {
-        args[0] = format!("&{}", args[0]);
+        args[generic_param_idx] = format!("&{}", args[generic_param_idx]);
     }
 
     for func in macro_func {
         let owned_type = if decay {
-            func.args[0].typename.clone().decay().typename
+            func.args[generic_param_idx].typename.clone().decay().typename
         } else {
-            func.args[0].typename.typename.clone()
+            func.args[generic_param_idx].typename.typename.clone()
         };
         let func_name = &func.func_name;
         out += ", \\\n";
@@ -1471,6 +1505,22 @@ pub fn generate_generic_c(
         out += &format!("    )({})", args.join(", "));
     }
     out
+}
+
+pub fn generate_generic_c(
+    macro_func: &[FunctionSignature],
+    generic_name: &str,
+    decay: bool,
+) -> String {
+    generate_generic_c_impl(macro_func, generic_name, decay, 0)
+}
+
+pub fn generate_generic_c_by_arg(
+    macro_func: &[FunctionSignature],
+    generic_name: &str,
+    generic_param_idx: usize
+) -> String {
+    generate_generic_c_impl(macro_func, generic_name, false, generic_param_idx)
 }
 
 pub fn generate_generic_loan_c(macro_func: &[FunctionSignature]) -> String {
@@ -1486,7 +1536,7 @@ pub fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_take_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_take", false)
+    generate_generic_c_by_arg(macro_func, "z_take", 1)
 }
 
 pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
