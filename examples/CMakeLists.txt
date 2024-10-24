@@ -33,11 +33,6 @@ foreach(file ${files})
         endif()
     endif()
 
-    # FIXME: remove once zenoh time primitives are available and examples updated
-    if(NOT(UNIX) AND(${target} STREQUAL "z_ping" OR ${target} STREQUAL "z_pong" OR ${target} STREQUAL "z_sub_thr"))
-        continue()
-    endif()
-
     add_executable(${target} EXCLUDE_FROM_ALL ${file})
     add_dependencies(examples ${target})
 
