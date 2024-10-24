@@ -34,13 +34,13 @@
     }
 
 #define ASSERT_CHECK(var)         \
-    if (!z_internal_check(var)) { \
+    if (!z_check(var)) { \
         assert(false);            \
         return -100;              \
     }
 
 #define ASSERT_CHECK_ERR(var)    \
-    if (z_internal_check(var)) { \
+    if (z_check(var)) { \
         assert(false);           \
         return -200;             \
     }
@@ -248,7 +248,7 @@ void layout_for_fn(struct z_owned_memory_layout_t* layout, void* context) {
     assert(context);
     assert(layout);
 
-    assert(z_internal_check(*layout));
+    assert(z_check(*layout));
 
     // check size and alignment
     size_t size = 0;

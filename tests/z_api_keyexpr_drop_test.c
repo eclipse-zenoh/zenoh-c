@@ -25,7 +25,7 @@ void test_publisher() {
     z_config_default(&config);
     z_owned_session_t s;
     z_open(&s, z_move(config), NULL);
-    assert(z_internal_check(s));
+    assert(z_check(s));
     char keyexpr[256];
     strncpy(keyexpr, "foo/bar", 256);
     z_view_keyexpr_t ke;

@@ -40,19 +40,19 @@
         name v;                        \
         memset(&v, -1, sizeof(v));     \
         z_internal_null(&v);           \
-        assert(!z_internal_check(v));  \
+        assert(!z_check(v));  \
         z_drop(z_move(v));             \
         z_drop(z_move(v));             \
         name v1;                       \
         z_internal_null(&v1);          \
         memset(&v, -1, sizeof(v));     \
         z_take(&v1, z_move(v));        \
-        assert(!z_internal_check(v));  \
+        assert(!z_check(v));  \
         name v2;                       \
         z_internal_null(&v2);          \
         memset(&v1, -1, sizeof(v1));   \
         z_take(&v2, z_loan_mut(v1));   \
-        assert(!z_internal_check(v1)); \
+        assert(!z_check(v1)); \
     }
 
 int main(void) {

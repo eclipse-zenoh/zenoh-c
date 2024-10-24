@@ -24,9 +24,9 @@
 int main(int argc, char **argv) {
     z_owned_keyexpr_t owned_keyexpr;
     assert(z_keyexpr_from_str(&owned_keyexpr, NULL) == Z_EINVAL);
-    assert(!z_internal_check(owned_keyexpr));
+    assert(!z_check(owned_keyexpr));
     assert(z_keyexpr_from_str_autocanonize(&owned_keyexpr, NULL) == Z_EINVAL);
-    assert(!z_internal_check(owned_keyexpr));
+    assert(!z_check(owned_keyexpr));
 
     assert(z_keyexpr_canonize_null_terminated(NULL) == Z_EINVAL);
 
