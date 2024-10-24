@@ -130,6 +130,9 @@ jobs:
       - id: build
         run: |
           toolchain_file=$(readlink -f TC-${{ matrix.build.target }}.cmake)
+          if [[ "${{ matrix.build.target }}" == "aarch64-unknown-linux-musl" ]]; then
+            export PATH=$PATH:$(readlink -f aarch64-linux-musl-cross)/bin
+          fi
           mkdir -p build  && cd build
           cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
           cmake --build . --config Release
