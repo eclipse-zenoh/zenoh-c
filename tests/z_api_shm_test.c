@@ -33,16 +33,16 @@
         return -300;      \
     }
 
-#define ASSERT_CHECK(var)         \
-    if (!z_check(var)) { \
-        assert(false);            \
-        return -100;              \
+#define ASSERT_CHECK(var) \
+    if (!z_check(var)) {  \
+        assert(false);    \
+        return -100;      \
     }
 
-#define ASSERT_CHECK_ERR(var)    \
-    if (z_check(var)) { \
-        assert(false);           \
-        return -200;             \
+#define ASSERT_CHECK_ERR(var) \
+    if (z_check(var)) {       \
+        assert(false);        \
+        return -200;          \
     }
 
 int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
