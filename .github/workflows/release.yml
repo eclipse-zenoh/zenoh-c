@@ -101,7 +101,6 @@ jobs:
       - name: Add rust toolchain
         run: |
           rustup target add ${{ matrix.build.target }}
-          rustup set default-host ${{ matrix.build.target }}
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'x86_64-unknown-linux-musl'}}
