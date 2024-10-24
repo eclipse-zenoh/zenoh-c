@@ -16,14 +16,6 @@
 
 set(ZENOHC_BUILD_WITH_UNSTABLE_API @ZENOHC_BUILD_WITH_UNSTABLE_API@)
 set(ZENOHC_BUILD_WITH_SHARED_MEMORY @ZENOHC_BUILD_WITH_SHARED_MEMORY@)
-# Compute the installation prefix relative to this file.
-get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
-get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
-get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
-get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
-if(_IMPORT_PREFIX STREQUAL "/")
-  set(_IMPORT_PREFIX "")
-endif()
 
 if (@BUILD_SHARED_LIBS@)
     if(NOT TARGET __zenohc_shared)
@@ -32,12 +24,12 @@ if (@BUILD_SHARED_LIBS@)
         set_target_properties(__zenohc_shared PROPERTIES
             IMPORTED_NO_SONAME TRUE
             INTERFACE_COMPILE_DEFINITION ZENOHC_DYN_LIB
-            IMPORTED_LOCATION "${_IMPORT_PREFIX}/@ZENOHC_INSTALL_DYLIBDIR@/@DYLIB@"
-            INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@"
+            IMPORTED_LOCATION "@ZENOHC_INSTALL_FULL_DYLIBDIR@/@DYLIB@"
+            INTERFACE_INCLUDE_DIRECTORIES "@CMAKE_INSTALL_FULL_INCLUDEDIR@"
         )
         add_library(zenohc::lib ALIAS __zenohc_shared)
         if(NOT ("@IMPLIB@" STREQUAL ""))
-            set_property(TARGET __zenohc_shared PROPERTY IMPORTED_IMPLIB "${_IMPORT_PREFIX}/@CMAKE_INSTALL_LIBDIR@/@IMPLIB@")
+            set_property(TARGET __zenohc_shared PROPERTY IMPORTED_IMPLIB "@CMAKE_INSTALL_FULL_LIBDIR@/@IMPLIB@")
         endif()
     endif()
 else()
@@ -46,8 +38,8 @@ else()
         add_library(zenohc::static ALIAS __zenohc_static)
         target_link_libraries(__zenohc_static INTERFACE @NATIVE_STATIC_LIBS@)
         set_target_properties(__zenohc_static PROPERTIES
-            IMPORTED_LOCATION "${_IMPORT_PREFIX}/@CMAKE_INSTALL_LIBDIR@/@STATICLIB@"
-            INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/@CMAKE_INSTALL_INCLUDEDIR@"
+            IMPORTED_LOCATION "@CMAKE_INSTALL_FULL_LIBDIR@/@STATICLIB@"
+            INTERFACE_INCLUDE_DIRECTORIES "@CMAKE_INSTALL_FULL_INCLUDEDIR@"
         )
         add_library(zenohc::lib ALIAS __zenohc_static)
     endif()
