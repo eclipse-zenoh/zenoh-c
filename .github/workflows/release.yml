@@ -128,6 +128,7 @@ jobs:
           tar xvfz aarch64-linux-musl-cross.tgz
 
       - id: build
+        shell: bash
         run: |
           toolchain_file=$(readlink -f TC-${{ matrix.build.target }}.cmake)
           if [[ "${{ matrix.build.target }}" == "aarch64-unknown-linux-musl" ]]; then
