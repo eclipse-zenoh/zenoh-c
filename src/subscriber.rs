@@ -182,7 +182,7 @@ pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
+pub extern "C" fn z_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

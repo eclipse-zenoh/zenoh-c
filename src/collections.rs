@@ -366,7 +366,7 @@ pub extern "C" fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this_: &
 
 /// @return ``true`` if slice is not empty, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_slice_check(this_: &z_owned_slice_t) -> bool {
+pub extern "C" fn z_slice_check(this_: &z_owned_slice_t) -> bool {
     !this_.as_rust_type_ref().is_empty()
 }
 
@@ -566,7 +566,7 @@ pub unsafe extern "C" fn z_string_drop(this_: &mut z_moved_string_t) {
 
 /// @return ``true`` if `this_` is a valid string, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_string_check(this_: &z_owned_string_t) -> bool {
+pub extern "C" fn z_string_check(this_: &z_owned_string_t) -> bool {
     !this_.as_rust_type_ref().is_empty()
 }
 
@@ -795,7 +795,7 @@ pub extern "C" fn z_internal_string_array_null(this_: &mut MaybeUninit<z_owned_s
 
 /// @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_string_array_check(this_: &z_owned_string_array_t) -> bool {
+pub extern "C" fn z_string_array_check(this_: &z_owned_string_array_t) -> bool {
     !this_.as_rust_type_ref().is_empty()
 }
 

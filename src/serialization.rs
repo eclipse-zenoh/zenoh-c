@@ -56,7 +56,7 @@ extern "C" fn ze_serializer_drop(this_: &mut ze_moved_serializer_t) {
 
 /// @brief Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
-extern "C" fn ze_internal_serializer_check(this: &ze_owned_serializer_t) -> bool {
+extern "C" fn ze_serializer_check(this: &ze_owned_serializer_t) -> bool {
     this.as_rust_type_ref().is_some()
 }
 

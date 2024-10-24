@@ -52,7 +52,7 @@ pub extern "C" fn z_internal_reply_err_null(this_: &mut MaybeUninit<z_owned_repl
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_internal_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
+pub extern "C" fn z_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
     !this_.as_rust_type_ref().payload().is_empty()
 }
 
@@ -313,7 +313,7 @@ pub extern "C" fn z_reply_drop(this_: &mut z_moved_reply_t) {
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_reply_check(this_: &z_owned_reply_t) -> bool {
+pub extern "C" fn z_reply_check(this_: &z_owned_reply_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

@@ -171,7 +171,7 @@ pub extern "C" fn z_keyexpr_drop(this_: &mut z_moved_keyexpr_t) {
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_keyexpr_check(this_: &z_owned_keyexpr_t) -> bool {
+pub extern "C" fn z_keyexpr_check(this_: &z_owned_keyexpr_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

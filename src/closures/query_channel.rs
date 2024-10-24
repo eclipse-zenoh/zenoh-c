@@ -51,9 +51,7 @@ pub extern "C" fn z_internal_fifo_handler_query_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_fifo_handler_query_check(
-    this_: &z_owned_fifo_handler_query_t,
-) -> bool {
+pub extern "C" fn z_fifo_handler_query_check(this_: &z_owned_fifo_handler_query_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -195,9 +193,7 @@ pub extern "C" fn z_internal_ring_handler_query_null(
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_ring_handler_query_check(
-    this_: &z_owned_ring_handler_query_t,
-) -> bool {
+pub extern "C" fn z_ring_handler_query_check(this_: &z_owned_ring_handler_query_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

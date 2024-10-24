@@ -167,8 +167,16 @@ Mutable loan operation
 ----------------------
 
 The function `z_xxx_loan_mut` accepts `z_owned_xxx_t*` and
-returns a pointer `z_xxx_loaned_t*` which allows 
-reading and modifying the `z_owned_xxx_t` entity. If supported by the type, it can also take ownership of it (see "take" operation).
+returns a pointer `z_xxx_loaned_t*` which allows reading and modifying the `z_owned_xxx_t` entity. 
+
+There is also API for taking ownership of the mutably loaned object: `z_xxx_take_loaned` functions. This
+is useful when user's code accepts a mutable loaned object. In this case the user's code is free to take
+the passed object for further processing or to process it on place without taking ownership. This was done 
+primarily for the callback functions: the callback handler is not obliged to take ownership of the passed object but
+can do it if needed.
+
+Though it's important to note that the zenoh API itself **never** takes ownership of the mutably loaned object. Otherwise,
+the user would be obliged to call `z_check` on the object each time after mutably passing it to the zenoh API.
 
 The `z_loan_mut` macro accepts a variable of `z_owned_xxx_t` type and calls the corresponding `z_xxx_loan_mut` function.
 

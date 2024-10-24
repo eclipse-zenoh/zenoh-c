@@ -46,7 +46,7 @@ pub extern "C" fn zc_internal_liveliness_token_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn zc_internal_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
+pub extern "C" fn zc_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

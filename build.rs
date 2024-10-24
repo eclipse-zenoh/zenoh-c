@@ -1016,7 +1016,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
 
     if drops != checks {
         msgs.push(format!(
-            "the list of z_xxx_drop and z_internal_xxx_check functions are different:\n missing z_internal_xxx_check for {:?}\n missing z_xxx_drop for {:?}",
+            "the list of z_xxx_drop and z_xxx_check functions are different:\n missing z_xxx_check for {:?}\n missing z_xxx_drop for {:?}",
             drops.difference(&checks),
             checks.difference(&drops)
         ));
@@ -1286,7 +1286,7 @@ pub fn find_null_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 pub fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"bool (z.?_internal_\w+_check)\(const struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"bool (z.?_\w+_check)\(const struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
@@ -1602,7 +1602,7 @@ pub fn generate_generic_null_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_check_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_internal_check", true)
+    generate_generic_c(macro_func, "z_check", true)
 }
 
 pub fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
@@ -1748,7 +1748,7 @@ pub fn generate_generic_null_cpp(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_generic_check_cpp(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_cpp(macro_func, "z_internal_check", true)
+    generate_generic_cpp(macro_func, "z_check", true)
 }
 
 pub fn generate_generic_call_cpp(macro_func: &[FunctionSignature]) -> String {

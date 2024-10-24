@@ -150,7 +150,7 @@ pub extern "C" fn z_internal_publisher_null(this_: &mut MaybeUninit<z_owned_publ
 /// Returns ``true`` if publisher is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_internal_publisher_check(this_: &z_owned_publisher_t) -> bool {
+pub extern "C" fn z_publisher_check(this_: &z_owned_publisher_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -337,9 +337,7 @@ pub extern "C" fn zc_internal_matching_listener_null(
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Checks the matching listener is for the gravestone state
-pub extern "C" fn zc_internal_matching_listener_check(
-    this_: &zc_owned_matching_listener_t,
-) -> bool {
+pub extern "C" fn zc_matching_listener_check(this_: &zc_owned_matching_listener_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

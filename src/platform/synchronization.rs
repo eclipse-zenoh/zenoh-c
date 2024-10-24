@@ -38,7 +38,7 @@ pub extern "C" fn z_mutex_drop(this_: &mut z_moved_mutex_t) {
 
 /// Returns ``true`` if mutex is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_mutex_check(this_: &z_owned_mutex_t) -> bool {
+pub extern "C" fn z_mutex_check(this_: &z_owned_mutex_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -147,7 +147,7 @@ pub extern "C" fn z_condvar_drop(this_: &mut z_moved_condvar_t) {
 
 /// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_condvar_check(this_: &z_owned_condvar_t) -> bool {
+pub extern "C" fn z_condvar_check(this_: &z_owned_condvar_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -252,7 +252,7 @@ pub extern "C" fn z_task_drop(this_: &mut z_moved_task_t) {
 
 /// Returns ``true`` if task is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_task_check(this_: &z_owned_task_t) -> bool {
+pub extern "C" fn z_task_check(this_: &z_owned_task_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

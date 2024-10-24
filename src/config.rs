@@ -245,7 +245,7 @@ pub extern "C" fn z_config_drop(this_: &mut z_moved_config_t) {
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_internal_config_check(this_: &z_owned_config_t) -> bool {
+pub extern "C" fn z_config_check(this_: &z_owned_config_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

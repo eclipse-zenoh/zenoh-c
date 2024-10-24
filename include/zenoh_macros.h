@@ -325,41 +325,41 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         ze_loaned_serializer_t* : ze_serializer_take_loaned \
     )(this_, x)
 
-#define z_internal_check(this_) \
+#define z_check(this_) \
     _Generic((this_), \
-        z_owned_bytes_t : z_internal_bytes_check, \
-        z_owned_bytes_writer_t : z_internal_bytes_writer_check, \
-        z_owned_closure_hello_t : z_internal_closure_hello_check, \
-        z_owned_closure_query_t : z_internal_closure_query_check, \
-        z_owned_closure_reply_t : z_internal_closure_reply_check, \
-        z_owned_closure_sample_t : z_internal_closure_sample_check, \
-        z_owned_closure_zid_t : z_internal_closure_zid_check, \
-        z_owned_condvar_t : z_internal_condvar_check, \
-        z_owned_config_t : z_internal_config_check, \
-        z_owned_encoding_t : z_internal_encoding_check, \
-        z_owned_fifo_handler_query_t : z_internal_fifo_handler_query_check, \
-        z_owned_fifo_handler_reply_t : z_internal_fifo_handler_reply_check, \
-        z_owned_fifo_handler_sample_t : z_internal_fifo_handler_sample_check, \
-        z_owned_hello_t : z_internal_hello_check, \
-        z_owned_keyexpr_t : z_internal_keyexpr_check, \
-        z_owned_mutex_t : z_internal_mutex_check, \
-        z_owned_publisher_t : z_internal_publisher_check, \
-        z_owned_query_t : z_internal_query_check, \
-        z_owned_queryable_t : z_internal_queryable_check, \
-        z_owned_reply_t : z_internal_reply_check, \
-        z_owned_reply_err_t : z_internal_reply_err_check, \
-        z_owned_ring_handler_query_t : z_internal_ring_handler_query_check, \
-        z_owned_ring_handler_reply_t : z_internal_ring_handler_reply_check, \
-        z_owned_ring_handler_sample_t : z_internal_ring_handler_sample_check, \
-        z_owned_sample_t : z_internal_sample_check, \
-        z_owned_session_t : z_internal_session_check, \
-        z_owned_slice_t : z_internal_slice_check, \
-        z_owned_string_array_t : z_internal_string_array_check, \
-        z_owned_string_t : z_internal_string_check, \
-        z_owned_subscriber_t : z_internal_subscriber_check, \
-        z_owned_task_t : z_internal_task_check, \
-        zc_owned_closure_log_t : zc_internal_closure_log_check, \
-        ze_owned_serializer_t : ze_internal_serializer_check \
+        z_owned_bytes_t : z_bytes_check, \
+        z_owned_bytes_writer_t : z_bytes_writer_check, \
+        z_owned_closure_hello_t : z_closure_hello_check, \
+        z_owned_closure_query_t : z_closure_query_check, \
+        z_owned_closure_reply_t : z_closure_reply_check, \
+        z_owned_closure_sample_t : z_closure_sample_check, \
+        z_owned_closure_zid_t : z_closure_zid_check, \
+        z_owned_condvar_t : z_condvar_check, \
+        z_owned_config_t : z_config_check, \
+        z_owned_encoding_t : z_encoding_check, \
+        z_owned_fifo_handler_query_t : z_fifo_handler_query_check, \
+        z_owned_fifo_handler_reply_t : z_fifo_handler_reply_check, \
+        z_owned_fifo_handler_sample_t : z_fifo_handler_sample_check, \
+        z_owned_hello_t : z_hello_check, \
+        z_owned_keyexpr_t : z_keyexpr_check, \
+        z_owned_mutex_t : z_mutex_check, \
+        z_owned_publisher_t : z_publisher_check, \
+        z_owned_query_t : z_query_check, \
+        z_owned_queryable_t : z_queryable_check, \
+        z_owned_reply_t : z_reply_check, \
+        z_owned_reply_err_t : z_reply_err_check, \
+        z_owned_ring_handler_query_t : z_ring_handler_query_check, \
+        z_owned_ring_handler_reply_t : z_ring_handler_reply_check, \
+        z_owned_ring_handler_sample_t : z_ring_handler_sample_check, \
+        z_owned_sample_t : z_sample_check, \
+        z_owned_session_t : z_session_check, \
+        z_owned_slice_t : z_slice_check, \
+        z_owned_string_array_t : z_string_array_check, \
+        z_owned_string_t : z_string_check, \
+        z_owned_subscriber_t : z_subscriber_check, \
+        z_owned_task_t : z_task_check, \
+        zc_owned_closure_log_t : zc_closure_log_check, \
+        ze_owned_serializer_t : ze_serializer_check \
     )(&this_)
 
 #define z_call(closure, hello) \
@@ -863,39 +863,39 @@ inline void z_take(ze_owned_serializer_t* dst, ze_loaned_serializer_t* src) {
 };
 
 
-inline bool z_internal_check(const z_owned_bytes_t& this_) { return z_internal_bytes_check(&this_); };
-inline bool z_internal_check(const z_owned_bytes_writer_t& this_) { return z_internal_bytes_writer_check(&this_); };
-inline bool z_internal_check(const z_owned_closure_hello_t& this_) { return z_internal_closure_hello_check(&this_); };
-inline bool z_internal_check(const z_owned_closure_query_t& this_) { return z_internal_closure_query_check(&this_); };
-inline bool z_internal_check(const z_owned_closure_reply_t& this_) { return z_internal_closure_reply_check(&this_); };
-inline bool z_internal_check(const z_owned_closure_sample_t& this_) { return z_internal_closure_sample_check(&this_); };
-inline bool z_internal_check(const z_owned_closure_zid_t& this_) { return z_internal_closure_zid_check(&this_); };
-inline bool z_internal_check(const z_owned_condvar_t& this_) { return z_internal_condvar_check(&this_); };
-inline bool z_internal_check(const z_owned_config_t& this_) { return z_internal_config_check(&this_); };
-inline bool z_internal_check(const z_owned_encoding_t& this_) { return z_internal_encoding_check(&this_); };
-inline bool z_internal_check(const z_owned_fifo_handler_query_t& this_) { return z_internal_fifo_handler_query_check(&this_); };
-inline bool z_internal_check(const z_owned_fifo_handler_reply_t& this_) { return z_internal_fifo_handler_reply_check(&this_); };
-inline bool z_internal_check(const z_owned_fifo_handler_sample_t& this_) { return z_internal_fifo_handler_sample_check(&this_); };
-inline bool z_internal_check(const z_owned_hello_t& this_) { return z_internal_hello_check(&this_); };
-inline bool z_internal_check(const z_owned_keyexpr_t& this_) { return z_internal_keyexpr_check(&this_); };
-inline bool z_internal_check(const z_owned_mutex_t& this_) { return z_internal_mutex_check(&this_); };
-inline bool z_internal_check(const z_owned_publisher_t& this_) { return z_internal_publisher_check(&this_); };
-inline bool z_internal_check(const z_owned_query_t& query) { return z_internal_query_check(&query); };
-inline bool z_internal_check(const z_owned_queryable_t& this_) { return z_internal_queryable_check(&this_); };
-inline bool z_internal_check(const z_owned_reply_t& this_) { return z_internal_reply_check(&this_); };
-inline bool z_internal_check(const z_owned_reply_err_t& this_) { return z_internal_reply_err_check(&this_); };
-inline bool z_internal_check(const z_owned_ring_handler_query_t& this_) { return z_internal_ring_handler_query_check(&this_); };
-inline bool z_internal_check(const z_owned_ring_handler_reply_t& this_) { return z_internal_ring_handler_reply_check(&this_); };
-inline bool z_internal_check(const z_owned_ring_handler_sample_t& this_) { return z_internal_ring_handler_sample_check(&this_); };
-inline bool z_internal_check(const z_owned_sample_t& this_) { return z_internal_sample_check(&this_); };
-inline bool z_internal_check(const z_owned_session_t& this_) { return z_internal_session_check(&this_); };
-inline bool z_internal_check(const z_owned_slice_t& this_) { return z_internal_slice_check(&this_); };
-inline bool z_internal_check(const z_owned_string_array_t& this_) { return z_internal_string_array_check(&this_); };
-inline bool z_internal_check(const z_owned_string_t& this_) { return z_internal_string_check(&this_); };
-inline bool z_internal_check(const z_owned_subscriber_t& this_) { return z_internal_subscriber_check(&this_); };
-inline bool z_internal_check(const z_owned_task_t& this_) { return z_internal_task_check(&this_); };
-inline bool z_internal_check(const zc_owned_closure_log_t& this_) { return zc_internal_closure_log_check(&this_); };
-inline bool z_internal_check(const ze_owned_serializer_t& this_) { return ze_internal_serializer_check(&this_); };
+inline bool z_check(const z_owned_bytes_t& this_) { return z_bytes_check(&this_); };
+inline bool z_check(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_check(&this_); };
+inline bool z_check(const z_owned_closure_hello_t& this_) { return z_closure_hello_check(&this_); };
+inline bool z_check(const z_owned_closure_query_t& this_) { return z_closure_query_check(&this_); };
+inline bool z_check(const z_owned_closure_reply_t& this_) { return z_closure_reply_check(&this_); };
+inline bool z_check(const z_owned_closure_sample_t& this_) { return z_closure_sample_check(&this_); };
+inline bool z_check(const z_owned_closure_zid_t& this_) { return z_closure_zid_check(&this_); };
+inline bool z_check(const z_owned_condvar_t& this_) { return z_condvar_check(&this_); };
+inline bool z_check(const z_owned_config_t& this_) { return z_config_check(&this_); };
+inline bool z_check(const z_owned_encoding_t& this_) { return z_encoding_check(&this_); };
+inline bool z_check(const z_owned_fifo_handler_query_t& this_) { return z_fifo_handler_query_check(&this_); };
+inline bool z_check(const z_owned_fifo_handler_reply_t& this_) { return z_fifo_handler_reply_check(&this_); };
+inline bool z_check(const z_owned_fifo_handler_sample_t& this_) { return z_fifo_handler_sample_check(&this_); };
+inline bool z_check(const z_owned_hello_t& this_) { return z_hello_check(&this_); };
+inline bool z_check(const z_owned_keyexpr_t& this_) { return z_keyexpr_check(&this_); };
+inline bool z_check(const z_owned_mutex_t& this_) { return z_mutex_check(&this_); };
+inline bool z_check(const z_owned_publisher_t& this_) { return z_publisher_check(&this_); };
+inline bool z_check(const z_owned_query_t& query) { return z_query_check(&query); };
+inline bool z_check(const z_owned_queryable_t& this_) { return z_queryable_check(&this_); };
+inline bool z_check(const z_owned_reply_t& this_) { return z_reply_check(&this_); };
+inline bool z_check(const z_owned_reply_err_t& this_) { return z_reply_err_check(&this_); };
+inline bool z_check(const z_owned_ring_handler_query_t& this_) { return z_ring_handler_query_check(&this_); };
+inline bool z_check(const z_owned_ring_handler_reply_t& this_) { return z_ring_handler_reply_check(&this_); };
+inline bool z_check(const z_owned_ring_handler_sample_t& this_) { return z_ring_handler_sample_check(&this_); };
+inline bool z_check(const z_owned_sample_t& this_) { return z_sample_check(&this_); };
+inline bool z_check(const z_owned_session_t& this_) { return z_session_check(&this_); };
+inline bool z_check(const z_owned_slice_t& this_) { return z_slice_check(&this_); };
+inline bool z_check(const z_owned_string_array_t& this_) { return z_string_array_check(&this_); };
+inline bool z_check(const z_owned_string_t& this_) { return z_string_check(&this_); };
+inline bool z_check(const z_owned_subscriber_t& this_) { return z_subscriber_check(&this_); };
+inline bool z_check(const z_owned_task_t& this_) { return z_task_check(&this_); };
+inline bool z_check(const zc_owned_closure_log_t& this_) { return zc_closure_log_check(&this_); };
+inline bool z_check(const ze_owned_serializer_t& this_) { return ze_serializer_check(&this_); };
 
 
 inline void z_call(const z_loaned_closure_hello_t* closure, z_loaned_hello_t* hello) {

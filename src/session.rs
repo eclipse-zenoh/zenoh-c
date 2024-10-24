@@ -143,7 +143,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
 /// Returns ``true`` if `session` is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
+pub extern "C" fn z_session_check(this_: &z_owned_session_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

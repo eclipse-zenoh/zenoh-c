@@ -152,7 +152,7 @@ pub extern "C" fn z_encoding_drop(this_: &mut z_moved_encoding_t) {
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_internal_encoding_check(this_: &'static z_owned_encoding_t) -> bool {
+pub extern "C" fn z_encoding_check(this_: &'static z_owned_encoding_t) -> bool {
     *this_.as_rust_type_ref() != Encoding::default()
 }
 

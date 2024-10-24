@@ -83,7 +83,7 @@ pub unsafe extern "C" fn z_internal_closure_query_null(
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_closure_query_check(this_: &z_owned_closure_query_t) -> bool {
+pub extern "C" fn z_closure_query_check(this_: &z_owned_closure_query_t) -> bool {
     !this_.is_empty()
 }
 
