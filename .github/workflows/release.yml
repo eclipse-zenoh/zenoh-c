@@ -123,10 +123,15 @@ jobs:
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'aarch64-unknown-linux-musl'}}
-        run: sudo apt-get install -y musl-tools
+        run: |
+          wget https://musl.cc/aarch64-linux-musl-cross.tgz
+          tar xvfz aarch64-linux-musl-cross.tgz
 
       - id: build
         run: |
+          if [[ ${{ matrix.build.target}} == 'aarch64-unknown-linux-musl' ]]; then
+            export PATH=$(PWD)/aarch64-linux-musl-cross/bin/:$PATH
+          fi
           mkdir -p build  && cd build
           cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
           cmake --build . --config Release
