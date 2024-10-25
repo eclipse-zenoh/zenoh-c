@@ -121,7 +121,7 @@ jobs:
             !target/release/.*
             !target/release/*.d
 
-  cross-compile-mac:
+  cross-compile-mac-os:
     name: Cross compile on macOS-latest
     runs-on: macOS-latest
     strategy:
@@ -163,6 +163,71 @@ jobs:
           cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
           cmake --build . --target examples
 
+  cross-compile-ubuntu:
+    name: Cross compile on ubuntu-latest
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y musl-tools
+          sudo apt-get install -y gcc-arm-linux-gnueabi
+          sudo apt-get install -y g++-arm-linux-gnueabi
+          sudo apt-get install -y mingw-w64
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          sudo apt-get install -y g++-aarch64-linux-gnu
+          wget https://musl.cc/aarch64-linux-musl-cross.tgz
+          tar xvfz aarch64-linux-musl-cross.tgz
+          echo "$(readlink -f aarch64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
+          wget https://musl.cc/x86_64-linux-musl-cross.tgz
+          tar xvfz x86_64-linux-musl-cross.tgz
+          echo "$(readlink -f x86_64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
+
+      - name: Install rust toolchains
+        run: |
+          rustup target add arm-unknown-linux-gnueabi
+          rustup target add x86_64-pc-windows-gnu
+          rustup target add aarch64-unknown-linux-gnu
+          rustup target add aarch64-unknown-linux-musl
+          rustup target add x86_64-unknown-linux-musl
+
+      - name: Cross compile for arm-unknown-linux-gnueabi
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabi.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+      - name: Cross compile for aarch64-unknown-linux-gnu
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+      - name: Cross compile for aarch64-unknown-linux-musl
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+      - name: Cross compile for x86_64-unknown-linux-musl
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+      - name: Cross compile for x86_64-pc-windows-gnu
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
 
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged

@@ -315,7 +315,6 @@ endif()
 # Components included only if project is the root project
 #
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-	include(cmake/cross_build_check.cmake)
 	add_subdirectory(install)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/tests)
 	add_subdirectory(tests)
