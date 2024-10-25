@@ -134,9 +134,7 @@ jobs:
           if [[ "${{ matrix.build.target }}" == "aarch64-unknown-linux-musl" ]]; then
             export PATH=$PATH:$(readlink -f aarch64-linux-musl-cross)/bin
           elif [[ "${{ matrix.build.target }}" == "x86_64-pc-windows-gnu" ]]; then
-            ls -lahR /c/mingw64/
-            ls -lahR /mingw64/
-            #export PATH=$PATH:C:/mingw64/bin
+            export PATH=/c/mingw64/bin:$PATH
             echo $PATH
           fi
           mkdir -p build  && cd build
