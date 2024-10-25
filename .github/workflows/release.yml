@@ -83,7 +83,7 @@ jobs:
           - { target: x86_64-unknown-linux-musl, os: ubuntu-20.04 }
           - { target: arm-unknown-linux-gnueabi, os: ubuntu-20.04 }
           - { target: arm-unknown-linux-gnueabihf, os: ubuntu-20.04 }
-          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-20.04 }
+          - { target: armv7-unknown-linux-gnueabihf, os: macos-12 }
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-20.04 }
           - { target: aarch64-unknown-linux-musl, os: ubuntu-20.04 }
           - { target: x86_64-apple-darwin, os: macos-12 }
@@ -115,7 +115,7 @@ jobs:
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'armv7-unknown-linux-gnueabihf'}}
-        run: sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-armhf-cross libc6-dev-armhf-cross
+        run: brew install -f messense/macos-cross-toolchains/armv7-unknown-linux-gnueabihf
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'aarch64-unknown-linux-gnu'}}
