@@ -482,7 +482,7 @@ where
     result::Z_OK
 }
 
-fn zdeserializer_deserialize_arithmetic<'a, T>(
+fn deserializer_deserialize_arithmetic<'a, T>(
     this: &'a mut ze_deserializer_t,
     val: &'a mut T,
 ) -> z_result_t
@@ -607,7 +607,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint8(
     this: &mut ze_deserializer_t,
     dst: &mut u8,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<u8>(this, dst)
+    deserializer_deserialize_arithmetic::<u8>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
@@ -617,7 +617,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint16(
     this: &mut ze_deserializer_t,
     dst: &mut u16,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<u16>(this, dst)
+    deserializer_deserialize_arithmetic::<u16>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
@@ -627,7 +627,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint32(
     this: &mut ze_deserializer_t,
     dst: &mut u32,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<u32>(this, dst)
+    deserializer_deserialize_arithmetic::<u32>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
@@ -637,7 +637,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint64(
     this: &mut ze_deserializer_t,
     dst: &mut u64,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<u64>(this, dst)
+    deserializer_deserialize_arithmetic::<u64>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -647,7 +647,7 @@ pub extern "C" fn ze_deserializer_deserialize_int8(
     this: &mut ze_deserializer_t,
     dst: &mut i8,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<i8>(this, dst)
+    deserializer_deserialize_arithmetic::<i8>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -657,7 +657,7 @@ pub extern "C" fn ze_deserializer_deserialize_int16(
     this: &mut ze_deserializer_t,
     dst: &mut i16,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<i16>(this, dst)
+    deserializer_deserialize_arithmetic::<i16>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -667,7 +667,7 @@ pub extern "C" fn ze_deserializer_deserialize_int32(
     this: &mut ze_deserializer_t,
     dst: &mut i32,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<i32>(this, dst)
+    deserializer_deserialize_arithmetic::<i32>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -677,7 +677,7 @@ pub extern "C" fn ze_deserializer_deserialize_int64(
     this: &mut ze_deserializer_t,
     dst: &mut i64,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<i64>(this, dst)
+    deserializer_deserialize_arithmetic::<i64>(this, dst)
 }
 
 /// @brief Deserializes into a float.
@@ -687,7 +687,7 @@ pub extern "C" fn ze_deserializer_deserialize_float(
     this: &mut ze_deserializer_t,
     dst: &mut f32,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<f32>(this, dst)
+    deserializer_deserialize_arithmetic::<f32>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -697,7 +697,7 @@ pub extern "C" fn ze_deserializer_deserialize_double(
     this: &mut ze_deserializer_t,
     dst: &mut f64,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<f64>(this, dst)
+    deserializer_deserialize_arithmetic::<f64>(this, dst)
 }
 
 /// @brief Deserializes into a bool.
@@ -707,7 +707,7 @@ pub extern "C" fn ze_deserializer_deserialize_bool(
     this: &mut ze_deserializer_t,
     dst: &mut bool,
 ) -> z_result_t {
-    zdeserializer_deserialize_arithmetic::<bool>(this, dst)
+    deserializer_deserialize_arithmetic::<bool>(this, dst)
 }
 
 /// @brief Serializes a slice.
