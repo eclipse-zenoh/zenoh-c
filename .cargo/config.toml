@@ -12,8 +12,16 @@ linker = "arm-linux-gnueabihf-gcc"
 [target.arm-unknown-linux-gnueabi]
 linker = "arm-linux-gnueabi-gcc"
 
+<<<<<<< HEAD
 [target.armv7-unknown-linux-gnueabihf]
 linker = "armv7-linux-gnueabihf-gcc"
+||||||| parent of 3d4ead7e (fix: typo in config.toml for armv7 target)
+[target.arm7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+=======
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+>>>>>>> 3d4ead7e (fix: typo in config.toml for armv7 target)
 
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
