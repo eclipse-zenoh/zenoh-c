@@ -142,16 +142,6 @@ pub extern "C" fn z_keyexpr_loan_mut(this_: &mut z_owned_keyexpr_t) -> &mut z_lo
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
-/// Takes ownership of the mutably borrowed keyexpr
-#[no_mangle]
-pub extern "C" fn z_keyexpr_take_loaned(
-    dst: &mut MaybeUninit<z_owned_keyexpr_t>,
-    src: &mut z_loaned_keyexpr_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
-}
-
 /// Borrows `z_view_keyexpr_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -171,7 +161,7 @@ pub extern "C" fn z_keyexpr_drop(this_: &mut z_moved_keyexpr_t) {
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_check(this_: &z_owned_keyexpr_t) -> bool {
+pub extern "C" fn z_internal_keyexpr_check(this_: &z_owned_keyexpr_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

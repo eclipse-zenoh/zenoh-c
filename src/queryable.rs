@@ -67,16 +67,6 @@ pub extern "C" fn z_queryable_loan_mut(
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
-/// Takes ownership of the mutably borrowed queryable
-#[no_mangle]
-pub extern "C" fn z_queryable_take_loaned(
-    dst: &mut MaybeUninit<z_owned_queryable_t>,
-    src: &mut z_loaned_queryable_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
-}
-
 pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
     owned(z_owned_query_t, option Query),
@@ -90,7 +80,7 @@ pub extern "C" fn z_internal_query_null(this_: &mut MaybeUninit<z_owned_query_t>
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
 #[no_mangle]
-pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
+pub extern "C" fn z_internal_query_check(query: &z_owned_query_t) -> bool {
     query.as_rust_type_ref().is_some()
 }
 /// Borrows the query.
@@ -336,7 +326,7 @@ pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
 
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_queryable_check(this_: &z_owned_queryable_t) -> bool {
+pub extern "C" fn z_internal_queryable_check(this_: &z_owned_queryable_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

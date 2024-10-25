@@ -265,7 +265,7 @@ pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subs
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_check(this_: &ze_owned_querying_subscriber_t) -> bool {
+pub extern "C" fn ze_internal_querying_subscriber_check(this_: &ze_owned_querying_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

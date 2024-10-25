@@ -107,7 +107,7 @@ pub extern "C" fn z_internal_shm_provider_null(this_: &mut MaybeUninit<z_owned_s
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shm_provider_check(this_: &z_owned_shm_provider_t) -> bool {
+pub extern "C" fn z_internal_shm_provider_check(this_: &z_owned_shm_provider_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -131,16 +131,6 @@ pub extern "C" fn z_shm_provider_loan_mut(
     this: &mut z_owned_shm_provider_t,
 ) -> &mut z_loaned_shm_provider_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
-}
-
-/// Takes ownership of the mutably borrowed SHM Provider
-#[no_mangle]
-pub extern "C" fn z_shm_provider_take_loaned(
-    dst: &mut MaybeUninit<z_owned_shm_provider_t>,
-    src: &mut z_loaned_shm_provider_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

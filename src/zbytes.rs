@@ -67,7 +67,7 @@ extern "C" fn z_bytes_drop(this_: &mut z_moved_bytes_t) {
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
-extern "C" fn z_bytes_check(this: &z_owned_bytes_t) -> bool {
+extern "C" fn z_internal_bytes_check(this: &z_owned_bytes_t) -> bool {
     !this.as_rust_type_ref().is_empty()
 }
 
@@ -81,16 +81,6 @@ unsafe extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
 #[no_mangle]
 extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
-}
-
-/// Takes ownership of the mutably borrowed bytes
-#[no_mangle]
-pub extern "C" fn z_bytes_take_loaned(
-    dst: &mut MaybeUninit<z_owned_bytes_t>,
-    src: &mut z_loaned_bytes_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Returns ``true`` if `this_` is empty, ``false`` otherwise.
@@ -631,7 +621,7 @@ extern "C" fn z_bytes_writer_drop(this_: &mut z_moved_bytes_writer_t) {
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
 #[no_mangle]
-extern "C" fn z_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
+extern "C" fn z_internal_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
     this.as_rust_type_ref().is_some()
 }
 
@@ -653,16 +643,6 @@ pub extern "C" fn z_bytes_writer_loan_mut(
     this: &mut z_owned_bytes_writer_t,
 ) -> &mut z_loaned_bytes_writer_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
-}
-
-/// Takes ownership of the mutably borrowed writer
-#[no_mangle]
-pub extern "C" fn z_bytes_writer_take_loaned(
-    dst: &mut MaybeUninit<z_owned_bytes_writer_t>,
-    src: &mut z_loaned_bytes_writer_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Constructs a writer in a gravestone state.

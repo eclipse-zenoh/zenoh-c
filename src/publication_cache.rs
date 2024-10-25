@@ -164,7 +164,7 @@ pub extern "C" fn ze_internal_publication_cache_null(
 /// @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_check(this_: &ze_owned_publication_cache_t) -> bool {
+pub extern "C" fn ze_internal_publication_cache_check(this_: &ze_owned_publication_cache_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

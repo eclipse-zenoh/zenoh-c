@@ -31,28 +31,29 @@
 // move v to v1
 // make sure that v is null now
 //
-// set v2 to null
-// move v1 to v2 using z_take from mutable loaned
-// make sure that v1 is null now
-//
-#define TEST(name)                   \
-    {                                \
-        name v;                      \
-        memset(&v, -1, sizeof(v));   \
-        z_internal_null(&v);         \
-        assert(!z_check(v));         \
-        z_drop(z_move(v));           \
-        z_drop(z_move(v));           \
-        name v1;                     \
-        z_internal_null(&v1);        \
-        memset(&v, -1, sizeof(v));   \
-        z_take(&v1, z_move(v));      \
-        assert(!z_check(v));         \
-        name v2;                     \
-        z_internal_null(&v2);        \
-        memset(&v1, -1, sizeof(v1)); \
-        z_take(&v2, z_loan_mut(v1)); \
-        assert(!z_check(v1));        \
+#define TEST(name)                    \
+    {                                 \
+        name v;                       \
+        memset(&v, -1, sizeof(v));    \
+        z_internal_null(&v);          \
+        assert(!z_internal_check(v)); \
+        z_drop(z_move(v));            \
+        z_drop(z_move(v));            \
+        name v1;                      \
+        z_internal_null(&v1);         \
+        memset(&v, -1, sizeof(v));    \
+        z_take(&v1, z_move(v));       \
+        assert(!z_internal_check(v)); \
+    }
+
+#define TEST_TAKE_MUT(name, take_loan_func) \
+    {                                       \
+        name v;                             \
+        name v1;                            \
+        z_internal_null(&v1);               \
+        memset(&v, -1, sizeof(v));          \
+        take_loan_func(&v1, z_loan_mut(v)); \
+        assert(!z_internal_check(v));       \
     }
 
 int main(void) {
@@ -85,6 +86,11 @@ int main(void) {
     // TEST(z_owned_task_t)
     // TEST(z_owned_mutex_t)
     // TEST(z_owned_condvar_t)
+
+    TEST_TAKE_MUT(z_owned_sample_t, z_sample_take_loaned)
+    TEST_TAKE_MUT(z_owned_query_t, z_query_take_loaned)
+    TEST_TAKE_MUT(z_owned_reply_t, z_reply_take_loaned)
+    TEST_TAKE_MUT(z_owned_hello_t, z_hello_take_loaned)
 
     return 0;
 }

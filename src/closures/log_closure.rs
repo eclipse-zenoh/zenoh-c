@@ -167,7 +167,7 @@ pub extern "C" fn zc_closure_log_drop(closure_: &mut zc_moved_closure_log_t) {
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
+pub extern "C" fn zc_internal_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
     !this_.is_empty()
 }
 

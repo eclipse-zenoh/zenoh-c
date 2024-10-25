@@ -152,7 +152,7 @@ pub extern "C" fn z_encoding_drop(this_: &mut z_moved_encoding_t) {
 
 /// Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_encoding_check(this_: &'static z_owned_encoding_t) -> bool {
+pub extern "C" fn z_internal_encoding_check(this_: &'static z_owned_encoding_t) -> bool {
     *this_.as_rust_type_ref() != Encoding::default()
 }
 
@@ -166,16 +166,6 @@ pub extern "C" fn z_encoding_loan(this_: &z_owned_encoding_t) -> &z_loaned_encod
 #[no_mangle]
 pub extern "C" fn z_encoding_loan_mut(this_: &mut z_owned_encoding_t) -> &mut z_loaned_encoding_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
-}
-
-/// Takes ownership of the mutably borrowed encoding
-#[no_mangle]
-pub extern "C" fn z_encoding_take_loaned(
-    dst: &mut MaybeUninit<z_owned_encoding_t>,
-    src: &mut z_loaned_encoding_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Constructs an owned copy of the encoding in provided uninitilized memory location.

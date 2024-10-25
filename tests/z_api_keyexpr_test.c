@@ -92,9 +92,9 @@ void undeclare() {
     z_view_keyexpr_from_str(&view_ke, "test/thr");
     z_owned_keyexpr_t ke;
     z_declare_keyexpr(z_loan(s), &ke, z_loan(view_ke));
-    assert(z_keyexpr_check(&ke));
+    assert(z_internal_keyexpr_check(&ke));
     z_undeclare_keyexpr(z_loan(s), z_move(ke));
-    assert(!z_keyexpr_check(&ke));
+    assert(!z_internal_keyexpr_check(&ke));
 }
 
 #if defined(Z_FEATURE_UNSTABLE_API)

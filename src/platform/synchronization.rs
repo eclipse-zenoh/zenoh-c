@@ -38,7 +38,7 @@ pub extern "C" fn z_mutex_drop(this_: &mut z_moved_mutex_t) {
 
 /// Returns ``true`` if mutex is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_mutex_check(this_: &z_owned_mutex_t) -> bool {
+pub extern "C" fn z_internal_mutex_check(this_: &z_owned_mutex_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -52,16 +52,6 @@ pub extern "C" fn z_internal_mutex_null(this_: &mut MaybeUninit<z_owned_mutex_t>
 #[no_mangle]
 pub extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
-}
-
-/// Takes ownership of the mutably borrowed mutex
-#[no_mangle]
-pub extern "C" fn z_mutex_take_loaned(
-    dst: &mut MaybeUninit<z_owned_mutex_t>,
-    src: &mut z_loaned_mutex_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
@@ -147,7 +137,7 @@ pub extern "C" fn z_condvar_drop(this_: &mut z_moved_condvar_t) {
 
 /// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_condvar_check(this_: &z_owned_condvar_t) -> bool {
+pub extern "C" fn z_internal_condvar_check(this_: &z_owned_condvar_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -252,7 +242,7 @@ pub extern "C" fn z_task_drop(this_: &mut z_moved_task_t) {
 
 /// Returns ``true`` if task is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_task_check(this_: &z_owned_task_t) -> bool {
+pub extern "C" fn z_internal_task_check(this_: &z_owned_task_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

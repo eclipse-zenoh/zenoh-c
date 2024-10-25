@@ -70,7 +70,7 @@ pub extern "C" fn z_hello_take_loaned(
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_hello_check(this_: &z_owned_hello_t) -> bool {
+pub extern "C" fn z_internal_hello_check(this_: &z_owned_hello_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

@@ -48,16 +48,6 @@ pub extern "C" fn z_session_loan_mut(this_: &mut z_owned_session_t) -> &mut z_lo
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
-/// Takes ownership of the mutably borrowed session
-#[no_mangle]
-pub extern "C" fn z_session_take_loaned(
-    dst: &mut MaybeUninit<z_owned_session_t>,
-    src: &mut z_loaned_session_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
-}
-
 /// Constructs a Zenoh session in its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -143,7 +133,7 @@ pub extern "C" fn z_open_with_custom_shm_clients(
 /// Returns ``true`` if `session` is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_session_check(this_: &z_owned_session_t) -> bool {
+pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

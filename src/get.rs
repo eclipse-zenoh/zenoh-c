@@ -52,7 +52,7 @@ pub extern "C" fn z_internal_reply_err_null(this_: &mut MaybeUninit<z_owned_repl
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
+pub extern "C" fn z_internal_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
     !this_.as_rust_type_ref().payload().is_empty()
 }
 
@@ -80,16 +80,6 @@ pub extern "C" fn z_reply_err_loan_mut(
     this_: &mut z_owned_reply_err_t,
 ) -> &mut z_loaned_reply_err_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
-}
-
-/// Takes ownership of the mutably borrowed reply error
-#[no_mangle]
-pub extern "C" fn z_reply_err_take_loaned(
-    dst: &mut MaybeUninit<z_owned_reply_err_t>,
-    src: &mut z_loaned_reply_err_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Frees the memory and resets the reply error it to its default value.
@@ -313,7 +303,7 @@ pub extern "C" fn z_reply_drop(this_: &mut z_moved_reply_t) {
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_reply_check(this_: &z_owned_reply_t) -> bool {
+pub extern "C" fn z_internal_reply_check(this_: &z_owned_reply_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

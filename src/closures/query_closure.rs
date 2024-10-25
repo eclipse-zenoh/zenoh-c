@@ -83,7 +83,7 @@ pub unsafe extern "C" fn z_internal_closure_query_null(
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_closure_query_check(this_: &z_owned_closure_query_t) -> bool {
+pub extern "C" fn z_internal_closure_query_check(this_: &z_owned_closure_query_t) -> bool {
     !this_.is_empty()
 }
 
@@ -140,15 +140,6 @@ pub extern "C" fn z_closure_query_loan_mut(
     closure: &mut z_owned_closure_query_t,
 ) -> &mut z_loaned_closure_query_t {
     closure.as_loaned_c_type_mut()
-}
-
-/// Takes ownership of the mutably borrowed closure
-#[no_mangle]
-pub extern "C" fn z_closure_query_take_loaned(
-    dst: &mut MaybeUninit<z_owned_closure_query_t>,
-    src: &mut z_loaned_closure_query_t,
-) {
-    dst.write(std::mem::take(src.as_owned_c_type_mut()));
 }
 
 /// @brief Constructs closure.
