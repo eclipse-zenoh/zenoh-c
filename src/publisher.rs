@@ -327,7 +327,9 @@ pub extern "C" fn zc_internal_matching_listener_null(
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Checks the matching listener is for the gravestone state
-pub extern "C" fn zc_internal_matching_listener_check(this_: &zc_owned_matching_listener_t) -> bool {
+pub extern "C" fn zc_internal_matching_listener_check(
+    this_: &zc_owned_matching_listener_t,
+) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

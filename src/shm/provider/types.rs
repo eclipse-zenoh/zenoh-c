@@ -231,7 +231,9 @@ pub extern "C" fn z_internal_chunk_alloc_result_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_internal_chunk_alloc_result_check(this_: &z_owned_chunk_alloc_result_t) -> bool {
+pub extern "C" fn z_internal_chunk_alloc_result_check(
+    this_: &z_owned_chunk_alloc_result_t,
+) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
