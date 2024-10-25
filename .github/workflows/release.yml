@@ -83,11 +83,11 @@ jobs:
           - { target: x86_64-unknown-linux-musl, os: ubuntu-20.04 }
           - { target: arm-unknown-linux-gnueabi, os: ubuntu-20.04 }
           - { target: arm-unknown-linux-gnueabihf, os: ubuntu-20.04 }
-          - { target: armv7-unknown-linux-gnueabihf, os: macos-12 }
+          - { target: armv7-unknown-linux-gnueabihf, os: macos-14 }
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-20.04 }
           - { target: aarch64-unknown-linux-musl, os: ubuntu-20.04 }
-          - { target: x86_64-apple-darwin, os: macos-12 }
-          - { target: aarch64-apple-darwin, os: macos-12 }
+          - { target: x86_64-apple-darwin, os: macos-14 }
+          - { target: aarch64-apple-darwin, os: macos-14 }
           - { target: x86_64-pc-windows-msvc, os: windows-2019 }
           - { target: x86_64-pc-windows-gnu, os: ubuntu-20.04 }
     needs: tag
