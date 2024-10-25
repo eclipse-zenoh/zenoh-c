@@ -155,21 +155,21 @@ jobs:
       - name: Upload library archive
         uses: actions/upload-artifact@v4
         with:
-          name: zenohc-${{ inputs.version }}-${{ matrix.build.target }}-standalone.zip
+          name: zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
           path: ./build/packages/*.zip
 
       - name: Upload DEB archive
         if: ${{ matrix.build.os == 'ubuntu-20.04' }}
         uses: actions/upload-artifact@v4
         with:
-          name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-debian.zip
+          name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip
           path: ./build/packages/*.deb
 
       - name: Upload RPM archive
         if: ${{ matrix.build.os == 'ubuntu-20.04' }}
         uses: actions/upload-artifact@v4
         with:
-          name: libzenohc-${{ inputs.version }}-${{ matrix.build.target }}-rpm.zip
+          name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip
           path: ./build/packages/*.rpm
 
   debian:
