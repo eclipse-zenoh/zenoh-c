@@ -133,8 +133,8 @@ jobs:
           toolchain_file=$(readlink -f TC-${{ matrix.build.target }}.cmake)
           if [[ "${{ matrix.build.target }}" == "aarch64-unknown-linux-musl" ]]; then
             export PATH=$PATH:$(readlink -f aarch64-linux-musl-cross)/bin
-          elif  [[ "${{ matrix.build.target }}" == "x86_64-pc-windows-gnu"]]; then
-            export PATH=$PATH:C:/mingw64/bin
+          elif [[ "${{ matrix.build.target }}" == "x86_64-pc-windows-gnu" ]]; then
+            #export PATH=$PATH:C:/mingw64/bin
             echo $PATH
           fi
           mkdir -p build  && cd build
