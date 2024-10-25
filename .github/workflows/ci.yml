@@ -121,6 +121,49 @@ jobs:
             !target/release/.*
             !target/release/*.d
 
+  cross-compile-mac:
+    name: Cross compile on macOS-latest
+    runs-on: macOS-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew tap messense/macos-cross-toolchains
+          brew install armv7-unknown-linux-gnueabihf
+          brew install mingw-w64
+          brew install x86_64-unknown-linux-gnu
+
+      - name: Install rust toolchains
+        run: |
+          rustup target add armv7-unknown-linux-gnueabihf
+          rustup target add x86_64-pc-windows-gnu
+          rustup target add x86_64-unknown-linux-gnu
+
+      - name: Cross compile for armv7-unknown-linux-gnueabihf
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-armv7-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+      - name: Cross compile for x86_64-unknown-linux-gnu
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+      - name: Cross compile for x86_64-pc-windows-gnu
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged
   # from branches where specific status checks have passed. These checks are
