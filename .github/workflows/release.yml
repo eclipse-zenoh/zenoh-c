@@ -115,7 +115,9 @@ jobs:
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'armv7-unknown-linux-gnueabihf'}}
-        run: brew install -f messense/macos-cross-toolchains/armv7-unknown-linux-gnueabihf
+        run: |
+          brew install -f messense/macos-cross-toolchains/armv7-unknown-linux-gnueabihf
+          brew install dpkg
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'aarch64-unknown-linux-gnu'}}
@@ -143,7 +145,7 @@ jobs:
           cpack -C Release -G ZIP
 
       - id: build-distro-packages
-        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
+        if: ${{ matrix.build.os == 'ubuntu-20.04' || matrix.build.target == 'armv7-unknown-linux-gnueabihf' }}
         run: |
           cd build
           cpack -G DEB
