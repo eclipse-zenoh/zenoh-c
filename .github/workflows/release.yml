@@ -89,7 +89,7 @@ jobs:
           - { target: x86_64-apple-darwin, os: macos-12 }
           - { target: aarch64-apple-darwin, os: macos-12 }
           - { target: x86_64-pc-windows-msvc, os: windows-2019 }
-          - { target: x86_64-pc-windows-gnu, os: windows-2019 }
+          - { target: x86_64-pc-windows-gnu, os: ubuntu-20.04 }
     needs: tag
     steps:
       - name: Checkout this repository
@@ -126,23 +126,19 @@ jobs:
         run: |
           wget https://musl.cc/aarch64-linux-musl-cross.tgz
           tar xvfz aarch64-linux-musl-cross.tgz
+          echo "$(readlink -f aarch64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'x86_64-pc-windows-gnu'}}
+        run: |
+          sudo apt-get install -y mingw-w64
 
       - id: build
         shell: bash
         run: |
           toolchain_file=$(readlink -f TC-${{ matrix.build.target }}.cmake)
-          cmake_cmd="cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON"
-          if [[ "${{ matrix.build.target }}" == "aarch64-unknown-linux-musl" ]]; then
-            export PATH=$PATH:$(readlink -f aarch64-linux-musl-cross)/bin
-          elif [[ "${{ matrix.build.target }}" == "x86_64-pc-windows-gnu" ]]; then
-            export PATH=/c/mingw64/bin:$PATH
-            echo $PATH
-            c_compiler="/c/mingw64/bin/x86_64-w64-mingw32-gcc.exe"
-            cxx_compiler="/c/mingw64/bin/x86_64-w64-mingw32-g++.exe"
-            cmake_cmd="cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_C_COMPILER="${c_compiler}" -DCMAKE_CXX_COMPILER_TARGET="${cxx_compiler}" -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON"
-          fi
           mkdir -p build  && cd build
-          $cmake_cmd
+          cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
           cmake --build . --config Release
           cpack -C Release -G ZIP
 
