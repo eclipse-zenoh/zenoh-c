@@ -118,6 +118,7 @@ jobs:
         run: |
           brew install -f messense/macos-cross-toolchains/armv7-unknown-linux-gnueabihf
           brew install dpkg
+          brew install rpm
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'aarch64-unknown-linux-gnu'}}
