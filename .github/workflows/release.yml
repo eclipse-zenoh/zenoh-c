@@ -104,7 +104,11 @@ jobs:
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'x86_64-unknown-linux-musl'}}
-        run: sudo apt-get install -y musl-tools
+        run: |
+          sudo apt-get install -y musl-tools
+          wget https://musl.cc/x86_64-linux-musl-cross.tgz
+          tar xvfz x86_64-linux-musl-cross.tgz
+          echo "$(readlink -f x86_64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
 
       - name: Install build deps
         if: ${{ matrix.build.target == 'arm-unknown-linux-gnueabi'}}
