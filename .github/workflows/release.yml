@@ -131,14 +131,18 @@ jobs:
         shell: bash
         run: |
           toolchain_file=$(readlink -f TC-${{ matrix.build.target }}.cmake)
+          cmake_cmd="cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON"
           if [[ "${{ matrix.build.target }}" == "aarch64-unknown-linux-musl" ]]; then
             export PATH=$PATH:$(readlink -f aarch64-linux-musl-cross)/bin
           elif [[ "${{ matrix.build.target }}" == "x86_64-pc-windows-gnu" ]]; then
             export PATH=/c/mingw64/bin:$PATH
             echo $PATH
+            c_compiler="/c/mingw64/bin/x86_64-w64-mingw32-gcc.exe"
+            cxx_compiler="/c/mingw64/bin/x86_64-w64-mingw32-g++.exe"
+            cmake_cmd="cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_C_COMPILER="${c_compiler}" -DCMAKE_CXX_COMPILER_TARGET="${cxx_compiler}" -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON"
           fi
           mkdir -p build  && cd build
-          cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
+          $cmake_cmd
           cmake --build . --config Release
           cpack -C Release -G ZIP
 
