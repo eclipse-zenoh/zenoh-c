@@ -161,14 +161,14 @@ jobs:
           path: ./build/packages/*.zip
 
       - name: Upload DEB archive
-        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
+        if: ${{ contains(matrix.build.target, 'linux') }}
         uses: actions/upload-artifact@v4
         with:
           name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip
           path: ./build/packages/*.deb
 
       - name: Upload RPM archive
-        if: ${{ matrix.build.os == 'ubuntu-20.04' }}
+        if: ${{ contains(matrix.build.target, 'linux') }}
         uses: actions/upload-artifact@v4
         with:
           name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip
