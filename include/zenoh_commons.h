@@ -1553,7 +1553,7 @@ void z_bytes_writer_finish(struct z_moved_bytes_writer_t *this_,
 ZENOHC_API
 const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
 /**
- * Muatably borrows writer.
+ * Mutably borrows writer.
  */
 ZENOHC_API
 struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
@@ -2428,7 +2428,7 @@ ZENOHC_API void z_fifo_handler_query_drop(struct z_moved_fifo_handler_query_t *t
 ZENOHC_API
 const struct z_loaned_fifo_handler_query_t *z_fifo_handler_query_loan(const struct z_owned_fifo_handler_query_t *this_);
 /**
- * Borrows handler.
+ * Mutably borrows handler.
  */
 ZENOHC_API
 struct z_loaned_fifo_handler_query_t *z_fifo_handler_query_loan_mut(struct z_owned_fifo_handler_query_t *this_);
@@ -2545,7 +2545,7 @@ ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
  */
 ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hello_t *this_);
 /**
- * Borrows hello message.
+ * Mutably borrows hello message.
  */
 ZENOHC_API struct z_loaned_hello_t *z_hello_loan_mut(struct z_owned_hello_t *this_);
 /**
@@ -3502,8 +3502,14 @@ ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
 ZENOHC_API
 z_entity_global_id_t z_queryable_id(const struct z_loaned_queryable_t *queryable);
 #endif
+/**
+ * Borrows Queryable.
+ */
 ZENOHC_API
 const struct z_loaned_queryable_t *z_queryable_loan(const struct z_owned_queryable_t *this_);
+/**
+ * Mutably borrows Queryable.
+ */
 ZENOHC_API struct z_loaned_queryable_t *z_queryable_loan_mut(struct z_owned_queryable_t *this_);
 /**
  * Constructs the default value for `z_query_reply_options_t`.
@@ -3651,7 +3657,7 @@ ZENOHC_API void z_ring_handler_query_drop(struct z_moved_ring_handler_query_t *t
 ZENOHC_API
 const struct z_loaned_ring_handler_query_t *z_ring_handler_query_loan(const struct z_owned_ring_handler_query_t *this_);
 /**
- * Borrows handler.
+ * Mutably borrows handler.
  */
 ZENOHC_API
 struct z_loaned_ring_handler_query_t *z_ring_handler_query_loan_mut(struct z_owned_ring_handler_query_t *this_);
@@ -3711,7 +3717,7 @@ ZENOHC_API void z_ring_handler_sample_drop(struct z_moved_ring_handler_sample_t 
 ZENOHC_API
 const struct z_loaned_ring_handler_sample_t *z_ring_handler_sample_loan(const struct z_owned_ring_handler_sample_t *this_);
 /**
- * Borrows handler.
+ * Mutably borrows handler.
  */
 ZENOHC_API
 struct z_loaned_ring_handler_sample_t *z_ring_handler_sample_loan_mut(struct z_owned_ring_handler_sample_t *this_);
@@ -4285,7 +4291,7 @@ const z_loaned_source_info_t *z_source_info_loan(const z_owned_source_info_t *th
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows source info.
+ * @brief Mutably borrows source info.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -5661,7 +5667,7 @@ void ze_serializer_finish(struct ze_moved_serializer_t *this_,
 ZENOHC_API
 const struct ze_loaned_serializer_t *ze_serializer_loan(const struct ze_owned_serializer_t *this_);
 /**
- * @brief Muatably borrows serializer.
+ * @brief Mutably borrows serializer.
  */
 ZENOHC_API
 struct ze_loaned_serializer_t *ze_serializer_loan_mut(struct ze_owned_serializer_t *this_);

@@ -48,7 +48,7 @@ pub extern "C" fn z_internal_queryable_null(this_: &mut MaybeUninit<z_owned_quer
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-// Borrows Queryable
+/// Borrows Queryable.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loaned_queryable_t {
@@ -59,7 +59,7 @@ pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loa
         .as_loaned_c_type_ref()
 }
 
-// Mutably borrows Queryable
+/// Mutably borrows Queryable.
 #[no_mangle]
 pub extern "C" fn z_queryable_loan_mut(
     this_: &mut z_owned_queryable_t,

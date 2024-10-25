@@ -72,7 +72,7 @@ pub unsafe extern "C" fn ze_serializer_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @brief Muatably borrows serializer.
+/// @brief Mutably borrows serializer.
 #[no_mangle]
 pub extern "C" fn ze_serializer_loan_mut(
     this: &mut ze_owned_serializer_t,

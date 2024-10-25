@@ -617,7 +617,7 @@ pub extern "C" fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Borrows source info.
+/// @brief Mutably borrows source info.
 #[no_mangle]
 pub extern "C" fn z_source_info_loan_mut(
     this_: &mut z_owned_source_info_t,

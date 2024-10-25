@@ -637,7 +637,7 @@ pub unsafe extern "C" fn z_bytes_writer_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Muatably borrows writer.
+/// Mutably borrows writer.
 #[no_mangle]
 pub extern "C" fn z_bytes_writer_loan_mut(
     this: &mut z_owned_bytes_writer_t,

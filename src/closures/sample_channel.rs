@@ -222,7 +222,7 @@ pub unsafe extern "C" fn z_ring_handler_sample_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Borrows handler.
+/// Mutably borrows handler.
 #[no_mangle]
 pub extern "C" fn z_ring_handler_sample_loan_mut(
     this: &mut z_owned_ring_handler_sample_t,
