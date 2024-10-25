@@ -145,7 +145,7 @@ jobs:
           cpack -C Release -G ZIP
 
       - id: build-distro-packages
-        if: ${{ matrix.build.os == 'ubuntu-20.04' || matrix.build.target == 'armv7-unknown-linux-gnueabihf' }}
+        if: ${{ contains(matrix.build.target, 'linux') }}
         run: |
           cd build
           cpack -G DEB
