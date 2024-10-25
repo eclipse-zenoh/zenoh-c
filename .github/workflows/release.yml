@@ -136,7 +136,8 @@ jobs:
         run: |
           sudo apt-get install -y mingw-w64
 
-      - id: build
+      - name: Build standalone
+        id: build
         shell: bash
         run: |
           toolchain_file=$(readlink -f TC-${{ matrix.build.target }}.cmake)
@@ -145,7 +146,8 @@ jobs:
           cmake --build . --config Release
           cpack -C Release -G ZIP
 
-      - id: build-distro-packages
+      - name: Build distro packages (DEB/RPM)
+        id: build-distro-packages
         if: ${{ contains(matrix.build.target, 'linux') }}
         run: |
           cd build
