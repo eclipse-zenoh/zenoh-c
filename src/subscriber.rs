@@ -54,10 +54,15 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 
 /// Mutably borrows subscriber.
 #[no_mangle]
-pub extern "C" fn z_subscriber_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_subscriber_loan_mut(
     this_: &mut z_owned_subscriber_t,
 ) -> &mut z_loaned_subscriber_t {
-    this_.as_rust_type_mut().as_loaned_c_type_mut()
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// Options passed to the `z_declare_subscriber()` function.

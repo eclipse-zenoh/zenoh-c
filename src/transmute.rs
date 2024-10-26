@@ -441,7 +441,7 @@ macro_rules! decl_c_type {
         impl_owned!(owned $c_owned_type, rust $rust_owned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_c_loaned_mut_unsafe($rust_loaned_type, $c_loaned_type));
-        impl_transmute!(as_c_loaned_mut($rust_owned_type, $c_loaned_type));
+        impl_transmute!(as_c_loaned_mut($rust_loaned_mut_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
         impl_transmute!(as_rust_mut($c_loaned_type, $rust_loaned_mut_type));
     };

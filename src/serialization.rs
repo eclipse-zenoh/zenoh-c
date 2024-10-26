@@ -74,10 +74,14 @@ pub unsafe extern "C" fn ze_serializer_loan(
 
 /// @brief Mutably borrows serializer.
 #[no_mangle]
-pub extern "C" fn ze_serializer_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_serializer_loan_mut(
     this: &mut ze_owned_serializer_t,
 ) -> &mut ze_loaned_serializer_t {
-    this.as_rust_type_mut().as_loaned_c_type_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// @brief Constructs a serializer in a gravestone state.
@@ -461,15 +465,14 @@ pub unsafe extern "C" fn ze_deserializer_is_done(this_: &ze_deserializer_t) -> b
     deserializer.done()
 }
 
-fn serializer_serialize_arithmetic<T>(this: &mut ze_loaned_serializer_t, val: &T) -> z_result_t
+fn ze_serializer_serialize_arithmetic<T>(this: &mut ze_loaned_serializer_t, val: &T)
 where
     T: Serialize,
 {
     this.as_rust_type_mut().serialize(val);
-    result::Z_OK
 }
 
-fn deserializer_deserialize_arithmetic<'a, T>(
+fn ze_deserializer_deserialize_arithmetic<'a, T>(
     this: &'a mut ze_deserializer_t,
     val: &'a mut T,
 ) -> z_result_t
@@ -494,7 +497,8 @@ pub extern "C" fn ze_serializer_serialize_uint8(
     this_: &mut ze_loaned_serializer_t,
     val: u8,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<u8>(this_, &val)
+    ze_serializer_serialize_arithmetic::<u8>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
@@ -503,7 +507,8 @@ pub extern "C" fn ze_serializer_serialize_uint16(
     this_: &mut ze_loaned_serializer_t,
     val: u16,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<u16>(this_, &val)
+    ze_serializer_serialize_arithmetic::<u16>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
@@ -512,7 +517,8 @@ pub extern "C" fn ze_serializer_serialize_uint32(
     this_: &mut ze_loaned_serializer_t,
     val: u32,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<u32>(this_, &val)
+    ze_serializer_serialize_arithmetic::<u32>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
@@ -521,7 +527,8 @@ pub extern "C" fn ze_serializer_serialize_uint64(
     this_: &mut ze_loaned_serializer_t,
     val: u64,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<u64>(this_, &val)
+    ze_serializer_serialize_arithmetic::<u64>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
@@ -530,7 +537,8 @@ pub extern "C" fn ze_serializer_serialize_int8(
     this_: &mut ze_loaned_serializer_t,
     val: i8,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<i8>(this_, &val)
+    ze_serializer_serialize_arithmetic::<i8>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
@@ -539,7 +547,8 @@ pub extern "C" fn ze_serializer_serialize_int16(
     this_: &mut ze_loaned_serializer_t,
     val: i16,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<i16>(this_, &val)
+    ze_serializer_serialize_arithmetic::<i16>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
@@ -548,7 +557,8 @@ pub extern "C" fn ze_serializer_serialize_int32(
     this_: &mut ze_loaned_serializer_t,
     val: i32,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<i32>(this_, &val)
+    ze_serializer_serialize_arithmetic::<i32>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
@@ -557,7 +567,8 @@ pub extern "C" fn ze_serializer_serialize_int64(
     this_: &mut ze_loaned_serializer_t,
     val: i64,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<i64>(this_, &val)
+    ze_serializer_serialize_arithmetic::<i64>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes a float.
@@ -566,7 +577,8 @@ pub extern "C" fn ze_serializer_serialize_float(
     this_: &mut ze_loaned_serializer_t,
     val: f32,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<f32>(this_, &val)
+    ze_serializer_serialize_arithmetic::<f32>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes a double.
@@ -575,7 +587,8 @@ pub extern "C" fn ze_serializer_serialize_double(
     this_: &mut ze_loaned_serializer_t,
     val: f64,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<f64>(this_, &val)
+    ze_serializer_serialize_arithmetic::<f64>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Serializes a bool.
@@ -584,7 +597,8 @@ pub extern "C" fn ze_serializer_serialize_bool(
     this_: &mut ze_loaned_serializer_t,
     val: bool,
 ) -> z_result_t {
-    serializer_serialize_arithmetic::<bool>(this_, &val)
+    ze_serializer_serialize_arithmetic::<bool>(this_, &val);
+    result::Z_OK
 }
 
 /// @brief Deserializes into an unsigned integer.
@@ -594,7 +608,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint8(
     this: &mut ze_deserializer_t,
     dst: &mut u8,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<u8>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<u8>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
@@ -604,7 +618,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint16(
     this: &mut ze_deserializer_t,
     dst: &mut u16,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<u16>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<u16>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
@@ -614,7 +628,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint32(
     this: &mut ze_deserializer_t,
     dst: &mut u32,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<u32>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<u32>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
@@ -624,7 +638,7 @@ pub extern "C" fn ze_deserializer_deserialize_uint64(
     this: &mut ze_deserializer_t,
     dst: &mut u64,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<u64>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<u64>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -634,7 +648,7 @@ pub extern "C" fn ze_deserializer_deserialize_int8(
     this: &mut ze_deserializer_t,
     dst: &mut i8,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<i8>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<i8>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -644,7 +658,7 @@ pub extern "C" fn ze_deserializer_deserialize_int16(
     this: &mut ze_deserializer_t,
     dst: &mut i16,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<i16>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<i16>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -654,7 +668,7 @@ pub extern "C" fn ze_deserializer_deserialize_int32(
     this: &mut ze_deserializer_t,
     dst: &mut i32,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<i32>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<i32>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -664,7 +678,7 @@ pub extern "C" fn ze_deserializer_deserialize_int64(
     this: &mut ze_deserializer_t,
     dst: &mut i64,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<i64>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<i64>(this, dst)
 }
 
 /// @brief Deserializes into a float.
@@ -674,7 +688,7 @@ pub extern "C" fn ze_deserializer_deserialize_float(
     this: &mut ze_deserializer_t,
     dst: &mut f32,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<f32>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<f32>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
@@ -684,7 +698,7 @@ pub extern "C" fn ze_deserializer_deserialize_double(
     this: &mut ze_deserializer_t,
     dst: &mut f64,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<f64>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<f64>(this, dst)
 }
 
 /// @brief Deserializes into a bool.
@@ -694,7 +708,7 @@ pub extern "C" fn ze_deserializer_deserialize_bool(
     this: &mut ze_deserializer_t,
     dst: &mut bool,
 ) -> z_result_t {
-    deserializer_deserialize_arithmetic::<bool>(this, dst)
+    ze_deserializer_deserialize_arithmetic::<bool>(this, dst)
 }
 
 /// @brief Serializes a slice.

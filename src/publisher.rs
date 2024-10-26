@@ -167,10 +167,14 @@ pub unsafe extern "C" fn z_publisher_loan(this_: &z_owned_publisher_t) -> &z_loa
 
 /// Mutably borrows publisher.
 #[no_mangle]
-pub extern "C" fn z_publisher_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_publisher_loan_mut(
     this: &mut z_owned_publisher_t,
 ) -> &mut z_loaned_publisher_t {
-    this.as_rust_type_mut().as_loaned_c_type_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// Options passed to the `z_publisher_put()` function.

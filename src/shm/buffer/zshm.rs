@@ -81,8 +81,14 @@ pub unsafe extern "C" fn z_shm_loan(this_: &z_owned_shm_t) -> &z_loaned_shm_t {
 
 /// @brief Mutably borrows ZShm slice.
 #[no_mangle]
-pub extern "C" fn z_shm_loan_mut(this_: &mut z_owned_shm_t) -> &mut z_loaned_shm_t {
-    this_.as_rust_type_mut().as_loaned_c_type_mut()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_shm_loan_mut(this_: &mut z_owned_shm_t) -> &mut z_loaned_shm_t {
+    let this: &mut zshm = this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .borrow_mut();
+    this.as_loaned_c_type_mut()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

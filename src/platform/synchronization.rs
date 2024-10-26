@@ -50,8 +50,13 @@ pub extern "C" fn z_internal_mutex_null(this_: &mut MaybeUninit<z_owned_mutex_t>
 
 /// Mutably borrows mutex.
 #[no_mangle]
-pub extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
-    this_.as_rust_type_mut().as_loaned_c_type_mut()
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.

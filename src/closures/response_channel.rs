@@ -107,10 +107,14 @@ pub unsafe extern "C" fn z_fifo_handler_reply_loan(
 
 /// Mutably borrows handler.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_reply_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_fifo_handler_reply_loan_mut(
     this: &mut z_owned_fifo_handler_reply_t,
 ) -> &mut z_loaned_fifo_handler_reply_t {
-    this.as_rust_type_mut().as_loaned_c_type_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// Returns reply from the fifo buffer. If there are no more pending replies will block until next reply is received, or until
@@ -220,10 +224,14 @@ pub unsafe extern "C" fn z_ring_handler_reply_loan(
 
 /// Mutably borrows handler.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_reply_loan_mut(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_ring_handler_reply_loan_mut(
     this: &mut z_owned_ring_handler_reply_t,
 ) -> &mut z_loaned_ring_handler_reply_t {
-    this.as_rust_type_mut().as_loaned_c_type_mut()
+    this.as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// Returns reply from the ring buffer. If there are no more pending replies will block until next reply is received, or until
