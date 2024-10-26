@@ -269,7 +269,7 @@ pub use crate::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t
 
 decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
-    loaned(z_loaned_slice_t, CSlice),
+    loaned(z_loaned_slice_t, CSlice, CSlice),
     view(z_view_slice_t, CSliceView),
 );
 
@@ -543,7 +543,7 @@ impl From<CStringOwned> for CSlice {
 
 decl_c_type!(
     owned(z_owned_string_t, CStringOwned),
-    loaned(z_loaned_string_t, CString),
+    loaned(z_loaned_string_t, CString, CString),
     view(z_view_string_t, CStringView),
 );
 

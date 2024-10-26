@@ -5785,12 +5785,6 @@ ZENOHC_API
 z_result_t ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_,
                                          uint8_t val);
 /**
- * @brief Takes ownership of the mutably borrowed serializer.
- */
-ZENOHC_API
-void ze_serializer_take_loaned(struct ze_owned_serializer_t *dst,
-                               struct ze_loaned_serializer_t *src);
-/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares publication cache.
  * @return 0 in case of success, negative error code otherwise.

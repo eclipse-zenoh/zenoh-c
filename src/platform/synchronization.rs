@@ -58,10 +58,7 @@ pub extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned
 /// @return 0 in case of success, negative error code in case of failure.
 #[no_mangle]
 pub extern "C" fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::z_result_t {
-    let Some(this) = this_.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
-
+    let this = this_.as_rust_type_mut();
     match this.0.lock() {
         Ok(new_lock) => {
             let old_lock = this.1.replace(new_lock);
@@ -78,9 +75,7 @@ pub extern "C" fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_result_t {
-    let Some(this) = this_.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
+    let this = this_.as_rust_type_mut();
     if this.1.is_none() {
         return result::Z_EINVAL_MUTEX;
     } else {
@@ -96,9 +91,7 @@ pub extern "C" fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_resu
 pub unsafe extern "C" fn z_mutex_try_lock(
     this: &'static mut z_loaned_mutex_t,
 ) -> result::z_result_t {
-    let Some(this) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
+    let this = this.as_rust_type_mut();
     match this.0.try_lock() {
         Ok(new_lock) => {
             let old_lock = this.1.replace(new_lock);
@@ -185,9 +178,7 @@ pub unsafe extern "C" fn z_condvar_wait(
     m: &mut z_loaned_mutex_t,
 ) -> result::z_result_t {
     let this = this.as_rust_type_ref();
-    let Some(m) = m.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
+    let m = m.as_rust_type_mut();
     if m.1.is_none() {
         return result::Z_EINVAL_MUTEX; // lock was not aquired prior to wait call
     }

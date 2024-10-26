@@ -80,16 +80,6 @@ pub extern "C" fn ze_serializer_loan_mut(
     this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
-/// @brief Takes ownership of the mutably borrowed serializer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_take_loaned(
-    dst: &mut MaybeUninit<ze_owned_serializer_t>,
-    src: &mut ze_loaned_serializer_t,
-) {
-    dst.as_rust_type_mut_uninit()
-        .write(std::mem::take(src.as_rust_type_mut()));
-}
-
 /// @brief Constructs a serializer in a gravestone state.
 #[no_mangle]
 pub extern "C" fn ze_internal_serializer_null(this_: &mut MaybeUninit<ze_owned_serializer_t>) {
@@ -475,10 +465,7 @@ fn serializer_serialize_arithmetic<T>(this: &mut ze_loaned_serializer_t, val: &T
 where
     T: Serialize,
 {
-    let Some(serializer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
-    serializer.serialize(val);
+    this.as_rust_type_mut().serialize(val);
     result::Z_OK
 }
 
@@ -716,11 +703,8 @@ pub extern "C" fn ze_serializer_serialize_slice(
     this: &mut ze_loaned_serializer_t,
     slice: &z_loaned_slice_t,
 ) -> z_result_t {
-    let Some(serializer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
     let cslice = slice.as_rust_type_ref().slice();
-    serializer.serialize(cslice);
+    this.as_rust_type_mut().serialize(cslice);
     result::Z_OK
 }
 
@@ -734,11 +718,8 @@ pub extern "C" fn ze_serializer_serialize_buf(
     data: *const u8,
     len: usize,
 ) -> z_result_t {
-    let Some(serializer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
     let slice = unsafe { from_raw_parts(data, len) };
-    serializer.serialize(slice);
+    this.as_rust_type_mut().serialize(slice);
     result::Z_OK
 }
 
@@ -771,12 +752,9 @@ pub extern "C" fn ze_serializer_serialize_string(
     this: &mut ze_loaned_serializer_t,
     str: &z_loaned_string_t,
 ) -> z_result_t {
-    let Some(serializer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
     match str::from_utf8(str.as_rust_type_ref().slice()) {
         Ok(s) => {
-            serializer.serialize(s);
+            this.as_rust_type_mut().serialize(s);
             result::Z_OK
         }
         Err(e) => {
@@ -795,13 +773,10 @@ pub extern "C" fn ze_serializer_serialize_substr(
     start: *const libc::c_char,
     len: usize,
 ) -> z_result_t {
-    let Some(serializer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
     let slice = unsafe { from_raw_parts(start as *const u8, len) };
     match str::from_utf8(slice) {
         Ok(s) => {
-            serializer.serialize(s);
+            this.as_rust_type_mut().serialize(s);
             result::Z_OK
         }
         Err(e) => {
@@ -849,10 +824,7 @@ pub extern "C" fn ze_serializer_serialize_sequence_length(
     this: &mut ze_loaned_serializer_t,
     len: usize,
 ) -> z_result_t {
-    let Some(serializer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
-    serializer.serialize(VarInt::<usize>(len));
+    this.as_rust_type_mut().serialize(VarInt::<usize>(len));
     result::Z_OK
 }
 

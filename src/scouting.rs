@@ -30,8 +30,8 @@ use crate::{
     z_owned_string_array_t, z_view_string_t, CString, CStringView, ZVector,
 };
 decl_c_type!(
-    owned(z_owned_hello_t, option Hello ),
-    loaned(z_loaned_hello_t),
+    owned(z_owned_hello_t, Option<Hello>),
+    loaned(z_loaned_hello_t, Hello, Option<Hello>),
 );
 
 /// Frees memory and resets hello message to its gravestone state.

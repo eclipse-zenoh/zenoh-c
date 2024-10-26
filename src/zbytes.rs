@@ -675,10 +675,7 @@ unsafe extern "C" fn z_bytes_writer_write_all(
     src: *const u8,
     len: usize,
 ) -> z_result_t {
-    let Some(writer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
-    match writer.write_all(from_raw_parts(src, len)) {
+    match this.as_rust_type_mut().write_all(from_raw_parts(src, len)) {
         Ok(_) => Z_OK,
         Err(_) => Z_EIO,
     }
@@ -694,9 +691,6 @@ extern "C" fn z_bytes_writer_append(
     this: &mut z_loaned_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {
-    let Some(writer) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
-    writer.append(bytes.take_rust_type());
+    this.as_rust_type_mut().append(bytes.take_rust_type());
     result::Z_OK
 }

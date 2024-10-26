@@ -195,9 +195,7 @@ pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
     value: *const c_char,
     value_len: usize,
 ) -> result::z_result_t {
-    let Some(config) = this.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
+    let config = this.as_rust_type_mut();
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(e) => {

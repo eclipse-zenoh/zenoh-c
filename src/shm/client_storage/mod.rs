@@ -93,13 +93,10 @@ pub extern "C" fn zc_shm_client_list_add_client(
     id: z_protocol_id_t,
     client: &mut z_moved_shm_client_t,
 ) -> z_result_t {
-    let Some(this) = this.as_rust_type_mut() else {
-        return Z_EINVAL;
-    };
     let Some(client) = client.take_rust_type() else {
         return Z_EINVAL;
     };
-    this.push((id, client));
+    this.as_rust_type_mut().push((id, client));
     Z_OK
 }
 

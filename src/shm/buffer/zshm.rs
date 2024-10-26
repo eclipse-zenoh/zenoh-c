@@ -29,7 +29,7 @@ use crate::{
 
 decl_c_type!(
     owned(z_owned_shm_t, Option<ZShm>),
-    loaned(z_loaned_shm_t, zshm),
+    loaned(z_loaned_shm_t, zshm, zshm),
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -116,10 +116,7 @@ pub extern "C" fn z_shm_drop(this_: &mut z_moved_shm_t) {
 pub unsafe extern "C" fn z_shm_try_reloan_mut(
     this_: &mut z_loaned_shm_t,
 ) -> *mut z_loaned_shm_mut_t {
-    let Some(this) = this_.as_rust_type_mut() else {
-        return std::ptr::null_mut();
-    };
-    match this.try_into() {
+    match this_.as_rust_type_mut().try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
             v.as_loaned_c_type_mut_unsafe()

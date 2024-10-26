@@ -26,7 +26,7 @@ use crate::{
 
 decl_c_type!(
     owned(z_owned_shm_mut_t, Option<ZShmMut>),
-    loaned(z_loaned_shm_mut_t, zshmmut),
+    loaned(z_loaned_shm_mut_t, zshmmut, zshmmut),
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -119,9 +119,5 @@ pub extern "C" fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_u
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
-    this_
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_mut_ptr()
+    this_.as_rust_type_mut().as_mut().as_mut_ptr()
 }

@@ -157,9 +157,7 @@ pub extern "C" fn z_close(
     session: &mut z_loaned_session_t,
     _options: Option<&z_close_options_t>,
 ) -> result::z_result_t {
-    let Some(s) = session.as_rust_type_mut() else {
-        return result::Z_ENULL;
-    };
+    let s = session.as_rust_type_mut();
     match s.close().wait() {
         Err(e) => {
             tracing::error!("Error closing session: {}", e);

@@ -102,8 +102,8 @@ pub extern "C" fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
 use crate::opaque_types::z_loaned_sample_t;
 pub use crate::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
-    owned(z_owned_sample_t, option Sample),
-    loaned(z_loaned_sample_t),
+    owned(z_owned_sample_t, Option<Sample>),
+    loaned(z_loaned_sample_t, Sample, Option<Sample>),
 );
 
 /// Returns the key expression of the sample.
@@ -561,7 +561,7 @@ pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
-    loaned(z_loaned_source_info_t, SourceInfo),
+    loaned(z_loaned_source_info_t),
 );
 
 #[cfg(feature = "unstable")]

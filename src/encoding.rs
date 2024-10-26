@@ -34,7 +34,7 @@ use crate::{
 
 decl_c_type!(
     owned(z_owned_encoding_t, Encoding),
-    loaned(z_loaned_encoding_t, Encoding),
+    loaned(z_loaned_encoding_t),
 );
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
