@@ -21,8 +21,7 @@ use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{
     transmute::{
-        LoanedCTypeMut, LoanedCTypeMutUnsafe, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit,
-        RustTypeRef, TakeRustType,
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
     },
     z_loaned_shm_mut_t, z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t,
 };
@@ -102,7 +101,7 @@ pub unsafe extern "C" fn z_shm_try_mut(this_: &mut z_owned_shm_t) -> *mut z_loan
     match shm.try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as_loaned_c_type_mut_unsafe()
+            v.as_loaned_c_type_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }
@@ -118,14 +117,11 @@ pub extern "C" fn z_shm_drop(this_: &mut z_moved_shm_t) {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_try_reloan_mut(
-    this_: &mut z_loaned_shm_t,
-) -> *mut z_loaned_shm_mut_t {
+pub extern "C" fn z_shm_try_reloan_mut(this_: &mut z_loaned_shm_t) -> *mut z_loaned_shm_mut_t {
     match this_.as_rust_type_mut().try_into() {
         Ok(val) => {
             let v: &mut zshmmut = val;
-            v.as_loaned_c_type_mut_unsafe()
+            v.as_loaned_c_type_mut()
         }
         Err(_) => std::ptr::null_mut(),
     }

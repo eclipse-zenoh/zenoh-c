@@ -200,17 +200,14 @@ pub unsafe extern "C" fn z_bytes_to_loaned_shm(
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_to_mut_loaned_shm(
+pub extern "C" fn z_bytes_to_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_result_t {
-    use crate::transmute::LoanedCTypeMutUnsafe;
-
     let payload = this.as_rust_type_mut();
     match payload.as_shm_mut() {
         Some(s) => {
-            dst.write(s.as_loaned_c_type_mut_unsafe());
+            dst.write(s.as_loaned_c_type_mut());
             result::Z_OK
         }
         None => {
