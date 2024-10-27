@@ -151,8 +151,8 @@ Common operations
 
 The transition between "owned", "loaned" and "moved" structures above is performed by corresponding functions.
 The following operations are available: move, loan, mutable loan, take, and drop. They are performed for 
-"xxx" entities by functions `z_xxx_move`, `z_xxx_loan`, `z_xxx_loan_mut`, `z_xxx_take_moved`, `z_xxx_take_loaned`,
-and `z_xxx_drop`.
+"xxx" entities by functions `z_xxx_move`, `z_xxx_loan`, `z_xxx_loan_mut`, `z_xxx_take`, `z_xxx_take_loaned` 
+(for certain types), and `z_xxx_drop`.
 The generic macros `z_move`, `z_loan`, `z_loan_mut`, `z_take`, and `z_drop` are also provided.
 
 Loan operation
