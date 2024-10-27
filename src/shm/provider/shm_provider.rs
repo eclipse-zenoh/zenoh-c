@@ -37,9 +37,7 @@ use crate::{
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
         provider::types::z_buf_layout_alloc_result_t,
     },
-    transmute::{
-        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
-    },
+    transmute::{LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
@@ -122,19 +120,6 @@ pub unsafe extern "C" fn z_shm_provider_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
-}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Mutably borrows SHM Provider.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_provider_loan_mut(
-    this: &mut z_owned_shm_provider_t,
-) -> &mut z_loaned_shm_provider_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

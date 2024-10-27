@@ -59,19 +59,6 @@ pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loa
         .as_loaned_c_type_ref()
 }
 
-/// Mutably borrows Queryable.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_queryable_loan_mut(
-    this_: &mut z_owned_queryable_t,
-) -> &mut z_loaned_queryable_t {
-    this_
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
-}
-
 pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
     owned(z_owned_query_t, Option<Query>),

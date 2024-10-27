@@ -28,11 +28,9 @@ use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
     shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
-    transmute::{
-        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
-    },
+    transmute::{RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
-    z_owned_alloc_layout_t,
+    z_owned_alloc_layout_t, LoanedCTypeRef,
 };
 
 pub type DynamicAllocLayout =
@@ -86,18 +84,6 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
-}
-
-/// Mutably borrows Alloc Layout
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_alloc_layout_loan_mut(
-    this: &mut z_owned_alloc_layout_t,
-) -> &mut z_loaned_alloc_layout_t {
-    this.as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
 }
 
 /// Deletes Alloc Layout

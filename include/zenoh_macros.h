@@ -89,26 +89,14 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_condvar_t : z_condvar_loan_mut, \
         z_owned_config_t : z_config_loan_mut, \
         z_owned_encoding_t : z_encoding_loan_mut, \
-        z_owned_fifo_handler_query_t : z_fifo_handler_query_loan_mut, \
-        z_owned_fifo_handler_reply_t : z_fifo_handler_reply_loan_mut, \
-        z_owned_fifo_handler_sample_t : z_fifo_handler_sample_loan_mut, \
         z_owned_hello_t : z_hello_loan_mut, \
-        z_owned_keyexpr_t : z_keyexpr_loan_mut, \
         z_owned_mutex_t : z_mutex_loan_mut, \
         z_owned_publisher_t : z_publisher_loan_mut, \
         z_owned_query_t : z_query_loan_mut, \
-        z_owned_queryable_t : z_queryable_loan_mut, \
-        z_owned_reply_err_t : z_reply_err_loan_mut, \
         z_owned_reply_t : z_reply_loan_mut, \
-        z_owned_ring_handler_query_t : z_ring_handler_query_loan_mut, \
-        z_owned_ring_handler_reply_t : z_ring_handler_reply_loan_mut, \
-        z_owned_ring_handler_sample_t : z_ring_handler_sample_loan_mut, \
         z_owned_sample_t : z_sample_loan_mut, \
         z_owned_session_t : z_session_loan_mut, \
-        z_owned_slice_t : z_slice_loan_mut, \
         z_owned_string_array_t : z_string_array_loan_mut, \
-        z_owned_string_t : z_string_loan_mut, \
-        z_owned_subscriber_t : z_subscriber_loan_mut, \
         ze_owned_serializer_t : ze_serializer_loan_mut \
     )(&this_)
 
@@ -479,26 +467,14 @@ inline z_loaned_closure_zid_t* z_loan_mut(z_owned_closure_zid_t& closure) { retu
 inline z_loaned_condvar_t* z_loan_mut(z_owned_condvar_t& this_) { return z_condvar_loan_mut(&this_); };
 inline z_loaned_config_t* z_loan_mut(z_owned_config_t& this_) { return z_config_loan_mut(&this_); };
 inline z_loaned_encoding_t* z_loan_mut(z_owned_encoding_t& this_) { return z_encoding_loan_mut(&this_); };
-inline z_loaned_fifo_handler_query_t* z_loan_mut(z_owned_fifo_handler_query_t& this_) { return z_fifo_handler_query_loan_mut(&this_); };
-inline z_loaned_fifo_handler_reply_t* z_loan_mut(z_owned_fifo_handler_reply_t& this_) { return z_fifo_handler_reply_loan_mut(&this_); };
-inline z_loaned_fifo_handler_sample_t* z_loan_mut(z_owned_fifo_handler_sample_t& this_) { return z_fifo_handler_sample_loan_mut(&this_); };
 inline z_loaned_hello_t* z_loan_mut(z_owned_hello_t& this_) { return z_hello_loan_mut(&this_); };
-inline z_loaned_keyexpr_t* z_loan_mut(z_owned_keyexpr_t& this_) { return z_keyexpr_loan_mut(&this_); };
 inline z_loaned_mutex_t* z_loan_mut(z_owned_mutex_t& this_) { return z_mutex_loan_mut(&this_); };
 inline z_loaned_publisher_t* z_loan_mut(z_owned_publisher_t& this_) { return z_publisher_loan_mut(&this_); };
 inline z_loaned_query_t* z_loan_mut(z_owned_query_t& this_) { return z_query_loan_mut(&this_); };
-inline z_loaned_queryable_t* z_loan_mut(z_owned_queryable_t& this_) { return z_queryable_loan_mut(&this_); };
-inline z_loaned_reply_err_t* z_loan_mut(z_owned_reply_err_t& this_) { return z_reply_err_loan_mut(&this_); };
 inline z_loaned_reply_t* z_loan_mut(z_owned_reply_t& this_) { return z_reply_loan_mut(&this_); };
-inline z_loaned_ring_handler_query_t* z_loan_mut(z_owned_ring_handler_query_t& this_) { return z_ring_handler_query_loan_mut(&this_); };
-inline z_loaned_ring_handler_reply_t* z_loan_mut(z_owned_ring_handler_reply_t& this_) { return z_ring_handler_reply_loan_mut(&this_); };
-inline z_loaned_ring_handler_sample_t* z_loan_mut(z_owned_ring_handler_sample_t& this_) { return z_ring_handler_sample_loan_mut(&this_); };
 inline z_loaned_sample_t* z_loan_mut(z_owned_sample_t& this_) { return z_sample_loan_mut(&this_); };
 inline z_loaned_session_t* z_loan_mut(z_owned_session_t& this_) { return z_session_loan_mut(&this_); };
-inline z_loaned_slice_t* z_loan_mut(z_owned_slice_t& this_) { return z_slice_loan_mut(&this_); };
 inline z_loaned_string_array_t* z_loan_mut(z_owned_string_array_t& this_) { return z_string_array_loan_mut(&this_); };
-inline z_loaned_string_t* z_loan_mut(z_owned_string_t& this_) { return z_string_loan_mut(&this_); };
-inline z_loaned_subscriber_t* z_loan_mut(z_owned_subscriber_t& this_) { return z_subscriber_loan_mut(&this_); };
 inline ze_loaned_serializer_t* z_loan_mut(ze_owned_serializer_t& this_) { return ze_serializer_loan_mut(&this_); };
 
 

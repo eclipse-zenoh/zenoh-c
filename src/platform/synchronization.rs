@@ -64,6 +64,7 @@ pub unsafe extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z
 #[no_mangle]
 pub extern "C" fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::z_result_t {
     let this = this_.as_rust_type_mut();
+
     match this.0.lock() {
         Ok(new_lock) => {
             let old_lock = this.1.replace(new_lock);
