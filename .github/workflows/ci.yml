@@ -175,7 +175,9 @@ jobs:
         run: |
           sudo apt-get install -y musl-tools
           sudo apt-get install -y gcc-arm-linux-gnueabi
+          sudo apt-get install -y gcc-arm-linux-gnueabihf
           sudo apt-get install -y g++-arm-linux-gnueabi
+          sudo apt-get install -y g++-arm-linux-gnueabihf
           sudo apt-get install -y mingw-w64
           sudo apt-get install -y gcc-aarch64-linux-gnu
           sudo apt-get install -y g++-aarch64-linux-gnu
@@ -189,6 +191,7 @@ jobs:
       - name: Install rust toolchains
         run: |
           rustup target add arm-unknown-linux-gnueabi
+          rustup target add arm-unknown-linux-gnueabihf
           rustup target add x86_64-pc-windows-gnu
           rustup target add aarch64-unknown-linux-gnu
           rustup target add aarch64-unknown-linux-musl
@@ -199,6 +202,13 @@ jobs:
           rm -rf ./build
           mkdir -p ./build && cd ./build
           cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabi.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake --build . --target examples
+
+      - name: Cross compile for arm-unknown-linux-gnueabihf
+        run: |
+          rm -rf ./build
+          mkdir -p ./build && cd ./build
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
           cmake --build . --target examples
 
       - name: Cross compile for aarch64-unknown-linux-gnu
