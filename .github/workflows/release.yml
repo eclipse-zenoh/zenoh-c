@@ -163,7 +163,11 @@ jobs:
       - name: Zip standalone archives
         shell: bash
         run: |
-          zip -9 zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip ./build/packages/*.zip
+          zip_cmd="zip"
+          if [[ ${{ contains(matrix.build.target, 'windows') }} == true ]]; then
+            zip_cmd="7z"
+          fi
+          ${zip_cmd} -9 zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip ./build/packages/*.zip
 
       - name: Zip deb/rpm archives
         shell: bash
