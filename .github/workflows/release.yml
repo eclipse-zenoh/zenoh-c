@@ -161,10 +161,12 @@ jobs:
 
       # Download artifacts client unzips the archive when it downloads, so we double zip, to fulfill expectation of the publish-* actions
       - name: Zip standalone archives
+        shell: bash
         run: |
           zip -9 zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip ./build/packages/*.zip
 
       - name: Zip deb/rpm archives
+        shell: bash
         if: ${{ contains(matrix.build.target, 'linux') }}
         run: |
           zip -9 libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip ./build/packages/*.deb
