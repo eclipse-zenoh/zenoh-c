@@ -159,25 +159,32 @@ jobs:
           cpack -G DEB
           cpack -G RPM
 
+      # Download artifacts client unzips the archive when it downloads, so we double zip, to fulfill expectation of the publish-* actions
+      - name: Zip archives
+        run: |
+          zip -9 zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip ./build/packages/*.zip
+          zip -9 libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip ./build/packages/*.deb
+          zip -9 libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip ./build/packages/*.rpm
+
       - name: Upload library archive
         uses: actions/upload-artifact@v4
         with:
           name: zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
-          path: ./build/packages/*.zip
+          path: zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
 
       - name: Upload DEB archive
         if: ${{ contains(matrix.build.target, 'linux') }}
         uses: actions/upload-artifact@v4
         with:
           name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip
-          path: ./build/packages/*.deb
+          path: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip
 
       - name: Upload RPM archive
         if: ${{ contains(matrix.build.target, 'linux') }}
         uses: actions/upload-artifact@v4
         with:
           name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip
-          path: ./build/packages/*.rpm
+          path: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip
 
   debian:
     name: Publish Debian packages
