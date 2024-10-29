@@ -130,35 +130,17 @@ cmake ../zenoh-c/examples
 cmake --build .
 ```
 
-In this case, the examples executables will be built in the current directory.
-
-As a root project the `examples` project links `zenoh-c` with CMake's [add_subdirectory] command by default. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
-
-[add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
-[find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
-[FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
-
 Link with `zenoh-c` installed into default location in the system (with [find_package]):
 
 ```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE
+cmake ../zenoh-c/examples
 ```
 
 Link with `zenoh-c` installed in `~/.local` directory:
 
 ```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE -DCMAKE_INSTALL_PREFIX=~/.local
+cmake ../zenoh-c/examples -DCMAKE_INSTALL_PREFIX=~/.local
 ```
-
-Download specific `zenoh-c` version from git with [FetchContent]:
-
-```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=GIT_URL -DZENOHC_GIT_TAG=0.11.0-rc
-```
-
-See also `configure_include_project` function in [helpers.cmake] for more information
-
-[helpers.cmake]: cmake/helpers.cmake
 
 ## Running the Examples
 

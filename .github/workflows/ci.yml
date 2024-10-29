@@ -88,19 +88,11 @@ jobs:
           cd build
           cmake --build . --target examples
 
-      - name: Build examples with zenoh-c as subbroject and static library and in debug mode and in separate directory
-        shell: bash
-        run: |
-          mkdir -p ../build_examples
-          cmake -S examples -B ../build_examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=OFF
-          cmake --build ../build_examples --config Debug
-          rm -rf ../build_examples
-
       - name: Build examples with zenoh-c as installed package
         shell: bash
         run: |
           mkdir -p build_examples && cd build_examples
-          cmake ../examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_SOURCE=PACKAGE
+          cmake ../examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
           cmake --build . --config Release
           cd .. && rm -rf build_examples
 
