@@ -141,13 +141,25 @@ jobs:
         run: |
           sudo apt-get install -y mingw-w64
 
+      - name: Compute package name
+        id: compute-package-name
+        if: ${{ contains(matrix.build.target, 'armv7') }}
+        run: |
+          if [[ "${{ matrix.build.target }}" =~ "armv7" ]]; then
+            echo "value=zenohc-armv7" >> $GITHUB_OUTPUT
+          elif [[ "${{ matrix.build.target }}" =~ "musl" ]]; then
+            echo "value=zenohc-musl" >> $GITHUB_OUTPUT
+          else
+            echo "value=zenohc" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build standalone
         id: build
         shell: bash
         run: |
           toolchain_file=$(readlink -f ci/toolchains/TC-${{ matrix.build.target }}.cmake)
           mkdir -p build  && cd build
-          cmake .. -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
+          cmake .. -DCPACK_PACKAGE_NAME=${{ steps.compute-package-name.outputs.value }} -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
           cmake --build . --config Release
           cpack -C Release -G ZIP
 
