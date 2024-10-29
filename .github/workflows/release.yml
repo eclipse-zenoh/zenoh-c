@@ -143,7 +143,6 @@ jobs:
 
       - name: Compute package name
         id: compute-package-name
-        if: ${{ contains(matrix.build.target, 'armv7') }}
         run: |
           if [[ "${{ matrix.build.target }}" =~ "armv7" ]]; then
             echo "value=zenohc-armv7" >> $GITHUB_OUTPUT
