@@ -175,7 +175,7 @@ jobs:
       - name: Zip standalone archives
         shell: bash
         run: |
-          zip_cmd="zip -9"
+          zip_cmd="zip -9 -j"
           if [[ ${{ contains(matrix.build.target, 'windows') }} == true ]]; then
             zip_cmd="7z -mx9 a"
           fi
@@ -185,8 +185,8 @@ jobs:
         shell: bash
         if: ${{ contains(matrix.build.target, 'linux') }}
         run: |
-          zip -9 libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip ./build/packages/*.deb
-          zip -9 libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip ./build/packages/*.rpm
+          zip -9 -j libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip ./build/packages/*.deb
+          zip -9 -j libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip ./build/packages/*.rpm
 
       - name: Upload library archive
         uses: actions/upload-artifact@v4
