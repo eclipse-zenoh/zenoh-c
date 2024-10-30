@@ -190,7 +190,8 @@ jobs:
       - name: Upload library archive
         uses: actions/upload-artifact@v4
         with:
-          name: zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
+          # Publish the artifact with zenoh-c (repo name) so it can be used by homebrew action
+          name: zenoh-c-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
           path: zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
 
       - name: Upload DEB archive
