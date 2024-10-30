@@ -175,11 +175,8 @@ jobs:
       - name: Zip standalone archives
         shell: bash
         run: |
-          zip_cmd="zip -9 -j"
-          if [[ ${{ contains(matrix.build.target, 'windows') }} == true ]]; then
-            zip_cmd="7z -mx9 a"
-          fi
-          ${zip_cmd} zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip ./build/packages/*.zip
+          zip_filename=$(readlink -f ./build/packages/*.zip)
+          mv ${zip_filename} zenoh-c-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
 
       - name: Zip deb/rpm archives
         shell: bash
@@ -193,7 +190,7 @@ jobs:
         with:
           # Publish the artifact with zenoh-c (repo name) so it can be used by homebrew action
           name: zenoh-c-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
-          path: zenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
+          path: zenoh-c-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
 
       - name: Upload DEB archive
         if: ${{ contains(matrix.build.target, 'linux') }}
