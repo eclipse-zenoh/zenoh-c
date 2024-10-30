@@ -171,8 +171,7 @@ jobs:
           cpack -G DEB
           cpack -G RPM
 
-      # Download artifacts client unzips the archive when it downloads, so we double zip, to fulfill expectation of the publish-* actions
-      - name: Zip standalone archives
+      - name: Prepare standalone archives
         shell: bash
         run: |
           zip_filename=$(readlink -f ./build/packages/*.zip)
@@ -185,7 +184,7 @@ jobs:
           zip -9 -j libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip ./build/packages/*.deb
           zip -9 -j libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip ./build/packages/*.rpm
 
-      - name: Upload library archive
+      - name: Upload standalone archive
         uses: actions/upload-artifact@v4
         with:
           # Publish the artifact with zenoh-c (repo name) so it can be used by homebrew action
