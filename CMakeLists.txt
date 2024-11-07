@@ -114,6 +114,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
+			${CMAKE_CURRENT_SOURCE_DIR}/version.txt
 			DESTINATION ${cargo_toml_dir})
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
@@ -168,16 +169,35 @@ endmacro()
 # dylib[r|d] - dymamic library (.so, .dll, .dylib)
 # staticlib[r|d] - static library (.a, .lib)
 # implib[r|d] - import library for windows dynamic library (DLL) - .lib
-# dylibs[r|d] - list of files required for use dynamic libraty
-# staticlibs[r|d] - list of files required for use static libraty
-set_lib(dylibsr dylibr ${CMAKE_SHARED_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX})
-set_lib(dylibsd dylibd ${CMAKE_SHARED_LIBRARY_PREFIX}zenohcd${CMAKE_SHARED_LIBRARY_SUFFIX})
-set_lib(staticlibsr staticlibr ${CMAKE_STATIC_LIBRARY_PREFIX}zenohc${CMAKE_STATIC_LIBRARY_SUFFIX})
-set_lib(staticlibsd staticlibd ${CMAKE_STATIC_LIBRARY_PREFIX}zenohcd${CMAKE_STATIC_LIBRARY_SUFFIX})
+# dylibs[r|d] - list of files required for use dynamic library
+# staticlibs[r|d] - list of files required for use static library
+# get rust output library names from https://github.com/corrosion-rs/corrosion/blob/1c6974c2473765449e7c4649f9f96f1b751420c3/cmake/Corrosion.cmake#L331
 if(WIN32)
-	set_lib(dylibsr implibr ${CMAKE_IMPORT_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_IMPORT_LIBRARY_SUFFIX})
-	set_lib(dylibsd implibd ${CMAKE_IMPORT_LIBRARY_PREFIX}zenohcd${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_IMPORT_LIBRARY_SUFFIX})
+	set_lib(dylibsr dylibr zenohc.dll)
+	set_lib(dylibsd dylibd zenohcd.dll)
+	if(MSVC)
+		set_lib(staticlibsr staticlibr zenohc.lib)
+		set_lib(staticlibsd staticlibd zenohcd.lib)
+		set_lib(dylibsr implibr zenohc.dll.lib)
+		set_lib(dylibsd implibd zenohcd.dll.lib)
+	else() #gnu/mingw/msys ?
+		set_lib(staticlibsr staticlibr libzenohc.a)
+		set_lib(staticlibsd staticlibd libzenohcd.a)
+		set_lib(dylibsr implibr libzenohc.dll.a)
+		set_lib(dylibsd implibd libzenohcd.dll.a)
+	endif()
+elseif(APPLE)
+	set_lib(dylibsr dylibr libzenohc.dylib)
+	set_lib(dylibsd dylibd libzenohcd.dylib)
+	set_lib(staticlibsr staticlibr libzenohc.a)
+	set_lib(staticlibsd staticlibd libzenohcd.a)
+else() #UNIX
+	set_lib(dylibsr dylibr libzenohc.so)
+	set_lib(dylibsd dylibd libzenohcd.so)
+	set_lib(staticlibsr staticlibr libzenohc.a)
+	set_lib(staticlibsd staticlibd libzenohcd.a)
 endif()
+
 list(APPEND libsr ${dylibsr})
 list(APPEND libsr ${staticlibsr})
 list(APPEND libsd ${dylibsd})
@@ -262,31 +282,33 @@ endfunction()
 # *IMPORTANT* any options in this section should be repeated in install/PackageConfig.cmake.in
 # to achieve correct behavior of find_package(zenohc)
 #
+add_library(zenohc_shared SHARED IMPORTED GLOBAL)
+add_library(zenohc::shared ALIAS zenohc_shared)
+add_dependencies(zenohc_shared cargo)
+target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
+# Workaroud for https://github.com/rust-lang/cargo/issues/5045
+# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
+# If it's fixed, do not forget to correct PackageConfig.cmake.in also
+set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
+set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
+add_library(zenohc_static STATIC IMPORTED GLOBAL)
+add_library(zenohc::static ALIAS zenohc_static)
+add_dependencies(zenohc_static cargo)
+get_required_static_libs(NATIVE_STATIC_LIBS)
+target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
+set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
+target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
+set_target_properties(zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
+
+if(DEFINED implibr)
+	set_target_imported_implib(zenohc_shared ${implibr} ${implibd})
+endif()
+target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
+set_target_properties(zenohc_shared PROPERTIES IMPORTED_GLOBAL TRUE)
 if (BUILD_SHARED_LIBS)
-	add_library(zenohc_shared SHARED IMPORTED GLOBAL)
 	add_library(zenohc::lib ALIAS zenohc_shared)
-	add_dependencies(zenohc_shared cargo)
-	target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
-	# Workaroud for https://github.com/rust-lang/cargo/issues/5045
-	# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
-	# If it's fixed, do not forget to correct PackageConfig.cmake.in also
-	set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
-	set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
-	if(DEFINED implibr)
-		set_target_imported_implib(zenohc_shared ${implibr} ${implibd})
-	endif()
-	target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
-	set_target_properties(zenohc_shared PROPERTIES IMPORTED_GLOBAL TRUE)
 else()
-	add_library(zenohc_static STATIC IMPORTED GLOBAL)
 	add_library(zenohc::lib ALIAS zenohc_static)
-	add_library(zenohc::static ALIAS zenohc_static)
-	add_dependencies(zenohc_static cargo)
-	get_required_static_libs(NATIVE_STATIC_LIBS)
-	target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
-	set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
-	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
-	set_target_properties(zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 endif()
 
 
@@ -294,7 +316,6 @@ endif()
 # Components included only if project is the root project
 #
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-	include(cmake/cross_build_check.cmake)
 	add_subdirectory(install)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/tests)
 	add_subdirectory(tests)

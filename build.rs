@@ -276,15 +276,6 @@ fn cargo_target_dir() -> PathBuf {
 }
 
 fn configure() {
-    let content = format!(
-        r#"#pragma once
-#define TARGET_ARCH_{}
-"#,
-        std::env::var("CARGO_CFG_TARGET_ARCH")
-            .unwrap()
-            .to_uppercase()
-    );
-
     let mut file = std::fs::File::options()
         .write(true)
         .truncate(true)
@@ -293,7 +284,38 @@ fn configure() {
         .open("include/zenoh_configure.h")
         .unwrap();
     file.lock_exclusive().unwrap();
-    file.write_all(content.as_bytes()).unwrap();
+
+    let version = std::fs::read_to_string("version.txt").unwrap();
+    let version = version.trim();
+    let version_parts: Vec<&str> = version.split('.').collect();
+    let major = version_parts[0];
+    let minor = version_parts[1];
+    let patch = version_parts[2];
+    let tweak = version_parts[3];
+    file.write_all(
+        format!(
+            r#"#pragma once
+#define ZENOH_C "{}"
+#define ZENOH_C_MAJOR {}
+#define ZENOH_C_MINOR {}
+#define ZENOH_C_PATCH {}
+#define ZENOH_C_TWEAK {}
+
+#define TARGET_ARCH_{}
+"#,
+            version,
+            major,
+            minor,
+            patch,
+            tweak,
+            std::env::var("CARGO_CFG_TARGET_ARCH")
+                .unwrap()
+                .to_uppercase()
+        )
+        .as_bytes(),
+    )
+    .unwrap();
+
     for (rust_feature, c_feature) in RUST_TO_C_FEATURES.entries() {
         if test_feature(rust_feature) {
             file.write_all(format!("#define {}\n", c_feature).as_bytes())

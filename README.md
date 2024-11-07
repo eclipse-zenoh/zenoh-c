@@ -130,35 +130,17 @@ cmake ../zenoh-c/examples
 cmake --build .
 ```
 
-In this case, the examples executables will be built in the current directory.
-
-As a root project the `examples` project links `zenoh-c` with CMake's [add_subdirectory] command by default. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
-
-[add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
-[find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
-[FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
-
 Link with `zenoh-c` installed into default location in the system (with [find_package]):
 
 ```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE
+cmake ../zenoh-c/examples
 ```
 
 Link with `zenoh-c` installed in `~/.local` directory:
 
 ```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE -DCMAKE_INSTALL_PREFIX=~/.local
+cmake ../zenoh-c/examples -DCMAKE_INSTALL_PREFIX=~/.local
 ```
-
-Download specific `zenoh-c` version from git with [FetchContent]:
-
-```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=GIT_URL -DZENOHC_GIT_TAG=0.11.0-rc
-```
-
-See also `configure_include_project` function in [helpers.cmake] for more information
-
-[helpers.cmake]: cmake/helpers.cmake
 
 ## Running the Examples
 
@@ -204,46 +186,46 @@ sphinx-build -b html . _build/html
 ```
 
 ## Cross-Compilation
+Cross-compilation can be performed using standard cmake approach as described in [[cmake-toolchains](https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html)].
 
-The following alternative options have been introduced to facilitate cross-compilation.
-> :warning: **WARNING** :warning: : Perhaps additional efforts are necessary, that will depend of your environment.
+In addition the following project-specific options might need to be set for cross-compilation:
 
 - `-DZENOHC_CARGO_CHANNEL="+nightly"|"+beta"|"+stable"`: refers to a specific rust toolchain release [[rust-channels](https://rust-lang.github.io/rustup/concepts/channels.html)]
 - `-DZENOHC_CARGO_FLAGS`: several optional flags can be used for compilation. [[cargo flags](https://doc.rust-lang.org/cargo/commands/cargo-build.html)]
-- `-DZENOHC_CUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tire-1, Tire-2 and Tire-3 targets [[targets](https://doc.rust-lang.org/nightly/rustc/platform-support.html)]. But keep in mind that zenoh-c only have support for following targets: `aarch64-unknown-linux-gnu`, `x86_64-unknown-linux-gnu`, `arm-unknown-linux-gnueabi`
+- `-DZENOHC_CUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tier-1, Tier-2 and Tier-3 targets [[targets](https://doc.rust-lang.org/nightly/rustc/platform-support.html)].
 
 Let's put all together in an example:
-Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
+Assuming you want to cross-compile for x86_64-pc-windows-gnu from Ubuntu environment.
 
 1. Install required packages
-   - `sudo apt install gcc-aarch64-linux-gnu`
+   - `sudo apt-get install -y mingw-w64`: cross-compilation toolchain for c/c++.
+   - `rustup toolchain install x86_64-pc-windows-gnu`: cross-compilation toolchain for rust.
 2. *(Only if you're using `nightly`)
    - `rustup component add rust-src --toolchain nightly`
 3. Compile Zenoh-C. Assume that it's in `zenoh-c` directory. Notice that build in this sample is performed outside of source directory
 
    ```bash
-   export RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
+   export RUSTFLAGS="-Clinker=x86_64-w64-mingw32-gcc -Car=x86_64-w64-mingw32-ar"
    mkdir -p build && cd build
-   cmake ../zenoh-c  -DZENOHC_CARGO_CHANNEL="+nightly" -DZENOHC_CARGO_FLAGS="-Zbuild-std=std,panic_abort" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
+   cmake ../zenoh-c  -DCMAKE_SYSTEM_NAME="Windows" -DCMAKE_C_COMPILER="x86_64-w64-mingw32-gcc" -DCMAKE_CXX_COMPILER="x86_64-w64-mingw32-g++" -DCMAKE_SYSTEM_PROCESSOR="x86_64" -DZENOHC_CARGO_CHANNEL="+nightly" -DZENOHC_CARGO_FLAGS="-Zbuild-std=std,panic_abort" -DZENOHC_CUSTOM_TARGET="x86_64-pc-windows-gnu" -DCMAKE_INSTALL_PREFIX="../x86_64-pc-windows-gnu/stage"
    cmake --build . --target install
    ```
 
-Additionally you can use `RUSTFLAGS` environment variable for lead the compilation.
-
 If all goes right the building files will be located at:
-`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+`/path/to/zenoh-c/target/x86_64-pc-windows-gnu/release`
 and release files will be located at
-`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+`/path/to/zenoh-c/target/x86_64-pc-windows-gnu/release`
 
+> :warning: **WARNING** :warning: : Perhaps additional efforts are necessary, that will depend of your environment.
 ## Rust Version
 
-The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.72.0`.
+The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.75.0`.
 There might be some memory mapping issue if you use the later version.
 
 You can also specify the Rust version.
 
 ```bash
-cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.72.0"
+cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0"
 ```
 
 ## Zenoh features support (enabling/disabling protocols, etc)
