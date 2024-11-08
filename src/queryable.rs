@@ -94,7 +94,7 @@ pub extern "C" fn z_query_loan_mut(this_: &mut z_owned_query_t) -> &mut z_loaned
 
 /// Takes ownership of the mutably borrowed query
 #[no_mangle]
-pub extern "C" fn z_query_take_loaned(
+pub extern "C" fn z_query_take_from_loaned(
     dst: &mut MaybeUninit<z_owned_query_t>,
     src: &mut z_loaned_query_t,
 ) {

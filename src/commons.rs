@@ -221,7 +221,7 @@ pub extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loan
 
 /// Takes ownership of the mutably borrowed sample.
 #[no_mangle]
-pub extern "C" fn z_sample_take_loaned(
+pub extern "C" fn z_sample_take_from_loaned(
     dst: &mut MaybeUninit<z_owned_sample_t>,
     src: &mut z_loaned_sample_t,
 ) {

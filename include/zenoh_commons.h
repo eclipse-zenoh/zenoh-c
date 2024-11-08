@@ -2538,7 +2538,7 @@ void z_hello_locators(const struct z_loaned_hello_t *this_,
 /**
  * Takes ownership of the mutably borrowed hello
  */
-ZENOHC_API void z_hello_take_loaned(struct z_owned_hello_t *dst, struct z_loaned_hello_t *src);
+ZENOHC_API void z_hello_take_from_loaned(struct z_owned_hello_t *dst, struct z_loaned_hello_t *src);
 /**
  * Returns type of Zenoh entity that transmitted hello message.
  */
@@ -3459,7 +3459,7 @@ ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *th
 /**
  * Takes ownership of the mutably borrowed query
  */
-ZENOHC_API void z_query_take_loaned(struct z_owned_query_t *dst, struct z_loaned_query_t *src);
+ZENOHC_API void z_query_take_from_loaned(struct z_owned_query_t *dst, struct z_loaned_query_t *src);
 /**
  * Create a default `z_query_target_t`.
  */
@@ -3592,7 +3592,7 @@ bool z_reply_replier_id(const struct z_loaned_reply_t *this_,
 /**
  * Takes ownership of the mutably borrowed reply
  */
-ZENOHC_API void z_reply_take_loaned(struct z_owned_reply_t *dst, struct z_loaned_reply_t *src);
+ZENOHC_API void z_reply_take_from_loaned(struct z_owned_reply_t *dst, struct z_loaned_reply_t *src);
 /**
  * Constructs send and recieve ends of the ring channel
  */
@@ -3763,7 +3763,9 @@ const z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_
 /**
  * Takes ownership of the mutably borrowed sample.
  */
-ZENOHC_API void z_sample_take_loaned(struct z_owned_sample_t *dst, struct z_loaned_sample_t *src);
+ZENOHC_API
+void z_sample_take_from_loaned(struct z_owned_sample_t *dst,
+                               struct z_loaned_sample_t *src);
 /**
  * Returns the sample timestamp.
  *

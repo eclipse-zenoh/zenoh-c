@@ -151,7 +151,7 @@ Common operations
 
 The transition between "owned", "loaned" and "moved" structures above is performed by corresponding functions.
 The following operations are available: move, loan, mutable loan, take, and drop. They are performed for 
-"xxx" entities by functions `z_xxx_move`, `z_xxx_loan`, `z_xxx_loan_mut`, `z_xxx_take`, `z_xxx_take_loaned` 
+"xxx" entities by functions `z_xxx_move`, `z_xxx_loan`, `z_xxx_loan_mut`, `z_xxx_take`, `z_xxx_take_from_loaned` 
 (for certain types), and `z_xxx_drop`.
 The generic macros `z_move`, `z_loan`, `z_loan_mut`, `z_take`, and `z_drop` are also provided.
 
@@ -206,24 +206,6 @@ unless if it's explicitly specified. See also section "Comparison with C++ move 
 The `z_take_from_loaned` macro accepts `z_loaned_xxx_t*` pointer and calls the corresponding
 `z_xxx_take_from_loaned` functions.
 
-
-
-There is also an API for taking owned object from a mutably loaned object: the `z_xxx_take_from_loaned` functions. 
-After this operation object is left in some "valid but unspecified" state. The logic is similar to C++ guarantee after `std::move` operation
-(see https://stackoverflow.com/questions/7930105/does-moving-leave-the-object-in-a-usable-state)
-
-The difference from C++ is that, instead of single `std::move` zenoh-c provides different `z_move` and `z_loan_mut` operations with corresponding
-`z_take` and `z_take_from_loaned`. This is made for user convenience: 
-
- It have to be dropped
-These functions
-are available only for types passed to callback functions as mutable references, such as `z_loaned_sample_t*`, `z_loaned_reply_t*`, 
-`z_loaned_hello_t*`, and `z_loaned_query_t*`.
-
-This feature is specifically designed for callbacks: it allows the callback to either process the passed object in place or take 
-ownership of it for further processing. No zenoh-c API functions take ownership of mutably loaned objects, i.e it's always safe to pass object
-to function with `z_loan_mut` and continue using it after return.
-
 Drop operation
 --------------
 
@@ -242,7 +224,6 @@ leaving it in some valid state which is later destroyed by it's destructor.
 There is no automatic destructors in C, so for the same logic we would need to require developer to call destructor (`z_drop`) even after `z_move` operation. 
 This is inconvenient, so for move operation our requirement is more strict than for C++: if function expects `z_moved_xxx_t*` it 
 should left the object on passed pointer in "gravestone" state, i.e. state which doesn't hold any external resources and so safe to be forgotten. 
-(There is also a second requirement for gravestone state: double drop safety. This decision is kind of arbitrary, but it helps to avoid segmentation faults).
 
 Unfortunately this strict `z_move` semantic is not enough in the situations below:
 
@@ -253,7 +234,7 @@ he needs only to read the object.
 But on the other hand sometimes it's necessary to take ownership of the object passed to callback for further processing. Therefore the take
 operation from mutable reference is required.
 
-The second problem is that the C++ API doesn't use the moved/loaned syntax sugar, as C++ has its own move semantics. The C++ `std::move` can be called
+The second problem is that the C++ API doesn't use the zenog-c moved/loaned syntax sugar, as C++ has its own move semantics. The C++ `std::move` can be called
 on any non-const reference, so we need to support this behavior. Detailed explanation is in note below, it's ok to skip it.
 
 ..note::
@@ -289,7 +270,8 @@ Examples:
     // no need to drop s here, passing it by z_move promises that it's dropped inside consume_string
 ``
 
-`z_loan_mut` and `z_take_from_loaned` usage:
+`z_loan_mut` and `z_take_from_loaned` usage (this example if fictional: actually take from loaned is implemented only
+for types used in callbacks at this moment: `z_loaned_sample_t*`, `z_loaned_reply_t*`, `z_loaned_hello_t*`, `z_loaned_query_t*`):
 
 .. code-block:: c
 
@@ -298,7 +280,7 @@ Examples:
             // process it in place
         } else {
             z_owned_string_t s;
-            z_take_from_loaned(&s, ps);
+            z_string_take_from_loaned(&s, ps);
             // save s for further processing
         }
     }

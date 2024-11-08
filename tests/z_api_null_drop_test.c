@@ -87,10 +87,10 @@ int main(void) {
     // TEST(z_owned_mutex_t)
     // TEST(z_owned_condvar_t)
 
-    TEST_TAKE_MUT(z_owned_sample_t, z_sample_take_loaned)
-    TEST_TAKE_MUT(z_owned_query_t, z_query_take_loaned)
-    TEST_TAKE_MUT(z_owned_reply_t, z_reply_take_loaned)
-    TEST_TAKE_MUT(z_owned_hello_t, z_hello_take_loaned)
+    TEST_TAKE_MUT(z_owned_sample_t, z_sample_take_from_loaned)
+    TEST_TAKE_MUT(z_owned_query_t, z_query_take_from_loaned)
+    TEST_TAKE_MUT(z_owned_reply_t, z_reply_take_from_loaned)
+    TEST_TAKE_MUT(z_owned_hello_t, z_hello_take_from_loaned)
 
     return 0;
 }

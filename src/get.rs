@@ -318,7 +318,7 @@ pub extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned
 
 /// Takes ownership of the mutably borrowed reply
 #[no_mangle]
-pub extern "C" fn z_reply_take_loaned(
+pub extern "C" fn z_reply_take_from_loaned(
     dst: &mut MaybeUninit<z_owned_reply_t>,
     src: &mut z_loaned_reply_t,
 ) {
