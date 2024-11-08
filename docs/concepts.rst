@@ -193,7 +193,30 @@ structure is set to an empty "gravestone" state, like after a drop operation.
 The `z_take` macro accepts `z_moved_xxx_t*` pointer and calls the corresponding
 `z_xxx_take` functions.
 
-There is also an API for taking ownership of a mutably loaned object: the `z_xxx_take_loaned` functions. These functions
+Take from mutably loaned object operation
+-----------------------------------------
+
+Functions `z_xxx_take_from_loaned` accept pointers to uninitialized `z_owned_xxx_t` destination structures and
+`z_loaned_xxx_t*` source pointers.
+
+These functions move data from the source `z_loaned_xxx_t` structure into the destination one. The source
+structure is set to "valid but unspecified" state: it **have** to be dropped, no other operation on it is safe,
+unless if it's explicitly specified. See also section "Comparison with C++ move semantics".
+
+The `z_take_from_loaned` macro accepts `z_loaned_xxx_t*` pointer and calls the corresponding
+`z_xxx_take_from_loaned` functions.
+
+
+
+There is also an API for taking owned object from a mutably loaned object: the `z_xxx_take_from_loaned` functions. 
+After this operation object is left in some "valid but unspecified" state. The logic is similar to C++ guarantee after `std::move` operation
+(see https://stackoverflow.com/questions/7930105/does-moving-leave-the-object-in-a-usable-state)
+
+The difference from C++ is that, instead of single `std::move` zenoh-c provides different `z_move` and `z_loan_mut` operations with corresponding
+`z_take` and `z_take_from_loaned`. This is made for user convenience: 
+
+ It have to be dropped
+These functions
 are available only for types passed to callback functions as mutable references, such as `z_loaned_sample_t*`, `z_loaned_reply_t*`, 
 `z_loaned_hello_t*`, and `z_loaned_query_t*`.
 
@@ -208,6 +231,84 @@ Function `z_xxx_drop` accepts `z_moved_xxx_t*` pointer. It frees all resources h
 `z_owned_xxx_t` object and sets this object to gravestone state, safe to double drop.
 
 `z_drop` macro accepts `z_moved_xxx_t*` and calls corresponding `z_xxx_drop` function
+
+Comparison with C++ move semantics
+==================================
+
+The behavior of `z_move` is similar to C++ `std::move` it converts normal reference to a "rvalue reference" which is intened to be consumed by the function.
+The difference is that the C++ automatically destucts the object. So the move semantics in C++ means taking the heavy data from rvalue-referenced object and
+leaving it in some valid state which is later destroyed by it's destructor. 
+
+There is no automatic destructors in C, so for the same logic we would need to require deleloper to call destructor (`z_drop`) even after `z_move` operation. 
+This is inconvenient, so for move move operation our requirement is more strict than for C++: if function expects `z_moved_xxx_t*` it 
+should left the object on passed pointer in "gravestone", i.e. state which doesn't hold any external resources and so safe to be forgotten. (The second 
+requirement for gravestone state is double drop safety. This decision is kind of arbitrary, but it helps to avoid segmentation faults).
+
+Unfortunately this strict `z_move`` semantic is not enough in 2 situations:
+
+First problem is that arguments of callbacks are "mutable loaned" references (e.g. `z_loaned_sample_t*`) It would be more logical to make them "moved" references to give
+ownership to the callback function. But in this case the callback function would be obliged to drop the object after use. This is additional burden for the
+developer and it would definitely lead to memory leaks. Also user is frequently just need to read the object, so it's would be useless job to create own instance and 
+use `z_take` to fill it just to e.g. read single field. 
+
+But on the other hand sometimes it's necessary to take ownership of the object passed to callback for further processing. Therefore the take
+operation from mutable reference is required.
+
+Second problem is the C++ API which doesn't use the moved/loaned syntax sugar, as the C++ have it's own move semantics. The C++ `std::move` can be called
+on any non-const reference, so we need to support this behavior. Detailed explanation is in note below, it's ok to skip it.
+
+..note::
+Zenoh C++ API bypasses zenoh-c protection by simply making `reinterpret_cast` from `z_loaned_xxx_t*` to `z_owned_xxx_t*` and back when necessary. This means that 
+if the move constructor in C++ accepts e.g. `Sample&&`, it can't be sure if this reference points to `z_owned_sample_t` with valid gravestone state (internally in Rust this
+corresponds to `Option<Sample>` and gravestone state is `None`) or is it `z_loaned_sample_t*` received from some zenoh-c function and which poits just to `Sample` inside Rust, not option-wrapped. 
+(It's important to notice that `Sample` and `Option<Sample>` have same size and layout in memory due to Null-Pointer Optimization, so it's safe to treat
+ `Option<Sample>` just as `Sample`, but not in other direction).
+
+To resolve this the `z_take_from_loaned` operation is introduced for `z_loaned_xxx_t*`. It behaves similarly to `z_take` for `z_moved_xxx_t*` but doesn't provide
+guarantee that the object is kept in gravestone state. Instead it only guarantees that the object is left in state safe to be dropped, nothing more. This operation is full equivalent
+to C++ move semantics: object is left in "valid but unspecified" state and it's lifetime still have to be finished with destructor.
+
+Zenoh guarantees that it never uses this operation inside it code. I.e. it's always safe to pass object to function with `z_loan_mut` and continue using it after return. It's better
+to follow this rule in user code too and use `z_take_from_loaned` only when it's absolutely necessary.
+
+Examples:
+
+`z_move` and `z_take` usage:
+
+.. code-block:: c
+
+    void consume_string(z_moved_string_t* ps) {
+        z_owned_string_t s;
+        z_take(&s, ps);
+        printf("%.*s\n", z_string_len(z_loan(s)), z_string_data(z_loan(s)));
+        z_drop(s);
+    }
+    ...
+    z_owned_string_t s;
+    z_string_copy_from_str(&s, "Hello, world!");
+    consume_string(z_move(s));
+
+``
+
+`z_loan_mut` and `z_take_from_loaned` usage:
+
+.. code-block:: c
+
+    void may_consume_string(z_loaned_string_t* ps) {
+        if (z_string)
+
+        z_owned_string_t s2;
+        z_take_from_loaned(&s, ps);
+        printf("%.*s\n", z_string_len(z_loan(s)), z_string_data(z_loan(s)));
+        z_drop(s);
+    }
+    ...
+    z_owned_string_t s;
+    z_string_copy_from_str(&s, "Hello, world!");
+    consume_string(z_loan_mut(s));
+
+``
+
 
 Name Prefixes `z_`, `zc_`, `ze_`
 ================================
