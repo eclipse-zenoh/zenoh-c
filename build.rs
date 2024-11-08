@@ -288,9 +288,12 @@ fn configure() {
     let version = std::fs::read_to_string("version.txt").unwrap();
     let version = version.trim();
     let version_parts: Vec<&str> = version.split('.').collect();
-    let major = version_parts.first().unwrap_or(&"");
-    let minor = version_parts.get(1).unwrap_or(&"");
-    let patch = version_parts.get(2).unwrap_or(&"");
+    if version_parts.len() < 3 {
+        panic!("Invalid version format: \"{}\" in file version.txt. Major.Minor.Patch parts are required", version);
+    }
+    let major = version_parts[0];
+    let minor = version_parts[1];
+    let patch = version_parts[2];
     let tweak = version_parts.get(3).unwrap_or(&"");
     file.write_all(
         format!(
