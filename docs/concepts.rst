@@ -237,16 +237,16 @@ operation from mutable reference is required.
 The second problem is that the C++ API doesn't use the zenog-c moved/loaned syntax sugar, as C++ has its own move semantics. The C++ `std::move` can be called
 on any non-const reference, so we need to support this behavior. Detailed explanation is in note below, it's ok to skip it.
 
-..note::
-Zenoh C++ API bypasses zenoh-c protection by simply making `reinterpret_cast` from `z_loaned_xxx_t*` to `z_owned_xxx_t*` and back when necessary. This means that 
-if the move constructor in C++ accepts e.g. C++ object `Reply&&`, it can't be sure if this reference points to `z_owned_reply_t` with valid gravestone state (internally in Rust this
-corresponds to `Option<Reply>` and gravestone state is `None`) or is it `z_loaned_reply_t*` received from inside zenoh-c, which points just to `Reply`, not option-wrapped. 
-(It's important to notice that `Reply` and `Option<Reply>` have same size and layout in memory due to Null-Pointer Optimization, so it's safe to treat
- `Option<Reply>` just as `Reply`, but not in other direction).
+.. note::
+
+    Zenoh C++ API bypasses zenoh-c protection by simply making `reinterpret_cast` from `z_loaned_xxx_t*` to `z_owned_xxx_t*` and back when necessary. This means that 
+    if the move constructor in C++ accepts e.g. C++ object `Reply&&`, it can't be sure if this reference points to `z_owned_reply_t` with valid gravestone state (internally in Rust this
+    corresponds to `Option<Reply>` and gravestone state is `None`) or is it `z_loaned_reply_t*` received from inside zenoh-c, which points just to `Reply`, not option-wrapped. 
+    (It's important to notice that `Reply` and `Option<Reply>` have same size and layout in memory due to Null-Pointer Optimization, so it's safe to treat
+    `Option<Reply>` just as `Reply`, but not in other direction).
 
 To resolve this the `z_take_from_loaned` operation is introduced for `z_loaned_xxx_t*`. It behaves similarly to `z_take` for `z_moved_xxx_t*` but doesn't provide
-guarantee that the object is kept in gravestone state. Instead it only guarantees that the object is left in state safe to be dropped, nothing more. 
-Unlike `z_move`, this operation is full equivalent to C++ move semantics: object is left in "valid but unspecified" state and it still has to be destructed.
+guarantee that the object is left in gravestone state. Instead it just leaves the object in some probably unusable but safe to drop state.
 
 Zenoh guarantees that it never uses this operation inside its code. I.e. it's always safe to pass object to function with `z_loan_mut` and continue using it after return. 
 It's recommended to follow this rule in user code too and use `z_take_from_loaned` only in exceptional cases.
@@ -268,10 +268,9 @@ Examples:
     z_string_copy_from_str(&s, "Hello, world!");
     consume_string(z_move(s));
     // no need to drop s here, passing it by z_move promises that it's dropped inside consume_string
-``
 
-`z_loan_mut` and `z_take_from_loaned` usage (this example if fictional: actually take from loaned is implemented only
-for types used in callbacks at this moment: `z_loaned_sample_t*`, `z_loaned_reply_t*`, `z_loaned_hello_t*`, `z_loaned_query_t*`):
+`z_loan_mut` and `z_take_from_loaned` usage *(Notice that this example if fictional: actually take from loaned is implemented only
+for types used in callbacks at this moment: `z_loaned_sample_t*`, `z_loaned_reply_t*`, `z_loaned_hello_t*`, `z_loaned_query_t*`)*:
 
 .. code-block:: c
 
@@ -290,8 +289,6 @@ for types used in callbacks at this moment: `z_loaned_sample_t*`, `z_loaned_repl
     may_consume_string(z_loan_mut(s));
     // can't make any assumptions about s here, but still obliged to drop it
     z_drop(s);
-
-``
 
 
 Name Prefixes `z_`, `zc_`, `ze_`
