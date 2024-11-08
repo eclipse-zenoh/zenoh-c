@@ -241,15 +241,14 @@ leaving it in some valid state which is later destroyed by it's destructor.
 
 There is no automatic destructors in C, so for the same logic we would need to require developer to call destructor (`z_drop`) even after `z_move` operation. 
 This is inconvenient, so for move operation our requirement is more strict than for C++: if function expects `z_moved_xxx_t*` it 
-should left the object on passed pointer in "gravestone", i.e. state which doesn't hold any external resources and so safe to be forgotten. (The second 
-requirement for gravestone state is double drop safety. This decision is kind of arbitrary, but it helps to avoid segmentation faults).
+should left the object on passed pointer in "gravestone" state, i.e. state which doesn't hold any external resources and so safe to be forgotten. 
+(There is also a second requirement for gravestone state: double drop safety. This decision is kind of arbitrary, but it helps to avoid segmentation faults).
 
-Unfortunately this strict `z_move` semantic is not enough in 2 situations:
+Unfortunately this strict `z_move` semantic is not enough in the situations below:
 
 First problem is that arguments of callbacks are "mutable loaned" references (e.g. `z_loaned_sample_t*`). It would be more logical to make them "moved" references to give
-ownership to the callback function. But in this case the callback function would be obliged to drop the object after use. This is additional burden for the
-developer and it would definitely lead to memory leaks. Also user is frequently just need to read the object, so it would be a useless job to create own instance and 
-use `z_take` to fill it just to e.g. read a single field. 
+ownership to the callback function. But in this case the callback function would be obliged to take the ownership and drop the object after use even if
+he needs only to read the object.
 
 But on the other hand sometimes it's necessary to take ownership of the object passed to callback for further processing. Therefore the take
 operation from mutable reference is required.
@@ -259,15 +258,14 @@ on any non-const reference, so we need to support this behavior. Detailed explan
 
 ..note::
 Zenoh C++ API bypasses zenoh-c protection by simply making `reinterpret_cast` from `z_loaned_xxx_t*` to `z_owned_xxx_t*` and back when necessary. This means that 
-if the move constructor in C++ accepts e.g. `Sample&&`, it can't be sure if this reference points to `z_owned_sample_t` with valid gravestone state (internally in Rust this
-corresponds to `Option<Sample>` and gravestone state is `None`) or is it `z_loaned_sample_t*` received from some zenoh-c function and which points just to `Sample` inside Rust, not option-wrapped. 
-(It's important to notice that `Sample` and `Option<Sample>` have same size and layout in memory due to Null-Pointer Optimization, so it's safe to treat
- `Option<Sample>` just as `Sample`, but not in other direction).
+if the move constructor in C++ accepts e.g. C++ object `Reply&&`, it can't be sure if this reference points to `z_owned_reply_t` with valid gravestone state (internally in Rust this
+corresponds to `Option<Reply>` and gravestone state is `None`) or is it `z_loaned_reply_t*` received from inside zenoh-c, which points just to `Reply`, not option-wrapped. 
+(It's important to notice that `Reply` and `Option<Reply>` have same size and layout in memory due to Null-Pointer Optimization, so it's safe to treat
+ `Option<Reply>` just as `Reply`, but not in other direction).
 
 To resolve this the `z_take_from_loaned` operation is introduced for `z_loaned_xxx_t*`. It behaves similarly to `z_take` for `z_moved_xxx_t*` but doesn't provide
 guarantee that the object is kept in gravestone state. Instead it only guarantees that the object is left in state safe to be dropped, nothing more. 
-This operation is full equivalent to C++ move semantics: object is left in "valid but unspecified" state and it has to be
-to be destructed.
+Unlike `z_move`, this operation is full equivalent to C++ move semantics: object is left in "valid but unspecified" state and it still has to be destructed.
 
 Zenoh guarantees that it never uses this operation inside its code. I.e. it's always safe to pass object to function with `z_loan_mut` and continue using it after return. 
 It's recommended to follow this rule in user code too and use `z_take_from_loaned` only in exceptional cases.
@@ -291,7 +289,7 @@ Examples:
     // no need to drop s here, passing it by z_move promises that it's dropped inside consume_string
 ``
 
-`z_loan_mut` and `z_take_from_loaned` usage
+`z_loan_mut` and `z_take_from_loaned` usage:
 
 .. code-block:: c
 
