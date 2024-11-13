@@ -31,7 +31,7 @@ use crate::{
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_segment_callbacks_t {
-    /// Obtain the actual region of memory identified by it's id
+    /// Obtain the actual region of memory identified by it's id.
     map_fn: unsafe extern "C" fn(chunk_id: z_chunk_id_t, context: *mut c_void) -> *mut u8,
 }
 
