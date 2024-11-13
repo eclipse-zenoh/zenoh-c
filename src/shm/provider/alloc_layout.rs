@@ -97,7 +97,7 @@ pub extern "C" fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Make allocation without any additional actions 
+/// @brief Make allocation without any additional actions
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_alloc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,

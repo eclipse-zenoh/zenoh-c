@@ -108,7 +108,7 @@ decl_c_type!(
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Reference the global client storage 
+/// @brief Reference the global client storage
 #[no_mangle]
 pub extern "C" fn z_ref_shm_client_storage_global(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
