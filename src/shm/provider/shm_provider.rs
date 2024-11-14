@@ -130,6 +130,7 @@ pub extern "C" fn z_shm_provider_drop(this_: &mut z_moved_shm_provider_t) {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make allocation without any additional actions.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -141,6 +142,7 @@ pub extern "C" fn z_shm_provider_alloc(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make allocation performing garbage collection if needed.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -152,6 +154,7 @@ pub extern "C" fn z_shm_provider_alloc_gc(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make allocation performing garbage collection and\or defragmentation if needed.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -163,6 +166,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make allocation performing garbage collection and\or defragmentation and\or forced deallocation if needed.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -174,6 +178,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make allocation performing garbage collection and\or defragmentation and\or blocking if needed.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -185,6 +190,8 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make allocation performing garbage collection and\or defragmentation in async manner. Will return Z_EINVAL
+/// if used with non-threadsafe SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -208,24 +215,29 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Perform memory defragmentation. The real operations taken depend on the provider's backend allocator
+/// implementation.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_defragment(provider: &z_loaned_shm_provider_t) -> usize {
     defragment(provider)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Perform memory garbage collection and reclaim all dereferenced SHM buffers.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
     garbage_collect(provider)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Return the memory size available in the provider.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_available(provider: &z_loaned_shm_provider_t) -> usize {
     available(provider)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Map the preallocated data chunk into SHM buffer.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_map(
     out_result: &mut MaybeUninit<z_owned_shm_mut_t>,
