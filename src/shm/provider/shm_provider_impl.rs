@@ -188,8 +188,7 @@ pub(crate) fn alloc_async_impl<
         *mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
 ) {
-    //todo: this should be ported to tokio with executor argument support
-    async_std::task::spawn(async move {
+    zenoh_runtime::ZRuntime::Application.spawn(async move {
         let result = provider
             .alloc(size)
             .with_alignment(alignment.into_rust_type())
