@@ -134,9 +134,23 @@ pub unsafe extern "C" fn z_bytes_to_slice(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_slice_t>,
 ) -> z_result_t {
+    use std::{
+        alloc::{alloc, Layout},
+        ptr,
+    };
     let payload = this.as_rust_type_ref();
+    let ptr = alloc(Layout::array::<u8>(payload.len()).unwrap());
+    {
+        let mut dst = ptr;
+        for slice in payload.slices() {
+            ptr::copy_nonoverlapping(slice.as_ptr(), dst, slice.len());
+            dst = dst.add(slice.len());
+        }
+    }
+    let slice_ptr = ptr::slice_from_raw_parts_mut(ptr, payload.len());
+    let boxed = Box::from_raw(slice_ptr);
     dst.as_rust_type_mut_uninit()
-        .write(payload.to_bytes().into_owned().into());
+        .write(CSliceOwned::from(boxed));
     result::Z_OK
 }
 

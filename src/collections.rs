@@ -254,6 +254,13 @@ impl From<Vec<u8>> for CSliceOwned {
     }
 }
 
+impl From<Box<[u8]>> for CSliceOwned {
+    fn from(value: Box<[u8]>) -> Self {
+        let slice = Box::leak(value);
+        CSliceOwned(CSlice::wrap(slice.as_ptr(), slice.len()))
+    }
+}
+
 impl From<Vec<u8>> for CSlice {
     fn from(value: Vec<u8>) -> Self {
         let slice: CSliceOwned = value.into();
