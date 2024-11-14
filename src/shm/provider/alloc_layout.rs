@@ -63,21 +63,21 @@ pub extern "C" fn z_alloc_layout_new(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// Constructs Alloc Layout in its gravestone value.
+/// @brief Constructs Alloc Layout in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_alloc_layout_null(this_: &mut MaybeUninit<z_owned_alloc_layout_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// Returns ``true`` if `this` is valid.
+/// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
 pub extern "C" fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// Borrows Alloc Layout.
+/// @brief Borrows Alloc Layout.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_alloc_layout_loan(
@@ -90,7 +90,7 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// Deletes Alloc Layout.
+/// @brief Deletes Alloc Layout.
 #[no_mangle]
 pub extern "C" fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {
     let _ = this_.take_rust_type();

@@ -230,7 +230,7 @@ pub extern "C" fn z_shm_provider_garbage_collect(provider: &z_loaned_shm_provide
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Return the memory size available in theprovider.
+/// @brief Return the memory size available in the provider.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_available(provider: &z_loaned_shm_provider_t) -> usize {
     available(provider)

@@ -1045,7 +1045,7 @@ void z_alloc_layout_alloc_gc_defrag_dealloc(struct z_buf_alloc_result_t *out_res
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Deletes Alloc Layout.
+ * @brief Deletes Alloc Layout.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -1053,7 +1053,7 @@ void z_alloc_layout_drop(struct z_moved_alloc_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Borrows Alloc Layout.
+ * @brief Borrows Alloc Layout.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -2390,7 +2390,7 @@ z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Returns ``true`` if `this` is valid.
+ * @brief Returns ``true`` if `this` is valid.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -2398,7 +2398,7 @@ bool z_internal_alloc_layout_check(const struct z_owned_alloc_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Constructs Alloc Layout in its gravestone value.
+ * @brief Constructs Alloc Layout in its gravestone value.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -3842,7 +3842,7 @@ void z_shm_provider_alloc_gc_defrag_dealloc(struct z_buf_layout_alloc_result_t *
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Return the memory size available in theprovider.
+ * @brief Return the memory size available in the provider.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
