@@ -110,18 +110,8 @@ pub unsafe extern "C" fn z_bytes_to_string(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_string_t>,
 ) -> z_result_t {
-    let payload = this.as_rust_type_ref();
-    match payload.try_to_string() {
-        Ok(s) => {
-            dst.as_rust_type_mut_uninit().write(s.into_owned().into());
-            result::Z_OK
-        }
-        Err(e) => {
-            tracing::error!("Failed to convert the payload: {}", e);
-            dst.as_rust_type_mut_uninit().write(CStringOwned::default());
-            result::Z_EINVAL
-        }
-    }
+    let dst_slice = std::mem::transmute(dst);
+    z_bytes_to_slice(this, dst_slice)
 }
 
 /// Converts data into an owned slice.
@@ -135,8 +125,25 @@ pub unsafe extern "C" fn z_bytes_to_slice(
     dst: &mut MaybeUninit<z_owned_slice_t>,
 ) -> z_result_t {
     let payload = this.as_rust_type_ref();
-    dst.as_rust_type_mut_uninit()
-        .write(payload.to_bytes().into_owned().into());
+    match payload.to_bytes() {
+        std::borrow::Cow::Borrowed(s) => {
+            let context = Box::leak(Box::new(payload.clone())) as *mut ZBytes as *mut _;
+            extern "C" fn __z_drop_bytes_inner(_data: *mut c_void, context: *mut c_void) {
+                let _ = unsafe { Box::from_raw(context as *mut ZBytes) };
+            }
+            let cs = CSliceOwned::wrap(
+                s.as_ptr() as *mut _,
+                s.len(),
+                Some(__z_drop_bytes_inner),
+                context,
+            )
+            .unwrap();
+            dst.as_rust_type_mut_uninit().write(cs);
+        }
+        std::borrow::Cow::Owned(v) => {
+            dst.as_rust_type_mut_uninit().write(v.into());
+        }
+    }
     result::Z_OK
 }
 
