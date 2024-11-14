@@ -32,7 +32,9 @@ use crate::z_moved_source_info_t;
 use crate::zc_moved_closure_matching_status_t;
 use crate::{
     result::{self},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_encoding_t, z_priority_t, z_timestamp_t,
 };

@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_sample_t,
 };
 /// @brief A sample-processing closure.
