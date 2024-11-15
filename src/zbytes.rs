@@ -100,7 +100,7 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
     this.as_rust_type_ref().len()
 }
 
-/// Converts data into an owned non-null-terminated string.
+/// Gets data as an owned non-null-terminated string.
 ///
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct a string.
@@ -114,7 +114,7 @@ pub unsafe extern "C" fn z_bytes_to_string(
     z_bytes_to_slice(this, dst_slice)
 }
 
-/// Converts data into an owned slice.
+/// @brief Gets data as an owned slice.
 ///
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct a slice.
@@ -127,6 +127,14 @@ pub unsafe extern "C" fn z_bytes_to_slice(
     let payload = this.as_rust_type_ref();
     match payload.to_bytes() {
         std::borrow::Cow::Borrowed(s) => {
+            // force a copy if zbytes is a single shared memory slice
+            #[cfg(all(feature = "unstable", feature = "shared-memory"))]
+            if payload.as_shm().is_some() {
+                dst.as_rust_type_mut_uninit().write(s.to_owned().into());
+                return result::Z_OK;
+            }
+            // otherwise we avoid a copy and instead just place zbytes clone into an owned_slice context to ensure
+            // that it will outlive the pointed data
             let context = Box::leak(Box::new(payload.clone())) as *mut ZBytes as *mut _;
             extern "C" fn __z_drop_bytes_inner(_data: *mut c_void, context: *mut c_void) {
                 let _ = unsafe { Box::from_raw(context as *mut ZBytes) };

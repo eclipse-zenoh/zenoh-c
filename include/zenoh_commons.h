@@ -1311,7 +1311,7 @@ z_result_t z_bytes_to_owned_shm(const struct z_loaned_bytes_t *this_,
                                 struct z_owned_shm_t *dst);
 #endif
 /**
- * Converts data into an owned slice.
+ * @brief Gets data as an owned slice.
  *
  * @param this_: Data to convert.
  * @param dst: An uninitialized memory location where to construct a slice.
@@ -1320,7 +1320,7 @@ ZENOHC_API
 z_result_t z_bytes_to_slice(const struct z_loaned_bytes_t *this_,
                             struct z_owned_slice_t *dst);
 /**
- * Converts data into an owned non-null-terminated string.
+ * Gets data as an owned non-null-terminated string.
  *
  * @param this_: Data to convert.
  * @param dst: An uninitialized memory location where to construct a string.
