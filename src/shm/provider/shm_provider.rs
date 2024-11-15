@@ -154,7 +154,7 @@ pub extern "C" fn z_shm_provider_alloc_gc(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Make allocation performing garbage collection and\or defragmentation if needed.
+/// @brief Make allocation performing garbage collection and/or defragmentation if needed.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -166,7 +166,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Make allocation performing garbage collection and\or defragmentation and\or forced deallocation if needed.
+/// @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -178,7 +178,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Make allocation performing garbage collection and\or defragmentation and\or blocking if needed.
+/// @brief Make allocation performing garbage collection and/or defragmentation and/or blocking if needed.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -190,7 +190,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Make allocation performing garbage collection and\or defragmentation in async manner. Will return Z_EINVAL
+/// @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
 /// if used with non-threadsafe SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(

@@ -138,6 +138,7 @@ pub extern "C" fn zc_liveliness_undeclare_token(
 /// @brief The options for `zc_liveliness_declare_subscriber()`
 #[repr(C)]
 pub struct zc_liveliness_subscriber_options_t {
+    /// Receive liveliness tokens that were declared before this liveliness subscriber.
     history: bool,
 }
 
@@ -238,7 +239,7 @@ pub extern "C" fn zc_liveliness_declare_background_subscriber(
 #[repr(C)]
 pub struct zc_liveliness_get_options_t {
     /// Set query timeout in milliseconds.
-    timeout_ms: u32,
+    pub timeout_ms: u32,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
