@@ -237,6 +237,7 @@ pub extern "C" fn zc_liveliness_declare_background_subscriber(
 /// @brief The options for `zc_liveliness_get()`
 #[repr(C)]
 pub struct zc_liveliness_get_options_t {
+    /// Set query timeout in milliseconds.
     timeout_ms: u32,
 }
 
