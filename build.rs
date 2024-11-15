@@ -109,12 +109,18 @@ fn get_build_rs_path() -> PathBuf {
 
 fn produce_opaque_types_data() -> PathBuf {
     let target = env::var("TARGET").unwrap();
+    let linker = env::var("RUSTC_LINKER").unwrap_or_default();
     let current_folder = get_build_rs_path();
     let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
     let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = Stdio::from(out_file);
 
+    let mut linker_args = Vec::<String>::new();
+    if !linker.is_empty() {
+        linker_args.push("--config".to_string());
+        linker_args.push(format!("target.{target}.linker=\"{linker}\""));
+    }
     #[allow(unused_mut)]
     let mut feature_args: Vec<&str> = vec!["-F", "panic"]; // enable output structure sizes in panic messages during build
     for (rust_feature, _c_feature) in RUST_TO_C_FEATURES.entries() {
@@ -127,6 +133,7 @@ fn produce_opaque_types_data() -> PathBuf {
     let _ = Command::new("cargo")
         .arg("build")
         .args(feature_args)
+        .args(linker_args)
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")

@@ -3775,7 +3775,6 @@ name = "zenoh-c"
 version = "1.0.0-dev"
 dependencies = [
  "async-std",
- "async-trait",
  "cbindgen",
  "chrono",
  "const_format",
@@ -3783,7 +3782,6 @@ dependencies = [
  "flume",
  "fs2",
  "fs_extra",
- "futures",
  "json5",
  "lazy_static",
  "libc",

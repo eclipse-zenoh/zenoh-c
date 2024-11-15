@@ -174,7 +174,7 @@ pub unsafe extern "C" fn z_bytes_to_owned_shm(
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_to_loaned_shm(
+pub unsafe extern "C" fn z_bytes_as_loaned_shm(
     this: &'static z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static z_loaned_shm_t>,
 ) -> z_result_t {
