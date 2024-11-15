@@ -817,8 +817,11 @@ Types
 
 .. doxygenstruct:: zc_owned_liveliness_token_t
 .. doxygenstruct:: zc_liveliness_declaration_options_t
+    ::members:
 .. doxygenstruct:: zc_liveliness_get_options_t
+    ::members:
 .. doxygenstruct:: zc_liveliness_subscriber_options_t
+    ::members:
 
 Functions
 ---------
