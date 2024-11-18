@@ -71,25 +71,25 @@ void test_liveliness_sub() {
     z_closure(&closure, on_receive, NULL, (void*)(&context));
 
     z_owned_subscriber_t sub;
-    zc_liveliness_declare_subscriber(z_loan(s2), &sub, z_loan(k), z_move(closure), NULL);
+    z_liveliness_declare_subscriber(z_loan(s2), &sub, z_loan(k), z_move(closure), NULL);
 
     z_sleep_s(1);
     zc_owned_liveliness_token_t t1, t2;
-    zc_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
-    zc_liveliness_declare_token(z_loan(s1), &t2, z_loan(k2), NULL);
+    z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
+    z_liveliness_declare_token(z_loan(s1), &t2, z_loan(k2), NULL);
 
     z_sleep_s(1);
 
     assert(context.token1_put);
     assert(context.token2_put);
 
-    zc_liveliness_undeclare_token(z_move(t1));
+    z_liveliness_undeclare_token(z_move(t1));
     z_sleep_s(1);
 
     assert(context.token1_drop);
     assert(!context.token2_drop);
 
-    zc_liveliness_undeclare_token(z_move(t2));
+    z_liveliness_undeclare_token(z_move(t2));
     z_sleep_s(1);
     assert(context.token2_drop);
 }
@@ -110,14 +110,14 @@ void test_liveliness_get() {
 
     z_sleep_s(1);
     zc_owned_liveliness_token_t t1;
-    zc_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
+    z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
     z_sleep_s(1);
 
     z_owned_fifo_handler_reply_t handler;
     z_owned_closure_reply_t cb;
     z_fifo_channel_reply_new(&cb, &handler, 3);
 
-    zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
+    z_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
     z_owned_reply_t reply;
     assert(z_recv(z_loan(handler), &reply) == Z_OK);
     assert(z_reply_is_ok(z_loan(reply)));
@@ -134,7 +134,7 @@ void test_liveliness_get() {
     z_sleep_s(1);
     z_fifo_channel_reply_new(&cb, &handler, 3);
 
-    zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
+    z_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
     assert(z_recv(z_loan(handler), &reply) == Z_CHANNEL_DISCONNECTED);
 
     z_drop(z_move(handler));

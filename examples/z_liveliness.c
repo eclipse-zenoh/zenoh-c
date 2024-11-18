@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
     printf("Declaring liveliness token '%s'...\n", args.keyexpr);
     zc_owned_liveliness_token_t token;
-    if (zc_liveliness_declare_token(z_loan(s), &token, z_loan(keyexpr), NULL) < 0) {
+    if (z_liveliness_declare_token(z_loan(s), &token, z_loan(keyexpr), NULL) < 0) {
         printf("Unable to create liveliness token!\n");
         exit(-1);
     }
