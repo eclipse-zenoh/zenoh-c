@@ -74,7 +74,7 @@ void test_liveliness_sub() {
     z_liveliness_declare_subscriber(z_loan(s2), &sub, z_loan(k), z_move(closure), NULL);
 
     z_sleep_s(1);
-    zc_owned_liveliness_token_t t1, t2;
+    z_owned_liveliness_token_t t1, t2;
     z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
     z_liveliness_declare_token(z_loan(s1), &t2, z_loan(k2), NULL);
 
@@ -109,7 +109,7 @@ void test_liveliness_get() {
     z_open(&s2, z_move(c2), NULL);
 
     z_sleep_s(1);
-    zc_owned_liveliness_token_t t1;
+    z_owned_liveliness_token_t t1;
     z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
     z_sleep_s(1);
 

@@ -815,7 +815,7 @@ Liveliness
 Types
 -----
 
-.. doxygenstruct:: zc_owned_liveliness_token_t
+.. doxygenstruct:: z_owned_liveliness_token_t
 .. doxygenstruct:: z_liveliness_token_options_t
 .. doxygenstruct:: z_liveliness_get_options_t
 .. doxygenstruct:: z_liveliness_subscriber_options_t

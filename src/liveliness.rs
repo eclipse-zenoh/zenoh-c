@@ -22,23 +22,23 @@ use zenoh::{
 };
 
 use crate::{
-    opaque_types::{zc_loaned_liveliness_token_t, zc_owned_liveliness_token_t},
+    opaque_types::{z_loaned_liveliness_token_t, z_owned_liveliness_token_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
-    z_owned_subscriber_t, zc_moved_liveliness_token_t,
+    z_owned_subscriber_t, z_moved_liveliness_token_t,
 };
 decl_c_type!(
-    owned(zc_owned_liveliness_token_t, option LivelinessToken),
-    loaned(zc_loaned_liveliness_token_t),
+    owned(z_owned_liveliness_token_t, option LivelinessToken),
+    loaned(z_loaned_liveliness_token_t),
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs liveliness token in its gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_internal_liveliness_token_null(
-    this_: &mut MaybeUninit<zc_owned_liveliness_token_t>,
+pub extern "C" fn z_internal_liveliness_token_null(
+    this_: &mut MaybeUninit<z_owned_liveliness_token_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
@@ -46,14 +46,14 @@ pub extern "C" fn zc_internal_liveliness_token_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn zc_internal_liveliness_token_check(this_: &zc_owned_liveliness_token_t) -> bool {
+pub extern "C" fn z_internal_liveliness_token_check(this_: &z_owned_liveliness_token_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_liveliness_token_drop(this_: &mut zc_moved_liveliness_token_t) {
+pub extern "C" fn z_liveliness_token_drop(this_: &mut z_moved_liveliness_token_t) {
     let _ = this_.take_rust_type();
 }
 
@@ -78,8 +78,8 @@ pub extern "C" fn z_liveliness_token_options_default(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_liveliness_token_loan(
-    this: &zc_owned_liveliness_token_t,
-) -> &zc_loaned_liveliness_token_t {
+    this: &z_owned_liveliness_token_t,
+) -> &z_loaned_liveliness_token_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
@@ -99,7 +99,7 @@ pub unsafe extern "C" fn z_liveliness_token_loan(
 #[no_mangle]
 pub extern "C" fn z_liveliness_declare_token(
     session: &z_loaned_session_t,
-    token: &mut MaybeUninit<zc_owned_liveliness_token_t>,
+    token: &mut MaybeUninit<z_owned_liveliness_token_t>,
     key_expr: &z_loaned_keyexpr_t,
     _options: Option<&z_liveliness_token_options_t>,
 ) -> result::z_result_t {
@@ -123,7 +123,7 @@ pub extern "C" fn z_liveliness_declare_token(
 /// @brief Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
 pub extern "C" fn z_liveliness_undeclare_token(
-    this: &mut zc_moved_liveliness_token_t,
+    this: &mut z_moved_liveliness_token_t,
 ) -> result::z_result_t {
     if let Some(token) = this.take_rust_type() {
         if let Err(e) = token.undeclare().wait() {

@@ -2765,6 +2765,22 @@ ZENOHC_API bool z_internal_keyexpr_check(const struct z_owned_keyexpr_t *this_);
 ZENOHC_API void z_internal_keyexpr_null(struct z_owned_keyexpr_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_liveliness_token_check(const z_owned_liveliness_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs liveliness token in its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_liveliness_token_null(z_owned_liveliness_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if `this` is valid.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -3178,7 +3194,7 @@ z_result_t z_liveliness_declare_subscriber(const struct z_loaned_session_t *sess
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_liveliness_declare_token(const struct z_loaned_session_t *session,
-                                      zc_owned_liveliness_token_t *token,
+                                      z_owned_liveliness_token_t *token,
                                       const struct z_loaned_keyexpr_t *key_expr,
                                       const struct z_liveliness_token_options_t *_options);
 #endif
@@ -3220,7 +3236,7 @@ void z_liveliness_subscriber_options_default(struct z_liveliness_subscriber_opti
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_liveliness_token_drop(zc_moved_liveliness_token_t *this_);
+void z_liveliness_token_drop(z_moved_liveliness_token_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3228,7 +3244,7 @@ void z_liveliness_token_drop(zc_moved_liveliness_token_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const zc_loaned_liveliness_token_t *z_liveliness_token_loan(const zc_owned_liveliness_token_t *this_);
+const z_loaned_liveliness_token_t *z_liveliness_token_loan(const z_owned_liveliness_token_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3244,7 +3260,7 @@ void z_liveliness_token_options_default(struct z_liveliness_token_options_t *thi
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t z_liveliness_undeclare_token(zc_moved_liveliness_token_t *this_);
+z_result_t z_liveliness_undeclare_token(z_moved_liveliness_token_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4945,22 +4961,6 @@ bool zc_internal_closure_matching_status_check(const struct zc_owned_closure_mat
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void zc_internal_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool zc_internal_liveliness_token_check(const zc_owned_liveliness_token_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs liveliness token in its gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_internal_liveliness_token_null(zc_owned_liveliness_token_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
