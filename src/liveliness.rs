@@ -27,7 +27,7 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
-    z_owned_subscriber_t, z_moved_liveliness_token_t,
+    z_moved_liveliness_token_t, z_owned_subscriber_t,
 };
 decl_c_type!(
     owned(z_owned_liveliness_token_t, option LivelinessToken),
