@@ -228,10 +228,10 @@ get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
 /// expressions.
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
-get_opaque_type_data!(Option<LivelinessToken>, zc_owned_liveliness_token_t);
+get_opaque_type_data!(Option<LivelinessToken>, z_owned_liveliness_token_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-get_opaque_type_data!(LivelinessToken, zc_loaned_liveliness_token_t);
+get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh publication cache.

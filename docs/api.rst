@@ -815,25 +815,25 @@ Liveliness
 Types
 -----
 
-.. doxygenstruct:: zc_owned_liveliness_token_t
-.. doxygenstruct:: zc_liveliness_declaration_options_t
-.. doxygenstruct:: zc_liveliness_get_options_t
-.. doxygenstruct:: zc_liveliness_subscriber_options_t
+.. doxygenstruct:: z_owned_liveliness_token_t
+.. doxygenstruct:: z_liveliness_token_options_t
+.. doxygenstruct:: z_liveliness_get_options_t
+.. doxygenstruct:: z_liveliness_subscriber_options_t
 
 Functions
 ---------
-.. doxygenfunction:: zc_liveliness_declare_subscriber
+.. doxygenfunction:: z_liveliness_declare_subscriber
 .. doxygenfunction:: zc_liveliness_declare_background_subscriber
-.. doxygenfunction:: zc_liveliness_get
+.. doxygenfunction:: z_liveliness_get
 
-.. doxygenfunction:: zc_liveliness_declare_token
-.. doxygenfunction:: zc_liveliness_undeclare_token
-.. doxygenfunction:: zc_liveliness_token_loan
-.. doxygenfunction:: zc_liveliness_token_drop
+.. doxygenfunction:: z_liveliness_declare_token
+.. doxygenfunction:: z_liveliness_undeclare_token
+.. doxygenfunction:: z_liveliness_token_loan
+.. doxygenfunction:: z_liveliness_token_drop
 
-.. doxygenfunction:: zc_liveliness_subscriber_options_default
-.. doxygenfunction:: zc_liveliness_declaration_options_default
-.. doxygenfunction:: zc_liveliness_get_options_default
+.. doxygenfunction:: z_liveliness_subscriber_options_default
+.. doxygenfunction:: z_liveliness_token_options_default
+.. doxygenfunction:: z_liveliness_get_options_default
 
 Publication Cache
 =================
