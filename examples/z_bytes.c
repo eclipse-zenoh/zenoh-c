@@ -200,9 +200,9 @@ int main(void) {
     {
         /// fill z_bytes with some data
         z_owned_bytes_t b1, b2, b3;
-        z_bytes_copy_from_str(&b1, "abc");
-        z_bytes_copy_from_str(&b2, "def");
-        z_bytes_copy_from_str(&b3, "hij");
+        z_bytes_from_str(&b1, "abc", NULL, NULL);
+        z_bytes_from_str(&b2, "def", NULL, NULL);
+        z_bytes_from_str(&b3, "hij", NULL, NULL);
         z_owned_bytes_writer_t writer;
         z_bytes_writer_empty(&writer);
         z_bytes_writer_append(z_loan_mut(writer), z_move(b1));
