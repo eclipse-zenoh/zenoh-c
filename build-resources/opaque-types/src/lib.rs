@@ -185,6 +185,9 @@ get_opaque_type_data!(Option<Session>, z_owned_session_t);
 /// A loaned Zenoh session.
 get_opaque_type_data!(Session, z_loaned_session_t);
 
+/// An owned Close handle
+get_opaque_type_data!(Option<tokio::task::JoinHandle<zenoh::Result<()>>>, zc_owned_concurrent_close_handle_t);
+
 /// An owned Zenoh configuration.
 get_opaque_type_data!(Option<Config>, z_owned_config_t);
 /// A loaned Zenoh configuration.

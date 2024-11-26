@@ -29,6 +29,8 @@ pub mod result;
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;
+mod close;
+pub use crate::close::*;
 pub mod encoding;
 pub use crate::encoding::*;
 mod commons;

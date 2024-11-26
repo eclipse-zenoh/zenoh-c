@@ -22,7 +22,7 @@ use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_moved_config_t, z_moved_session_t,
+    z_moved_config_t, z_moved_session_t, zc_owned_concurrent_close_handle_t,
 };
 decl_c_type!(
     owned(z_owned_session_t, option Session),
@@ -145,13 +145,22 @@ pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
 /// Options passed to the `z_close()` function.
 #[repr(C)]
 pub struct z_close_options_t {
-    _dummy: u8,
+    /// The timeout for close operation in milliseconds. 0 means default close timeout which is 10 seconds.
+    timeout_ms: u32,
+
+    /// An optional uninitialized concurrent close handle. If set, the close operation will be executed
+    /// concurrently in separate task, and this handle will be initialized to be used for controlling
+    /// it's execution.
+    out_concurrent: Option<&'static mut MaybeUninit<zc_owned_concurrent_close_handle_t>>,
 }
 
 /// Constructs the default value for `z_close_options_t`.
 #[no_mangle]
 pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
-    this_.write(z_close_options_t { _dummy: 0 });
+    this_.write(z_close_options_t {
+        timeout_ms: 0,
+        out_concurrent: None,
+    });
 }
 
 /// Closes zenoh session. This also drops all the closure callbacks remaining from dropped, but not undeclared subscribers.
@@ -160,10 +169,24 @@ pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_option
 #[no_mangle]
 pub extern "C" fn z_close(
     session: &mut z_loaned_session_t,
-    _options: Option<&z_close_options_t>,
+    options: Option<&mut z_close_options_t>,
 ) -> result::z_result_t {
-    let s = session.as_rust_type_mut();
-    match s.close().wait() {
+    let mut close_builder = session.as_rust_type_mut().close();
+
+    if let Some(options) = options {
+        if options.timeout_ms != 0 {
+            close_builder =
+                close_builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64))
+        }
+
+        if let Some(close_handle) = &mut options.out_concurrent {
+            let handle = close_builder.concurrently();
+            close_handle.as_rust_type_mut_uninit().write(Some(handle));
+            return result::Z_OK;
+        }
+    }
+
+    match close_builder.wait() {
         Err(e) => {
             tracing::error!("Error closing session: {}", e);
             result::Z_EGENERIC

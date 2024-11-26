@@ -276,10 +276,25 @@ typedef struct z_clock_t {
   const void *t_base;
 } z_clock_t;
 /**
+ * An owned Close handle
+ */
+typedef struct ALIGN(8) zc_owned_concurrent_close_handle_t {
+  uint8_t _0[8];
+} zc_owned_concurrent_close_handle_t;
+/**
  * Options passed to the `z_close()` function.
  */
 typedef struct z_close_options_t {
-  uint8_t _dummy;
+  /**
+   * The timeout for close operation in milliseconds. 0 means default close timeout which is 10 seconds.
+   */
+  uint32_t timeout_ms;
+  /**
+   * An optional uninitialized concurrent close handle. If set, the close operation will be executed
+   * concurrently in separate task, and this handle will be initialized to be used for controlling
+   * it's execution.
+   */
+  struct zc_owned_concurrent_close_handle_t *out_concurrent;
 } z_close_options_t;
 /**
  * @brief A hello message-processing closure.
@@ -892,6 +907,9 @@ typedef struct zc_moved_closure_matching_status_t {
   struct zc_owned_closure_matching_status_t _this;
 } zc_moved_closure_matching_status_t;
 #endif
+typedef struct zc_moved_concurrent_close_handle_t {
+  struct zc_owned_concurrent_close_handle_t _this;
+} zc_moved_concurrent_close_handle_t;
 typedef struct zc_moved_matching_listener_t {
   struct zc_owned_matching_listener_t _this;
 } zc_moved_matching_listener_t;
@@ -1424,7 +1442,7 @@ ZENOHC_API struct z_clock_t z_clock_now(void);
  */
 ZENOHC_API
 z_result_t z_close(struct z_loaned_session_t *session,
-                   const struct z_close_options_t *_options);
+                   struct z_close_options_t *options);
 /**
  * Constructs the default value for `z_close_options_t`.
  */
@@ -4633,6 +4651,15 @@ ZENOHC_API
 const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loan(const struct zc_owned_closure_matching_status_t *closure);
 #endif
 /**
+ * @brief Drops the close handle. The concurrent close task will not be interrupted.
+ */
+ZENOHC_API void zc_concurrent_close_handle_drop(struct zc_moved_concurrent_close_handle_t *this_);
+/**
+ * @brief Blocking wait on close handle to complete. Returns `Z_EIO` if close finishes with error.
+ */
+ZENOHC_API
+z_result_t zc_concurrent_close_handle_wait(struct zc_moved_concurrent_close_handle_t *handle);
+/**
  * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
  *
  * Returns 0 in case of success, negative error code otherwise.
@@ -4742,6 +4769,16 @@ bool zc_internal_closure_matching_status_check(const struct zc_owned_closure_mat
 ZENOHC_API
 void zc_internal_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
 #endif
+/**
+ * @brief Returns ``true`` if concurrent close handle is valid, ``false`` if it is in gravestone state.
+ */
+ZENOHC_API
+bool zc_internal_concurrent_close_handle_check(const struct zc_owned_concurrent_close_handle_t *this_);
+/**
+ * @brief Constructs concurrent close handle in its gravestone state.
+ */
+ZENOHC_API
+void zc_internal_concurrent_close_handle_null(struct zc_owned_concurrent_close_handle_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Checks the matching listener is for the gravestone state
