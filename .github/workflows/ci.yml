@@ -123,6 +123,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          brew update
+          brew install pkg-config
           brew tap messense/macos-cross-toolchains
           brew install armv7-unknown-linux-gnueabihf
           brew install mingw-w64
