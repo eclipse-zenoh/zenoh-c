@@ -117,5 +117,5 @@ zenoh_opaque.h:
   - z_loaned_fifo_handler_reply_t!
   - z_owned_ring_handler_reply_t!
   - z_loaned_ring_handler_reply_t!
-  - zc_owned_concurrent_close_handle_t
+  - zc_owned_concurrent_close_handle_t!
 

@@ -276,12 +276,6 @@ typedef struct z_clock_t {
   const void *t_base;
 } z_clock_t;
 /**
- * An owned Close handle
- */
-typedef struct ALIGN(8) zc_owned_concurrent_close_handle_t {
-  uint8_t _0[8];
-} zc_owned_concurrent_close_handle_t;
-/**
  * Options passed to the `z_close()` function.
  */
 typedef struct z_close_options_t {
