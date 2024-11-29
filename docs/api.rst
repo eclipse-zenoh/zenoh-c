@@ -532,6 +532,25 @@ Functions
 .. doxygenfunction:: z_closure_zid_call
 .. doxygenfunction:: z_closure_zid
 
+Matching
+========
+
+Types
+-----
+.. doxygenstruct:: zc_owned_matching_listener_t
+.. doxygenstruct:: zc_owned_closure_matching_status_t
+.. doxygenstruct:: zc_matching_status_t
+
+Functions
+---------
+
+.. doxygenfunction:: zc_matching_listener_drop
+.. doxygenfunction:: zc_closure_matching_status_drop
+.. doxygenfunction:: zc_closure_matching_status_loan
+.. doxygenfunction:: zc_closure_matching_status_call
+.. doxygenfunction:: zc_closure_matching_status
+
+
 Publication
 ===========
 
@@ -556,9 +575,6 @@ Types
 .. doxygenstruct:: z_publisher_delete_options_t
     :members:
 
-.. doxygenstruct:: zc_owned_matching_listener_t
-.. doxygenstruct:: zc_owned_closure_matching_status_t
-
 Functions
 ---------
 .. doxygenfunction:: z_put
@@ -582,16 +598,9 @@ Functions
 
 .. doxygenfunction:: z_reliability_default
 
-.. doxygenfunction:: zc_closure_matching_status_drop
-.. doxygenfunction:: zc_closure_matching_status_loan
-.. doxygenfunction:: zc_closure_matching_status_call
-.. doxygenfunction:: zc_closure_matching_status
-
 .. doxygenfunction:: zc_publisher_get_matching_status
 .. doxygenfunction:: zc_publisher_declare_matching_listener
 .. doxygenfunction:: zc_publisher_declare_background_matching_listener
-
-.. doxygenfunction:: zc_publisher_matching_listener_drop
 
 Subscription
 ============
@@ -719,8 +728,12 @@ Functions
 
 Query
 =====
+
 Types
 -----
+.. doxygenstruct:: z_owned_querier_t
+.. doxygenstruct:: z_loaned_querier_t
+
 .. doxygenstruct:: z_owned_reply_t
 .. doxygenstruct:: z_loaned_reply_t
 
@@ -731,12 +744,19 @@ Types
     :members:
 .. doxygenenum:: z_query_target_t
 .. doxygenenum:: z_consolidation_mode_t
+.. doxygenenum:: zc_reply_keyexpr_t
 .. doxygenstruct:: z_query_consolidation_t
+
+.. doxygenstruct:: z_querier_options_t
+    :members:
+.. doxygenstruct:: z_querier_get_options_t
+    :members:
 
 .. doxygenstruct:: z_owned_fifo_handler_reply_t
 .. doxygenstruct:: z_loaned_fifo_handler_reply_t
 .. doxygenstruct:: z_owned_ring_handler_reply_t
 .. doxygenstruct:: z_loaned_ring_handler_reply_t
+    
 
 
 Functions
@@ -751,6 +771,26 @@ Functions
 .. doxygenfunction:: z_query_consolidation_monotonic
 .. doxygenfunction:: z_query_consolidation_latest
 .. doxygenfunction:: z_query_target_default
+
+.. doxygenfunction:: z_declare_querier
+.. doxygenfunction:: z_undeclare_querier
+.. doxygenfunction:: z_querier_loan
+.. doxygenfunction:: z_querier_drop
+.. doxygenfunction:: z_declare_background_querier
+.. doxygenfunction:: z_querier_id
+.. doxygenfunction:: z_querier_keyexpr
+.. doxygenfunction:: z_querier_get
+.. doxygenfunction:: zc_querier_get_matching_status
+.. doxygenfunction:: zc_querier_declare_matching_listener
+.. doxygenfunction:: zc_querier_declare_background_matching_listener
+
+.. doxygenfunction:: z_querier_options_default
+.. doxygenfunction:: z_querier_get_options_default
+
+.. doxygenfunction:: z_reply_loan
+.. doxygenfunction:: z_reply_is_ok
+.. doxygenfunction:: z_reply_ok
+.. doxygenfunction:: z_reply_err
 
 .. doxygenfunction:: z_reply_drop
 .. doxygenfunction:: z_reply_clone
@@ -870,7 +910,6 @@ Types
 .. doxygenstruct:: ze_loaned_querying_subscriber_t
 .. doxygenstruct:: ze_querying_subscriber_options_t
     :members:
-.. doxygenenum:: zc_reply_keyexpr_t
 
 Functions
 ---------

@@ -587,14 +587,6 @@ typedef struct z_publisher_options_t {
 #endif
 } z_publisher_options_t;
 /**
- * An owned Zenoh querier.
- *
- * Sends queries to matching queryables.
- */
-typedef struct ALIGN(8) z_owned_querier_t {
-  uint8_t _0[72];
-} z_owned_querier_t;
-/**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
  */
 typedef struct z_query_consolidation_t {
@@ -892,12 +884,6 @@ typedef struct z_put_options_t {
 typedef struct z_moved_querier_t {
   struct z_owned_querier_t _this;
 } z_moved_querier_t;
-/**
- * A loaned Zenoh queryable.
- */
-typedef struct ALIGN(8) z_loaned_querier_t {
-  uint8_t _0[72];
-} z_loaned_querier_t;
 /**
  * Options passed to the `z_querier_get()` function.
  */
