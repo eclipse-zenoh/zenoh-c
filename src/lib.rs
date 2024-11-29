@@ -41,6 +41,8 @@ mod info;
 pub use crate::info::*;
 mod get;
 pub use crate::get::*;
+mod querier;
+pub use crate::querier::*;
 mod queryable;
 pub use crate::queryable::*;
 mod put;
@@ -61,6 +63,10 @@ pub use platform::*;
 mod liveliness;
 #[cfg(feature = "unstable")]
 pub use liveliness::*;
+#[cfg(feature = "unstable")]
+mod matching;
+#[cfg(feature = "unstable")]
+pub use matching::*;
 #[cfg(feature = "unstable")]
 mod publication_cache;
 #[cfg(feature = "unstable")]
