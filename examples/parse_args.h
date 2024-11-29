@@ -216,11 +216,11 @@ void parse_zenoh_common_args(const int argc, char** argv, z_owned_config_t* conf
 }
 
 z_query_target_t parse_query_target(const char* arg) {
-    if (strcasecmp(arg, "BEST_MATCHING") == 0) {
+    if (strcmp(arg, "BEST_MATCHING") == 0) {
         return Z_QUERY_TARGET_BEST_MATCHING;
-    } else if (strcasecmp(arg, "ALL") == 0) {
+    } else if (strcmp(arg, "ALL") == 0) {
         return Z_QUERY_TARGET_ALL;
-    } else if (strcasecmp(arg, "ALL_COMPLETE") == 0) {
+    } else if (strcmp(arg, "ALL_COMPLETE") == 0) {
         return Z_QUERY_TARGET_ALL_COMPLETE;
     } else {
         printf("Unsupported query target value [%s]\n", arg);
