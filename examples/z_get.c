@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
     const char* ke = args.selector;
     size_t ke_len = strlen(ke);
-    const char* params = strchr(args.selector, "?");
+    const char* params = strchr(args.selector, '?');
     if (params != NULL) {
         ke_len = params - ke;
         params += 1;
@@ -108,8 +108,8 @@ void print_help() {
         -s <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
         -p <PAYLOAD> (optional, string): An optional value to put in the query\n\
         -t <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
-        -o <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n" DEFAULT_SELECTOR,
-        DEFAULT_TIMEOUT_MS);
+        -o <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
+        DEFAULT_SELECTOR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);
     printf(
         "\
