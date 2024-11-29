@@ -771,6 +771,7 @@ Functions
 .. doxygenfunction:: z_query_consolidation_monotonic
 .. doxygenfunction:: z_query_consolidation_latest
 .. doxygenfunction:: z_query_target_default
+.. doxygenfunction:: zc_reply_keyexpr_default
 
 .. doxygenfunction:: z_declare_querier
 .. doxygenfunction:: z_undeclare_querier
@@ -786,11 +787,6 @@ Functions
 
 .. doxygenfunction:: z_querier_options_default
 .. doxygenfunction:: z_querier_get_options_default
-
-.. doxygenfunction:: z_reply_loan
-.. doxygenfunction:: z_reply_is_ok
-.. doxygenfunction:: z_reply_ok
-.. doxygenfunction:: z_reply_err
 
 .. doxygenfunction:: z_reply_drop
 .. doxygenfunction:: z_reply_clone
@@ -922,7 +918,6 @@ Functions
 .. doxygenfunction:: ze_querying_subscriber_drop
 
 .. doxygenfunction:: ze_querying_subscriber_options_default
-.. doxygenfunction:: zc_reply_keyexpr_default
 
 Logging
 =======
