@@ -5335,6 +5335,15 @@ ZENOHC_API
 void zc_try_init_log_from_env(void);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Undeclares the given matching listener, droping and invalidating it.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t zc_undeclare_matching_listener(zc_moved_matching_listener_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Declares a background publication cache. It will function in background until the corresponding session is closed or dropped.
  *
  * @param session: A Zenoh session.

@@ -14,10 +14,13 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::matching::MatchingListener;
+use zenoh::{matching::MatchingListener, Wait};
 
 pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_owned_matching_listener_t};
-use crate::transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType};
+use crate::{
+    result,
+    transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
+};
 decl_c_type!(
     owned(zc_owned_matching_listener_t, option MatchingListener<()>),
 );
@@ -55,4 +58,21 @@ pub struct zc_matching_status_t {
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn zc_matching_listener_drop(this: &mut zc_moved_matching_listener_t) {
     std::mem::drop(this.take_rust_type())
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Undeclares the given matching listener, droping and invalidating it.
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn zc_undeclare_matching_listener(
+    this: &mut zc_moved_matching_listener_t,
+) -> result::z_result_t {
+    if let Some(m) = this.take_rust_type() {
+        if let Err(e) = m.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_ENETWORK;
+        }
+    }
+    result::Z_OK
 }

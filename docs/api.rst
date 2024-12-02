@@ -545,6 +545,7 @@ Functions
 ---------
 
 .. doxygenfunction:: zc_matching_listener_drop
+.. doxygenfunction:: zc_matching_listener_undeclare
 .. doxygenfunction:: zc_closure_matching_status_drop
 .. doxygenfunction:: zc_closure_matching_status_loan
 .. doxygenfunction:: zc_closure_matching_status_call

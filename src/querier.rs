@@ -391,8 +391,8 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
 ///
 /// @return 0 in case of success, negative error code otherwise.
 pub extern "C" fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
-    if let Some(p) = this_.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
+    if let Some(q) = this_.take_rust_type() {
+        if let Err(e) = q.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_ENETWORK;
         }
