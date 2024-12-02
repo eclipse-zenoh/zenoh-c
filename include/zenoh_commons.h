@@ -593,8 +593,10 @@ typedef struct z_query_consolidation_t {
   enum z_consolidation_mode_t mode;
 } z_query_consolidation_t;
 /**
- * Options passed to the `z_declare_querier()` function.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Options passed to the `z_declare_querier()` function.
  */
+#if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_querier_options_t {
   /**
    * The Queryables that should be target of the querier queries.
@@ -637,6 +639,7 @@ typedef struct z_querier_options_t {
    */
   uint64_t timeout_ms;
 } z_querier_options_t;
+#endif
 /**
  * Options passed to the `z_delete()` function.
  */
@@ -881,12 +884,11 @@ typedef struct z_put_options_t {
    */
   struct z_moved_bytes_t *attachment;
 } z_put_options_t;
-typedef struct z_moved_querier_t {
-  struct z_owned_querier_t _this;
-} z_moved_querier_t;
 /**
- * Options passed to the `z_querier_get()` function.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Options passed to the `z_querier_get()` function.
  */
+#if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_querier_get_options_t {
   /**
    * An optional payload to attach to the query.
@@ -909,6 +911,7 @@ typedef struct z_querier_get_options_t {
    */
   struct z_moved_bytes_t *attachment;
 } z_querier_get_options_t;
+#endif
 typedef struct z_moved_query_t {
   struct z_owned_query_t _this;
 } z_moved_query_t;
@@ -2036,7 +2039,8 @@ z_result_t z_declare_publisher(const struct z_loaned_session_t *session,
                                const struct z_loaned_keyexpr_t *key_expr,
                                struct z_publisher_options_t *options);
 /**
- * Constructs and declares a querier on the given key expression.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs and declares a querier on the given key expression.
  *
  * The queries can be send with the help of the `z_querier_get()` function.
  *
@@ -2047,11 +2051,13 @@ z_result_t z_declare_publisher(const struct z_loaned_session_t *session,
  *
  * @return 0 in case of success, negative error code otherwise.
  */
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_declare_querier(const struct z_loaned_session_t *session,
-                             struct z_owned_querier_t *querier,
+                             z_owned_querier_t *querier,
                              const struct z_loaned_keyexpr_t *key_expr,
                              struct z_querier_options_t *options);
+#endif
 /**
  * Constructs a Queryable for the given key expression.
  *
@@ -2902,13 +2908,21 @@ ZENOHC_API bool z_internal_publisher_check(const struct z_owned_publisher_t *thi
  */
 ZENOHC_API void z_internal_publisher_null(struct z_owned_publisher_t *this_);
 /**
- * Returns ``true`` if querier is valid, ``false`` otherwise.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if querier is valid, ``false`` otherwise.
  */
-ZENOHC_API bool z_internal_querier_check(const struct z_owned_querier_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_querier_check(const z_owned_querier_t *this_);
+#endif
 /**
- * Constructs a querier in a gravestone state.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a querier in a gravestone state.
  */
-ZENOHC_API void z_internal_querier_null(struct z_owned_querier_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_querier_null(z_owned_querier_t *this_);
+#endif
 /**
  * Returns `false` if `this` is in a gravestone state, `true` otherwise.
  */
@@ -3554,12 +3568,17 @@ z_result_t z_put(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
 /**
- * Frees memory and resets querier to its gravestone state.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Frees memory and resets querier to its gravestone state.
  * This is equivalent to calling `z_undeclare_querier()` and discarding its return value.
  */
-ZENOHC_API void z_querier_drop(struct z_moved_querier_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_querier_drop(z_moved_querier_t *this_);
+#endif
 /**
- * Query data from the matching queryables in the system.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
  * @param querier: The querier to make query from.
@@ -3569,40 +3588,61 @@ ZENOHC_API void z_querier_drop(struct z_moved_querier_t *this_);
  *
  * @return 0 in case of success, a negative error value upon failure.
  */
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t z_querier_get(const struct z_loaned_querier_t *querier,
+z_result_t z_querier_get(const z_loaned_querier_t *querier,
                          const char *parameters,
                          struct z_moved_closure_reply_t *callback,
                          struct z_querier_get_options_t *options);
+#endif
 /**
- * Constructs the default value for `z_querier_get_options_t`.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs the default value for `z_querier_get_options_t`.
  */
-ZENOHC_API void z_querier_get_options_default(struct z_querier_get_options_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_querier_get_options_default(struct z_querier_get_options_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the ID of the querier.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_entity_global_id_t z_querier_id(const struct z_loaned_querier_t *querier);
+z_entity_global_id_t z_querier_id(const z_loaned_querier_t *querier);
 #endif
 /**
- * Returns the key expression of the querier.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns the key expression of the querier.
  */
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const struct z_loaned_keyexpr_t *z_querier_keyexpr(const struct z_loaned_querier_t *querier);
+const struct z_loaned_keyexpr_t *z_querier_keyexpr(const z_loaned_querier_t *querier);
+#endif
 /**
- * Borrows querier.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows querier.
  */
-ZENOHC_API const struct z_loaned_querier_t *z_querier_loan(const struct z_owned_querier_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const z_loaned_querier_t *z_querier_loan(const z_owned_querier_t *this_);
+#endif
 /**
- * Mutably borrows querier.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Mutably borrows querier.
  */
-ZENOHC_API struct z_loaned_querier_t *z_querier_loan_mut(struct z_owned_querier_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_loaned_querier_t *z_querier_loan_mut(z_owned_querier_t *this_);
+#endif
 /**
- * Constructs the default value for `z_querier_options_t`.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs the default value for `z_querier_options_t`.
  */
-ZENOHC_API void z_querier_options_default(struct z_querier_options_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_querier_options_default(struct z_querier_options_t *this_);
+#endif
 /**
  * Gets query attachment.
  *
@@ -4738,11 +4778,15 @@ z_result_t z_undeclare_keyexpr(const struct z_loaned_session_t *session,
  */
 ZENOHC_API z_result_t z_undeclare_publisher(struct z_moved_publisher_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares the given querier.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-ZENOHC_API z_result_t z_undeclare_querier(struct z_moved_querier_t *this_);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_undeclare_querier(z_moved_querier_t *this_);
+#endif
 /**
  * Undeclares a `z_owned_queryable_t`.
  * Returns 0 in case of success, negative error code otherwise.
@@ -5234,9 +5278,9 @@ z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *t
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_querier_declare_background_matching_listener(const struct z_loaned_querier_t *querier,
+z_result_t zc_querier_declare_background_matching_listener(const z_loaned_querier_t *querier,
                                                            struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
@@ -5249,9 +5293,9 @@ z_result_t zc_querier_declare_background_matching_listener(const struct z_loaned
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_querier_declare_matching_listener(const struct z_loaned_querier_t *querier,
+z_result_t zc_querier_declare_matching_listener(const z_loaned_querier_t *querier,
                                                 zc_owned_matching_listener_t *matching_listener,
                                                 struct zc_moved_closure_matching_status_t *callback);
 #endif
@@ -5261,9 +5305,9 @@ z_result_t zc_querier_declare_matching_listener(const struct z_loaned_querier_t 
  *
  * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_querier_get_matching_status(const struct z_loaned_querier_t *this_,
+z_result_t zc_querier_get_matching_status(const z_loaned_querier_t *this_,
                                           struct zc_matching_status_t *matching_status);
 #endif
 /**

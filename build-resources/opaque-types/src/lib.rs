@@ -14,7 +14,7 @@ use zenoh::{
     handlers::{FifoChannelHandler, RingChannelHandler},
     key_expr::KeyExpr,
     pubsub::{Publisher, Subscriber},
-    query::{Querier, Query, Queryable, Reply, ReplyError},
+    query::{Query, Queryable, Reply, ReplyError},
     sample::Sample,
     scouting::Hello,
     session::{Session, ZenohId},
@@ -22,7 +22,7 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    liveliness::LivelinessToken, matching::MatchingListener, sample::SourceInfo,
+    liveliness::LivelinessToken, matching::MatchingListener, query::Querier, sample::SourceInfo,
     session::EntityGlobalId,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -130,10 +130,12 @@ get_opaque_type_data!(Option<Queryable<()>>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
 get_opaque_type_data!(Queryable<()>, z_loaned_queryable_t);
 
+#[cfg(feature = "unstable")]
 /// An owned Zenoh querier.
 ///
 /// Sends queries to matching queryables.
 get_opaque_type_data!(Option<Querier>, z_owned_querier_t);
+#[cfg(feature = "unstable")]
 /// A loaned Zenoh queryable.
 get_opaque_type_data!(Querier, z_loaned_querier_t);
 
