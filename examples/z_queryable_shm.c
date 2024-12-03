@@ -22,6 +22,11 @@
 z_view_keyexpr_t ke;
 const char *value;
 
+typedef struct {
+    const char *keyexpr;
+    const z_loaned_shm_provider_t *provider;
+} context_t;
+
 struct args_t {
     char *keyexpr;  // -k
     char *value;    // -p
@@ -30,7 +35,7 @@ struct args_t {
 struct args_t parse_args(int argc, char **argv, z_owned_config_t *config);
 
 void query_handler(z_loaned_query_t *query, void *context) {
-    z_loaned_shm_provider_t *provider = (z_loaned_shm_provider_t *)context;
+    context_t *handler_context = (context_t *)context;
 
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
@@ -60,12 +65,12 @@ void query_handler(z_loaned_query_t *query, void *context) {
     size_t value_len = strlen(value) + 1;  // + NULL terminator
     z_alloc_alignment_t alignment = {0};
     z_buf_layout_alloc_result_t alloc;
-    z_shm_provider_alloc_gc_defrag_blocking(&alloc, provider, value_len, alignment);
+    z_shm_provider_alloc_gc_defrag_blocking(&alloc, handler_context->provider, value_len, alignment);
     if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         {
             uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
             memcpy(buf, value, value_len);
-            printf(">> [Queryable] Responding ('%s': '%s')...\n", (const char *)context, buf);
+            printf(">> [Queryable] Responding ('%s': '%s')...\n", handler_context->keyexpr, buf);
         }
 
         z_query_reply_options_t options;
@@ -75,7 +80,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
         z_bytes_from_shm_mut(&reply_payload, z_move(alloc.buf));
 
         z_view_keyexpr_t reply_keyexpr;
-        z_view_keyexpr_from_str(&reply_keyexpr, (const char *)context);
+        z_view_keyexpr_from_str(&reply_keyexpr, handler_context->keyexpr);
 
         z_query_reply(query, z_loan(reply_keyexpr), z_move(reply_payload), &options);
 
@@ -114,7 +119,8 @@ int main(int argc, char **argv) {
 
     printf("Declaring Queryable on '%s'...\n", args.keyexpr);
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, (void *)z_loan(provider), (void *)args.keyexpr);
+    context_t context = (context_t){.keyexpr = args.keyexpr, .provider = z_loan(provider)};
+    z_closure(&callback, query_handler, NULL, (void *)&context);
     z_owned_queryable_t qable;
 
     z_queryable_options_t opts;

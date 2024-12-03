@@ -81,7 +81,6 @@ int main(int argc, char** argv) {
     // Convert mutable SHM Buffer into immutable one (to be able to make it's ref copies)
     z_owned_shm_t shm;
     z_shm_from_mut(&shm, z_move(alloc.buf));
-    const z_loaned_shm_t* loaned_shm = z_loan(shm);
 
     printf("Sending Query '%s'...\n", args.selector);
     z_owned_fifo_handler_reply_t handler;
@@ -95,7 +94,7 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     if (args.value != NULL) {
-        if (!z_bytes_from_shm(&payload, z_move(shm))) {
+        if (z_bytes_from_shm(&payload, z_move(shm)) != Z_OK) {
             printf("Unexpected failure during SHM buffer serialization...\n");
             return -1;
         }
