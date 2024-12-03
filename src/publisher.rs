@@ -15,10 +15,7 @@
 use std::mem::MaybeUninit;
 
 #[cfg(feature = "unstable")]
-use zenoh::{
-    handlers::Callback,
-    pubsub::{MatchingListener, MatchingStatus},
-};
+use zenoh::{handlers::Callback, matching::MatchingStatus};
 use zenoh::{
     pubsub::Publisher,
     qos::{CongestionControl, Priority},
@@ -26,8 +23,6 @@ use zenoh::{
     Wait,
 };
 
-#[cfg(feature = "unstable")]
-use crate::z_moved_source_info_t;
 #[cfg(feature = "unstable")]
 use crate::zc_moved_closure_matching_status_t;
 use crate::{
@@ -42,6 +37,8 @@ use crate::{
     zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
     zc_locality_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{z_moved_source_info_t, zc_matching_status_t, zc_owned_matching_listener_t};
 
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
@@ -93,7 +90,7 @@ decl_c_type!(
 /// `z_publisher_put()` and `z_publisher_delete()` functions.
 ///
 /// @param session: The Zenoh session.
-/// @param publisher: An unitilized location in memory where publisher will be constructed.
+/// @param publisher: An uninitialized location in memory where publisher will be constructed.
 /// @param key_expr: The key expression to publish.
 /// @param options: Additional options for the publisher.
 ///
@@ -309,54 +306,17 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 }
 
 #[cfg(feature = "unstable")]
-pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_owned_matching_listener_t};
-#[cfg(feature = "unstable")]
-decl_c_type!(
-    owned(zc_owned_matching_listener_t, option MatchingListener<()>),
-);
-
-#[no_mangle]
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs an empty matching listener.
-pub extern "C" fn zc_internal_matching_listener_null(
-    this_: &mut MaybeUninit<zc_owned_matching_listener_t>,
-) {
-    this_.as_rust_type_mut_uninit().write(None);
-}
-
-#[no_mangle]
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Checks the matching listener is for the gravestone state
-pub extern "C" fn zc_internal_matching_listener_check(
-    this_: &zc_owned_matching_listener_t,
-) -> bool {
-    this_.as_rust_type_ref().is_some()
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression.
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct zc_matching_status_t {
-    /// True if there exist Subscribers matching the Publisher's key expression, false otherwise.
-    pub matching: bool,
-}
-
-#[cfg(feature = "unstable")]
-fn _publisher_matching_listener_declare_inner<'a, 'b>(
+fn _publisher_matching_listener_declare_inner<'a>(
     publisher: &'a z_loaned_publisher_t,
     callback: &mut zc_moved_closure_matching_status_t,
-) -> zenoh::pubsub::MatchingListenerBuilder<'a, 'b, Callback<MatchingStatus>> {
+) -> zenoh::matching::MatchingListenerBuilder<'a, Callback<MatchingStatus>> {
     let publisher = publisher.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
             let status = zc_matching_status_t {
-                matching: matching_status.matching_subscribers(),
+                matching: matching_status.matching(),
             };
             zc_closure_matching_status_call(zc_closure_matching_status_loan(&callback), &status);
         });
@@ -368,8 +328,8 @@ fn _publisher_matching_listener_declare_inner<'a, 'b>(
 /// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
 /// @param publisher: A publisher to associate with matching listener.
-/// @param matching_listener: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
-/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+/// @param matching_listener: An uninitialized memory location where matching listener will be constructed. The matching listener's callback will be automatically dropped when the publisher is dropped.
+/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -399,7 +359,7 @@ pub extern "C" fn zc_publisher_declare_matching_listener(
 /// The callback will be run in the background until the corresponding publisher is dropped.
 ///
 /// @param publisher: A publisher to associate with matching listener.
-/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -419,15 +379,6 @@ pub extern "C" fn zc_publisher_declare_background_matching_listener(
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given matching listener, droping and invalidating it.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_matching_listener_drop(this: &mut zc_moved_matching_listener_t) {
-    std::mem::drop(this.take_rust_type())
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
@@ -440,7 +391,7 @@ pub extern "C" fn zc_publisher_get_matching_status(
     match this.as_rust_type_ref().matching_status().wait() {
         Ok(s) => {
             matching_status.write(zc_matching_status_t {
-                matching: s.matching_subscribers(),
+                matching: s.matching(),
             });
             result::Z_OK
         }

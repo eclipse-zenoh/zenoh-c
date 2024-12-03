@@ -30,9 +30,9 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 #if defined(Z_FEATURE_UNSTABLE_API)
 void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
-        printf("Subscriber matched\n");
+        printf("Publisher has matching subscribers.\n");
     } else {
-        printf("No Subscribers matched\n");
+        printf("Publisher has NO MORE matching subscribers.\n");
     }
 }
 #endif
@@ -60,16 +60,10 @@ int main(int argc, char** argv) {
     }
 
 #if defined(Z_FEATURE_UNSTABLE_API)
-    zc_owned_matching_listener_t listener;
     if (args.add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zc_publisher_declare_matching_listener(z_loan(pub), &listener, z_move(callback));
-    }
-#else
-    if (args.add_matching_listener) {
-        printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
-        exit(-1);
+        zc_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback));
     }
 #endif
 
@@ -87,11 +81,6 @@ int main(int argc, char** argv) {
 
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
-#if defined(Z_FEATURE_UNSTABLE_API)
-    if (args.add_matching_listener) {
-        z_drop(z_move(listener));
-    }
-#endif
 
     z_drop(z_move(pub));
     z_drop(z_move(s));
@@ -104,8 +93,11 @@ void print_help() {
     Usage: z_pub [OPTIONS]\n\n\
     Options:\n\
         -k <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
-        -v <VALUE> (optional, string, default='%s'): The value to write\n\
-        --add-matching-listener (optional): Add matching listener\n",
+        -v <VALUE> (optional, string, default='%s'): The value to write\n"
+#if defined(Z_FEATURE_UNSTABLE_API)
+        "--add-matching-listener (optional): Add matching listener\n"
+#endif
+        ,
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
     printf(

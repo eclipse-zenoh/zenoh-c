@@ -22,10 +22,8 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    liveliness::LivelinessToken,
-    pubsub::MatchingListener,
-    sample::SourceInfo,
-    session::EntityGlobalId
+    liveliness::LivelinessToken, matching::MatchingListener, query::Querier, sample::SourceInfo,
+    session::EntityGlobalId,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
@@ -131,6 +129,16 @@ get_opaque_type_data!(Query, z_loaned_query_t);
 get_opaque_type_data!(Option<Queryable<()>>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
 get_opaque_type_data!(Queryable<()>, z_loaned_queryable_t);
+
+#[cfg(feature = "unstable")]
+/// An owned Zenoh querier.
+///
+/// Sends queries to matching queryables.
+get_opaque_type_data!(Option<Querier>, z_owned_querier_t);
+#[cfg(feature = "unstable")]
+/// A loaned Zenoh queryable.
+get_opaque_type_data!(Querier, z_loaned_querier_t);
+
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh querying subscriber.
@@ -209,7 +217,7 @@ get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh matching listener.
 ///
-/// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
+/// A listener that sends notifications when the [`MatchingStatus`] of a publisher or querier changes.
 /// Dropping the corresponding publisher, also drops matching listener.
 get_opaque_type_data!(Option<MatchingListener<()>>, zc_owned_matching_listener_t);
 
@@ -314,7 +322,6 @@ get_opaque_type_data!(MemoryLayout, z_loaned_memory_layout_t);
 /// @brief An owned ChunkAllocResult.
 get_opaque_type_data!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned ZShm slice.
