@@ -764,7 +764,7 @@ typedef struct z_moved_keyexpr_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_liveliness_subscriber_options_t {
   /**
-   * Receive liveliness tokens that were declared before this liveliness subscriber.
+   * If true, subscriber will receive the state change notifications for liveliness tokens that were declared before its declaration.
    */
   bool history;
 } z_liveliness_subscriber_options_t;
