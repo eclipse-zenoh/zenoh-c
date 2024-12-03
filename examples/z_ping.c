@@ -6,7 +6,6 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
-#define DEFAULT_PKT_SIZE 8
 #define DEFAULT_PING_NB 100
 #define DEFAULT_WARMUP_MS 1000
 #define PING_TIMEOUT_SEC 1
@@ -25,9 +24,10 @@ void callback(z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loa
 void drop(void* context) { z_drop(z_move(cond)); }
 
 struct args_t {
-    unsigned int size;             // -s
+    unsigned int size;             // positional_0
     unsigned int number_of_pings;  // -n
     unsigned int warmup_ms;        // -w
+    bool no_express;               // --no-express
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -46,7 +46,10 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_declare_publisher(z_loan(session), &pub, z_loan(ping), NULL);
+    z_publisher_options_t opts;
+    z_publisher_options_default(&opts);
+    opts.is_express = !args.no_express;
+    z_declare_publisher(z_loan(session), &pub, z_loan(ping), &opts);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub;
@@ -99,12 +102,14 @@ int main(int argc, char** argv) {
 void print_help() {
     printf(
         "\
-    Usage: z_ping [OPTIONS]\n\n\
+    Usage: z_ping [OPTIONS] <PAYLOAD_SIZE>\n\n\
+    Arguments:\n\
+        <PAYLOAD_SIZE> (required, number): Size of the payload to publish\n\n\
     Options:\n\
         -n <SAMPLES> (optional, int, default=%d): The number of pings to be attempted\n\
-        -s <SIZE> (optional, int, default=%d): The size of the payload embedded in the ping and repeated by the pong\n\
-        -w <WARMUP> (optional, int, default=%d): The warmup time in ms during which pings will be emitted but not measured\n",
-        DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
+        -w <WARMUP> (optional, int, default=%d): The warmup time in ms during which pings will be emitted but not measured\n\
+        --no-express (optional): Disable message batching.\n",
+        DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
     printf(COMMON_HELP);
     printf(
         "\
@@ -116,33 +121,24 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    const char* arg = parse_opt(argc, argv, "s", true);
-    unsigned int size = DEFAULT_PKT_SIZE;
-    if (arg) {
-        size = atoi(arg);
-    }
-    arg = parse_opt(argc, argv, "n", true);
-    unsigned int number_of_pings = DEFAULT_PING_NB;
-    if (arg) {
-        number_of_pings = atoi(arg);
-    }
-    arg = parse_opt(argc, argv, "w", true);
-    unsigned int warmup_ms = DEFAULT_WARMUP_MS;
-    if (arg) {
-        warmup_ms = atoi(arg);
-    }
+    struct args_t args;
+    _Z_PARSE_ARG(args.number_of_pings, "n", atoi, DEFAULT_PING_NB);
+    _Z_PARSE_ARG(args.warmup_ms, "w", atoi, DEFAULT_WARMUP_MS);
+    _Z_CHECK_FLAG(args.no_express, "no-express");
+
     parse_zenoh_common_args(argc, argv, config);
-    arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
     }
     char** pos_args = parse_pos_args(argc, argv, 1);
-    if (!pos_args || pos_args[0]) {
-        printf("Unexpected positional arguments\n");
+    if (!pos_args[0]) {
+        printf("<PAYLOAD_SIZE> argument is required\n");
         free(pos_args);
         exit(-1);
     }
+    args.size = atoi(pos_args[0]);
     free(pos_args);
-    return (struct args_t){.size = size, .number_of_pings = number_of_pings, .warmup_ms = warmup_ms};
+    return args;
 }

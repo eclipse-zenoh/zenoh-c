@@ -104,10 +104,9 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -121,5 +120,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr};
+    return args;
 }

@@ -16,9 +16,15 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
-#define N 1000000
+#define DEFAULT_MEASUREMENTS 10
+#define DEFAULT_MESSAGES 1000000
 
-void parse_args(int argc, char **argv, z_owned_config_t *config);
+typedef struct {
+    unsigned long samples;       // -s
+    unsigned long num_messages;  // -n
+} args_t;
+
+args_t parse_args(int argc, char **argv, z_owned_config_t *config);
 
 typedef struct {
     volatile unsigned long count;
@@ -26,13 +32,17 @@ typedef struct {
     z_clock_t start;
     z_clock_t first_start;
     bool started;
+    unsigned long max_rounds;
+    unsigned long messages_per_round;
 } z_stats_t;
 
-z_stats_t *z_stats_make() {
+z_stats_t *z_stats_make(unsigned long max_rounds, unsigned long messages_per_round) {
     z_stats_t *stats = z_malloc(sizeof(z_stats_t));
     stats->count = 0;
     stats->finished_rounds = 0;
     stats->started = false;
+    stats->max_rounds = max_rounds;
+    stats->messages_per_round = messages_per_round;
     return stats;
 }
 
@@ -45,17 +55,20 @@ void on_sample(z_loaned_sample_t *sample, void *context) {
             stats->started = true;
         }
         stats->count++;
-    } else if (stats->count < N) {
+    } else if (stats->count < stats->messages_per_round) {
         stats->count++;
     } else {
         stats->finished_rounds++;
-        printf("%f msg/s\n", 1000.0 * N / z_clock_elapsed_ms(&stats->start));
+        printf("%f msg/s\n", 1000.0 * stats->messages_per_round / z_clock_elapsed_ms(&stats->start));
         stats->count = 0;
+        if (stats->finished_rounds > stats->max_rounds) {
+            exit(0);
+        }
     }
 }
 void drop_stats(void *context) {
     const z_stats_t *stats = (z_stats_t *)context;
-    const unsigned long sent_messages = N * stats->finished_rounds + stats->count;
+    const unsigned long sent_messages = stats->messages_per_round * stats->finished_rounds + stats->count;
     double elapsed_s = z_clock_elapsed_s(&stats->first_start);
     printf("Stats being dropped after unsubscribing: sent %ld messages over %f seconds (%f msg/s)\n", sent_messages,
            elapsed_s, (double)sent_messages / elapsed_s);
@@ -66,7 +79,7 @@ int main(int argc, char **argv) {
     zc_init_log_from_env_or("error");
 
     z_owned_config_t config;
-    parse_args(argc, argv, &config);
+    args_t args = parse_args(argc, argv, &config);
 
 #if defined(Z_FEATURE_SHARED_MEMORY)
     // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
@@ -92,7 +105,7 @@ int main(int argc, char **argv) {
     z_owned_keyexpr_t declared_ke;
     z_declare_keyexpr(z_loan(s), &declared_ke, z_loan(ke));
 
-    z_stats_t *context = z_stats_make();
+    z_stats_t *context = z_stats_make(args.samples, args.num_messages);
     z_owned_closure_sample_t callback;
     z_closure(&callback, on_sample, drop_stats, context);
     if (z_declare_background_subscriber(z_loan(s), z_loan(declared_ke), z_move(callback), NULL)) {
@@ -113,19 +126,26 @@ int main(int argc, char **argv) {
 void print_help() {
     printf(
         "\
-    Usage: z_sub_thr [OPTIONS]\n\n\
-    Options:\n");
+    Usage: z_sub [OPTIONS]\n\n\
+    Options:\n\
+        -s <MESUREMENTS> (optional, number, default='%d'): Number of throughput measurements.\n\
+        -n <NUM_MESSAGES> (optional, number, default='%d'): Number of messages in each throughput measurements.\n",
+        DEFAULT_MEASUREMENTS, DEFAULT_MESSAGES);
     printf(COMMON_HELP);
     printf(
         "\
         -h: print help\n");
 }
 
-void parse_args(int argc, char **argv, z_owned_config_t *config) {
+args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
     if (parse_opt(argc, argv, "h", false)) {
         print_help();
         exit(1);
     }
+    args_t args;
+    _Z_PARSE_ARG(args.samples, "s", atoi, DEFAULT_MEASUREMENTS);
+    _Z_PARSE_ARG(args.num_messages, "n", atoi, DEFAULT_MESSAGES);
+
     parse_zenoh_common_args(argc, argv, config);
     const char *arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -139,4 +159,5 @@ void parse_args(int argc, char **argv, z_owned_config_t *config) {
         exit(-1);
     }
     free(pos_args);
+    return args;
 }

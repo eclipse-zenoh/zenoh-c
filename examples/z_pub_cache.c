@@ -99,21 +99,13 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
-    const char* value = parse_opt(argc, argv, "v", true);
-    if (!value) {
-        value = DEFAULT_VALUE;
-    }
-    const char* arg = parse_opt(argc, argv, "i", true);
-    unsigned int history = DEFAULT_HISTORY;
-    if (arg) {
-        history = atoi(arg);
-    }
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "v", (char*), (char*)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.history, "i", atoi, DEFAULT_HISTORY);
+
     parse_zenoh_common_args(argc, argv, config);
-    arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
@@ -125,5 +117,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value, .history = history};
+    return args;
 }

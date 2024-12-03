@@ -17,9 +17,13 @@
 #include "zenoh.h"
 
 #define DEFAULT_KEYEXPR "demo/example/**"
+#define DEFAULT_RING_BUFFER_SIZE 3
+#define DEFAULT_PULL_INTERVAL 5
 
 struct args_t {
-    char* keyexpr;  // -k
+    char* keyexpr;           // -k
+    unsigned long size;      // -s
+    unsigned long interval;  // -i
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -52,7 +56,7 @@ int main(int argc, char** argv) {
 
     z_owned_closure_sample_t closure;
     z_owned_ring_handler_sample_t handler;
-    z_ring_channel_sample_new(&closure, &handler, 3);
+    z_ring_channel_sample_new(&closure, &handler, args.size);
 
     printf("Declaring Subscriber on '%s'...\n", args.keyexpr);
     z_view_keyexpr_t ke;
@@ -71,7 +75,7 @@ int main(int argc, char** argv) {
     while (c != 'q') {
         c = getchar();
         if (c == -1) {
-            z_sleep_s(1);
+            z_sleep_s(args.interval);
         } else {
             z_result_t res = z_try_recv(z_loan(handler), &sample);
             if (res == Z_OK) {
@@ -101,8 +105,10 @@ void print_help() {
         "\
     Usage: z_pull [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression to subscribe to\n",
-        DEFAULT_KEYEXPR);
+        -k <KEY> (optional, string, default='%s'): The key expression to subscribe to\n\
+        -s <SIZE> (optional, number, default='%d'): The size of the ring buffer\n\
+        -i <INTERVAL> (optional, number, default='%d'): The interval for pulling the ringbuffer.\n",
+        DEFAULT_KEYEXPR, DEFAULT_RING_BUFFER_SIZE, DEFAULT_PULL_INTERVAL);
     printf(COMMON_HELP);
     printf(
         "\
@@ -114,10 +120,11 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.size, "s", atoi, DEFAULT_RING_BUFFER_SIZE);
+    _Z_PARSE_ARG(args.interval, "i", atoi, DEFAULT_PULL_INTERVAL);
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -131,5 +138,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr};
+    return args;
 }

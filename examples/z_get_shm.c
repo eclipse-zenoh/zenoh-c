@@ -14,43 +14,44 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-int main(int argc, char** argv) {
-    char* expr = "demo/example/**";
-    char* value = NULL;
-    switch (argc) {
-        default:
-        case 3:
-            value = argv[2];
-        case 2:
-            expr = argv[1];
-            break;
-        case 1:
-            value = "Test Value";
-            break;
-    }
-    size_t value_len = value ? strlen(value) : 0;
+#define DEFAULT_SELECTOR "demo/example/**"
+#define DEFAULT_VALUE NULL
+#define DEFAULT_TIMEOUT_MS 10000
 
+struct args_t {
+    char* selector;           // -s
+    char* value;              // -p
+    z_query_target_t target;  // -t
+    uint64_t timeout_ms;      // -o
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
+    z_owned_config_t config;
+
+    struct args_t args = parse_args(argc, argv, &config);
+    if (!args.value) {
+        args.value = "Get from Rust SHM!";
+    }
+
+    const char* ke = args.selector;
+    size_t ke_len = strlen(ke);
+    const char* params = strchr(args.selector, '?');
+    if (params != NULL) {
+        ke_len = params - ke;
+        params += 1;
+    }
+
+    size_t value_len = args.value ? strlen(args.value) : 0;
 
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr_from_str(&keyexpr, expr) < 0) {
-        printf("%s is not a valid key expression", expr);
+    if (z_view_keyexpr_from_substr(&keyexpr, ke, ke_len) < 0) {
+        printf("%.*s is not a valid key expression", (int)ke_len, ke);
         exit(-1);
-    }
-
-    z_owned_config_t config;
-    z_config_default(&config);
-
-    if (argc > 3) {
-        if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
     }
 
     printf("Opening session...\n");
@@ -76,29 +77,31 @@ int main(int argc, char** argv) {
     }
     // Fill SHM Buffer with data
     uint8_t* data = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
-    memcpy(data, value, value_len);
+    memcpy(data, args.value, value_len);
     // Convert mutable SHM Buffer into immutable one (to be able to make it's ref copies)
     z_owned_shm_t shm;
     z_shm_from_mut(&shm, z_move(alloc.buf));
     const z_loaned_shm_t* loaned_shm = z_loan(shm);
 
-    printf("Sending Query '%s'...\n", expr);
+    printf("Sending Query '%s'...\n", args.selector);
     z_owned_fifo_handler_reply_t handler;
     z_owned_closure_reply_t closure;
     z_fifo_channel_reply_new(&closure, &handler, 16);
 
     z_get_options_t opts;
     z_get_options_default(&opts);
+    opts.target = args.target;
+    opts.timeout_ms = args.timeout_ms;
 
     z_owned_bytes_t payload;
-    if (value != NULL) {
+    if (args.value != NULL) {
         if (!z_bytes_from_shm(&payload, z_move(shm))) {
             printf("Unexpected failure during SHM buffer serialization...\n");
             return -1;
         }
         opts.payload = z_move(payload);
     }
-    z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
+    z_get(z_loan(s), z_loan(keyexpr), params, z_move(closure),
           &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
 
@@ -128,4 +131,47 @@ int main(int argc, char** argv) {
     z_drop(z_move(provider));
     z_drop(z_move(layout));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_get [OPTIONS]\n\n\
+    Options:\n\
+        -s <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
+        -p <PAYLOAD> (optional, string): An optional value to put in the query\n\
+        -t <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
+        -o <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
+        DEFAULT_SELECTOR, DEFAULT_TIMEOUT_MS);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    struct args_t args;
+    _Z_PARSE_ARG(args.selector, "s", (char*), (char*)DEFAULT_SELECTOR);
+    _Z_PARSE_ARG(args.value, "p", (char*), (char*)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.timeout_ms, "o", atoi, DEFAULT_TIMEOUT_MS);
+    _Z_PARSE_ARG(args.target, "t", parse_query_target, z_query_target_default());
+
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return args;
 }

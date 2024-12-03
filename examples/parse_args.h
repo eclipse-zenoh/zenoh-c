@@ -227,3 +227,27 @@ z_query_target_t parse_query_target(const char* arg) {
         exit(-1);
     }
 }
+
+z_priority_t parse_priority(const char* arg) {
+    int p = atoi(arg);
+    if (p < Z_PRIORITY_INTERACTIVE_HIGH || p > Z_PRIORITY_BACKGROUND) {
+        printf("Unsupported priority value [%s]\n", arg);
+        exit(-1);
+    }
+    return (z_priority_t)p;
+}
+
+#define _Z_PARSE_ARG(VALUE, ID, FUNC, DEFAULT_VALUE)           \
+    do {                                                       \
+        const char* arg_val = parse_opt(argc, argv, ID, true); \
+        if (!arg_val) {                                        \
+            VALUE = DEFAULT_VALUE;                             \
+        } else {                                               \
+            VALUE = FUNC(arg_val);                             \
+        }                                                      \
+    } while (0)
+
+#define _Z_CHECK_FLAG(VALUE, ID)                            \
+    do {                                                    \
+        VALUE = (parse_opt(argc, argv, ID, false) != NULL); \
+    } while (0)

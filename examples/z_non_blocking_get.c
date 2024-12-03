@@ -18,10 +18,16 @@
 #include "zenoh.h"
 
 #define DEFAULT_SELECTOR "demo/example/**"
+#define DEFAULT_VALUE NULL
+#define DEFAULT_TIMEOUT_MS 10000
 
 struct args_t {
-    char* selector;  // -s
+    char* selector;           // -s
+    char* value;              // -v
+    z_query_target_t target;  // -t
+    uint64_t timeout_ms;      // -o
 };
+
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
@@ -30,9 +36,17 @@ int main(int argc, char** argv) {
     z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
+    const char* ke = args.selector;
+    size_t ke_len = strlen(ke);
+    const char* params = strchr(args.selector, '?');
+    if (params != NULL) {
+        ke_len = params - ke;
+        params += 1;
+    }
+
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr_from_str(&keyexpr, args.selector) < 0) {
-        printf("%s is not a valid key expression", args.selector);
+    if (z_view_keyexpr_from_str(&keyexpr, ke) < 0) {
+        printf("%s is not a valid key expression", ke);
         exit(-1);
     }
 
@@ -50,7 +64,7 @@ int main(int argc, char** argv) {
     z_owned_fifo_handler_reply_t handler;
     z_owned_closure_reply_t closure;
     z_fifo_channel_reply_new(&closure, &handler, 16);
-    z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
+    z_get(z_loan(s), z_loan(keyexpr), params, z_move(closure),
           &opts);  // here, the closure is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
     for (z_result_t res = z_try_recv(z_loan(handler), &reply); res != Z_CHANNEL_DISCONNECTED;
@@ -81,10 +95,13 @@ int main(int argc, char** argv) {
 void print_help() {
     printf(
         "\
-    Usage: z_non_blocking_get [OPTIONS]\n\n\
+    Usage: z_get [OPTIONS]\n\n\
     Options:\n\
-        -s <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n",
-        DEFAULT_SELECTOR);
+        -s <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
+        -p <PAYLOAD> (optional, string): An optional value to put in the query\n\
+        -t <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
+        -o <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
+        DEFAULT_SELECTOR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);
     printf(
         "\
@@ -96,10 +113,12 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    const char* selector = parse_opt(argc, argv, "s", true);
-    if (!selector) {
-        selector = DEFAULT_SELECTOR;
-    }
+    struct args_t args;
+    _Z_PARSE_ARG(args.selector, "s", (char*), (char*)DEFAULT_SELECTOR);
+    _Z_PARSE_ARG(args.value, "p", (char*), (char*)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.timeout_ms, "o", atoi, DEFAULT_TIMEOUT_MS);
+    _Z_PARSE_ARG(args.target, "t", parse_query_target, z_query_target_default());
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -113,5 +132,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.selector = (char*)selector};
+    return args;
 }

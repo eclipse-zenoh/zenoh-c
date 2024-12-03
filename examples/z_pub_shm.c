@@ -17,13 +17,12 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
-#define N 10
 #define DEFAULT_KEYEXPR "demo/example/zenoh-c-pub-shm"
 #define DEFAULT_VALUE "Pub from C!"
 
 struct args_t {
     char* keyexpr;               // -k
-    char* value;                 // -v
+    char* value;                 // -p
     bool add_matching_listener;  // --add-matching-listener
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
@@ -130,7 +129,7 @@ void print_help() {
     Usage: z_pub_shm [OPTIONS]\n\n\
     Options:\n\
         -k <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
-        -v <VALUE> (optional, string, default='%s'): The value to write\n",
+        -p <PAYLOAD> (optional, string, default='%s'): The value to write\n",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
     printf(
@@ -143,21 +142,13 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         print_help();
         exit(1);
     }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
-    const char* value = parse_opt(argc, argv, "v", true);
-    if (!value) {
-        value = DEFAULT_VALUE;
-    }
-    const char* arg = parse_opt(argc, argv, "add-matching-listener", false);
-    bool add_matching_listener = false;
-    if (arg) {
-        add_matching_listener = true;
-    }
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", (char*), (char*)DEFAULT_VALUE);
+    _Z_CHECK_FLAG(args.add_matching_listener, "add-matching-listener");
+
     parse_zenoh_common_args(argc, argv, config);
-    arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
@@ -169,6 +160,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){
-        .keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
+    return args;
 }
