@@ -21,6 +21,7 @@ static inline z_moved_fifo_handler_reply_t* z_fifo_handler_reply_move(z_owned_fi
 static inline z_moved_fifo_handler_sample_t* z_fifo_handler_sample_move(z_owned_fifo_handler_sample_t* x) { return (z_moved_fifo_handler_sample_t*)(x); }
 static inline z_moved_hello_t* z_hello_move(z_owned_hello_t* x) { return (z_moved_hello_t*)(x); }
 static inline z_moved_keyexpr_t* z_keyexpr_move(z_owned_keyexpr_t* x) { return (z_moved_keyexpr_t*)(x); }
+static inline z_moved_liveliness_token_t* z_liveliness_token_move(z_owned_liveliness_token_t* x) { return (z_moved_liveliness_token_t*)(x); }
 static inline z_moved_memory_layout_t* z_memory_layout_move(z_owned_memory_layout_t* x) { return (z_moved_memory_layout_t*)(x); }
 static inline z_moved_mutex_t* z_mutex_move(z_owned_mutex_t* x) { return (z_moved_mutex_t*)(x); }
 static inline z_moved_publisher_t* z_publisher_move(z_owned_publisher_t* x) { return (z_moved_publisher_t*)(x); }
@@ -46,7 +47,6 @@ static inline z_moved_subscriber_t* z_subscriber_move(z_owned_subscriber_t* x) {
 static inline z_moved_task_t* z_task_move(z_owned_task_t* x) { return (z_moved_task_t*)(x); }
 static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t* x) { return (zc_moved_closure_log_t*)(x); }
 static inline zc_moved_closure_matching_status_t* zc_closure_matching_status_move(zc_owned_closure_matching_status_t* x) { return (zc_moved_closure_matching_status_t*)(x); }
-static inline zc_moved_liveliness_token_t* zc_liveliness_token_move(zc_owned_liveliness_token_t* x) { return (zc_moved_liveliness_token_t*)(x); }
 static inline zc_moved_matching_listener_t* zc_publisher_matching_listener_move(zc_owned_matching_listener_t* x) { return (zc_moved_matching_listener_t*)(x); }
 static inline zc_moved_shm_client_list_t* zc_shm_client_list_move(zc_owned_shm_client_list_t* x) { return (zc_moved_shm_client_list_t*)(x); }
 static inline ze_moved_publication_cache_t* ze_publication_cache_move(ze_owned_publication_cache_t* x) { return (ze_moved_publication_cache_t*)(x); }
@@ -72,6 +72,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_loan, \
         z_owned_hello_t : z_hello_loan, \
         z_owned_keyexpr_t : z_keyexpr_loan, \
+        z_owned_liveliness_token_t : z_liveliness_token_loan, \
         z_owned_memory_layout_t : z_memory_layout_loan, \
         z_owned_publisher_t : z_publisher_loan, \
         z_owned_query_t : z_query_loan, \
@@ -97,7 +98,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_view_string_t : z_view_string_loan, \
         zc_owned_closure_log_t : zc_closure_log_loan, \
         zc_owned_closure_matching_status_t : zc_closure_matching_status_loan, \
-        zc_owned_liveliness_token_t : zc_liveliness_token_loan, \
         zc_owned_shm_client_list_t : zc_shm_client_list_loan, \
         ze_owned_publication_cache_t : ze_publication_cache_loan, \
         ze_owned_querying_subscriber_t : ze_querying_subscriber_loan, \
@@ -144,6 +144,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_moved_fifo_handler_sample_t* : z_fifo_handler_sample_drop, \
         z_moved_hello_t* : z_hello_drop, \
         z_moved_keyexpr_t* : z_keyexpr_drop, \
+        z_moved_liveliness_token_t* : z_liveliness_token_drop, \
         z_moved_memory_layout_t* : z_memory_layout_drop, \
         z_moved_mutex_t* : z_mutex_drop, \
         z_moved_publisher_t* : z_publisher_drop, \
@@ -169,7 +170,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_moved_task_t* : z_task_drop, \
         zc_moved_closure_log_t* : zc_closure_log_drop, \
         zc_moved_closure_matching_status_t* : zc_closure_matching_status_drop, \
-        zc_moved_liveliness_token_t* : zc_liveliness_token_drop, \
         zc_moved_matching_listener_t* : zc_publisher_matching_listener_drop, \
         zc_moved_shm_client_list_t* : zc_shm_client_list_drop, \
         ze_moved_publication_cache_t* : ze_publication_cache_drop, \
@@ -196,6 +196,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_fifo_handler_sample_t : z_fifo_handler_sample_move, \
         z_owned_hello_t : z_hello_move, \
         z_owned_keyexpr_t : z_keyexpr_move, \
+        z_owned_liveliness_token_t : z_liveliness_token_move, \
         z_owned_memory_layout_t : z_memory_layout_move, \
         z_owned_mutex_t : z_mutex_move, \
         z_owned_publisher_t : z_publisher_move, \
@@ -221,7 +222,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_task_t : z_task_move, \
         zc_owned_closure_log_t : zc_closure_log_move, \
         zc_owned_closure_matching_status_t : zc_closure_matching_status_move, \
-        zc_owned_liveliness_token_t : zc_liveliness_token_move, \
         zc_owned_matching_listener_t : zc_publisher_matching_listener_move, \
         zc_owned_shm_client_list_t : zc_shm_client_list_move, \
         ze_owned_publication_cache_t : ze_publication_cache_move, \
@@ -248,6 +248,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_fifo_handler_sample_t* : z_internal_fifo_handler_sample_null, \
         z_owned_hello_t* : z_internal_hello_null, \
         z_owned_keyexpr_t* : z_internal_keyexpr_null, \
+        z_owned_liveliness_token_t* : z_internal_liveliness_token_null, \
         z_owned_memory_layout_t* : z_internal_memory_layout_null, \
         z_owned_mutex_t* : z_internal_mutex_null, \
         z_owned_publisher_t* : z_internal_publisher_null, \
@@ -273,7 +274,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_task_t* : z_internal_task_null, \
         zc_owned_closure_log_t* : zc_internal_closure_log_null, \
         zc_owned_closure_matching_status_t* : zc_internal_closure_matching_status_null, \
-        zc_owned_liveliness_token_t* : zc_internal_liveliness_token_null, \
         zc_owned_matching_listener_t* : zc_internal_matching_listener_null, \
         zc_owned_shm_client_list_t* : zc_internal_shm_client_list_null, \
         ze_owned_publication_cache_t* : ze_internal_publication_cache_null, \
@@ -298,6 +298,7 @@ static inline void z_fifo_handler_reply_take(z_owned_fifo_handler_reply_t* this_
 static inline void z_fifo_handler_sample_take(z_owned_fifo_handler_sample_t* this_, z_moved_fifo_handler_sample_t* x) { *this_ = x->_this; z_internal_fifo_handler_sample_null(&x->_this); }
 static inline void z_hello_take(z_owned_hello_t* this_, z_moved_hello_t* x) { *this_ = x->_this; z_internal_hello_null(&x->_this); }
 static inline void z_keyexpr_take(z_owned_keyexpr_t* this_, z_moved_keyexpr_t* x) { *this_ = x->_this; z_internal_keyexpr_null(&x->_this); }
+static inline void z_liveliness_token_take(z_owned_liveliness_token_t* this_, z_moved_liveliness_token_t* x) { *this_ = x->_this; z_internal_liveliness_token_null(&x->_this); }
 static inline void z_memory_layout_take(z_owned_memory_layout_t* this_, z_moved_memory_layout_t* x) { *this_ = x->_this; z_internal_memory_layout_null(&x->_this); }
 static inline void z_mutex_take(z_owned_mutex_t* this_, z_moved_mutex_t* x) { *this_ = x->_this; z_internal_mutex_null(&x->_this); }
 static inline void z_publisher_take(z_owned_publisher_t* this_, z_moved_publisher_t* x) { *this_ = x->_this; z_internal_publisher_null(&x->_this); }
@@ -323,7 +324,6 @@ static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscr
 static inline void z_task_take(z_owned_task_t* this_, z_moved_task_t* x) { *this_ = x->_this; z_internal_task_null(&x->_this); }
 static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) { *closure_ = x->_this; zc_internal_closure_log_null(&x->_this); }
 static inline void zc_closure_matching_status_take(zc_owned_closure_matching_status_t* closure_, zc_moved_closure_matching_status_t* x) { *closure_ = x->_this; zc_internal_closure_matching_status_null(&x->_this); }
-static inline void zc_liveliness_token_take(zc_owned_liveliness_token_t* this_, zc_moved_liveliness_token_t* x) { *this_ = x->_this; zc_internal_liveliness_token_null(&x->_this); }
 static inline void zc_publisher_matching_listener_take(zc_owned_matching_listener_t* this_, zc_moved_matching_listener_t* x) { *this_ = x->_this; zc_internal_matching_listener_null(&x->_this); }
 static inline void zc_shm_client_list_take(zc_owned_shm_client_list_t* this_, zc_moved_shm_client_list_t* x) { *this_ = x->_this; zc_internal_shm_client_list_null(&x->_this); }
 static inline void ze_publication_cache_take(ze_owned_publication_cache_t* this_, ze_moved_publication_cache_t* x) { *this_ = x->_this; ze_internal_publication_cache_null(&x->_this); }
@@ -350,6 +350,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_fifo_handler_sample_t* : z_fifo_handler_sample_take, \
         z_owned_hello_t* : z_hello_take, \
         z_owned_keyexpr_t* : z_keyexpr_take, \
+        z_owned_liveliness_token_t* : z_liveliness_token_take, \
         z_owned_memory_layout_t* : z_memory_layout_take, \
         z_owned_mutex_t* : z_mutex_take, \
         z_owned_publisher_t* : z_publisher_take, \
@@ -375,7 +376,6 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_task_t* : z_task_take, \
         zc_owned_closure_log_t* : zc_closure_log_take, \
         zc_owned_closure_matching_status_t* : zc_closure_matching_status_take, \
-        zc_owned_liveliness_token_t* : zc_liveliness_token_take, \
         zc_owned_matching_listener_t* : zc_publisher_matching_listener_take, \
         zc_owned_shm_client_list_t* : zc_shm_client_list_take, \
         ze_owned_publication_cache_t* : ze_publication_cache_take, \
@@ -402,6 +402,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_fifo_handler_sample_t : z_internal_fifo_handler_sample_check, \
         z_owned_hello_t : z_internal_hello_check, \
         z_owned_keyexpr_t : z_internal_keyexpr_check, \
+        z_owned_liveliness_token_t : z_internal_liveliness_token_check, \
         z_owned_memory_layout_t : z_internal_memory_layout_check, \
         z_owned_mutex_t : z_internal_mutex_check, \
         z_owned_publisher_t : z_internal_publisher_check, \
@@ -427,7 +428,6 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_task_t : z_internal_task_check, \
         zc_owned_closure_log_t : zc_internal_closure_log_check, \
         zc_owned_closure_matching_status_t : zc_internal_closure_matching_status_check, \
-        zc_owned_liveliness_token_t : zc_internal_liveliness_token_check, \
         zc_owned_matching_listener_t : zc_internal_matching_listener_check, \
         zc_owned_shm_client_list_t : zc_internal_shm_client_list_check, \
         ze_owned_publication_cache_t : ze_internal_publication_cache_check, \
@@ -522,6 +522,7 @@ static inline z_moved_fifo_handler_reply_t* z_fifo_handler_reply_move(z_owned_fi
 static inline z_moved_fifo_handler_sample_t* z_fifo_handler_sample_move(z_owned_fifo_handler_sample_t* x) { return reinterpret_cast<z_moved_fifo_handler_sample_t*>(x); }
 static inline z_moved_hello_t* z_hello_move(z_owned_hello_t* x) { return reinterpret_cast<z_moved_hello_t*>(x); }
 static inline z_moved_keyexpr_t* z_keyexpr_move(z_owned_keyexpr_t* x) { return reinterpret_cast<z_moved_keyexpr_t*>(x); }
+static inline z_moved_liveliness_token_t* z_liveliness_token_move(z_owned_liveliness_token_t* x) { return reinterpret_cast<z_moved_liveliness_token_t*>(x); }
 static inline z_moved_memory_layout_t* z_memory_layout_move(z_owned_memory_layout_t* x) { return reinterpret_cast<z_moved_memory_layout_t*>(x); }
 static inline z_moved_mutex_t* z_mutex_move(z_owned_mutex_t* x) { return reinterpret_cast<z_moved_mutex_t*>(x); }
 static inline z_moved_publisher_t* z_publisher_move(z_owned_publisher_t* x) { return reinterpret_cast<z_moved_publisher_t*>(x); }
@@ -547,7 +548,6 @@ static inline z_moved_subscriber_t* z_subscriber_move(z_owned_subscriber_t* x) {
 static inline z_moved_task_t* z_task_move(z_owned_task_t* x) { return reinterpret_cast<z_moved_task_t*>(x); }
 static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t* x) { return reinterpret_cast<zc_moved_closure_log_t*>(x); }
 static inline zc_moved_closure_matching_status_t* zc_closure_matching_status_move(zc_owned_closure_matching_status_t* x) { return reinterpret_cast<zc_moved_closure_matching_status_t*>(x); }
-static inline zc_moved_liveliness_token_t* zc_liveliness_token_move(zc_owned_liveliness_token_t* x) { return reinterpret_cast<zc_moved_liveliness_token_t*>(x); }
 static inline zc_moved_matching_listener_t* zc_publisher_matching_listener_move(zc_owned_matching_listener_t* x) { return reinterpret_cast<zc_moved_matching_listener_t*>(x); }
 static inline zc_moved_shm_client_list_t* zc_shm_client_list_move(zc_owned_shm_client_list_t* x) { return reinterpret_cast<zc_moved_shm_client_list_t*>(x); }
 static inline ze_moved_publication_cache_t* ze_publication_cache_move(ze_owned_publication_cache_t* x) { return reinterpret_cast<ze_moved_publication_cache_t*>(x); }
@@ -572,6 +572,7 @@ inline const z_loaned_fifo_handler_reply_t* z_loan(const z_owned_fifo_handler_re
 inline const z_loaned_fifo_handler_sample_t* z_loan(const z_owned_fifo_handler_sample_t& this_) { return z_fifo_handler_sample_loan(&this_); };
 inline const z_loaned_hello_t* z_loan(const z_owned_hello_t& this_) { return z_hello_loan(&this_); };
 inline const z_loaned_keyexpr_t* z_loan(const z_owned_keyexpr_t& this_) { return z_keyexpr_loan(&this_); };
+inline const z_loaned_liveliness_token_t* z_loan(const z_owned_liveliness_token_t& this_) { return z_liveliness_token_loan(&this_); };
 inline const z_loaned_memory_layout_t* z_loan(const z_owned_memory_layout_t& this_) { return z_memory_layout_loan(&this_); };
 inline const z_loaned_publisher_t* z_loan(const z_owned_publisher_t& this_) { return z_publisher_loan(&this_); };
 inline const z_loaned_query_t* z_loan(const z_owned_query_t& this_) { return z_query_loan(&this_); };
@@ -597,7 +598,6 @@ inline const z_loaned_slice_t* z_loan(const z_view_slice_t& this_) { return z_vi
 inline const z_loaned_string_t* z_loan(const z_view_string_t& this_) { return z_view_string_loan(&this_); };
 inline const zc_loaned_closure_log_t* z_loan(const zc_owned_closure_log_t& closure) { return zc_closure_log_loan(&closure); };
 inline const zc_loaned_closure_matching_status_t* z_loan(const zc_owned_closure_matching_status_t& closure) { return zc_closure_matching_status_loan(&closure); };
-inline const zc_loaned_liveliness_token_t* z_loan(const zc_owned_liveliness_token_t& this_) { return zc_liveliness_token_loan(&this_); };
 inline const zc_loaned_shm_client_list_t* z_loan(const zc_owned_shm_client_list_t& this_) { return zc_shm_client_list_loan(&this_); };
 inline const ze_loaned_publication_cache_t* z_loan(const ze_owned_publication_cache_t& this_) { return ze_publication_cache_loan(&this_); };
 inline const ze_loaned_querying_subscriber_t* z_loan(const ze_owned_querying_subscriber_t& this_) { return ze_querying_subscriber_loan(&this_); };
@@ -640,6 +640,7 @@ inline void z_drop(z_moved_fifo_handler_reply_t* this_) { z_fifo_handler_reply_d
 inline void z_drop(z_moved_fifo_handler_sample_t* this_) { z_fifo_handler_sample_drop(this_); };
 inline void z_drop(z_moved_hello_t* this_) { z_hello_drop(this_); };
 inline void z_drop(z_moved_keyexpr_t* this_) { z_keyexpr_drop(this_); };
+inline void z_drop(z_moved_liveliness_token_t* this_) { z_liveliness_token_drop(this_); };
 inline void z_drop(z_moved_memory_layout_t* this_) { z_memory_layout_drop(this_); };
 inline void z_drop(z_moved_mutex_t* this_) { z_mutex_drop(this_); };
 inline void z_drop(z_moved_publisher_t* this_) { z_publisher_drop(this_); };
@@ -665,7 +666,6 @@ inline void z_drop(z_moved_subscriber_t* this_) { z_subscriber_drop(this_); };
 inline void z_drop(z_moved_task_t* this_) { z_task_drop(this_); };
 inline void z_drop(zc_moved_closure_log_t* closure_) { zc_closure_log_drop(closure_); };
 inline void z_drop(zc_moved_closure_matching_status_t* closure_) { zc_closure_matching_status_drop(closure_); };
-inline void z_drop(zc_moved_liveliness_token_t* this_) { zc_liveliness_token_drop(this_); };
 inline void z_drop(zc_moved_matching_listener_t* this_) { zc_publisher_matching_listener_drop(this_); };
 inline void z_drop(zc_moved_shm_client_list_t* this_) { zc_shm_client_list_drop(this_); };
 inline void z_drop(ze_moved_publication_cache_t* this_) { ze_publication_cache_drop(this_); };
@@ -690,6 +690,7 @@ inline z_moved_fifo_handler_reply_t* z_move(z_owned_fifo_handler_reply_t& this_)
 inline z_moved_fifo_handler_sample_t* z_move(z_owned_fifo_handler_sample_t& this_) { return z_fifo_handler_sample_move(&this_); };
 inline z_moved_hello_t* z_move(z_owned_hello_t& this_) { return z_hello_move(&this_); };
 inline z_moved_keyexpr_t* z_move(z_owned_keyexpr_t& this_) { return z_keyexpr_move(&this_); };
+inline z_moved_liveliness_token_t* z_move(z_owned_liveliness_token_t& this_) { return z_liveliness_token_move(&this_); };
 inline z_moved_memory_layout_t* z_move(z_owned_memory_layout_t& this_) { return z_memory_layout_move(&this_); };
 inline z_moved_mutex_t* z_move(z_owned_mutex_t& this_) { return z_mutex_move(&this_); };
 inline z_moved_publisher_t* z_move(z_owned_publisher_t& this_) { return z_publisher_move(&this_); };
@@ -715,7 +716,6 @@ inline z_moved_subscriber_t* z_move(z_owned_subscriber_t& this_) { return z_subs
 inline z_moved_task_t* z_move(z_owned_task_t& this_) { return z_task_move(&this_); };
 inline zc_moved_closure_log_t* z_move(zc_owned_closure_log_t& closure_) { return zc_closure_log_move(&closure_); };
 inline zc_moved_closure_matching_status_t* z_move(zc_owned_closure_matching_status_t& closure_) { return zc_closure_matching_status_move(&closure_); };
-inline zc_moved_liveliness_token_t* z_move(zc_owned_liveliness_token_t& this_) { return zc_liveliness_token_move(&this_); };
 inline zc_moved_matching_listener_t* z_move(zc_owned_matching_listener_t& this_) { return zc_publisher_matching_listener_move(&this_); };
 inline zc_moved_shm_client_list_t* z_move(zc_owned_shm_client_list_t& this_) { return zc_shm_client_list_move(&this_); };
 inline ze_moved_publication_cache_t* z_move(ze_owned_publication_cache_t& this_) { return ze_publication_cache_move(&this_); };
@@ -740,6 +740,7 @@ inline void z_internal_null(z_owned_fifo_handler_reply_t* this_) { z_internal_fi
 inline void z_internal_null(z_owned_fifo_handler_sample_t* this_) { z_internal_fifo_handler_sample_null(this_); };
 inline void z_internal_null(z_owned_hello_t* this_) { z_internal_hello_null(this_); };
 inline void z_internal_null(z_owned_keyexpr_t* this_) { z_internal_keyexpr_null(this_); };
+inline void z_internal_null(z_owned_liveliness_token_t* this_) { z_internal_liveliness_token_null(this_); };
 inline void z_internal_null(z_owned_memory_layout_t* this_) { z_internal_memory_layout_null(this_); };
 inline void z_internal_null(z_owned_mutex_t* this_) { z_internal_mutex_null(this_); };
 inline void z_internal_null(z_owned_publisher_t* this_) { z_internal_publisher_null(this_); };
@@ -765,7 +766,6 @@ inline void z_internal_null(z_owned_subscriber_t* this_) { z_internal_subscriber
 inline void z_internal_null(z_owned_task_t* this_) { z_internal_task_null(this_); };
 inline void z_internal_null(zc_owned_closure_log_t* this_) { zc_internal_closure_log_null(this_); };
 inline void z_internal_null(zc_owned_closure_matching_status_t* this_) { zc_internal_closure_matching_status_null(this_); };
-inline void z_internal_null(zc_owned_liveliness_token_t* this_) { zc_internal_liveliness_token_null(this_); };
 inline void z_internal_null(zc_owned_matching_listener_t* this_) { zc_internal_matching_listener_null(this_); };
 inline void z_internal_null(zc_owned_shm_client_list_t* this_) { zc_internal_shm_client_list_null(this_); };
 inline void z_internal_null(ze_owned_publication_cache_t* this_) { ze_internal_publication_cache_null(this_); };
@@ -789,6 +789,7 @@ static inline void z_fifo_handler_reply_take(z_owned_fifo_handler_reply_t* this_
 static inline void z_fifo_handler_sample_take(z_owned_fifo_handler_sample_t* this_, z_moved_fifo_handler_sample_t* x) { *this_ = x->_this; z_internal_fifo_handler_sample_null(&x->_this); }
 static inline void z_hello_take(z_owned_hello_t* this_, z_moved_hello_t* x) { *this_ = x->_this; z_internal_hello_null(&x->_this); }
 static inline void z_keyexpr_take(z_owned_keyexpr_t* this_, z_moved_keyexpr_t* x) { *this_ = x->_this; z_internal_keyexpr_null(&x->_this); }
+static inline void z_liveliness_token_take(z_owned_liveliness_token_t* this_, z_moved_liveliness_token_t* x) { *this_ = x->_this; z_internal_liveliness_token_null(&x->_this); }
 static inline void z_memory_layout_take(z_owned_memory_layout_t* this_, z_moved_memory_layout_t* x) { *this_ = x->_this; z_internal_memory_layout_null(&x->_this); }
 static inline void z_mutex_take(z_owned_mutex_t* this_, z_moved_mutex_t* x) { *this_ = x->_this; z_internal_mutex_null(&x->_this); }
 static inline void z_publisher_take(z_owned_publisher_t* this_, z_moved_publisher_t* x) { *this_ = x->_this; z_internal_publisher_null(&x->_this); }
@@ -814,7 +815,6 @@ static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscr
 static inline void z_task_take(z_owned_task_t* this_, z_moved_task_t* x) { *this_ = x->_this; z_internal_task_null(&x->_this); }
 static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) { *closure_ = x->_this; zc_internal_closure_log_null(&x->_this); }
 static inline void zc_closure_matching_status_take(zc_owned_closure_matching_status_t* closure_, zc_moved_closure_matching_status_t* x) { *closure_ = x->_this; zc_internal_closure_matching_status_null(&x->_this); }
-static inline void zc_liveliness_token_take(zc_owned_liveliness_token_t* this_, zc_moved_liveliness_token_t* x) { *this_ = x->_this; zc_internal_liveliness_token_null(&x->_this); }
 static inline void zc_publisher_matching_listener_take(zc_owned_matching_listener_t* this_, zc_moved_matching_listener_t* x) { *this_ = x->_this; zc_internal_matching_listener_null(&x->_this); }
 static inline void zc_shm_client_list_take(zc_owned_shm_client_list_t* this_, zc_moved_shm_client_list_t* x) { *this_ = x->_this; zc_internal_shm_client_list_null(&x->_this); }
 static inline void ze_publication_cache_take(ze_owned_publication_cache_t* this_, ze_moved_publication_cache_t* x) { *this_ = x->_this; ze_internal_publication_cache_null(&x->_this); }
@@ -873,6 +873,9 @@ inline void z_take(z_owned_hello_t* this_, z_moved_hello_t* x) {
 };
 inline void z_take(z_owned_keyexpr_t* this_, z_moved_keyexpr_t* x) {
     z_keyexpr_take(this_, x);
+};
+inline void z_take(z_owned_liveliness_token_t* this_, z_moved_liveliness_token_t* x) {
+    z_liveliness_token_take(this_, x);
 };
 inline void z_take(z_owned_memory_layout_t* this_, z_moved_memory_layout_t* x) {
     z_memory_layout_take(this_, x);
@@ -949,9 +952,6 @@ inline void z_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) 
 inline void z_take(zc_owned_closure_matching_status_t* closure_, zc_moved_closure_matching_status_t* x) {
     zc_closure_matching_status_take(closure_, x);
 };
-inline void z_take(zc_owned_liveliness_token_t* this_, zc_moved_liveliness_token_t* x) {
-    zc_liveliness_token_take(this_, x);
-};
 inline void z_take(zc_owned_matching_listener_t* this_, zc_moved_matching_listener_t* x) {
     zc_publisher_matching_listener_take(this_, x);
 };
@@ -986,6 +986,7 @@ inline bool z_internal_check(const z_owned_fifo_handler_reply_t& this_) { return
 inline bool z_internal_check(const z_owned_fifo_handler_sample_t& this_) { return z_internal_fifo_handler_sample_check(&this_); };
 inline bool z_internal_check(const z_owned_hello_t& this_) { return z_internal_hello_check(&this_); };
 inline bool z_internal_check(const z_owned_keyexpr_t& this_) { return z_internal_keyexpr_check(&this_); };
+inline bool z_internal_check(const z_owned_liveliness_token_t& this_) { return z_internal_liveliness_token_check(&this_); };
 inline bool z_internal_check(const z_owned_memory_layout_t& this_) { return z_internal_memory_layout_check(&this_); };
 inline bool z_internal_check(const z_owned_mutex_t& this_) { return z_internal_mutex_check(&this_); };
 inline bool z_internal_check(const z_owned_publisher_t& this_) { return z_internal_publisher_check(&this_); };
@@ -1011,7 +1012,6 @@ inline bool z_internal_check(const z_owned_subscriber_t& this_) { return z_inter
 inline bool z_internal_check(const z_owned_task_t& this_) { return z_internal_task_check(&this_); };
 inline bool z_internal_check(const zc_owned_closure_log_t& this_) { return zc_internal_closure_log_check(&this_); };
 inline bool z_internal_check(const zc_owned_closure_matching_status_t& this_) { return zc_internal_closure_matching_status_check(&this_); };
-inline bool z_internal_check(const zc_owned_liveliness_token_t& this_) { return zc_internal_liveliness_token_check(&this_); };
 inline bool z_internal_check(const zc_owned_matching_listener_t& this_) { return zc_internal_matching_listener_check(&this_); };
 inline bool z_internal_check(const zc_owned_shm_client_list_t& this_) { return zc_internal_shm_client_list_check(&this_); };
 inline bool z_internal_check(const ze_owned_publication_cache_t& this_) { return ze_internal_publication_cache_check(&this_); };
@@ -1194,6 +1194,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_hello_t> { typedef z_owned_h
 template<> struct z_owned_to_loaned_type_t<z_owned_hello_t> { typedef z_loaned_hello_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_keyexpr_t> { typedef z_owned_keyexpr_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_keyexpr_t> { typedef z_loaned_keyexpr_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_liveliness_token_t> { typedef z_owned_liveliness_token_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_liveliness_token_t> { typedef z_loaned_liveliness_token_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_memory_layout_t> { typedef z_owned_memory_layout_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_memory_layout_t> { typedef z_loaned_memory_layout_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_publisher_t> { typedef z_owned_publisher_t type; };
@@ -1238,8 +1240,6 @@ template<> struct z_loaned_to_owned_type_t<zc_loaned_closure_log_t> { typedef zc
 template<> struct z_owned_to_loaned_type_t<zc_owned_closure_log_t> { typedef zc_loaned_closure_log_t type; };
 template<> struct z_loaned_to_owned_type_t<zc_loaned_closure_matching_status_t> { typedef zc_owned_closure_matching_status_t type; };
 template<> struct z_owned_to_loaned_type_t<zc_owned_closure_matching_status_t> { typedef zc_loaned_closure_matching_status_t type; };
-template<> struct z_loaned_to_owned_type_t<zc_loaned_liveliness_token_t> { typedef zc_owned_liveliness_token_t type; };
-template<> struct z_owned_to_loaned_type_t<zc_owned_liveliness_token_t> { typedef zc_loaned_liveliness_token_t type; };
 template<> struct z_loaned_to_owned_type_t<zc_loaned_shm_client_list_t> { typedef zc_owned_shm_client_list_t type; };
 template<> struct z_owned_to_loaned_type_t<zc_owned_shm_client_list_t> { typedef zc_loaned_shm_client_list_t type; };
 template<> struct z_loaned_to_owned_type_t<ze_loaned_publication_cache_t> { typedef ze_owned_publication_cache_t type; };
